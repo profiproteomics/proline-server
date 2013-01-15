@@ -14,9 +14,9 @@ import com.weiglewilczek.slf4s.Logging
 
 import uk.ac.ebi.jmzidml.model.mzidml._
 import uk.ac.ebi.jmzidml.xml.io.MzIdentMLMarshaller
+import uk.ac.ebi.jmzidml.xml.jaxb.marshaller.MarshallerFactory
 import uk.ac.ebi.jmzidml.xml.jaxb.unmarshaller.UnmarshallerFactory
 import uk.ac.ebi.jmzidml.model.utils.ModelConstants
-import uk.ac.ebi.jmzidml.model.mzidml.params.SoftwareNameCvParam
 
 import fr.proline.core.om.model.msi.MSISearch
 import fr.proline.core.om.model.msi.ResultSet
@@ -53,88 +53,6 @@ object MzIdExporter {
   
 }
 
-trait ParamMaker {
-  
-  // Init the CVs
-  val psiCvID = "PSI-MS"
-  val psiCV = new Cv()
-  psiCV.setUri("http://psidev.cvs.sourceforge.net/viewvc/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo")
-  psiCV.setId(psiCvID);
-  psiCV.setVersion("2.25.0")
-  psiCV.setFullName("PSI-MS")
-
-  val unimodID = "UNIMOD"
-  val unimodCV = new Cv() 
-  unimodCV.setUri("http://www.unimod.org/obo/unimod.obo")
-  unimodCV.setId(unimodID)
-  unimodCV.setFullName("UNIMOD")
-  
-  val unitCvID = "UO"
-  val unitCV = new Cv() 
-  unitCV.setUri("http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo")
-  unitCV.setId(unitCvID)
-  unitCV.setFullName("UNIT-ONTOLOGY")
-  
-  def makeParamGroup( cvParam: CvParam ): Param = {
-    val p = new Param()    
-    p.setParam(cvParam)
-    p
-  }
-  def makeParamGroup( userParam: UserParam ): Param = {
-    val p = new Param()    
-    p.setParam(userParam)
-    p
-  }
- 
-  def makeUserParamGroup( name: String ): Param = {
-    this.makeParamGroup(this.makeUserParam( name ))
-  }
-    
-  def makeUserParam( name: String ): UserParam = {
-    val up = new UserParam()
-    up.setName(name)
-    up
-  }
-  
-  /**
-   * Helper method to create and return a CvParam from accession, name and CV
-   *
-   * @return CvParam
-   */
-  def makeCvParam( accession: String, name: String, cv: Cv, value: String = null ): CvParam = {
-    val cvParam = new CvParam()
-    cvParam.setAccession(accession)
-    cvParam.setName(name)
-    cvParam.setCv(cv)
-    if( value != null ) cvParam.setValue(value)
-    
-    cvParam
-  }
-
-  /**
-   * Helper method to create and return a CvParam from accession, name, CV, unitAccession, unitName and unitCV
-   *
-   * @return CvParam
-   */
-  def makeCvParamWithUnit( accession: String,  name: String, cv: Cv,
-                           unitAccession: String, unitName: String, alternateUnitCV: Cv = null,
-                           value: String = null ): CvParam = {
-    
-    val cvParam = new CvParam()
-    cvParam.setAccession(accession)
-    cvParam.setName(name)
-    cvParam.setCv(cv)
-    cvParam.setUnitAccession(unitAccession)
-    cvParam.setUnitName(unitName)
-    
-    if( alternateUnitCV != null ) cvParam.setUnitCv(alternateUnitCV) else cvParam.setUnitCv(unitCV)
-    if( value != null ) cvParam.setValue(value)
-    
-    cvParam
-  }
-  
-}
-
 /**
  * @author David Bouyssie
  *
@@ -150,7 +68,7 @@ class MzIdExporter(
   val msiSearch = rs.msiSearch
   val searchSettings = msiSearch.searchSettings
   val pepById = rs.peptideById
-  println("nb peptides="+pepById.size)
+  //println("nb peptides="+pepById.size)
   val protMatchById = rs.proteinMatchById
   //val pepMatchById = rs.peptideMatchById
   val pepInstByPepId = Map() ++ rsm.peptideInstances.map( pi => pi.peptide.id -> pi )
@@ -159,18 +77,73 @@ class MzIdExporter(
   // Set the main mzIdentML Element ids
   val spectraDataId = "SD_" + msiSearch.peakList.id
   val searchDatabaseIds = searchSettings.seqDatabases.map( "SDB_" + _.id )
-  val protDetectProtoId = "PDP_Proline"
+  val protDetectProtoId = "PDP_MascotParser_1" // "PDP_Proline"
+  
+  val profiOrganization = {
+    val org = new Organization()
+    org.setId("ORG_PROFI")
+    org.setName("Proteomics French Infrastructure")
+    org
+  }
+  
+  val profiContact = {
     
+    val proFI = new Person()
+    proFI.setId("PERSON_DOC_OWNER")
+    
+    val affiliation = new Affiliation()
+    affiliation.setOrganization(profiOrganization)
+    proFI.getAffiliation().add(affiliation)
+    
+    proFI
+  }
+  
+  lazy val matrixScienceOrganization = {
+    val org = new Organization()
+    org.setId("ORG_MSL")
+    org.setName("Matrix Science Limited")
+    org
+  }
+  
+  lazy val matrixScienceContact = {
+    val proFI = new Person()
+    proFI.setId("Matrix_Science_Limited")
+    val affiliation = new Affiliation()
+    affiliation.setOrganization(matrixScienceOrganization)
+    proFI.getAffiliation().add(affiliation)
+    proFI
+  }
+  
+  val auditCollection = {
+    /*
+    <AuditCollection>
+      <Person id="">
+        <Affiliation organization_ref="ORG_MSL"/>
+      </Person>
+      <Person id="PERSON_DOC_OWNER" firstName="" lastName="" >
+        <Affiliation organization_ref="ORG_DOC_OWNER"/>
+      </Person>
+      <Organization id="ORG_MSL" name=""  />
+      <Organization id="ORG_DOC_OWNER" />
+    </AuditCollection>"""
+      
+    */
+    
+    val auditCollec = new AuditCollection()
+    auditCollec.getPerson().add(matrixScienceContact)
+    auditCollec.getPerson().add(profiContact)
+    auditCollec.getOrganization().add(matrixScienceOrganization)
+    auditCollec.getOrganization().add(profiOrganization)
+    auditCollec
+    
+  }
   lazy val searchDatabase: SearchDatabase = {
     
     //TODO: export all seq dbs
     val seqDb = searchSettings.seqDatabases(0)
     val seqDbFile = new java.io.File(seqDb.filePath)
     
-    val fileFormat = new FileFormat()
-    fileFormat.setCvParam(
-      makeCvParam("MS:1001348", "FASTA format", psiCV )
-    )
+    val fileFormat = FileFormat( CvParam("MS:1001348", "FASTA format", psiCV ) )
     
     val sd = new SearchDatabase()
     sd.setId( searchDatabaseIds(0) )
@@ -238,18 +211,20 @@ class MzIdExporter(
 
     // XML header
     writer.write(mzIdMarshaller.createXmlHeader() + "\n")
+    
     // mzIdentML start tag
     writer.write(mzIdMarshaller.createMzIdentMLStartTag("12345") + "\n")
 
-    //val cvList = unmarshaller.unmarshal(MzIdentMLElement.CvList.getXpath());
-    //cvCount = cvList.getCv().size();
-    val cvListAsStr =
+    /*val cvListAsStr =
     """<cvList>
       <cv id="PSI-MS" fullName="Proteomics Standards Initiative Mass Spectrometry Vocabularies"  uri="http://psidev.cvs.sourceforge.net/viewvc/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo" version="2.25.0"></cv>
       <cv id="UNIMOD" fullName="UNIMOD"        uri="http://www.unimod.org/obo/unimod.obo"></cv>
       <cv id="UO"     fullName="UNIT-ONTOLOGY" uri="http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo"></cv>
     </cvList>"""
-    writer.write(cvListAsStr + "\n")
+    writer.write(cvListAsStr + "\n")*/
+    
+    mzIdMarshaller.marshal(this.cvList, writer)
+    writer.write("\n")
 
     mzIdMarshaller.marshal( this._buildAnalysisSoftwareList(), writer)
     writer.write("\n")
@@ -258,7 +233,7 @@ class MzIdExporter(
     mzIdMarshaller.marshal(this._buildProvider(), writer)
     writer.write("\n")
     
-    mzIdMarshaller.marshal(this._buildAuditCollection(), writer)
+    mzIdMarshaller.marshal(auditCollection, writer)
     writer.write("\n")
 
     // TODO: export the samples
@@ -269,9 +244,25 @@ class MzIdExporter(
     mzIdMarshaller.marshal(this._buildSequenceCollection(), writer)
     writer.write("\n");
 
-    val analysisCollection = this._buildAnalysisCollection()
-    mzIdMarshaller.marshal(analysisCollection, writer)
-    writer.write("\n")
+    //val analysisCollection = this._buildAnalysisCollection()
+    //mzIdMarshaller.marshal(analysisCollection, writer)
+    
+    // TODO: export all seq dbs
+    // TODO: set the dates
+    // Note: the jmzidentml API doesn't allows to set the refs of the spectrumIdentificationProtocol/List
+    //       but need the real objects which will be problematic for large datasets
+    val analysisCollecNode =
+    <AnalysisCollection>
+      <SpectrumIdentification id="SI" spectrumIdentificationProtocol_ref="SIP"  spectrumIdentificationList_ref="SIL_1" activityDate="2008-06-23T19:39:34">
+        <InputSpectra spectraData_ref={ spectraDataId } />
+        <SearchDatabaseRef searchDatabase_ref={ searchDatabaseIds(0) } />
+      </SpectrumIdentification>
+      <ProteinDetection id="PD_1" proteinDetectionProtocol_ref={protDetectProtoId} proteinDetectionList_ref="PDL_1" activityDate="2009-08-18T18:03:11">
+        <InputSpectrumIdentifications spectrumIdentificationList_ref="SIL_1"/>
+      </ProteinDetection>
+    </AnalysisCollection>
+      
+    writer.write(analysisCollecNode + "\n")
 
     mzIdMarshaller.marshal(this._buildAnalysisProtocolCollection(), writer)
     writer.write("\n")
@@ -347,9 +338,9 @@ class MzIdExporter(
         // Try to retrieve a peptide instance
         pepInstByPepId.get(pepId).foreach { pepInst =>
           if( pepInst.proteinMatchesCount == 1 )
-            psmParams.add(makeCvParam("MS:1001363", "peptide unique to one protein", psiCV )) 
+            psmParams.add(CvParam("MS:1001363", "peptide unique to one protein", psiCV )) 
           else
-            psmParams.add(makeCvParam("MS:1001175", "peptide shared in multiple proteins", psiCV )) 
+            psmParams.add(CvParam("MS:1001175", "peptide shared in multiple proteins", psiCV )) 
         }
         
         val mascotPropsOpt = pepMatch.properties.get.mascotProperties
@@ -358,11 +349,11 @@ class MzIdExporter(
           val mascotProps = mascotPropsOpt.get
           
           psmParams.add(
-            makeCvParam("MS:1001171", "mascot:score", psiCV, pepMatch.score.toString )
+            CvParam("MS:1001171", "mascot:score", psiCV, pepMatch.score.toString )
           )
           
           psmParams.add(
-            makeCvParam(
+            CvParam(
               "MS:1001172","mascot:expectation value", psiCV, 
               mascotProps.getExpectationValue.toString
             )
@@ -441,16 +432,16 @@ class MzIdExporter(
         
         val protHypoCvParams = protDetectHypo.getCvParam()
         protHypoCvParams.add(
-          makeCvParam("MS:1001171", "mascot:score", psiCV, protMatch.score.toString)
+          CvParam("MS:1001171", "mascot:score", psiCV, protMatch.score.toString)
         )
         protHypoCvParams.add(
-          makeCvParam("MS:1001093", "sequence coverage", psiCV, protMatch.coverage.toString)
+          CvParam("MS:1001093", "sequence coverage", psiCV, protMatch.coverage.toString)
         )
         /*protHypoCvParams.add(
           makeCvParam("MS:1001097", "distinct peptide sequences", psiCV, pepSeqs.distinct.length.toString)
         )*/
         protHypoCvParams.add(
-          makeCvParam("MS:1001098", "confident distinct peptide sequences", psiCV, confidentPepSeqs.distinct.length.toString)
+          CvParam("MS:1001098", "confident distinct peptide sequences", psiCV, confidentPepSeqs.distinct.length.toString)
         )
         
         protDetectHypoList.add(protDetectHypo)
@@ -512,35 +503,23 @@ class MzIdExporter(
     searchEngine.setName(softName)
     searchEngine.setVersion(searchSettings.softwareVersion)
     
-    /*val softCvParamByName = Map( "Mascot" -> """<cvParam accession="MS:1001207" name="Mascot" cvRef="PSI-MS"/>""",
-                                 "OMSSA" -> """<cvParam accession="MS:1001475" name="OMSSA" cvRef="PSI-MS"/>"""
-                               )*/
-    val softCvParamByName = Map( "Mascot" -> makeCvParam("MS:1001207","Mascot",psiCV),
-                                 "OMSSA" -> makeCvParam("MS:1001475","OMSSA",psiCV)
-                               ) 
+    val softCvParamByName = Map( "Mascot" -> CvParam("MS:1001207","Mascot",psiCV),
+                                 "OMSSA" -> CvParam("MS:1001475","OMSSA",psiCV)
+                               )
     val softCvParamOpt = softCvParamByName.get(softName)
     require( softCvParamOpt != None, "unsupported search engine '"+softName+"'")
     
-    val softNameParam = new Param()
-    softNameParam.setParam( softCvParamOpt.get )
-    searchEngine.setSoftwareName( softNameParam )
-    
-    val contactRoleAsStr = """
-      <ContactRole contact_ref="ORG_MSL">
-        <Role>
-          <cvParam accession="MS:1001267" name="software vendor" cvRef="PSI-MS"/>
-        </Role>
-      </ContactRole>
-    """
-    val contactRole = new ContactRole()
+    searchEngine.setSoftwareName( makeParamGroup(softCvParamOpt.get) )
+      
+    val contactRole = ContactRole(
+      matrixScienceContact, // TODO: retrieve the right one
+      Role( CvParam("MS:1001267", "software vendor", psiCV) )
+    )
     contactRole.setContact(matrixScienceContact) // TODO: retrieve the right one
     
-    val role = new Role()
-    role.setCvParam(makeCvParam("MS:1001267", "software vendor", psiCV))
-    contactRole.setRole(role)
+    searchEngine.setContactRole( contactRole )
     
-    searchEngine.setContactRole( MzIdExporter.unmarshallXmlString( classOf[ContactRole], contactRoleAsStr ) )
-
+    
     searchEngine
   }
   
@@ -555,76 +534,19 @@ class MzIdExporter(
     anlSoftList
   }
   
+  // TODO: query for this value in the exporter constructor
   protected def _buildProvider(): Provider = {
-    val providerStr = """
-    <Provider id="PROVIDER">
-      <ContactRole contact_ref="PERSON_DOC_OWNER">
-        <Role>
-          <cvParam accession="MS:1001271" name="researcher" cvRef="PSI-MS" />
-        </Role>
-      </ContactRole>
-    </Provider>"""
-      
-    MzIdExporter.unmarshallXmlString( classOf[Provider], providerStr )
-  }
-  
-  val profiOrganization = {
-    val org = new Organization()
-    org.setId("ORG_PROFI")
-    org
-  }
-  
-  val profiContact = {
-    val proFI = new Person()
-    proFI.setId("ProFI")
-    val affiliation = new Affiliation()
-    affiliation.setOrganization(profiOrganization)
-    proFI.getAffiliation().add(affiliation)
-    proFI
-  }
-  
-  lazy val matrixScienceOrganization = {
-    val org = new Organization()
-    org.setId("ORG_MSL")
-    org
-  }
-  
-  lazy val matrixScienceContact = {
-    val proFI = new Person()
-    proFI.setId("Matrix_Science_Limited")
-    val affiliation = new Affiliation()
-    affiliation.setOrganization(matrixScienceOrganization)
-    proFI.getAffiliation().add(affiliation)
-    proFI
-  }
-  
-  val auditCollection = {
-    val auditCollec = new AuditCollection()
-    auditCollec.getPerson().add(matrixScienceContact)
-    auditCollec.getPerson().add(profiContact)
-    auditCollec.getOrganization().add(matrixScienceOrganization)
-    auditCollec.getOrganization().add(profiOrganization)
-    auditCollec
-  }
-  
-  protected def _buildAuditCollection(): AuditCollection = {
-    auditCollection
-    /*
-    <AuditCollection>
-      <Person id="">
-        <Affiliation organization_ref="ORG_MSL"/>
-      </Person>
-      <Person id="PERSON_DOC_OWNER" firstName="" lastName="" >
-        <Affiliation organization_ref="ORG_DOC_OWNER"/>
-      </Person>
-      <Organization id="ORG_MSL" name=""  />
-      <Organization id="ORG_DOC_OWNER" />
-    </AuditCollection>"""
-      
-    MzIdExporter.unmarshallXmlString( classOf[AuditCollection], providerStr )*/
+    Provider(
+      "PROVIDER",
+      ContactRole(
+        profiContact,
+        Role(CvParam("MS:1001268","programmer",psiCV))
+      )
+    )
   }
   
   protected lazy val dbSeqByProtMatchId = {
+    
     val tmpDbSeqByProtMatchId = new HashMap[Int,DBSequence]()
     for( protMatch <- rs.proteinMatches ) {
       
@@ -636,9 +558,8 @@ class MzIdExporter(
       //seq.setLength(value)
       seq.setSearchDatabase(searchDatabase) // TODO: retrieve the right one
       
-      val descParam = makeCvParam("MS:1001088", "protein description", psiCV, protMatch.description)
+      val descParam = CvParam("MS:1001088", "protein description", psiCV, protMatch.description)
       seq.getCvParam().add(descParam)
-      
       
       tmpDbSeqByProtMatchId += protMatch.id -> seq
     }
@@ -646,7 +567,8 @@ class MzIdExporter(
     tmpDbSeqByProtMatchId
   }
   
- protected lazy val mzidPepByPepId = {
+  protected lazy val mzidPepByPepId = {
+    
     val tmpMzidPepByPepId = new HashMap[Int,Peptide]()
     
     // TODO: handle substitutions
@@ -738,25 +660,6 @@ class MzIdExporter(
     
   }
   
-  // TODO: create from scratch
-  // TODO: export all seq dbs
-  protected def _buildAnalysisCollection(): AnalysisCollection = {
-    
-    val xmlNode =
-    <AnalysisCollection>
-      <SpectrumIdentification id="SI" spectrumIdentificationProtocol_ref="SIP"  spectrumIdentificationList_ref="SIL_1" activityDate="2008-06-23T19:39:34">
-        <InputSpectra spectraData_ref={ spectraDataId } />
-        <SearchDatabaseRef searchDatabase_ref={ searchDatabaseIds(0) } />
-      </SpectrumIdentification>
-      <ProteinDetection id="PD_1" proteinDetectionProtocol_ref={protDetectProtoId} proteinDetectionList_ref="PDL_1" activityDate="2009-08-18T18:03:11">
-        <InputSpectrumIdentifications spectrumIdentificationList_ref="SIL_1"/>
-      </ProteinDetection>
-    </AnalysisCollection>
-    
-    MzIdExporter.unmarshallXmlString( classOf[AnalysisCollection], xmlNode.toString )
-  }
-  
-  
   protected def _buildAnalysisProtocolCollection(): AnalysisProtocolCollection = {
     val anlProtoCollec = new AnalysisProtocolCollection()
     
@@ -765,7 +668,7 @@ class MzIdExporter(
     specIdentProtoList.add(this._buildSpectrumIdentificationProtocol)
     
     // Set the protein detection protocol
-    anlProtoCollec.setProteinDetectionProtocol(this._buildProteinDetectionProtocol)
+    anlProtoCollec.setProteinDetectionProtocol(this._buildMascotProteinDetectionProtocol)
     
     anlProtoCollec
   }
@@ -784,18 +687,23 @@ class MzIdExporter(
     if( searchSettings.msmsSearchSettings != None ) {
       specIdentProto.setFragmentTolerance(this._buildFragmentTolerance().get)
       specIdentProto.setSearchType(
-        makeParamGroup(makeCvParam("MS:1001083", "ms-ms search", psiCV))
+        makeParamGroup(CvParam("MS:1001083", "ms-ms search", psiCV))
       )
     } else {
       specIdentProto.setSearchType(
-        makeParamGroup(makeCvParam("MS:1001081", "pmf search", psiCV))
+        makeParamGroup(CvParam("MS:1001081", "pmf search", psiCV))
       )
     }
     
     specIdentProto.getMassTable().add(this._buildMassTable)
-    specIdentProto.setModificationParams(this._buildModificationParams())
-    specIdentProto.setParentTolerance(this._buildParentTolerance())
-    //specIdentProto.setThreshold(value)
+    
+    if( searchSettings.fixedPtmDefs.length > 0 || searchSettings.variablePtmDefs.length > 0 )
+      specIdentProto.setModificationParams(this._buildModificationParams())
+    
+    specIdentProto.setParentTolerance(this._buildParentTolerance())    
+    specIdentProto.setThreshold(
+      Threshold(List(CvParam("MS:1001316","mascot:SigThreshold",psiCV,"0.05")))
+    )
     
     specIdentProto
   }
@@ -807,14 +715,11 @@ class MzIdExporter(
     for( usedEnz <- searchSettings.usedEnzymes ) {
       if( usedEnz.isIndependant == false ) enzymes.setIndependent(false)
       
-      // FIXME: create an enzyme name mapping
-      val enzName = new ParamList()
-      enzName.getCvParam().add( makeCvParam("MS:1001251", "Trypsin", psiCV) )
-      
       val enz = new Enzyme()
       enz.setId("ENZ_"+usedEnz.id)
       //enz.setCTermGain(value)
-      enz.setEnzymeName(enzName)
+      // FIXME: create an enzyme name mapping
+      enz.setEnzymeName(ParamList(List(CvParam("MS:1001251", "Trypsin", psiCV))))
       //enz.setMinDistance(value)
       enz.setMissedCleavages(searchSettings.maxMissedCleavages) // TODO: put column in used enzyme
       //enz.setNTermGain(value)
@@ -826,22 +731,23 @@ class MzIdExporter(
     
     // FIXME: enzyme should be defined in the MSI-DB
     if( searchSettings.usedEnzymes.length == 0 ) {
-      val xmlStr = """
-      <Enzyme id="ENZ_0" cTermGain="OH" nTermGain="H" semiSpecific="0">
-        <SiteRegexp><![CDATA[(?<=[KR])(?!P)]]></SiteRegexp>
-        <EnzymeName>
-          <cvParam accession="MS:1001251" name="Trypsin" cvRef="PSI-MS"/>
-        </EnzymeName>
-      </Enzyme>
-      """
       
-      enzList.add( MzIdExporter.unmarshallXmlString(classOf[Enzyme], xmlStr) )
+      val enz = new Enzyme()
+      enz.setId("ENZ_0")
+      enz.setCTermGain("OH")
+      enz.setEnzymeName(ParamList(List(CvParam("MS:1001251", "Trypsin", psiCV))))
+      //enz.setMinDistance(value)
+      //enz.setMissedCleavages(value)
+      enz.setNTermGain("H")
+      enz.setSemiSpecific(false)
+      enz.setSiteRegexp("""(?<=[KR])(?!P)""")
+      
+      enzList.add( enz )
     }
     
     enzymes
   }
   
-  case class CVUnit( accession: String,name:String)
   protected def _buildFragmentTolerance(): Option[Tolerance] = {
     
     val ms2Settings = searchSettings.msmsSearchSettings
@@ -849,20 +755,20 @@ class MzIdExporter(
     
     // TODO: use MassTolUnit enum when also used in MSIdb (check PPM case)
     val tolUnit = ms2Settings.get.ms2ErrorTolUnit match {
-      case "ppm" => CVUnit("UO:0000169","parts per million")
-      case "Da" => CVUnit("UO:0000221","dalton")
+      case "ppm" => CvParamUnit("UO:0000169","parts per million")
+      case "Da" => CvParamUnit("UO:0000221","dalton")
     }
     
     val tolValue = ms2Settings.get.ms2ErrorTol.toString
     val tol = new Tolerance()
     tol.getCvParam().add(
-      makeCvParamWithUnit(
+      CvParam(
         "MS:1001412", "search tolerance plus value", psiCV,
         tolUnit.accession, tolUnit.name, value = tolValue
       )
     )
     tol.getCvParam().add(
-      makeCvParamWithUnit(
+      CvParam(
         "MS:1001413", "search tolerance minus value", psiCV,
         tolUnit.accession, tolUnit.name, value = tolValue
       )
@@ -875,20 +781,20 @@ class MzIdExporter(
     
     // TODO: use MassTolUnit enum when also used in MSIdb (check PPM case)
     val tolUnit = searchSettings.ms1ErrorTolUnit match {
-      case "ppm" => CVUnit("UO:0000169","parts per million")
-      case "Da" => CVUnit("UO:0000221","dalton")
+      case "ppm" => CvParamUnit("UO:0000169","parts per million")
+      case "Da" => CvParamUnit("UO:0000221","dalton")
     }
     
     val tolValue = searchSettings.ms1ErrorTol.toString
     val tol = new Tolerance()
     tol.getCvParam().add(
-      makeCvParamWithUnit(
+      CvParam(
         "MS:1001412", "search tolerance plus value", psiCV,
         tolUnit.accession, tolUnit.name, value = tolValue
       )
     )
     tol.getCvParam().add(
-      makeCvParamWithUnit(
+      CvParam(
         "MS:1001413", "search tolerance minus value", psiCV,
         tolUnit.accession, tolUnit.name, value = tolValue
       )
@@ -898,48 +804,57 @@ class MzIdExporter(
   }
   
   protected def _buildMassTable(): MassTable = {
-    val massTableXmlStr = """
-    <MassTable id="MT" msLevel="1 2">
-        <Residue code="A" mass="71.037114"/>
-        <Residue code="C" mass="103.009185"/>
-        <Residue code="D" mass="115.026943"/>
-        <Residue code="E" mass="129.042593"/>
-        <Residue code="F" mass="147.068414"/>
-        <Residue code="G" mass="57.021464"/>
-        <Residue code="H" mass="137.058912"/>
-        <Residue code="I" mass="113.084064"/>
-        <Residue code="K" mass="128.094963"/>
-        <Residue code="L" mass="113.084064"/>
-        <Residue code="M" mass="131.040485"/>
-        <Residue code="N" mass="114.042927"/>
-        <Residue code="P" mass="97.052764"/>
-        <Residue code="Q" mass="128.058578"/>
-        <Residue code="R" mass="156.101111"/>
-        <Residue code="S" mass="87.032028"/>
-        <Residue code="T" mass="101.047679"/>
-        <Residue code="U" mass="150.95363"/>
-        <Residue code="V" mass="99.068414"/>
-        <Residue code="W" mass="186.079313"/>
-        <Residue code="Y" mass="163.063329"/>
-        <AmbiguousResidue code="B">
-          <cvParam accession="MS:1001360" name="alternate single letter codes" cvRef="PSI-MS" value="D N"/>
-        </AmbiguousResidue>
-        <AmbiguousResidue code="Z">
-          <cvParam accession="MS:1001360" name="alternate single letter codes" cvRef="PSI-MS" value="E Q"/>
-        </AmbiguousResidue>
-        <AmbiguousResidue code="X">
-          <cvParam accession="MS:1001360" name="alternate single letter codes" cvRef="PSI-MS" value="A C D E F G H I K L M N O P Q R S T U V W Y"/>
-        </AmbiguousResidue>
-      </MassTable>"""
-      
-    MzIdExporter.unmarshallXmlString(classOf[MassTable], massTableXmlStr)
+    
+    val massTable = new MassTable()
+    massTable.setId("MT")
+    massTable.getMsLevel().add(1)
+    massTable.getMsLevel().add(2)
+    
+    val residueList = massTable.getResidue()
+    val residues = List(
+      Residue( code="A", mass=71.037114f ),
+      Residue( code="C", mass=103.009185f ),
+      Residue( code="D", mass=115.026943f ),
+      Residue( code="E", mass=129.042593f ),
+      Residue( code="F", mass=147.068414f ),
+      Residue( code="G", mass=57.021464f ),
+      Residue( code="H", mass=137.058912f ),
+      Residue( code="I", mass=113.084064f ),
+      Residue( code="K", mass=128.094963f ),
+      Residue( code="L", mass=113.084064f ),
+      Residue( code="M", mass=131.040485f ),
+      Residue( code="N", mass=114.042927f ),
+      Residue( code="P", mass=97.052764f ),
+      Residue( code="Q", mass=128.058578f ),
+      Residue( code="R", mass=156.101111f ),
+      Residue( code="S", mass=87.032028f ),
+      Residue( code="T", mass=101.047679f ),
+      Residue( code="U", mass=150.95363f ),
+      Residue( code="V", mass=99.068414f ),
+      Residue( code="W", mass=186.079313f ),
+      Residue( code="Y", mass=163.063329f )
+    )
+    residues.foreach( residueList.add(_) )
+    
+    val ambiguousResList = massTable.getAmbiguousResidue()
+    val ambiguousResidues = List(
+      AmbiguousResidue("B",List(CvParam("MS:1001360","alternate single letter codes",psiCV,"D N"))),
+      AmbiguousResidue("Z",List(CvParam("MS:1001360","alternate single letter codes",psiCV,"E Q"))),
+      AmbiguousResidue("X",List(CvParam("MS:1001360","alternate single letter codes",
+                                        psiCV,"A C D E F G H I K L M N O P Q R S T U V W Y")))
+    )
+    ambiguousResidues.foreach( ambiguousResList.add(_) )
+    
+    massTable
   }
   
   protected def _buildModificationParams(): ModificationParams = {
+    
     val modParams = new ModificationParams()
     val modParamsList = modParams.getSearchModification()
     
     def ptm2mod(ptmDef: PtmDefinition, isFixed: Boolean): SearchModification = {
+      
       val mod = new SearchModification()
       mod.setFixedMod(isFixed)
       mod.setMassDelta(ptmDef.precursorDelta.monoMass.toFloat) // TODO: add to usedPtm ?
@@ -948,7 +863,7 @@ class MzIdExporter(
       mod.getResidues().add(modRes)
       
       mod.getCvParam().add(
-        makeCvParam("UNIMOD:"+unimodIdByPtmId(ptmDef.ptmId), ptmDef.names.shortName, unimodCV )
+        CvParam("UNIMOD:"+unimodIdByPtmId(ptmDef.ptmId), ptmDef.names.shortName, unimodCV )
       )
       
       //mod.getSpecificityRules()
@@ -970,29 +885,50 @@ class MzIdExporter(
   
   
   // FIXME: put correct values there
-  protected def _buildProteinDetectionProtocol(): ProteinDetectionProtocol = {
+  protected def _buildMascotProteinDetectionProtocol(): ProteinDetectionProtocol = {
     
-    val xmlStr = """
-    <ProteinDetectionProtocol id="PDP_MascotParser_1"  analysisSoftware_ref="AS_mascot_parser">
-      <AnalysisParams>
-        <cvParam accession="MS:1001316" name="mascot:SigThreshold"                               cvRef="PSI-MS" value="0.05"/>
-        <cvParam accession="MS:1001317" name="mascot:MaxProteinHits"                             cvRef="PSI-MS" value="Auto"/>
-        <cvParam accession="MS:1001318" name="mascot:ProteinScoringMethod"                       cvRef="PSI-MS" value="MudPIT"/>
-        <cvParam accession="MS:1001319" name="mascot:MinMSMSThreshold"                           cvRef="PSI-MS" value="0"/>
-        <cvParam accession="MS:1001320" name="mascot:ShowHomologousProteinsWithSamePeptides"     cvRef="PSI-MS" value="1"/>
-        <cvParam accession="MS:1001321" name="mascot:ShowHomologousProteinsWithSubsetOfPeptides" cvRef="PSI-MS" value="1"/>
-        <cvParam accession="MS:1001322" name="mascot:RequireBoldRed"                             cvRef="PSI-MS" value="0"/>
-        <cvParam accession="MS:1001323" name="mascot:UseUnigeneClustering"                       cvRef="PSI-MS" value="false"/>
-        <cvParam accession="MS:1001324" name="mascot:IncludeErrorTolerantMatches"                cvRef="PSI-MS" value="1"/>
-        <cvParam accession="MS:1001325" name="mascot:ShowDecoyMatches"                           cvRef="PSI-MS" value="0"/>
-      </AnalysisParams>
-      <Threshold>
-        <cvParam accession="MS:1001494" name="no threshold" cvRef="PSI-MS" />
-      </Threshold>
-    </ProteinDetectionProtocol>"""
-      
+    val pdp = new ProteinDetectionProtocol()
+    pdp.setId(protDetectProtoId)
+    pdp.setAnalysisSoftware(mzidSearchEngine)
+    pdp.setThreshold(ParamList(List(CvParam("MS:1001494","no threshold",psiCV))))
     
-    MzIdExporter.unmarshallXmlString(classOf[ProteinDetectionProtocol], xmlStr)
+    pdp.setAnalysisParams(
+      ParamList(
+        List(
+          CvParam( "MS:1001316", "mascot:SigThreshold", psiCV, "0.05" ),
+          CvParam( "MS:1001317", "mascot:MaxProteinHits", psiCV, "Auto" ),
+          CvParam( "MS:1001318", "mascot:ProteinScoringMethod", psiCV, "MudPIT" ),
+          CvParam( "MS:1001319", "mascot:MinMSMSThreshold", psiCV, "0" ),
+          CvParam( "MS:1001320", "mascot:ShowHomologousProteinsWithSamePeptides", psiCV, "1" ),
+          CvParam( "MS:1001321", "mascot:ShowHomologousProteinsWithSubsetOfPeptides", psiCV, "1" ),
+          CvParam( "MS:1001322", "mascot:RequireBoldRed", psiCV, "0" ),
+          CvParam( "MS:1001323", "mascot:UseUnigeneClustering", psiCV, "false" ),
+          CvParam( "MS:1001324", "mascot:IncludeErrorTolerantMatches", psiCV, "1" ),
+          CvParam( "MS:1001325", "mascot:ShowDecoyMatches", psiCV, "0" )
+        )
+      )
+    )
+    
+    pdp
+  }
+  
+  protected def _buildProlineProteinDetectionProtocol(): ProteinDetectionProtocol = {
+    
+    val pdp = new ProteinDetectionProtocol()
+    pdp.setId(protDetectProtoId)
+    pdp.setAnalysisSoftware(mzidSearchEngine)
+    pdp.setThreshold(ParamList(List(CvParam("MS:1001494","no threshold",psiCV))))
+    
+    pdp.setAnalysisParams(
+      ParamList(
+        List(
+          UserParam( "expected_peptides_fdr", "5.0","xsd:float" ),
+          UserParam( "expected_protein_sets_fdr", "1.0","xsd:float" )
+        )
+      )
+    )
+    
+    pdp
   }
   
   protected def _buildInputs(): Inputs = {
@@ -1010,7 +946,7 @@ class MzIdExporter(
     
     // FIXME: retrieve the right file format
     val sourcefileFormat = new FileFormat()
-    sourcefileFormat.setCvParam(makeCvParam("MS:1001199", "Mascot DAT file", psiCV))
+    sourcefileFormat.setCvParam(CvParam("MS:1001199", "Mascot DAT file", psiCV))
     sourceFile.setFileFormat(sourcefileFormat)
     
     inputs.getSourceFile().add(sourceFile)
@@ -1023,13 +959,13 @@ class MzIdExporter(
     
     // FIXME: retrieve the right file format
     val specFileFormat = new FileFormat()
-    specFileFormat.setCvParam(makeCvParam("MS:1001062", "Mascot MGF file", psiCV))
+    specFileFormat.setCvParam(CvParam("MS:1001062", "Mascot MGF file", psiCV))
     specData.setFileFormat(specFileFormat)
     
     // FIXME: retrieve the right format
     val specIDFormat = new SpectrumIDFormat()
     specIDFormat.setCvParam(
-      makeCvParam("MS:1000774", "multiple peak list nativeID format", psiCV)
+      CvParam("MS:1000774", "multiple peak list nativeID format", psiCV)
     )
     specData.setSpectrumIDFormat(specIDFormat)
     
@@ -1039,22 +975,15 @@ class MzIdExporter(
   }
   
   protected def _buildFragmentationTable(): FragmentationTable = {
-    //val fragTable = new FragmentationTable()
-    val xmlStr = """
-    <FragmentationTable>
-      <Measure id="m_mz">
-        <cvParam cvRef="PSI-MS" accession="MS:1001225" name="product ion m/z"/>
-      </Measure>
-      <Measure id="m_intensity">
-        <cvParam cvRef="PSI-MS" accession="MS:1001226" name="product ion intensity"/>
-      </Measure>
-      <Measure id="m_error">
-        <cvParam cvRef="PSI-MS" accession="MS:1001227" name="product ion m/z error"
-          unitAccession="MS:1000040" unitName="m/z" unitCvRef="PSI-MS"/>
-      </Measure>
-    </FragmentationTable>"""
-      
-    MzIdExporter.unmarshallXmlString(classOf[FragmentationTable], xmlStr)
+
+    FragmentationTable(
+      List(
+        Measure("m_mz", List(CvParam("MS:1001225","product ion m/z",psiCV)) ),
+        Measure("m_intensity", List(CvParam("MS:1001226","product ion intensity",psiCV)) ),
+        Measure("m_error", List(CvParam("MS:1001227","product ion m/z error",psiCV,"MS:1000040","m/z")) )
+      )
+    )
+    
   }
 
   
