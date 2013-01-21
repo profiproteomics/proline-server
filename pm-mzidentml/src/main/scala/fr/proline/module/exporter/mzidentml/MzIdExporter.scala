@@ -151,11 +151,11 @@ class MzIdExporter(
     sd.setDatabaseName( makeUserParamGroup(seqDb.name) )
     sd.setNumDatabaseSequences(seqDb.sequencesCount)
     //sd.setNumResidues(value)
-    seqDb.releaseDate.foreach( relDate => {
-      val releaseDateCal = java.util.Calendar.getInstance()
-      releaseDateCal.setTime(relDate)
-      sd.setReleaseDate(releaseDateCal)
-    })
+    
+    val releaseDateCal = java.util.Calendar.getInstance()
+    releaseDateCal.setTime(seqDb.releaseDate)
+    sd.setReleaseDate(releaseDateCal)
+    
     sd.setVersion(seqDb.version)
     //sd.setExternalFormatDocumentation(value)
     sd.setFileFormat(fileFormat)
