@@ -1,0 +1,263 @@
+# Text between # and EOL is a comment.
+# Each section starts with a title: line
+# Each section ends with an asterisk
+# Each instrument can have one or more of the 
+# following fragment ion / rule keys: 
+# 1  # singly charged 
+# 2  # doubly charged if precursor 2+ or higher
+#      (not internal or immonium) 
+# 3  # doubly charged if precursor 3+ or higher
+#      (not internal or immonium) 
+# 4  # immonium
+# 5  # a series
+# 6  # a - NH3 if a significant and fragment includes RKNQ
+# 7  # a - H2O if a significant and fragment includes STED
+# 8  # b series
+# 9  # b - NH3 if b significant and fragment includes RKNQ
+# 10 # b - H2O if b significant and fragment includes STED
+# 11 # c series
+# 12 # x series
+# 13 # y series
+# 14 # y - NH3 if y significant and fragment includes RKNQ
+# 15 # y - H2O if y significant and fragment includes STED
+# 16 # z series
+# 17 # internal yb < 700 Da
+# 18 # internal ya < 700 Da
+# 19 # y or y++ must be significant
+# 20 # y or y++ must be highest scoring series
+# 21 # z+1 series
+# 22 # d and d' series
+# 23 # v series
+# 24 # w and w' series
+# 25 # z+2 series
+title:Default
+# for backward compatibility when no instrument specified
+1  # singly charged fragments
+2  # doubly charged fragments if precursor doubly charged or higher (not internal or immonium)
+5  # a series
+6  # a - NH3 if a significant and fragment includes RKNQ
+8  # b series
+9  # b - NH3 if b significant and fragment includes RKNQ
+13 # y series
+14 # y - NH3 if y significant and fragment includes RKNQ
+minInternalMass 0.0
+maxInternalMass 700.0
+*
+title:ESI-QUAD-TOF
+# Q-TOF, Q-Star
+1  # singly charged fragments
+2  # doubly charged fragments if precursor doubly charged or higher (not internal or immonium)
+8  # b series
+9  # b - NH3 if b significant and fragment includes RKNQ
+10 # b - H2O if b significant and fragment includes STED
+13 # y series
+14 # y - NH3 if y significant and fragment includes RKNQ
+15 # y - H2O if y significant and fragment includes STED
+minInternalMass 0.0
+maxInternalMass 700.0
+*
+title:MALDI-TOF-PSD
+1  # singly charged fragments
+4  # immonium
+5  # a series
+6  # a - NH3 if a significant and fragment includes RKNQ
+7  # a - H2O if a significant and fragment includes STED
+8  # b series
+9  # b - NH3 if b significant and fragment includes RKNQ
+10 # b - H2O if b significant and fragment includes STED
+13 # y series
+minInternalMass 0.0
+maxInternalMass 700.0
+*
+title:ESI-TRAP
+1  # singly charged fragments
+2  # doubly charged fragments if precursor doubly charged or higher (not internal or immonium)
+8  # b series
+9  # b - NH3 if b significant and fragment includes RKNQ
+10 # b - H2O if b significant and fragment includes STED
+13 # y series
+14 # y - NH3 if y significant and fragment includes RKNQ
+15 # y - H2O if y significant and fragment includes STED
+minInternalMass 0.0
+maxInternalMass 700.0
+*
+title:ESI-QUAD
+1  # singly charged fragments
+2  # doubly charged fragments if precursor doubly charged or higher (not internal or immonium)
+8  # b series
+9  # b - NH3 if b significant and fragment includes RKNQ
+10 # b - H2O if b significant and fragment includes STED
+13 # y series
+14 # y - NH3 if y significant and fragment includes RKNQ
+15 # y - H2O if y significant and fragment includes STED
+minInternalMass 0.0
+maxInternalMass 700.0
+*
+title:ESI-FTICR
+1  # singly charged fragments
+2  # doubly charged fragments if precursor doubly charged or higher (not internal or immonium)
+8  # b series
+9  # b - NH3 if b significant and fragment includes RKNQ
+10 # b - H2O if b significant and fragment includes STED
+13 # y series
+14 # y - NH3 if y significant and fragment includes RKNQ
+15 # y - H2O if y significant and fragment includes STED
+minInternalMass 0.0
+maxInternalMass 700.0
+*
+title:MALDI-TOF-TOF
+1  # singly charged fragments
+4  # immonium
+5  # a series
+6  # a - NH3 if a significant and fragment includes RKNQ
+7  # a - H2O if a significant and fragment includes STED
+8  # b series
+9  # b - NH3 if b significant and fragment includes RKNQ
+10 # b - H2O if b significant and fragment includes STED
+13 # y series
+14 # y - NH3 if y significant and fragment includes RKNQ
+15 # y - H2O if y significant and fragment includes STED
+17 # internal yb < 700 Da
+18 # internal ya < 700 Da
+22 # d and d' series
+23 # v series
+24 # w and w' series
+minInternalMass 0.0
+maxInternalMass 700.0
+*
+title:ESI-4SECTOR
+1  # singly charged fragments
+2  # doubly charged fragments if precursor doubly charged or higher (not internal or immonium)
+4  # immonium
+5  # a series
+8  # b series
+9  # b - NH3 if b significant and fragment includes RKNQ
+10 # b - H2O if b significant and fragment includes STED
+13 # y series
+16 # z series
+17 # internal yb < 700 Da
+18 # internal ya < 700 Da
+minInternalMass 0.0
+maxInternalMass 700.0
+*
+title:FTMS-ECD
+1  # singly charged fragments
+2  # doubly charged fragments if precursor doubly charged or higher (not internal or immonium)
+11 # c series
+13 # y series
+21 # z+1 series
+25 # z+2 series
+minInternalMass 0.0
+maxInternalMass 700.0
+*
+title:ETD-TRAP
+1  # singly charged fragments
+2  # doubly charged fragments if precursor doubly charged or higher (not internal or immonium)
+11 # c series
+13 # y series
+21 # z+1 series
+25 # z+2 series
+minInternalMass 0.0
+maxInternalMass 700.0
+*
+title:MALDI-QUAD-TOF
+1  # singly charged fragments
+2  # doubly charged fragments if precursor doubly charged or higher (not internal or immonium)
+4  # immonium
+8  # b series
+9  # b - NH3 if b significant and fragment includes RKNQ
+10 # b - H2O if b significant and fragment includes STED
+13 # y series
+14 # y - NH3 if y significant and fragment includes RKNQ
+15 # y - H2O if y significant and fragment includes STED
+17 # internal yb < 700 Da
+18 # internal ya < 700 Da
+minInternalMass 0.0
+maxInternalMass 700.0
+*
+title:MALDI-QIT-TOF
+1  # singly charged fragments
+4  # immonium
+5  # a series
+6  # a - NH3 if a significant and fragment includes RKNQ
+7  # a - H2O if a significant and fragment includes STED
+8  # b series
+9  # b - NH3 if b significant and fragment includes RKNQ
+10 # b - H2O if b significant and fragment includes STED
+13 # y series
+14 # y - NH3 if y significant and fragment includes RKNQ
+15 # y - H2O if y significant and fragment includes STED
+17 # internal yb < 700 Da
+18 # internal ya < 700 Da
+minInternalMass 0.0
+maxInternalMass 700.0
+*
+title:MALDI-ISD
+1 # singly charged fragments
+5 # a series
+11 # c series
+13 # y series
+25 # z+2 series
+minInternalMass 0.0
+maxInternalMass 0.0
+*
+title:CID+ETD
+1 # singly charged fragments
+2 # doubly charged fragments if precursor doubly charged or higher (not internal or immonium)
+8 # b series
+9 # b - NH3 if b significant and fragment includes RKNQ
+10 # b - H2O if b significant and fragment includes STED
+11 # c series
+13 # y series
+14 # y - NH3 if y significant and fragment includes RKNQ
+15 # y - H2O if y significant and fragment includes STED
+21 # z+1 series
+24 # w and w' series
+25 # z+2 series
+minInternalMass 0.0
+maxInternalMass 700.0
+*
+# title:ALL
+# 1  # singly charged
+# 2  # doubly charged if precursor 2+ or higher
+# 4  # immonium
+# 5  # a series
+# 6  # a - NH3 if a significant and fragment includes RKNQ
+# 7  # a - H2O if a significant and fragment includes STED
+# 8  # b series
+# 9  # b - NH3 if b significant and fragment includes RKNQ
+# 10 # b - H2O if b significant and fragment includes STED
+# 11 # c series
+# 12 # x series
+# 13 # y series
+# 14 # y - NH3 if y significant and fragment includes RKNQ
+# 15 # y - H2O if y significant and fragment includes STED
+# 16 # z series
+# 17 # internal yb < 700 Da
+# 18 # internal ya < 700 Da
+# 21 # z+1 series
+# 22 # d and d' series
+# 23 # v series
+# 24 # w and w' series
+# 25 # z+2 series
+# minInternalMass 0
+# maxInternalMass 700
+# *
+title:ESI FTMS HCD
+1 # singly charged fragments
+2 # doubly charged fragments if precursor doubly charged or higher (not internal or immonium)
+4 # immonium
+5 # a series
+6 # a - NH3 if a significant and fragment includes RKNQ
+7 # a - H2O if a significant and fragment includes STED
+8 # b series
+9 # b - NH3 if b significant and fragment includes RKNQ
+10 # b - H2O if b significant and fragment includes STED
+13 # y series
+14 # y - NH3 if y significant and fragment includes RKNQ
+15 # y - H2O if y significant and fragment includes STED
+17 # internal yb < 700 Da
+18 # internal ya < 700 Da
+minInternalMass 0.0
+maxInternalMass 700.0
+*
