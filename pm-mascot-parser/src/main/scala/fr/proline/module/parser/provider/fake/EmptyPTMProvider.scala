@@ -3,14 +3,14 @@ package fr.proline.module.parser.provider.fake
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
-import fr.proline.repository.DatabaseContext
+
 
 /**
  * Return only no value (Option.empty) 
  */
 object EmptyPTMProvider extends IPTMProvider {
   
-  val psDbCtx: DatabaseContext = null
+  val psDbCtx = null
   
   def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Int]): Array[Option[PtmDefinition]] = {
   	val retArray =  new Array[Option[PtmDefinition]](ptmDefIds.length)

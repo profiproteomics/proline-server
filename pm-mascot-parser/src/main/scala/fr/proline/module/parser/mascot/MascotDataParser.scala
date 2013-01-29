@@ -3,19 +3,17 @@ package fr.proline.module.parser.mascot
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.core.om.builder.{PeptideBuilder,PtmDefinitionBuilder}
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.{IPTMProvider,IPeptideProvider,IProteinProvider}
-import fr.proline.repository.DatabaseContext
-
 import matrix_science.msparser.{ms_mascotresfile,ms_peptide,ms_peptidesummary,vectori,VectorString}
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 
 class MascotDataParser( val pepSummary: ms_peptidesummary,
                         val mascotResFile:ms_mascotresfile,
                         val searchSettings:SearchSettings,
                         val msQueryByInitialId: Map[Int,MsQuery],
-                        val entityProviders: EntityProviders,
+                        val parserContext: ProviderDecoratedExecutionContext,
                         val isDecoy: Boolean ) extends Logging {
   
   private var pepByUniqueKey:HashMap[String, Peptide] = null
@@ -57,9 +55,9 @@ class MascotDataParser( val pepSummary: ms_peptidesummary,
   def parseMatches(rsId:Int): Boolean = {
        
     //Get Necessary providers : for peptide, protein and ptms
-    var pepProvider = entityProviders.peptideProvider
-    var ptmProvider = entityProviders.ptmProvider
-    var protProvider = entityProviders.proteinProvider
+    var pepProvider = parserContext.getProvider(classOf[IPeptideProvider])
+    var ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
+    var protProvider = parserContext.getProvider(classOf[IProteinProvider])
 
 	  // parsed data
     val bestPepMatchByPepKey = new HashMap[String, PeptideMatch]()

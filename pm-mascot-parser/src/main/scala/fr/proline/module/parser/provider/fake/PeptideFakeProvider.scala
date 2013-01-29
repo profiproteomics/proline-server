@@ -5,11 +5,11 @@ import scala.collection.Seq
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.repository.DatabaseContext
+
 
 object PeptideFakeProvider extends IPeptideProvider {
   
-  val psDbCtx: DatabaseContext = null
+  val psDbCtx = null
 
   var pepByID:HashMap[Int, Peptide] = new HashMap[Int, Peptide]()
   var pepBySeqPtm:HashMap[String, Peptide] = new HashMap[String, Peptide]()

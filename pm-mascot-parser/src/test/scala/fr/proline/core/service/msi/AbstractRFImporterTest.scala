@@ -1,85 +1,86 @@
 package fr.proline.core.service.msi
 
 import java.io.File
-import org.junit.{After,AfterClass, Assert, Test, Before,BeforeClass}
+import org.junit.{ After, AfterClass, Assert, Test, Before, BeforeClass }
 import com.weiglewilczek.slf4s.Logging
 import fr.proline.core.dal._
 import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.provider.msi.impl.{SQLPeptideProvider, SQLPTMProvider, SQLResultSetProvider, ORMSeqDatabaseProvider, ORMResultSetProvider, ORMProteinProvider, ORMPeptideProvider, ORMPTMProvider}
-import fr.proline.core.om.provider.msi.{ProvidersFactory, IResultSetProvider}
+import fr.proline.core.om.provider.msi.impl.{ SQLPeptideProvider, SQLPTMProvider, SQLResultSetProvider, ORMSeqDatabaseProvider, ORMResultSetProvider, ORMProteinProvider, ORMPeptideProvider, ORMPTMProvider }
 import fr.proline.core.om.utils.AbstractMultipleDBTestCase
-import fr.proline.core.om.storer.msi.impl.{StorerContext,StorerContextBuilder}
 import fr.proline.repository.DriverType
-import fr.proline.repository.DatabaseContext
+import fr.proline.context.IExecutionContext
+import fr.proline.context.ContextFactory
+import fr.proline.context.BasicExecutionContext
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.provider.msi.IPeptideProvider
+import fr.proline.core.om.provider.msi.IResultSetProvider
+import fr.proline.core.om.provider.msi.IPTMProvider
 
 // Note: the name of the trait ends with an underscore to indicate it must not be tested directly
 trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
 
   protected val driverType: DriverType
   protected var _datFileName: String = "/F047876.dat"
-  protected val thisProviderKey = "MSParser"
-  
+
   protected def beforeAllTests() {}
   protected def afterAllTests() {}
-  
+
   this.beforeAllTests()
 
-  @throws( classOf[Exception] )
+  @throws(classOf[Exception])
   def setUp() = {
-    
-    logger.info( "Initializing Dbs" )
-    super.initDBsDBManagement( driverType )
+
+    logger.info("Initializing Dbs")
+    super.initDBsDBManagement(driverType)
 
     //Load Data
-    psDBTestCase.loadDataSet( "/fr/proline/module/parser/mascot/Unimod_Dataset.xml" )  
-    pdiDBTestCase.loadDataSet( "/fr/proline/module/parser/mascot/Proteins_Dataset.xml" )
-    msiDBTestCase.loadDataSet( "/fr/proline/module/parser/mascot/Init_Dataset.xml" )
-    
-    logger.info( "PS, PDI and MSI dbs succesfully initialized" )
+    psDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/Unimod_Dataset.xml")
+    pdiDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/Proteins_Dataset.xml")
+    msiDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/Init_Dataset.xml")
+
+    logger.info("PS, PDI and MSI dbs succesfully initialized")
   }
-  
-  @throws( classOf[Exception] )
+
+  @throws(classOf[Exception])
   def tearDown() {
     super.closeDbs
   }
-  
-  protected def runServiceForTest( stContext: StorerContext, rsProvider: IResultSetProvider ): Unit
+
+  protected def runServiceForTest(executionContext: IExecutionContext, rsProvider: IResultSetProvider): Unit
 
   //@Test
   def runRFIwithSQLPepProviders() = {
-    
+
     val msiDbConnector = msiDBTestCase.getConnector
-    
-    val udsDbCtx = StorerContextBuilder.buildDbContext(dbManagerForTest.getUdsDbConnector,useJpa = false)
-    val pdiDbCtx = StorerContextBuilder.buildDbContext(dbManagerForTest.getPdiDbConnector,useJpa = true)
-    val psDbCtx = StorerContextBuilder.buildDbContext(dbManagerForTest.getPsDbConnector,useJpa = false)
-    val msiDbCtx = StorerContextBuilder.buildDbContext(msiDbConnector,useJpa = false)
-    
-    val stContext = new StorerContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx)
+
+    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
+    val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
+    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
+    val msiDbCtx = ContextFactory.buildDbConnectionContext(msiDbConnector, false)
+
+    val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
+
+    val parserContext = new ProviderDecoratedExecutionContext(executionContext)
 
     //val pdiEM = stContext.pdiEm
-    val psEzDBC = ProlineEzDBC( psDbCtx )
-    
-    ProvidersFactory.registerPeptideProvider( thisProviderKey, new SQLPeptideProvider( psDbCtx, psEzDBC ) )
-    ProvidersFactory.registerPTMProvider( thisProviderKey, new SQLPTMProvider( psDbCtx, psEzDBC ) )
-    ProvidersFactory.registerProteinProvider( thisProviderKey, new ORMProteinProvider(pdiDbCtx) )
-    ProvidersFactory.registerSeqDatabaseProvider( thisProviderKey, new ORMSeqDatabaseProvider(pdiDbCtx) )
+    val psEzDBC = ProlineEzDBC(psDbCtx)
 
-    val msiEzDBC = ProlineEzDBC( msiDbCtx ) // new SQLQueryHelper(stContext.msiConnector).ezDBC
-    val udsSqlCtx = new SQLContext( udsDbCtx, ProlineEzDBC( udsDbCtx ) )
-    val rsProvider = new SQLResultSetProvider( msiDbCtx, msiEzDBC, psDbCtx, psEzDBC, udsSqlCtx )
-    
-    this.runServiceForTest( stContext, rsProvider )
-    
-    stContext.closeAll()
+    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx, psEzDBC))
+    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx, psEzDBC))
+
+    val msiEzDBC = ProlineEzDBC(msiDbCtx) // new SQLQueryHelper(stContext.msiConnector).ezDBC
+    val udsSqlCtx = new SQLContext(udsDbCtx, ProlineEzDBC(udsDbCtx))
+    val rsProvider = new SQLResultSetProvider(msiDbCtx, msiEzDBC, psDbCtx, psEzDBC, udsSqlCtx)
+
+    this.runServiceForTest(parserContext, rsProvider)
+
+    executionContext.closeAll()
   }
-  
-//    @Test
+
+  //    @Test
   def runRFIwithJPA() = {
-    
-    val msiDbConnector = msiDBTestCase.getConnector
-    val stContext = StorerContextBuilder(dbManagerForTest, msiDbConnector,useJpa = true)
-    
+    val executionContext = ContextFactory.getExecutionContextInstance(dsConnectorFactoryForTest, 1, true) // Full JPA
+
     /*val udsDbCtx = StorerContextBuilder.buildDbContext(dbManagerForTest.getUdsDbConnector,useJpa = false)
     val pdiDbCtx = StorerContextBuilder.buildDbContext(dbManagerForTest.getPdiDbConnector,useJpa = true)
     val psDbCtx = StorerContextBuilder.buildDbContext(dbManagerForTest.getPsDbConnector,useJpa = true)
@@ -88,17 +89,13 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
 
     //val psEM = stContext.psDbContext.getEntityManager()
     //val pdiEM = stContext.pdiDbContext.getEntityManager()
-    ProvidersFactory.registerPeptideProvider( thisProviderKey, new ORMPeptideProvider(stContext.psDbContext) )
-    ProvidersFactory.registerPTMProvider( thisProviderKey, new ORMPTMProvider(stContext.psDbContext) )
-    ProvidersFactory.registerProteinProvider( thisProviderKey, new ORMProteinProvider(stContext.pdiDbContext) )
-    ProvidersFactory.registerSeqDatabaseProvider( thisProviderKey, new ORMSeqDatabaseProvider(stContext.pdiDbContext) )
 
-    val rsProvider = new ORMResultSetProvider( stContext.msiDbContext, stContext.psDbContext, stContext.pdiDbContext )
-    
-    this.runServiceForTest( stContext, rsProvider )
-    
-    stContext.closeAll()
-    
+    val rsProvider = new ORMResultSetProvider(executionContext.getMSIDbConnectionContext, executionContext.getPSDbConnectionContext, executionContext.getPDIDbConnectionContext)
+
+    this.runServiceForTest(executionContext, rsProvider)
+
+    executionContext.closeAll()
+
     this.afterAllTests()
   }
 

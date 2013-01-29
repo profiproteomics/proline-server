@@ -8,7 +8,7 @@ import org.junit.Before
 import org.junit.Test
 import com.weiglewilczek.slf4s.Logger
 import fr.proline.core.om.model.msi.PtmDefinition
-import fr.proline.core.om.provider.msi.ProvidersFactory
+
 import fr.proline.module.parser.provider.fake.EmptyPTMProvider
 import fr.proline.module.parser.provider.fake.PeptideFakeProvider
 import fr.proline.module.parser.provider.fake.PTMFakeProvider
@@ -21,17 +21,15 @@ class MascotPTMUtilsTest {
 	
 	@Before
 	def init(){	  	  
-	  logger.debug("Start Logging MascotPTMUtilsTest")
-	  
-	  ProvidersFactory.registerPeptideProvider("MSParser", PeptideFakeProvider)
-	  ProvidersFactory.registerPTMProvider("MSParser", PTMFakeProvider)
+	  logger.debug("Start Logging MascotPTMUtilsTest")	  
+	 
 	  MascotPTMUtils.ptmDefsByMascotModName.clear()
 	}
 	
 	@Test
   def testparseSimplePTM() = {	
 	  val ptmToParse = "Oxidation (M)" 
-	  val ptmDefs = MascotPTMUtils.mascotModToPTMDefinitions(ProvidersFactory.getPTMProvider("MSParser", false).get, ptmToParse)
+	  val ptmDefs = MascotPTMUtils.mascotModToPTMDefinitions(PTMFakeProvider, ptmToParse)
 	  assertNotNull(ptmDefs)
 	  assertEquals(1,ptmDefs.length)
 	  

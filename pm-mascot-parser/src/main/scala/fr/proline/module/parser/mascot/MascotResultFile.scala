@@ -6,13 +6,11 @@ import java.net.URLDecoder
 import scala.Array.canBuildFrom
 import scala.collection.mutable.{HashMap, ArrayBuffer}
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.core.om.model.msi._
-import fr.proline.core.om.provider.msi.{ProvidersFactory, ISeqDatabaseProvider, IProteinProvider, IPeptideProvider, IPTMProvider}
-//import fr.proline.core.om.provider.msi.impl.ResultFileProviderContext
-import fr.proline.repository.DatabaseContext
-
+import fr.proline.core.om.provider.msi.{ISeqDatabaseProvider, IProteinProvider, IPeptideProvider, IPTMProvider}
+import fr.proline.context.DatabaseConnectionContext
 import matrix_science.msparser.{ms_searchparams, ms_peptidesummary, ms_mascotresults, ms_mascotresfile, ms_inputquery}
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 
 object MascotScores extends Enumeration {
   type ScoreType = Value
@@ -60,63 +58,19 @@ object MascotResultFile extends Logging {
 
 }
 
-// TODO: put in the ResultFileProviderContext class ?
-class EntityProviders( val providerKey: String ) extends Logging {
-  
-  //val providerCtx: ResultFileProviderContext
-  //val providerKey = providerCtx.providerKey
-  
-  lazy val peptideProvider: IPeptideProvider = {
-    if (ProvidersFactory.getPeptideProvider(providerKey, true) == None) {
-      throw new Exception("No Peptide Provider specified")
-    }
-    
-    val pepProvider = ProvidersFactory.getPeptideProvider(providerKey, true).get
-    logger.debug("parse Mascot using PeptideProvider " + pepProvider.getClass().getName())
-    pepProvider
-  }
 
-  lazy val ptmProvider: IPTMProvider = {
-    val ptmProviderAsOpt = ProvidersFactory.getPTMProvider(providerKey, true)
-    if ( ptmProviderAsOpt == None)
-      throw new Exception("No PTM Provider specified")
-    
-    logger.debug("parse Mascot using PTMProvider " + ptmProviderAsOpt.get.getClass().getName())
-    ptmProviderAsOpt.get
-  }
-
-  lazy val proteinProvider: IProteinProvider = {
-    if (ProvidersFactory.getProteinProvider(providerKey, true) == None)
-      throw new Exception("No Protein Provider specified")
-    
-    val protProvider = ProvidersFactory.getProteinProvider(providerKey, true).get
-    logger.debug("parse Mascot using ProteinProvider " + protProvider.getClass().getName())
-    protProvider
-  }
-  
-  lazy val seqDbProvider: ISeqDatabaseProvider = {
-    if (ProvidersFactory.getSeqDatabaseProvider(providerKey, true) == None)
-      throw new Exception("No SeqDatabase Provider specified")
-
-    val seqDbProvider = ProvidersFactory.getSeqDatabaseProvider(providerKey, true).get
-    logger.debug("parse Mascot using SeqDatabaseProvider " + seqDbProvider.getClass().getName())
-    seqDbProvider
-  }
-}
 
 /**
  * Create a MascotResultFile to parse specified Mascot identification result file.
  * mascot parse parameters are specified in parseProperties 
  * 
  * @param fileLocation :  Mascot identification result file to parse
- * @param providerKey key to use to get correct data provider from provider factory
  * @param importProperties : parameters to use for parsing. Allowed values are those specified by MascotParseParams. Should not be null. 
  * Empty Map could be specified if default value should be used.
  */
 class MascotResultFile( val fileLocation: File,
                         val importProperties: Map[String,Any],
-                        val providerKey: String
-                        //val providerCtx: ResultFileProviderContext
+                        val parserContext: ProviderDecoratedExecutionContext
                         ) extends IResultFile with Logging {
   
   // Requirements
@@ -130,10 +84,7 @@ class MascotResultFile( val fileLocation: File,
   logger.info("open Mascot dat file " + fileLocation.getAbsoluteFile())
   
   // Load the matrix science DLL
-  MascotResultFile.initMascotLib()
-  
-  // Instantiate entity providers
-  private val entityProviders = new EntityProviders( providerKey )
+  MascotResultFile.initMascotLib()  
   
   // Create Mascot ms_mascotresfile and ms_peptidesummary from specified file name 
   private val mascotResFile: ms_mascotresfile = new ms_mascotresfile(fileLocation.getAbsolutePath(), 0, "")
@@ -220,7 +171,7 @@ class MascotResultFile( val fileLocation: File,
   
   def getPtmDefsByModName( mascotModsAsStr:String ): HashMap[String,Array[PtmDefinition]] = {
     
-    val ptmProvider = this.entityProviders.ptmProvider
+    val ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
     val ptmDefsByModName = new HashMap[String,Array[PtmDefinition]]()
     
     if ( mascotModsAsStr != null && !mascotModsAsStr.isEmpty ) {
@@ -241,7 +192,7 @@ class MascotResultFile( val fileLocation: File,
     // Get MSISearch information : Retrieve peak list, search parameters...
     logger.info("Parse Search Settings information ...")
     
-    val ptmProvider = this.entityProviders.ptmProvider
+    val ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
     val searchParams = this.mascotSearchParams
 
     val nbrSearchedQueries = mascotResFile.getNumSeqsAfterTax(0) //Get num of seq in all dbs after taxonomy filter
@@ -255,7 +206,7 @@ class MascotResultFile( val fileLocation: File,
       var dbName = searchParams.getDB(dbIndex)
       var filePath = mascotResFile.getFastaPath(dbIndex)
      
-      val seqDbProvider = this.entityProviders.seqDbProvider
+      val seqDbProvider = parserContext.getProvider(classOf[ISeqDatabaseProvider])
       var usedSeqSDb = seqDbProvider.getSeqDatabase(dbName,filePath)
       
       logger.debug("Seq DB "+dbIndex+ ": "+dbName+", "+filePath  +" exist ? "+usedSeqSDb)
@@ -422,11 +373,11 @@ class MascotResultFile( val fileLocation: File,
     if ( wantDecoy ) logger.info("Load decoy identification results...")
     else  logger.info("Load target identification results...")
     
-    var dataParser = new MascotDataParser( pepSummary,
+    var dataParser: MascotDataParser = new MascotDataParser( pepSummary,
                                            this.mascotResFile,
                                            this.msiSearch.searchSettings,
                                            this.msQueryByInitialId,
-                                           this.entityProviders,
+                                           parserContext,
                                            wantDecoy
                                           )
 

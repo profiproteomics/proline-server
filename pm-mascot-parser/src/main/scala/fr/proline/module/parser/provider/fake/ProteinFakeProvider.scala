@@ -4,14 +4,14 @@ import scala.collection.mutable.HashMap
 import fr.proline.core.om.model.msi.Protein
 import fr.proline.core.om.model.msi.SeqDatabase
 import fr.proline.core.om.provider.msi.IProteinProvider
-import fr.proline.repository.DatabaseContext
+
 
 /**
  * Return only no value (Option.empty) 
  */
 object ProteinFakeProvider extends IProteinProvider {
   
-  val pdiDbCtx: DatabaseContext = null
+  val pdiDbCtx = null
   
   private var protByAcc:HashMap[String, Protein] = new HashMap[String, Protein]()
   

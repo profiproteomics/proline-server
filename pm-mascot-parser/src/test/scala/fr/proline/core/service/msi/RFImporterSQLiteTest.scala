@@ -9,6 +9,7 @@ import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.repository.DriverType
 import fr.proline.core.dal.ProlineEzDBC
+import fr.proline.context.IExecutionContext
 
 @AfterClass
 @BeforeClass
@@ -62,7 +63,7 @@ class RFImporterSQLiteTest extends AbstractRFImporterTest_ {
     logger.info( "UDS db succesfully initialized" )
     
     // Remove existing external DB connections
-    import fr.proline.core.orm.util.DatabaseManager
+   
     //val udsSqlHelper = new SQLQueryHelper( dbManagerForTest.asInstanceOf[DatabaseManager].getMsiDbConnector(1) ).ezDBC
     //sys.error( "" + udsSqlHelper.selectInt("select count(*) from scoring") )
     
@@ -85,12 +86,12 @@ class RFImporterSQLiteTest extends AbstractRFImporterTest_ {
     //super.runRFIwithJPA()
   }
   
-  protected def runServiceForTest( stContext: StorerContext, rsProvider: IResultSetProvider  ) = {
+  protected def runServiceForTest( executionContext: IExecutionContext, rsProvider: IResultSetProvider  ) = {
     
     //val msiDbConnector2 = msiDBTestCase.getConnector
     //val msiSqlHelper2 = new SQLQueryHelper(msiDbConnector2)
     
-    Assert.assertNotNull( stContext )
+    Assert.assertNotNull( executionContext )
     
     logger.debug( " --- Get File " + _datFileName )
     var datFile: File = new File( RFImporterSQLiteTest.this.getClass.getResource( _datFileName ).toURI )
@@ -100,10 +101,9 @@ class RFImporterSQLiteTest extends AbstractRFImporterTest_ {
     propertiedBuilder += ( "subset.threshold" -> 0.5 )
     
     val importer = new ResultFileImporterSQLStorer(
-      storerContext = stContext,
+      executionContext,
       resultIdentFile = datFile,
       fileType = "MascotMSParser",
-      providerKey = thisProviderKey,
       instrumentConfigId = 1,
       peaklistSoftwareId = 1,// TODO : provide the right value
       importerProperties = Map.empty,      

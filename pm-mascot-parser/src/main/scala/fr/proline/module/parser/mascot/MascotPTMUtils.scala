@@ -13,7 +13,7 @@ import fr.proline.core.om.model.msi.PtmNames
 import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.core.om.model.msi.IonTypes
 import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.repository.DatabaseContext
+
 
 object MascotPTMUtils extends Logging {
   

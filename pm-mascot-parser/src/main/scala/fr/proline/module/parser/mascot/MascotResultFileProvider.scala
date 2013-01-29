@@ -1,17 +1,16 @@
 package fr.proline.module.parser.mascot
 
 import java.io.File
-
 import fr.proline.core.om.model.msi.IResultFile
 import fr.proline.core.om.provider.msi.IResultFileProvider
-//import fr.proline.core.om.provider.msi.impl.ResultFileProviderContext
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 
 class MascotResultFileProvider extends IResultFileProvider {
   
   val fileType: String = "MascotMSParser"
   
-  def getResultFile( fileLocation: File, importProperties: Map[String, Any], providerKey: String ): IResultFile = {
-    new MascotResultFile( fileLocation, importProperties, providerKey )
+  def getResultFile( fileLocation: File, importProperties: Map[String, Any], parserContext: ProviderDecoratedExecutionContext ): IResultFile = {
+    new MascotResultFile( fileLocation, importProperties, parserContext )
   }
   
   val resultFileProperties : Map[String, Class[_]] ={	 

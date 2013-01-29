@@ -5,10 +5,10 @@ import org.junit.{After,AfterClass, Assert, Test, Before,BeforeClass}
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.core.orm.util.DatabaseManager
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.repository.DriverType
 import fr.proline.core.dal.SQLQueryHelper
+import fr.proline.context.IExecutionContext
 
 @Test
 class RFImporterH2Test extends AbstractRFImporterTest_ {
@@ -39,9 +39,9 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
     super.runRFIwithJPA()
   }
 
-  protected def runServiceForTest( stContext: StorerContext, rsProvider: IResultSetProvider  ) = {
+  protected def runServiceForTest( executionContext: IExecutionContext, rsProvider: IResultSetProvider  ) = {
     
-    Assert.assertNotNull( stContext )
+    Assert.assertNotNull( executionContext )
     
     logger.debug( " --- Get File " + _datFileName )
     var datFile: File = new File( RFImporterH2Test.this.getClass.getResource( _datFileName ).toURI )
@@ -51,10 +51,9 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
     propertiedBuilder += ( "subset.threshold" -> 0.5 )
 
     val importer: ResultFileImporterJPAStorer = new ResultFileImporterJPAStorer(
-      stContext,
+      executionContext,
       resultIdentFile = datFile,
-      fileType = "MascotMSParser",
-      providerKey = thisProviderKey,
+      fileType = "MascotMSParser",     
       instrumentConfigId = 1,
       peaklistSoftwareId = 1,// TODO : provide the right value
       importerProperties = Map.empty,

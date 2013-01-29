@@ -2,11 +2,11 @@ package fr.proline.module.parser.provider.fake
 
 import fr.proline.core.om.model.msi.SeqDatabase
 import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
-import fr.proline.repository.DatabaseContext
+
 
 object SeqDbFakeProvider extends ISeqDatabaseProvider {
   
-  val pdiDbCtx: DatabaseContext = null
+  val pdiDbCtx = null
   
   def getSeqDatabasesAsOptions(seqDBIds: Seq[Int]): Array[Option[SeqDatabase]] = { 
 	  var result = new Array[Option[SeqDatabase]](1)
