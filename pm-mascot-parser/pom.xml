@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>fr.proline</groupId>
   <artifactId>PM-MascotParser</artifactId>
-  <version>0.0.4-SNAPSHOT</version>
+  <version>0.0.4</version>
   <name>${project.artifactId}</name>
   <description>Proline Module which parse a Mascot result file and store its result in databases</description>
   <inceptionYear>2012</inceptionYear>
@@ -11,27 +11,9 @@
     <maven.compiler.source>1.6</maven.compiler.source>
     <maven.compiler.target>1.6</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>0.0.5-SNAPSHOT</core.version>
+    <core.version>0.0.5</core.version>
   </properties>
 
-<!--
-  <repositories>
-    <repository>
-      <id>scala-tools.org</id>
-      <name>Scala-Tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
-
-    </repository>
-  </repositories>
-
-  <pluginRepositories>
-    <pluginRepository>
-      <id>scala-tools.org</id>
-      <name>Scala-Tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
-    </pluginRepository>
-  </pluginRepositories>
--->
   <dependencies>
     <dependency>
       <groupId>org.scala-lang</groupId>
@@ -71,7 +53,7 @@
         </exclusion>
       </exclusions>
     </dependency>
-    
+
     <!-- Logging -->
     <dependency>
       <groupId>ch.qos.logback</groupId>
@@ -88,14 +70,14 @@
         <artifactId>slf4s_2.9.1</artifactId>
         <version>1.0.7</version>
     </dependency>
-    
+
     <!--  Commons collection: is it needed ?
     <dependency>
         <groupId>commons-collections</groupId>
         <artifactId>commons-collections</artifactId>
         <version>3.1</version>
     </dependency>-->
-    
+
     <!--  Mascot & BioJava -->
     <dependency>
         <groupId>matrixscience</groupId>
@@ -107,7 +89,7 @@
         <artifactId>biojava</artifactId>
         <version>1.7</version>
     </dependency>
-    
+
     <!-- Proline -->
     <dependency>
         <groupId>fr.proline</groupId>
@@ -138,24 +120,9 @@
         <type>test-jar</type>
         <scope>test</scope>
     </dependency>
-    
+
   </dependencies>
-  <repositories>
-  <repository>
-      <id>scala-tools.org</id>
-      <name>Scala-Tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
-    </repository>
-    <repository>
-         <releases>
-         </releases>
-         <snapshots>
-         </snapshots>
-         <id>proline-repo</id>
-         <name>Proline Repository</name>
-         <url>https://bioproj.extra.cea.fr/redmine/projects/proline-repo/repository/raw/maven2</url>
-    </repository>
-  </repositories>
+
   <build>
     <plugins>
       <plugin>
