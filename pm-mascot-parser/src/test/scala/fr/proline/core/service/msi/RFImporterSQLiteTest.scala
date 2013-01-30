@@ -59,7 +59,7 @@ class RFImporterSQLiteTest extends AbstractRFImporterTest_ {
     
     super.setUp()
     
-    udsDBTestCase.loadDataSet( "/fr/proline/module/parser/mascot/UDS_Simple_Dataset_SQLite.xml" )
+    udsDBTestCase.loadDataSet( "/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml" )
     logger.info( "UDS db succesfully initialized" )
     
     // Remove existing external DB connections
