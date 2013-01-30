@@ -9,7 +9,7 @@ import fr.proline.core.om.provider.msi.impl.ORMSeqDatabaseProvider
 import fr.proline.core.service.msi.ResultFileImporterJPAStorer
 import fr.proline.module.parser.mascot.MascotParseParams
 import fr.proline.core.orm.util.DataStoreConnectorFactory
-import fr.proline.context.ContextFactory
+import fr.proline.core.dal.ContextFactory
 
 object RunResultFileService extends Logging {
 
@@ -59,7 +59,7 @@ object RunResultFileService extends Logging {
 
     val projectId = 2
 
-    val executionContext = ContextFactory.getExecutionContextInstance(dbManager, projectId, true) // Use JPA !
+    val executionContext = ContextFactory.buildExecutionContext(dbManager, projectId, true) // Use JPA !
 
     val importer = new ResultFileImporterJPAStorer(
       executionContext,

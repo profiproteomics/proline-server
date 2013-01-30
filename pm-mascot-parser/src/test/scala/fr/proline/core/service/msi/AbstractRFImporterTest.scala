@@ -9,7 +9,7 @@ import fr.proline.core.om.provider.msi.impl.{ SQLPeptideProvider, SQLPTMProvider
 import fr.proline.core.om.utils.AbstractMultipleDBTestCase
 import fr.proline.repository.DriverType
 import fr.proline.context.IExecutionContext
-import fr.proline.context.ContextFactory
+
 import fr.proline.context.BasicExecutionContext
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPeptideProvider
@@ -50,13 +50,10 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
 
   //@Test
   def runRFIwithSQLPepProviders() = {
-
-    val msiDbConnector = msiDBTestCase.getConnector
-
-    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
+    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false).asInstanceOf[SQLConnectionContext]
     val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
-    val msiDbCtx = ContextFactory.buildDbConnectionContext(msiDbConnector, false)
+    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false).asInstanceOf[SQLConnectionContext]
+    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false).asInstanceOf[SQLConnectionContext]
 
     val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
 
@@ -68,9 +65,7 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
     parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx, psEzDBC))
     parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx, psEzDBC))
 
-    val msiEzDBC = ProlineEzDBC(msiDbCtx) // new SQLQueryHelper(stContext.msiConnector).ezDBC
-    val udsSqlCtx = new SQLContext(udsDbCtx, ProlineEzDBC(udsDbCtx))
-    val rsProvider = new SQLResultSetProvider(msiDbCtx, msiEzDBC, psDbCtx, psEzDBC, udsSqlCtx)
+    val rsProvider = new SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
 
     this.runServiceForTest(parserContext, rsProvider)
 
@@ -79,7 +74,7 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
 
   //    @Test
   def runRFIwithJPA() = {
-    val executionContext = ContextFactory.getExecutionContextInstance(dsConnectorFactoryForTest, 1, true) // Full JPA
+    val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
 
     /*val udsDbCtx = StorerContextBuilder.buildDbContext(dbManagerForTest.getUdsDbConnector,useJpa = false)
     val pdiDbCtx = StorerContextBuilder.buildDbContext(dbManagerForTest.getPdiDbConnector,useJpa = true)
