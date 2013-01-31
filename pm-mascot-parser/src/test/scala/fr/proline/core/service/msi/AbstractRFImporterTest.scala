@@ -1,20 +1,21 @@
 package fr.proline.core.service.msi
 
-import java.io.File
-import org.junit.{ After, AfterClass, Assert, Test, Before, BeforeClass }
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.dal._
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.provider.msi.impl.{ SQLPeptideProvider, SQLPTMProvider, SQLResultSetProvider, ORMSeqDatabaseProvider, ORMResultSetProvider, ORMProteinProvider, ORMPeptideProvider, ORMPTMProvider }
-import fr.proline.core.om.utils.AbstractMultipleDBTestCase
-import fr.proline.repository.DriverType
-import fr.proline.context.IExecutionContext
 
 import fr.proline.context.BasicExecutionContext
+import fr.proline.context.IExecutionContext
+import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.SQLConnectionContext
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.core.om.provider.msi.IPTMProvider
+import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
+import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
+import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
+import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import fr.proline.core.om.utils.AbstractMultipleDBTestCase
+import fr.proline.repository.DriverType
 
 // Note: the name of the trait ends with an underscore to indicate it must not be tested directly
 trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
@@ -59,11 +60,8 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
 
     val parserContext = new ProviderDecoratedExecutionContext(executionContext)
 
-    //val pdiEM = stContext.pdiEm
-    val psEzDBC = ProlineEzDBC(psDbCtx)
-
-    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx, psEzDBC))
-    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx, psEzDBC))
+    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx))
+    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx))
 
     val rsProvider = new SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
 
