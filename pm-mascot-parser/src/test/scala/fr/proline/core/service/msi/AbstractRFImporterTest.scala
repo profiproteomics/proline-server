@@ -1,21 +1,20 @@
 package fr.proline.core.service.msi
 
+import java.io.File
+import org.junit.{ After, AfterClass, Assert, Test, Before, BeforeClass }
 import com.weiglewilczek.slf4s.Logging
-
-import fr.proline.context.BasicExecutionContext
-import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.ContextFactory
-import fr.proline.core.dal.SQLConnectionContext
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
-import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
-import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import fr.proline.core.dal._
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.provider.msi.impl.{ SQLPeptideProvider, SQLPTMProvider, SQLResultSetProvider, ORMSeqDatabaseProvider, ORMResultSetProvider, ORMProteinProvider, ORMPeptideProvider, ORMPTMProvider }
 import fr.proline.core.om.utils.AbstractMultipleDBTestCase
 import fr.proline.repository.DriverType
+import fr.proline.context.IExecutionContext
+
+import fr.proline.context.BasicExecutionContext
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.provider.msi.IPeptideProvider
+import fr.proline.core.om.provider.msi.IResultSetProvider
+import fr.proline.core.om.provider.msi.IPTMProvider
 
 // Note: the name of the trait ends with an underscore to indicate it must not be tested directly
 trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
@@ -47,10 +46,8 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
     super.closeDbs
   }
 
-  protected def runServiceForTest(executionContext: IExecutionContext, rsProvider: IResultSetProvider): Unit
-
   //@Test
-  def runRFIwithSQLPepProviders() = {
+  def buildSQLContext() = {
     val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false).asInstanceOf[SQLConnectionContext]
     val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
     val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false).asInstanceOf[SQLConnectionContext]
@@ -65,31 +62,15 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
 
     val rsProvider = new SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
 
-    this.runServiceForTest(parserContext, rsProvider)
-
-    executionContext.closeAll()
+    (parserContext, rsProvider)
   }
 
   //    @Test
-  def runRFIwithJPA() = {
+  def buildJPAContext() = {
     val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
-
-    /*val udsDbCtx = StorerContextBuilder.buildDbContext(dbManagerForTest.getUdsDbConnector,useJpa = false)
-    val pdiDbCtx = StorerContextBuilder.buildDbContext(dbManagerForTest.getPdiDbConnector,useJpa = true)
-    val psDbCtx = StorerContextBuilder.buildDbContext(dbManagerForTest.getPsDbConnector,useJpa = true)
-    val msiDbCtx = StorerContextBuilder.buildDbContext(msiDbConnector,useJpa = true)    
-    val stContext = new StorerContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx)*/
-
-    //val psEM = stContext.psDbContext.getEntityManager()
-    //val pdiEM = stContext.pdiDbContext.getEntityManager()
-
     val rsProvider = new ORMResultSetProvider(executionContext.getMSIDbConnectionContext, executionContext.getPSDbConnectionContext, executionContext.getPDIDbConnectionContext)
 
-    this.runServiceForTest(executionContext, rsProvider)
-
-    executionContext.closeAll()
-
-    this.afterAllTests()
+    (executionContext, rsProvider)    
   }
 
 }

@@ -9,17 +9,20 @@ import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.repository.DriverType
 import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.context.IExecutionContext
+import fr.proline.core.dal.SQLConnectionContext
+import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import fr.proline.core.dal.ContextFactory
 
 @Test
-class RFImporterH2Test extends AbstractRFImporterTest_ {
+class RFImporterH2CTDTest extends AbstractRFImporterTest_ {
   
   val driverType = DriverType.H2
-  
+    
   @Before
   @throws( classOf[Exception] )
   override def setUp() = {
     super.setUp()
-    _datFileName = "/dat_samples/STR_F122817_Mascot_v2.3.dat"
+    _datFileName = "/dat_samples/STR_F136482_CTD.dat"
     udsDBTestCase.loadDataSet( "/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml" )
     logger.info( "UDS db succesfully initialized" )
   }
@@ -33,88 +36,82 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
   @Test
   def testRFIwithSQL() = {
     val (executionContext, rsProvider) = buildSQLContext()
-        Assert.assertNotNull( executionContext )
-    
+  
     logger.debug( " --- Get File " + _datFileName )
-    var datFile: File = new File( RFImporterH2Test.this.getClass.getResource( _datFileName ).toURI )
+    var datFile: File = new File( RFImporterH2CTDTest.this.getClass.getResource( _datFileName ).toURI )
     
     val propertiedBuilder = Map.newBuilder[String, Any]
     propertiedBuilder += ( "ion.score.cutoff" -> 0.5 )
     propertiedBuilder += ( "subset.threshold" -> 0.5 )
-
-    val importer: ResultFileImporterSQLStorer = new ResultFileImporterSQLStorer(
+    
+    val importer = new ResultFileImporterSQLStorer(
       executionContext,
       resultIdentFile = datFile,
-      fileType = "MascotMSParser",     
+      fileType = "MascotMSParser",
       instrumentConfigId = 1,
       peaklistSoftwareId = 1,// TODO : provide the right value
-      importerProperties = Map.empty,
-      acDecoyRegex = None
+      importerProperties = Map.empty,      
+      acDecoyRegex = Some("""sp\|REV_\S+""".r)
     )
+
 
     logger.debug( " --- run service " )
     val result = importer.runService()
     val id = importer.getTargetResultSetId
-    logger.debug( " --- done " + result + " save with resultID " + id )
+    logger.debug( " --- done " + result + " save with target resultID " + id )
 
     Assert.assertTrue( result )
     Assert.assertNotNull( id )
     Assert.assertTrue( id > 0 )
-
-    //val rsProvider: IResultSetProvider = new ORMResultSetProvider(stContext.msiDbContext,stContext.psDbContext,stContext.pdiDbContext)
 
     val rsBackOp = rsProvider.getResultSet( id )
     Assert.assertTrue( rsBackOp.isDefined )
     val rsBack: ResultSet = rsBackOp.get
     Assert.assertNotNull( rsBack )
 
-    // Other verifs....
-    
     executionContext.closeAll()
+    // Other verifs....
   }
   
   @Test
   def runRFIwithJPA() = {
     val (executionContext, rsProvider) = buildJPAContext()
-    
-    Assert.assertNotNull( executionContext )
-    
+ 
     logger.debug( " --- Get File " + _datFileName )
-    var datFile: File = new File( RFImporterH2Test.this.getClass.getResource( _datFileName ).toURI )
+    var datFile: File = new File( RFImporterH2CTDTest.this.getClass.getResource( _datFileName ).toURI )
     
     val propertiedBuilder = Map.newBuilder[String, Any]
     propertiedBuilder += ( "ion.score.cutoff" -> 0.5 )
     propertiedBuilder += ( "subset.threshold" -> 0.5 )
-
-    val importer: ResultFileImporterJPAStorer = new ResultFileImporterJPAStorer(
+    
+    val importer = new ResultFileImporterJPAStorer(
       executionContext,
       resultIdentFile = datFile,
-      fileType = "MascotMSParser",     
+      fileType = "MascotMSParser",
       instrumentConfigId = 1,
       peaklistSoftwareId = 1,// TODO : provide the right value
-      importerProperties = Map.empty,
-      acDecoyRegex = None
+      importerProperties = Map.empty,      
+      acDecoyRegex = Some("""sp\|REV_\S+""".r)
     )
+
 
     logger.debug( " --- run service " )
     val result = importer.runService()
     val id = importer.getTargetResultSetId
-    logger.debug( " --- done " + result + " save with resultID " + id )
+    logger.debug( " --- done " + result + " save with target resultID " + id )
 
     Assert.assertTrue( result )
     Assert.assertNotNull( id )
     Assert.assertTrue( id > 0 )
 
-    //val rsProvider: IResultSetProvider = new ORMResultSetProvider(stContext.msiDbContext,stContext.psDbContext,stContext.pdiDbContext)
 
     val rsBackOp = rsProvider.getResultSet( id )
     Assert.assertTrue( rsBackOp.isDefined )
     val rsBack: ResultSet = rsBackOp.get
     Assert.assertNotNull( rsBack )
 
-    // Other verifs....
-    
     executionContext.closeAll()
+    // Other verifs....
   }
 
 }
