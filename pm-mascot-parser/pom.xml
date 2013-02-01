@@ -1,7 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>fr.proline</groupId>
+  <parent>
+    <artifactId>ProFI-Pom</artifactId>
+    <groupId>fr.proline</groupId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+
   <artifactId>PM-MascotParser</artifactId>
   <version>0.0.6-SNAPSHOT</version>
 
@@ -10,8 +15,6 @@
   <inceptionYear>2012</inceptionYear>
 
   <properties>
-    <maven.compiler.source>1.6</maven.compiler.source>
-    <maven.compiler.target>1.6</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <core.version>0.0.7-SNAPSHOT</core.version>
   </properties>
@@ -20,26 +23,11 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <version>2.9.1</version>
     </dependency>
 
-    <!-- Logging -->
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
-      <version>1.0.3</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>1.0.3</version>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>com.weiglewilczek.slf4s</groupId>
       <artifactId>slf4s_2.9.1</artifactId>
-      <version>1.0.7</version>
     </dependency>
 
     <!-- Commons collection: is it needed ?
@@ -82,33 +70,22 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.8.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.testing</groupId>
       <artifactId>specs_2.9.1</artifactId>
-      <version>1.6.9</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_2.9.1</artifactId>
-      <version>1.6.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.dbunit</groupId>
       <artifactId>dbunit</artifactId>
-      <version>2.4.9</version>
       <scope>test</scope>
-      <!-- Exclude SL4J which is an older version than the logback dependency -->
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <dependency>
@@ -126,6 +103,18 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- Logging -->
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
   <build>
@@ -134,7 +123,6 @@
       <plugin>
         <groupId>org.scala-tools</groupId>
         <artifactId>maven-scala-plugin</artifactId>
-        <version>2.15.0</version>
         <executions>
           <execution>
             <goals>
@@ -276,6 +264,7 @@
 
       </plugins>
     </pluginManagement>
+
   </build>
 
   <!-- Skip OS dependent test (dll loading) on continuous integration server builds -->
@@ -293,26 +282,6 @@
                 <exclude>**/MascotParserTest*</exclude>
               </excludes>
             </configuration>
-          </plugin>
-
-          <!-- Cobertura plugin, format xml -->
-	      <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>cobertura-maven-plugin</artifactId>
-            <version>2.5.1</version>
-            <configuration>
-              <formats>
-                <format>xml</format>
-              </formats>
-            </configuration>
-            <executions>
-              <execution>
-                <phase>package</phase>
-                <goals>
-                  <goal>cobertura</goal>
-                </goals>
-              </execution>
-            </executions>
           </plugin>
 
         </plugins>
