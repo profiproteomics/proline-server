@@ -410,10 +410,9 @@ class MascotResultFile( val fileLocation: File,
   
   /**
    * Creates for each MsQuery the corresponding Spectrum and
-   * execute the specified onEachSpectrum fonction on it.
+   * execute the specified onEachSpectrum function on it.
    * 
    */
-  
   def eachSpectrum( onEachSpectrum: Spectrum => Unit ): Unit = {
     
     for( (initialId, msq) <- this.msQueryByInitialId ) { // Go through each Query
@@ -429,15 +428,25 @@ class MascotResultFile( val fileLocation: File,
       }*/
       
       // Parse peaks
-      val peaks = mascotQ.getStringIons1.split(",").map { peakAsStr =>
-                    val values = peakAsStr.split(":")
-                    Tuple2( values(0).toDouble, values(1).toFloat )
-                  } toList
-      
-      // Sort peaks by moz and build moz and intensity lists
-      peaks.sort( (a,b) => a._1 < b._1 ).foreach { peak =>
-        mozList += peak._1
-        intensityList += peak._2
+      val msqIonsString = mascotQ.getStringIons1
+      if( msqIonsString.isEmpty == false ) {
+        
+        val peaksAsStr = msqIonsString.split(",")
+        val peaks = new ArrayBuffer[Tuple2[Double,Float]](peaksAsStr.length)
+        
+        peaksAsStr.foreach { peakAsStr =>
+          val values = peakAsStr.split(":")
+          peaks += Tuple2( values(0).toDouble, values(1).toFloat )
+        }
+        
+        // Sort peaks by moz and build moz and intensity lists
+        peaks.sortBy( _._1 ).foreach { peak =>
+          mozList += peak._1
+          intensityList += peak._2
+        }
+        
+      } else {
+        this.logger.debug("spectrum of query#"+initialId+" is empty")
       }
       
       // TODO: parse spectrum title to extract timings
