@@ -1,14 +1,17 @@
 package fr.proline.core.service.msi
 
 import java.io.File
-import org.junit.{After,AfterClass, Assert, Test, Before,BeforeClass}
+
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+import org.junit.Assert
+
 import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
-import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.core.om.storer.msi.impl.StorerContext
+import fr.proline.core.service.msi.AbstractRFImporterTest_
+import fr.proline.core.service.msi.ResultFileImporterJPAStorer
+import fr.proline.core.service.msi.ResultFileImporterSQLStorer
 import fr.proline.repository.DriverType
-import fr.proline.core.dal.SQLQueryHelper
-import fr.proline.context.IExecutionContext
 
 @Test
 class RFImporterH2Test extends AbstractRFImporterTest_ {
@@ -61,8 +64,6 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
     Assert.assertNotNull( id )
     Assert.assertTrue( id > 0 )
 
-    //val rsProvider: IResultSetProvider = new ORMResultSetProvider(stContext.msiDbContext,stContext.psDbContext,stContext.pdiDbContext)
-
     val rsBackOp = rsProvider.getResultSet( id )
     Assert.assertTrue( rsBackOp.isDefined )
     val rsBack: ResultSet = rsBackOp.get
@@ -71,6 +72,7 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
     // Other verifs....
     
     executionContext.closeAll()
+    
   }
   
   @Test
@@ -104,9 +106,7 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
     Assert.assertTrue( result )
     Assert.assertNotNull( id )
     Assert.assertTrue( id > 0 )
-
-    //val rsProvider: IResultSetProvider = new ORMResultSetProvider(stContext.msiDbContext,stContext.psDbContext,stContext.pdiDbContext)
-
+    
     val rsBackOp = rsProvider.getResultSet( id )
     Assert.assertTrue( rsBackOp.isDefined )
     val rsBack: ResultSet = rsBackOp.get
