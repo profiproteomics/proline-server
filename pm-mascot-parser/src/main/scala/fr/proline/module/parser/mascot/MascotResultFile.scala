@@ -45,7 +45,7 @@ object MascotResultFile extends Logging {
           val libpath: String = System.getProperty("java.library.path")
           logger.error("System.loadLibrary ERROR " + e.getMessage())
           logger.error("java.library.path is " + libpath)
-          val msg = "Native code library failed to load. Is msparserj.dll on the path ?"
+          val msg = "Native code library failed to load. Is msparserj.dll on the java.library.path ?"
           logger.error( msg + "\n" + e)
           throw new Exception(msg)
           //        System.exit(0);
@@ -415,7 +415,9 @@ class MascotResultFile( val fileLocation: File,
    */
   def eachSpectrum( onEachSpectrum: Spectrum => Unit ): Unit = {
     
-    for( (initialId, msq) <- this.msQueryByInitialId ) { // Go through each Query
+    val querybyInitialId = this.msQueryByInitialId
+    logger.info("Iterate over MSQueries")
+    for( (initialId, msq) <-  querybyInitialId) { // Go through each Query
       
       val mozList = new ArrayBuffer[Double]
       val intensityList = new ArrayBuffer[Float]
@@ -472,6 +474,7 @@ class MascotResultFile( val fileLocation: File,
                               peaklistId = peaklist.id
                               )
     
+      if (initialId % 4000 == 0) logger.info("Spectra Id="+ initialId + " created")
       onEachSpectrum(spec)
       
     }
