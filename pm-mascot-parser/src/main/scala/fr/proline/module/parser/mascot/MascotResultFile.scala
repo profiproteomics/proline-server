@@ -3,14 +3,19 @@ package fr.proline.module.parser.mascot
 import java.io.{ FileNotFoundException, File }
 import java.lang.{ UnsatisfiedLinkError, System }
 import java.net.URLDecoder
+
 import scala.Array.canBuildFrom
 import scala.collection.mutable.{ HashMap, ArrayBuffer }
+
 import com.weiglewilczek.slf4s.Logging
+
+import matrix_science.msparser.{ms_searchparams, ms_peptidesummary, ms_mascotresults, ms_mascotresfile, ms_inputquery}
+
+import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.{ ISeqDatabaseProvider, IProteinProvider, IPeptideProvider, IPTMProvider }
-import fr.proline.context.DatabaseConnectionContext
-import matrix_science.msparser.{ ms_searchparams, ms_peptidesummary, ms_mascotresults, ms_mascotresfile, ms_inputquery }
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.algo.msi.validation.MascotValidationHelper 
 
 import matrixscience.NativeLibrariesLoader
 
@@ -25,6 +30,8 @@ object MascotParseParams extends Enumeration {
   val ION_SCORE_CUTOFF = Value("ion.score.cutoff")
   val SUBSET_THRESHOLD = Value("subset.threshold")
   val PROTEIN_CUTOFF_PVALUE = Value("protein.cutoff.pvalue")
+  val MASCOT_VERSION = Value("mascot.version")
+  val MASCOT_SERVER_URL = Value("mascot.server.url")
 }
 
 /**
@@ -35,9 +42,11 @@ object MascotParseParams extends Enumeration {
  * @param importProperties : parameters to use for parsing. Allowed values are those specified by MascotParseParams. Should not be null.
  * Empty Map could be specified if default value should be used.
  */
-class MascotResultFile(val fileLocation: File,
+class MascotResultFile(
+  val fileLocation: File,
   val importProperties: Map[String, Any],
-  val parserContext: ProviderDecoratedExecutionContext) extends IResultFile with Logging {
+  val parserContext: ProviderDecoratedExecutionContext
+) extends IResultFile with Logging {
 
   // Requirements
   require(importProperties != null)
@@ -99,30 +108,58 @@ class MascotResultFile(val fileLocation: File,
       if (pepSummaryOpt == None) None
       else {
         val pepSum = pepSummaryOpt.get
-        val ht = pepSum.getHomologyThreshold(msQueryNum, 20)
-        Some(new MsQueryDbSearchProperties(candidatePeptidesCount = pepSum.getQmatch(msQueryNum),
-          mascotIdentityThreshold = Some(pepSum.getPeptideIdentityThreshold(msQueryNum, 20)),
-          mascotHomologyThreshold = if (ht > 0) Some(ht) else None))
+        
+        // FIXME: Small hack => compute multiple values to have more precision on the HT
+        def computeHTCandidatePeptides(probability:Double): Float = {
+          val mascotHT = pepSum.getHomologyThreshold(msQueryNum,1/probability)
+          MascotValidationHelper.calcCandidatePeptidesCount(mascotHT,probability)
+        }
+        
+        var ht: Float = 0f
+        val mascotHT = pepSum.getHomologyThreshold(msQueryNum,20)
+        if( mascotHT > 0) {
+          var candPepCountSum = 0f
+          val probFactors = List(11,22,34,55,76,99) // arbitrary values
+          for( probFactor <- probFactors) {
+            candPepCountSum += computeHTCandidatePeptides(1.0/probFactor)
+          }
+          ht = MascotValidationHelper.calcIdentityThreshold(candPepCountSum/probFactors.length, 0.05)
+        }
+        
+        val candidatePepCount = pepSum.getQmatch(msQueryNum)
+        //val it = pepSum.getPeptideIdentityThreshold(msQueryNum,20)        
+        val it = MascotValidationHelper.calcIdentityThreshold(candidatePepCount, 0.05)
+        
+        Some(
+          MsQueryDbSearchProperties(
+            candidatePeptidesCount = pepSum.getQmatch(msQueryNum),
+            mascotIdentityThreshold = Some( it ),
+            mascotHomologyThreshold = if( ht > 0 ) Some(ht) else None
+          )
+        )
       }
     }
 
     for (q <- 1 to nbrQueries) { // Go through each Query
 
       val mascotMsQuery = new ms_inputquery(mascotResFile, q)
-      val specTitle = URLDecoder.decode(this.mascotResFile.getQuerySectionValueStr(q, "title"), "UTF-8").replace('\\', '/') //WorkAround for \ char in spectrum storer  !     
-
-      val msQueryProps = new MsQueryProperties(
-        targetDbSearch = getMsQueryDbSearchProps(this.targetPepSummary, q),
-        decoyDbSearch = getMsQueryDbSearchProps(this.decoyPepSummary, q))
-
-      var query = new Ms2Query(id = Ms2Query.generateNewId,
+      val specTitle = URLDecoder.decode( this.mascotResFile.getQuerySectionValueStr(q,"title") , "UTF-8").replace('\\','/') //WorkAround for \ char in spectrum storer  !
+      
+      val msQueryProps = new MsQueryProperties( 
+        targetDbSearch = getMsQueryDbSearchProps( this.targetPepSummary, q ),
+        decoyDbSearch = getMsQueryDbSearchProps( this.decoyPepSummary, q )
+      )
+      
+      var query = new Ms2Query(
+        id = Ms2Query.generateNewId,
         initialId = q,
         moz = this.mascotResFile.getObservedMass(q),
-        charge = this.mascotResFile.getObservedCharge(q),
+        charge = this.mascotResFile.getObservedCharge( q ),
         spectrumTitle = specTitle,
-        properties = Some(msQueryProps))
-
-      msQueryMapBuilder += (q -> query)
+        properties = Some(msQueryProps)
+      )
+      
+      msQueryMapBuilder += ( q -> query )
     }
 
     msQueryMapBuilder.result()
@@ -446,14 +483,20 @@ class MascotResultFile(val fileLocation: File,
    *
    */
 
-  def eachSpectrumMatch(wantDecoy: Boolean, onEachSpectrumMatch: SpectrumMatch => Unit): Unit = {
+  def eachSpectrumMatch(wantDecoy: Boolean,
+                        onEachSpectrumMatch: SpectrumMatch => Unit): Unit = {
+    
+    val mascotVersion = importProperties.getOrElse(
+      MascotParseParams.MASCOT_VERSION.toString,
+      throw new Exception("mascot version must be provided in the import properties")
+    )
+    val mascotServerURLAsStr = importProperties.getOrElse(
+      MascotParseParams.MASCOT_SERVER_URL.toString,
+      throw new Exception("mascot server url must be provided in the import properties")
+    )
 
-    // FIXME: retrieve these parameters
-    val mascotVersion = "2.3.0.1"
-    val mascotServerURLAsStr = "http://tol-brandir/mascot/cgi"
-
-    val mascotConfig = new MascotRemoteConfig(mascotVersion, mascotServerURLAsStr)
-    //val spectrumMatcher = new MascotSpectrumMatcher( mascotResFile, mascotConfig )
+    val mascotConfig = new MascotRemoteConfig(mascotVersion.asInstanceOf[String], mascotServerURLAsStr.asInstanceOf[String])
+    val spectrumMatcher = new MascotSpectrumMatcher( mascotResFile, mascotConfig )
 
     // Retrieve peptide summary corresponding to the wanted dataset
     val pepSummary = this._getPepSummary(wantDecoy)
@@ -466,7 +509,7 @@ class MascotResultFile(val fileLocation: File,
 
       // Check that the peptide is not empty
       if (currentMSPep.getAnyMatch) {
-        //onEachSpectrumMatch( spectrumMatcher.getSpectrumMatch(currentMSPep) )
+        onEachSpectrumMatch( spectrumMatcher.getSpectrumMatch(currentMSPep) )
       }
     }
 
