@@ -1,5 +1,6 @@
 <configuration>
- <contextName>Proline MascotParser Test</contextName>
+  <contextName>Proline MascotParser Test</contextName>
+
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <!-- encoders are assigned the type
          ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
@@ -8,12 +9,13 @@
     </encoder>
   </appender>
 
-  <logger name="fr.proline" level="DEBUG">
- 
-  </logger>
+  <logger name="fr.proline" level="DEBUG" />
 
-  <root level="OFF">
-    <appender-ref ref="STDOUT" />   
+  <!-- For matrixscience.NativeLibrariesLoader -->
+  <logger name="matrixscience" level="DEBUG" />
+
+  <root level="WARN">
+    <appender-ref ref="STDOUT" />
   </root>
-  
+
 </configuration>

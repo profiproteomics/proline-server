@@ -37,12 +37,15 @@
       <version>3.1</version>
     </dependency> -->
 
-    <!-- Mascot & BioJava -->
+    <!-- Mascot Parser native libraries (for all OSes, loaded at runtime)
+         msparser.jar dependency is defined via Maven profiles -->
     <dependency>
       <groupId>matrixscience</groupId>
-      <artifactId>msparser</artifactId>
-      <version>2.4</version>
+      <artifactId>MSParser-native-libraries_2.4.02</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
     </dependency>
+
+    <!-- BioJava -->
     <dependency>
       <groupId>biojava</groupId>
       <artifactId>biojava</artifactId>
@@ -140,154 +143,50 @@
         </executions>
       </plugin>
 
-      <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <version>2.4.1</version>
-        <executions>
-          <execution>
-            <id>copy-resources</id>
-            <phase>validate</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>resources</directory>
-                  <filtering>true</filtering>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.12.3</version>
-        <configuration>
-          <!-- <useFile>false</useFile> -->
-          <skipTests>false</skipTests>
-          <workingDirectory>${project.build.directory}</workingDirectory>
-          <argLine>-Djava.library.path=${project.build.directory}\lib -Duser.language=en -Xms512M -Xmx512M</argLine>
-          <!-- <disableXmlReport>true</disableXmlReport> -->
-          <!-- If you have classpath issue like NoDefClassError,... -->
-          <!-- useManifestOnlyJar>false</useManifestOnlyJar -->
-          <includes>
-            <include>**/*Test.*</include>
-            <include>**/*Suite.*</include>
-          </includes>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.2</version>
-        <executions>
-          <execution>
-            <id>copy-dependencies</id>
-            <phase>package</phase>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}/lib</outputDirectory>
-              <includeTypes>jar</includeTypes>
-              <overWriteReleases>false</overWriteReleases>
-              <overWriteSnapshots>false</overWriteSnapshots>
-              <overWriteIfNewer>true</overWriteIfNewer>
-            </configuration>
-          </execution>
-          <execution>
-            <id>copy-dll</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}/lib</outputDirectory>
-              <includeTypes>dll,exe</includeTypes>
-              <stripVersion>true</stripVersion>
-              <overWriteReleases>false</overWriteReleases>
-              <overWriteSnapshots>false</overWriteSnapshots>
-              <overWriteIfNewer>true</overWriteIfNewer>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
     </plugins>
-
-    <pluginManagement>
-      <plugins>
-
-        <plugin>
-          <groupId>org.eclipse.m2e</groupId>
-          <artifactId>lifecycle-mapping</artifactId>
-          <version>1.0.0</version>
-          <configuration>
-            <lifecycleMappingMetadata>
-              <pluginExecutions>
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-dependency-plugin</artifactId>
-                    <versionRange>[2.0,)</versionRange>
-                    <goals>
-                      <goal>copy-dependencies</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <execute />
-                  </action>
-                </pluginExecution>
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-antrun-plugin</artifactId>
-                    <versionRange>[1.6,)</versionRange>
-                    <goals>
-                      <goal>run</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <execute />
-                  </action>
-                </pluginExecution>
-              </pluginExecutions>
-            </lifecycleMappingMetadata>
-          </configuration>
-        </plugin>
-
-      </plugins>
-    </pluginManagement>
 
   </build>
 
-  <!-- Skip OS dependent test (dll loading) on continuous integration server builds -->
   <profiles>
+
     <profile>
+      <!-- Development profile : Windows 32 or 64 bits -->
+      <id>dev</id>
+
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+
+      <dependencies>
+
+        <dependency>
+          <groupId>matrixscience</groupId>
+          <artifactId>msparser</artifactId>
+          <version>2.4.02</version>
+          <classifier>Windows</classifier>
+        </dependency>
+
+      </dependencies>
+
+    </profile> <!-- End of dev profile -->
+
+    <profile>
+      <!-- Integration (Jenkins) profile : Linux 64 bits -->
       <id>integ</id>
 
-      <build>
-        <plugins>
+      <dependencies>
 
-          <plugin>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <excludes>
-                <exclude>**/MascotParserTest*</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
+        <dependency>
+          <groupId>matrixscience</groupId>
+          <artifactId>msparser</artifactId>
+          <version>2.4.02</version>
+          <classifier>Linux_amd64</classifier>
+        </dependency>
 
-        </plugins>
-      </build>
+      </dependencies>
 
     </profile> <!-- End of integ profile -->
+
   </profiles>
 
 </project>

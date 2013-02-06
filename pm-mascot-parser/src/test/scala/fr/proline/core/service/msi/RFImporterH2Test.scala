@@ -2,15 +2,9 @@ package fr.proline.core.service.msi
 
 import java.io.File
 
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
-import org.junit.Assert
+import org.junit._
 
 import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.service.msi.AbstractRFImporterTest_
-import fr.proline.core.service.msi.ResultFileImporterJPAStorer
-import fr.proline.core.service.msi.ResultFileImporterSQLStorer
 import fr.proline.repository.DriverType
 
 @Test
