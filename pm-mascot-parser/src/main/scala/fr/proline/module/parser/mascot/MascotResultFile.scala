@@ -127,13 +127,13 @@ class MascotResultFile(
         }
         
         val candidatePepCount = pepSum.getQmatch(msQueryNum)
-        //val it = pepSum.getPeptideIdentityThreshold(msQueryNum,20)        
-        val it = MascotValidationHelper.calcIdentityThreshold(candidatePepCount, 0.05)
+        //val it = pepSum.getPeptideIdentityThreshold(msQueryNum,20)
+        val it = if(candidatePepCount > 0 ) Some(MascotValidationHelper.calcIdentityThreshold(candidatePepCount, 0.05)) else None
         
         Some(
           MsQueryDbSearchProperties(
             candidatePeptidesCount = pepSum.getQmatch(msQueryNum),
-            mascotIdentityThreshold = Some( it ),
+            mascotIdentityThreshold = it,
             mascotHomologyThreshold = if( ht > 0 ) Some(ht) else None
           )
         )
