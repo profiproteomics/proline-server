@@ -26,12 +26,12 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-    
+
     <!-- ProFI-Commons-Java -->
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Java</artifactId>
-      <version>0.0.2-SNAPSHOT</version>
+      <version>0.0.3-SNAPSHOT</version>
     </dependency>
 
     <!-- JUnit tests -->
