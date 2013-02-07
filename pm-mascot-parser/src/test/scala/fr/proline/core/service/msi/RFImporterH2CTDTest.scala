@@ -28,7 +28,6 @@ class RFImporterH2CTDTest extends AbstractRFImporterTest_ {
   }
   
   @After
-  @throws( classOf[Exception] )
   override def tearDown() {
     super.tearDown()
   }

@@ -41,9 +41,8 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
     logger.info("PS, PDI and MSI dbs succesfully initialized")
   }
 
-  @throws(classOf[Exception])
-  def tearDown() {
-    super.closeDbs
+  override def tearDown() {
+    super.tearDown()
   }
 
   //@Test

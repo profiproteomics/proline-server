@@ -70,7 +70,6 @@ class RFImporterSQLiteTest extends AbstractRFImporterTest_ {
   }
   
   @After
-  @throws( classOf[Exception] )
   override def tearDown() {
     super.tearDown()
   }
