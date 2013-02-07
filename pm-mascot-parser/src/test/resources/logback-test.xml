@@ -14,6 +14,8 @@
   <!-- For matrixscience.NativeLibrariesLoader -->
   <logger name="matrixscience" level="DEBUG" />
 
+  <logger name="org.dbunit.dataset" level="ERROR" />
+
   <root level="WARN">
     <appender-ref ref="STDOUT" />
   </root>
