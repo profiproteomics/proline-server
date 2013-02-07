@@ -41,7 +41,7 @@
          msparser.jar dependency is defined via Maven profiles -->
     <dependency>
       <groupId>matrixscience</groupId>
-      <artifactId>MSParser-native-libraries_2.4.02</artifactId>
+      <artifactId>MSParser-native-libraries_2.4.00</artifactId>
       <version>0.0.1-SNAPSHOT</version>
     </dependency>
 
@@ -162,8 +162,8 @@
         <dependency>
           <groupId>matrixscience</groupId>
           <artifactId>msparser</artifactId>
-          <version>2.4.02</version>
-          <classifier>Windows</classifier>
+          <version>2.4.00</version>
+          <classifier>Windows_amd64</classifier>
         </dependency>
 
       </dependencies>
@@ -179,7 +179,7 @@
         <dependency>
           <groupId>matrixscience</groupId>
           <artifactId>msparser</artifactId>
-          <version>2.4.02</version>
+          <version>2.4.00</version>
           <classifier>Linux_amd64</classifier>
         </dependency>
 
