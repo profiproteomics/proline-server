@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import fr.proline.util.ThreadLogger;
 import fr.proline.util.system.OSInfo;
 import fr.proline.util.system.OSType;
 
@@ -44,7 +45,9 @@ public final class NativeLibrariesLoader {
     private static final Object LOADER_LOCK = new Object();
 
     /* Static class variables */
+
     /* All mutable fields are @GuardedBy("LOADER_LOCK") */
+
     private static boolean loaded;
 
     /* Private constructor (Utility class) */
@@ -64,6 +67,12 @@ public final class NativeLibrariesLoader {
 	synchronized (LOADER_LOCK) {
 
 	    if (!loaded) {
+		final Thread currentThread = Thread.currentThread();
+
+		if (!(currentThread.getUncaughtExceptionHandler() instanceof ThreadLogger)) {
+		    currentThread.setUncaughtExceptionHandler(new ThreadLogger(LOG));
+		}
+
 		LOG.debug("Loading Mascot Parser native libraries");
 
 		String libraryPathname = null;
