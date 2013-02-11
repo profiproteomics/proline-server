@@ -9,7 +9,8 @@
     </encoder>
   </appender>
 
-  <logger name="fr.proline" level="DEBUG" />
+   <!-- Add debug traces to run tests on Jenkins -->
+  <logger name="fr.proline" level="TRACE" />
 
   <!-- For matrixscience.NativeLibrariesLoader -->
   <logger name="matrixscience" level="DEBUG" />
