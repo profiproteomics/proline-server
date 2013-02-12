@@ -50,6 +50,8 @@ class MascotResultFile(
 
   // Requirements
   require(importProperties != null)
+  
+  val logSpectraCount = 4000 // Print a log for each created spectrum
 
   // ---- For Java developers ;) : --- Constructor Code 
 
@@ -413,6 +415,9 @@ class MascotResultFile(
 
     val querybyInitialId = this.msQueryByInitialId
     logger.info("Iterate over MSQueries")
+    
+    var count = 0
+    
     for ((initialId, msq) <- querybyInitialId) { // Go through each Query
 
       val mozList = new ArrayBuffer[Double]
@@ -469,7 +474,12 @@ class MascotResultFile(
         instrumentConfigId = instConfigId,
         peaklistId = peaklist.id)
 
-      if (initialId % 4000 == 0) logger.info("Spectra Id=" + initialId + " created")
+      count += 1
+      
+      if ((count % logSpectraCount) == 0) {
+        logger.debug("Created Spectra: " + count)
+      }
+      
       onEachSpectrum(spec)
 
     }
