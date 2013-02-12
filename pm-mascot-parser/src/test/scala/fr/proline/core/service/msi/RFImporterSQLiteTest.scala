@@ -20,7 +20,7 @@ object RFImporterSQLiteTest extends Logging {
   val UDS_SQLITE_LINUX_FILE = "uds_sqlite_shared_memory.lock:uds_test?mode=memory&cache=shared"
 
   val PDI_SQLITE_MEMORY_LOCK_FILE = "pdi_sqlite_shared_memory.lock"
-  val PDI_SQLITE_LINUX_FILE = "pdi_sqlite_shared_memory.lock:pdi_test?mode=memory&cache=shared	"
+  val PDI_SQLITE_LINUX_FILE = "pdi_sqlite_shared_memory.lock:pdi_test?mode=memory&cache=shared"
 
   val PS_SQLITE_MEMORY_LOCK_FILE = "ps_sqlite_shared_memory.lock"
   val PS_SQLITE_LINUX_FILE = "ps_sqlite_shared_memory.lock:ps_test?mode=memory&cache=shared"
