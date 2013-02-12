@@ -2,7 +2,9 @@ package fr.proline.core.service.msi
 
 import java.io.File
 
-import org.junit.{ After, AfterClass, Assert, Before, BeforeClass, Test }
+import org.junit.{ After, AfterClass }
+import org.junit.{ Before, BeforeClass, Test }
+import org.junit.Assert.{ assertNotNull, assertTrue }
 
 import com.weiglewilczek.slf4s.Logging
 
@@ -10,48 +12,58 @@ import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.repository.DriverType
 import fr.proline.util.StringUtils
 
-@AfterClass
-@BeforeClass
 object RFImporterSQLiteTest extends Logging {
 
   // TODO: retrieve this value from the properties
-  val MSI_SQLITE_MEMORY_LOCK_FILE = "msi_sqlite_shared_memory.lock"
+  /* On Linux servers, the lock file name contains ":uds_test?mode=memory&cache=shared" suffix */
   val UDS_SQLITE_MEMORY_LOCK_FILE = "uds_sqlite_shared_memory.lock"
-  val PS_SQLITE_MEMORY_LOCK_FILE = "ps_sqlite_shared_memory.lock"
+  val UDS_SQLITE_LINUX_FILE = "uds_sqlite_shared_memory.lock:uds_test?mode=memory&cache=shared"
+
   val PDI_SQLITE_MEMORY_LOCK_FILE = "pdi_sqlite_shared_memory.lock"
+  val PDI_SQLITE_LINUX_FILE = "pdi_sqlite_shared_memory.lock:pdi_test?mode=memory&cache=shared	"
 
-  private def _deleteSQLiteLockFile(path: String) {
+  val PS_SQLITE_MEMORY_LOCK_FILE = "ps_sqlite_shared_memory.lock"
+  val PS_SQLITE_LINUX_FILE = "ps_sqlite_shared_memory.lock:ps_test?mode=memory&cache=shared"
 
-    if (!StringUtils.isEmpty(path)) {
+  val MSI_SQLITE_MEMORY_LOCK_FILE = "msi_sqlite_shared_memory.lock"
+  val MSI_SQLITE_LINUX_FILE = "msi_sqlite_shared_memory.lock:msi_test?mode=memory&cache=shared"
 
-      try {
-        val sqliteLock = new File(path)
+  def deleteSQLiteLockFiles() {
+    logger.debug("Trying to delete SQLite lock files")
 
-        if (sqliteLock.exists) {
+    _deleteSQLiteLockFile(UDS_SQLITE_MEMORY_LOCK_FILE)
+    _deleteSQLiteLockFile(UDS_SQLITE_LINUX_FILE)
 
-          if (sqliteLock.delete()) {
-            logger.debug("File [" + path + "] successfully deleted")
-          } else {
-            logger.warn("Unable to delete [" + path + ']')
-          }
+    _deleteSQLiteLockFile(PDI_SQLITE_MEMORY_LOCK_FILE)
+    _deleteSQLiteLockFile(PDI_SQLITE_LINUX_FILE)
 
-        }
+    _deleteSQLiteLockFile(PS_SQLITE_MEMORY_LOCK_FILE)
+    _deleteSQLiteLockFile(PS_SQLITE_LINUX_FILE)
 
-      } catch {
-        case ex: Exception => logger.error("Error deleteing [" + path + ']', ex)
-      }
-
-    }
-
+    _deleteSQLiteLockFile(MSI_SQLITE_MEMORY_LOCK_FILE)
+    _deleteSQLiteLockFile(MSI_SQLITE_LINUX_FILE)
   }
 
-  @AfterClass
-  @BeforeClass
-  def deleteSQLiteLockFiles() {
-    _deleteSQLiteLockFile(MSI_SQLITE_MEMORY_LOCK_FILE)
-    _deleteSQLiteLockFile(UDS_SQLITE_MEMORY_LOCK_FILE)
-    _deleteSQLiteLockFile(PS_SQLITE_MEMORY_LOCK_FILE)
-    _deleteSQLiteLockFile(PDI_SQLITE_MEMORY_LOCK_FILE)
+  private def _deleteSQLiteLockFile(path: String) {
+    assert(!StringUtils.isEmpty(path), "_deleteSQLiteLockFile() invalid path")
+
+    try {
+      val sqliteLock = new File(path)
+
+      if (sqliteLock.exists) {
+
+        if (sqliteLock.delete()) {
+          logger.debug("File [" + path + "] successfully deleted")
+        } else {
+          logger.warn("Unable to delete [" + path + ']')
+        }
+
+      }
+
+    } catch {
+      case ex: Exception => logger.error("Error deleteing [" + path + ']', ex)
+    }
+
   }
 
 }
@@ -68,7 +80,9 @@ class RFImporterSQLiteTest extends AbstractRFImporterTest_ {
   @throws(classOf[Exception])
   override def setUp() = {
     RFImporterSQLiteTest.deleteSQLiteLockFiles()
+
     super.setUp()
+
     _datFileName = "/dat_samples/STR_F122817_Mascot_v2.3.dat"
     udsDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml")
     logger.info("UDS db succesfully initialized")
@@ -77,8 +91,6 @@ class RFImporterSQLiteTest extends AbstractRFImporterTest_ {
 
     //val udsSqlHelper = new SQLQueryHelper( dbManagerForTest.asInstanceOf[DatabaseManager].getMsiDbConnector(1) ).ezDBC
     //sys.error( "" + udsSqlHelper.selectInt("select count(*) from scoring") )
-
-    ()
   }
 
   @After
@@ -88,89 +100,98 @@ class RFImporterSQLiteTest extends AbstractRFImporterTest_ {
 
   @Test
   def testRFIwithSQL() = {
-    val (executionContext, rsProvider) = buildSQLContext()
-    Assert.assertNotNull(executionContext)
+    val (executionContext, rsProvider) = buildSQLContext
 
-    logger.debug(" --- Get File " + _datFileName)
-    var datFile: File = new File(RFImporterSQLiteTest.this.getClass.getResource(_datFileName).toURI)
+    assertNotNull(executionContext)
 
-    val propertiedBuilder = Map.newBuilder[String, Any]
-    propertiedBuilder += ("ion.score.cutoff" -> 0.5)
-    propertiedBuilder += ("subset.threshold" -> 0.5)
+    try {
+      logger.debug(" --- Get File " + _datFileName)
+      var datFile: File = new File(RFImporterSQLiteTest.this.getClass.getResource(_datFileName).toURI)
 
-    val importer = new ResultFileImporterSQLStorer(
-      executionContext,
-      resultIdentFile = datFile,
-      fileType = "MascotMSParser",
-      instrumentConfigId = 1,
-      peaklistSoftwareId = 1, // TODO : provide the right value
-      importerProperties = Map.empty,
-      acDecoyRegex = None)
+      val propertiedBuilder = Map.newBuilder[String, Any]
+      propertiedBuilder += ("ion.score.cutoff" -> 0.5)
+      propertiedBuilder += ("subset.threshold" -> 0.5)
 
-    logger.debug(" --- run service ")
-    val result = importer.runService()
-    val id = importer.getTargetResultSetId
-    logger.debug(" --- done " + result + " save with resultID " + id)
+      val importer = new ResultFileImporterSQLStorer(
+        executionContext,
+        resultIdentFile = datFile,
+        fileType = "MascotMSParser",
+        instrumentConfigId = 1,
+        peaklistSoftwareId = 1, // TODO : provide the right value
+        importerProperties = Map.empty, // TODO Use propertiedBuilder here ?
+        acDecoyRegex = None)
 
-    Assert.assertTrue(result)
-    Assert.assertNotNull(id)
-    Assert.assertTrue(id > 0)
+      logger.debug(" --- run service ")
+      val result = importer.runService()
+      val id = importer.getTargetResultSetId
+      logger.debug(" --- done " + result + " save with resultID " + id)
 
-    val rsBackOp = rsProvider.getResultSet(id)
-    Assert.assertTrue(rsBackOp.isDefined)
-    val rsBack: ResultSet = rsBackOp.get
-    Assert.assertNotNull(rsBack)
+      assertTrue(result)
 
-    //msiEzDBC.connection.close()
-    //psEzDBC.connection.close()
+      assertTrue(id > 0)
 
-    // Other verifs....
+      val rsBackOp = rsProvider.getResultSet(id)
+      assertTrue(rsBackOp.isDefined)
+      val rsBack: ResultSet = rsBackOp.get
+      assertNotNull(rsBack)
 
-    executionContext.closeAll()
+      //msiEzDBC.connection.close()
+      //psEzDBC.connection.close()
+
+      // Other verifs....
+
+    } finally {
+      executionContext.closeAll()
+    }
+
   }
 
   @Test
   def runRFIwithJPA() = {
-    val (executionContext, rsProvider) = buildJPAContext()
+    val (executionContext, rsProvider) = buildJPAContext
 
-    Assert.assertNotNull(executionContext)
+    assertNotNull(executionContext)
 
-    logger.debug(" --- Get File " + _datFileName)
-    var datFile: File = new File(RFImporterSQLiteTest.this.getClass.getResource(_datFileName).toURI)
+    try {
+      logger.debug(" --- Get File " + _datFileName)
+      var datFile: File = new File(RFImporterSQLiteTest.this.getClass.getResource(_datFileName).toURI)
 
-    val propertiedBuilder = Map.newBuilder[String, Any]
-    propertiedBuilder += ("ion.score.cutoff" -> 0.5)
-    propertiedBuilder += ("subset.threshold" -> 0.5)
+      val propertiedBuilder = Map.newBuilder[String, Any]
+      propertiedBuilder += ("ion.score.cutoff" -> 0.5)
+      propertiedBuilder += ("subset.threshold" -> 0.5)
 
-    val importer = new ResultFileImporterJPAStorer(
-      executionContext,
-      resultIdentFile = datFile,
-      fileType = "MascotMSParser",
-      instrumentConfigId = 1,
-      peaklistSoftwareId = 1, // TODO : provide the right value
-      importerProperties = Map.empty,
-      acDecoyRegex = None)
+      val importer = new ResultFileImporterJPAStorer(
+        executionContext,
+        resultIdentFile = datFile,
+        fileType = "MascotMSParser",
+        instrumentConfigId = 1,
+        peaklistSoftwareId = 1, // TODO : provide the right value
+        importerProperties = Map.empty, // TODO Use propertiedBuilder here ?
+        acDecoyRegex = None)
 
-    logger.debug(" --- run service ")
-    val result = importer.runService()
-    val id = importer.getTargetResultSetId
-    logger.debug(" --- done " + result + " save with resultID " + id)
+      logger.debug(" --- run service ")
+      val result = importer.runService()
+      val id = importer.getTargetResultSetId
+      logger.debug(" --- done " + result + " save with resultID " + id)
 
-    Assert.assertTrue(result)
-    Assert.assertNotNull(id)
-    Assert.assertTrue(id > 0)
+      assertTrue(result)
+      assertNotNull(id)
+      assertTrue(id > 0)
 
-    val rsBackOp = rsProvider.getResultSet(id)
-    Assert.assertTrue(rsBackOp.isDefined)
-    val rsBack: ResultSet = rsBackOp.get
-    Assert.assertNotNull(rsBack)
+      val rsBackOp = rsProvider.getResultSet(id)
+      assertTrue(rsBackOp.isDefined)
+      val rsBack: ResultSet = rsBackOp.get
+      assertNotNull(rsBack)
 
-    //msiEzDBC.connection.close()
-    //psEzDBC.connection.close()
+      //msiEzDBC.connection.close()
+      //psEzDBC.connection.close()
 
-    // Other verifs....
+      // Other verifs....
 
-    executionContext.closeAll()
+    } finally {
+      executionContext.closeAll()
+    }
+
   }
 
 }

@@ -3,9 +3,9 @@ package fr.proline.core.service.msi
 import java.io.File
 import java.sql.Connection
 
-import org.junit.{ After, Assert }
 import org.junit.{ Before, Test }
-import org.junit.Assert._
+import org.junit.After
+import org.junit.Assert.{ assertEquals, assertNotNull, assertTrue }
 
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.model.msi.ResultSet
@@ -20,7 +20,9 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
   @Before
   @throws(classOf[Exception])
   override def setUp() = {
+
     super.setUp()
+
     _datFileName = "/dat_samples/STR_F122817_Mascot_v2.3.dat"
     udsDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml")
     logger.info("UDS db succesfully initialized")
@@ -33,49 +35,54 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
 
   @Test
   def testRFIwithSQL() = {
-    val (executionContext, rsProvider) = buildSQLContext()
-    Assert.assertNotNull(executionContext)
+    val (executionContext, rsProvider) = buildSQLContext
 
-    logger.debug(" --- Get File " + _datFileName)
-    var datFile: File = new File(RFImporterH2Test.this.getClass.getResource(_datFileName).toURI)
+    assertNotNull(executionContext)
 
-    val propertiedBuilder = Map.newBuilder[String, Any]
-    propertiedBuilder += ("ion.score.cutoff" -> 0.5)
-    propertiedBuilder += ("subset.threshold" -> 0.5)
+    try {
+      logger.debug(" --- Get File " + _datFileName)
+      var datFile: File = new File(RFImporterH2Test.this.getClass.getResource(_datFileName).toURI)
 
-    val importer: ResultFileImporterSQLStorer = new ResultFileImporterSQLStorer(
-      executionContext,
-      resultIdentFile = datFile,
-      fileType = "MascotMSParser",
-      instrumentConfigId = 1,
-      peaklistSoftwareId = 1, // TODO : provide the right value
-      importerProperties = Map.empty,
-      acDecoyRegex = None)
+      val propertiedBuilder = Map.newBuilder[String, Any]
+      propertiedBuilder += ("ion.score.cutoff" -> 0.5)
+      propertiedBuilder += ("subset.threshold" -> 0.5)
 
-    logger.debug(" --- run service ")
-    val result = importer.runService()
-    val id = importer.getTargetResultSetId
-    logger.debug(" --- done " + result + " save with resultID " + id)
+      val importer: ResultFileImporterSQLStorer = new ResultFileImporterSQLStorer(
+        executionContext,
+        resultIdentFile = datFile,
+        fileType = "MascotMSParser",
+        instrumentConfigId = 1,
+        peaklistSoftwareId = 1, // TODO : provide the right value
+        importerProperties = Map.empty, // TODO use propertiedBuilder here ?
+        acDecoyRegex = None)
 
-    Assert.assertTrue(result)
-    Assert.assertNotNull(id)
-    Assert.assertTrue(id > 0)
+      logger.debug(" --- run service ")
+      val result = importer.runService()
+      val id = importer.getTargetResultSetId
+      logger.debug(" --- done " + result + " save with resultID " + id)
 
-    val rsBackOp = rsProvider.getResultSet(id)
-    Assert.assertTrue(rsBackOp.isDefined)
-    val rsBack: ResultSet = rsBackOp.get
-    Assert.assertNotNull(rsBack)
+      assertTrue(result)
 
-    // Other verifs....
+      assertTrue(id > 0)
 
-    executionContext.closeAll()
+      val rsBackOp = rsProvider.getResultSet(id)
+      assertTrue(rsBackOp.isDefined)
+      val rsBack: ResultSet = rsBackOp.get
+      assertNotNull(rsBack)
+
+      // Other verifs....
+
+    } finally {
+      executionContext.closeAll()
+    }
+
   }
 
   @Test
   def runRFIwithJPA() = {
-    val (executionContext, rsProvider) = buildJPAContext()
+    val (executionContext, rsProvider) = buildJPAContext
 
-    Assert.assertNotNull(executionContext)
+    assertNotNull(executionContext)
 
     try {
       logger.debug(" --- Get File " + _datFileName)
@@ -91,7 +98,7 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
         fileType = "MascotMSParser",
         instrumentConfigId = 1,
         peaklistSoftwareId = 1, // TODO : provide the right value
-        importerProperties = Map.empty,
+        importerProperties = Map.empty, // TODO use propertiedBuilder here ?
         acDecoyRegex = None)
 
       logger.debug(" --- run service ")
@@ -99,14 +106,14 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
       val id = importer.getTargetResultSetId
       logger.debug(" --- done " + result + " save with resultID " + id)
 
-      Assert.assertTrue(result)
-      Assert.assertNotNull(id)
-      Assert.assertTrue(id > 0)
+      assertTrue(result)
+
+      assertTrue(id > 0)
 
       val rsBackOp = rsProvider.getResultSet(id)
-      Assert.assertTrue(rsBackOp.isDefined)
+      assertTrue(rsBackOp.isDefined)
       val rsBack: ResultSet = rsBackOp.get
-      Assert.assertNotNull(rsBack)
+      assertNotNull(rsBack)
 
       // Other verifs....
 
@@ -125,7 +132,7 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
     propertiedBuilder += ("subset.threshold" -> 0.5)
 
     /* First import */
-    val (executionContext, rsProvider) = buildJPAContext()
+    val (executionContext, rsProvider) = buildJPAContext
 
     assertNotNull(executionContext)
 
@@ -153,11 +160,6 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
       assertTrue(result)
 
       assertTrue(id > 0)
-
-      val rsBackOp = rsProvider.getResultSet(id)
-      assertTrue(rsBackOp.isDefined)
-      val rsBack: ResultSet = rsBackOp.get
-      assertNotNull(rsBack)
 
       val firstPeptideCount = countPsPeptide(executionContext)
 

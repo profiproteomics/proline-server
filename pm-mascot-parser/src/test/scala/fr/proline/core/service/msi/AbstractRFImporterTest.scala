@@ -1,20 +1,14 @@
 package fr.proline.core.service.msi
 
-import java.io.File
-import org.junit.{ After, AfterClass, Assert, Test, Before, BeforeClass }
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.dal._
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.provider.msi.impl.{ SQLPeptideProvider, SQLPTMProvider, SQLResultSetProvider, ORMSeqDatabaseProvider, ORMResultSetProvider, ORMProteinProvider, ORMPeptideProvider, ORMPTMProvider }
-import fr.proline.core.om.utils.AbstractMultipleDBTestCase
-import fr.proline.repository.DriverType
-import fr.proline.context.IExecutionContext
 
 import fr.proline.context.BasicExecutionContext
+import fr.proline.core.dal.{ContextFactory, SQLConnectionContext}
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.core.om.provider.msi.IPTMProvider
+import fr.proline.core.om.provider.msi.{IPTMProvider, IPeptideProvider}
+import fr.proline.core.om.provider.msi.impl.{ORMResultSetProvider, SQLPTMProvider, SQLPeptideProvider, SQLResultSetProvider}
+import fr.proline.core.om.utils.AbstractMultipleDBTestCase
+import fr.proline.repository.DriverType
 
 // Note: the name of the trait ends with an underscore to indicate it must not be tested directly
 trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
@@ -29,7 +23,6 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
 
   @throws(classOf[Exception])
   def setUp() = {
-
     logger.info("Initializing Dbs")
     super.initDBsDBManagement(driverType)
 
@@ -45,7 +38,6 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
     super.tearDown()
   }
 
-  //@Test
   def buildSQLContext() = {
     val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false).asInstanceOf[SQLConnectionContext]
     val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
@@ -64,12 +56,11 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
     (parserContext, rsProvider)
   }
 
-  //    @Test
   def buildJPAContext() = {
     val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
     val rsProvider = new ORMResultSetProvider(executionContext.getMSIDbConnectionContext, executionContext.getPSDbConnectionContext, executionContext.getPDIDbConnectionContext)
 
-    (executionContext, rsProvider)    
+    (executionContext, rsProvider)
   }
 
 }
