@@ -69,7 +69,6 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
     // Other verifs....
 
     executionContext.closeAll()
-
   }
 
   @Test
@@ -78,117 +77,129 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
 
     Assert.assertNotNull(executionContext)
 
-    logger.debug(" --- Get File " + _datFileName)
+    try {
+      logger.debug(" --- Get File " + _datFileName)
+      var datFile: File = new File(RFImporterH2Test.this.getClass.getResource(_datFileName).toURI)
+
+      val propertiedBuilder = Map.newBuilder[String, Any]
+      propertiedBuilder += ("ion.score.cutoff" -> 0.5)
+      propertiedBuilder += ("subset.threshold" -> 0.5)
+
+      val importer: ResultFileImporterJPAStorer = new ResultFileImporterJPAStorer(
+        executionContext,
+        resultIdentFile = datFile,
+        fileType = "MascotMSParser",
+        instrumentConfigId = 1,
+        peaklistSoftwareId = 1, // TODO : provide the right value
+        importerProperties = Map.empty,
+        acDecoyRegex = None)
+
+      logger.debug(" --- run service ")
+      val result = importer.runService()
+      val id = importer.getTargetResultSetId
+      logger.debug(" --- done " + result + " save with resultID " + id)
+
+      Assert.assertTrue(result)
+      Assert.assertNotNull(id)
+      Assert.assertTrue(id > 0)
+
+      val rsBackOp = rsProvider.getResultSet(id)
+      Assert.assertTrue(rsBackOp.isDefined)
+      val rsBack: ResultSet = rsBackOp.get
+      Assert.assertNotNull(rsBack)
+
+      // Other verifs....
+
+    } finally {
+      executionContext.closeAll()
+    }
+
+  }
+
+  @Test
+  def runRFIwithDoubleJPA() = {
     var datFile: File = new File(RFImporterH2Test.this.getClass.getResource(_datFileName).toURI)
 
     val propertiedBuilder = Map.newBuilder[String, Any]
     propertiedBuilder += ("ion.score.cutoff" -> 0.5)
     propertiedBuilder += ("subset.threshold" -> 0.5)
 
-    val importer: ResultFileImporterJPAStorer = new ResultFileImporterJPAStorer(
-      executionContext,
-      resultIdentFile = datFile,
-      fileType = "MascotMSParser",
-      instrumentConfigId = 1,
-      peaklistSoftwareId = 1, // TODO : provide the right value
-      importerProperties = Map.empty,
-      acDecoyRegex = None)
-
-    logger.debug(" --- run service ")
-    val result = importer.runService()
-    val id = importer.getTargetResultSetId
-    logger.debug(" --- done " + result + " save with resultID " + id)
-
-    Assert.assertTrue(result)
-    Assert.assertNotNull(id)
-    Assert.assertTrue(id > 0)
-
-    val rsBackOp = rsProvider.getResultSet(id)
-    Assert.assertTrue(rsBackOp.isDefined)
-    val rsBack: ResultSet = rsBackOp.get
-    Assert.assertNotNull(rsBack)
-
-    // Other verifs....
-
-    executionContext.closeAll()
-  }
-
-  @Test
-  def runRFIwithDoubleJPA() = {
     /* First import */
     val (executionContext, rsProvider) = buildJPAContext()
 
     assertNotNull(executionContext)
 
-    val initialPeptideCount = countPsPeptide(executionContext)
+    var firstPeptideCount = -1
 
-    logger.debug(" --- Get first File " + _datFileName)
-    var datFile: File = new File(RFImporterH2Test.this.getClass.getResource(_datFileName).toURI)
+    try {
+      val initialPeptideCount = countPsPeptide(executionContext)
 
-    val propertiedBuilder = Map.newBuilder[String, Any]
-    propertiedBuilder += ("ion.score.cutoff" -> 0.5)
-    propertiedBuilder += ("subset.threshold" -> 0.5)
+      logger.debug(" --- Get first File " + _datFileName)
 
-    val importer: ResultFileImporterJPAStorer = new ResultFileImporterJPAStorer(
-      executionContext,
-      resultIdentFile = datFile,
-      fileType = "MascotMSParser",
-      instrumentConfigId = 1,
-      peaklistSoftwareId = 1, // TODO : provide the right value
-      importerProperties = propertiedBuilder.result,
-      acDecoyRegex = None)
+      val importer: ResultFileImporterJPAStorer = new ResultFileImporterJPAStorer(
+        executionContext,
+        resultIdentFile = datFile,
+        fileType = "MascotMSParser",
+        instrumentConfigId = 1,
+        peaklistSoftwareId = 1, // TODO : provide the right value
+        importerProperties = propertiedBuilder.result,
+        acDecoyRegex = None)
 
-    logger.debug(" --- run first service ")
-    val result = importer.runService()
-    val id = importer.getTargetResultSetId
-    logger.debug(" --- done First import " + result + " save with resultID " + id)
+      logger.debug(" --- run first service ")
+      val result = importer.runService()
+      val id = importer.getTargetResultSetId
+      logger.debug(" --- done First import " + result + " save with resultID " + id)
 
-    assertTrue(result)
+      assertTrue(result)
 
-    assertTrue(id > 0)
+      assertTrue(id > 0)
 
-    val rsBackOp = rsProvider.getResultSet(id)
-    assertTrue(rsBackOp.isDefined)
-    val rsBack: ResultSet = rsBackOp.get
-    assertNotNull(rsBack)
+      val rsBackOp = rsProvider.getResultSet(id)
+      assertTrue(rsBackOp.isDefined)
+      val rsBack: ResultSet = rsBackOp.get
+      assertNotNull(rsBack)
 
-    val firstPeptideCount = countPsPeptide(executionContext)
+      val firstPeptideCount = countPsPeptide(executionContext)
 
-    assertTrue("First PS Peptide creations", firstPeptideCount > initialPeptideCount)
-
-    executionContext.closeAll()
+      assertTrue("First PS Peptide creations", firstPeptideCount > initialPeptideCount)
+    } finally {
+      executionContext.closeAll()
+    }
 
     /* Second import with same dat file */
     val (executionContext2, rsProvider2) = buildJPAContext
 
     assertNotNull(executionContext2)
 
-    logger.debug(" --- Get second File " + _datFileName)
-    datFile = new File(RFImporterH2Test.this.getClass.getResource(_datFileName).toURI)
+    try {
+      logger.debug(" --- Get second File " + _datFileName)
+      datFile = new File(RFImporterH2Test.this.getClass.getResource(_datFileName).toURI)
 
-    val importer2: ResultFileImporterJPAStorer = new ResultFileImporterJPAStorer(
-      executionContext2,
-      resultIdentFile = datFile,
-      fileType = "MascotMSParser",
-      instrumentConfigId = 1,
-      peaklistSoftwareId = 1, // TODO : provide the right value
-      importerProperties = propertiedBuilder.result,
-      acDecoyRegex = None)
+      val importer2: ResultFileImporterJPAStorer = new ResultFileImporterJPAStorer(
+        executionContext2,
+        resultIdentFile = datFile,
+        fileType = "MascotMSParser",
+        instrumentConfigId = 1,
+        peaklistSoftwareId = 1, // TODO : provide the right value
+        importerProperties = propertiedBuilder.result,
+        acDecoyRegex = None)
 
-    logger.debug(" --- run second service ")
-    val result2 = importer2.runService()
-    val id2 = importer2.getTargetResultSetId
-    logger.debug(" --- done Second import " + result2 + " save with resultID " + id)
+      logger.debug(" --- run second service ")
+      val result2 = importer2.runService()
+      val id2 = importer2.getTargetResultSetId
+      logger.debug(" --- done Second import " + result2 + " save with resultID " + id2)
 
-    assertTrue(result2)
+      assertTrue(result2)
 
-    assertTrue(id2 > 0)
+      assertTrue(id2 > 0)
 
-    val secondPeptideCount = countPsPeptide(executionContext2)
+      val secondPeptideCount = countPsPeptide(executionContext2)
 
-    assertEquals("Second ResultSet import", firstPeptideCount, secondPeptideCount)
+      assertEquals("Second ResultSet import", firstPeptideCount, secondPeptideCount)
+    } finally {
+      executionContext2.closeAll()
+    }
 
-    executionContext2.closeAll()
   }
 
   private def countPsPeptide(executionContext: IExecutionContext): Long = {
