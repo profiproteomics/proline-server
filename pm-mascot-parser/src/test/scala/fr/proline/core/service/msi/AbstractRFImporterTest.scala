@@ -1,5 +1,7 @@
 package fr.proline.core.service.msi
 
+import org.junit.Ignore
+
 import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.context.BasicExecutionContext
@@ -11,6 +13,7 @@ import fr.proline.core.om.utils.AbstractMultipleDBTestCase
 import fr.proline.repository.DriverType
 
 // Note: the name of the trait ends with an underscore to indicate it must not be tested directly
+@Ignore
 trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
 
   protected val driverType: DriverType

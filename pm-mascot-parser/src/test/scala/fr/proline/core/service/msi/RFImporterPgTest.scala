@@ -1,15 +1,15 @@
 package fr.proline.core.service.msi
 
-import fr.proline.repository.DriverType
-import org.junit.Before
-import org.junit.After
-import org.junit.Assert._
-import org.junit.Test
 import java.io.File
-import fr.proline.core.om.model.msi.ResultSet
-import org.junit.Ignore
 
-/* Manual PostgreSQL Test */
+import org.junit._
+import org.junit.After
+import org.junit.Assert.{assertNotNull, assertTrue}
+
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.repository.DriverType
+
+@Ignore /* Manual PostgreSQL Test */
 class RFImporterPgTest extends AbstractRFImporterTest_ {
 
   val driverType = DriverType.POSTGRESQL
@@ -75,7 +75,7 @@ class RFImporterPgTest extends AbstractRFImporterTest_ {
 
   }
 
-  @Ignore
+  @Test
   def runRFIwithJPA() = {
     val (executionContext, rsProvider) = buildJPAContext
 
