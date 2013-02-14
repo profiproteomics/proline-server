@@ -8,6 +8,7 @@ import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.{IPTMProvider,IPeptideProvider,IProteinProvider}
 import matrix_science.msparser.{ms_mascotresfile,ms_peptide,ms_peptidesummary,vectori,VectorString}
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import scala.collection.mutable.ArrayBuilder
 
 class MascotDataParser( val pepSummary: ms_peptidesummary,
                         val mascotResFile:ms_mascotresfile,
@@ -130,12 +131,17 @@ class MascotDataParser( val pepSummary: ms_peptidesummary,
       } // End go through current query Peptide
     } // End go through Queries
     
-    logger.debug(" Go through query / pep done ")
-    
-    val searchPeps = Seq() ++ pepToPeptideMatches.map(entry => (entry._1.sequence, entry._1.ptms) )
-    
+    logger.debug(" Go through query / pep done . Found "+pepToPeptideMatches.size+" different peptides" )
+
+    val pepsToSearch = Array.newBuilder[Pair[String, Array[LocatedPtm]]]
+    pepToPeptideMatches.foreach( entry => {
+      pepsToSearch += Pair(entry._1.sequence, entry._1.ptms) 
+     })
+    val searchPeps = pepsToSearch.result
+
     val foundPep = pepProvider.getPeptidesAsOptionsBySeqAndPtms(searchPeps)
-    logger.debug(" Search Pep in PS : "+foundPep.size)
+    logger.debug(" Found Pep in PS : "+foundPep.filter(_.isDefined).size)
+    
     foundPep.foreach(fPep => {
       if(fPep.isDefined){
         
