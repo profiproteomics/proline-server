@@ -25,8 +25,7 @@ import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
 @Test
 class MascotParserTest extends Logging { // }extends DatabaseTestCase {
 
-  val dictyDatFileName: String = "/F047876.dat"
-  val k12ControlDatFileName: String = "/F065306.dat"
+  var ecoli_datFileName: String = "/dat_samples/GRE_F068213_M2.4_TD_EColi.dat"
 
   var file: File = null
 
@@ -39,10 +38,7 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
     // Init PS db connexion
     psDBTestCase = new PSDatabaseTestCase()
     psDBTestCase.initDatabase()
-    //psDBTestCase.initEntityManager(JPAUtil.PersistenceUnitNames.PS_Key.getPersistenceUnitName())
     psDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/Unimod_Dataset.xml")
-
-    //psDbEMF = psDBTestCase.getConnector().getEntityManagerFactory()   
   }
 
   @After
@@ -51,7 +47,7 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
   }
 
   @Test
-  def testReadDictyDatFile() = {
+  def testReadDatFile() = {
     val psDbCtx = new DatabaseConnectionContext(psDBTestCase.getConnector)
 
     val executionContext = new BasicExecutionContext(null, null, psDbCtx, null, null)
@@ -62,111 +58,59 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
       parserContext.putProvider(classOf[IProteinProvider], ProteinFakeProvider)
       parserContext.putProvider(classOf[ISeqDatabaseProvider], SeqDbFakeProvider)
 
-      val f = new File(this.getClass().getResource(dictyDatFileName).toURI())
+      val f = new File(this.getClass().getResource(ecoli_datFileName).toURI())
       val propertiesBuilder = Map.newBuilder[String, Any]
       propertiesBuilder += (MascotParseParams.ION_SCORE_CUTOFF.toString -> 0.5)
       val mascotDatFile = new MascotResultFile(f, propertiesBuilder.result, parserContext);
       val rs: ResultSet = mascotDatFile.getResultSet(wantDecoy = false)
 
       //Test Search Param info
-      testDictyDescription(rs)
+      testEColiDescription(rs)
 
       //Test PTM Providers worked well 
-      testDictyPeptidePtms(rs)
+      testEColiPeptidePtms(rs)
       assertNotNull(rs)
-      assertEquals(21393, rs.peptideMatches.length)
-      assertEquals(11323, rs.proteinMatches.length)
+      // --> VD TODO: Estimate # peptideMatch & # proteinMatches
+      assertEquals(1687, rs.peptideMatches.length) 
+      assertEquals(2519, rs.proteinMatches.length)
     } finally {
       executionContext.closeAll()
     }
 
   }
 
-  @Test
-  def testReadControlDatFile() = {
-    val psDbCtx = new DatabaseConnectionContext(psDBTestCase.getConnector)
+  private def testEColiDescription(rs: ResultSet) = {
 
-    val executionContext = new BasicExecutionContext(null, null, psDbCtx, null, null)
-
-    try {
-      val parserContext = new ProviderDecoratedExecutionContext(executionContext)
-
-      parserContext.putProvider(classOf[IProteinProvider], ProteinFakeProvider)
-      parserContext.putProvider(classOf[ISeqDatabaseProvider], SeqDbFakeProvider)
-
-      val f = new File(this.getClass().getResource(k12ControlDatFileName).toURI())
-
-      val mascotDatFile = new MascotResultFile(f, Map.empty, parserContext)
-      val rs: ResultSet = mascotDatFile.getResultSet(wantDecoy = false)
-
-      assertNotNull(rs)
-
-      //Test Search Param info
-      testK12Description(rs)
-      //Test PTM Providers worked well 
-      testK12PeptidePtms(rs)
-
-      assertEquals(13103, rs.peptideMatches.length)
-      assertEquals(19651, rs.proteinMatches.length)
-    } finally {
-      executionContext.closeAll()
-    }
-
-  }
-
-  private def testK12Description(rs: ResultSet) = {
     val msiSearchDate = Calendar.getInstance()
     msiSearchDate.setTime(rs.msiSearch.date)
 
     val expectedDate = Calendar.getInstance()
-    expectedDate.set(2012, 4, 21)
+    expectedDate.set(2013, 01, 05)
     assertThat(msiSearchDate.get(Calendar.MONTH), CoreMatchers.equalTo(expectedDate.get(Calendar.MONTH)))
     assertThat(msiSearchDate.get(Calendar.DAY_OF_MONTH), CoreMatchers.equalTo(expectedDate.get(Calendar.DAY_OF_MONTH)))
     assertThat(msiSearchDate.get(Calendar.YEAR), CoreMatchers.equalTo(expectedDate.get(Calendar.YEAR)))
 
-    assertThat(rs.msiSearch.jobNumber, CoreMatchers.equalTo(65306))
-    assertThat(rs.msiSearch.submittedQueriesCount, CoreMatchers.equalTo(7896))
-    assertThat(rs.msiSearch.resultFileName, CoreMatchers.equalTo("F065306.dat"))
+    assertThat(rs.msiSearch.jobNumber, CoreMatchers.equalTo(68213))
+    assertThat(rs.msiSearch.queriesCount, CoreMatchers.equalTo(7047))
+    assertThat(rs.msiSearch.submittedQueriesCount, CoreMatchers.equalTo(7047))
+    assertThat(rs.msiSearch.resultFileName, CoreMatchers.equalTo("GRE_F068213_M2.4_TD_EColi.dat"))
     assertThat(rs.msiSearch.searchedSequencesCount, CoreMatchers.equalTo(32182))
-    assertThat(rs.msiSearch.title, CoreMatchers.equalTo("K12 controle LC-MS DH5 xtract 1% VELOS7546.raw"))
-    assertThat(rs.msiSearch.userName, CoreMatchers.equalTo("Kieffer Sylvie"))
+    assertThat(rs.msiSearch.title, CoreMatchers.equalTo("K12 Test nano trap duree gradient T12 HCD QEx1_000192.raw (DH5_50)"))
+    assertThat(rs.msiSearch.userName, CoreMatchers.equalTo("AMH"))
 
     assertThat(rs.msiSearch.searchSettings.fixedPtmDefs.length, CoreMatchers.equalTo(1))
-    assertThat(rs.msiSearch.searchSettings.fixedPtmDefs(0).names.shortName, CoreMatchers.equalTo("Carbamidomethyl"))
-    assertThat(rs.msiSearch.searchSettings.fixedPtmDefs(0).residue, CoreMatchers.equalTo('C'))
     assertThat(rs.msiSearch.searchSettings.variablePtmDefs.length, CoreMatchers.equalTo(2))
-  }
-
-  private def testDictyDescription(rs: ResultSet) = {
-
-    val msiSearchDate = Calendar.getInstance()
-    msiSearchDate.setTime(rs.msiSearch.date)
-
-    val expectedDate = Calendar.getInstance()
-    expectedDate.set(2009, 7, 29)
-    assertThat(msiSearchDate.get(Calendar.MONTH), CoreMatchers.equalTo(expectedDate.get(Calendar.MONTH)))
-    assertThat(msiSearchDate.get(Calendar.DAY_OF_MONTH), CoreMatchers.equalTo(expectedDate.get(Calendar.DAY_OF_MONTH)))
-    assertThat(msiSearchDate.get(Calendar.YEAR), CoreMatchers.equalTo(expectedDate.get(Calendar.YEAR)))
-
-    assertThat(rs.msiSearch.jobNumber, CoreMatchers.equalTo(47876))
-    assertThat(rs.msiSearch.queriesCount, CoreMatchers.equalTo(4004))
-    assertThat(rs.msiSearch.submittedQueriesCount, CoreMatchers.equalTo(4004))
-    assertThat(rs.msiSearch.resultFileName, CoreMatchers.equalTo("F047876.dat"))
-    assertThat(rs.msiSearch.searchedSequencesCount, CoreMatchers.equalTo(26782))
-    assertThat(rs.msiSearch.title, CoreMatchers.equalTo("ENDODDVE7_1T_20"))
-    assertThat(rs.msiSearch.userName, CoreMatchers.equalTo("Brugiere Sabine"))
-
-    assertThat(rs.msiSearch.searchSettings.fixedPtmDefs.length, CoreMatchers.equalTo(0))
-    assertThat(rs.msiSearch.searchSettings.variablePtmDefs.length, CoreMatchers.equalTo(4))
     assertThat(rs.msiSearch.searchSettings.variablePtmDefs(0).names.shortName, CoreMatchers.equalTo("Acetyl"))
     assertThat(rs.msiSearch.searchSettings.variablePtmDefs(0).residue, CoreMatchers.equalTo('\0'))
+    assertThat(rs.msiSearch.searchSettings.variablePtmDefs(1).names.shortName, CoreMatchers.equalTo("Oxidation"))
+    assertThat(rs.msiSearch.searchSettings.variablePtmDefs(1).residue, CoreMatchers.equalTo('M'))
   }
 
-  private def testDictyPeptidePtms(rs: ResultSet) = {
+  private def testEColiPeptidePtms(rs: ResultSet) = {
 
     //Test PTM Providers worked well 
     val allPepMatches: Array[PeptideMatch] = rs.peptideMatches
-    val PtmShortNames = Array[String]("Acetyl", "Dioxidation", "Oxidation", "Trioxidation")
+    val PtmShortNames = Array[String]("Acetyl", "Oxidation", "Carbamidomethyl")
     allPepMatches filter (!_.peptide.ptms.isEmpty) foreach { pepMatch =>
       //	     logger.debug(" PepPtm \t" + pepMatch.peptide.sequence+"\t"+pepMatch.msQuery.initialId+"\t"+pepMatch.rank+"\t"+pepMatch.peptide.ptmString)
       val pepPtms: Array[fr.proline.core.om.model.msi.LocatedPtm] = pepMatch.peptide.ptms
@@ -174,7 +118,7 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
         assertTrue(PtmShortNames.contains(locatedPtm.definition.names.shortName))
         if (locatedPtm.definition.names.shortName.equals(PtmShortNames(0)))
           assertTrue(locatedPtm.isNTerm)
-        else if (locatedPtm.definition.names.shortName.equals(PtmShortNames(1)) || locatedPtm.definition.names.shortName.equals(PtmShortNames(2)))
+        else if (locatedPtm.definition.names.shortName.equals(PtmShortNames(1)))
           assertTrue(locatedPtm.definition.residue.equals('M'))
         else
           assertTrue(locatedPtm.definition.residue.equals('C'))
@@ -188,32 +132,7 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
 
   }
 
-  private def testK12PeptidePtms(rs: ResultSet) = {
-
-    //Test PTM Providers worked well 
-    val allPepMatches: Array[PeptideMatch] = rs.peptideMatches
-    val PtmShortNames = Array[String]("Acetyl", "Carbamidomethyl", "Oxidation")
-    allPepMatches filter (!_.peptide.ptms.isEmpty) foreach { pepMatch =>
-      //	     logger.debug(" PepPtm \t" + pepMatch.peptide.sequence+"\t"+pepMatch.msQuery.initialId+"\t"+pepMatch.rank+"\t"+pepMatch.peptide.ptmString)
-      val pepPtms: Array[fr.proline.core.om.model.msi.LocatedPtm] = pepMatch.peptide.ptms
-      pepPtms.foreach { locatedPtm =>
-        assertTrue(PtmShortNames.contains(locatedPtm.definition.names.shortName))
-        if (locatedPtm.definition.names.shortName.equals(PtmShortNames(0)))
-          assertTrue(locatedPtm.isNTerm)
-        else if (locatedPtm.definition.names.shortName.equals(PtmShortNames(1)))
-          assertTrue(locatedPtm.definition.residue.equals('C'))
-        else
-          assertTrue(locatedPtm.definition.residue.equals('M'))
-      }
-    }
-
-    allPepMatches filter (nextPepMatch => nextPepMatch.msQuery.initialId.equals(35) && nextPepMatch.rank == 1) foreach { pepMatch =>
-      //	   	 logger.debug(" --------------- QUERY 385 !! "+pepMatch.peptide.sequence+ " --- " +pepMatch.peptide.ptms(0).definition.names.shortName)
-      assertEquals("Carbamidomethyl", pepMatch.peptide.ptms(0).definition.names.shortName)
-    }
-
-  }
-
+ 
   class PSDatabaseTestCase extends DatabaseTestCase {
     override def getProlineDatabaseType() = ProlineDatabaseType.PS
   }
