@@ -136,7 +136,7 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
 
     assertNotNull(executionContext)
 
-    var firstPeptideCount = -1
+    var firstPeptideCount = -1L
 
     try {
       val initialPeptideCount = countPsPeptide(executionContext)
@@ -161,7 +161,7 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
 
       assertTrue(id > 0)
 
-      val firstPeptideCount = countPsPeptide(executionContext)
+      firstPeptideCount = countPsPeptide(executionContext)
 
       assertTrue("First PS Peptide creations", firstPeptideCount > initialPeptideCount)
     } finally {
