@@ -1,16 +1,12 @@
 package fr.proline.core.service.msi
 
 import java.io.File
-import java.sql.Connection
 
-import org.junit.{ Before, Test }
+import org.junit.{Before, Ignore, Test}
 import org.junit.After
-import org.junit.Assert.{ assertEquals, assertNotNull, assertTrue }
+import org.junit.Assert._
 
-import fr.proline.context.IExecutionContext
-import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.repository.DriverType
-import fr.proline.repository.util.JDBCReturningWork
 
 @Test
 class RFImporterH2Test extends AbstractRFImporterTest_ {
@@ -37,6 +33,8 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
   def testRFIwithSQL() = {
     val (executionContext, rsProvider) = buildSQLContext
 
+    val (jpaContext, ormProvider) = buildJPAContext
+
     assertNotNull(executionContext)
 
     try {
@@ -47,7 +45,7 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
       propertiedBuilder += ("ion.score.cutoff" -> 0.5)
       propertiedBuilder += ("subset.threshold" -> 0.5)
 
-      val importer: ResultFileImporterSQLStorer = new ResultFileImporterSQLStorer(
+      val importer = new ResultFileImporterSQLStorer(
         executionContext,
         resultIdentFile = datFile,
         fileType = "MascotMSParser",
@@ -67,12 +65,20 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
 
       val rsBackOp = rsProvider.getResultSet(id)
       assertTrue(rsBackOp.isDefined)
-      val rsBack: ResultSet = rsBackOp.get
+      val rsBack = rsBackOp.get
       assertNotNull(rsBack)
 
       // Other verifs....
 
+      /* Reload with JPA */
+      val ormLoadedRsOp = ormProvider.getResultSet(id)
+      assertTrue(ormLoadedRsOp.isDefined)
+      val ormLoadedRs = ormLoadedRsOp.get
+      assertNotNull(ormLoadedRs)
+
     } finally {
+      jpaContext.closeAll()
+
       executionContext.closeAll()
     }
 
@@ -92,7 +98,7 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
       propertiedBuilder += ("ion.score.cutoff" -> 0.5)
       propertiedBuilder += ("subset.threshold" -> 0.5)
 
-      val importer: ResultFileImporterJPAStorer = new ResultFileImporterJPAStorer(
+      val importer = new ResultFileImporterJPAStorer(
         executionContext,
         resultIdentFile = datFile,
         fileType = "MascotMSParser",
@@ -112,7 +118,7 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
 
       val rsBackOp = rsProvider.getResultSet(id)
       assertTrue(rsBackOp.isDefined)
-      val rsBack: ResultSet = rsBackOp.get
+      val rsBack = rsBackOp.get
       assertNotNull(rsBack)
 
       // Other verifs....
@@ -143,7 +149,7 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
 
       logger.debug(" --- Get first File " + _datFileName)
 
-      val importer: ResultFileImporterJPAStorer = new ResultFileImporterJPAStorer(
+      val importer = new ResultFileImporterJPAStorer(
         executionContext,
         resultIdentFile = datFile,
         fileType = "MascotMSParser",
@@ -177,7 +183,7 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
       logger.debug(" --- Get second File " + _datFileName)
       datFile = new File(RFImporterH2Test.this.getClass.getResource(_datFileName).toURI)
 
-      val importer2: ResultFileImporterJPAStorer = new ResultFileImporterJPAStorer(
+      val importer2 = new ResultFileImporterJPAStorer(
         executionContext2,
         resultIdentFile = datFile,
         fileType = "MascotMSParser",
@@ -202,51 +208,6 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
       executionContext2.closeAll()
     }
 
-  }
-
-  private def countPsPeptide(executionContext: IExecutionContext): Long = {
-
-    val sqlWork = new JDBCReturningWork[Long]() {
-
-      override def execute(con: Connection): Long = {
-        var peptideCount: Long = -1L
-
-        val stat = con.prepareStatement("SELECT COUNT(*) from Peptide")
-
-        val rs = stat.executeQuery()
-
-        while ((peptideCount == -1L) && rs.next()) {
-          val obj = rs.getObject(1) // 1st column
-
-          if (obj.isInstanceOf[java.lang.Long]) {
-            peptideCount = obj.asInstanceOf[java.lang.Long].longValue
-
-            logger.debug("Peptides in PS : " + peptideCount)
-          }
-
-        }
-
-        rs.close()
-
-        stat.close()
-
-        peptideCount
-      }
-
-    }
-
-    logger.debug("Try to retrieve Peptides count from PS")
-
-    val psDb = executionContext.getPSDbConnectionContext
-
-    val transaction = psDb.getEntityManager.getTransaction
-    transaction.begin()
-
-    val result = executionContext.getPSDbConnectionContext.doReturningWork(sqlWork, false)
-
-    transaction.commit()
-
-    result
   }
 
 }
