@@ -1,6 +1,6 @@
 package fr.proline.core.service.msi
 
-import java.sql.Connection
+import java.sql.{Connection, SQLException}
 
 import org.junit.Ignore
 
@@ -90,15 +90,27 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
   private def countPsPeptideSQL(con: Connection): Long = {
     var peptideCount: Long = -1L
 
-    val stat = con.prepareStatement("SELECT COUNT(*) from Peptide")
+    val stm = con.createStatement()
 
-    val rs = stat.executeQuery()
+    try {
+      val rs = stm.executeQuery("SELECT COUNT(*) from Peptide")
 
-    while ((peptideCount == -1L) && rs.next()) {
-      val obj = rs.getObject(1) // 1st column
+      while ((peptideCount == -1L) && rs.next()) {
+        val obj = rs.getObject(1) // 1st column
 
-      if (obj.isInstanceOf[java.lang.Long]) {
-        peptideCount = obj.asInstanceOf[java.lang.Long].longValue
+        if (obj.isInstanceOf[java.lang.Long]) {
+          peptideCount = obj.asInstanceOf[java.lang.Long].longValue
+        }
+
+      }
+
+      rs.close()
+    } finally {
+
+      try {
+        stm.close() // Also closes current ResultSet object
+      } catch {
+        case exClose: SQLException => logger.error("Error closing count statement", exClose)
       }
 
     }
