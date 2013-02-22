@@ -139,13 +139,13 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
 
   @Test
   def testRankValidation() = {
-
+    val readRS = rsProvider.getResultSet(rsIDWork).get
     val seqBuilder = Seq.newBuilder[IPeptideMatchFilter]
     val rank = 1
     seqBuilder += new RankPSMFilter( pepMatchMaxRank = 1 )
-    val rsValidation = ResultSetValidator(
+    val rsValidation = new ResultSetValidator(
       execContext = executionContext,
-      targetRsId = rsIDWork,
+      targetRs = readRS,
       tdAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED)),
       pepMatchPreFilters = Some( seqBuilder.result() ),
       pepMatchValidator = None,
@@ -197,6 +197,28 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
 
       Assert.assertTrue( validatedEntry )
     } )
+    
+    val rsPepMatchByQuId = new HashMap[Int, ArrayBuffer[PeptideMatch]]()
+    val rsPsm = readRS.peptideMatches ++ readRS.decoyResultSet.get.peptideMatches
+    rsPsm.foreach( peptideM => {
+      val pepMatches = rsPepMatchByQuId.get( peptideM.msQueryId ).getOrElse( new ArrayBuffer[PeptideMatch]() )
+      pepMatches +=(peptideM)    
+      rsPepMatchByQuId.put( peptideM.msQueryId, pepMatches )
+    } )
+    
+    rsPepMatchByQuId.foreach(entry => {
+     val psmEntry =  entry._2.sortWith((a,b) => a.score > b.score)
+     var firstPSMScore = psmEntry(0).score
+     entry._2.foreach(psm => {
+       //logger.debug(" -- QID "+entry._1+" PSM "+psm.peptide.sequence+" firstPSMScore "+firstPSMScore+" <> "+psm.score+"  " +psm.isValidated+" ( "+(firstPSMScore - psm.score).abs+" )")
+       if( (firstPSMScore - psm.score).abs >=0.1)
+         Assert.assertTrue(!psm.isValidated)
+       else 
+         Assert.assertTrue(psm.isValidated)
+     })
+   })
+    
+    
   }
 
   @Test
@@ -239,13 +261,14 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     Assert.assertEquals( new ScorePSMFilter().filterDescription, fPrp.getDescription.get )
     
     val scoreThresh = props( FilterPropertyKeys.THRESHOLD_VALUE).asInstanceOf[Float]
-    Assert.assertEquals(52.8, scoreThresh, ScorePSMFilter.thresholdIncreaseValue/10 )
-    Assert.assertEquals(6.67f, rsValidation.validatedTargetRsm.properties.get.getValidationProperties.get.getResults.getPeptideResults.get.getFdr)
+    Assert.assertEquals(52.89, scoreThresh, 0.01 )
+    
+    Assert.assertEquals(7.01f, rsValidation.validatedTargetRsm.properties.get.getValidationProperties.get.getResults.getPeptideResults.get.getFdr.get, 0.01f)
 
     logger.debug( " Verify Result IN RSM " )
     val allTarPepMatc = rsValidation.validatedTargetRsm.peptideInstances.flatMap( pi => pi.peptideMatches )
     val allDecPepMatc = rsValidation.validatedDecoyRsm.get.peptideInstances.flatMap( pi => pi.peptideMatches )
-    Assert.assertEquals( 58, allTarPepMatc.length )
+    Assert.assertEquals( 55, allTarPepMatc.length )
     Assert.assertEquals( 2, allDecPepMatc.length )
 
     allTarPepMatc.foreach( peptideM => {
