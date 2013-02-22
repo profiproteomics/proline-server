@@ -16,7 +16,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>0.0.7-SNAPSHOT</core.version>
+    <core.version>0.0.8-SNAPSHOT</core.version>
   </properties>
 
   <dependencies>
