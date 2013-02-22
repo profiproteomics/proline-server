@@ -16,6 +16,7 @@ import fr.proline.core.om.provider.msi.IProteinProvider
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
 import org.scalatest.junit.{ JUnitRunner, JUnitSuite }
+import fr.proline.core.om.model.msi.PeptideMatch
 
 @Test
 class TargetDecoySplitterTest extends JUnitSuite with Logging { 
@@ -89,7 +90,25 @@ class TargetDecoySplitterTest extends JUnitSuite with Logging {
     logger.debug("number of target peptides        = " + tRs.peptides.length)
     logger.debug("number of decoy peptides         = " + dRs.peptides.length)
 
+    val peptideMatches = tRs.peptideMatches ++ dRs.peptideMatches
+    assertEquals(peptideMatches.size, (tRs.peptideMatches.length+ dRs.peptideMatches.length))
+    var pepMatchesByMsQueryInitialId = peptideMatches.groupBy( _.msQuery.initialId )
+    val nbrQueries = pepMatchesByMsQueryInitialId.size
+    assertEquals(nbrQueries , 782) //Vu avec IRMa: 216 unassigned queries sur les 998...
+    
+      // Build peptide match joint table
+    for( (msQueryInitialId, pepMatches) <- pepMatchesByMsQueryInitialId ) {
+      
+      // Group peptide matches by result set id
+	val sortedPepMatches : Array[PeptideMatch]= pepMatches.sortBy(_.rank)
+	pepMatchesByMsQueryInitialId += msQueryInitialId -> sortedPepMatches
+    }
+    assertEquals(nbrQueries,pepMatchesByMsQueryInitialId.size)
+    assertEquals(19, pepMatchesByMsQueryInitialId.get(145).get.length )
+    val pepMatchQ145 = pepMatchesByMsQueryInitialId.get(145).get.filter(_.peptide.sequence == "VAIPK")
+    assertEquals(2, pepMatchQ145.size)
+    assertEquals(pepMatchQ145(0).peptideId, pepMatchQ145(1).peptideId)
+    
   }
-
-
+  
 }
