@@ -13,18 +13,19 @@ import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.dal.SQLConnectionContext
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.dal.ContextFactory
-import fr.proline.core.algo.msi.filter.IPeptideMatchFilter
-import fr.proline.core.algo.msi.filter.ScorePSMFilter
-import fr.proline.core.service.msi.ResultSetValidator
-import fr.proline.core.algo.msi.filter.RankPSMFilter
+import fr.proline.core.algo.msi.filtering.pepmatch._
 import scala.collection.mutable.HashMap
 import fr.proline.core.om.model.msi.PeptideMatch
 import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
-import fr.proline.core.algo.msi.validation.TargetDecoyModes
+import fr.proline.core.algo.msi.validation._
 import fr.proline.core.om.model.msi.FilterDescriptor
-import fr.proline.core.algo.msi.filter.FilterPropertyKeys
+import fr.proline.core.algo.msi.filtering._
+import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
+import fr.proline.core.algo.msi.filtering.pepmatch.RankPSMFilter
+import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
+import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
 import fr.proline.core.algo.msi.validation.pepmatch.TDPepMatchValidatorWithFDROptimization
+import fr.proline.core.algo.msi.filtering.FilterPropertyKeys
 
 class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
 
