@@ -150,8 +150,8 @@
   <profiles>
 
     <profile>
-      <!-- Development profile : Windows 32 or 64 bits -->
-      <id>dev</id>
+      <!-- Development profile : Windows 64 bits -->
+      <id>dev_64</id>
 
       <activation>
         <activeByDefault>true</activeByDefault>
@@ -168,11 +168,28 @@
 
       </dependencies>
 
-    </profile> <!-- End of dev profile -->
+    </profile> <!-- End of dev_64 profile -->
+
+    <profile>
+      <!-- Integration profile : Linux 32 bits -->
+      <id>integ_32</id>
+
+      <dependencies>
+
+        <dependency>
+          <groupId>matrixscience</groupId>
+          <artifactId>msparser</artifactId>
+          <version>2.4.00</version>
+          <classifier>Linux_i386</classifier>
+        </dependency>
+
+      </dependencies>
+
+    </profile> <!-- End of integ_32 profile -->
 
     <profile>
       <!-- Integration (Jenkins) profile : Linux 64 bits -->
-      <id>integ</id>
+      <id>integ_64</id>
 
       <dependencies>
 
@@ -185,7 +202,7 @@
 
       </dependencies>
 
-    </profile> <!-- End of integ profile -->
+    </profile> <!-- End of integ_64 profile -->
 
   </profiles>
 
