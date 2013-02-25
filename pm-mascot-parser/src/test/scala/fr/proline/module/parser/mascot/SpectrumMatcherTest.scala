@@ -1,17 +1,16 @@
 package fr.proline.module.parser.mascot
 
 import java.io.File
-import java.util.Locale
 
-import org.junit.{ Assert, Test }
+import org.junit.{Assert, Test}
 
 import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.context.BasicExecutionContext
-import fr.proline.core.dal.{ ContextFactory, SQLConnectionContext }
+import fr.proline.core.dal.{ContextFactory, SQLConnectionContext}
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.{ IPTMProvider, IPeptideProvider, ResultFileProviderRegistry }
-import fr.proline.core.om.provider.msi.impl.{ SQLPTMProvider, SQLPeptideProvider }
+import fr.proline.core.om.provider.msi.{IPTMProvider, IPeptideProvider, ResultFileProviderRegistry}
+import fr.proline.core.om.provider.msi.impl.{SQLPTMProvider, SQLPeptideProvider}
 import fr.proline.core.om.utils.AbstractMultipleDBTestCase
 import fr.proline.repository.DriverType
 
@@ -70,34 +69,23 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
     logger.info(" --- SpectrumMatcher  " + datFile.exists)
 
     // Get Right ResultFile provider
-    val oldLocale = Locale.getDefault
+    val rfProvider = ResultFileProviderRegistry.get("MascotMSParser")
+    if (rfProvider == None)
+      throw new IllegalArgumentException("No ResultFileProvider for specified identification file format")
 
-    try {
-      logger.info("Setting ENGLISH Locale")
-      Locale.setDefault(Locale.ENGLISH)
+    //import com.codahale.jerkson.Json.generate
+    import fr.proline.core.utils.serialization.ProlineJson
 
-      val rfProvider = ResultFileProviderRegistry.get("MascotMSParser")
-      if (rfProvider == None)
-        throw new IllegalArgumentException("No ResultFileProvider for specified identification file format")
+    // Open the result file
+    val resultFile = rfProvider.get.getResultFile(datFile, importProperties, parserContext)
 
-      //import com.codahale.jerkson.Json.generate
-      import fr.proline.core.utils.serialization.ProlineJson
+    var fragMatchesCount = 0
+    val rs = resultFile.eachSpectrumMatch(true, { sMatch =>
+      fragMatchesCount += sMatch.fragmentMatches.length
+      //println(ProlineJson.generate(sMatch).length)
+    })
 
-      // Open the result file
-      val resultFile = rfProvider.get.getResultFile(datFile, importProperties, parserContext)
-
-      var fragMatchesCount = 0
-      val rs = resultFile.eachSpectrumMatch(true, { sMatch =>
-        fragMatchesCount += sMatch.fragmentMatches.length
-        //println(ProlineJson.generate(sMatch).length)
-      })
-
-      Assert.assertEquals(24569, fragMatchesCount)
-
-    } finally {
-      logger.info("Resetting locale to " + oldLocale)
-      Locale.setDefault(oldLocale)
-    }
+    Assert.assertEquals(24569, fragMatchesCount)
 
   }
 
