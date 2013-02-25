@@ -79,11 +79,19 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
       // Other verifs....
 
       /* Reload with JPA */
-//      val ormLoadedRsOp = ormProvider.getResultSet(id)
-//      assertTrue(ormLoadedRsOp.isDefined)
-//      val ormLoadedRs = ormLoadedRsOp.get
-//      assertNotNull(ormLoadedRs)
-
+      val ormLoadedRsOp = ormProvider.getResultSet(id)
+      assertTrue(ormLoadedRsOp.isDefined)
+      val ormLoadedRs = ormLoadedRsOp.get
+      assertNotNull(ormLoadedRs)
+      
+      nbrMascotProperties = 0
+      ormLoadedRs.peptideMatches.foreach(psm =>{ 
+        assertTrue(psm.properties.isDefined)
+        if(psm.properties.get.getMascotProperties.isDefined)
+            nbrMascotProperties +=1        
+      })
+      assertTrue(nbrMascotProperties>0)
+      
     } finally {
       jpaContext.closeAll()
 
