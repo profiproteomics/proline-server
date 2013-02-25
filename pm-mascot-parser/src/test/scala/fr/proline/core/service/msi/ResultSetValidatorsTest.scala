@@ -26,6 +26,9 @@ import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
 import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
 import fr.proline.core.algo.msi.validation.pepmatch.TDPepMatchValidatorWithFDROptimization
 import fr.proline.core.algo.msi.filtering.FilterPropertyKeys
+import fr.proline.core.algo.msi.validation.proteinset.ProtSetRulesValidatorWithFDROptimization
+import fr.proline.core.algo.msi.filtering.proteinset.ScoreProtSetFilter
+import fr.proline.core.algo.msi.scoring.MascotProteinSetScoreUpdater
 
 class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
 
@@ -151,7 +154,8 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
       pepMatchPreFilters = Some( seqBuilder.result() ),
       pepMatchValidator = None,
       protSetFilters = None,
-      storeResultSummary = false )
+      storeResultSummary = false
+    )
       
 
     val result = rsValidation.runService
@@ -284,6 +288,94 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
       Assert.assertTrue( peptideM.score > scoreThresh )
     } )
 
+  }
+  
+  @Test
+  def testRankAndScoreFDRValidation() = {
+
+    val firstRankFilter = new RankPSMFilter(1)
+    val valFilter = new ScorePSMFilter()
+    val testTDAnalyzer = Some(new CompetitionBasedTDAnalyzer(valFilter))
+    val fdrValidator = new TDPepMatchValidatorWithFDROptimization(
+      validationFilter = valFilter,
+      expectedFdr = Some(7.0f),
+      tdAnalyzer = testTDAnalyzer
+    )
+    
+    logger.info( "ResultSetValidator testRankAndScoreFDRValidation Create service" )
+    val rsValidation = ResultSetValidator(
+      execContext = executionContext,
+      targetRsId = rsIDWork,
+      tdAnalyzer = testTDAnalyzer,
+      pepMatchPreFilters = Some(Seq(firstRankFilter)),
+      pepMatchValidator = Some(fdrValidator),
+      protSetFilters = None,
+      protSetValidator = None,
+      storeResultSummary = false
+    )
+    
+    logger.debug( "ResultSetValidator testRankAndScoreFDRValidation RUN service" )
+    val result = rsValidation.runService
+    Assert.assertTrue( result )
+    logger.debug( "End Run ResultSetValidator Service with FDR filter using Rank and Score, in Test " )
+    
+    logger.debug( "Verify Result IN RS" )
+    val rsTarPepMatches = rsValidation.validatedTargetRsm.resultSet.get.peptideMatches
+    val rsDecPepMatches = rsValidation.validatedDecoyRsm.get.resultSet.get.peptideMatches
+    Assert.assertEquals( 102, rsTarPepMatches.count(_.isValidated) )
+    Assert.assertEquals( 16, rsDecPepMatches.count(_.isValidated) )
+    
+    logger.debug( "Verify Result IN RSM" )
+    val allTarPepMatc = rsValidation.validatedTargetRsm.peptideInstances.flatMap( pi => pi.peptideMatches )
+    val allDecPepMatc = rsValidation.validatedDecoyRsm.get.peptideInstances.flatMap( pi => pi.peptideMatches )
+    Assert.assertEquals( 102, allTarPepMatc.length )
+    Assert.assertEquals( 16, allDecPepMatc.length )
+  }
+  
+  @Test
+  def testPepMatchAndProtSetFDRValidation() = {
+
+    val firstRankFilter = new RankPSMFilter(1)
+    val pepMatchValFilter = new ScorePSMFilter()
+    val testTDAnalyzer = Some(new CompetitionBasedTDAnalyzer(pepMatchValFilter))
+    
+    // Create peptide match validator
+    val pepMatchValidator = new TDPepMatchValidatorWithFDROptimization(
+      validationFilter = pepMatchValFilter,
+      expectedFdr = Some(7.0f),
+      tdAnalyzer = testTDAnalyzer
+    )
+    
+    // Create protein set validator
+    val protSetValidator = new ProtSetRulesValidatorWithFDROptimization(
+      protSetScoreUpdater = Some(new MascotProteinSetScoreUpdater(0f)),
+      protSetFilterRule1 = new ScoreProtSetFilter(30),
+      protSetFilterRule2 = new ScoreProtSetFilter,
+      expectedFdr = Some(1.0f)
+    )
+    
+    logger.info( "ResultSetValidator testPepMatchAndProtSetFDRValidation Create service" )
+    val rsValidation = ResultSetValidator(
+      execContext = executionContext,
+      targetRsId = rsIDWork,
+      tdAnalyzer = testTDAnalyzer,
+      pepMatchPreFilters = Some(Seq(firstRankFilter)),
+      pepMatchValidator = Some(pepMatchValidator),
+      protSetFilters = None,
+      protSetValidator = Some(protSetValidator),
+      storeResultSummary = false
+    )
+    
+    logger.debug( "ResultSetValidator testPepMatchAndProtSetFDRValidation RUN service" )
+    val result = rsValidation.runService
+    Assert.assertTrue( result )
+    logger.debug( "End Run ResultSetValidator Service for testPepMatchAndProtSetFDRValidation" )
+    
+    logger.debug( "Verify Result IN RSM" )
+    val allTarProtSets = rsValidation.validatedTargetRsm.proteinSets
+    val allDecProtSets = rsValidation.validatedDecoyRsm.get.proteinSets
+    Assert.assertEquals( 8, allTarProtSets.count(_.isValidated) )
+    Assert.assertEquals( 0, allDecProtSets.count(_.isValidated) )
   }
 
 }
