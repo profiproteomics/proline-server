@@ -348,7 +348,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     
     // Create protein set validator
     val protSetValidator = new ProtSetRulesValidatorWithFDROptimization(
-      protSetScoreUpdater = Some(new MascotProteinSetScoreUpdater(-20f)),
+      //protSetScoreUpdater = Some(new MascotProteinSetScoreUpdater(-20f)),
       protSetFilterRule1 = new ScoreProtSetFilter,
       protSetFilterRule2 = new ScoreProtSetFilter,
       expectedFdr = Some(1.0f)
