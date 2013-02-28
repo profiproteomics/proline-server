@@ -54,10 +54,10 @@ class MascotResultFile(
   // TEST LMN : Forcing ENGLISH Locale before any Mascot work
   val oldLocale = Locale.getDefault
 
-  if (!Locale.ENGLISH.equals(oldLocale)) {
+  if (!Locale.US.equals(oldLocale)) {
     logger.info("Forcing ENGLISH Locale before Mascot imports (was " + oldLocale + ')')
 
-    Locale.setDefault(Locale.ENGLISH)
+    Locale.setDefault(Locale.US)
   }
   // End TEST LMN
 
