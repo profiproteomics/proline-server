@@ -69,6 +69,12 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
       // --> VD TODO: Estimate # peptideMatch & # proteinMatches
       assertEquals(1687, rs.peptideMatches.length)
       assertEquals(2519, rs.proteinMatches.length)
+      
+      rs.proteinMatches.foreach(protMatch => {
+        assertTrue(protMatch.score>0)
+        assertTrue(protMatch.peptideMatchesCount>0)
+      })
+      
     } finally {
       executionContext.closeAll()
     }

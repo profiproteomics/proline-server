@@ -153,7 +153,7 @@ class MascotDataParser( val pepSummary: ms_peptidesummary,
       	if(pepToPeptideMatches.get(oldPep).isDefined){
       		var pepMatches = pepToPeptideMatches.get(oldPep).get
       		var newPepMatches = new ArrayBuffer[PeptideMatch]
-  				pepMatches.foreach(f =>  {
+  		pepMatches.foreach(f =>  {
   					  val newPepMatch = new PeptideMatch( 
   		                         id = f.id,
   		                         rank =f.rank,
@@ -234,7 +234,7 @@ class MascotDataParser( val pepSummary: ms_peptidesummary,
           } else { 
         	  // Try to get Protein from repository  
         	  prot = protProvider.getProtein(protAcc.get(indProt),seqDbs(0))
-			  protAccSeqDbToProteinWrapper += protWrapperKey -> new ProteinWrapper( dbs.get(indProt), protAcc.get(indProt), prot)
+		  protAccSeqDbToProteinWrapper += protWrapperKey -> new ProteinWrapper( dbs.get(indProt), protAcc.get(indProt), prot)
           }
           
           //Create SequenceMatch and ProteinMatch, if necessary, for current Matched Protein
@@ -280,6 +280,12 @@ class MascotDataParser( val pepSummary: ms_peptidesummary,
           newSeqMatches += seqMatch
           
           protMatch.sequenceMatches = newSeqMatches.toArray
+          
+          // Update Protein Match score
+          protMatch.score = protMatch.score + bestPepMatch.score
+          
+          //Update  Protein Match peptideMatchesCount
+          protMatch.peptideMatchesCount = protMatch.peptideMatchesCount + pepToPeptideMatches.get(bestPepMatch.peptide).get.length          
           
         } //End go through matched proteins
         
