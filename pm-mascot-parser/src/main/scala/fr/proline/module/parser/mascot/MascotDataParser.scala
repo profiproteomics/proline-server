@@ -9,6 +9,7 @@ import fr.proline.core.om.provider.msi.{IPTMProvider,IPeptideProvider,IProteinPr
 import matrix_science.msparser.{ms_mascotresfile,ms_peptide,ms_peptidesummary,vectori,VectorString}
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import scala.collection.mutable.ArrayBuilder
+import fr.proline.util.system._
 
 class MascotDataParser( val pepSummary: ms_peptidesummary,
                         val mascotResFile:ms_mascotresfile,
@@ -16,6 +17,9 @@ class MascotDataParser( val pepSummary: ms_peptidesummary,
                         val msQueryByInitialId: Map[Int,MsQuery],
                         val parserContext: ProviderDecoratedExecutionContext,
                         val isDecoy: Boolean ) extends Logging {
+  
+  val osType = OSInfo.getOSType
+  val isLinux = ((osType == OSType.LINUX_I386) || (osType == OSType.LINUX_AMD64))
   
   private var pepByUniqueKey:HashMap[String, Peptide] = null
   private var pepToPeptideMatches:HashMap[Peptide, ArrayBuffer[PeptideMatch]] = null
@@ -87,7 +91,12 @@ class MascotDataParser( val pepSummary: ms_peptidesummary,
 	    	  
 	    	  var parsedPep = this.getOrCreatePeptide( currentMSPep, ptmProvider, pepProvider )
 	    			  
-		        // -- Retrieve some properties values 
+		        // -- Retrieve some properties values
+
+	    	  if (isLinux) {
+	    	    logger.debug(">>> Linux IonScore: " + currentMSPep.getIonsScore + "  Delta: "+ currentMSPep.getDelta)
+	    	  }
+	    	  
 	    	  val pepMatchScore = currentMSPep.getIonsScore().floatValue()
 	  	      val pepMatchExpectValue = this.pepSummary.getPeptideExpectationValue( pepMatchScore, q )		      
 

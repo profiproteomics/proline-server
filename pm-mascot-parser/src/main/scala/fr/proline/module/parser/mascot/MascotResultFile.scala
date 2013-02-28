@@ -51,16 +51,6 @@ class MascotResultFile(
 
   // ---- For Java developers ;) : --- Constructor Code 
 
-  // TEST LMN : Forcing ENGLISH Locale before any Mascot work
-  val oldLocale = Locale.getDefault
-
-  if (!Locale.US.equals(oldLocale)) {
-    logger.info("Forcing ENGLISH Locale before Mascot imports (was " + oldLocale + ')')
-
-    Locale.setDefault(Locale.US)
-  }
-  // End TEST LMN
-
   // Requirements
   require(importProperties != null)
 
