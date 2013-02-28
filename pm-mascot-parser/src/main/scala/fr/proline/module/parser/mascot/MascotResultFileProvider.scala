@@ -1,7 +1,6 @@
 package fr.proline.module.parser.mascot
 
 import java.io.File
-import java.util.Locale
 
 import com.weiglewilczek.slf4s.Logging
 
@@ -14,16 +13,6 @@ class MascotResultFileProvider extends IResultFileProvider with Logging {
   val fileType: String = "MascotMSParser"
 
   def getResultFile(fileLocation: File, importProperties: Map[String, Any], parserContext: ProviderDecoratedExecutionContext): IResultFile = {
-    // TEST LMN : Forcing ENGLISH Locale before any Mascot work
-    // val oldLocale = Locale.getDefault
-    //
-    // if (!Locale.ENGLISH.equals(oldLocale)) {
-    //   logger.info("Forcing ENGLISH Locale before Mascot imports (was " + oldLocale + ')')
-    // }
-    //
-    // Locale.setDefault(Locale.ENGLISH)
-    // End TEST LMN
-
     new MascotResultFile(fileLocation, importProperties, parserContext)
   }
 
