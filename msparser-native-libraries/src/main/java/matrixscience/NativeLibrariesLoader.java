@@ -5,10 +5,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Locale;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import fr.proline.util.StringUtils;
 import fr.proline.util.ThreadLogger;
 import fr.proline.util.system.OSInfo;
 import fr.proline.util.system.OSType;
@@ -39,6 +41,10 @@ public final class NativeLibrariesLoader {
 	    + WINDOWS_LIBRARY_NAME;
 
     private static final String TMP_DIR_KEY = "java.io.tmpdir";
+
+    private static final String LINUX_LOCALE_KEY = "LC_ALL";
+
+    private static final String LINUX_LANG_KEY = "LANG";
 
     private static final int BUFFER_SIZE = 8192;
 
@@ -87,11 +93,15 @@ public final class NativeLibrariesLoader {
 		switch (osType) {
 
 		case LINUX_I386:
+		    checkLinuxLocale();
+
 		    libraryPathname = LINUX_I386_LIBRARY_PATHNAME;
 		    targetLibraryName = LINUX_LIBRARY_NAME;
 		    break;
 
 		case LINUX_AMD64:
+		    checkLinuxLocale();
+
 		    libraryPathname = LINUX_AMD64_LIBRARY_PATHNAME;
 		    targetLibraryName = LINUX_LIBRARY_NAME;
 		    break;
@@ -211,6 +221,29 @@ public final class NativeLibrariesLoader {
 	}
 
 	return result;
+    }
+
+    private static void checkLinuxLocale() {
+	/* Try LC_* then LANG System properties */
+	String linuxNativeLocale = System.getenv(LINUX_LOCALE_KEY);
+
+	if (StringUtils.isEmpty(linuxNativeLocale)) {
+	    linuxNativeLocale = System.getenv(LINUX_LANG_KEY);
+	}
+
+	final String englishLanguage = Locale.ENGLISH.getLanguage();
+
+	if (StringUtils.isEmpty(linuxNativeLocale)) {
+	    final Locale currentLocale = Locale.getDefault();
+
+	    if (!englishLanguage.equals(currentLocale.getLanguage())) {
+		LOG.warn("Linux MS Parser MUST use an ENGLISH Java locale, current: " + currentLocale);
+	    }
+
+	} else if (!linuxNativeLocale.startsWith(englishLanguage)) {
+	    LOG.warn("Linux MS Parser MUST use an \"en\" Linux locale, current: " + linuxNativeLocale);
+	}
+
     }
 
 }
