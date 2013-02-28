@@ -259,7 +259,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     assertEquals(new ScorePSMFilter().filterDescription, fPrp.getDescription.get)
 
     val scoreThresh = props(FilterPropertyKeys.THRESHOLD_VALUE).asInstanceOf[Float]
-    assertEquals("ScoreThresh double compare", 52.89f, scoreThresh, MathUtils.EPSILON_FLOAT)
+    assertEquals("ScoreThresh float compare", 52.89f, scoreThresh, MathUtils.EPSILON_FLOAT)
 
     assertEquals(7.01f, rsValidation.validatedTargetRsm.properties.get.getValidationProperties.get.getResults.getPeptideResults.get.getFdr.get, MathUtils.EPSILON_FLOAT)
 

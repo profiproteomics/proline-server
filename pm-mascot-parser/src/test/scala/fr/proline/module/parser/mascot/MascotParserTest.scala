@@ -2,25 +2,21 @@ package fr.proline.module.parser.mascot
 
 import java.io.File
 import java.util.Calendar
+
 import org.hamcrest.CoreMatchers
-import org.junit.Assert._
+import org.junit.{Before, Ignore, Test}
 import org.junit.After
-import org.junit.Before
-import org.junit.Test
+import org.junit.Assert.{assertEquals, assertNotNull, assertThat, assertTrue}
+
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.provider.msi.impl.ORMPTMProvider
-import fr.proline.core.om.provider.msi.impl.ORMPeptideProvider
-import fr.proline.module.parser.provider.fake.ProteinFakeProvider
-import fr.proline.module.parser.provider.fake.SeqDbFakeProvider
-import fr.proline.repository.utils.DatabaseTestCase
-import fr.proline.repository.ProlineDatabaseType
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.context.BasicExecutionContext
+
+import fr.proline.context.{BasicExecutionContext, DatabaseConnectionContext}
+import fr.proline.core.om.model.msi.{PeptideMatch, ResultSet}
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.IProteinProvider
-import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
+import fr.proline.core.om.provider.msi.{IProteinProvider, ISeqDatabaseProvider}
+import fr.proline.module.parser.provider.fake.{ProteinFakeProvider, SeqDbFakeProvider}
+import fr.proline.repository.ProlineDatabaseType
+import fr.proline.repository.utils.DatabaseTestCase
 
 @Test
 class MascotParserTest extends Logging { // }extends DatabaseTestCase {
@@ -71,7 +67,7 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
       testEColiPeptidePtms(rs)
       assertNotNull(rs)
       // --> VD TODO: Estimate # peptideMatch & # proteinMatches
-      assertEquals(1687, rs.peptideMatches.length) 
+      assertEquals(1687, rs.peptideMatches.length)
       assertEquals(2519, rs.proteinMatches.length)
     } finally {
       executionContext.closeAll()
@@ -110,6 +106,9 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
 
     //Test PTM Providers worked well 
     val allPepMatches: Array[PeptideMatch] = rs.peptideMatches
+
+    TestUtils.savePeptideMatches(allPepMatches)
+
     val PtmShortNames = Array[String]("Acetyl", "Oxidation", "Carbamidomethyl")
     allPepMatches filter (!_.peptide.ptms.isEmpty) foreach { pepMatch =>
       //	     logger.debug(" PepPtm \t" + pepMatch.peptide.sequence+"\t"+pepMatch.msQuery.initialId+"\t"+pepMatch.rank+"\t"+pepMatch.peptide.ptmString)
@@ -132,7 +131,6 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
 
   }
 
- 
   class PSDatabaseTestCase extends DatabaseTestCase {
     override def getProlineDatabaseType() = ProlineDatabaseType.PS
   }
@@ -140,5 +138,5 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
   class PDIDatabaseTestCase extends DatabaseTestCase {
     override def getProlineDatabaseType() = ProlineDatabaseType.PDI
   }
-  
+
 }
