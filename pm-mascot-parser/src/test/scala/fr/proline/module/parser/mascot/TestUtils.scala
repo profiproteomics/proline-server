@@ -19,7 +19,7 @@ object TestUtils extends Logging {
 
   private val LINE_LENGTH = 256
 
-  def savePeptideMatches(peptideMatches: Array[PeptideMatch]) = {
+  def savePeptideMatches(peptideMatches: Array[PeptideMatch]) {
     val now = new Date()
 
     def sorter(left: PeptideMatch, right: PeptideMatch): Boolean = {
