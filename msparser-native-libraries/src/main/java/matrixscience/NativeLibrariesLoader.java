@@ -42,6 +42,8 @@ public final class NativeLibrariesLoader {
 
     private static final String TMP_DIR_KEY = "java.io.tmpdir";
 
+    private static final String LINUX_NUMERIC_LOCALE_KEY = "LC_NUMERIC";
+
     private static final String LINUX_LOCALE_KEY = "LC_ALL";
 
     private static final String LINUX_LANG_KEY = "LANG";
@@ -224,24 +226,30 @@ public final class NativeLibrariesLoader {
     }
 
     private static void checkLinuxLocale() {
-	/* Try LC_* then LANG System properties */
-	String linuxNativeLocale = System.getenv(LINUX_LOCALE_KEY);
+	/* Try LC_NUMERIC, then LC_ALL, then LANG environment variables and finally Java Locale */
+	String linuxNativeLocale = System.getenv(LINUX_NUMERIC_LOCALE_KEY);
 
 	if (StringUtils.isEmpty(linuxNativeLocale)) {
-	    linuxNativeLocale = System.getenv(LINUX_LANG_KEY);
+	    linuxNativeLocale = System.getenv(LINUX_LOCALE_KEY);
+
+	    if (StringUtils.isEmpty(linuxNativeLocale)) {
+		linuxNativeLocale = System.getenv(LINUX_LANG_KEY);
+	    }
+
 	}
 
 	final String englishLanguage = Locale.ENGLISH.getLanguage();
 
 	if (StringUtils.isEmpty(linuxNativeLocale)) {
-	    final Locale currentLocale = Locale.getDefault();
+	    final Locale javaLocale = Locale.getDefault();
 
-	    if (!englishLanguage.equals(currentLocale.getLanguage())) {
-		LOG.warn("Linux MS Parser MUST use an ENGLISH Java locale, current: " + currentLocale);
+	    if (!englishLanguage.equals(javaLocale.getLanguage())) {
+		LOG.warn("Linux Mascot Parser expects ENGLISH locale, current Java locale: " + javaLocale);
 	    }
 
 	} else if (!linuxNativeLocale.startsWith(englishLanguage)) {
-	    LOG.warn("Linux MS Parser MUST use an \"en\" Linux locale, current: " + linuxNativeLocale);
+	    LOG.warn("Linux Mascot Parser expects ENGLISH locale, current system locale: "
+		    + linuxNativeLocale);
 	}
 
     }
