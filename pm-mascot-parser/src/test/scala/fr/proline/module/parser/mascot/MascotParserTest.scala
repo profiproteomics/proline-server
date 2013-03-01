@@ -6,7 +6,7 @@ import java.util.Calendar
 import org.hamcrest.CoreMatchers
 import org.junit.{Before, Ignore, Test}
 import org.junit.After
-import org.junit.Assert.{assertEquals, assertNotNull, assertThat, assertTrue}
+import org.junit.Assert._
 
 import com.weiglewilczek.slf4s.Logging
 
@@ -31,6 +31,7 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
   def init() {
     logger.info("Start Logging ")
     logger.debug("Start Logging Debug ")
+
     // Init PS db connexion
     psDBTestCase = new PSDatabaseTestCase()
     psDBTestCase.initDatabase()
@@ -69,12 +70,12 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
       // --> VD TODO: Estimate # peptideMatch & # proteinMatches
       assertEquals(1687, rs.peptideMatches.length)
       assertEquals(2519, rs.proteinMatches.length)
-      
+
       rs.proteinMatches.foreach(protMatch => {
-        assertTrue(protMatch.score>0)
-        assertTrue(protMatch.peptideMatchesCount>0)
+        assertTrue(protMatch.score > 0)
+        assertTrue(protMatch.peptideMatchesCount > 0)
       })
-      
+
     } finally {
       executionContext.closeAll()
     }

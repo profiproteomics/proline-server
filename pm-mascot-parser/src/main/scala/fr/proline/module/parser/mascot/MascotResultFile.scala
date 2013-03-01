@@ -3,7 +3,6 @@ package fr.proline.module.parser.mascot
 import java.io.{ FileNotFoundException, File }
 import java.lang.{ UnsatisfiedLinkError, System }
 import java.net.URLDecoder
-import java.util.Locale
 import scala.Array.canBuildFrom
 import scala.collection.mutable.{ HashMap, ArrayBuffer }
 
