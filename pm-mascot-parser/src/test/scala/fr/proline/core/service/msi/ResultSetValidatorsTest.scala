@@ -145,7 +145,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     })
   }
 
-  @Test
+    @Test
   def testRankValidation() = {
     importDatFile(_datFileName)
 
@@ -159,7 +159,8 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
       tdAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED)),
       pepMatchPreFilters = Some(seqBuilder.result()),
       pepMatchValidator = None,
-      protSetFilters = None,
+      protSetFilters = None, 
+      protSetValidator = None,
       storeResultSummary = false
       )
 
@@ -208,6 +209,13 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
       Assert.assertTrue(validatedEntry)
     })
 
+    logger.debug(" ResultSetValidator testRankValidation test properties")
+    val rsmPropTargetCount = rsValidation.validatedTargetRsm.properties.get.getValidationProperties.get.getResults.getPeptideResults.get.getTargetMatchesCount
+    val rsmPropDecoyCount = rsValidation.validatedTargetRsm.properties.get.getValidationProperties.get.getResults.getPeptideResults.get.getDecoyMatchesCount
+
+    Assert.assertEquals(" RSM validation properties target count ",allTarPepMatc.length,rsmPropTargetCount)
+    Assert.assertEquals(" RSM validation properties target count ", allDecPepMatc.length, rsmPropDecoyCount.get)
+
     val rsPepMatchByQuId = new HashMap[Int, ArrayBuffer[PeptideMatch]]()
     val rsPsm = readRS.peptideMatches ++ readRS.decoyResultSet.get.peptideMatches
     rsPsm.foreach(peptideM => {
@@ -227,6 +235,74 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
           Assert.assertTrue(psm.isValidated)
       })
     })
+
+  }
+    
+  @Test
+  def testRankValidationWithCompetitionFDR() = {
+    importDatFile(_datFileName)
+
+    val readRS = rsProvider.getResultSet(rsIDWork).get
+    val seqBuilder = Seq.newBuilder[IPeptideMatchFilter]
+    val rank = 1
+    seqBuilder += new RankPSMFilter(pepMatchMaxRank = 1)
+    val seqFilters = seqBuilder.result
+    val rsValidation = new ResultSetValidator(
+      execContext = executionContext,
+      targetRs = readRS,
+      tdAnalyzer = Some(new CompetitionBasedTDAnalyzer(seqFilters(0))),
+      pepMatchPreFilters = Some(seqFilters),
+      pepMatchValidator = None,
+      protSetFilters = None,
+      protSetValidator = None,
+      storeResultSummary = false
+      )
+
+    val result = rsValidation.runService
+    Assert.assertTrue(result)
+    logger.info(" End Run ResultSetValidator Service with Rank filter, in Test ")
+
+    Assert.assertNotNull(rsValidation.validatedTargetRsm)
+    Assert.assertTrue(rsValidation.validatedDecoyRsm.isDefined)
+
+    logger.debug(" Verify Result IN RSM ")
+    val allTarPepMatc = rsValidation.validatedTargetRsm.peptideInstances.flatMap(pi => pi.peptideMatches)
+    val allDecPepMatc = rsValidation.validatedDecoyRsm.get.peptideInstances.flatMap(pi => pi.peptideMatches)
+    val allPepMatc  = allTarPepMatc++allDecPepMatc
+    Assert.assertEquals("AllTarPepMatc length", 774, allTarPepMatc.length)
+    Assert.assertEquals("AllDecPepMatc length",638, allDecPepMatc.length)
+    Assert.assertEquals("All PepMatc length",638+774, allPepMatc.length)
+    
+    val pepMatchByQuId = new HashMap[Int, ArrayBuffer[PeptideMatch]]()
+    allPepMatc.foreach(peptideM => {
+      val pepMatches = pepMatchByQuId.get(peptideM.msQueryId).getOrElse(new ArrayBuffer[PeptideMatch]())
+      //             System.out.println(peptideM.msQueryId+"\t"+peptideM.peptide.sequence+"\t"+peptideM.peptide.ptmString+"\t"+peptideM.score)
+      pepMatches + peptideM
+      Assert.assertTrue(peptideM.isValidated)
+      pepMatchByQuId.put(peptideM.msQueryId, pepMatches)
+    })
+
+    pepMatchByQuId.foreach(entry => {
+      var validatedEntry = false
+      if (entry._2.length.equals(1)) {
+        validatedEntry = true
+      } else {
+        var index = 0
+        while (index < entry._2.length - 1) {
+          validatedEntry = (entry._2(index).score - entry._2(index + 1).score).abs < 0.1
+          index += 1
+        }
+      }
+      Assert.assertTrue(validatedEntry)
+    })
+    
+    logger.debug(" ResultSetValidator testRankValidationWithCompetitionFDR test properties")
+    val rsmPropTargetCount = rsValidation.validatedTargetRsm.properties.get.getValidationProperties.get.getResults.getPeptideResults.get.getTargetMatchesCount
+    val rsmPropDecoyCount = rsValidation.validatedTargetRsm.properties.get.getValidationProperties.get.getResults.getPeptideResults.get.getDecoyMatchesCount
+
+    Assert.assertEquals(" RSM validation properties target count ",allTarPepMatc.length,rsmPropTargetCount)
+    Assert.assertEquals(" RSM validation properties target count ", allDecPepMatc.length, rsmPropDecoyCount)
+
 
   }
 
@@ -250,11 +326,13 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
       pepMatchPreFilters = None,
       pepMatchValidator = Some(fdrValidator),
       protSetFilters = None,
-      storeResultSummary = false)
+      storeResultSummary = true)
 
     logger.debug(" ResultSetValidator testScoreFDRValidation RUN  service")
     val result = rsValidation.runService
     Assert.assertTrue(result)
+    val rsmID = rsValidation.validatedTargetRsm.id
+    Assert.assertTrue(" ResultSummary was saved (positive id) ",rsmID>1)
     logger.debug(" End Run ResultSetValidator Service with FDR filter using Score, in Test ")
 
     Assert.assertNotNull(rsValidation.validatedTargetRsm)
@@ -303,6 +381,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     val firstRankFilter = new RankPSMFilter(1)
     val valFilter = new ScorePSMFilter()
     val testTDAnalyzer = Some(new CompetitionBasedTDAnalyzer(valFilter))
+//    val testTDAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED))
     val fdrValidator = new TDPepMatchValidatorWithFDROptimization(
       validationFilter = valFilter,
       expectedFdr = Some(7.0f),
