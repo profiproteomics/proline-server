@@ -238,7 +238,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
 
   }
     
-  @Test
+  //@Test
   def testRankValidationWithCompetitionFDR() = {
     importDatFile(_datFileName)
 
@@ -301,7 +301,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     val rsmPropDecoyCount = rsValidation.validatedTargetRsm.properties.get.getValidationProperties.get.getResults.getPeptideResults.get.getDecoyMatchesCount
 
     Assert.assertEquals(" RSM validation properties target count ",allTarPepMatc.length,rsmPropTargetCount)
-    Assert.assertEquals(" RSM validation properties target count ", allDecPepMatc.length, rsmPropDecoyCount)
+    Assert.assertEquals(" RSM validation properties decoy count ", allDecPepMatc.length, rsmPropDecoyCount.get)
 
 
   }
@@ -415,6 +415,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     val allDecPepMatc = rsValidation.validatedDecoyRsm.get.peptideInstances.flatMap(pi => pi.peptideMatches)
     Assert.assertEquals(102, allTarPepMatc.length)
     Assert.assertEquals(16, allDecPepMatc.length)
+
   }
 
   @Test
@@ -619,10 +620,10 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     //    allPepMatches.foreach( pepM  => {
     //	logger.debug(pepM.msQueryId+"\t"+pepM.peptide.sequence+"\t"+pepM.peptide.ptmString)
     //    } )
-    logger.debug(" allTarPepMatc " + allTarPepMatc.length) //IRMa 230 +9
+    logger.debug(" allTarPepMatc " + allTarPepMatc.length) //IRMa 81 + 0 duplicated between target and decoy 
 
-    logger.debug(" allDecPepMatc  " + allDecPepMatc.length) //IRMa 95 +9 
-    Assert.assertEquals(343, allTarPepMatc.length + allDecPepMatc.length)
+    logger.debug(" allDecPepMatc  " + allDecPepMatc.length) //IRMa 3 + 0 duplicated between target and decoy 
+    Assert.assertEquals(84, allTarPepMatc.length + allDecPepMatc.length)
 
     rsValidation.validatedTargetRsm.peptideInstances.foreach(pepInst => {
       pepInst.peptideMatches.foreach(peptideM => {
@@ -645,8 +646,8 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     val pepValResultsOpt = rsValidation.validatedTargetRsm.properties.get.getValidationProperties.get.getResults.getPeptideResults
     Assert.assertTrue(pepValResultsOpt.isDefined)
     val pepValResults = pepValResultsOpt.get
-    Assert.assertEquals(239, pepValResults.getTargetMatchesCount)
-    Assert.assertEquals(104, pepValResults.getDecoyMatchesCount.get)
+    Assert.assertEquals(81, pepValResults.getTargetMatchesCount)
+    Assert.assertEquals(3, pepValResults.getDecoyMatchesCount.get)
   }
 
 }
