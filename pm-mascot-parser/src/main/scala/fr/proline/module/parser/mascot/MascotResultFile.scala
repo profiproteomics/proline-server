@@ -108,24 +108,7 @@ class MascotResultFile(
       if (pepSummaryOpt == None) None
       else {
         val pepSum = pepSummaryOpt.get
-
-        // FIXME: Small hack => compute multiple values to have more precision on the HT
-        def computeHTCandidatePeptides(probability: Double): Float = {
-          val mascotHT = pepSum.getHomologyThreshold(msQueryNum, 1 / probability)
-          MascotValidationHelper.calcCandidatePeptidesCount(mascotHT, probability)
-        }
-
-        var ht: Float = 0f
-        val mascotHT = pepSum.getHomologyThreshold(msQueryNum, 20)
-        if (mascotHT > 0) {
-          var candPepCountSum = 0f
-          val probFactors = List(11, 22, 34, 55, 76, 99) // arbitrary values
-          for (probFactor <- probFactors) {
-            candPepCountSum += computeHTCandidatePeptides(1.0 / probFactor)
-          }
-          ht = MascotValidationHelper.calcIdentityThreshold(candPepCountSum / probFactors.length, 0.05)
-        }
-
+        var ht: Float = mascotResFile.getSectionValueDouble(ms_mascotresfile.SEC_SUMMARY, "qplughole"+msQueryNum).toFloat        
         val candidatePepCount = pepSum.getQmatch(msQueryNum)
         //val it = pepSum.getPeptideIdentityThreshold(msQueryNum,20)
         val it = if (candidatePepCount > 0) Some(MascotValidationHelper.calcIdentityThreshold(candidatePepCount, 0.05)) else None
@@ -134,7 +117,7 @@ class MascotResultFile(
           MsQueryDbSearchProperties(
             candidatePeptidesCount = pepSum.getQmatch(msQueryNum),
             mascotIdentityThreshold = it,
-            mascotHomologyThreshold = if (ht > 0) Some(ht) else None
+            mascotHomologyThreshold = Some(ht)
           )
         )
       }
