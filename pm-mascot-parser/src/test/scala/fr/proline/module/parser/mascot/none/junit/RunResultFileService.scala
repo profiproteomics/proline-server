@@ -35,8 +35,9 @@ object RunResultFileService extends Logging {
       // method call creates a first connection that will be closed by closeAll() method.
       conn.getDataSource().getConnection()
     } catch {
-      case e: Exception => e.printStackTrace();
+      case ex: Exception => logger.error("Error retrieving SQL Connection", ex)
     }
+
     conn
   }
 
