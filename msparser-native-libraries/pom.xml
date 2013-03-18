@@ -5,12 +5,12 @@
   <parent>
     <artifactId>ProFI-Pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
   </parent>
 
   <groupId>matrixscience</groupId>
   <artifactId>MSParser-native-libraries_2.4.00</artifactId> <!-- Include Mascot Parser version -->
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.1</version>
   <packaging>jar</packaging>
 
   <name>MSParser-native-libraries</name>
@@ -31,7 +31,7 @@
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Java</artifactId>
-      <version>0.0.3-SNAPSHOT</version>
+      <version>0.0.3</version>
     </dependency>
 
     <!-- JUnit tests -->
