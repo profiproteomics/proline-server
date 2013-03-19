@@ -29,6 +29,7 @@ import fr.proline.core.algo.msi.filtering.FilterPropertyKeys
 import fr.proline.core.algo.msi.validation.proteinset.ProtSetRulesValidatorWithFDROptimization
 import fr.proline.core.algo.msi.filtering.proteinset.ScoreProtSetFilter
 import fr.proline.core.algo.msi.scoring.MascotProteinSetScoreUpdater
+import fr.proline.core.algo.msi.filtering.proteinset.ProteotypiquePeptidePSFilter
 
 class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
 
@@ -54,7 +55,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
 
   }
 
-  private def importDatFile(datFileClassPath: String): Unit = {
+  private def importDatFile(datFileClassPath: String, decoyRegExp : String): Unit = {
     logger.debug(" --- Load Mascot File " + datFileClassPath)
 
     var datFile: File = new File(getClass.getResource(datFileClassPath).toURI)
@@ -70,7 +71,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
       instrumentConfigId = 1,
       peaklistSoftwareId = 1, // TODO : provide the right value
       importerProperties = propertiedBuilder.result,
-      acDecoyRegex = Some("""sp\|REV_\S+""".r))
+      acDecoyRegex = Some(decoyRegExp.r))
 
     val result = importer.runService()
     rsIDWork = importer.getTargetResultSetId
@@ -87,7 +88,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
 
   @Test
   def testScoreValidation() = {
-    importDatFile(_datFileName)
+    importDatFile(_datFileName,"""sp\|REV_\S+""")
 
     val scoreTh = 22.0f
     val pepFilters = Seq(new ScorePSMFilter(scoreThreshold = scoreTh))
@@ -145,9 +146,9 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     })
   }
 
-    @Test
+   @Test
   def testRankValidation() = {
-    importDatFile(_datFileName)
+    importDatFile(_datFileName,"""sp\|REV_\S+""")
 
     val readRS = rsProvider.getResultSet(rsIDWork).get
     val seqBuilder = Seq.newBuilder[IPeptideMatchFilter]
@@ -240,7 +241,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     
   //@Test
   def testRankValidationWithCompetitionFDR() = {
-    importDatFile(_datFileName)
+    importDatFile(_datFileName,"""sp\|REV_\S+""")
 
     val readRS = rsProvider.getResultSet(rsIDWork).get
     val seqBuilder = Seq.newBuilder[IPeptideMatchFilter]
@@ -250,7 +251,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     val rsValidation = new ResultSetValidator(
       execContext = executionContext,
       targetRs = readRS,
-      tdAnalyzer = Some(new CompetitionBasedTDAnalyzer(seqFilters(0))),
+      tdAnalyzer = Some(new CompetitionBasedTDAnalyzer(new ScorePSMFilter())), //sort PSM using score
       pepMatchPreFilters = Some(seqFilters),
       pepMatchValidator = None,
       protSetFilters = None,
@@ -303,13 +304,12 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     Assert.assertEquals(" RSM validation properties target count ",allTarPepMatc.length,rsmPropTargetCount)
     Assert.assertEquals(" RSM validation properties decoy count ", allDecPepMatc.length, rsmPropDecoyCount.get)
 
-
   }
 
   @Test
   def testScoreFDRValidation() = {
 
-    importDatFile(_datFileName)
+    importDatFile(_datFileName,"""sp\|REV_\S+""")
 
     val testTDAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED))
     val fdrValidator = new TDPepMatchValidatorWithFDROptimization(
@@ -372,11 +372,90 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     })
 
   }
+  
+  @Test
+  def testProtPrototypiquePSMValidation() = {
+
+  importDatFile(_datFileName,"""sp\|REV_\S+""")
+  //   importDatFile("/dat_samples/F067920.dat","""###REV###\S+""")
+     
+    val testTDAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED))
+//    val scoreTh = 22.0f
+    val nbrPepProteo = 1
+//    val pepFilters = Seq(new ScorePSMFilter(scoreThreshold = scoreTh))
+    val protProteoTypiqueFilters = Seq(new ProteotypiquePeptidePSFilter(nbrPepProteo))
+    
+    logger.info(" ResultSetValidator testProtPrototypiquePSMValidation Create service")
+    val rsValidation = ResultSetValidator(
+      execContext = executionContext,
+      targetRsId = rsIDWork,
+      tdAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED)),
+      pepMatchPreFilters = None, // Some(pepFilters),
+      pepMatchValidator = None,
+      protSetFilters = None, //Some(protProteoTypiqueFilters),
+      storeResultSummary = false)
+      
+      logger.debug(" ResultSetValidator testProtPrototypiquePSMValidation RUN  service")
+      val result = rsValidation.runService
+      Assert.assertTrue(result)      
+      logger.debug(" End Run ResultSetValidator Service with FDR filter using Score, in Test ")
+
+    Assert.assertNotNull(rsValidation.validatedTargetRsm)
+    Assert.assertTrue(rsValidation.validatedDecoyRsm.isDefined)
+    Assert.assertTrue(rsValidation.validatedTargetRsm.properties.isDefined)
+
+//    val protFilterPropsOpt = rsValidation.validatedTargetRsm.properties.get.getValidationProperties.get.getParams.getProteinFilters
+//    Assert.assertTrue(protFilterPropsOpt.isDefined)
+//    val protFilterProps = protFilterPropsOpt.get
+//    Assert.assertEquals(1, protFilterProps.size)
+//    val fPrp: FilterDescriptor = protFilterProps(0)
+//    val props = fPrp.getProperties.get
+//    Assert.assertEquals(1, props.size)
+//    Assert.assertEquals(ProtSetFilterParams.PROTEOTYPIQUE_PEP.toString, fPrp.getParameter)
+
+//    val nbrPep = props(FilterPropertyKeys.THRESHOLD_VALUE).asInstanceOf[Int]
+//    Assert.assertEquals("Proteotypique peptide # compare",nbrPepProteo, nbrPep)
+
+    logger.debug(" Verify Result IN RSM ")
+    val allTarProtSet2 = rsValidation.validatedTargetRsm.proteinSets
+    val allDecProtSet2= rsValidation.validatedDecoyRsm.get.proteinSets
+    
+    val allTarProtSet = rsValidation.validatedTargetRsm.proteinSets.filter(!_.isValidated)
+    val allDecProtSet = rsValidation.validatedDecoyRsm.get.proteinSets.filter(!_.isValidated)
+    logger.debug(" FULL allTarProtSet "+allTarProtSet2.length+" <> ! validated allTarProtSet "+  allTarProtSet.length)
+    logger.debug(" FULL allDecProtSet "+allDecProtSet2.length+" <> ! validated allDecProtSet "+  allDecProtSet.length)
+//    Assert.assertEquals("allTarProtSet length", 4, allTarProtSet.length)
+//    Assert.assertEquals("allDecProtSet length", 1, allDecProtSet.length)
+    
+    allTarProtSet.foreach(protSet => {
+      //DEBUG ONLY 
+      
+	val firstPrtMatch =  rsValidation.validatedTargetRsm.resultSet.get.proteinMatches.filter(_.id == protSet.proteinMatchIds(0))(0)
+        System.out.println(firstPrtMatch.accession+"\t"+protSet.peptideSet.peptideMatchesCount+"\t"+protSet.isValidated)
+        protSet.peptideSet.getPeptideInstances.foreach(pepIns =>{
+	  System.out.println("\t"+"\t"+pepIns.peptide.sequence+"\t"+pepIns.peptide.ptmString+"\t"+pepIns.proteinSetsCount)  
+        })    
+        logger.debug(" Protein Set - unique pep # "+protSet.peptideSet.getPeptideInstances.filter(_.proteinSetsCount == 1).length)
+//        Assert.assertTrue("Protein Set more than 1 unique pep", protSet.peptideSet.getPeptideInstances.filter(_.proteinSetsCount == 1).length >= 2 )
+    })
+    
+    allDecProtSet.foreach(protSet => {
+      //DEBUG ONLY 
+      
+	val firstPrtMatch =  rsValidation.validatedDecoyRsm.get.resultSet.get.proteinMatches.filter(_.id == protSet.proteinMatchIds(0))(0)
+        System.out.println(firstPrtMatch.accession+"\t"+protSet.peptideSet.peptideMatchesCount+"\t"+protSet.isValidated)
+        protSet.peptideSet.getPeptideInstances.foreach(pepIns =>{
+	  System.out.println("\t"+"\t"+pepIns.peptide.sequence+"\t"+pepIns.peptide.ptmString+"\t"+pepIns.proteinSetsCount)  
+        })    
+        logger.debug(" Protein Set - unique pep # "+protSet.peptideSet.getPeptideInstances.filter(_.proteinSetsCount == 1).length)
+//        Assert.assertTrue("Protein Set more than 1 unique pep", protSet.peptideSet.getPeptideInstances.filter(_.proteinSetsCount == 1).length >= 2 )
+    })
+  }
 
   @Test
   def testRankAndScoreFDRValidation() = {
 
-    importDatFile(_datFileName)
+    importDatFile(_datFileName,"""sp\|REV_\S+""")
 
     val firstRankFilter = new RankPSMFilter(1)
     val valFilter = new ScorePSMFilter()
@@ -420,7 +499,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
 
   @Test
   def testPepMatchAndProtSetFDRValidation() = {
-    importDatFile(_datFileName)
+    importDatFile(_datFileName,"""sp\|REV_\S+""")
 
     val firstRankFilter = new RankPSMFilter(1)
     val pepMatchValFilter = new ScorePSMFilter()
@@ -466,7 +545,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
   @Test
   def testOtherMascotPValueValidation() = {
 
-    importDatFile("/dat_samples/GRE_F068213_M2.4_TD_EColi.dat")
+    importDatFile("/dat_samples/GRE_F068213_M2.4_TD_EColi.dat","""sp\|REV_\S+""") //"""###REV###\S+""")
 
     val pValTh = 0.1f
     val pepFilters = Seq(new MascotPValuePSMFilter(pValue = pValTh, useHomologyThreshold = false))
@@ -525,7 +604,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
 
   @Test
   def testMascotPValueValidation() = {
-    importDatFile(_datFileName)
+    importDatFile(_datFileName,"""sp\|REV_\S+""")
     val pValTh = 0.01f
     val pepFilters = Seq(new MascotPValuePSMFilter(pValue = pValTh, useHomologyThreshold = false))
 
@@ -587,8 +666,8 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
 
   @Test
   def testMascotHomologyPValueValidation() = {
-//    importDatFile("/dat_samples/F067920.dat")
-    importDatFile(_datFileName)
+//    importDatFile("/dat_samples/F067920.dat","""###REV###_\S+""")
+    importDatFile(_datFileName,"""sp\|REV_\S+""")
     val pValTh = 0.01f
     val pepFilters = Seq(new MascotPValuePSMFilter(pValue = pValTh, useHomologyThreshold = true))
 
