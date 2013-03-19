@@ -1,0 +1,3 @@
+Spectrum number, Filename/id, Peptide, E-value, Mass, gi, Accession, Start, Stop, Defline, Mods, Charge, Theo Mass, P-value, NIST score
+3," Cmpd 4, +MSn(576.33), 1.4 min",EGQELGTADCSVPGDPEGLETAK,4.92351895492103,2301.299,0,O75363,250,272,Breast carcinoma-amplified sequence 1 OS=Homo sapiens GN=BCAS1 PE=1 SV=2,,4,2302.028,0.00121089989053641,0
+11," Cmpd 12, +MSn(561.78), 1.5 min",YPGFLDVRAAPLLADDNKLR,1.73831119984123,2243.091,0,P22760,311,330,Arylacetamide deacetylase OS=Homo sapiens GN=AADAC PE=1 SV=5,,4,2243.205,0.000408918183919368,0
