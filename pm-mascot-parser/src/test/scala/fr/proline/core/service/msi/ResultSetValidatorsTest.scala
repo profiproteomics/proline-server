@@ -1,35 +1,28 @@
 package fr.proline.core.service.msi
 
-import org.junit.{ After, AfterClass, Assert, Test, Before, BeforeClass }
-import com.weiglewilczek.slf4s.Logging
-import fr.proline.context.IExecutionContext
-import fr.proline.repository.DriverType
 import java.io.File
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
+
+import scala.collection.mutable.{HashMap, ArrayBuffer}
+
+import org.junit.{After, Assert, Test, Before}
+
+import com.weiglewilczek.slf4s.Logging
+
+import fr.proline.context.IExecutionContext
+import fr.proline.core.algo.msi.filtering.pepmatch.{ScorePSMFilter, RankPSMFilter, _}
+import fr.proline.core.algo.msi.filtering.proteinset.{ScoreProtSetFilter, ProteotypiquePeptidePSFilter}
+import fr.proline.core.algo.msi.filtering.{IPeptideMatchFilter, FilterPropertyKeys, _}
+import fr.proline.core.algo.msi.validation.pepmatch.TDPepMatchValidatorWithFDROptimization
+import fr.proline.core.algo.msi.validation.proteinset.ProtSetRulesValidatorWithFDROptimization
+import fr.proline.core.algo.msi.validation.{BasicTDAnalyzer, _}
+import fr.proline.core.algo.msi.InferenceMethods
+import fr.proline.core.algo.msi.scoring.ProtSetScoring
+import fr.proline.core.dal.{SQLQueryHelper, SQLConnectionContext}
+import fr.proline.core.om.model.msi.{ResultSet, PeptideMatch, FilterDescriptor}
+import fr.proline.core.om.provider.msi.impl.{SQLResultSetProvider, ORMResultSetProvider}
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.storer.msi.impl.StorerContext
-import fr.proline.core.dal.SQLQueryHelper
-import fr.proline.core.dal.SQLConnectionContext
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
-import fr.proline.core.dal.ContextFactory
-import fr.proline.core.algo.msi.filtering.pepmatch._
-import scala.collection.mutable.HashMap
-import fr.proline.core.om.model.msi.PeptideMatch
-import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.algo.msi.validation._
-import fr.proline.core.om.model.msi.FilterDescriptor
-import fr.proline.core.algo.msi.filtering._
-import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
-import fr.proline.core.algo.msi.filtering.pepmatch.RankPSMFilter
-import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
-import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
-import fr.proline.core.algo.msi.validation.pepmatch.TDPepMatchValidatorWithFDROptimization
-import fr.proline.core.algo.msi.filtering.FilterPropertyKeys
-import fr.proline.core.algo.msi.validation.proteinset.ProtSetRulesValidatorWithFDROptimization
-import fr.proline.core.algo.msi.filtering.proteinset.ScoreProtSetFilter
-import fr.proline.core.algo.msi.scoring.MascotProteinSetScoreUpdater
-import fr.proline.core.algo.msi.filtering.proteinset.ProteotypiquePeptidePSFilter
+import fr.proline.repository.DriverType
 
 class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
 
@@ -145,7 +138,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
       })
     })
   }
-
+  
    @Test
   def testRankValidation() = {
     importDatFile(_datFileName,"""sp\|REV_\S+""")
@@ -578,6 +571,8 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
       pepMatchValidator = Some(pepMatchValidator),
       protSetFilters = None,
       protSetValidator = Some(protSetValidator),
+      inferenceMethod = Some(InferenceMethods.parsimonious),
+      proteinSetScoring = Some(ProtSetScoring.MASCOT_PROTEIN_SET_SCORE),
       storeResultSummary = false)
 
     logger.debug("ResultSetValidator testPepMatchAndProtSetFDRValidation RUN service")
