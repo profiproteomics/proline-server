@@ -504,7 +504,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
 
   }
 
-   // @Test
+  @Test
   def testProtSetFDRValidation() = {
     importDatFile(_datFileName,"""sp\|REV_\S+""")
 
@@ -536,7 +536,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     logger.debug("Verify Result IN RSM")
     val allTarProtSets = rsValidation.validatedTargetRsm.proteinSets
     val allDecProtSets = rsValidation.validatedDecoyRsm.get.proteinSets
-    Assert.assertEquals("AllTarProtSets validated count", 7, allTarProtSets.count(_.isValidated))
+    Assert.assertEquals("AllTarProtSets validated count", 13, allTarProtSets.count(_.isValidated))
     Assert.assertEquals("AllDecProtSets validated count", 0, allDecProtSets.count(_.isValidated))
   }
     
