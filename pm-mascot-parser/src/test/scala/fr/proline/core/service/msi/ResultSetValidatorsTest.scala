@@ -10,7 +10,7 @@ import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.filtering.pepmatch.{ScorePSMFilter, RankPSMFilter, _}
-import fr.proline.core.algo.msi.filtering.proteinset.{ScoreProtSetFilter, ProteotypiquePeptidePSFilter}
+import fr.proline.core.algo.msi.filtering.proteinset.{ScoreProtSetFilter, SpecificPeptidesPSFilter}
 import fr.proline.core.algo.msi.filtering.{IPeptideMatchFilter, FilterPropertyKeys, _}
 import fr.proline.core.algo.msi.validation.pepmatch.TDPepMatchValidatorWithFDROptimization
 import fr.proline.core.algo.msi.validation.proteinset.ProtSetRulesValidatorWithFDROptimization
@@ -376,7 +376,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     val scoreTh = 22.0f
     val nbrPepProteo = 1
     val pepFilters = Seq(new ScorePSMFilter(scoreThreshold = scoreTh))
-    val protProteoTypiqueFilters = Seq(new ProteotypiquePeptidePSFilter(nbrPepProteo))
+    val protProteoTypiqueFilters = Seq(new SpecificPeptidesPSFilter(nbrPepProteo))
     
     logger.info(" ResultSetValidator testProtPrototypiquePSMValidation Create service")
     val rsValidation = ResultSetValidator(
@@ -404,7 +404,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     val fPrp: FilterDescriptor = protFilterProps(0)
     val props = fPrp.getProperties.get
     Assert.assertEquals(1, props.size)
-    Assert.assertEquals(ProtSetFilterParams.PROTEOTYPIQUE_PEP.toString, fPrp.getParameter)
+    Assert.assertEquals(ProtSetFilterParams.SPECIFIC_PEP.toString, fPrp.getParameter)
 
     val nbrPep = props(FilterPropertyKeys.THRESHOLD_VALUE).asInstanceOf[Int]
     Assert.assertEquals("Proteotypique peptide # compare",nbrPepProteo, nbrPep)
