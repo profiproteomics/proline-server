@@ -68,17 +68,17 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   // users parameters
   private var parseProperties: Map[OmssaParseParams.OmssaParseParam, Any] = importProperties.map(entry => OmssaParseParams.withName(entry._1) -> entry._2)
   // check mandatory parameters
-      if(parseProperties.get(OmssaParseParams.FASTA_CONTAINS_TARGET) == None)  throw new Exception("User did not indicate '"+OmssaParseParams.FASTA_CONTAINS_TARGET+"' parameter")
-      if(parseProperties.get(OmssaParseParams.FASTA_CONTAINS_DECOY) == None)  throw new Exception("User did not indicate '"+OmssaParseParams.FASTA_CONTAINS_DECOY+"' parameter")
+//      if(parseProperties.get(OmssaParseParams.FASTA_CONTAINS_TARGET) == None)  throw new Exception("User did not indicate '"+OmssaParseParams.FASTA_CONTAINS_TARGET+"' parameter")
+//      if(parseProperties.get(OmssaParseParams.FASTA_CONTAINS_DECOY) == None)  throw new Exception("User did not indicate '"+OmssaParseParams.FASTA_CONTAINS_DECOY+"' parameter")
   // FIXME adding a default value to these parameters for test
-//  if (parseProperties.get(OmssaParseParams.FASTA_CONTAINS_TARGET) == None) {
-//    logger.info("FASTA_CONTAINS_TARGET is missing, default value will be used (true)")
-//    parseProperties += (OmssaParseParams.FASTA_CONTAINS_TARGET -> true)
-//  }
-//  if (parseProperties.get(OmssaParseParams.FASTA_CONTAINS_DECOY) == None) {
-//    logger.info("FASTA_CONTAINS_DECOY is missing, default value will be used (true)")
-//    parseProperties += (OmssaParseParams.FASTA_CONTAINS_DECOY -> true)
-//  }
+  if (parseProperties.get(OmssaParseParams.FASTA_CONTAINS_TARGET) == None) {
+    logger.info("FASTA_CONTAINS_TARGET is missing, default value will be used (true)")
+    parseProperties += (OmssaParseParams.FASTA_CONTAINS_TARGET -> true)
+  }
+  if (parseProperties.get(OmssaParseParams.FASTA_CONTAINS_DECOY) == None) {
+    logger.info("FASTA_CONTAINS_DECOY is missing, default value will be used (true)")
+    parseProperties += (OmssaParseParams.FASTA_CONTAINS_DECOY -> true)
+  }
   // parameters that must be present, at least with a default value
   if (parseProperties.get(OmssaParseParams.USERMOD_XML_FILE) == None) parseProperties += (OmssaParseParams.USERMOD_XML_FILE -> "")
   if (parseProperties.get(OmssaParseParams.OMSSA_VERSION) == None) parseProperties += (OmssaParseParams.OMSSA_VERSION -> "2.1.9")
@@ -105,9 +105,9 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   val hasMs2Peaklist: Boolean = true // an OMSSA omx  file may not have spectra and search params included
 
   // FIXME empty instrumentConfig for tests
-  if (instrumentConfig == null) {
+  if (this.instrumentConfig == null) {
     logger.info("No instrument selected, use default instrument (QUAD-TOF MALDI)")
-    instrumentConfig = new InstrumentConfig(
+    this.instrumentConfig = new InstrumentConfig(
       id = 7,
       instrument = new Instrument(
         id = Instrument.generateNewId(),
@@ -122,7 +122,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   }
 
   // read omssa file
-  val fileReader = new OmssaReadFile(omxFile, parseProperties, omssaLoader, peaklist, instrumentConfig, parserContext)
+  val fileReader = new OmssaReadFile(omxFile, parseProperties, omssaLoader, peaklist, this.instrumentConfig, parserContext)
 //  val fastaContainsTarget: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_TARGET, true).toString.toBoolean
 //  val fastaContainsDecoy: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_DECOY, true).toString.toBoolean
   val hasDecoyResultSet = (!fileReader.searchForTargetEntries && fileReader.searchForDecoyEntries)

@@ -431,43 +431,43 @@ class OmssaMSParserTest extends Logging {
     logger.debug("number of decoy peptides         = " + dRs.peptides.length)
     logger.debug("TEST [" + method + "] OK: parsing is successful")
   }
-  @Test
-  def testCompareMatches {
-    val method = getMethod()
-    logger.debug("TEST [" + method + "] STARTS")
-    val omssaOmxFile = parseOmxFile("E 040676.omx")
-    val rs = omssaOmxFile.getResultSet(false)
-    // get peptides matches
-    var pepPeptideIds = new scala.collection.mutable.HashMap[Int, Int]()
-    val peptideMatchesByPepId = rs.peptideMatches.groupBy(_.peptide.id)
-    for ((peptideId, pepMatchGroup) <- (peptideMatchesByPepId)) {
-      var bestPepMatch: fr.proline.core.om.model.msi.PeptideMatch = null
-      if (pepMatchGroup.length == 1) { bestPepMatch = pepMatchGroup(0) }
-      else { bestPepMatch = pepMatchGroup.toList.reduce { (a, b) => if (a.score > b.score) a else b } }
-      pepPeptideIds.put(bestPepMatch.peptide.id, 1)
-    }
-    logger.debug("pepPeptideIds has " + pepPeptideIds.size + " items")
-    // get protein matches
-    var countEmptyProtSeqMatch = 0
-    var protPeptideIds = new scala.collection.mutable.HashMap[Int, Int]()
-    for (protMatch <- rs.proteinMatches) {
-      if (protMatch.sequenceMatches.length == 0) { countEmptyProtSeqMatch += 1 }
-      for (seqMatch <- protMatch.sequenceMatches) {
-        protPeptideIds.put(seqMatch.getPeptideId, 1)
-      }
-    }
-    logger.debug("protPeptideIds has " + protPeptideIds.size + " items")
-    // compare
-    for (item <- pepPeptideIds.keySet) {
-      val opt = protPeptideIds.get(item)
-      if (opt == None) { logger.debug("Peptide " + item + " from pepPeptideIds does not exist in protPeptideIds") }
-    }
-    for (item <- protPeptideIds.keySet) {
-      val opt = pepPeptideIds.get(item)
-      if (opt == None) { logger.debug("Peptide " + item + " from protPeptideIds does not exist in pepPeptideIds") }
-    }
-    logger.debug("rs has " + rs.peptideMatches.length + " peptideMatches and " + rs.proteinMatches.length + " proteinMatches (but " + countEmptyProtSeqMatch + " are empty)")
-  }
+//  @Test
+//  def testCompareMatches {
+//    val method = getMethod()
+//    logger.debug("TEST [" + method + "] STARTS")
+//    val omssaOmxFile = parseOmxFile("E 040676.omx")
+//    val rs = omssaOmxFile.getResultSet(false)
+//    // get peptides matches
+//    var pepPeptideIds = new scala.collection.mutable.HashMap[Int, Int]()
+//    val peptideMatchesByPepId = rs.peptideMatches.groupBy(_.peptide.id)
+//    for ((peptideId, pepMatchGroup) <- (peptideMatchesByPepId)) {
+//      var bestPepMatch: fr.proline.core.om.model.msi.PeptideMatch = null
+//      if (pepMatchGroup.length == 1) { bestPepMatch = pepMatchGroup(0) }
+//      else { bestPepMatch = pepMatchGroup.toList.reduce { (a, b) => if (a.score > b.score) a else b } }
+//      pepPeptideIds.put(bestPepMatch.peptide.id, 1)
+//    }
+//    logger.debug("pepPeptideIds has " + pepPeptideIds.size + " items")
+//    // get protein matches
+//    var countEmptyProtSeqMatch = 0
+//    var protPeptideIds = new scala.collection.mutable.HashMap[Int, Int]()
+//    for (protMatch <- rs.proteinMatches) {
+//      if (protMatch.sequenceMatches.length == 0) { countEmptyProtSeqMatch += 1 }
+//      for (seqMatch <- protMatch.sequenceMatches) {
+//        protPeptideIds.put(seqMatch.getPeptideId, 1)
+//      }
+//    }
+//    logger.debug("protPeptideIds has " + protPeptideIds.size + " items")
+//    // compare
+//    for (item <- pepPeptideIds.keySet) {
+//      val opt = protPeptideIds.get(item)
+//      if (opt == None) { logger.debug("Peptide " + item + " from pepPeptideIds does not exist in protPeptideIds") }
+//    }
+//    for (item <- protPeptideIds.keySet) {
+//      val opt = pepPeptideIds.get(item)
+//      if (opt == None) { logger.debug("Peptide " + item + " from protPeptideIds does not exist in pepPeptideIds") }
+//    }
+//    logger.debug("rs has " + rs.peptideMatches.length + " peptideMatches and " + rs.proteinMatches.length + " proteinMatches (but " + countEmptyProtSeqMatch + " are empty)")
+//  }
   @Test
   def testCsvFile {
     val method = getMethod()
