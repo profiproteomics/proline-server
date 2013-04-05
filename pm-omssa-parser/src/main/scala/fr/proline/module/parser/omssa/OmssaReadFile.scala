@@ -1,6 +1,6 @@
 package fr.proline.module.parser.omssa
 
-import fr.proline.core.om.model.msi.{ Protein, ProteinMatch, Peptide, PeptideMatch, Peaklist, Ms2Query, SequenceMatch, MSISearch, SeqDatabase, SearchSettings, SearchSettingsProperties, PtmDefinition, LocatedPtm, InstrumentConfig, PeptideMatchProperties }
+import fr.proline.core.om.model.msi.{ Protein, ProteinMatch, Peptide, PeptideMatch, Peaklist, Ms2Query, SequenceMatch, MSISearch, SeqDatabase, SearchSettings, SearchSettingsProperties, PtmDefinition, LocatedPtm, /*InstrumentConfig,*/ PeptideMatchProperties }
 //import fr.proline.core.om.model.msi.PeptideMatchOmssaProperties
 import fr.proline.core.om.provider.msi.{ IProteinProvider, ISeqDatabaseProvider, IPeptideProvider, IPTMProvider }
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
@@ -29,7 +29,7 @@ class OmssaReadFile(val omxFile: File,
                     val parseProperties: Map[OmssaParseParams.OmssaParseParam, Any],
                     val omssaLoader: OmssaMandatoryFilesLoader,
                     val peaklist: Peaklist,
-                    val instrumentConfig: InstrumentConfig,
+//                    val instrumentConfig: Option[InstrumentConfig],
                     //  val omssaDefaultVersion: String, 
                     val parserContext: ProviderDecoratedExecutionContext //  entityProviders: EntityProviders
                     ) extends Logging {
@@ -532,7 +532,8 @@ class OmssaReadFile(val omxFile: File,
       variablePtmDefs = msVarPtms.toArray,
       fixedPtmDefs = msFixedPtms.toArray,
       seqDatabases = Array(seqDatabase),
-      instrumentConfig = this.instrumentConfig,
+//      instrumentConfig = instrumentConfig.getOrElse(null),
+      instrumentConfig = null, // not instanciate at this moment
       quantitation = "")
 
     //Create MSISearch regrouping all these information

@@ -105,24 +105,24 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   val hasMs2Peaklist: Boolean = true // an OMSSA omx  file may not have spectra and search params included
 
   // FIXME empty instrumentConfig for tests
-  if (this.instrumentConfig == null) {
-    logger.info("No instrument selected, use default instrument (QUAD-TOF MALDI)")
-    this.instrumentConfig = new InstrumentConfig(
-      id = 7,
-      instrument = new Instrument(
-        id = Instrument.generateNewId(),
-        name = "QUAD-TOF",
-        source = "MALDI"
-      ),
-      ms1Analyzer = "QUAD",
-      msnAnalyzer = "QUAD",
-      activationType = "ECD",
-      fragmentationRules = Some(Array[FragmentationRule]())
-    )
-  }
+//  if (this.instrumentConfig == null) {
+//    logger.info("No instrument selected, use default instrument (QUAD-TOF MALDI)")
+//    this.instrumentConfig = new InstrumentConfig(
+//      id = 3,
+//      instrument = new Instrument(
+//        id = Instrument.generateNewId(),
+//        name = "QUAD-TOF",
+//        source = "MALDI"
+//      ),
+//      ms1Analyzer = "QUAD",
+//      msnAnalyzer = "QUAD",
+//      activationType = "ECD",
+//      fragmentationRules = Some(Array[FragmentationRule]())
+//    )
+//  }
 
   // read omssa file
-  val fileReader = new OmssaReadFile(omxFile, parseProperties, omssaLoader, peaklist, this.instrumentConfig, parserContext)
+  val fileReader = new OmssaReadFile(omxFile, parseProperties, omssaLoader, peaklist, /*Some(this.instrumentConfig),*/ parserContext)
 //  val fastaContainsTarget: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_TARGET, true).toString.toBoolean
 //  val fastaContainsDecoy: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_DECOY, true).toString.toBoolean
   val hasDecoyResultSet = (!fileReader.searchForTargetEntries && fileReader.searchForDecoyEntries)
@@ -160,7 +160,11 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
    * Create from the omx file a MSISearch with all associated information :
    * Peaklist, Enzyme, SeqDatabase and SearchSettings
    */
-  lazy val msiSearch: MSISearch = fileReader.getMsiSearch
+  lazy val msiSearch: MSISearch = {
+    val search: MSISearch = fileReader.getMsiSearch
+    search.searchSettings.instrumentConfig = this.instrumentConfig
+    search
+  }
   def getMSISearch: MSISearch = msiSearch
 
   /**

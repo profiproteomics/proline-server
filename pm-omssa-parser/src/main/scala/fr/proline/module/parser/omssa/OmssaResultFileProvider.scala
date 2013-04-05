@@ -6,8 +6,9 @@ import fr.proline.core.om.provider.msi.IResultFileProvider
 //import fr.proline.core.om.model.msi.{IResultFileProvider, IResultFile}
 //import fr.proline.repository.DatabaseContext
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import com.weiglewilczek.slf4s.Logging
 
-class OmssaResultFileProvider extends IResultFileProvider {
+class OmssaResultFileProvider extends IResultFileProvider with Logging {
 
   val fileType: String = "OmssaMSParser"
 
