@@ -170,7 +170,7 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
     
     val fragmentationTable = this._buildFragmentationTable( pepSequence, theoFragments )
     
-    new SpectrumMatch( fragmentationTable, fragMatches.toArray )
+    new SpectrumMatch( mascotQueryId, fragmentationTable, fragMatches.toArray )
     /*new PeptideMatchDetail(
           pep.getSequenceStr(),
           spectrum,
