@@ -4,7 +4,7 @@
   <parent>
     <artifactId>ProFI-Pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.0.1</version>
+    <version>0.0.2-SNAPSHOT</version>
   </parent>
 
   <artifactId>PM-MascotParser</artifactId>
@@ -42,7 +42,7 @@
     <dependency>
       <groupId>matrixscience</groupId>
       <artifactId>MSParser-native-libraries_2.4.00</artifactId>
-      <version>0.0.1</version>
+      <version>0.0.2-SNAPSHOT</version>
     </dependency>
 
     <!-- BioJava -->
