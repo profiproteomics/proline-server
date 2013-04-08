@@ -83,63 +83,66 @@ public final class NativeLibrariesLoader {
 
 		LOG.debug("Loading Mascot Parser native libraries");
 
-		String libraryPathname = null;
-		String targetLibraryName = null;
-
 		final OSType osType = OSInfo.getOSType();
 
-		if (osType != null) {
+		if (osType == null) {
+		    LOG.warn("Unable to detect running OS Type");
+		} else {
 		    LOG.debug("Detected OS Type {}", osType);
-		}
 
-		switch (osType) {
+		    String libraryPathname = null;
+		    String targetLibraryName = null;
 
-		case LINUX_I386:
-		    checkLinuxLocale();
+		    switch (osType) {
 
-		    libraryPathname = LINUX_I386_LIBRARY_PATHNAME;
-		    targetLibraryName = LINUX_LIBRARY_NAME;
-		    break;
+		    case LINUX_I386:
+			checkLinuxLocale();
 
-		case LINUX_AMD64:
-		    checkLinuxLocale();
+			libraryPathname = LINUX_I386_LIBRARY_PATHNAME;
+			targetLibraryName = LINUX_LIBRARY_NAME;
+			break;
 
-		    libraryPathname = LINUX_AMD64_LIBRARY_PATHNAME;
-		    targetLibraryName = LINUX_LIBRARY_NAME;
-		    break;
+		    case LINUX_AMD64:
+			checkLinuxLocale();
 
-		case WINDOWS_X86:
-		    libraryPathname = WINDOWS_X86_LIBRARY_PATHNAME;
-		    targetLibraryName = WINDOWS_LIBRARY_NAME;
-		    break;
+			libraryPathname = LINUX_AMD64_LIBRARY_PATHNAME;
+			targetLibraryName = LINUX_LIBRARY_NAME;
+			break;
 
-		case WINDOWS_AMD64:
-		    libraryPathname = WINDOWS_AMD64_LIBRARY_PATHNAME;
-		    targetLibraryName = WINDOWS_LIBRARY_NAME;
-		    break;
+		    case WINDOWS_X86:
+			libraryPathname = WINDOWS_X86_LIBRARY_PATHNAME;
+			targetLibraryName = WINDOWS_LIBRARY_NAME;
+			break;
 
-		}
+		    case WINDOWS_AMD64:
+			libraryPathname = WINDOWS_AMD64_LIBRARY_PATHNAME;
+			targetLibraryName = WINDOWS_LIBRARY_NAME;
+			break;
 
-		if ((libraryPathname != null) && (targetLibraryName != null)) {
-		    final File nativeLibrary = extractLibrary(libraryPathname, targetLibraryName);
-
-		    if ((nativeLibrary != null) && nativeLibrary.isFile()) {
-			final String nativeLibraryAbsolutePathname = nativeLibrary.getAbsolutePath();
-
-			LOG.debug("Loading [{}]", nativeLibraryAbsolutePathname);
-
-			System.load(nativeLibraryAbsolutePathname);
-
-			LOG.info("Library [{}] successfully loaded", nativeLibraryAbsolutePathname);
-
-			loaded = true;
-		    } else {
-			LOG.warn("Invalid extracted [{}] file", targetLibraryName);
 		    }
 
-		} else {
-		    LOG.warn("No known native library for OS Type {}", osType);
-		} // End if ((libraryPathname is null) OR (targetLibraryName is null))
+		    if ((libraryPathname != null) && (targetLibraryName != null)) {
+			final File nativeLibrary = extractLibrary(libraryPathname, targetLibraryName);
+
+			if ((nativeLibrary != null) && nativeLibrary.isFile()) {
+			    final String nativeLibraryAbsolutePathname = nativeLibrary.getAbsolutePath();
+
+			    LOG.debug("Loading [{}]", nativeLibraryAbsolutePathname);
+
+			    System.load(nativeLibraryAbsolutePathname);
+
+			    LOG.info("Library [{}] successfully loaded", nativeLibraryAbsolutePathname);
+
+			    loaded = true;
+			} else {
+			    LOG.warn("Invalid extracted [{}] file", targetLibraryName);
+			}
+
+		    } else {
+			LOG.warn("No known native library for OS Type {}", osType);
+		    } // End if ((libraryPathname is null) OR (targetLibraryName is null))
+
+		} // End if (osType is not null)
 
 	    } // End if (not loaded)
 
