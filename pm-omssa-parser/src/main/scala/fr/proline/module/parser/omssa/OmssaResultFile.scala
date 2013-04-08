@@ -104,23 +104,6 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   val msLevel: Int = 2 // Disable support for PMF data  
   val hasMs2Peaklist: Boolean = true // an OMSSA omx  file may not have spectra and search params included
 
-  // FIXME empty instrumentConfig for tests
-//  if (this.instrumentConfig == null) {
-//    logger.info("No instrument selected, use default instrument (QUAD-TOF MALDI)")
-//    this.instrumentConfig = new InstrumentConfig(
-//      id = 3,
-//      instrument = new Instrument(
-//        id = Instrument.generateNewId(),
-//        name = "QUAD-TOF",
-//        source = "MALDI"
-//      ),
-//      ms1Analyzer = "QUAD",
-//      msnAnalyzer = "QUAD",
-//      activationType = "ECD",
-//      fragmentationRules = Some(Array[FragmentationRule]())
-//    )
-//  }
-
   // read omssa file
   val fileReader = new OmssaReadFile(omxFile, parseProperties, omssaLoader, peaklist, /*Some(this.instrumentConfig),*/ parserContext)
 //  val fastaContainsTarget: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_TARGET, true).toString.toBoolean

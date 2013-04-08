@@ -24,6 +24,7 @@ case class ProteinWrapper(val seqdbId: Int, val protAccess: String, var wrappedP
     }
   }
 }
+case class simpleSequenceMatch(val accessionNumber: String, val start: Int, val stop: Int)
 
 class OmssaReadFile(val omxFile: File,
                     val parseProperties: Map[OmssaParseParams.OmssaParseParam, Any],
@@ -230,6 +231,8 @@ class OmssaReadFile(val omxFile: File,
                               case "MSHits_pephits" => // one MSPepHit per ProteinMatch/SequenceMatch
                                 val MSPepHit = MSHits_firstChild.childElementCursor().advance()
                                 var peptideMatchRank = 0
+                                // variable used to check that the sequence match does not already exist (bug in omssa)
+                                val simpleSequenceMatches = new ArrayBuffer[simpleSequenceMatch]()
                                 // for each pephit
                                 while (MSPepHit.getCurrEvent() != null) {
                                   // prepare the variables for the sequence match
@@ -253,6 +256,12 @@ class OmssaReadFile(val omxFile: File,
                                   }
                                   MSPepHit.advance()
                                   if (proteinMatchGiNumber != "") proteinMatchAccessionNumber = proteinMatchGiNumber // MSPepHit_gi is only given for ncbi databases
+                                  
+                                  // check that the sequence match does not already exist (bug in omssa)
+//                                  if(simpleSequenceMatches.contains(new simpleSequenceMatch(proteinMatchAccessionNumber, sequenceMatchStart, sequenceMatchStop))) {
+//                                    logger.debug("ABU redundant sequence match on "+proteinMatchAccessionNumber +"/"+ sequenceMatchStart +"/"+ sequenceMatchStop)
+//                                  } else {
+                                  if(!simpleSequenceMatches.contains(new simpleSequenceMatch(proteinMatchAccessionNumber, sequenceMatchStart, sequenceMatchStop))) {
                                   // create and store the ProteinMatch object
                                   var proteinMatch: ProteinMatch = null
 //                                  if (proteinAccessionNumbersToProteinMatches.contains(proteinMatchAccessionNumber) && proteinAccessionNumbersToProteinMatches.get(proteinMatchAccessionNumber) != None) {
@@ -292,6 +301,8 @@ class OmssaReadFile(val omxFile: File,
                                       residueAfter = 0 // not read yet
                                     )
                                   )
+                                  simpleSequenceMatches += new simpleSequenceMatch(proteinMatchAccessionNumber, sequenceMatchStart, sequenceMatchStop)
+                                  }
                                 }
                               case "MSHits_mzhits" =>
                                 val MSMZHit = MSHits_firstChild.childElementCursor().advance()
