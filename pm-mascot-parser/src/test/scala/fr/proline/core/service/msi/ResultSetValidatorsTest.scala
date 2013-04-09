@@ -78,7 +78,39 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
       executionContext.closeAll()
     super.tearDown()
   }
+  
+ @Test
+  def testScoreValidationOnNoneDecoy() = {
+    importDatFile("/dat_samples/STR_F122817_Mascot_v2.3.dat","""sp\|REV_\S+""")
+   val nbrPepProteo = 1
+    val scoreTh = 22.0f
+    val pepFilters = Seq(new ScorePSMFilter(scoreThreshold = scoreTh))
+    val protProteoTypiqueFilters = Seq()
+    
+    val rsValidation = ResultSetValidator(
+      execContext = executionContext,
+      targetRsId = rsIDWork,
+      tdAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED)),
+      pepMatchPreFilters = Some(pepFilters),
+      pepMatchValidator = None,
+      protSetFilters = Some(protProteoTypiqueFilters),
+      storeResultSummary = false)
 
+    val result = rsValidation.runService
+    Assert.assertTrue("ResultSet validation result", result)
+    logger.info(" End Run ResultSetValidator Service with Score Filter, in Test ")
+
+    val tRSM = rsValidation.validatedTargetRsm
+    val dRSM = rsValidation.validatedDecoyRsm
+    logger.info(" rsValidation.validatedTargetRsm "+tRSM.id+" rsValidation.validatedDecoyRsm "+dRSM.isDefined)
+    Assert.assertNotNull(tRSM)
+    Assert.assertNotNull(dRSM)
+    
+//    Assert.assertFalse(dRSM.isDefined)
+
+  }
+
+ 
   @Test
   def testScoreValidation() = {
     importDatFile(_datFileName,"""sp\|REV_\S+""")
