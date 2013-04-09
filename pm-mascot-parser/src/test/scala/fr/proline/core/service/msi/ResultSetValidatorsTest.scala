@@ -64,7 +64,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
       instrumentConfigId = 1,
       peaklistSoftwareId = 1, // TODO : provide the right value
       importerProperties = propertiedBuilder.result,
-      acDecoyRegex = Some(decoyRegExp.r))
+      acDecoyRegex = if(decoyRegExp == null) None else Some(decoyRegExp.r))
 
     val result = importer.runService()
     rsIDWork = importer.getTargetResultSetId
@@ -81,7 +81,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
   
  @Test
   def testScoreValidationOnNoneDecoy() = {
-    importDatFile("/dat_samples/STR_F122817_Mascot_v2.3.dat","""sp\|REV_\S+""")
+   importDatFile("/dat_samples/STR_F122817_Mascot_v2.3.dat",null)
    val nbrPepProteo = 1
     val scoreTh = 22.0f
     val pepFilters = Seq(new ScorePSMFilter(scoreThreshold = scoreTh))
