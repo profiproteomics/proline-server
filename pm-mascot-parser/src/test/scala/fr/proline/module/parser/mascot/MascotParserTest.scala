@@ -85,7 +85,8 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
   private def testEColiDescription(rs: ResultSet) = {
 
     val msiSearchDate = Calendar.getInstance()
-    msiSearchDate.setTime(rs.msiSearch.date)
+    val msiSearch = rs.msiSearch.get
+    msiSearchDate.setTime(msiSearch.date)
 
     val expectedDate = Calendar.getInstance()
     expectedDate.set(2013, 01, 05)
@@ -93,20 +94,20 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
     assertThat(msiSearchDate.get(Calendar.DAY_OF_MONTH), CoreMatchers.equalTo(expectedDate.get(Calendar.DAY_OF_MONTH)))
     assertThat(msiSearchDate.get(Calendar.YEAR), CoreMatchers.equalTo(expectedDate.get(Calendar.YEAR)))
 
-    assertThat(rs.msiSearch.jobNumber, CoreMatchers.equalTo(68213))
-    assertThat(rs.msiSearch.queriesCount, CoreMatchers.equalTo(7047))
-    assertThat(rs.msiSearch.submittedQueriesCount, CoreMatchers.equalTo(7047))
-    assertThat(rs.msiSearch.resultFileName, CoreMatchers.equalTo("GRE_F068213_M2.4_TD_EColi.dat"))
-    assertThat(rs.msiSearch.searchedSequencesCount, CoreMatchers.equalTo(32182))
-    assertThat(rs.msiSearch.title, CoreMatchers.equalTo("K12 Test nano trap duree gradient T12 HCD QEx1_000192.raw (DH5_50)"))
-    assertThat(rs.msiSearch.userName, CoreMatchers.equalTo("AMH"))
+    assertThat(msiSearch.jobNumber, CoreMatchers.equalTo(68213))
+    assertThat(msiSearch.queriesCount, CoreMatchers.equalTo(7047))
+    assertThat(msiSearch.submittedQueriesCount, CoreMatchers.equalTo(7047))
+    assertThat(msiSearch.resultFileName, CoreMatchers.equalTo("GRE_F068213_M2.4_TD_EColi.dat"))
+    assertThat(msiSearch.searchedSequencesCount, CoreMatchers.equalTo(32182))
+    assertThat(msiSearch.title, CoreMatchers.equalTo("K12 Test nano trap duree gradient T12 HCD QEx1_000192.raw (DH5_50)"))
+    assertThat(msiSearch.userName, CoreMatchers.equalTo("AMH"))
 
-    assertThat(rs.msiSearch.searchSettings.fixedPtmDefs.length, CoreMatchers.equalTo(1))
-    assertThat(rs.msiSearch.searchSettings.variablePtmDefs.length, CoreMatchers.equalTo(2))
-    assertThat(rs.msiSearch.searchSettings.variablePtmDefs(0).names.shortName, CoreMatchers.equalTo("Acetyl"))
-    assertThat(rs.msiSearch.searchSettings.variablePtmDefs(0).residue, CoreMatchers.equalTo('\0'))
-    assertThat(rs.msiSearch.searchSettings.variablePtmDefs(1).names.shortName, CoreMatchers.equalTo("Oxidation"))
-    assertThat(rs.msiSearch.searchSettings.variablePtmDefs(1).residue, CoreMatchers.equalTo('M'))
+    assertThat(msiSearch.searchSettings.fixedPtmDefs.length, CoreMatchers.equalTo(1))
+    assertThat(msiSearch.searchSettings.variablePtmDefs.length, CoreMatchers.equalTo(2))
+    assertThat(msiSearch.searchSettings.variablePtmDefs(0).names.shortName, CoreMatchers.equalTo("Acetyl"))
+    assertThat(msiSearch.searchSettings.variablePtmDefs(0).residue, CoreMatchers.equalTo('\0'))
+    assertThat(msiSearch.searchSettings.variablePtmDefs(1).names.shortName, CoreMatchers.equalTo("Oxidation"))
+    assertThat(msiSearch.searchSettings.variablePtmDefs(1).residue, CoreMatchers.equalTo('M'))
   }
 
   private def testEColiPeptidePtms(rs: ResultSet) = {

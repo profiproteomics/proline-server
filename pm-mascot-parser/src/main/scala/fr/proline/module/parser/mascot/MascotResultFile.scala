@@ -378,13 +378,15 @@ class MascotResultFile(
     logger.debug("Parser has gone through " + pepMatchesByPep.size + " peptides creating " + allPepMatches.length + " peptide matches ")
     logger.info("Create ResultSet with " + allPepMatches.length + " peptide matches identifying " + protMatches.size + " proteins")
 
-    new ResultSet(id = rsId,
+    new ResultSet(
+      id = rsId,
       peptides = pepMatchesByPep.keySet.toArray,
       peptideMatches = allPepMatches,
       proteinMatches = protMatches,
       isDecoy = wantDecoy,
       isNative = true,
-      msiSearch = this.msiSearch)
+      msiSearch = Some(this.msiSearch)
+    )
   }
 
   /**
