@@ -17,7 +17,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>0.0.8</core.version>
+    <core.version>0.0.9-SNAPSHOT</core.version>
   </properties>
 
   <dependencies>
@@ -27,35 +27,10 @@
       <artifactId>scala-library</artifactId>
     </dependency>
 
-    <!-- Test -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-    <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-tools.testing</groupId>
-      <artifactId>specs_2.9.1</artifactId>
-    <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_2.9.1</artifactId>
-    <scope>test</scope>
-    </dependency>
-
     <!-- Logging -->
     <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>com.weiglewilczek.slf4s</groupId>
-        <artifactId>slf4s_2.9.1</artifactId>
+      <groupId>com.weiglewilczek.slf4s</groupId>
+      <artifactId>slf4s_2.9.1</artifactId>
     </dependency>
 
     <!-- jmzidentml -->
@@ -90,16 +65,10 @@
     </dependency>
 
     <!-- Override jmzidentml / xxindex dependency without com.springsource prefix  -->
+    <!-- Use SLF4J instead of Apache common-loggings -->
     <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-      <version>1.1.1</version>
-    </dependency>
-
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>1.2.17</version>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
     </dependency>
 
     <dependency>
@@ -116,33 +85,62 @@
 
     <!-- Proline -->
     <dependency>
-        <groupId>fr.proline</groupId>
-        <artifactId>Proline-OM</artifactId>
-        <version>${core.version}</version>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-OM</artifactId>
+      <version>${core.version}</version>
     </dependency>
     <dependency>
-        <groupId>fr.proline</groupId>
-        <artifactId>Proline-DAL</artifactId>
-        <version>${core.version}</version>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-DAL</artifactId>
+      <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-OMP</artifactId>
       <version>${core.version}</version>
     </dependency>
+
     <dependency>
-        <groupId>fr.proline</groupId>
-        <artifactId>Proline-Databases</artifactId>
-        <version>${core.version}</version>
-        <type>test-jar</type>
-        <scope>test</scope>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-Databases</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
     </dependency>
     <dependency>
-        <groupId>fr.proline</groupId>
-        <artifactId>Proline-DAL</artifactId>
-        <version>${core.version}</version>
-        <type>test-jar</type>
-        <scope>test</scope>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-DAL</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Tests -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-tools.testing</groupId>
+      <artifactId>specs_2.9.1</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_2.9.1</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+     <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>
