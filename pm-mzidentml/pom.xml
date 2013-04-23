@@ -64,12 +64,14 @@
 
     </dependency>
 
-    <!-- Override jmzidentml / xxindex dependency without com.springsource prefix  -->
+    <!-- Override jmzidentml / xxindex dependency without com.springsource prefix -->
     <!-- Use SLF4J instead of Apache common-loggings -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>jcl-over-slf4j</artifactId>
     </dependency>
+
+    <!-- If log4j is needed, add log4j-over-slf4j dependency -->
 
     <dependency>
       <groupId>antlr</groupId>

@@ -65,7 +65,13 @@ class MzIdExporter(
   
   // Retrieve some proline objects
   val rs = rsm.resultSet.get
-  val msiSearch = rs.msiSearch
+  val rsId = rs.id
+  val optionalMsiSearch = rs.msiSearch
+  
+  // TODO LMN : May not work for merged ResultSet (refs #7486)
+  require((optionalMsiSearch != null) && optionalMsiSearch.isDefined, "ResultSet #" + rsId+" has no associated MSI Search")
+  
+  val msiSearch = optionalMsiSearch.get
   val searchSettings = msiSearch.searchSettings
   val pepById = rs.peptideById
   //println("nb peptides="+pepById.size)
