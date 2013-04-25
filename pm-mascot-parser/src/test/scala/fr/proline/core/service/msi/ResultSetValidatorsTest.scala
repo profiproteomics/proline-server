@@ -264,6 +264,47 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
 
   }
     
+ @Test
+  def testScoreAfterValidation() = {
+    importDatFile(_datFileName,"""sp\|REV_\S+""")
+
+    val readRS = rsProvider.getResultSet(rsIDWork).get
+    val seqBuilder = Seq.newBuilder[IPeptideMatchFilter]
+    val rank = 1
+    seqBuilder += new RankPSMFilter(pepMatchMaxRank = 1)
+    val rsValidation = new ResultSetValidator(
+      execContext = executionContext,
+      targetRs = readRS,
+      tdAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED)),
+      pepMatchPreFilters = Some(seqBuilder.result()),
+      pepMatchValidator = None,
+      protSetFilters = None, 
+      protSetValidator = None,
+      storeResultSummary = false
+    )
+
+    val result = rsValidation.runService
+    Assert.assertTrue(result)
+    logger.info(" End Run ResultSetValidator Service with Rank filter, in Test ")
+
+    Assert.assertNotNull(rsValidation.validatedTargetRsm)
+    Assert.assertTrue(rsValidation.validatedDecoyRsm.isDefined)
+
+    logger.debug(" Verify Result IN RSM ")
+    val allTarPepMatc = rsValidation.validatedTargetRsm.peptideInstances.flatMap(pi => pi.peptideMatches)
+    val allDecPepMatc = rsValidation.validatedDecoyRsm.get.peptideInstances.flatMap(pi => pi.peptideMatches)
+    Assert.assertEquals("AllTarPepMatc length", 774, allTarPepMatc.length)
+    Assert.assertEquals("AllDecPepMatc length",638, allDecPepMatc.length)
+
+    val allPepSets = rsValidation.validatedTargetRsm.peptideSets
+    allPepSets.foreach(pepS =>{
+      if(pepS.proteinSet!=null && pepS.proteinSet.isDefined){
+	  Assert.assertEquals(pepS.score, pepS.proteinSet.get.score,0.01)
+      } 
+      
+    })
+  }
+    
   //@Test
   def testRankValidationWithCompetitionFDR() = {
     importDatFile(_datFileName,"""sp\|REV_\S+""")
