@@ -192,7 +192,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
       proteinMatches = protMatches,
       isDecoy = wantDecoy,
       isNative = true,
-      msiSearch = msiSearch)
+      msiSearch = Some(msiSearch))
   }
 
   private var pepToPeptideMatches: HashMap[Peptide, ArrayBuffer[PeptideMatch]] = null

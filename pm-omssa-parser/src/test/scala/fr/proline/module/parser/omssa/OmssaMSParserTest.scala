@@ -431,43 +431,43 @@ class OmssaMSParserTest extends Logging {
     logger.debug("number of decoy peptides         = " + dRs.peptides.length)
     logger.debug("TEST [" + method + "] OK: parsing is successful")
   }
-//  @Test
-//  def testCompareMatches {
-//    val method = getMethod()
-//    logger.debug("TEST [" + method + "] STARTS")
-//    val omssaOmxFile = parseOmxFile("E 040676.omx")
-//    val rs = omssaOmxFile.getResultSet(false)
-//    // get peptides matches
-//    var pepPeptideIds = new scala.collection.mutable.HashMap[Int, Int]()
-//    val peptideMatchesByPepId = rs.peptideMatches.groupBy(_.peptide.id)
-//    for ((peptideId, pepMatchGroup) <- (peptideMatchesByPepId)) {
-//      var bestPepMatch: fr.proline.core.om.model.msi.PeptideMatch = null
-//      if (pepMatchGroup.length == 1) { bestPepMatch = pepMatchGroup(0) }
-//      else { bestPepMatch = pepMatchGroup.toList.reduce { (a, b) => if (a.score > b.score) a else b } }
-//      pepPeptideIds.put(bestPepMatch.peptide.id, 1)
-//    }
-//    logger.debug("pepPeptideIds has " + pepPeptideIds.size + " items")
-//    // get protein matches
-//    var countEmptyProtSeqMatch = 0
-//    var protPeptideIds = new scala.collection.mutable.HashMap[Int, Int]()
-//    for (protMatch <- rs.proteinMatches) {
-//      if (protMatch.sequenceMatches.length == 0) { countEmptyProtSeqMatch += 1 }
-//      for (seqMatch <- protMatch.sequenceMatches) {
-//        protPeptideIds.put(seqMatch.getPeptideId, 1)
-//      }
-//    }
-//    logger.debug("protPeptideIds has " + protPeptideIds.size + " items")
-//    // compare
-//    for (item <- pepPeptideIds.keySet) {
-//      val opt = protPeptideIds.get(item)
-//      if (opt == None) { logger.debug("Peptide " + item + " from pepPeptideIds does not exist in protPeptideIds") }
-//    }
-//    for (item <- protPeptideIds.keySet) {
-//      val opt = pepPeptideIds.get(item)
-//      if (opt == None) { logger.debug("Peptide " + item + " from protPeptideIds does not exist in pepPeptideIds") }
-//    }
-//    logger.debug("rs has " + rs.peptideMatches.length + " peptideMatches and " + rs.proteinMatches.length + " proteinMatches (but " + countEmptyProtSeqMatch + " are empty)")
-//  }
+  //  @Test
+  //  def testCompareMatches {
+  //    val method = getMethod()
+  //    logger.debug("TEST [" + method + "] STARTS")
+  //    val omssaOmxFile = parseOmxFile("E 040676.omx")
+  //    val rs = omssaOmxFile.getResultSet(false)
+  //    // get peptides matches
+  //    var pepPeptideIds = new scala.collection.mutable.HashMap[Int, Int]()
+  //    val peptideMatchesByPepId = rs.peptideMatches.groupBy(_.peptide.id)
+  //    for ((peptideId, pepMatchGroup) <- (peptideMatchesByPepId)) {
+  //      var bestPepMatch: fr.proline.core.om.model.msi.PeptideMatch = null
+  //      if (pepMatchGroup.length == 1) { bestPepMatch = pepMatchGroup(0) }
+  //      else { bestPepMatch = pepMatchGroup.toList.reduce { (a, b) => if (a.score > b.score) a else b } }
+  //      pepPeptideIds.put(bestPepMatch.peptide.id, 1)
+  //    }
+  //    logger.debug("pepPeptideIds has " + pepPeptideIds.size + " items")
+  //    // get protein matches
+  //    var countEmptyProtSeqMatch = 0
+  //    var protPeptideIds = new scala.collection.mutable.HashMap[Int, Int]()
+  //    for (protMatch <- rs.proteinMatches) {
+  //      if (protMatch.sequenceMatches.length == 0) { countEmptyProtSeqMatch += 1 }
+  //      for (seqMatch <- protMatch.sequenceMatches) {
+  //        protPeptideIds.put(seqMatch.getPeptideId, 1)
+  //      }
+  //    }
+  //    logger.debug("protPeptideIds has " + protPeptideIds.size + " items")
+  //    // compare
+  //    for (item <- pepPeptideIds.keySet) {
+  //      val opt = protPeptideIds.get(item)
+  //      if (opt == None) { logger.debug("Peptide " + item + " from pepPeptideIds does not exist in protPeptideIds") }
+  //    }
+  //    for (item <- protPeptideIds.keySet) {
+  //      val opt = pepPeptideIds.get(item)
+  //      if (opt == None) { logger.debug("Peptide " + item + " from protPeptideIds does not exist in pepPeptideIds") }
+  //    }
+  //    logger.debug("rs has " + rs.peptideMatches.length + " peptideMatches and " + rs.proteinMatches.length + " proteinMatches (but " + countEmptyProtSeqMatch + " are empty)")
+  //  }
   @Test
   def testCsvFile {
     val method = getMethod()
@@ -568,82 +568,91 @@ class OmssaMSParserTest extends Logging {
     //    for (peptideMatch <- rs.peptideMatches; ptm <- peptideMatch.peptide.ptms) { assert(ptm.definition.names.fullName == "BS3 linker + H2O") }
     //    logger.debug("TEST [" + method + "] OK: parsing is successful")
   }
-//
-//  /*
-//   * this file is from LSA and seems to contain at least one redundancy on quadruplet "protein_match_id, peptide_id, start, stop"
-//   * La clé ½ (protein_match_id, peptide_id, start, stop)=(35, 967485, 248, 264) ╗ existe déjà.
-//   * This test is commented because the file containing
-//   */
-//  @Test
-//  def testSequenceMatchRedundancyIssue {
-//    val method = getMethod()
-//    logger.debug("TEST [" + method + "] STARTS")
-//    val omssaOmxFile = parseOmxFile("MsMerge_piste mircroparticules.omx")
-//    val rs = omssaOmxFile.getResultSet(wantDecoy = false)
-//    logger.debug("rs.proteinMatches.length="+rs.proteinMatches.length)
-////    assertEquals(2, rs.proteinMatches.length)
-//    logger.info("#proteinMatchId#peptideId#start#stop#")
-//    var count = 0
-//    for (pm <- rs.proteinMatches ; sm <- pm.sequenceMatches) {
-//	    if(pm.accession == "sp|REV_A6NJG2" && sm.start == 248 && sm.end == 264) {
-//	    	count += 1
-//	    	logger.info("#"+pm.id+"#"+sm.getPeptideId+"#"+sm.start+"#"+sm.end+"#")
-//	    	logger.info(pm.toString)
-//	    	logger.info(sm.toString)
-//	    }
-//    }
-//    assert(count == 1)
-//
-//    logger.debug("TEST [" + method + "] OK: parsing is successful")
-//  }
+  //
+  //  /*
+  //   * this file is from LSA and seems to contain at least one redundancy on quadruplet "protein_match_id, peptide_id, start, stop"
+  //   * La clé ½ (protein_match_id, peptide_id, start, stop)=(35, 967485, 248, 264) ╗ existe déjà.
+  //   * This test is commented because the file containing
+  //   */
+  //  @Test
+  //  def testSequenceMatchRedundancyIssue {
+  //    val method = getMethod()
+  //    logger.debug("TEST [" + method + "] STARTS")
+  //    val omssaOmxFile = parseOmxFile("MsMerge_piste mircroparticules.omx")
+  //    val rs = omssaOmxFile.getResultSet(wantDecoy = false)
+  //    logger.debug("rs.proteinMatches.length="+rs.proteinMatches.length)
+  ////    assertEquals(2, rs.proteinMatches.length)
+  //    logger.info("#proteinMatchId#peptideId#start#stop#")
+  //    var count = 0
+  //    for (pm <- rs.proteinMatches ; sm <- pm.sequenceMatches) {
+  //	    if(pm.accession == "sp|REV_A6NJG2" && sm.start == 248 && sm.end == 264) {
+  //	    	count += 1
+  //	    	logger.info("#"+pm.id+"#"+sm.getPeptideId+"#"+sm.start+"#"+sm.end+"#")
+  //	    	logger.info(pm.toString)
+  //	    	logger.info(sm.toString)
+  //	    }
+  //    }
+  //    assert(count == 1)
+  //
+  //    logger.debug("TEST [" + method + "] OK: parsing is successful")
+  //  }
 
-//  @Test
-//  def testExtraHighOmssaScore {
-//    val method = getMethod()
-//    logger.debug("TEST [" + method + "] STARTS")
-//    val omssaOmxFile = parseOmxFile("STG_W11940CC_OTD.omx")
-//    val rs = omssaOmxFile.getResultSet(wantDecoy = false)
-////    logger.debug("rs.proteinMatches.length="+rs.proteinMatches.length)
-////    assertEquals(2, rs.proteinMatches.length)
-//    for (pm <- rs.peptideMatches) {
-//      if(pm.score > 40) {
-//        logger.debug("ABU found "+pm.toString)
-//      }
-//    }
-//    logger.debug("TEST [" + method + "] OK: parsing is successful")
-//  }
-  
-    @Test
+  //  @Test
+  //  def testExtraHighOmssaScore {
+  //    val method = getMethod()
+  //    logger.debug("TEST [" + method + "] STARTS")
+  //    val omssaOmxFile = parseOmxFile("STG_W11940CC_OTD.omx")
+  //    val rs = omssaOmxFile.getResultSet(wantDecoy = false)
+  ////    logger.debug("rs.proteinMatches.length="+rs.proteinMatches.length)
+  ////    assertEquals(2, rs.proteinMatches.length)
+  //    for (pm <- rs.peptideMatches) {
+  //      if(pm.score > 40) {
+  //        logger.debug("ABU found "+pm.toString)
+  //      }
+  //    }
+  //    logger.debug("TEST [" + method + "] OK: parsing is successful")
+  //  }
+
+  @Test
   def testPtmPosition {
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")
     val omssaOmxFile = parseOmxFile("STG_W18776LSA_OTD_pklInputFile.omx")
     val rs = omssaOmxFile.getResultSet(wantDecoy = false)
     val expectedResidues = new ArrayBuffer[Char]()
-    if(rs.msiSearch.searchSettings.variablePtmDefs.length > 0) {
-	    logger.debug("PTM(s) expected : ")
-	    for (ptm <- rs.msiSearch.searchSettings.variablePtmDefs) {
-	      expectedResidues += ptm.residue
-	      logger.debug(ptm.names.fullName + "("+ptm.residue+")")
-	    }
+
+    val optionalMsiSearch = rs.msiSearch
+
+    if ((optionalMsiSearch != null) && optionalMsiSearch.isDefined) {
+      val msiSearch = optionalMsiSearch.get
+
+      if (msiSearch.searchSettings.variablePtmDefs.length > 0) {
+        logger.debug("PTM(s) expected : ")
+        for (ptm <- msiSearch.searchSettings.variablePtmDefs) {
+          expectedResidues += ptm.residue
+          logger.debug(ptm.names.fullName + "(" + ptm.residue + ")")
+        }
+      }
+
     }
+
     try {
-	    for (pm <- rs.peptideMatches) {
-	      if(pm.peptide.ptms.length > 0) {
-	        logger.debug("PTM in sequence "+pm.peptide.sequence+" on amino acid(s) : ")
-	        for(ptm <- pm.peptide.ptms) {
-	          if(ptm.seqPosition == -1) logger.debug("C-term ptm")
-	          else if(ptm.seqPosition == 0) logger.debug("N-term ptm")
-	          else if(ptm.seqPosition > 0) {
-	        	  logger.debug(pm.peptide.sequence.charAt(ptm.seqPosition-1).toString+" ("+ptm.seqPosition+")")
-	        	  assert(expectedResidues.contains(pm.peptide.sequence.charAt(ptm.seqPosition-1)))
-	          }
-	        }
-	      }
-	    }
-	    logger.debug("TEST [" + method + "] OK: parsing is successful")
+      for (pm <- rs.peptideMatches) {
+        if (pm.peptide.ptms.length > 0) {
+          logger.debug("PTM in sequence " + pm.peptide.sequence + " on amino acid(s) : ")
+          for (ptm <- pm.peptide.ptms) {
+            if (ptm.seqPosition == -1) logger.debug("C-term ptm")
+            else if (ptm.seqPosition == 0) logger.debug("N-term ptm")
+            else if (ptm.seqPosition > 0) {
+              logger.debug(pm.peptide.sequence.charAt(ptm.seqPosition - 1).toString + " (" + ptm.seqPosition + ")")
+              assert(expectedResidues.contains(pm.peptide.sequence.charAt(ptm.seqPosition - 1)))
+            }
+          }
+        }
+      }
+      logger.debug("TEST [" + method + "] OK: parsing is successful")
     } catch {
-      case e: Exception => 
+      case e: Exception =>
         logger.error("TEST [" + method + "] FAILED", e)
         throw e
     }
