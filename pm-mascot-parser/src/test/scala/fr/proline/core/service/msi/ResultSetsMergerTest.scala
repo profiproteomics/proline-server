@@ -2,26 +2,16 @@ package fr.proline.core.service.msi
 
 import java.io.File
 
-import scala.collection.mutable.{ HashMap, ArrayBuffer }
-
-import org.junit.{ After, Assert, Test, Before }
+import org.junit.{After, Assert}
+import org.junit.{Before, Ignore, Test}
+import org.junit.Assert._
 
 import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.context.IExecutionContext
-import fr.proline.core.algo.msi.filtering.pepmatch.{ ScorePSMFilter, RankPSMFilter, _ }
-import fr.proline.core.algo.msi.filtering.proteinset.{ ScoreProtSetFilter, SpecificPeptidesPSFilter }
-import fr.proline.core.algo.msi.filtering.{ IPeptideMatchFilter, FilterPropertyKeys, _ }
-import fr.proline.core.algo.msi.validation.pepmatch.TDPepMatchValidatorWithFDROptimization
-import fr.proline.core.algo.msi.validation.proteinset.ProtSetRulesValidatorWithFDROptimization
-import fr.proline.core.algo.msi.validation.{ BasicTDAnalyzer, _ }
-import fr.proline.core.algo.msi.InferenceMethods
-import fr.proline.core.algo.msi.scoring.ProtSetScoring
-import fr.proline.core.dal.{ SQLQueryHelper, SQLConnectionContext }
-import fr.proline.core.om.model.msi.{ ResultSet, PeptideMatch, FilterDescriptor }
-import fr.proline.core.om.provider.msi.impl.{ SQLResultSetProvider, ORMResultSetProvider }
+import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.core.om.storer.msi.impl.StorerContext
+import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.repository.DriverType
 
 class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
@@ -98,13 +88,15 @@ class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
 
     val tRSM = rsMerger.mergedResultSet
 
-    Assert.assertNotNull(tRSM)
+    assertNotNull(tRSM)
 
+    val mergedDecoyRS = tRSM.decoyResultSet
+
+    assertTrue("Merged DECOY ResultSet is present", (mergedDecoyRS != null) && mergedDecoyRS.isDefined)
   }
 
   @Test
   def testMergeTwoRS() = {
-
     rs1IDWork = importDatFile("/dat_samples/STR_F136482_CTD.dat", """sp\|REV_\S+""")
     rs2IDWork = importDatFile("/dat_samples/STR_F122817_Mascot_v2.3.dat", """sp\|REV_\S+""")
     val rsIDs = Seq(rs1IDWork, rs2IDWork)
@@ -114,12 +106,42 @@ class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
       resultSetIds = rsIDs)
 
     val result = rsMerger.runService
-    Assert.assertTrue("ResultSet merger result", result)
+    assertTrue("ResultSet merger result", result)
     logger.info(" End Run ResultSetMerger Service, merge two different RS twice, in Test ")
 
     val tRSM = rsMerger.mergedResultSet
 
-    Assert.assertNotNull(tRSM)
+    assertNotNull(tRSM)
+
+    val mergedDecoyRS = tRSM.decoyResultSet
+
+    assertTrue("Merged DECOY ResultSet is present", (mergedDecoyRS != null) && mergedDecoyRS.isDefined)
+
+    /* Try to reload merged ResultSet with JPA */
+    val mergedRSId = tRSM.id
+
+    val localJPAContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true)
+
+    try {
+      val rsProvider = new ORMResultSetProvider(localJPAContext.getMSIDbConnectionContext, localJPAContext.getPSDbConnectionContext, localJPAContext.getPDIDbConnectionContext)
+
+      val optionalMergedRS = rsProvider.getResultSet(mergedRSId)
+      assertTrue("Reloaded Merged ResultSet", (optionalMergedRS != null) && optionalMergedRS.isDefined)
+
+      val optionalMergedDecoyRS = optionalMergedRS.get.decoyResultSet
+      assertTrue("Reloaded Merged DECOY ResultSet", (optionalMergedDecoyRS != null) && optionalMergedDecoyRS.isDefined)
+
+    } finally {
+
+      if (localJPAContext != null) {
+        try {
+          localJPAContext.closeAll()
+        } catch {
+          case exClose: Exception => logger.error("Error closing local JPA ExecutionContext", exClose)
+        }
+      }
+
+    }
 
   }
 
