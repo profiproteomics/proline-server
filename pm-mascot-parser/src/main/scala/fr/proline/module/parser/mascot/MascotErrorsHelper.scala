@@ -20,15 +20,16 @@ object MascotErrorsHelper extends Logging {
   
   def logErrors(mascotErrors: ms_errs) {
     
-    for ( k <- 0 until mascotErrors.getNumberOfErrors ) {
+    for ( k <- 1 to mascotErrors.getNumberOfErrors ) {
       val( errorString, errorNumber ) = (mascotErrors.getErrorString(k),mascotErrors.getErrorNumber(k))
       
-      mascotErrors.getErrorSeverity(k) match {       
-        case 0 => {
-          this.logger.warn("Mascot warning (CODE="+ errorNumber +"): " + errorString )
-        }
-        case _ => throw new MascotException(errorString,errorNumber)
+      val severity = mascotErrors.getErrorSeverity(k)
+      
+      if( severity > 0 ) throw new MascotException(errorString,errorNumber)
+      else {
+        this.logger.warn("ms_parser warning (CODE=%d): %s".format(errorNumber,errorString) )
       }
+      
       /*val severity = if( mascotErrors.getErrorSeverity(k) <= 0 ) "[W], " else "[F], "
         
       this.logger.error("  - ms_error CODE=" + mascotErrors.getErrorNumber(k) +
