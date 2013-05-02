@@ -19,12 +19,8 @@ import fr.proline.repository.DriverType
 @Test
 class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
 
-  /* Constants : Test result assetions */
-  val EXPECTED_SPECTRUM_MATCHES_COUNT = 2647
-  val EXPECTED_FRAG_MATCHES_COUNT = 24569
-
   val driverType = DriverType.H2
-  val datFileName: String = "/dat_samples/TLS_F027737_MTD_no_varmod.dat"
+
   val importProperties = Map(
     "mascot.version" -> "2.3.0.1",
     "mascot.server.url" -> "http://www.matrixscience.com/cgi/" //http://tol-brandir/mascot/cgi
@@ -62,11 +58,13 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
   }
 
   @Test
-  def runService(): Unit = {
+  def testNoModFile(): Unit = {
     setUp()
 
     val parserContext = buildParserContext()
     Assert.assertNotNull(parserContext)
+
+    val datFileName: String = "/dat_samples/TLS_F027737_MTD_no_varmod.dat"
 
     logger.info(" --- Get File " + datFileName)
 
@@ -98,9 +96,51 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
     }
     )
 
-    assertEquals("SpectrumMatches Count", EXPECTED_SPECTRUM_MATCHES_COUNT, spectrumMatchesCount)
+    assertEquals("SpectrumMatches Count", 2647, spectrumMatchesCount)
+    assertEquals("Calculated FragMatches Count", 24569, fragMatchesCount)
+  }
+  
+    @Test
+  def testModFile(): Unit = {
+    setUp()
 
-    assertEquals("Calculated FragMatches Count", EXPECTED_FRAG_MATCHES_COUNT, fragMatchesCount)
+    val parserContext = buildParserContext()
+    Assert.assertNotNull(parserContext)
+
+    val datFileName: String = "/dat_samples/STR_F136482_CTD.dat"
+
+    logger.info(" --- Get File " + datFileName)
+
+    var datFile = new File(getClass.getResource(datFileName).toURI)
+
+    logger.info(" --- SpectrumMatcher  " + datFile.exists)
+
+    // Get Right ResultFile provider
+    val rfProvider = ResultFileProviderRegistry.get("MascotMSParser")
+    if (rfProvider == None) {
+      throw new IllegalArgumentException("No ResultFileProvider for specified identification file format")
+    }
+
+    //import com.codahale.jerkson.Json.generate
+    import fr.proline.core.utils.serialization.ProlineJson
+
+    // Open the result file
+    val resultFile = rfProvider.get.getResultFile(datFile, importProperties, parserContext)
+
+    var spectrumMatchesCount: Int = 0
+    var fragMatchesCount: Int = 0
+
+    val rs = resultFile.eachSpectrumMatch(false, { sMatch =>
+      {
+        spectrumMatchesCount += 1
+        fragMatchesCount += sMatch.fragmentMatches.length
+      }
+
+    }
+    )
+
+//    assertEquals("SpectrumMatches Count", EXPECTED_SPECTRUM_MATCHES_COUNT, spectrumMatchesCount)
+//    assertEquals("Calculated FragMatches Count", EXPECTED_FRAG_MATCHES_COUNT, fragMatchesCount)
   }
 
 }
