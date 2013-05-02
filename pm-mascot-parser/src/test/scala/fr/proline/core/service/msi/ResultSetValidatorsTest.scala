@@ -16,7 +16,7 @@ import fr.proline.core.algo.msi.validation.pepmatch.TDPepMatchValidatorWithFDROp
 import fr.proline.core.algo.msi.validation.proteinset.ProtSetRulesValidatorWithFDROptimization
 import fr.proline.core.algo.msi.validation.{BasicTDAnalyzer, _}
 import fr.proline.core.algo.msi.InferenceMethods
-import fr.proline.core.algo.msi.scoring.ProtSetScoring
+import fr.proline.core.algo.msi.scoring.PepSetScoring
 import fr.proline.core.dal.{SQLQueryHelper, SQLConnectionContext}
 import fr.proline.core.om.model.msi.{ResultSet, PeptideMatch, FilterDescriptor}
 import fr.proline.core.om.provider.msi.impl.{SQLResultSetProvider, ORMResultSetProvider}
@@ -295,14 +295,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     val allDecPepMatc = rsValidation.validatedDecoyRsm.get.peptideInstances.flatMap(pi => pi.peptideMatches)
     Assert.assertEquals("AllTarPepMatc length", 774, allTarPepMatc.length)
     Assert.assertEquals("AllDecPepMatc length",638, allDecPepMatc.length)
-
-    val allPepSets = rsValidation.validatedTargetRsm.peptideSets
-    allPepSets.foreach(pepS =>{
-      if(pepS.proteinSet!=null && pepS.proteinSet.isDefined){
-	  Assert.assertEquals(pepS.score, pepS.proteinSet.get.score,0.01)
-      } 
-      
-    })
+    
   }
     
   //@Test
@@ -645,8 +638,9 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
       protSetFilters = None,
       protSetValidator = Some(protSetValidator),
       inferenceMethod = Some(InferenceMethods.parsimonious),
-      proteinSetScoring = Some(ProtSetScoring.MASCOT_PROTEIN_SET_SCORE),
-      storeResultSummary = false)
+      proteinSetScoring = Some(PepSetScoring.MASCOT_PEPTIDE_SET_SCORE),
+      storeResultSummary = false
+    )
 
     logger.debug("ResultSetValidator testPepMatchAndProtSetFDRValidation RUN service")
     val result = rsValidation.runService

@@ -3,7 +3,7 @@ package fr.proline.module.parser.mascot
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.om.builder.{PeptideBuilder,PtmDefinitionBuilder}
+import fr.proline.core.om.builder.PtmDefinitionBuilder
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.{IPTMProvider,IPeptideProvider,IProteinProvider}
 import matrix_science.msparser.{ms_mascotresfile,ms_peptide,ms_peptidesummary,vectori,VectorString}

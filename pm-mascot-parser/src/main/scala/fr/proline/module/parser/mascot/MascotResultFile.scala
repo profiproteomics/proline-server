@@ -15,6 +15,7 @@ import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.{ ISeqDatabaseProvider, IProteinProvider, IPeptideProvider, IPTMProvider }
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
+import fr.proline.util.primitives.toFloat
 
 import matrixscience.NativeLibrariesLoader
 
@@ -43,7 +44,7 @@ object MascotParseParams extends Enumeration {
  */
 class MascotResultFile(
   val fileLocation: File,
-  val importProperties: Map[String, Any],
+  val importProperties: Map[String, Any], // TODO: use the MascotImportProperties class instead ???
   val parserContext: ProviderDecoratedExecutionContext) extends IResultFile with Logging {
 
   val logSpectraCount = 4000 // Print a log for each created spectrum
@@ -54,7 +55,11 @@ class MascotResultFile(
   require(importProperties != null)
 
   val parseProperties: Map[MascotParseParams.MascotParseParam, Any] = importProperties.map(entry => MascotParseParams.withName(entry._1) -> entry._2)
-
+  val rsImportProperties = new MascotImportProperties()
+  rsImportProperties.setIonsScoreCutoff(parseProperties.get(MascotParseParams.ION_SCORE_CUTOFF).map(toFloat(_)))
+  rsImportProperties.setProteinsPvalueCutoff(parseProperties.get(MascotParseParams.PROTEIN_CUTOFF_PVALUE).map(toFloat(_)))
+  rsImportProperties.setSubsetsThreshold(parseProperties.get(MascotParseParams.SUBSET_THRESHOLD).map(toFloat(_)))
+  
   if (fileLocation == null || !fileLocation.exists()) throw new FileNotFoundException("Invalid specified file")
   logger.info("open Mascot dat file " + fileLocation.getAbsoluteFile())
 
@@ -242,8 +247,9 @@ class MascotResultFile(
       variablePtmDefs = varPtmDefsByModName.values.flatMap { p => p } toArray,
       fixedPtmDefs = fixedPtmDefsByModName.values.flatMap { p => p } toArray,
       seqDatabases = seqDbs,
-      instrumentConfig = this.instrumentConfig,
-      quantitation = "")
+      instrumentConfig = this.instrumentConfig.getOrElse(null),
+      quantitation = ""
+    )
 
     if (msLevel == 2) {
       sSettings.msmsSearchSettings = Some(new MSMSSearchSettings(
@@ -287,10 +293,11 @@ class MascotResultFile(
     if (wantDecoy) { flagCombination = flagCombination | MascotResFlags.Decoy }
 
     val (minProtProb, maxHitsToReport) = (0, 0) // Report All proteins
-    val ignoreIonsScoreBelow = parseProperties.getOrElse(MascotParseParams.ION_SCORE_CUTOFF, 0).toString.toDouble // Specify ion score cut off
+    val ignoreIonsScoreBelow = rsImportProperties.ionsScoreCutoff.getOrElse(0f).toDouble // Specify ion score cut off
     val (unigeneIndexFile, minPepLenInPepSummary, singleHit, flags2) = (null, 0, null, ms_peptidesummary.MSPEPSUM_NO_PROTEIN_GROUPING)
 
-    val peptideSummary = new ms_peptidesummary(mascotResFile,
+    val peptideSummary = new ms_peptidesummary(
+      mascotResFile,
       flagCombination,
       minProtProb,
       maxHitsToReport,
@@ -298,11 +305,12 @@ class MascotResultFile(
       ignoreIonsScoreBelow,
       minPepLenInPepSummary,
       singleHit,
-      flags2)
+      flags2
+    )
     // subSetThreshold - is the fractional score required for a protein to be counted as a subset. 
     // Its score must be greater than or equal to main_protein_score * (1-scoreFraction)
     // The default value is 1.0  
-    peptideSummary.setSubsetsThreshold(parseProperties.getOrElse(MascotParseParams.SUBSET_THRESHOLD, 1.0).toString.toDouble)
+    peptideSummary.setSubsetsThreshold( rsImportProperties.getSubsetsThreshold().getOrElse(1.0f).toDouble )
 
     Some(peptideSummary)
 
@@ -378,14 +386,19 @@ class MascotResultFile(
     logger.debug("Parser has gone through " + pepMatchesByPep.size + " peptides creating " + allPepMatches.length + " peptide matches ")
     logger.info("Create ResultSet with " + allPepMatches.length + " peptide matches identifying " + protMatches.size + " proteins")
 
+    val rsProps = new ResultSetProperties()
+    rsProps.setMascotImportProperties(Some(rsImportProperties))
+    
     new ResultSet(
       id = rsId,
+      name = this.msiSearch.title,
       peptides = pepMatchesByPep.keySet.toArray,
       peptideMatches = allPepMatches,
       proteinMatches = protMatches,
       isDecoy = wantDecoy,
       isNative = true,
-      msiSearch = Some(this.msiSearch)
+      msiSearch = Some(this.msiSearch),
+      properties = Some(rsProps)
     )
   }
 
@@ -437,7 +450,7 @@ class MascotResultFile(
 
       // TODO: parse spectrum title to extract timings
       val spectrumTitle = msq.asInstanceOf[Ms2Query].spectrumTitle
-      val instConfigId = if (this.instrumentConfig != null) this.instrumentConfig.id else 0
+      val instConfigId = if (this.instrumentConfig.isDefined) this.instrumentConfig.get.id else 0
 
       val spec = new Spectrum(id = Spectrum.generateNewId,
         title = spectrumTitle,
@@ -478,15 +491,22 @@ class MascotResultFile(
 
   def eachSpectrumMatch(wantDecoy: Boolean,
                         onEachSpectrumMatch: SpectrumMatch => Unit): Unit = {
-
+    
     val mascotVersion = importProperties.getOrElse(
       MascotParseParams.MASCOT_VERSION.toString,
-      throw new Exception("mascot version must be provided in the import properties")
-    )
+      this.msiSearch.searchSettings.softwareVersion
+      //throw new Exception("mascot version must be provided in the import properties")
+    ).toString
+    
     val mascotServerURLAsStr = importProperties.getOrElse(
       MascotParseParams.MASCOT_SERVER_URL.toString,
-      throw new Exception("mascot server url must be provided in the import properties")
-    )
+      "http://www.matrixscience.com/cgi/"
+      //throw new Exception("mascot server url must be provided in the import properties")
+    ).toString
+    
+    this.logger.debug("Iterating over spectrum matches of result file '%s' (mascot version=%s ; server URL =%s)".format(
+      fileLocation.getName,mascotVersion,mascotServerURLAsStr
+    ))
 
     val mascotConfig = new MascotRemoteConfig(mascotVersion.asInstanceOf[String], mascotServerURLAsStr.asInstanceOf[String])
     val spectrumMatcher = new MascotSpectrumMatcher(mascotResFile, mascotConfig)
