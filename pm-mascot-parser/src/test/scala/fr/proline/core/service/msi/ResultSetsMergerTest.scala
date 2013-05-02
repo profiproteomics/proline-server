@@ -51,11 +51,11 @@ class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
       val rsMerger = new ResultSetMerger(sqlExecutionContext, loadResultSetsWithDecoy(rzProvider, rsIds))
 
       val result = rsMerger.runService
-      Assert.assertTrue("ResultSet merger result", result)
-      logger.info("End Run ResultSetMerger Service, merge same RS twice, in Test ")
+      assertTrue("ResultSet merger result", result)
+      logger.info("End Run ResultSetMerger Service, merge same RS twice, in Test")
 
       val tRSM = rsMerger.mergedResultSet
-      assertNotNull(tRSM)
+      assertNotNull("Merged TARGET ResultSet", tRSM)
 
       val mergedDecoyRS = tRSM.decoyResultSet
       assertTrue("Merged DECOY ResultSet is present", (mergedDecoyRS != null) && mergedDecoyRS.isDefined)
@@ -86,7 +86,7 @@ class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
         try {
           sqlExecutionContext.closeAll()
         } catch {
-          case exClose: Exception => logger.error("Error closing JPA ExecutionContext", exClose)
+          case exClose: Exception => logger.error("Error closing SQL ExecutionContext", exClose)
         }
       }
 
@@ -110,10 +110,10 @@ class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
 
       val result = rsMerger.runService
       assertTrue("ResultSet merger result", result)
-      logger.info("End Run ResultSetMerger Service, merge two different RS twice, in Test ")
+      logger.info("End Run ResultSetMerger Service, merge two different RS twice, in Test")
 
       val tRSM = rsMerger.mergedResultSet
-      assertNotNull(tRSM)
+      assertNotNull("Merged TARGET ResultSet", tRSM)
 
       val mergedDecoyRS = tRSM.decoyResultSet
       assertTrue("Merged DECOY ResultSet is present", (mergedDecoyRS != null) && mergedDecoyRS.isDefined)
@@ -154,11 +154,12 @@ class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
 
   /* Private methods */
   private def importDatFile(localExecutionContext: IExecutionContext, datFileClassPath: String, decoyRegExp: String): Int = {
-    logger.debug(" --- Load Mascot File " + datFileClassPath)
+    logger.debug(" --- Load Mascot file [" + datFileClassPath + ']')
 
     val beforePeptideMatch = getPeptideMatchCount
 
-    var datFile: File = new File(getClass.getResource(datFileClassPath).toURI)
+    val datFile = new File(getClass.getResource(datFileClassPath).toURI)
+    val datAbsolutePathname = datFile.getAbsolutePath
 
     val propertiedBuilder = Map.newBuilder[String, Any]
     propertiedBuilder += ("ion.score.cutoff" -> 0.0)
@@ -174,17 +175,17 @@ class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
       acDecoyRegex = Some(decoyRegExp.r))
 
     val result = importer.runService()
-    val rsID = importer.getTargetResultSetId
+    assertTrue("ResultFile [" + datAbsolutePathname + "] importer service result", result)
 
-    val localJPAContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true)
+    val rsId = importer.getTargetResultSetId
+
+    logger.debug("ResultFile [" + datAbsolutePathname + "] imported as TARGET ResultSet Id: " + rsId)
 
     val afterPeptideMatch = getPeptideMatchCount
 
     logger.info("TOTAL PeptideMatches created : " + (afterPeptideMatch - beforePeptideMatch))
 
-    logger.debug("ResultFile result (" + result + ") from " + datFile.getAbsolutePath() + " with target resultID " + rsID)
-
-    rsID
+    rsId
   }
 
   private def getPeptideMatchCount(): Long = {
@@ -242,7 +243,7 @@ class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
             }
 
           } else {
-            logger.warn("ResultSet #" + rsId + "has no associated DECOY ResultSet")
+            logger.warn("ResultSet #" + rsId + " has no associated DECOY ResultSet")
           }
 
         }
