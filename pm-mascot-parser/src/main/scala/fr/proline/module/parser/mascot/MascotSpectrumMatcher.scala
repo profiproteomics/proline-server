@@ -36,7 +36,7 @@ trait LoggingFake {
 
 case class Peak( moz: Double, intensity: Float )
 
-class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMascotConfig ) extends LoggingFake {
+class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMascotConfig ) extends Logging {
   
   val mascotSearchParams = mascotResFile.params
   val mascotVersion = mascotResFile.getMascotVer  
@@ -220,8 +220,8 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
     // Need to create a new ms_peptide object since some ms_pep objects
     // extracted from the resultfile can cause msparser JVM crash.
     // TODO: try to explain why => is this still needed ?
-    //val new_ms_pep = this._createPeptideFrom(ms_pep.getPeptideStr, ms_pep.getCharge, varModString, nlString, mascotAAHelper )
-    val new_ms_pep = ms_pep
+    val new_ms_pep = this._createPeptideFrom(ms_pep.getPeptideStr, ms_pep.getCharge, varModString, nlString, mascotAAHelper )
+//    val new_ms_pep = ms_pep
     val fragments = new ms_fragmentvector()
     val all_fragments = new ms_fragmentvector() // Keep a list of fragments from all series
     
