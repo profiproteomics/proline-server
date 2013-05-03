@@ -107,7 +107,7 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
     val parserContext = buildParserContext()
     Assert.assertNotNull(parserContext)
 
-    val datFileName: String = "/dat_samples/STR_F136482_CTD.dat"
+    val datFileName: String = "/dat_samples/GRE_F068213_M2.4_TD_EColi.dat"
 
     logger.info(" --- Get File " + datFileName)
 

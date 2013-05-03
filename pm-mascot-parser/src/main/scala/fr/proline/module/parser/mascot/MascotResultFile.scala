@@ -73,6 +73,22 @@ class MascotResultFile(
     throw new RuntimeException(message)
   }
 
+  lazy val ptmHelper : MascotPTMHelper = {
+   	 val helper = new MascotPTMHelper(parserContext)
+   	 // Retrieve PTMs, fixed and variable, specified for Mascot Search
+   	 val mascotVarModsAsStr = this.mascotSearchParams.getIT_MODS()
+   	 logger.debug("Get specified variable Ptms using mascot string : " + mascotVarModsAsStr)
+   	 val varPtmDefsByModName = helper.createVarPtmDefs(mascotVarModsAsStr)
+   	 logger.debug("Found " + varPtmDefsByModName.size + " variables PTMs")
+
+   	 val mascotFixedModsAsStr = this.mascotSearchParams.getMODS()
+   	 logger.debug("Get specified fixed Ptms using mascot string : " + mascotFixedModsAsStr)
+   	 val fixedPtmDefsByModName = helper.createFixedPtmDefs(mascotFixedModsAsStr)
+   	 logger.debug("Found " + fixedPtmDefsByModName.size + " fixed PTMs")
+
+   	 helper
+  }
+  
   // Create Mascot ms_mascotresfile and ms_peptidesummary from specified file name 
   private val mascotResFile: ms_mascotresfile = new ms_mascotresfile(fileLocation.getAbsolutePath(), 0, "")
   if (!mascotResFile.isValid()) throw new Exception("Invalid Mascot result file " + fileLocation.getAbsolutePath() + " specified")
@@ -162,19 +178,6 @@ class MascotResultFile(
       msLevel = 2)
   }
 
-  def getPtmDefsByModName(mascotModsAsStr: String): HashMap[String, Array[PtmDefinition]] = {
-
-    val ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
-    val ptmDefsByModName = new HashMap[String, Array[PtmDefinition]]()
-
-    if (mascotModsAsStr != null && !mascotModsAsStr.isEmpty) {
-      mascotModsAsStr.split(",").foreach { modAsStr =>
-        ptmDefsByModName(modAsStr) = MascotPTMUtils.mascotModToPTMDefinitions(ptmProvider, modAsStr)
-      }
-    }
-
-    ptmDefsByModName
-  }
 
   /**
    * Create from mascot parser ms_mascotresfile, a MSISearch with all associated information :
@@ -221,18 +224,7 @@ class MascotResultFile(
 
     // Create Peaklist & Enzymes
     val enzymes = Array(new Enzyme(searchParams.getCLE()))
-
-    // Retrieve PTMs, fixed and variable, specified for Mascot Search
-    val mascotVarModsAsStr = this.mascotSearchParams.getIT_MODS()
-    logger.debug("Get specified variable Ptms using mascot string : " + mascotVarModsAsStr)
-    val varPtmDefsByModName = getPtmDefsByModName(mascotVarModsAsStr)
-    logger.debug("Found " + varPtmDefsByModName.size + " variables PTMs")
-
-    val mascotFixedModsAsStr = this.mascotSearchParams.getMODS()
-    logger.debug("Get specified fixed Ptms using mascot string : " + mascotFixedModsAsStr)
-    val fixedPtmDefsByModName = getPtmDefsByModName(mascotFixedModsAsStr)
-    logger.debug("Found " + fixedPtmDefsByModName.size + " fixed PTMs")
-
+    
     //Create MSISearch regrouping all these information   
     var sSettings: SearchSettings = new SearchSettings(id = SearchSettings.generateNewId(),
       softwareName = "Mascot",
@@ -244,8 +236,8 @@ class MascotResultFile(
       ms1ErrorTolUnit = searchParams.getTOLU(),
       isDecoy = false,
       usedEnzymes = enzymes,
-      variablePtmDefs = varPtmDefsByModName.values.flatMap { p => p } toArray,
-      fixedPtmDefs = fixedPtmDefsByModName.values.flatMap { p => p } toArray,
+      variablePtmDefs = ptmHelper.varPtmDefsByModName.values.flatMap { p => p } toArray,
+      fixedPtmDefs = ptmHelper.fixedPtmDefsByModName.values.flatMap { p => p } toArray,
       seqDatabases = seqDbs,
       instrumentConfig = this.instrumentConfig.getOrElse(null),
       quantitation = ""
@@ -509,7 +501,7 @@ class MascotResultFile(
     ))
 
     val mascotConfig = new MascotRemoteConfig(mascotVersion.asInstanceOf[String], mascotServerURLAsStr.asInstanceOf[String])
-    val spectrumMatcher = new MascotSpectrumMatcher(mascotResFile, mascotConfig)
+    val spectrumMatcher = new MascotSpectrumMatcher(mascotResFile, mascotConfig, ptmHelper)
 
     // Retrieve peptide summary corresponding to the wanted dataset
     val pepSummary = this._getPepSummary(wantDecoy)
