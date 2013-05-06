@@ -63,7 +63,7 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
     val pepSequence = mascotPep.getPeptideStr
     val mascotQueryId = mascotPep.getQuery
     
-    this.logger.debug("generate fragments and matches for query="+ mascotQueryId +" and seq="+pepSequence )
+//    this.logger.debug("generate fragments and matches for query="+ mascotQueryId +" and seq="+pepSequence )
     val usedPeaksCount = mascotPep.getPeaksUsedFromIons1() // was numUsed    
     
     val(ms2ErrorTol,ms2ErrorTolUnitStr) = (mascotSearchParams.getITOL,mascotSearchParams.getITOLU)
@@ -201,7 +201,6 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
     var nlString = ms_pep.getPrimaryNlStr()
     val mascotAAHelper = getMascotAAHelper( ms_pep, this.ptmHelper)
 
-//      
 //    this.logger.debug("mod String = "+ varModString)
 //    this.logger.debug("nl String = "+ nlString)
     
@@ -218,7 +217,7 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
       nlString = nlString.replace('2', 'X').replace('1', '2').replace('X', '1')      
       ms_pep.setPrimaryNlStr(nlString)
       
-      logger.debug("### Mascot 2.2 file :  modified nlString = "+ nlString)
+//      logger.debug("### Mascot 2.2 file :  modified nlString = "+ nlString)
     }
     
     // Need to create a new ms_peptide object since some ms_pep objects
@@ -331,7 +330,7 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
       }
     }
     
-    this.logger.debug("Total number of fragments (with neutral losses): " + all_fragments.getNumberOfFragments )
+//    this.logger.debug("Total number of fragments (with neutral losses): " + all_fragments.getNumberOfFragments )
     
     all_fragments
   }
@@ -371,7 +370,7 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
       MascotErrorsHelper.logErrors(mascotErrs)
     }
     
-    this.logger.debug("ms_peptide created")
+//    this.logger.debug("ms_peptide created")
     
     mascotPep
   }
@@ -522,7 +521,8 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
       // 
       // Mascot version 2.1 : use datFile to build ms_modifications, however mod description
       // is not complete : ModificationType and Residue modification is not set 
-      
+
+      this.logger.debug("Build ms_aahelper for Mascot version <= 2.1")
       val anotherHelper = new ms_aahelper(mascotResFile, null)
       val vecFixed = anotherHelper.getFixedMods()
       
@@ -558,29 +558,32 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
       //
       // Mascot version 2.2 
       //       - Use modfile to build modification list
+      this.logger.debug("Build ms_aahelper for Mascot version >= 2.2")
 
       val modsFile = this.mascotConfig.modificationsFile
       
       // create a list of fixed modifications
       val vecFixed = new ms_modvector()
-      for ( fixedPtms <- ptmHelper.fixedPtmDefsByModName ) {
-        val mod = modsFile.getModificationByName(fixedPtms._1)        
+      for ( fixedPtms <- ptmHelper.fixedPtmIndexed ) {
+        val mod = modsFile.getModificationByName(fixedPtms)        
         if (mod != null) {
+            logger.debug("+++ Fixed Modification " + mod.getTitle()+ " added")
             vecFixed.appendModification(mod)
         } else {
-            logger.error("Modification " + fixedPtms._1 + " cannot be created")
+            logger.error("Fixed Modification " + fixedPtms + " cannot be created")
         }                   
       }
       
       // create a list of variable modifications :
       val vecVariable = new ms_modvector()
-      for ( varPtms <- ptmHelper.varPtmDefsByModName ) {
+      for ( varPtms <- ptmHelper.varPtmIndexed ) {
           
-          val mod = modsFile.getModificationByName(varPtms._1)
+          val mod = modsFile.getModificationByName(varPtms)
           if (mod != null) {
+              logger.debug("+++ Var Modification " + mod.getTitle()+ " added")
               vecVariable.appendModification(mod)
           } else {
-              logger.error("Modification " + varPtms._1+ " cannot be created")
+              logger.error("Variable Modification " + varPtms+ " cannot be created")
           }
       }                           
       
@@ -595,7 +598,7 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
       
       for(  m <- 0 until vecVariable.getNumberOfModifications ) {
         val mod = vecVariable.getModificationByNumber(m)
-        this._updateVarModification(mod, ms_pep, ptmHelper.varPtmIndexesByModName(mod.getTitle()))
+        this._updateVarModification(mod, ms_pep, ptmHelper.indexOfVarPtm(mod.getTitle()))
       }
       aahelper.setAvailableModifications(aahelper.getFixedMods(), vecVariable)
       

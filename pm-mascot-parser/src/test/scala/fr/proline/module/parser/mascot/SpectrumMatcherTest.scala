@@ -101,13 +101,57 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
   }
   
     @Test
-  def testModFile(): Unit = {
+  def testModFileGRE(): Unit = {
     setUp()
 
     val parserContext = buildParserContext()
     Assert.assertNotNull(parserContext)
 
     val datFileName: String = "/dat_samples/GRE_F068213_M2.4_TD_EColi.dat"
+
+    logger.info(" --- Get File " + datFileName)
+
+    var datFile = new File(getClass.getResource(datFileName).toURI)
+
+    logger.info(" --- SpectrumMatcher  " + datFile.exists)
+
+    // Get Right ResultFile provider
+    val rfProvider = ResultFileProviderRegistry.get("MascotMSParser")
+    if (rfProvider == None) {
+      throw new IllegalArgumentException("No ResultFileProvider for specified identification file format")
+    }
+
+    //import com.codahale.jerkson.Json.generate
+    import fr.proline.core.utils.serialization.ProlineJson
+
+    // Open the result file
+    val resultFile = rfProvider.get.getResultFile(datFile, importProperties, parserContext)
+
+    var spectrumMatchesCount: Int = 0
+    var fragMatchesCount: Int = 0
+
+    val rs = resultFile.eachSpectrumMatch(false, { sMatch =>
+      {
+        spectrumMatchesCount += 1
+        fragMatchesCount += sMatch.fragmentMatches.length
+      }
+
+    }
+    )
+
+//    assertEquals("SpectrumMatches Count", EXPECTED_SPECTRUM_MATCHES_COUNT, spectrumMatchesCount)
+//    assertEquals("Calculated FragMatches Count", EXPECTED_FRAG_MATCHES_COUNT, fragMatchesCount)
+  }
+
+    
+        @Test
+  def testModFileSTR(): Unit = {
+    setUp()
+
+    val parserContext = buildParserContext()
+    Assert.assertNotNull(parserContext)
+
+    val datFileName: String = "/dat_samples/STR_F136482_CTD.dat"
 
     logger.info(" --- Get File " + datFileName)
 

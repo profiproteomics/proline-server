@@ -6,45 +6,52 @@ import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.provider.msi.IPTMProvider
 import scala.collection.mutable
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.ListBuffer
 
 
 class MascotPTMHelper(val parserContext: ProviderDecoratedExecutionContext) extends Logging {
 
   var varPtmDefsByModName = mutable.Map.empty[String, Array[PtmDefinition]]
-  var varPtmIndexesByModName = mutable.Map.empty[String, Int]
+  var varPtmIndexed = List.empty[String]
   var fixedPtmDefsByModName = mutable.Map.empty[String, Array[PtmDefinition]]
-  var fixedPtmIndexesByModName = mutable.Map.empty[String, Int]
+  var fixedPtmIndexed = List.empty[String]
   
-  def getPtmDefsByModName(mascotModsAsStr: String): (mutable.Map[String, Array[PtmDefinition]], mutable.Map[String, Int]) = {
+  def getPtmDefsByModName(mascotModsAsStr: String): (mutable.Map[String, Array[PtmDefinition]], List[String]) = {
 
     val ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
     val ptmDefsByModName = new HashMap[String, Array[PtmDefinition]]()
-    val ptmIndexesByModName = new HashMap[String, Int]
+    val ptmIndexes = new ListBuffer[String]
     
     if (mascotModsAsStr != null && !mascotModsAsStr.isEmpty) {
-      var index = 0
       mascotModsAsStr.split(",").foreach { modAsStr =>
         ptmDefsByModName(modAsStr) = MascotPTMUtils.mascotModToPTMDefinitions(ptmProvider, modAsStr)
-        ptmIndexesByModName(modAsStr) = index
-        index += 1
+        ptmIndexes += modAsStr
       }
     }
-    (ptmDefsByModName, ptmIndexesByModName)
+    (ptmDefsByModName, ptmIndexes.toList)
   }
     
   def createVarPtmDefs(mascotModsAsStr: String): mutable.Map[String, Array[PtmDefinition]] = {
     val maps = getPtmDefsByModName(mascotModsAsStr)
 	 varPtmDefsByModName = maps._1
-	 varPtmIndexesByModName = maps._2
+	 varPtmIndexed = maps._2
 	 varPtmDefsByModName
   }
 
+  def indexOfVarPtm(ptm: String) : Int = {
+		  varPtmIndexed.indexOf(ptm)
+  }
+  
   def createFixedPtmDefs(mascotModsAsStr: String): mutable.Map[String, Array[PtmDefinition]] = {
     val maps = getPtmDefsByModName(mascotModsAsStr)
     fixedPtmDefsByModName = maps._1
-    fixedPtmIndexesByModName = maps._2 
+    fixedPtmIndexed = maps._2 
     fixedPtmDefsByModName
   }
 
+  def indexOfFixedPtm(ptm: String) : Int = {
+		  fixedPtmIndexed.indexOf(ptm)
+  }
 
 }
