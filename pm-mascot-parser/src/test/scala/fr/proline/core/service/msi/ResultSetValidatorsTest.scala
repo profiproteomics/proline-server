@@ -4,7 +4,7 @@ import java.io.File
 
 import scala.collection.mutable.{HashMap, ArrayBuffer}
 
-import org.junit.{After, Assert, Test, Before}
+import org.junit.{After, Assert, Before, Ignore, Test}
 
 import com.weiglewilczek.slf4s.Logging
 
@@ -24,6 +24,7 @@ import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.repository.DriverType
 
+@Ignore
 class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
 
   val driverType = DriverType.H2
@@ -638,7 +639,7 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
       protSetFilters = None,
       protSetValidator = Some(protSetValidator),
       inferenceMethod = Some(InferenceMethods.parsimonious),
-      proteinSetScoring = Some(PepSetScoring.MASCOT_PEPTIDE_SET_SCORE),
+      peptideSetScoring = Some(PepSetScoring.MASCOT_PEPTIDE_SET_SCORE),
       storeResultSummary = false
     )
 
