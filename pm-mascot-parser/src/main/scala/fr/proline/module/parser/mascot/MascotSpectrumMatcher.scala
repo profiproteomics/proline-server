@@ -219,15 +219,12 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
       
 //      logger.debug("### Mascot 2.2 file :  modified nlString = "+ nlString)
     }
-    
-    // Need to create a new ms_peptide object since some ms_pep objects
-    // extracted from the resultfile can cause msparser JVM crash.
-    // TODO: try to explain why => is this still needed ?
 
-    // Note we need to create a new ms_peptide object since some ms_pep objects extracted from the resultfile
+    // Note: for modified ms_pep (var mod or NL) we need to create a new ms_peptide object since they
     // can cause msparser JVM crash such as EXCEPTION_ACCESS_VIOLATION (see redmine defect #7550).
+    val new_ms_pep = if( varModString.isEmpty && nlString.isEmpty ) ms_pep
+    else this._createPeptideFrom(ms_pep.getPeptideStr, ms_pep.getCharge, varModString, nlString, mascotAAHelper )
     
-    val new_ms_pep = this._createPeptideFrom(ms_pep.getPeptideStr, ms_pep.getCharge, varModString, nlString, mascotAAHelper )
     val fragments = new ms_fragmentvector()
     val all_fragments = new ms_fragmentvector() // Keep a list of fragments from all series
     
