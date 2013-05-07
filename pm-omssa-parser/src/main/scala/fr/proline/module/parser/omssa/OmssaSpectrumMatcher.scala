@@ -48,16 +48,20 @@ class OmssaSpectrumMatcher(omxFile: File, wantDecoy: Boolean, spectrumList: Arra
         case "MSHitSet" =>
           // read the MSHitSet children
           val MSHitSet = MSHitSets.childElementCursor().advance()
+          var msQueryId: Int = 0
           while (MSHitSet.getCurrEvent() != null) {
             MSHitSet.getPrefixedName() match {
+              case "MSHitSet_number" => msQueryId = MSHitSet.collectDescendantText(false).toInt
               case "MSHitSet_hits" =>
                 val MSHits = MSHitSet.childElementCursor().advance()
                 // for each PeptideMatch (MSHits)
                 while (MSHits.getCurrEvent() != null) {
                   val chargePerSerie: HashMap[String, Int] = new HashMap[String, Int]
                   val localFragmentMatches: ArrayBuffer[LocalFragmentMatch] = new ArrayBuffer[LocalFragmentMatch]
+                  var peptideMatchRank: Int = 0
                   MSHits.getPrefixedName() match {
                     case "MSHits" =>
+                      peptideMatchRank += 1
                       val MSHit = MSHits.childElementCursor().advance()
                       while (MSHit.getCurrEvent() != null) {
                         MSHit.getPrefixedName() match {
@@ -169,6 +173,8 @@ class OmssaSpectrumMatcher(omxFile: File, wantDecoy: Boolean, spectrumList: Arra
                           // call the onEachSpectrumMatch function with the spectrumMatch object in argument
                           onEachSpectrumMatch(
                             new SpectrumMatch(
+                              msQueryInitialId = msQueryId,
+                              peptideMatchRank = peptideMatchRank,
                               fragmentationTable = fragmentationTable.toArray[TheoreticalFragmentSeries],
                               fragmentMatches = fragmentMatches.toArray[FragmentMatch]))
                         }
@@ -225,6 +231,7 @@ class OmssaSpectrumMatcher(omxFile: File, wantDecoy: Boolean, spectrumList: Arra
       _fragmentIons = fragmentIons
       _spectrum = spectrum
       return new FragmentMatch(label = _label,
+        `type` = fr.proline.core.om.model.msi.FragmentMatchType.REGULAR.toString,
         moz = _moz,
         calculatedMoz = _calculatedMoz,
         intensity = _intensity,

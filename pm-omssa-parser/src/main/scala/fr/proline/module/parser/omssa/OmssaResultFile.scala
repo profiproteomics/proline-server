@@ -145,7 +145,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
    */
   lazy val msiSearch: MSISearch = {
     val search: MSISearch = fileReader.getMsiSearch
-    search.searchSettings.instrumentConfig = this.instrumentConfig
+    search.searchSettings.instrumentConfig = this.instrumentConfig.getOrElse(null)
     search
   }
   def getMSISearch: MSISearch = msiSearch
@@ -192,7 +192,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
       proteinMatches = protMatches,
       isDecoy = wantDecoy,
       isNative = true,
-      msiSearch = msiSearch)
+      msiSearch = Some(msiSearch))
   }
 
   private var pepToPeptideMatches: HashMap[Peptide, ArrayBuffer[PeptideMatch]] = null
@@ -392,7 +392,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   def eachSpectrum(onEachSpectrum: Spectrum => Unit): Unit = {
 
     logger.info("eachSpectrum(" + omxFile.getAbsolutePath() + ")")
-    new OmssaListSpectrum(omxFile, peaklist.id, this.instrumentConfig, onEachSpectrum)
+    new OmssaListSpectrum(omxFile, peaklist.id, this.instrumentConfig.getOrElse(null), onEachSpectrum)
     ()
   }
 
