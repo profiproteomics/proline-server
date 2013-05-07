@@ -58,8 +58,10 @@ class OmssaSpectrumMatcher(omxFile: File, wantDecoy: Boolean, spectrumList: Arra
                 while (MSHits.getCurrEvent() != null) {
                   val chargePerSerie: HashMap[String, Int] = new HashMap[String, Int]
                   val localFragmentMatches: ArrayBuffer[LocalFragmentMatch] = new ArrayBuffer[LocalFragmentMatch]
+                  var peptideMatchRank: Int = 0
                   MSHits.getPrefixedName() match {
                     case "MSHits" =>
+                      peptideMatchRank += 1
                       val MSHit = MSHits.childElementCursor().advance()
                       while (MSHit.getCurrEvent() != null) {
                         MSHit.getPrefixedName() match {
@@ -172,6 +174,7 @@ class OmssaSpectrumMatcher(omxFile: File, wantDecoy: Boolean, spectrumList: Arra
                           onEachSpectrumMatch(
                             new SpectrumMatch(
                               msQueryInitialId = msQueryId,
+                              peptideMatchRank = peptideMatchRank,
                               fragmentationTable = fragmentationTable.toArray[TheoreticalFragmentSeries],
                               fragmentMatches = fragmentMatches.toArray[FragmentMatch]))
                         }
