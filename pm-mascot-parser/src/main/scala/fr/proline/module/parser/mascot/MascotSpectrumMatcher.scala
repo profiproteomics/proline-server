@@ -10,7 +10,7 @@ import fr.proline.core.om.model.msi.FragmentMatch
 import fr.proline.core.om.model.msi.FragmentMatchType
 import fr.proline.core.om.model.msi.SpectrumMatch
 import fr.proline.core.om.model.msi.TheoreticalFragmentSeries
-import fr.proline.util.ms.{calcMozTolInDalton,MassTolUnit}
+import fr.proline.util.ms.{ calcMozTolInDalton, MassTolUnit }
 import matrix_science.msparser.ms_aahelper
 import matrix_science.msparser.ms_errs
 import matrix_science.msparser.ms_fragment
@@ -35,77 +35,78 @@ trait LoggingFake {
   }
 }
 
-case class Peak( moz: Double, intensity: Float )
+case class Peak(moz: Double, intensity: Float)
 
-class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMascotConfig, ptmHelper: MascotPTMHelper ) extends Logging {
-  
+class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMascotConfig, ptmHelper: MascotPTMHelper) extends Logging {
+
   val mascotSearchParams = mascotResFile.params
-  val mascotVersion = mascotResFile.getMascotVer  
-  val mascotFragRules = mascotConfig.fragmentationRulesFile.getInstrumentByName(mascotSearchParams.getINSTRUMENT())
-  val aaHelpersByQuantComp = mutable.Map.empty[String, ms_aahelper];
-  
+  val mascotVersion = mascotResFile.getMascotVer
+  val mascotFragRules = mascotConfig.fragmentationRulesFile.getInstrumentByName(mascotSearchParams.getINSTRUMENT())  
+  val aaHelpersByQuantComp = mutable.Map.empty[String, ms_aahelper]
+  final val DEFAULT_QUANT_COMP_KEY = "DEFAULT"
+
   // Map Mascot fragmentation series names by internal ones (handle doubly charged state)
-  val fragSeriesByMascotFragSeries = Map()++
-                                     Fragmentation.defaultIonTypeByMascotSeriesName.map( p => p._1 -> p._2.toString ) ++
-                                     Fragmentation.defaultIonTypeByMascotSeriesName.map( p => (p._1+"++") -> (p._2.toString+"++") )
-  
+  val fragSeriesByMascotFragSeries = Map() ++
+    Fragmentation.defaultIonTypeByMascotSeriesName.map(p => p._1 -> p._2.toString) ++
+    Fragmentation.defaultIonTypeByMascotSeriesName.map(p => (p._1 + "++") -> (p._2.toString + "++"))
+
   val quantitationMethod: ms_quant_method = {
 
     val quantMethodName = mascotSearchParams.getQUANTITATION
     val quantCfgFile = mascotConfig.quantitationFile
-    
+
     if (quantMethodName == null || quantCfgFile == null) null
-    else  quantCfgFile.getMethodByName(quantMethodName)
+    else quantCfgFile.getMethodByName(quantMethodName)
   }
-  
-  def getSpectrumMatch( mascotPep: ms_peptide ): SpectrumMatch = { //, spectrum: Spectrum
-    
+
+  def getSpectrumMatch(mascotPep: ms_peptide): SpectrumMatch = { //, spectrum: Spectrum
+
     val pepSequence = mascotPep.getPeptideStr
     val mascotQueryId = mascotPep.getQuery
-    
-//    this.logger.debug("generate fragments and matches for query="+ mascotQueryId +" and seq="+pepSequence )
+
+    //    this.logger.debug("generate fragments and matches for query="+ mascotQueryId +" and seq="+pepSequence )
     val usedPeaksCount = mascotPep.getPeaksUsedFromIons1() // was numUsed    
-    
-    val(ms2ErrorTol,ms2ErrorTolUnitStr) = (mascotSearchParams.getITOL,mascotSearchParams.getITOLU)
+
+    val (ms2ErrorTol, ms2ErrorTolUnitStr) = (mascotSearchParams.getITOL, mascotSearchParams.getITOLU)
     val ms2ErrorTolUnit = MassTolUnit.withName(ms2ErrorTolUnitStr)
     //val ms2ErrorTolInDa = calcMozTolInDalton( )
-    
+
     // To find the matching peaks we need to have them in the correct order
     // Mascot store peaks in a custom order so we have to parse again the data
     val ionsStr = mascotResFile.getQuerySectionValueStr(mascotQueryId, "Ions1")
     val allPeaks = this.parseMascotQueryIonsStr(ionsStr)
-    
-    var usedPeaks = new ArrayBuffer[Peak]( usedPeaksCount + 2 )
-    
+
+    var usedPeaks = new ArrayBuffer[Peak](usedPeaksCount + 2)
+
     // Fill usedPeaks with firstSortedPeaks data  
-    usedPeaks += Peak(0.0,0f)
-    usedPeaks ++= allPeaks.take(usedPeaksCount).sortBy( _.moz )
-    usedPeaks += Peak(Double.MaxValue,0f)
-    
+    usedPeaks += Peak(0.0, 0f)
+    usedPeaks ++= allPeaks.take(usedPeaksCount).sortBy(_.moz)
+    usedPeaks += Peak(Double.MaxValue, 0f)
+
     // FIXME: is this really needed ?
     //intensities.put(m.get(0), intensities.get(m.get(1)))
     //intensities.put(m.get(m.size() - 1), intensities.get(m.get(m.size() - 2)))
-    
+
     // Retrieve full spectrum peaks
-    val allPeaksSorted = allPeaks.sortBy( _.moz )
+    val allPeaksSorted = allPeaks.sortBy(_.moz)
     //val allMozList = spectrum.mozList.get
     //val allIntList = spectrum.intensityList.get
-    
+
     // Define some vars
     var prevPeak: Peak = null
     var j = 0
-    
+
     // Iterate over matching peaks
-    for ( val i <- 0 until usedPeaks.length ) {
+    for (val i <- 0 until usedPeaks.length) {
       val peak = usedPeaks(i)
       var intThresh = peak.intensity
-      
+
       // TODO: explain this computation
-      if ((i > 0) && (i < (usedPeaks.length - 1)) && (prevPeak.intensity < peak.intensity) ) {
+      if ((i > 0) && (i < (usedPeaks.length - 1)) && (prevPeak.intensity < peak.intensity)) {
         intThresh = prevPeak.intensity
       }
-      
-      while ( (j < allPeaksSorted.length) && (allPeaksSorted(j).moz < peak.moz) ) {
+
+      while ((j < allPeaksSorted.length) && (allPeaksSorted(j).moz < peak.moz)) {
         val newPeak = allPeaksSorted(j)
         if (newPeak.intensity >= intThresh) {
           usedPeaks += newPeak
@@ -113,36 +114,36 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
         j += 1
       }
       j += 1
-      
+
       prevPeak = peak
     }
-    
+
     // Sort peaks again because some peaks have been added since the first sorting
-    usedPeaks = usedPeaks.sortBy( _.moz )    
+    usedPeaks = usedPeaks.sortBy(_.moz)
     //val mozList = sortedPeaks.map(_._1).sortBy(_.asInstanceOf[Double])    
-    
-    val theoFragments = this._getTheoreticalFragments(mascotPep)    
+
+    val theoFragments = this._getTheoreticalFragments(mascotPep)
     val fragMatches = new ArrayBuffer[FragmentMatch]()
-    
-    for ( k <- 0 until theoFragments.getNumberOfFragments ) {
-      
+
+    for (k <- 0 until theoFragments.getNumberOfFragments) {
+
       val fragment = theoFragments.getFragmentByNumber(k)
       val theoFragMoz = fragment.getMass
-      val mozTolInDa = calcMozTolInDalton( theoFragMoz, ms2ErrorTol, ms2ErrorTolUnit )
+      val mozTolInDa = calcMozTolInDalton(theoFragMoz, ms2ErrorTol, ms2ErrorTolUnit)
       var bestMatch: FragmentMatch = null
-      
+
       breakable {
-        for ( ms2Peak <- usedPeaks ) {
-          
+        for (ms2Peak <- usedPeaks) {
+
           val obsMoz = ms2Peak.moz
-          val deltaMoz = obsMoz- theoFragMoz
-          
-          if ( Math.abs(deltaMoz) <= mozTolInDa ) {
-            
-            val fragType = if(fragment.isRegular) FragmentMatchType.REGULAR
-                           else if (fragment.isInternal) FragmentMatchType.INTERNAL 
-                           else FragmentMatchType.IMMONIUM
-                 
+          val deltaMoz = obsMoz - theoFragMoz
+
+          if (Math.abs(deltaMoz) <= mozTolInDa) {
+
+            val fragType = if (fragment.isRegular) FragmentMatchType.REGULAR
+            else if (fragment.isInternal) FragmentMatchType.INTERNAL
+            else FragmentMatchType.IMMONIUM
+
             val fragMatch = new FragmentMatch(
               label = fragment.getLabel,
               //ionSeries = fragment.getSeriesName,
@@ -154,24 +155,24 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
               calculatedMoz = theoFragMoz,
               intensity = ms2Peak.intensity
             )
-            
+
             val nl = fragment.getNeutralLoss
-            if ( nl > 0.0) fragMatch.neutralLossMass = Some(nl)
-            
-            if ( (bestMatch == null) || (bestMatch.intensity < fragMatch.intensity) ) {
+            if (nl > 0.0) fragMatch.neutralLossMass = Some(nl)
+
+            if ((bestMatch == null) || (bestMatch.intensity < fragMatch.intensity)) {
               bestMatch = fragMatch
             }
-            
-          } else if ( Math.signum(deltaMoz) > 0 ) break
+
+          } else if (Math.signum(deltaMoz) > 0) break
         }
       }
-        
-      if ( bestMatch != null ) fragMatches += bestMatch
+
+      if (bestMatch != null) fragMatches += bestMatch
     }
-    
-    val fragmentationTable = this._buildFragmentationTable( pepSequence, theoFragments )
-    
-    new SpectrumMatch( mascotQueryId, mascotPep.getRank, fragmentationTable, fragMatches.toArray )
+
+    val fragmentationTable = this._buildFragmentationTable(pepSequence, theoFragments)
+
+    new SpectrumMatch(mascotQueryId, mascotPep.getRank, fragmentationTable, fragMatches.toArray)
     /*new PeptideMatchDetail(
           pep.getSequenceStr(),
           spectrum,
@@ -183,58 +184,60 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
               )
          )*/
   }
-  
-  protected def parseMascotQueryIonsStr( mascotQueryPeaksStr: String ): Array[Peak] = {
+
+  protected def parseMascotQueryIonsStr(mascotQueryPeaksStr: String): Array[Peak] = {
     val peaks = mascotQueryPeaksStr.split(",")
     //val firstPeaks = if( maxNbPeaks > 0 ) peaks.take(maxNbPeaks) else peaks
-    
+
     peaks.map { peakAsStr =>
       val values = peakAsStr.split(":")
-      Peak( values(0).toDouble, values(1).toFloat )
+      Peak(values(0).toDouble, values(1).toFloat)
     }
   }
-  
-  private def _getTheoreticalFragments( ms_pep: ms_peptide ): ms_fragmentvector = {
-    
-    val mascotErrs = new ms_errs()
-    val varModString = ms_pep.getVarModsStr()
-    var nlString = ms_pep.getPrimaryNlStr()
-    val mascotAAHelper = getMascotAAHelper( ms_pep, this.ptmHelper)
 
-//    this.logger.debug("mod String = "+ varModString)
-//    this.logger.debug("nl String = "+ nlString)
+  private def _getTheoreticalFragments(ms_pep: ms_peptide): ms_fragmentvector = {
+
+    val mascotErrs = new ms_errs()
+    val mascotAAHelper = getMascotAAHelper(ms_pep, this.ptmHelper)
+    val varModString = ms_pep.getVarModsStr()
+    val hasMod = varModString matches "0+"
+    var nlString = ms_pep.getPrimaryNlStr()
     
+    //    this.logger.debug("mod String = "+ varModString)
+    //    this.logger.debug("nl String = "+ nlString)
+
     // Test if empty nlString can influence the call to calcFragment ?? NO
-    if ( nlString.isEmpty ) {
+    val hasNL = if (nlString.isEmpty) {
       //generate a trail of c
-      nlString = new String( Array.fill(varModString.length)('0') )
+      nlString = new String(Array.fill(varModString.length)('0'))
       ms_pep.setPrimaryNlStr(nlString)
-//      logger.debug("Modified nl String = "+ nlString)
-    }
-    
-    if ( mascotVersion.startsWith("2.2") ) {
-      
-      nlString = nlString.replace('2', 'X').replace('1', '2').replace('X', '1')      
+      //      logger.debug("Modified nl String = "+ nlString)
+      false
+    } else true
+
+    if (mascotVersion.startsWith("2.2")) {
+
+      nlString = nlString.replace('2', 'X').replace('1', '2').replace('X', '1')
       ms_pep.setPrimaryNlStr(nlString)
-      
-//      logger.debug("### Mascot 2.2 file :  modified nlString = "+ nlString)
+
+      //      logger.debug("### Mascot 2.2 file :  modified nlString = "+ nlString)
     }
 
     // Note: for modified ms_pep (var mod or NL) we need to create a new ms_peptide object since they
     // can cause msparser JVM crash such as EXCEPTION_ACCESS_VIOLATION (see redmine defect #7550).
-    val new_ms_pep = if( varModString.isEmpty && nlString.isEmpty ) ms_pep
-    else this._createPeptideFrom(ms_pep.getPeptideStr, ms_pep.getCharge, varModString, nlString, mascotAAHelper )
-    
+    val new_ms_pep = if (hasMod == false && hasNL == false) ms_pep
+    else this._createPeptideFrom(ms_pep.getPeptideStr, ms_pep.getCharge, varModString, nlString, mascotAAHelper)
+
     val fragments = new ms_fragmentvector()
     val all_fragments = new ms_fragmentvector() // Keep a list of fragments from all series
-    
-//    logger.debug("### calc fragments for each serie configured in fragmentation rules")
-    for ( series <- ms_fragmentationrules.getFirstSeries to ms_fragmentationrules.getLastSeries ) {
-      
-      if ( mascotFragRules.isSeriesUsed(series) ) {
-        
-        def calcFragments( isDoublyCharged: Boolean ) {
-          
+
+    //    logger.debug("### calc fragments for each serie configured in fragmentation rules")
+    for (series <- ms_fragmentationrules.getFirstSeries to ms_fragmentationrules.getLastSeries) {
+
+      if (mascotFragRules.isSeriesUsed(series)) {
+
+        def calcFragments(isDoublyCharged: Boolean) {
+
           mascotAAHelper.calcFragments(
             new_ms_pep,
             series, // ions series ID
@@ -245,80 +248,80 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
             fragments,
             mascotAAHelper.getErrorHandler
           )
-  
-          if ( mascotErrs.getNumberOfErrors > 0 ) {
-            this.logger.error( mascotErrs.getNumberOfErrors + " error(s) in fragmentation of " + new_ms_pep.getPeptideStr )
+
+          if (mascotErrs.getNumberOfErrors > 0) {
+            this.logger.error(mascotErrs.getNumberOfErrors + " error(s) in fragmentation of " + new_ms_pep.getPeptideStr)
             MascotErrorsHelper.logErrors(mascotErrs)
           }
-          
+
           // Append calculated fragments to the list of all fragments
-          for ( i <- 0 until fragments.getNumberOfFragments ) {
-            all_fragments.appendFragment( fragments.getFragmentByNumber(i) )
+          for (i <- 0 until fragments.getNumberOfFragments) {
+            all_fragments.appendFragment(fragments.getFragmentByNumber(i))
           }
         }
-        
+
         // calculate 1+ fragments
-        calcFragments( isDoublyCharged = false )
-        
+        calcFragments(isDoublyCharged = false)
+
         // clear tmp fragments
         fragments.clearFragments()
-        
+
         // If peptide is doubly charged
         // TODO: why charge > 1 ? this should be > 2 to have fragments doubly charged
-        if ( (new_ms_pep.getCharge > 1) && mascotFragRules.isCharged2Plus ) {
+        if ((new_ms_pep.getCharge > 1) && mascotFragRules.isCharged2Plus) {
           //calculate 2+ fragments
-          calcFragments( isDoublyCharged = true )
+          calcFragments(isDoublyCharged = true)
         }
       }
     }
 
-    if ( (nlString != null) && (nlString.length > 0) ) {
+    if (hasNL) {
 
-//      logger.debug("List of "+all_fragments.getNumberOfFragments()+" fragments will be completed with Neutral Losses")
+      //      logger.debug("List of "+all_fragments.getNumberOfFragments()+" fragments will be completed with Neutral Losses")
 
-      for ( m <- 0 until mascotAAHelper.getVarMods.getNumberOfModifications ) {
-        
-          val mod = mascotAAHelper.getVarMods.getModificationByNumber(m)
-          val modificationTitle = mod.getTitle
-//          this.logger.debug("Search NL for modification "+modificationTitle)
-          
-          val modificationCharacterCode = String.valueOf(m+1)
-          val modificationNLVector = mod.getNeutralLoss(msparserConstants.MASS_TYPE_MONO)
-          
-          if ( modificationNLVector.size > 1 ) {
-            
-            for ( f <- 0 until all_fragments.getNumberOfFragments ) {
-              
-              val frag = all_fragments.getFragmentByNumber(f)
-              val isReverseSeries = Fragmentation.isReverseSeries(frag.getSeriesName)
-              
-              val fragmentVarModStr =
-                if ( isReverseSeries )
-                     varModString.substring( new_ms_pep.getPeptideStr.length - frag.getColumn + 1, varModString.length - 1 )
-                else varModString.substring( 1, frag.getColumn + 1 )
-              
-              val modCount = StringUtils.countMatches(fragmentVarModStr, modificationCharacterCode)
-              if ( modCount > 0 ) {
-                
-                val appliedNLIdx =
-                  if ( isReverseSeries ) nlString.charAt(varModString.lastIndexOf(modificationCharacterCode)) - 48
-                  else nlString.charAt(varModString.indexOf(modificationCharacterCode)) - 48
-                
-                for ( nlIdx <- 0 until modificationNLVector.size.toInt ) {
-                  
-                  if ( (appliedNLIdx != 0) && (nlIdx != (appliedNLIdx-1)) ) {
-                    
-                    // cancel the already applied NL and apply the current NL
-                    val delta = modCount * (modificationNLVector.get(nlIdx) - modificationNLVector.get(appliedNLIdx-1))
-                    
-                    val newFragment = new ms_fragment(
-                                            frag.getSeriesName,
-                                            frag.getMass - (delta / frag.getCharge.toDouble),
-                                            Math.round( modificationNLVector.get(nlIdx) / frag.getCharge.toDouble ),
-                                            frag.getColumn,
-                                            frag.getCharge
-                                          )
-                    all_fragments.appendFragment(newFragment)
+      for (m <- 0 until mascotAAHelper.getVarMods.getNumberOfModifications) {
+
+        val mod = mascotAAHelper.getVarMods.getModificationByNumber(m)
+        val modificationTitle = mod.getTitle
+        //          this.logger.debug("Search NL for modification "+modificationTitle)
+
+        val modificationCharacterCode = String.valueOf(m + 1)
+        val modificationNLVector = mod.getNeutralLoss(msparserConstants.MASS_TYPE_MONO)
+
+        if (modificationNLVector.size > 1) {
+
+          for (f <- 0 until all_fragments.getNumberOfFragments) {
+
+            val frag = all_fragments.getFragmentByNumber(f)
+            val isReverseSeries = Fragmentation.isReverseSeries(frag.getSeriesName)
+
+            val fragmentVarModStr =
+              if (isReverseSeries)
+                varModString.substring(new_ms_pep.getPeptideStr.length - frag.getColumn + 1, varModString.length - 1)
+              else varModString.substring(1, frag.getColumn + 1)
+
+            val modCount = StringUtils.countMatches(fragmentVarModStr, modificationCharacterCode)
+            if (modCount > 0) {
+
+              val appliedNLIdx =
+                if (isReverseSeries) nlString.charAt(varModString.lastIndexOf(modificationCharacterCode)) - 48
+                else nlString.charAt(varModString.indexOf(modificationCharacterCode)) - 48
+
+              for (nlIdx <- 0 until modificationNLVector.size.toInt) {
+
+                if ((appliedNLIdx != 0) && (nlIdx != (appliedNLIdx - 1))) {
+
+                  // cancel the already applied NL and apply the current NL
+                  val delta = modCount * (modificationNLVector.get(nlIdx) - modificationNLVector.get(appliedNLIdx - 1))
+
+                  val newFragment = new ms_fragment(
+                    frag.getSeriesName,
+                    frag.getMass - (delta / frag.getCharge.toDouble),
+                    Math.round(modificationNLVector.get(nlIdx) / frag.getCharge.toDouble),
+                    frag.getColumn,
+                    frag.getCharge
+                  )
+                  all_fragments.appendFragment(newFragment)
                 }
               }
             }
@@ -326,114 +329,114 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
         }
       }
     }
-    
-//    this.logger.debug("Total number of fragments (with neutral losses): " + all_fragments.getNumberOfFragments )
-    
+
+    //    this.logger.debug("Total number of fragments (with neutral losses): " + all_fragments.getNumberOfFragments )
+
     all_fragments
   }
 
-  private def _createPeptideFrom( peptideStr: String,
-                                  charge: Int,
-                                  modStr: String,
-                                  nlStr: String,
-                                  aaHelper: ms_aahelper ): ms_peptide = {
-    
+  private def _createPeptideFrom(peptideStr: String,
+                                 charge: Int,
+                                 modStr: String,
+                                 nlStr: String,
+                                 aaHelper: ms_aahelper): ms_peptide = {
+
     val mascotErrs = new ms_errs()
     val numModded = new vectori()
     val whichNL = new vectori()
-    
-    // Fill numModded and whichNL vectors
-    for( k <- 0 until modStr.length ) {
-      numModded.add( modStr.charAt(k) - 48 )
-      whichNL.add( nlStr.charAt(k) - 48 )
-    }
-    
-//    this.logger.debug("Creating peptide of sequence '"+peptideStr+"'...")
-    
-    val mascotPep = aaHelper.createPeptide(
-                                peptideStr,
-                                peptideStr.length(),
-                                1,
-                                peptideStr.length(), // end positions
-                                numModded, // modification string-like vector
-                                whichNL, // which neutral loss to use
-                                charge, // no charge
-                                msparserConstants.MASS_TYPE_MONO,
-                                mascotErrs // collect errors in it
-                               )
 
-    if ( !mascotErrs.isValid ) {
-      this.logger.error(mascotErrs.getNumberOfErrors+" error(s) during creation of peptide with sequence '"+ peptideStr+"'")
+    // Fill numModded and whichNL vectors
+    for (k <- 0 until modStr.length) {
+      numModded.add(modStr.charAt(k) - 48)
+      whichNL.add(nlStr.charAt(k) - 48)
+    }
+
+    //    this.logger.debug("Creating peptide of sequence '"+peptideStr+"'...")
+
+    val mascotPep = aaHelper.createPeptide(
+      peptideStr,
+      peptideStr.length(),
+      1,
+      peptideStr.length(), // end positions
+      numModded, // modification string-like vector
+      whichNL, // which neutral loss to use
+      charge, // no charge
+      msparserConstants.MASS_TYPE_MONO,
+      mascotErrs // collect errors in it
+    )
+
+    if (!mascotErrs.isValid) {
+      this.logger.error(mascotErrs.getNumberOfErrors + " error(s) during creation of peptide with sequence '" + peptideStr + "'")
       MascotErrorsHelper.logErrors(mascotErrs)
     }
-    
-//    this.logger.debug("ms_peptide created")
-    
+
+    //    this.logger.debug("ms_peptide created")
+
     mascotPep
   }
-  
-  protected def _buildFragmentationTable( pepSequence: String, mascotTheoFragments: ms_fragmentvector): Array[TheoreticalFragmentSeries] = {
-    
+
+  protected def _buildFragmentationTable(pepSequence: String, mascotTheoFragments: ms_fragmentvector): Array[TheoreticalFragmentSeries] = {
+
     val mascotTheoFragsBySeriesName = new collection.mutable.HashMap[String, ArrayBuffer[ms_fragment]]()
-    
+
     // Index fragments by serie's name
-    for ( k <- 0 until mascotTheoFragments.getNumberOfFragments ) {
-      
+    for (k <- 0 until mascotTheoFragments.getNumberOfFragments) {
+
       val mascotFrag = mascotTheoFragments.getFragmentByNumber(k)
-      val key = if ( mascotFrag.getCharge == 2 ) mascotFrag.getSeriesName + "++" //throw new Exception(mascotFrag.getSeriesName)
-                else mascotFrag.getSeriesName
-      
-      mascotTheoFragsBySeriesName.getOrElseUpdate(key,new ArrayBuffer[ms_fragment]) += mascotFrag
+      val key = if (mascotFrag.getCharge == 2) mascotFrag.getSeriesName + "++" //throw new Exception(mascotFrag.getSeriesName)
+      else mascotFrag.getSeriesName
+
+      mascotTheoFragsBySeriesName.getOrElseUpdate(key, new ArrayBuffer[ms_fragment]) += mascotFrag
     }
-    
+
     val pepSeqLength = pepSequence.length
     val rules = this.mascotFragRules
     var columnIdx = 1
-    
+
     val fragTable = new ArrayBuffer[TheoreticalFragmentSeries]()
-    for ( k <- ms_fragmentationrules.getFirstSerie to ms_fragmentationrules.getLastSeries ) {
-      
+    for (k <- ms_fragmentationrules.getFirstSerie to ms_fragmentationrules.getLastSeries) {
+
       var charge = 1
       var mascotFragSeriesName = ms_fragmentationrules.getSeriesName(k)
-      
-      if ( rules.isSeriesUsed(k) ) {
-        
+
+      if (rules.isSeriesUsed(k)) {
+
         def addCurrentSeriesToTable() {
-          
+
           val theoMasses = Array.fill(pepSeqLength)(0.0)
-          
-          for( mascotFragment <- mascotTheoFragsBySeriesName(mascotFragSeriesName) ) {
+
+          for (mascotFragment <- mascotTheoFragsBySeriesName(mascotFragSeriesName)) {
             // Test if the theoMasses[i] had already been affected (ie not null), since due to neutral loss it can happen that 
             // multiple fragment exists at the same position for the same serie (with the default NL value and the alternative NL).
-            if ( Fragmentation.isReverseSeries(mascotFragSeriesName) ) {
+            if (Fragmentation.isReverseSeries(mascotFragSeriesName)) {
               val idx = pepSeqLength - mascotFragment.getColumn
-              if ( theoMasses(idx) == 0.0 ) theoMasses(idx) = mascotFragment.getMass
+              if (theoMasses(idx) == 0.0) theoMasses(idx) = mascotFragment.getMass
             } else {
               val idx = mascotFragment.getColumn - 1
-              if ( theoMasses(idx) == 0.0 ) theoMasses(idx) = mascotFragment.getMass
+              if (theoMasses(idx) == 0.0) theoMasses(idx) = mascotFragment.getMass
             }
           }
-          
-          val fragSeriesName = fragSeriesByMascotFragSeries.getOrElse(mascotFragSeriesName,mascotFragSeriesName)
-          
+
+          val fragSeriesName = fragSeriesByMascotFragSeries.getOrElse(mascotFragSeriesName, mascotFragSeriesName)
+
           fragTable += new TheoreticalFragmentSeries(fragSeriesName, theoMasses)
           columnIdx += 1
         }
-        
+
         // Check singly charged series
-        if ( mascotTheoFragsBySeriesName.contains(mascotFragSeriesName) ) addCurrentSeriesToTable()
-        
+        if (mascotTheoFragsBySeriesName.contains(mascotFragSeriesName)) addCurrentSeriesToTable()
+
         // Check doubly charged series
         charge = 2
         mascotFragSeriesName += "++"
-        if ( mascotTheoFragsBySeriesName.contains(mascotFragSeriesName) ) addCurrentSeriesToTable()
-        
+        if (mascotTheoFragsBySeriesName.contains(mascotFragSeriesName)) addCurrentSeriesToTable()
+
       }
     }
-    
+
     fragTable.toArray
   }
-  
+
   /*protected def buildSeries( pep: IPeptide, allFragments: ms_fragmentvector): Array[PeptideFragmentation.Serie] = {
     
     val series = new collection.mutable.HashMap[String, ListBuffer[ms_fragment]]()
@@ -493,26 +496,26 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
   }
     
 */
-  protected def getMascotAAHelper( ms_pep: ms_peptide, ptmHelper : MascotPTMHelper): ms_aahelper = {
-        
+  protected def getMascotAAHelper(ms_pep: ms_peptide, ptmHelper: MascotPTMHelper): ms_aahelper = {
+
     val msQuantComp = _getMascotQuantComponent(ms_pep)
 
-    if (!aaHelpersByQuantComp.contains(msQuantComp.getOrElse("DEFAULT"))) {
-   	 var masses = this.mascotConfig.massesFile
-       masses = new ms_masses(masses)
-       if (msQuantComp.isDefined)
-      	 masses.applyIsotopes(this.mascotConfig.unimodFile,this.quantitationMethod.getComponentByName(msQuantComp.get))
-       aaHelpersByQuantComp(msQuantComp.getOrElse("DEFAULT")) = _buildMascotAAHelper(ms_pep,ptmHelper, masses)
+    if (!aaHelpersByQuantComp.contains(msQuantComp.getOrElse(DEFAULT_QUANT_COMP_KEY))) {
+      var masses = this.mascotConfig.massesFile
+      masses = new ms_masses(masses)
+      if (msQuantComp.isDefined)
+        masses.applyIsotopes(this.mascotConfig.unimodFile, this.quantitationMethod.getComponentByName(msQuantComp.get))
+      aaHelpersByQuantComp(msQuantComp.getOrElse(DEFAULT_QUANT_COMP_KEY)) = _buildMascotAAHelper(ms_pep, ptmHelper, masses)
     }
-    
-    aaHelpersByQuantComp(msQuantComp.getOrElse("DEFAULT"))
+
+    aaHelpersByQuantComp(msQuantComp.getOrElse(DEFAULT_QUANT_COMP_KEY))
   }
-  
-  private def _buildMascotAAHelper( ms_pep: ms_peptide, ptmHelper : MascotPTMHelper, masses: ms_masses): ms_aahelper = {
-    
+
+  private def _buildMascotAAHelper(ms_pep: ms_peptide, ptmHelper: MascotPTMHelper, masses: ms_masses): ms_aahelper = {
+
     val aahelper = new ms_aahelper()
     aahelper.setMasses(masses)
-    
+
     if (mascotVersion.startsWith("1.") || mascotVersion.startsWith("2.1")) {
 
       // 
@@ -522,26 +525,26 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
       this.logger.debug("Build ms_aahelper for Mascot version <= 2.1")
       val anotherHelper = new ms_aahelper(mascotResFile, null)
       val vecFixed = anotherHelper.getFixedMods()
-      
-      for( val m <- 1 until vecFixed.getNumberOfModifications ) {
-        
+
+      for (val m <- 1 until vecFixed.getNumberOfModifications) {
+
         val mod = vecFixed.getModificationByNumber(m)
         val ptms = ptmHelper.fixedPtmDefsByModName(mod.getTitle())
-        
-        for(ptmDef <- ptms) {
-        
-        if (ptmDef.location.endsWith("N-term")) {
+
+        for (ptmDef <- ptms) {
+
+          if (ptmDef.location.endsWith("N-term")) {
             mod.setModificationType(msparserConstants.MOD_TYPE_N_TERM)
-        } else if (ptmDef.location.endsWith("C-term")) {
+          } else if (ptmDef.location.endsWith("C-term")) {
             mod.setModificationType(msparserConstants.MOD_TYPE_C_TERM)
-        } else {
-          mod.setModificationType(msparserConstants.MOD_TYPE_RESIDUE)
-          
-          val mascotMasses = this.mascotConfig.massesFile
+          } else {
+            mod.setModificationType(msparserConstants.MOD_TYPE_RESIDUE)
+
+            val mascotMasses = this.mascotConfig.massesFile
             val r = ptmDef.residue
             mod.appendModifiedResidue(
               r,
-              mascotMasses.getResidueMass(msparserConstants.MASS_TYPE_MONO, r), 
+              mascotMasses.getResidueMass(msparserConstants.MASS_TYPE_MONO, r),
               mascotMasses.getResidueMass(msparserConstants.MASS_TYPE_AVE, r)
             )
           }
@@ -549,7 +552,7 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
       }
       val vecVariable = anotherHelper.getVarMods()
       aahelper.setAvailableModifications(vecFixed, vecVariable)
-    
+
     } else {
 
       //
@@ -558,105 +561,104 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
       this.logger.debug("Build ms_aahelper for Mascot version >= 2.2")
 
       val modsFile = this.mascotConfig.modificationsFile
-      
+
       // create a list of fixed modifications
       val vecFixed = new ms_modvector()
-      for ( fixedPtms <- ptmHelper.fixedPtmIndexed ) {
-        val mod = modsFile.getModificationByName(fixedPtms)        
+      for (fixedPtms <- ptmHelper.fixedPtmIndexed) {
+        val mod = modsFile.getModificationByName(fixedPtms)
         if (mod != null) {
-            logger.debug("+++ Fixed Modification " + mod.getTitle()+ " added")
-            vecFixed.appendModification(mod)
+          logger.debug("+++ Fixed Modification " + mod.getTitle() + " added")
+          vecFixed.appendModification(mod)
         } else {
-            logger.error("Fixed Modification " + fixedPtms + " cannot be created")
-        }                   
+          logger.error("Fixed Modification " + fixedPtms + " cannot be created")
+        }
       }
-      
+
       // create a list of variable modifications :
       val vecVariable = new ms_modvector()
-      for ( varPtms <- ptmHelper.varPtmIndexed ) {
-          
-          val mod = modsFile.getModificationByName(varPtms)
-          if (mod != null) {
-              logger.debug("+++ Var Modification " + mod.getTitle()+ " added")
-              vecVariable.appendModification(mod)
-          } else {
-              logger.error("Variable Modification " + varPtms+ " cannot be created")
-          }
-      }                           
-      
+      for (varPtms <- ptmHelper.varPtmIndexed) {
+
+        val mod = modsFile.getModificationByName(varPtms)
+        if (mod != null) {
+          logger.debug("+++ Var Modification " + mod.getTitle() + " added")
+          vecVariable.appendModification(mod)
+        } else {
+          logger.error("Variable Modification " + varPtms + " cannot be created")
+        }
+      }
+
       aahelper.setAvailableModifications(vecFixed, vecVariable)
-      
+
     }
-    
-    
+
     // for Mascot 2.1 files, it is necessary to update mods ... 
     if (mascotVersion.startsWith("2.1")) {
       val vecVariable = aahelper.getVarMods()
-      
-      for(  m <- 0 until vecVariable.getNumberOfModifications ) {
+
+      for (m <- 0 until vecVariable.getNumberOfModifications) {
         val mod = vecVariable.getModificationByNumber(m)
         this._updateVarModification(mod, ms_pep, ptmHelper.indexOfVarPtm(mod.getTitle()))
       }
       aahelper.setAvailableModifications(aahelper.getFixedMods(), vecVariable)
-      
-//      this.logger.debug(" ###### Modified Mascot 2.1 var mods")
-//      MascotErrorsHelper.logMods(vecVariable)
-    } 
+
+      //      this.logger.debug(" ###### Modified Mascot 2.1 var mods")
+      //      MascotErrorsHelper.logMods(vecVariable)
+    }
 
     aahelper
   }
-  
+
   private def _getMascotQuantComponent(ms_pep: ms_peptide): Option[String] = {
-    
-    if (ms_pep.getComponentStr() != null && ! (ms_pep.getComponentStr().length() == 0)) { 
-      
+
+    if (ms_pep.getComponentStr != null && !(ms_pep.getComponentStr.length == 0)) {
+
       val quantMethod = this.quantitationMethod
-      if ( quantMethod != null && quantMethod.getName != this.mascotConfig.NONE_QUANTI_METHOD_NAME ) {
-       
-        val pepComponentStr = ms_pep.getComponentStr()
-        this.logger.debug("ms_pep componentStr = "+ pepComponentStr)
-        
-        val msQuantComp = quantMethod.getComponentByName(pepComponentStr)       
-        this.logger.debug("ms_quant_component name = "+ msQuantComp.getName())
-        Some(msQuantComp.getName())
+      if (quantMethod != null && quantMethod.getName != this.mascotConfig.NONE_QUANTI_METHOD_NAME) {
+
+        val pepComponentStr = ms_pep.getComponentStr
+        this.logger.debug("ms_pep componentStr = " + pepComponentStr)
+
+        val msQuantComp = quantMethod.getComponentByName(pepComponentStr)
+        this.logger.debug("ms_quant_component name = " + msQuantComp.getName)
+        Some(msQuantComp.getName)
       }
     }
     None
   }
-  
-  private def _updateVarModification( mod: ms_modification, ms_pep: ms_peptide, index: Int ): ms_modification = {
-    
+
+  private def _updateVarModification(mod: ms_modification, ms_pep: ms_peptide, index: Int): ms_modification = {
+
     val mascotMasses = this.mascotConfig.massesFile
     val modStr = ms_pep.getVarModsStr
     var isModTypeSet = false
-    
-    for ( k <- 0 until modStr.length ) {
-      
-      val modIdx = Integer.valueOf(modStr.substring(k,k+1))
+
+    for (k <- 0 until modStr.length) {
+
+      val modIdx = Integer.valueOf(modStr.substring(k, k + 1))
       if (modIdx == index) {
-        
+
         val title = mod.getTitle()
-        
+
         if (k == 0) { //N-term modification
-          
-          if ( title matches "Protein" )
-               mod.setModificationType(msparserConstants.MOD_TYPE_N_PROTEIN)
+
+          if (title matches "Protein")
+            mod.setModificationType(msparserConstants.MOD_TYPE_N_PROTEIN)
           else mod.setModificationType(msparserConstants.MOD_TYPE_N_TERM)
-          
+
           isModTypeSet = true
-          
-        } else if (k == modStr.length()-1) { //C-term modification
-            
-            if ( title matches "Protein" )
-                 mod.setModificationType(msparserConstants.MOD_TYPE_C_PROTEIN)
-            else mod.setModificationType(msparserConstants.MOD_TYPE_C_TERM)
-            
-            isModTypeSet = true
+
+        } else if (k == modStr.length() - 1) { //C-term modification
+
+          if (title matches "Protein")
+            mod.setModificationType(msparserConstants.MOD_TYPE_C_PROTEIN)
+          else mod.setModificationType(msparserConstants.MOD_TYPE_C_TERM)
+
+          isModTypeSet = true
         } else {
           mod.setModificationType(msparserConstants.MOD_TYPE_RESIDUE)
           isModTypeSet = true
-          
-          val r = ms_pep.getPeptideStr().charAt(k-1)
+
+          val r = ms_pep.getPeptideStr().charAt(k - 1)
           val delta = mod.getDelta(msparserConstants.MASS_TYPE_MONO)
           val r_mono = delta + mascotMasses.getResidueMass(msparserConstants.MASS_TYPE_MONO, r)
           val r_avg = delta + mascotMasses.getResidueMass(msparserConstants.MASS_TYPE_AVE, r)
@@ -664,42 +666,15 @@ class MascotSpectrumMatcher( mascotResFile: ms_mascotresfile, mascotConfig: IMas
         }
       }
     }
-    
-    if ( !isModTypeSet ) {
-      if ( mod.getTitle matches "Protein" )
+
+    if (!isModTypeSet) {
+      if (mod.getTitle matches "Protein")
         mod.setModificationType(msparserConstants.MOD_TYPE_N_PROTEIN)
       else
         mod.setModificationType(msparserConstants.MOD_TYPE_C_PROTEIN)
     }
-    
+
     mod
   }
-  
-}
 
-/*
-trait IPeptide {
-  def getSequenceStr: String = null
 }
-
-object PeptideFragmentation {
-  class Serie( seriesName: String ) {
-    var isReverse: Boolean = false
-    var values: Array[Object] = null
-  }
-}*/
-
-/*
-class PTM {
-  def getIndex() = 0
-}
-
-class IPTM() {
-  def getName(): String = null
-}
-class PTMHelper() {
-  def getFixedPTM(str:String,a: Any): PTM = null
-  def getVariablePTM(str:String,a: Any): PTM = null
-  def getAllFixedPTMs(): Array[IPTM] = null
-  def getAllVariablePTMs(): Array[IPTM] = null
-}*/
