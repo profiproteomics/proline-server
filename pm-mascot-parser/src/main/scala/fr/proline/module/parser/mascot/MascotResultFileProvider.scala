@@ -21,6 +21,7 @@ class MascotResultFileProvider extends IResultFileProvider with Logging {
     propertiedBuilder += (MascotParseParams.ION_SCORE_CUTOFF.toString -> Double.getClass())
     propertiedBuilder += (MascotParseParams.SUBSET_THRESHOLD.toString -> Double.getClass())
     propertiedBuilder += (MascotParseParams.PROTEIN_CUTOFF_PVALUE.toString -> Double.getClass())
+    propertiedBuilder += (MascotParseParams.MASCOT_SERVER_URL.toString -> classOf[String])
     propertiedBuilder.result
   }
 
