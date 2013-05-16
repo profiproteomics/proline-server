@@ -450,7 +450,7 @@ class MascotDataParser( val pepSummary: ms_peptidesummary,
 		if(ptmMatchPep){
 		  if(!isNter && ! isCter ){
 		    pepResidueIndexes foreach (p =>{
-		    	seqPos = p
+		    	seqPos = p+1 //0 for N-term... for residue start at 1
 		    	val newLocatedPtm =  new LocatedPtm(  definition = nextPTMDef,
                      seqPosition = seqPos,
                      monoMass = nextPTMDef.precursorDelta.monoMass,
