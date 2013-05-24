@@ -140,16 +140,16 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
 
           if (Math.abs(deltaMoz) <= mozTolInDa) {
 
-            val fragType = if (fragment.isRegular) FragmentMatchType.REGULAR
-            else if (fragment.isInternal) FragmentMatchType.INTERNAL
-            else FragmentMatchType.IMMONIUM
+            val fragType = if (fragment.isRegular) None
+            else if (fragment.isInternal) Some(FragmentMatchType.INTERNAL.toString)
+            else Some(FragmentMatchType.IMMONIUM.toString)
 
             val fragMatch = new FragmentMatch(
               label = fragment.getLabel,
               //ionSeries = fragment.getSeriesName,
               // TODO: check is this is the expected value
               //aaPosition = if( fragment.isInternal) fragment.getStart else fragment.getColumn,
-              `type` = fragType.toString,
+              `type` = fragType,
               //charge = fragment.getCharge,
               moz = obsMoz,
               calculatedMoz = theoFragMoz,
@@ -408,13 +408,12 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
           for (mascotFragment <- mascotTheoFragsBySeriesName(mascotFragSeriesName)) {
             // Test if the theoMasses[i] had already been affected (ie not null), since due to neutral loss it can happen that 
             // multiple fragment exists at the same position for the same serie (with the default NL value and the alternative NL).
-            if (Fragmentation.isReverseSeries(mascotFragSeriesName)) {
-              val idx = pepSeqLength - mascotFragment.getColumn
-              if (theoMasses(idx) == 0.0) theoMasses(idx) = mascotFragment.getMass
+            val idx = if (Fragmentation.isReverseSeries(mascotFragSeriesName)) {
+              pepSeqLength - mascotFragment.getColumn
             } else {
-              val idx = mascotFragment.getColumn - 1
-              if (theoMasses(idx) == 0.0) theoMasses(idx) = mascotFragment.getMass
+              mascotFragment.getColumn - 1
             }
+            if (theoMasses(idx) == 0.0) theoMasses(idx) = mascotFragment.getMass
           }
 
           val fragSeriesName = fragSeriesByMascotFragSeries.getOrElse(mascotFragSeriesName, mascotFragSeriesName)
@@ -677,4 +676,22 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
     mod
   }
 
+
+  
 }
+
+
+
+/*
+// TODO: move to commons math utils
+
+def roundToDecimals( d: Double, c: Int): Double = {
+  val temp = (d * math.pow(10,c)).toInt
+  (temp.toDouble/math.pow(10,c))
+}
+  
+public static double roundToDecimals(double d, int c) {
+int temp=(int)((d*Math.pow(10,c)));
+return (((double)temp)/Math.pow(10,c));
+}
+ */

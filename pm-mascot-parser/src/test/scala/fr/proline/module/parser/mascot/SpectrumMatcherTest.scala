@@ -90,7 +90,7 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
     val rs = resultFile.eachSpectrumMatch(true, { sMatch =>
       {
         spectrumMatchesCount += 1
-        fragMatchesCount += sMatch.fragmentMatches.length
+        fragMatchesCount += sMatch.fragMatches.length
       }
 
     }
@@ -133,7 +133,7 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
     val rs = resultFile.eachSpectrumMatch(false, { sMatch =>
       {
         spectrumMatchesCount += 1
-        fragMatchesCount += sMatch.fragmentMatches.length
+        fragMatchesCount += sMatch.fragMatches.length
       }
 
     }
@@ -177,7 +177,7 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
     val rs = resultFile.eachSpectrumMatch(false, { sMatch =>
       {
         spectrumMatchesCount += 1
-        fragMatchesCount += sMatch.fragmentMatches.length
+        fragMatchesCount += sMatch.fragMatches.length
       }
 
     }
