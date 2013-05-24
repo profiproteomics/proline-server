@@ -5,6 +5,7 @@ import java.io.File
 import scala.collection.mutable.{HashMap, ArrayBuffer}
 
 import org.junit.{After, Assert, Before, Ignore, Test}
+import org.junit.Assert._
 
 import com.weiglewilczek.slf4s.Logging
 
@@ -136,6 +137,10 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     val dRSM = rsValidation.validatedDecoyRsm
 
     Assert.assertNotNull(tRSM)
+    
+    val filters = ResultSummaryFilterBuilder.buildPeptideMatchFilters(tRSM)
+    assertTrue("Filters build from ResultSummary", (filters != null) && (filters.length > 0))
+    
     Assert.assertNotNull(dRSM)
     Assert.assertTrue(dRSM.isDefined)
 
