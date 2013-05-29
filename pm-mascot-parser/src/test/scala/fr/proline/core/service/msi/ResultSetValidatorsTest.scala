@@ -25,6 +25,7 @@ import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.repository.DriverType
 
+/*
 @Ignore
 class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
 
@@ -847,4 +848,4 @@ class ResultSetValidatorsTest extends AbstractRFImporterTest_ with Logging {
     Assert.assertEquals(3, pepValResults.getDecoyMatchesCount.get)
   }
 
-}
+}*/
