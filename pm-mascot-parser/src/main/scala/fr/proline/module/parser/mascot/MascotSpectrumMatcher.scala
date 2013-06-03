@@ -39,6 +39,7 @@ case class Peak(moz: Double, intensity: Float)
 
 class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMascotConfig, ptmHelper: MascotPTMHelper) extends Logging {
 
+  val FREE_MEMORY = true // TODO: remove me when the memory leaks have been solved
   val mascotSearchParams = mascotResFile.params
   val mascotVersion = mascotResFile.getMascotVer
   val mascotFragRules = mascotConfig.fragmentationRulesFile.getInstrumentByName(mascotSearchParams.getINSTRUMENT())  
@@ -171,6 +172,15 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
     }
 
     val fragmentationTable = this._buildFragmentationTable(pepSequence, theoFragments)
+    
+    // --- Free memory --- //
+    if (FREE_MEMORY) {
+      // TODO: is this really needed ???
+      for (i <- 0 until theoFragments.getNumberOfFragments) {
+        theoFragments.getFragmentByNumber(i).delete
+      }
+      theoFragments.delete()
+    }
 
     new SpectrumMatch(mascotQueryId, mascotPep.getRank, fragmentationTable, fragMatches.toArray)
     /*new PeptideMatchDetail(
@@ -197,8 +207,8 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
 
   private def _getTheoreticalFragments(ms_pep: ms_peptide): ms_fragmentvector = {
 
-    val mascotErrs = new ms_errs()
     val mascotAAHelper = getMascotAAHelper(ms_pep, this.ptmHelper)
+    val mascotErrs = new ms_errs() // mascotAAHelper.getErrorHandler()
     val varModString = ms_pep.getVarModsStr()
     val hasMod = varModString matches "0+"
     var nlString = ms_pep.getPrimaryNlStr()
@@ -228,6 +238,7 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
     val new_ms_pep = if (hasMod == false && hasNL == false) ms_pep
     else this._createPeptideFrom(ms_pep.getPeptideStr, ms_pep.getCharge, varModString, nlString, mascotAAHelper)
 
+    // Instantiate two ms_fragment vectors
     val fragments = new ms_fragmentvector()
     val all_fragments = new ms_fragmentvector() // Keep a list of fragments from all series
 
@@ -246,9 +257,9 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
             new_ms_pep.getMrExperimental(), // maximal fragment mass to return
             msparserConstants.MASS_TYPE_MONO,
             fragments,
-            mascotAAHelper.getErrorHandler
+            mascotErrs
           )
-
+          
           if (mascotErrs.getNumberOfErrors > 0) {
             this.logger.error(mascotErrs.getNumberOfErrors + " error(s) in fragmentation of " + new_ms_pep.getPeptideStr)
             MascotErrorsHelper.logErrors(mascotErrs)
@@ -328,6 +339,20 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
           }
         }
       }
+    } // End of if hasNL
+    
+    // --- Free memory --- //
+    if (FREE_MEMORY) {
+      mascotErrs.delete()
+      
+      // TODO: is this really needed ???
+      for (i <- 0 until fragments.getNumberOfFragments) {
+        fragments.getFragmentByNumber(i).delete
+      }
+      
+      fragments.delete()
+      
+      if( new_ms_pep != ms_pep ) new_ms_pep.delete // delete only newly created peptides
     }
 
     //    this.logger.debug("Total number of fragments (with neutral losses): " + all_fragments.getNumberOfFragments )
@@ -368,6 +393,13 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
     if (!mascotErrs.isValid) {
       this.logger.error(mascotErrs.getNumberOfErrors + " error(s) during creation of peptide with sequence '" + peptideStr + "'")
       MascotErrorsHelper.logErrors(mascotErrs)
+    }
+    
+    // Free memory
+    if (FREE_MEMORY) {
+      mascotErrs.delete()
+      numModded.delete()
+      whichNL.delete()
     }
 
     //    this.logger.debug("ms_peptide created")

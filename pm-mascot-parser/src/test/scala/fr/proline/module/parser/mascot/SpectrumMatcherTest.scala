@@ -95,12 +95,15 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
 
     }
     )
+    
+    // Free memory
+    resultFile.close()
 
     assertEquals("SpectrumMatches Count", 2647, spectrumMatchesCount)
     assertEquals("Calculated FragMatches Count", 24569, fragMatchesCount)
   }
   
-    @Test
+  @Test
   def testModFileGRE(): Unit = {
     setUp()
 
@@ -138,13 +141,16 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
 
     }
     )
+    
+    // Free memory
+    resultFile.close()
 
 //    assertEquals("SpectrumMatches Count", EXPECTED_SPECTRUM_MATCHES_COUNT, spectrumMatchesCount)
 //    assertEquals("Calculated FragMatches Count", EXPECTED_FRAG_MATCHES_COUNT, fragMatchesCount)
   }
 
     
-        @Test
+  @Test
   def testModFileSTR(): Unit = {
     setUp()
 
@@ -182,6 +188,9 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
 
     }
     )
+    
+    // Free memory
+    resultFile.close()
 
 //    assertEquals("SpectrumMatches Count", EXPECTED_SPECTRUM_MATCHES_COUNT, spectrumMatchesCount)
 //    assertEquals("Calculated FragMatches Count", EXPECTED_FRAG_MATCHES_COUNT, fragMatchesCount)
