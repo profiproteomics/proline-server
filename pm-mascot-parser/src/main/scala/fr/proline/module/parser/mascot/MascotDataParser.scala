@@ -69,7 +69,7 @@ class MascotDataParser( val pepSummary: ms_peptidesummary,
 
     var totalNbrPepMatches = 0
     var totalNbrSeqMatches = 0
-    logger.debug("go through " + nbrQueries + " queries using max rank " + maxRankPerQuery)
+    logger.debug("Go through " + nbrQueries + " queries using max rank " + maxRankPerQuery)
 
     for (q <- 1 to nbrQueries) { // Go through each Query
 
@@ -129,8 +129,8 @@ class MascotDataParser( val pepSummary: ms_peptidesummary,
       } // End go through current query Peptide
     } // End go through Queries
 
-    logger.debug(" Go through query / pep done . Found " + pepToPeptideMatches.size + " different peptides")
-
+    logger.debug("Go through Queries/PSM done")
+    logger.debug("Search for " + pepToPeptideMatches.size + " different Peptides.")
     val pepsToSearch = Array.newBuilder[Pair[String, Array[LocatedPtm]]]
     pepToPeptideMatches.foreach(entry => {
       pepsToSearch += Pair(entry._1.sequence, entry._1.ptms)
@@ -138,7 +138,7 @@ class MascotDataParser( val pepSummary: ms_peptidesummary,
     val searchPeps = pepsToSearch.result
 
     val foundPeps = pepProvider.getPeptidesAsOptionsBySeqAndPtms(searchPeps)
-    logger.debug("Found peptides in PS : " + foundPeps.filter(_.isDefined).size)
+    logger.debug("Peptides found in PSdb : " + foundPeps.filter(_.isDefined).size)
 
     // Iterate over found peptides in order to put them into existing peptide matches
     for( foundPepOpt <- foundPeps; fPep <- foundPepOpt ) {
@@ -161,7 +161,7 @@ class MascotDataParser( val pepSummary: ms_peptidesummary,
     } // End of for loop
 
     // Determine best peptide match for each peptide
-    logger.debug("Determining the best peptide match for each peptide...")
+    logger.debug("Determining the best PeptideMatch for each Peptide...")
     for ((pep, pepMatches) <- pepToPeptideMatches) {
 
       var bestPepMatch = pepMatches(0)
@@ -176,7 +176,7 @@ class MascotDataParser( val pepSummary: ms_peptidesummary,
     }
 
     // Second pass to build protein matches and sequence matches
-    logger.debug(" Go through bestPepMatchByPepKey " + bestPepMatchByPepKey.size)
+    logger.debug("Go through " + bestPepMatchByPepKey.size + " best PeptideMatches")
     for (bestPepMatch <- bestPepMatchByPepKey.values) {
 
       val query = bestPepMatch.msQuery
@@ -288,7 +288,7 @@ class MascotDataParser( val pepSummary: ms_peptidesummary,
       protAcc.delete()
     }
 
-    logger.debug(" Found nbr SeqMatch " + totalNbrSeqMatches + " for " + totalNbrPepMatches + " peptides matches")
+    logger.debug("Found " + totalNbrSeqMatches + " SeqMatches for " + totalNbrPepMatches + " PeptidesMatches")
     return true
 
   }

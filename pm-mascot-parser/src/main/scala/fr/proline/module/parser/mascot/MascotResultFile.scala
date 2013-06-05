@@ -62,7 +62,7 @@ class MascotResultFile(
   rsImportProperties.setSubsetsThreshold(parseProperties.get(MascotParseParams.SUBSET_THRESHOLD).map(toFloat(_)))
   
   if (fileLocation == null || !fileLocation.exists()) throw new FileNotFoundException("Invalid specified file")
-  logger.info("open Mascot dat file " + fileLocation.getAbsoluteFile())
+  logger.info("Opening Mascot result file " + fileLocation.getAbsoluteFile())
 
   /* Load Matrix Science Mascot Parser native libraries */
   if (NativeLibrariesLoader.loadNativeLibraries == false) {
@@ -91,14 +91,14 @@ class MascotResultFile(
      
      // Retrieve PTMs, fixed and variable, specified for Mascot Search
      val mascotVarModsAsStr = this.mascotSearchParams.getIT_MODS()
-     logger.debug("Get specified variable Ptms using mascot string : " + mascotVarModsAsStr)
+     logger.debug("Search variable Ptms using Mascot string : " + mascotVarModsAsStr)
      val varPtmDefsByModName = helper.createVarPtmDefs(mascotVarModsAsStr)
-     logger.debug("Found " + varPtmDefsByModName.size + " variables PTMs")
+     logger.debug("PTMProvider found " + varPtmDefsByModName.size + " variables PTMs")
 
      val mascotFixedModsAsStr = this.mascotSearchParams.getMODS()
-     logger.debug("Get specified fixed Ptms using mascot string : " + mascotFixedModsAsStr)
+     logger.debug("Search fixed Ptms using Mascot string : " + mascotFixedModsAsStr)
      val fixedPtmDefsByModName = helper.createFixedPtmDefs(mascotFixedModsAsStr)
-     logger.debug("Found " + fixedPtmDefsByModName.size + " fixed PTMs")
+     logger.debug("PTMProvider found " + fixedPtmDefsByModName.size + " fixed PTMs")
 
      helper
   }
@@ -195,7 +195,7 @@ class MascotResultFile(
   lazy val msiSearch: MSISearch = {
 
     // Get MSISearch information : Retrieve peak list, search parameters...
-    logger.info("Parse Search Settings information ...")
+    logger.info("Parse Marcot Search Settings information ...")
 
     val ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
     val searchParams = this.mascotSearchParams
@@ -204,7 +204,7 @@ class MascotResultFile(
 
     // Verify used SeqDatabases specified for Mascot Search exist, else Stop and throw an exception
     var nbrDBs = searchParams.getNumberOfDatabases()
-    logger.debug("Get " + nbrDBs + " differents sequences database(s)")
+    logger.debug("Search for " + nbrDBs + " Sequences database(s) used in Mascot result file")
 
     var seqDbs = new Array[SeqDatabase](nbrDBs)
     for (dbIndex <- 1 until (nbrDBs + 1)) {
@@ -214,11 +214,11 @@ class MascotResultFile(
       val seqDbProvider = parserContext.getProvider(classOf[ISeqDatabaseProvider])
       var usedSeqSDb = seqDbProvider.getSeqDatabase(dbName, filePath)
 
-      logger.debug("Seq DB " + dbIndex + ": " + dbName + ", " + filePath + " exist ? " + usedSeqSDb)
+      logger.debug("Sequence database " + dbIndex + ": " + dbName + ", " + filePath + " found ? = " + usedSeqSDb)
       if (usedSeqSDb != None)
         seqDbs.update(dbIndex - 1, usedSeqSDb.get)
       else {
-        val msg = "Sequence DB used for identification is not referenced in system ... First load data in repository "
+        val msg = "Sequence database used for identification does not exist in Proline datastore. Please load this database in proline datastore"
         logger.warn(msg)
         seqDbs.update(
           dbIndex - 1,
@@ -365,8 +365,8 @@ class MascotResultFile(
     // Check if the result file is closed
     if( _isClosed ) throw new java.lang.IllegalAccessException("MascotResultFile is closed")
     
-    val pepSummary = this._getPepSummary(wantDecoy)
-
+    val start = System.currentTimeMillis;
+    
     //---- DEBUG Purpose : to be removed
     // Get Matches information : Read Peptide, Proteins and associated matches
 
@@ -384,9 +384,11 @@ class MascotResultFile(
 
     //---- END DEBUG Purpose : to be removed
 
-    if (wantDecoy) logger.info("Load decoy identification results...")
-    else logger.info("Load target identification results...")
+    if (wantDecoy) logger.info("Start loading DECOY identification results...")
+    else logger.info("Start loading TARGET identification results...")
 
+    val pepSummary = this._getPepSummary(wantDecoy)
+    
     var dataParser: MascotDataParser = new MascotDataParser(
       pepSummary,
       this.mascotResFile,
@@ -410,12 +412,12 @@ class MascotResultFile(
     var allPepMatches = pepMatchesByPep.values.flatMap { p => p } toArray
 
     val protMatches = dataParser.getProteinMatches
-    logger.debug("Parser has gone through " + pepMatchesByPep.size + " peptides creating " + allPepMatches.length + " peptide matches ")
-    logger.info("Create ResultSet with " + allPepMatches.length + " peptide matches identifying " + protMatches.size + " proteins")
+    logger.debug("Parser has gone through " + pepMatchesByPep.size + " Peptides creating " + allPepMatches.length + " PeptideMatches")
+    logger.info("Create ResultSet with " + allPepMatches.length + " PeptideMatches identifying " + protMatches.size + " Proteins")
 
     val rsProps = new ResultSetProperties()
     rsProps.setMascotImportProperties(Some(rsImportProperties))
-    
+    logger.info("Loading identification results done in "+(System.currentTimeMillis - start)+" ms");
     new ResultSet(
       id = rsId,
       name = this.msiSearch.title,
@@ -437,7 +439,7 @@ class MascotResultFile(
   def eachSpectrum(onEachSpectrum: Spectrum => Unit): Unit = {
 
     val querybyInitialId = this.msQueryByInitialId
-    logger.info("Iterate over MSQueries")
+    logger.info("Start iterate over MSQueries")
 
     var count = 0
 
@@ -472,7 +474,7 @@ class MascotResultFile(
         }
 
       } else {
-        this.logger.debug("spectrum of query#" + initialId + " is empty")
+        this.logger.debug("Spectrum of query#" + initialId + " is empty")
       }
 
       // TODO: parse spectrum title to extract timings
