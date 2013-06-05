@@ -9,6 +9,8 @@
     </encoder>
   </appender>
 
+  <logger name="fr.proline.context.DatabaseConnectionContext" level="INFO" />
+
   <logger name="fr.proline" level="DEBUG" />
 
   <!-- For matrixscience.NativeLibrariesLoader -->
