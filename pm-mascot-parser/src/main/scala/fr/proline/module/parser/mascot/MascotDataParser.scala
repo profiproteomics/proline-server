@@ -50,7 +50,7 @@ class MascotDataParser( val pepSummary: ms_peptidesummary,
    *
    *
    */
-  def parseMatches(rsId: Int): Boolean = {
+  def parseMatches(rsId: Long): Boolean = {
 
     //Get Necessary providers : for peptide, protein and ptms
     var pepProvider = parserContext.getProvider(classOf[IPeptideProvider])
