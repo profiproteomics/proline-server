@@ -74,7 +74,7 @@ class RFImporterPgTest extends AbstractRFImporterTest_ {
 
   }
 
-  @Test
+  @Ignore
   def runRFIwithJPA() = {
     val (executionContext, rsProvider) = buildJPAContext
 
@@ -82,11 +82,11 @@ class RFImporterPgTest extends AbstractRFImporterTest_ {
 
     try {
       val msiEm = executionContext.getMSIDbConnectionContext.getEntityManager
-      
-     logger.info("EntityManager flush mode : " + msiEm.getFlushMode)
-     
-     msiEm.setFlushMode(FlushModeType.COMMIT)
-      
+
+      logger.info("EntityManager flush mode : " + msiEm.getFlushMode)
+
+      msiEm.setFlushMode(FlushModeType.COMMIT)
+
       logger.debug(" --- Get File " + _datFileName)
       var datFile: File = new File(getClass.getResource(_datFileName).toURI)
 
