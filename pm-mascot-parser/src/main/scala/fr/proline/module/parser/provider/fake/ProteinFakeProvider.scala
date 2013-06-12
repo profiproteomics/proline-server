@@ -15,7 +15,7 @@ object ProteinFakeProvider extends IProteinProvider {
   
   private var protByAcc:HashMap[String, Protein] = new HashMap[String, Protein]()
   
-  def getProteinsAsOptions( protIds: Seq[Int] ): Array[Option[Protein]] = {
+  def getProteinsAsOptions( protIds: Seq[Long] ): Array[Option[Protein]] = {
    val retArray =  new Array[Option[Protein]](1)
 	retArray.update(0, Option.empty[Protein])	
 	return retArray    

@@ -1,15 +1,14 @@
 package fr.proline.core.service.msi
 
 import java.io.File
-
 import org.junit._
 import org.junit.After
-import org.junit.Assert.{assertNotNull, assertTrue}
-
+import org.junit.Assert.{ assertNotNull, assertTrue }
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.repository.DriverType
+import javax.persistence.FlushModeType
 
-@Ignore /* Manual PostgreSQL Test */
+@Test /* Manual PostgreSQL Test */
 class RFImporterPgTest extends AbstractRFImporterTest_ {
 
   val driverType = DriverType.POSTGRESQL
@@ -21,8 +20,8 @@ class RFImporterPgTest extends AbstractRFImporterTest_ {
     super.setUp()
 
     _datFileName = "/dat_samples/STR_F122817_Mascot_v2.3.dat"
-    udsDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml")
-    logger.info("UDS db succesfully initialized")
+    // udsDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml")
+    // logger.info("UDS db succesfully initialized")
   }
 
   @After
@@ -30,7 +29,7 @@ class RFImporterPgTest extends AbstractRFImporterTest_ {
     super.tearDown()
   }
 
-  @Test
+  @Ignore
   def testRFIwithSQL() = {
     val (executionContext, rsProvider) = buildSQLContext
 
@@ -82,6 +81,12 @@ class RFImporterPgTest extends AbstractRFImporterTest_ {
     assertNotNull(executionContext)
 
     try {
+      val msiEm = executionContext.getMSIDbConnectionContext.getEntityManager
+      
+     logger.info("EntityManager flush mode : " + msiEm.getFlushMode)
+     
+     msiEm.setFlushMode(FlushModeType.COMMIT)
+      
       logger.debug(" --- Get File " + _datFileName)
       var datFile: File = new File(getClass.getResource(_datFileName).toURI)
 

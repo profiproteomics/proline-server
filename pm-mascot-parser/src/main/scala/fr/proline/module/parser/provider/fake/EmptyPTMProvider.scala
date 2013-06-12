@@ -12,7 +12,7 @@ object EmptyPTMProvider extends IPTMProvider {
   
   val psDbCtx = null
   
-  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Int]): Array[Option[PtmDefinition]] = {
+  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Long]): Array[Option[PtmDefinition]] = {
   	val retArray =  new Array[Option[PtmDefinition]](ptmDefIds.length)
   	var index = 0
   	ptmDefIds foreach ( id => {
@@ -23,7 +23,7 @@ object EmptyPTMProvider extends IPTMProvider {
   	retArray
   }
   
-  def getPtmDefinitions(ptmDefIds: Seq[Int]): Array[PtmDefinition] = {
+  def getPtmDefinitions(ptmDefIds: Seq[Long]): Array[PtmDefinition] = {
     Array.empty[PtmDefinition]
   }
  
@@ -31,8 +31,8 @@ object EmptyPTMProvider extends IPTMProvider {
 	  Option.empty[PtmDefinition]
   }
   
-  def getPtmId(shortName: String): Option[Int] = {
-     Option.empty[Int]
+  def getPtmId(shortName: String): Option[Long] = {
+     Option.empty[Long]
   }
   
 }

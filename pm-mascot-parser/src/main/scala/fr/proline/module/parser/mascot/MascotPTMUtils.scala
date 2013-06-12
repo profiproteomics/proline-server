@@ -85,7 +85,7 @@ object MascotPTMUtils extends Logging {
           if (nextPtmDef == None) { //Ptm Definition don't exist. Create One 
 
             var ptmIdOpt = ptmProvider.getPtmId(modName) // Get PtmName if exist
-            var ptmId = 0
+            var ptmId: Long = 0L
 
             if (ptmIdOpt == Some)
               ptmId = ptmIdOpt.get

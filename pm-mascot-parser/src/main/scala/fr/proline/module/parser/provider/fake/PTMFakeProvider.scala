@@ -50,22 +50,22 @@ object PTMFakeProvider extends IPTMProvider {
   /**
    * Return an empty array
    */
-  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Int]): Array[Option[PtmDefinition]] = {
+  def getPtmDefinitionsAsOptions(ptmDefIds: Seq[Long]): Array[Option[PtmDefinition]] = {
   	val retArray =  new Array[Option[PtmDefinition]](1)
   	retArray.update(0, Option.empty[PtmDefinition])	
   	
   	retArray
   }
   
-  def getPtmDefinitions(ptmDefIds: Seq[Int]): Array[PtmDefinition] = {
+  def getPtmDefinitions(ptmDefIds: Seq[Long]): Array[PtmDefinition] = {
     this.getPtmDefinitionsAsOptions(ptmDefIds).filter( _ != None ).map( _.get )
   } 
       
   /**
-   * Return an Option.empty Int
+   * Return an Option.empty Long
    */
-  def getPtmId(shortName: String): Option[Int] = {
-    Option.empty[Int]
+  def getPtmId(shortName: String): Option[Long] = {
+    Option.empty[Long]
   }
 
 }

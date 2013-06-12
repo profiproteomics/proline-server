@@ -11,7 +11,7 @@ object PeptideFakeProvider extends IPeptideProvider {
   
   val psDbCtx = null
 
-  var pepByID:HashMap[Int, Peptide] = new HashMap[Int, Peptide]()
+  var pepByID:HashMap[Long, Peptide] = new HashMap[Long, Peptide]()
   var pepBySeqPtm:HashMap[String, Peptide] = new HashMap[String, Peptide]()
   
   /**
@@ -19,7 +19,7 @@ object PeptideFakeProvider extends IPeptideProvider {
    * or create a new fake one with specified ID + seq = "X", no ptm, calcularedMass = Double.MaxValue
    *  
    */
-  def getPeptidesAsOptions(peptideIds: Seq[Int] ): Array[Option[Peptide]] = {    
+  def getPeptidesAsOptions(peptideIds: Seq[Long] ): Array[Option[Peptide]] = {    
     var peptidesLst = List[Option[Peptide]]()
         
 	peptideIds foreach (id => {
@@ -34,7 +34,7 @@ object PeptideFakeProvider extends IPeptideProvider {
     return peptidesLst.toArray 
   }
   
-  def getPeptides(peptideIds: Seq[Int] ): Array[Peptide] = {
+  def getPeptides(peptideIds: Seq[Long] ): Array[Peptide] = {
     this.getPeptidesAsOptions( peptideIds ).filter { _ != None }.map { _.get }
   }
   

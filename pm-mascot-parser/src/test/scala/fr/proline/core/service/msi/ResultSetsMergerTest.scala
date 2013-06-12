@@ -153,7 +153,7 @@ class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
   }
 
   /* Private methods */
-  private def importDatFile(localExecutionContext: IExecutionContext, datFileClassPath: String, decoyRegExp: String): Int = {
+  private def importDatFile(localExecutionContext: IExecutionContext, datFileClassPath: String, decoyRegExp: String): Long = {
     logger.debug(" --- Load Mascot file [" + datFileClassPath + ']')
 
     val beforePeptideMatch = getPeptideMatchCount
@@ -217,7 +217,7 @@ class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
     result
   }
 
-  private def loadResultSetsWithDecoy(rsProvider: IResultSetProvider, rsIds: Seq[Int]): Seq[ResultSet] = {
+  private def loadResultSetsWithDecoy(rsProvider: IResultSetProvider, rsIds: Seq[Long]): Seq[ResultSet] = {
     val loadedRS = ListBuffer.empty[ResultSet]
 
     for (rsId <- rsIds) {
