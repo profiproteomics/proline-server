@@ -20,8 +20,10 @@ class RFImporterPgTest extends AbstractRFImporterTest_ {
     super.setUp()
 
     _datFileName = "/dat_samples/STR_F122817_Mascot_v2.3.dat"
-    // udsDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml")
-    // logger.info("UDS db succesfully initialized")
+    udsDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml")
+    logger.info("UDS db succesfully initialized")
+
+    updatePsPeptideSequence()
   }
 
   @After
@@ -121,6 +123,40 @@ class RFImporterPgTest extends AbstractRFImporterTest_ {
 
     } finally {
       executionContext.closeAll()
+    }
+
+  }
+
+  private def updatePsPeptideSequence() {
+    val psDbConnector = psDBTestCase.getConnector
+
+    val con = psDbConnector.getDataSource.getConnection
+
+    try {
+      val stm = con.createStatement()
+
+      val rs = stm.executeQuery("SELECT setval(\'peptide_id_seq\', 1 + (SELECT max(id) FROM peptide) )")
+
+      if (rs.next()) {
+        logger.debug("Peptide Sequence new value : " + rs.getObject(1))
+      }
+
+      rs.close()
+
+      stm.close()
+    } catch {
+      case ex: Exception => logger.error("Error error updating PS Peptide Sequence", ex)
+
+    } finally {
+
+      if (con != null) {
+        try {
+          con.close()
+        } catch {
+          case exClose: Exception => logger.error("Error closing PS Db SQL Connection", exClose)
+        }
+      }
+
     }
 
   }
