@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>ProFI-Pom</artifactId>
+    <groupId>fr.proline</groupId>
+    <version>0.0.2-SNAPSHOT</version>
+  </parent>
+
+  <groupId>fr.proline</groupId>
+  <artifactId>PM-FragmentMatchGenerator</artifactId>
+  <version>0.0.2-SNAPSHOT</version>
+
+  <name>${project.artifactId}</name>
+  <description>Proline Module made to generate the fragment matches from a spectrum</description>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <core.version>0.1.1-SNAPSHOT</core.version>
+  </properties>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+    </dependency>
+
+    <!-- Logging -->
+    <dependency>
+      <groupId>com.weiglewilczek.slf4s</groupId>
+      <artifactId>slf4s_2.9.1</artifactId>
+    </dependency>
+
+    <!-- Compomics tools -->
+    <dependency>
+      <groupId>com.compomics</groupId>
+      <artifactId>utilities</artifactId>
+      <version>3.10.39</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>junit</artifactId>
+          <groupId>junit</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>servlet-api</artifactId>
+          <groupId>javax.servlet</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>log4j</artifactId>
+          <groupId>log4j</groupId>
+        </exclusion>
+        <!-- <exclusion> <artifactId>xpp3</artifactId> <groupId>xpp3</groupId>
+          </exclusion> -->
+        <exclusion>
+          <artifactId>commons-math</artifactId>
+          <groupId>commons-math</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>looks</artifactId>
+          <groupId>com.jgoodies</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>swing-layout</artifactId>
+          <groupId>org.swinglabs</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>swingx</artifactId>
+          <groupId>org.swinglabs</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>batik-all</artifactId>
+          <groupId>batik</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>pdf-transcoder</artifactId>
+          <groupId>batik</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>xercesImpl</artifactId>
+          <groupId>xerces</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jmzml</artifactId>
+          <groupId>uk.ac.ebi.jmzml</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jfreechart</artifactId>
+          <groupId>jfree</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jsparklines</artifactId>
+          <groupId>no.uib</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>ols-dialog</artifactId>
+          <groupId>no.uib</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-compress</artifactId>
+          <groupId>org.apache.commons</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>derby</artifactId>
+          <groupId>org.apache.derby</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>braf</artifactId>
+          <groupId>uk.ac.ebi.pride.tools</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>ssj</artifactId>
+          <groupId>umontreal.iro.lecuyer.gof</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- Override jmzidentml / xxindex dependency without com.springsource prefix -->
+    <!-- Use SLF4J instead of Apache common-loggings -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+    </dependency>
+
+    <!-- If log4j is needed, add log4j-over-slf4j dependency -->
+
+    <dependency>
+      <groupId>antlr</groupId>
+      <artifactId>antlr</artifactId>
+      <version>2.7.7</version>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>1.4</version>
+    </dependency>
+
+    <!-- Proline -->
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-OM</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-DAL</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-OMP</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-Databases</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-DAL</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Tests -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-tools.testing</groupId>
+      <artifactId>specs_2.9.1</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_2.9.1</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+     <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+
+      <plugin>
+        <groupId>org.scala-tools</groupId>
+        <artifactId>maven-scala-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>compile</id>
+            <goals><goal>compile</goal></goals>
+            <phase>compile</phase>
+          </execution>
+          <execution>
+            <id>test-compile</id>
+            <goals><goal>testCompile</goal></goals>
+            <phase>test-compile</phase>
+          </execution>
+          <execution>
+           <id>scala-compile-first</id>
+            <phase>process-resources</phase>
+            <goals><goal>add-source</goal><goal>compile</goal></goals>
+          </execution>
+          <execution>
+            <id>scala-test-compile</id>
+            <phase>process-test-resources</phase>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <scalaVersion>2.9.1</scalaVersion>
+          <launchers>
+            <launcher>
+              <id>myLauncher</id>
+              <mainClass>samples.AppJava</mainClass>
+          </launcher>
+        </launchers>
+            <args>
+                <arg>-make:transitivenocp</arg>
+                <arg>-dependencyfile</arg>
+                <arg>${project.build.directory}/.scala_dependencies</arg>
+              </args>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+
+</project>
