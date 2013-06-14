@@ -36,8 +36,6 @@ class FragmentMatchManager extends Logging {
   }
   def add(ionType: String, position: Int, moz: Double) {
     try {
-      // omssa parser stops here, but do not raise an exception !!
-      // the test in this module cannot reproduce the problem with the same values...
       fragmentMatches += new FragmentMatch(
         label = label(ionType, position), // b(3)++ for a doubly charged "b" ion for the third amino acid of the peptide
         `type` = Some(fragmentType(ionType)), // none (regular), internal or immonium
@@ -95,7 +93,6 @@ class FragmentMatchManager extends Logging {
   /**
    * intensity corresponding to the given Moz, searched in the given spectrum
    */
-  //  private def intensity(moz: Double): Float = {
   private def intensity(spectrum: Spectrum, moz: Double): Float = {
     try {
       var intensity: Float = -1

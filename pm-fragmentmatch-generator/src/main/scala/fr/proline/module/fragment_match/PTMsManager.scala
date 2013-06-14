@@ -31,8 +31,6 @@ object PTMsManager extends Logging {
   def init(ptmDefinitions: Array[PtmDefinition]) {
     // get the instance of the factory
     val ptmFactory = PTMFactory.getInstance()
-    // clean the previously saved ptms
-    //    ptmFactory.clearFactory() // this line removes everything that WILL BE added next !! (lost an hour on this, still don't understand...)
     // load each Proline PTM into the factory
     for (ptm <- ptmDefinitions) {
       try {

@@ -31,6 +31,5 @@ class NeutralLosses extends Logging {
       case e: Exception => logger.warn("Failed to create a new Compomic NeutralLoss  object (" + neutralLoss + ", " + bStart + ", " + yStart + ")")
     }
   }
-  //	def getNeutralLossMap = map
   def get = map
 }

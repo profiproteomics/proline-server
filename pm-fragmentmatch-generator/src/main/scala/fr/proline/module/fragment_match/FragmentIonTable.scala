@@ -35,14 +35,12 @@ object FragmentTable {
 //  def apply(k1: K1, k2: K2) = wrapped((k1, k2))
 //}
 
-// TODO add a loaded PtmFactory object
 class FragmentIonTable(peptideSequence: String,
                        proteinAccessionNumbers: Array[String],
                        ptmDefinitions: Array[PtmDefinition],
                        modificationMatches: Array[FragmentModificationMatch],
                        currentFragmentIonTypes: FragmentIons,
                        neutralLosses: NeutralLossesMap) extends Logging {
-  //                       charge: Int) {
 
   // Set the current peptide
   private val proteins: ArrayList[String] = new ArrayList(asJavaList(proteinAccessionNumbers))
@@ -51,6 +49,8 @@ class FragmentIonTable(peptideSequence: String,
   PTMsManager.init(ptmDefinitions)
   private val currentPeptide: Peptide = new Peptide(peptideSequence, proteins, ptms)
 
+  // the following object might be needed in FragmentMatchManager.scala to retreive the mass for a neutral loss in a PTM
+  // currently only the mass of a NH3 or a H2O can be used if the ion serie indicates it (b* for instance)
   //  private val neutralLossTable = new TwoDimensionsMap[String, Int, Double] // ion type, position, mass
   //  def getNeutralLossTable = neutralLossTable
 
