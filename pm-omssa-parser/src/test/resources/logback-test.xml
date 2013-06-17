@@ -5,16 +5,18 @@
     <!-- encoders are assigned the type
          ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
     <encoder>
-       <pattern>%-5level: [%thread] +%-4relative ms  %date{dd MMM yyyy - HH:mm:ss.SSS} %logger{35} - %msg%n</pattern>
+      <pattern>%-5level: [%thread] +%-4relative ms  %date{dd MMM yyyy - HH:mm:ss.SSS} %logger{35} - %msg%n</pattern>
     </encoder>
   </appender>
+
+  <logger name="fr.proline.context.DatabaseConnectionContext" level="INFO" />
 
   <logger name="fr.proline" level="DEBUG" />
 
   <logger name="org.dbunit.dataset" level="ERROR" />
- 
+
   <root level="WARN">
-    <appender-ref ref="STDOUT" />   
+    <appender-ref ref="STDOUT" />
   </root>
-  
+
 </configuration>

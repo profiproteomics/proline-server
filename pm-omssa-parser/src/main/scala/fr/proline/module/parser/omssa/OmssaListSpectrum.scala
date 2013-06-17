@@ -9,7 +9,7 @@ import org.codehaus.staxmate.SMInputFactory
 import fr.proline.core.om.model.msi.{ Spectrum, InstrumentConfig }
 //import fr.proline.repository.DatabaseContext
 
-class OmssaListSpectrum(omxFile: File, peaklistId: Int, instrumentConfig: InstrumentConfig, onEachSpectrum: Spectrum => Unit) extends Logging {
+class OmssaListSpectrum(omxFile: File, peaklistId: Long, instrumentConfig: InstrumentConfig, onEachSpectrum: Spectrum => Unit) extends Logging {
 
   _parseOmxFile()
 

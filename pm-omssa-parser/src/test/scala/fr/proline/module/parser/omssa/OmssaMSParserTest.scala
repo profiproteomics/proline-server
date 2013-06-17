@@ -16,6 +16,7 @@ import net.liftweb.json.{ pretty, compact }
 import net.liftweb.json.JsonDSL._
 import net.liftweb.json.JsonAST._
 import java.io.FileNotFoundException
+import fr.proline.module.fragment_match.FragmentTable
 
 @Test
 class OmssaMSParserTest extends Logging {
@@ -52,6 +53,7 @@ class OmssaMSParserTest extends Logging {
 
   @Before
   def init() {
+    try {
     logger.info("Start Logging ")
     logger.debug("Start Logging Debug ")
     // Init PS db connexion
@@ -64,13 +66,14 @@ class OmssaMSParserTest extends Logging {
     parserContext = new ProviderDecoratedExecutionContext(executionContext)
     parserContext.putProvider(classOf[IProteinProvider], ProteinFakeProvider)
     parserContext.putProvider(classOf[ISeqDatabaseProvider], SeqDbFakeProvider)
-    //    parserContext.putProvider(classOf[IPeptideProvider], PeptideFakeProvider)
-    //    parserContext.putProvider(classOf[IPTMProvider], PTMFakeProvider)
+    } catch {
+      case e: Exception => logger.error("test init failed", e)
+    }
   }
 
   @After
   def closeResources() {
-    executionContext.closeAll()
+//    executionContext.closeAll()
     psDBTestCase.tearDown()
   }
 
@@ -119,9 +122,9 @@ class OmssaMSParserTest extends Logging {
   }
 
   /*
-   * main test with a small correct file
-   */
-  @Test
+     * main test with a small correct file
+     */
+    @Test
   def testMgfInputFile {
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")
@@ -131,7 +134,7 @@ class OmssaMSParserTest extends Logging {
     assertEquals(2, rs.proteinMatches.length)
     val ionSeries: ArrayBuffer[String] = new ArrayBuffer[String]()
     def eachSpectrumMatches(spectrumMatch: SpectrumMatch) = {
-      for (fm <- spectrumMatch.fragmentMatches) {
+      for (fm <- spectrumMatch.fragMatches) {
         if (fm.label == "y(7)+") assert(fm.ionSeries == "y" && fm.aaPosition == 7 && fm.charge == 1)
         else if (fm.label == "b(10)++") assert(fm.ionSeries == "b" && fm.aaPosition == 10 && fm.charge == 2)
         else if (fm.label == "y(22)+++") assert(fm.ionSeries == "y" && fm.aaPosition == 22 && fm.charge == 3)
@@ -140,6 +143,36 @@ class OmssaMSParserTest extends Logging {
     omssaOmxFile.eachSpectrumMatch(false, eachSpectrumMatches)
     for (ion <- ionSeries) logger.debug(ion)
     logger.debug("TEST [" + method + "] OK: parsing is successful")
+  }
+  @Test
+  def testSpectrumMatches {
+    val method = getMethod()
+    logger.debug("TEST [" + method + "] STARTS")
+    try {
+      // this file is a simple search that should be correct (it can be used to verify most of the algorithm)
+      val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_mgfInputFile.omx")
+      val rs = omssaOmxFile.getResultSet(wantDecoy = false)
+      assertEquals(2, rs.proteinMatches.length)
+      val ionSeries: ArrayBuffer[String] = new ArrayBuffer[String]()
+      def eachSpectrumMatches(spectrumMatch: SpectrumMatch) = {
+        logger.debug("SpectrumMatch: msQueryInitialId:" + spectrumMatch.msQueryInitialId + " peptideMatchRank:" + spectrumMatch.peptideMatchRank)
+        logger.debug("Spectrum match fragment ion table :")
+//        logger.debug(fr.proline.module.fragment_match.FragmentTable.fragmentIonTableAsString(spectrumMatch.fragTable))
+        logger.debug(FragmentTable.fragmentIonTableAsString(spectrumMatch.fragTable))
+//        spectrumMatch.fragTable.foreach(ft => logger.debug("Serie:"+ft.fragSeries+" isReverse:"+ft.isReverse+" "+ft.masses.))
+        logger.debug("Spectrum match fragment matches :")
+//        for (sm <- spectrumMatch.fragMatches) logger.debug("FragmentMatch " + sm.label + " : type:" + sm.`type`.toString() + " moz:" + sm.moz + " theoMoz:" + sm.calculatedMoz + " intensity:" + sm.intensity + " neutralLossMass:" + sm.neutralLossMass)
+        spectrumMatch.fragMatches.foreach(fm => logger.debug("FragmentMatch " + fm.label + " : type:" + fm.`type`.toString() + " moz:" + fm.moz + " theoMoz:" + fm.calculatedMoz + " intensity:" + fm.intensity + " neutralLossMass:" + fm.neutralLossMass))
+        logger.debug("")
+      }
+      omssaOmxFile.eachSpectrumMatch(false, eachSpectrumMatches)
+      for (ion <- ionSeries) logger.debug(ion)
+      logger.debug("TEST [" + method + "] OK: parsing is successful")
+    } catch {
+      case e: Exception =>
+        logger.error("TEST [" + method + "] in error", e)
+      //        throw e
+    }
   }
 
   @Test
@@ -215,20 +248,20 @@ class OmssaMSParserTest extends Logging {
     logger.debug("TEST [" + method + "] OK : all additional tests are successfull")
   }
 
-  //  @Test
-  //  def testSearchInNCBI {
-  //    val method = getMethod()
-  //    logger.debug("TEST [" + method + "] STARTS")
-  //    val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_ncbiDatabase.omx")
-  //    val rs = omssaOmxFile.getResultSet(wantDecoy = true)
-  //    for (pm <- rs.proteinMatches) {
-  //      pm.accession match {
-  //        case "49614" => assert(pm.description == "Reverse sequence, was rCG48939 [Rattus norvegicus] (originalGI:149067022)")
-  //        case "60727" => assert(pm.description == "Reverse sequence, was neuron navigator 3 [Rattus norvegicus] (originalGI:300796331)")
-  //      }
-  //    }
-  //    logger.debug("TEST [" + method + "] OK: parsing is successful")
-  //  }
+    @Test
+  def testSearchInNCBI {
+    val method = getMethod()
+    logger.debug("TEST [" + method + "] STARTS")
+    val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_ncbiDatabase.omx")
+    val rs = omssaOmxFile.getResultSet(wantDecoy = true)
+    for (pm <- rs.proteinMatches) {
+      pm.accession match {
+        case "49614" => assert(pm.description == "Reverse sequence, was rCG48939 [Rattus norvegicus] (originalGI:149067022)")
+        case "60727" => assert(pm.description == "Reverse sequence, was neuron navigator 3 [Rattus norvegicus] (originalGI:300796331)")
+      }
+    }
+    logger.debug("TEST [" + method + "] OK: parsing is successful")
+  }
   @Test
   def testFileWithoutSpectraNorSettings {
     val method = getMethod()
@@ -249,8 +282,8 @@ class OmssaMSParserTest extends Logging {
     }
   }
   /* 
-   * tests related to the peaklists
-   */
+     * tests related to the peaklists
+     */
   @Test
   def testMsMerge {
     val method = getMethod()
@@ -311,8 +344,8 @@ class OmssaMSParserTest extends Logging {
   }
 
   /* 
-       * tests related to specific options in omssa
-       */
+         * tests related to specific options in omssa
+         */
   @Test
   def testMozTolerance {
     val method = getMethod()
@@ -344,8 +377,8 @@ class OmssaMSParserTest extends Logging {
   }
 
   /*
-         * tests related to the results
-         */
+           * tests related to the results
+           */
   @Test
   def testNoMatch {
     val method = getMethod()
@@ -520,32 +553,32 @@ class OmssaMSParserTest extends Logging {
     logger.debug("TEST [" + method + "] OK: parsing is successful")
   }
 
-  //  @Test
-  //  def testUnimodMatch {
-  //    val method = getMethod()
-  //    logger.debug("TEST [" + method + "] STARTS")
-  //    // at least one ptm match in this file
-  //    val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_unimodPtmMatches.omx")
-  //    // the first match in the decoy resultset has at least one ptm match, read in the unimod file
-  //    val rs = omssaOmxFile.getResultSet(true)
-  //    for (peptideMatch <- rs.peptideMatches; ptm <- peptideMatch.peptide.ptms) {
-  //      if (ptm.definition.names.fullName == "deamidation of N and Q") assert(ptm.definition.names.shortName == "Deamidated")
-  //    }
-  //    def eachSpectrumMatches(spectrumMatch: SpectrumMatch) = {
-  //      try {
-  //        for (fm <- spectrumMatch.fragmentMatches) {
-  //          if (fm.label == "y(16)+++") assert(fm.calculatedMoz == 1587.8581046599998)
-  //        }
-  //      } catch {
-  //        case e: Exception =>
-  //          logger.debug("eachSpectrumMatch error : " + e.getMessage())
-  //          e.printStackTrace()
-  //          throw e
-  //      }
-  //    }
-  //    omssaOmxFile.eachSpectrumMatch(true, eachSpectrumMatches)
-  //    logger.debug("TEST [" + method + "] OK: parsing is successful")
-  //  }
+  @Test
+  def testUnimodMatch {
+    val method = getMethod()
+    logger.debug("TEST [" + method + "] STARTS")
+    // at least one ptm match in this file
+    val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_unimodPtmMatches.omx")
+    // the first match in the decoy resultset has at least one ptm match, read in the unimod file
+    val rs = omssaOmxFile.getResultSet(true)
+    for (peptideMatch <- rs.peptideMatches; ptm <- peptideMatch.peptide.ptms) {
+      if (ptm.definition.names.fullName == "deamidation of N and Q") assert(ptm.definition.names.shortName == "Deamidated")
+    }
+    def eachSpectrumMatches(spectrumMatch: SpectrumMatch) = {
+      try {
+        for (fm <- spectrumMatch.fragMatches) {
+          if (fm.label == "y(16)+++") assert(fm.calculatedMoz == 1587.8581046599998)
+        }
+      } catch {
+        case e: Exception =>
+          logger.debug("eachSpectrumMatch error : " + e.getMessage())
+          e.printStackTrace()
+          throw e
+      }
+    }
+    omssaOmxFile.eachSpectrumMatch(true, eachSpectrumMatches)
+    logger.debug("TEST [" + method + "] OK: parsing is successful")
+  }
   @Test
   def testUsermodMatch {
     val method = getMethod()

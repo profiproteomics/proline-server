@@ -8,13 +8,13 @@ object SeqDbFakeProvider extends ISeqDatabaseProvider {
 
   val pdiDbCtx = null
   //  val pdiDbCtx: DatabaseContext = null
-  def getSeqDatabasesAsOptions(seqDBIds: Seq[Int]): Array[Option[SeqDatabase]] = {
+  def getSeqDatabasesAsOptions(seqDBIds: Seq[Long]): Array[Option[SeqDatabase]] = {
     var result = new Array[Option[SeqDatabase]](1)
     result(0) = None
     result
   }
 
-  def getSeqDatabases(seqDBIds: Seq[Int]): Array[SeqDatabase] = {
+  def getSeqDatabases(seqDBIds: Seq[Long]): Array[SeqDatabase] = {
     this.getSeqDatabasesAsOptions(seqDBIds).filter(_ != None).map(_.get)
   }
 

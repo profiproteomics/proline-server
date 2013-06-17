@@ -1,7 +1,6 @@
 package fr.proline.module.parser.omssa
 
 import fr.proline.core.om.model.msi.{ Protein, ProteinMatch, Peptide, PeptideMatch, Peaklist, Ms2Query, SequenceMatch, MSISearch, SeqDatabase, SearchSettings, SearchSettingsProperties, PtmDefinition, LocatedPtm, /*InstrumentConfig,*/ PeptideMatchProperties }
-//import fr.proline.core.om.model.msi.PeptideMatchOmssaProperties
 import fr.proline.core.om.provider.msi.{ IProteinProvider, ISeqDatabaseProvider, IPeptideProvider, IPTMProvider }
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.builder.PtmDefinitionBuilder
@@ -16,7 +15,9 @@ import net.liftweb.json.{ pretty, compact }
 import net.liftweb.json.JsonDSL._
 import net.liftweb.json.JsonAST._
 
-case class ProteinWrapper(val seqdbId: Int, val protAccess: String, var wrappedProt: Option[Protein]) {
+//import fr.proline.core.om.model.msi.PeptideMatchOmssaProperties
+
+case class ProteinWrapper(val seqdbId: Long, val protAccess: String, var wrappedProt: Option[Protein]) {
   override def equals(other: Any): Boolean = {
     other match {
       case otherRefProt: ProteinWrapper => return protAccess.equals(otherRefProt.protAccess) && seqdbId.equals(otherRefProt.seqdbId)
@@ -43,10 +44,10 @@ class OmssaReadFile(val omxFile: File,
   private var protAccSeqDbToProteinWrapper: HashMap[String, ProteinWrapper] = null
   private var peptideToPeptideMatches: HashMap[Peptide, ArrayBuffer[PeptideMatch]] = null
   def getPeptideToPeptideMatches: HashMap[Peptide, ArrayBuffer[PeptideMatch]] = peptideToPeptideMatches
-  private var peptideMatchToProteinMatches: HashMap[Int, ArrayBuffer[ProteinMatch]] = null
-  def getPeptideMatchToProteinMatches: HashMap[Int, ArrayBuffer[ProteinMatch]] = peptideMatchToProteinMatches
-  private var peptideMatchProteinMatchToSequenceMatch: TwoDimensionsMap[Int, Int, SequenceMatch] = null
-  def getPeptideMatchProteinMatchToSequenceMatch: TwoDimensionsMap[Int, Int, SequenceMatch] = peptideMatchProteinMatchToSequenceMatch
+  private var peptideMatchToProteinMatches: HashMap[Long, ArrayBuffer[ProteinMatch]] = null
+  def getPeptideMatchToProteinMatches: HashMap[Long, ArrayBuffer[ProteinMatch]] = peptideMatchToProteinMatches
+  private var peptideMatchProteinMatchToSequenceMatch: TwoDimensionsMap[Long, Long, SequenceMatch] = null
+  def getPeptideMatchProteinMatchToSequenceMatch: TwoDimensionsMap[Long, Long, SequenceMatch] = peptideMatchProteinMatchToSequenceMatch
   private var proteinAccessionNumbersToProteinMatches: HashMap[String, ProteinMatch] = null
   def mzScale: Int = currentFileMzScale
   private var nbSequencesInFastaFile: Int = 0
@@ -56,9 +57,9 @@ class OmssaReadFile(val omxFile: File,
   private var msiSearch: MSISearch = null
   def getMsiSearch: MSISearch = msiSearch
   private val hasTargetResultSet: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_TARGET, true).toString.toBoolean
-  def searchForTargetEntries: Boolean = hasTargetResultSet
+//  def searchForTargetEntries: Boolean = hasTargetResultSet
   private val hasDecoyResultSet: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_DECOY, true).toString.toBoolean
-  def searchForDecoyEntries: Boolean = hasDecoyResultSet
+//  def searchForDecoyEntries: Boolean = hasDecoyResultSet
   //  private var omssaSettingsInJsonFormat: ArrayBuffer[JObject] = null
   def getSettingsInJsonFormat: ArrayBuffer[JObject] = omssaSettingsInJsonFormat
   // the Mz in the omssa files are Integers, they must be divided by this number to get the real value
@@ -67,6 +68,10 @@ class OmssaReadFile(val omxFile: File,
   private var currentFileMzScale = mozScaleExtractor.mozScaleValue()
 //  private val MINUS_LOG_EVALUE_MIN_SCORE = -1
 //  private val MINUS_LOG_EVALUE_MAX_SCORE = 300
+  private var _containsTargetProteinMatches: Boolean = false
+  def containsTargetProteinMatches = _containsTargetProteinMatches
+  private var _containsDecoyProteinMatches: Boolean = false
+  def containsDecoyProteinMatches = _containsDecoyProteinMatches
 
   _parseOmxFile()
 
@@ -82,8 +87,8 @@ class OmssaReadFile(val omxFile: File,
     msQueries = new HashMap[Int, Ms2Query]()
     protAccSeqDbToProteinWrapper = new HashMap[String, ProteinWrapper]()
     peptideToPeptideMatches = new HashMap[Peptide, ArrayBuffer[PeptideMatch]]()
-    peptideMatchToProteinMatches = new HashMap[Int, ArrayBuffer[ProteinMatch]]()
-    peptideMatchProteinMatchToSequenceMatch = new TwoDimensionsMap[Int, Int, SequenceMatch]()
+    peptideMatchToProteinMatches = new HashMap[Long, ArrayBuffer[ProteinMatch]]()
+    peptideMatchProteinMatchToSequenceMatch = new TwoDimensionsMap[Long, Long, SequenceMatch]()
     proteinAccessionNumbersToProteinMatches = new HashMap[String, ProteinMatch]()
 
     logger.info("readOmxFile(" + omxFile.getAbsolutePath() + ")")
@@ -221,7 +226,7 @@ class OmssaReadFile(val omxFile: File,
                           val proteinMatches = new ArrayBuffer[ProteinMatch]()
                           var sequenceMatchResidueBefore: Option[Char] = None
                           var sequenceMatchResidueAfter: Option[Char] = None
-                          val proteinMatchIdToSequenceMatches = new HashMap[Int, SequenceMatch]()
+                          val proteinMatchIdToSequenceMatches = new HashMap[Long, SequenceMatch]()
                           // for each data on the hitset
                           val MSHits_firstChild = MSHits.childElementCursor().advance()
                           while (MSHits_firstChild.getCurrEvent() != null) {
@@ -716,13 +721,20 @@ private def minusLogEValue(evalue: Double): Float = (-1 * scala.math.log10(evalu
     if (hasTargetResultSet && !hasDecoyResultSet) return false // if the file contains only target entries
     else if (!hasTargetResultSet && hasDecoyResultSet) return true // if the file contains only decoy entries
     // otherwise use a regex on the accession number or the description to find to know if the protein is a decoy
-    //    else if (proteinMatch.description.matches("^Reverse sequence, was .*")) return true
     else if (proteinMatchDescriptionContainsDecoyTag(proteinMatch.description)) return true
     //logger.debug(proteinMatch.accession + ": "+ proteinMatch.description+ " is decoy : "+isDecoy+" ("+hasTargetResultSet+"/"+hasDecoyResultSet+")")
     return false
   }
   private def proteinMatchDescriptionContainsDecoyTag(description: String): Boolean = {
-    return description.matches("^Reverse sequence, was .*")
-
+    if(description.matches("^Reverse sequence, was .*")) {
+      _containsDecoyProteinMatches = true
+//      logger.debug(description+" is decoy")
+      true
+    } else {
+      _containsTargetProteinMatches = true
+//      logger.debug(description+" is target")
+      false
+    }
+//    return description.matches("^Reverse sequence, was .*")
   }
 }

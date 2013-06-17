@@ -108,7 +108,8 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   val fileReader = new OmssaReadFile(omxFile, parseProperties, omssaLoader, peaklist, /*Some(this.instrumentConfig),*/ parserContext)
 //  val fastaContainsTarget: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_TARGET, true).toString.toBoolean
 //  val fastaContainsDecoy: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_DECOY, true).toString.toBoolean
-  val hasDecoyResultSet = (!fileReader.searchForTargetEntries && fileReader.searchForDecoyEntries)
+//  val hasDecoyResultSet = (!fileReader.searchForTargetEntries && fileReader.searchForDecoyEntries)
+  val hasDecoyResultSet = fileReader.containsDecoyProteinMatches
 //  val hasTargetResultSet = fileReader.searchForTargetEntries
 //  val hasDecoyResultSet = fileReader.searchForDecoyEntries
   val omssaSettingsInJsonFormat: ArrayBuffer[JObject] = fileReader.getSettingsInJsonFormat
@@ -155,6 +156,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
    */
   def getResultSet(wantDecoy: Boolean): ResultSet = {
 
+    logger.debug("hasDecoyResultSet="+hasDecoyResultSet+" && wantDecoy="+wantDecoy)
     if (!hasDecoyResultSet && wantDecoy) {
       throw new Exception("can't load the peptide summary")
     }
@@ -205,9 +207,9 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
    *
    */
   private def parseMatches(peptideToPeptideMatches: HashMap[Peptide, ArrayBuffer[PeptideMatch]],
-                           peptideMatchProteinMatchToSequenceMatch: TwoDimensionsMap[Int, Int, SequenceMatch],
-                           peptideMatchToProteinMatches: HashMap[Int, ArrayBuffer[ProteinMatch]],
-                           wantDecoy: Boolean, resultSetId: Int) = {
+                           peptideMatchProteinMatchToSequenceMatch: TwoDimensionsMap[Long, Long, SequenceMatch],
+                           peptideMatchToProteinMatches: HashMap[Long, ArrayBuffer[ProteinMatch]],
+                           wantDecoy: Boolean, resultSetId: Long) = {
     // Define/reset some vars
     val bestPepMatchByPepKey = new HashMap[String, PeptideMatch]()
     proteinAccessionNumberToProteinMatch = new HashMap[String, ProteinMatch]()
@@ -400,6 +402,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   private def storeSpectrum(spectrum: Spectrum) = { spectrumList += spectrum }
   def eachSpectrumMatch(wantDecoy: Boolean, onEachSpectrumMatch: SpectrumMatch => Unit): Unit = {
     logger.info("eachSpectrumMatch(" + wantDecoy + ")")
+    try {
     // first reset the list of spectra
     // spectra a deleted from this list after being used, because of the important amount of memory that may be needed
     // this list should already be empty at this point, but reset is forced anyway
@@ -408,47 +411,17 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
     eachSpectrum(storeSpectrum)
     // then read the file (again) to get the detailed PeptideMatches
     new OmssaSpectrumMatcher(omxFile, wantDecoy, spectrumList, omssaLoader, getMSISearch.searchSettings, fileReader.mzScale, onEachSpectrumMatch)
+    } catch {
+      case e: Exception => 
+        logger.error("eachSpectrumMatch in error", e)
+        throw e
+    }
     ()
   }
 
-}
+  /**
+   * Clean loaded stuff is any
+   */
+  def close() {}
 
-//class EntityProviders(providerKey: String) extends Logging {
-//
-//  lazy val peptideProvider: IPeptideProvider = {
-//    if (ProvidersFactory.getPeptideProvider(providerKey, true) == None) {
-//      throw new Exception("No Peptide Provider specified")
-//    }
-//
-//    val pepProvider = ProvidersFactory.getPeptideProvider(providerKey, true).get
-//    logger.debug("parse Omssa using PeptideProvider " + pepProvider.getClass().getName())
-//    pepProvider
-//  }
-//
-//  lazy val ptmProvider: IPTMProvider = {
-//    val ptmProviderAsOpt = ProvidersFactory.getPTMProvider(providerKey, true)
-//    if (ptmProviderAsOpt == None)
-//      throw new Exception("No PTM Provider specified")
-//
-//    logger.debug("parse Omssa using PTMProvider " + ptmProviderAsOpt.get.getClass().getName())
-//    ptmProviderAsOpt.get
-//  }
-//
-//  lazy val proteinProvider: IProteinProvider = {
-//    if (ProvidersFactory.getProteinProvider(providerKey, true) == None)
-//      throw new Exception("No Protein Provider specified")
-//
-//    val protProvider = ProvidersFactory.getProteinProvider(providerKey, true).get
-//    logger.debug("parse Omssa using ProteinProvider " + protProvider.getClass().getName())
-//    protProvider
-//  }
-//
-//  lazy val seqDbProvider: ISeqDatabaseProvider = {
-//    if (ProvidersFactory.getSeqDatabaseProvider(providerKey, true) == None)
-//      throw new Exception("No SeqDatabase Provider specified")
-//
-//    val seqDbProvider = ProvidersFactory.getSeqDatabaseProvider(providerKey, true).get
-//    logger.debug("parse Omssa using SeqDatabaseProvider " + seqDbProvider.getClass().getName())
-//    seqDbProvider
-//  }
-//}
+}
