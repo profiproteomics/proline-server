@@ -580,7 +580,7 @@ class OmssaMSParserTest extends Logging {
         for (fm <- spectrumMatch.fragMatches) {
 
           if (fm.label == "y(16)+++") {
-            assertEquals("FragMatches.calculatedMoz", 1587.8581046599998, fm.calculatedMoz, MathUtils.EPSILON_LOW_PRECISION)
+            assertEquals("FragMatches.calculatedMoz", 794.4326905634059, fm.calculatedMoz, MathUtils.EPSILON_LOW_PRECISION)
           }
 
         }
