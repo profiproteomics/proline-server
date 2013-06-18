@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE dataset SYSTEM "../msi-dataset.dtd">
+
 <dataset>
   <SCORING ID="1" SEARCH_ENGINE="mascot" NAME="standard score"/>
   <SCORING ID="2" SEARCH_ENGINE="mascot" NAME="ions score"/>
@@ -7,5 +7,5 @@
   <PEAKLIST_SOFTWARE ID="1"  VERSION="4.3.2" NAME="Distiller"  />
 
   <OBJECT_TREE_SCHEMA IS_BINARY_MODE="1" NAME="peptide_match.spectrum_match" TYPE="MessagePack" VERSION="0.1" SCHEMA="" />
-  
+
 </dataset>

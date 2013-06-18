@@ -17,6 +17,7 @@ import net.liftweb.json.JsonDSL._
 import net.liftweb.json.JsonAST._
 import java.io.FileNotFoundException
 import fr.proline.module.fragment_match.FragmentTable
+import fr.proline.util.MathUtils
 
 @Test
 class OmssaMSParserTest extends Logging {
@@ -33,10 +34,19 @@ class OmssaMSParserTest extends Logging {
   val defaultDatasetsFolder: String = "/default_datasets"
 
   class PSDatabaseTestCase extends DatabaseTestCase {
+
     override def getProlineDatabaseType() = ProlineDatabaseType.PS
+
+    override def getPropertiesFileName() = "db_settings/h2/db_ps.properties"
+
   }
+
   class PDIDatabaseTestCase extends DatabaseTestCase {
+
     override def getProlineDatabaseType() = ProlineDatabaseType.PDI
+
+    override def getPropertiesFileName() = "db_settings/h2/db_pdi.properties"
+
   }
 
   val propertiesBuilder = Map.newBuilder[String, Any]
@@ -54,18 +64,18 @@ class OmssaMSParserTest extends Logging {
   @Before
   def init() {
     try {
-    logger.info("Start Logging ")
-    logger.debug("Start Logging Debug ")
-    // Init PS db connexion
-    psDBTestCase = new PSDatabaseTestCase()
-    psDBTestCase.initDatabase()
-    psDBTestCase.loadDataSet(defaultDatasetsFolder + "/Unimod_Dataset.xml")
+      logger.info("Start Logging ")
+      logger.debug("Start Logging Debug ")
+      // Init PS db connexion
+      psDBTestCase = new PSDatabaseTestCase()
+      psDBTestCase.initDatabase()
+      psDBTestCase.loadDataSet(defaultDatasetsFolder + "/Unimod_Dataset.xml")
 
-    val psDbCtx = new DatabaseConnectionContext(psDBTestCase.getConnector)
-    executionContext = new BasicExecutionContext(null, null, psDbCtx, null, null)
-    parserContext = new ProviderDecoratedExecutionContext(executionContext)
-    parserContext.putProvider(classOf[IProteinProvider], ProteinFakeProvider)
-    parserContext.putProvider(classOf[ISeqDatabaseProvider], SeqDbFakeProvider)
+      val psDbCtx = new DatabaseConnectionContext(psDBTestCase.getConnector)
+      executionContext = new BasicExecutionContext(null, null, psDbCtx, null, null)
+      parserContext = new ProviderDecoratedExecutionContext(executionContext)
+      parserContext.putProvider(classOf[IProteinProvider], ProteinFakeProvider)
+      parserContext.putProvider(classOf[ISeqDatabaseProvider], SeqDbFakeProvider)
     } catch {
       case e: Exception => logger.error("test init failed", e)
     }
@@ -73,7 +83,7 @@ class OmssaMSParserTest extends Logging {
 
   @After
   def closeResources() {
-//    executionContext.closeAll()
+    //    executionContext.closeAll()
     psDBTestCase.tearDown()
   }
 
@@ -124,7 +134,7 @@ class OmssaMSParserTest extends Logging {
   /*
      * main test with a small correct file
      */
-    @Test
+  @Test
   def testMgfInputFile {
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")
@@ -157,11 +167,11 @@ class OmssaMSParserTest extends Logging {
       def eachSpectrumMatches(spectrumMatch: SpectrumMatch) = {
         logger.debug("SpectrumMatch: msQueryInitialId:" + spectrumMatch.msQueryInitialId + " peptideMatchRank:" + spectrumMatch.peptideMatchRank)
         logger.debug("Spectrum match fragment ion table :")
-//        logger.debug(fr.proline.module.fragment_match.FragmentTable.fragmentIonTableAsString(spectrumMatch.fragTable))
+        //        logger.debug(fr.proline.module.fragment_match.FragmentTable.fragmentIonTableAsString(spectrumMatch.fragTable))
         logger.debug(FragmentTable.fragmentIonTableAsString(spectrumMatch.fragTable))
-//        spectrumMatch.fragTable.foreach(ft => logger.debug("Serie:"+ft.fragSeries+" isReverse:"+ft.isReverse+" "+ft.masses.))
+        //        spectrumMatch.fragTable.foreach(ft => logger.debug("Serie:"+ft.fragSeries+" isReverse:"+ft.isReverse+" "+ft.masses.))
         logger.debug("Spectrum match fragment matches :")
-//        for (sm <- spectrumMatch.fragMatches) logger.debug("FragmentMatch " + sm.label + " : type:" + sm.`type`.toString() + " moz:" + sm.moz + " theoMoz:" + sm.calculatedMoz + " intensity:" + sm.intensity + " neutralLossMass:" + sm.neutralLossMass)
+        //        for (sm <- spectrumMatch.fragMatches) logger.debug("FragmentMatch " + sm.label + " : type:" + sm.`type`.toString() + " moz:" + sm.moz + " theoMoz:" + sm.calculatedMoz + " intensity:" + sm.intensity + " neutralLossMass:" + sm.neutralLossMass)
         spectrumMatch.fragMatches.foreach(fm => logger.debug("FragmentMatch " + fm.label + " : type:" + fm.`type`.toString() + " moz:" + fm.moz + " theoMoz:" + fm.calculatedMoz + " intensity:" + fm.intensity + " neutralLossMass:" + fm.neutralLossMass))
         logger.debug("")
       }
@@ -248,7 +258,7 @@ class OmssaMSParserTest extends Logging {
     logger.debug("TEST [" + method + "] OK : all additional tests are successfull")
   }
 
-    @Test
+  @Test
   def testSearchInNCBI {
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")
@@ -566,9 +576,15 @@ class OmssaMSParserTest extends Logging {
     }
     def eachSpectrumMatches(spectrumMatch: SpectrumMatch) = {
       try {
+
         for (fm <- spectrumMatch.fragMatches) {
-          if (fm.label == "y(16)+++") assert(fm.calculatedMoz == 1587.8581046599998)
+
+          if (fm.label == "y(16)+++") {
+            assertEquals("FragMatches.calculatedMoz", 1587.8581046599998, fm.calculatedMoz, MathUtils.EPSILON_LOW_PRECISION)
+          }
+
         }
+
       } catch {
         case e: Exception =>
           logger.debug("eachSpectrumMatch error : " + e.getMessage())
