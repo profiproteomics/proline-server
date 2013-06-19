@@ -48,7 +48,7 @@ class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
 
       val rsIds = Seq(rs1Id, rs1Id)
 
-      val rsMerger = new ResultSetMerger(sqlExecutionContext, loadResultSetsWithDecoy(rzProvider, rsIds))
+      val rsMerger = new ResultSetMerger(sqlExecutionContext, None, Some(loadResultSetsWithDecoy(rzProvider, rsIds)))
 
       val result = rsMerger.runService
       assertTrue("ResultSet merger result", result)
@@ -106,7 +106,7 @@ class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
 
       val rsIds = Seq(rs1Id, rs2Id)
 
-      val rsMerger = new ResultSetMerger(sqlExecutionContext, loadResultSetsWithDecoy(rzProvider, rsIds))
+      val rsMerger = new ResultSetMerger(sqlExecutionContext, None, Some(loadResultSetsWithDecoy(rzProvider, rsIds)))
 
       val result = rsMerger.runService
       assertTrue("ResultSet merger result", result)
