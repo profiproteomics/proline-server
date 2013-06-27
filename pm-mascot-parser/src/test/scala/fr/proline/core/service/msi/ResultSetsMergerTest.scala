@@ -106,7 +106,8 @@ class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
 
       val rsIds = Seq(rs1Id, rs2Id)
 
-      val rsMerger = new ResultSetMerger(sqlExecutionContext, None, Some(loadResultSetsWithDecoy(rzProvider, rsIds)))
+      val rsMerger = new ResultSetMerger(sqlExecutionContext, Some(rsIds), None)
+      // val rsMerger = new ResultSetMerger(sqlExecutionContext, None, Some(loadResultSetsWithDecoy(rzProvider, rsIds)))
 
       val result = rsMerger.runService
       assertTrue("ResultSet merger result", result)
@@ -115,8 +116,8 @@ class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
       val tRSM = rsMerger.mergedResultSet
       assertNotNull("Merged TARGET ResultSet", tRSM)
 
-      val mergedDecoyRS = tRSM.decoyResultSet
-      assertTrue("Merged DECOY ResultSet is present", (mergedDecoyRS != null) && mergedDecoyRS.isDefined)
+      val mergedDecoyRSId = tRSM.getDecoyResultSetId
+      assertTrue("Merged DECOY ResultSet is present", mergedDecoyRSId > 0)
 
       /* Try to reload merged ResultSet with JPA */
       val mergedRSId = tRSM.id
