@@ -59,8 +59,8 @@ object MzIdExporter {
  */
 class MzIdExporter(
   rsm: ResultSummary,
-  unimodIdByPtmId: Map[Int,Int],
-  spectrumNumberById: Map[Int,Int]
+  unimodIdByPtmId: Map[Long, Long],
+  spectrumNumberById: Map[Long, Long]
 ) extends ParamMaker with Logging {
   
   // Retrieve some proline objects
@@ -553,7 +553,7 @@ class MzIdExporter(
   
   protected lazy val dbSeqByProtMatchId = {
     
-    val tmpDbSeqByProtMatchId = new HashMap[Int,DBSequence]()
+    val tmpDbSeqByProtMatchId = new HashMap[Long, DBSequence]()
     for( protMatch <- rs.proteinMatches ) {
       
       val seq = new DBSequence()
@@ -575,7 +575,7 @@ class MzIdExporter(
   
   protected lazy val mzidPepByPepId = {
     
-    val tmpMzidPepByPepId = new HashMap[Int,Peptide]()
+    val tmpMzidPepByPepId = new HashMap[Long, Peptide]()
     
     // TODO: handle substitutions
     for( peptide <- rs.peptides ) {
@@ -613,7 +613,7 @@ class MzIdExporter(
     _pepEvidenceBySeqMatch
   }
   
-  private val _pepEvidencesByPepId = new HashMap[Int,ArrayBuffer[PeptideEvidence]]
+  private val _pepEvidencesByPepId = new HashMap[Long, ArrayBuffer[PeptideEvidence]]
   private val _pepEvidenceBySeqMatch = new HashMap[SequenceMatch,PeptideEvidence]
   
   /*private def _makeSeqMatchUniqueKey( protMatchId: Int, seqMatch: SequenceMatch ) = {
