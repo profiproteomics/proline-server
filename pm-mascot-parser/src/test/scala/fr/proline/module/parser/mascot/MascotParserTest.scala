@@ -122,13 +122,28 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
       //	     logger.debug(" PepPtm \t" + pepMatch.peptide.sequence+"\t"+pepMatch.msQuery.initialId+"\t"+pepMatch.rank+"\t"+pepMatch.peptide.ptmString)
       val pepPtms: Array[fr.proline.core.om.model.msi.LocatedPtm] = pepMatch.peptide.ptms
       pepPtms.foreach { locatedPtm =>
-        assertTrue(PtmShortNames.contains(locatedPtm.definition.names.shortName))
+      	assertTrue(PtmShortNames.contains(locatedPtm.definition.names.shortName))
         if (locatedPtm.definition.names.shortName.equals(PtmShortNames(0)))
           assertTrue(locatedPtm.isNTerm)
-        else if (locatedPtm.definition.names.shortName.equals(PtmShortNames(1)))
-          assertTrue(locatedPtm.definition.residue.equals('M'))
-        else
+        else if (locatedPtm.definition.names.shortName.equals(PtmShortNames(1))) {          
+        	assertTrue(locatedPtm.definition.residue.equals('M'))
+        	var indexB = Seq.newBuilder[Int]
+        	for (k <- 0 until pepMatch.peptide.sequence.length) {
+            val nextChar =  pepMatch.peptide.sequence.charAt(k)
+            if(nextChar.equals('M'))
+              indexB += k+1
+          }
+          assertTrue(indexB.result.contains(locatedPtm.seqPosition))
+        } else {
           assertTrue(locatedPtm.definition.residue.equals('C'))
+          var indexB = Seq.newBuilder[Int]
+          for (k <- 0 until pepMatch.peptide.sequence.length) {
+            val nextChar =  pepMatch.peptide.sequence.charAt(k)
+            if(nextChar.equals('C'))
+              indexB += k+1
+          }
+          assertTrue(indexB.result.contains(locatedPtm.seqPosition))
+        }
       }
     }
 
