@@ -60,7 +60,7 @@ object MzIdExporter {
 class MzIdExporter(
   rsm: ResultSummary,
   unimodIdByPtmId: Map[Long, Long],
-  spectrumNumberById: Map[Long, Long]
+  spectrumNumberById: Map[Long, Int]
 ) extends ParamMaker with Logging {
   
   // Retrieve some proline objects
