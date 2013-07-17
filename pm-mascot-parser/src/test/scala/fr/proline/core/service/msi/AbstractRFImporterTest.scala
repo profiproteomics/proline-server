@@ -48,14 +48,14 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
   }
 
   def buildSQLContext() = {
-    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false).asInstanceOf[SQLConnectionContext]
+    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
     val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false).asInstanceOf[SQLConnectionContext]
-    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false).asInstanceOf[SQLConnectionContext]
+    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
+    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
 
     val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
 
-    val parserContext = new ProviderDecoratedExecutionContext(executionContext)
+    val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
     parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx))
     parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx))
@@ -66,13 +66,13 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
   }
 
   def buildSQLContextForJPA() = {
-    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false).asInstanceOf[SQLConnectionContext]
+    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
     val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false).asInstanceOf[SQLConnectionContext]
-    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(2), false).asInstanceOf[SQLConnectionContext]
+    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
+    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(2), false)
 
     val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
-    val parserContext = new ProviderDecoratedExecutionContext(executionContext)
+    val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
     parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx))
     parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx))

@@ -50,7 +50,7 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
     val executionContext = new BasicExecutionContext(null, null, psDbCtx, null, null)
 
     try {
-      val parserContext = new ProviderDecoratedExecutionContext(executionContext)
+      val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
       parserContext.putProvider(classOf[IProteinProvider], ProteinFakeProvider)
       parserContext.putProvider(classOf[ISeqDatabaseProvider], SeqDbFakeProvider)

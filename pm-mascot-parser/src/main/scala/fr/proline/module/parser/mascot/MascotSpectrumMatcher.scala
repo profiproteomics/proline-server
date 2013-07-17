@@ -98,7 +98,7 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
     var j = 0
 
     // Iterate over matching peaks
-    for (val i <- 0 until usedPeaks.length) {
+    for (i <- 0 until usedPeaks.length) {
       val peak = usedPeaks(i)
       var intThresh = peak.intensity
 
@@ -139,7 +139,7 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
           val obsMoz = ms2Peak.moz
           val deltaMoz = obsMoz - theoFragMoz
 
-          if (Math.abs(deltaMoz) <= mozTolInDa) {
+          if (scala.math.abs(deltaMoz) <= mozTolInDa) {
 
             val fragType = if (fragment.isRegular) None
             else if (fragment.isInternal) Some(FragmentMatchType.INTERNAL.toString)
@@ -164,7 +164,7 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
               bestMatch = fragMatch
             }
 
-          } else if (Math.signum(deltaMoz) > 0) break
+          } else if (scala.math.signum(deltaMoz) > 0) break
         }
       }
 
@@ -328,7 +328,7 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
                   val newFragment = new ms_fragment(
                     frag.getSeriesName,
                     frag.getMass - (delta / frag.getCharge.toDouble),
-                    Math.round(modificationNLVector.get(nlIdx) / frag.getCharge.toDouble),
+                    scala.math.round(modificationNLVector.get(nlIdx) / frag.getCharge.toDouble),
                     frag.getColumn,
                     frag.getCharge
                   )
@@ -557,7 +557,7 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
       val anotherHelper = new ms_aahelper(mascotResFile, null)
       val vecFixed = anotherHelper.getFixedMods()
 
-      for (val m <- 1 until vecFixed.getNumberOfModifications) {
+      for (m <- 1 until vecFixed.getNumberOfModifications) {
 
         val mod = vecFixed.getModificationByNumber(m)
         val ptms = ptmHelper.fixedPtmDefsByModName(mod.getTitle())

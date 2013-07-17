@@ -33,7 +33,7 @@ class TargetDecoySplitterTest extends JUnitSuite with Logging {
   private def buildFakeParserContext: ProviderDecoratedExecutionContext = {
     val executionContext = new BasicExecutionContext(null, null, null, null, null)
 
-    val parserContext = new ProviderDecoratedExecutionContext(executionContext)
+    val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
     parserContext.putProvider(classOf[IPeptideProvider], PeptideFakeProvider)
     parserContext.putProvider(classOf[IPTMProvider], PTMFakeProvider)
