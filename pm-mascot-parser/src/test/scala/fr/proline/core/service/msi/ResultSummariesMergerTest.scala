@@ -14,6 +14,7 @@ import fr.proline.core.algo.msi.filtering.pepmatch.RankPSMFilter
 import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import org.msgpack.annotation.Ignore
+import fr.proline.core.om.model.msi.ResultSummary
 
 class ResultSummariesMergerTest extends ResultSetsMergerTest with Logging {
 
@@ -48,28 +49,47 @@ class ResultSummariesMergerTest extends ResultSetsMergerTest with Logging {
       val rs1Id = importDatFile(sqlExecutionContext, "/dat_samples/STR_F136482_CTD.dat", """sp\|REV_\S+""")
       val rs2Id = importDatFile(sqlExecutionContext, "/dat_samples/STR_F122817_Mascot_v2.3.dat", """sp\|REV_\S+""")
 
-      logger.debug("Validating ResultSets ...")
-      val rsm1Id = validate(sqlExecutionContext, rs1Id)
-      val rsm2Id = validate(sqlExecutionContext, rs2Id)
+      logger.debug("Validating ResultSet by Ids ...")
+      val rsm1 = validate(sqlExecutionContext, rs1Id)
+      val rsm2 = validate(sqlExecutionContext, rs2Id)
+
+      val rsms = Seq(rsm1, rsm2)
+
+      logger.debug("Merging two ResultSummaries by objects ...")
+
+      val rsmMergerObj = new ResultSummaryMerger(sqlExecutionContext, None, Some(rsms))
+
+      val resultObj = rsmMergerObj.runService
+      assertTrue("ResultSummary merger resultObj", resultObj)
+      logger.info("End Run ResultSummaryMerger Service, merge two different RSMs by objects")
+
+      val tMergedRSMObj = rsmMergerObj.mergedResultSummary
+      assertNotNull("Merged TARGET ResultSummary Object", tMergedRSMObj)
+
+      val mergedDecoyRSMObjId = tMergedRSMObj.getDecoyResultSummaryId
+      assertTrue("Merged DECOY ResultSummary by Object is present", mergedDecoyRSMObjId > 0L)
+
+      val rsm1Id = rsm1.id
+      val rsm2Id = rsm2.id
 
       val rsmIds = Seq(rsm1Id, rsm2Id)
 
-      logger.debug("Merging two ResultSummaries ...")
+      logger.debug("Merging two ResultSummaries by Ids...")
 
-      val rsmMerger = new ResultSummaryMerger(sqlExecutionContext, Some(rsmIds), None)
+      val rsmMergerId = new ResultSummaryMerger(sqlExecutionContext, Some(rsmIds), None)
 
-      val result = rsmMerger.runService
-      assertTrue("ResultSummary merger result", result)
-      logger.info("End Run ResultSummaryMerger Service, merge two different RSMs")
+      val resultId = rsmMergerId.runService
+      assertTrue("ResultSummary merger resultId", resultId)
+      logger.info("End Run ResultSummaryMerger Service, merge two different RSMs by Ids")
 
-      val tMergedRSM = rsmMerger.mergedResultSummary
-      assertNotNull("Merged TARGET ResultSet", tMergedRSM)
+      val tMergedRSMId = rsmMergerId.mergedResultSummary
+      assertNotNull("Merged TARGET ResultSummary Id", tMergedRSMId)
 
-      val mergedDecoyRSMId = tMergedRSM.getDecoyResultSummaryId
-      assertTrue("Merged DECOY ResultSummary is present", mergedDecoyRSMId > 0)
+      val mergedDecoyRSMId = tMergedRSMId.getDecoyResultSummaryId
+      assertTrue("Merged DECOY ResultSummary by Id is present", mergedDecoyRSMId > 0L)
 
       /* Try to reload merged TARGET ResultSet with JPA */
-      val mergedRSId = tMergedRSM.getResultSetId
+      val mergedRSId = tMergedRSMId.getResultSetId
 
       localJPAExecutionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true)
 
@@ -102,7 +122,7 @@ class ResultSummariesMergerTest extends ResultSetsMergerTest with Logging {
 
   }
 
-  private def validate(execContext: IExecutionContext, rsId: Long): Long = {
+  private def validate(execContext: IExecutionContext, rsId: Long): ResultSummary = {
     /* PeptideMatch pre-filter on Rank */
     val seqBuilder = Seq.newBuilder[IPeptideMatchFilter]
     seqBuilder += new RankPSMFilter(2) // Only 1, 2 ranks
@@ -125,7 +145,7 @@ class ResultSummariesMergerTest extends ResultSetsMergerTest with Logging {
     val decoyRSMId = validatedTargetRSM.getDecoyResultSummaryId
     assertTrue("Validated Decoy RSM", decoyRSMId > 0)
 
-    validatedTargetRSM.id
+    validatedTargetRSM
   }
 
 }
