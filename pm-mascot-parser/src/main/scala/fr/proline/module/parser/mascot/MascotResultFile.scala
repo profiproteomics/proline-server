@@ -15,7 +15,7 @@ import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.{ ISeqDatabaseProvider, IProteinProvider, IPeptideProvider, IPTMProvider }
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
-import fr.proline.util.primitives.toFloat
+import fr.proline.util.primitives._
 
 import matrixscience.NativeLibrariesLoader
 
@@ -45,7 +45,8 @@ object MascotParseParams extends Enumeration {
 class MascotResultFile(
   val fileLocation: File,
   val importProperties: Map[String, Any], // TODO: use the MascotImportProperties class instead ???
-  val parserContext: ProviderDecoratedExecutionContext) extends IResultFile with Logging {
+  val parserContext: ProviderDecoratedExecutionContext
+) extends IResultFile with Logging {
 
   final val LOG_SPECTRA_COUNT = 4000 // Print a log for each created spectrum
 
@@ -477,23 +478,29 @@ class MascotResultFile(
         this.logger.debug("Spectrum of query#" + initialId + " is empty")
       }
 
-      // TODO: parse spectrum title to extract timings
+      // Retrieve spectrum title and instrument config id
       val spectrumTitle = msq.asInstanceOf[Ms2Query].spectrumTitle
       val instConfigId = if (this.instrumentConfig.isDefined) this.instrumentConfig.get.id else 0
+      
+      val specTitleFieldMapOpt = this.peaklistSoftware.get.specTitleParsingRule.map( _.parseTitle(spectrumTitle) )
+      val specTitleFieldMap = specTitleFieldMapOpt.getOrElse(Map.empty[SpectrumTitleFields.Value,String])
+      
+      def toIntOrZero(v: Any): Int = try { toInt(v) } catch { case _ => 0 }
+      def toFloatOrZero(v: Any): Float = try { toFloat(v) } catch { case _ => 0f }
+      
+      val titleFields = SpectrumTitleFields
 
       val spec = new Spectrum(
         id = Spectrum.generateNewId,
         title = spectrumTitle,
         precursorMoz = msq.moz,
         precursorCharge = msq.charge,
-        /*
-                              firstCycle = Int = 0,
-                              lastCycle = Int = 0,
-                              firstScan = Int = 0,
-                              lastScan = Int = 0,
-                              firstTime = Float = 0,
-                              lastTime = Float = 0,
-                              */
+        firstCycle = toIntOrZero( specTitleFieldMap.getOrElse(titleFields.FIRST_CYCLE,0) ),
+        lastCycle = toIntOrZero( specTitleFieldMap.getOrElse(titleFields.LAST_CYCLE,0) ),
+        firstScan = toIntOrZero( specTitleFieldMap.getOrElse(titleFields.FIRST_SCAN,0) ),
+        lastScan = toIntOrZero( specTitleFieldMap.getOrElse(titleFields.LAST_SCAN,0) ),
+        firstTime = toFloatOrZero( specTitleFieldMap.getOrElse(titleFields.FIRST_TIME,0f) ),
+        lastTime = toFloatOrZero( specTitleFieldMap.getOrElse(titleFields.LAST_TIME,0f) ),
         mozList = Some(mozList.toArray),
         intensityList = Some(intensityList.toArray),
         peaksCount = mozList.length,
