@@ -43,7 +43,7 @@ class RFImporterH2CTDTest extends AbstractRFImporterTest_ {
     propertiedBuilder += ( "ion.score.cutoff" -> 0.5 )
     propertiedBuilder += ( "subset.threshold" -> 0.5 )
     
-    val importer = new ResultFileImporterSQLStorer(
+    val importer = new ResultFileImporter(
       executionContext,
       resultIdentFile = datFile,
       fileType = "MascotMSParser",
@@ -83,7 +83,7 @@ class RFImporterH2CTDTest extends AbstractRFImporterTest_ {
     propertiedBuilder += ( "ion.score.cutoff" -> 0.5 )
     propertiedBuilder += ( "subset.threshold" -> 0.5 )
     
-    val importer = new ResultFileImporterJPAStorer(
+    val importer = new ResultFileImporter(
       executionContext,
       resultIdentFile = datFile,
       fileType = "MascotMSParser",

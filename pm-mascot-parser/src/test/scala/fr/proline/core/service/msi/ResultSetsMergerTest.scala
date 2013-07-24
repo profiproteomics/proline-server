@@ -166,7 +166,7 @@ class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
     propertiedBuilder += ("ion.score.cutoff" -> 0.0)
     propertiedBuilder += ("subset.threshold" -> 1.0)
 
-    val importer: ResultFileImporterSQLStorer = new ResultFileImporterSQLStorer(
+    val importer: ResultFileImporter = new ResultFileImporter(
       localExecutionContext,
       resultIdentFile = datFile,
       fileType = "MascotMSParser",

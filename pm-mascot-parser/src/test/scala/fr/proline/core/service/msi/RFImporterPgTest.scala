@@ -45,7 +45,7 @@ class RFImporterPgTest extends AbstractRFImporterTest_ {
       propertiedBuilder += ("ion.score.cutoff" -> 0.5)
       propertiedBuilder += ("subset.threshold" -> 0.5)
 
-      val importer: ResultFileImporterSQLStorer = new ResultFileImporterSQLStorer(
+      val importer = new ResultFileImporter(
         executionContext,
         resultIdentFile = datFile,
         fileType = "MascotMSParser",
@@ -96,7 +96,7 @@ class RFImporterPgTest extends AbstractRFImporterTest_ {
       propertiedBuilder += ("ion.score.cutoff" -> 0.5)
       propertiedBuilder += ("subset.threshold" -> 0.5)
 
-      val importer = new ResultFileImporterJPAStorer(
+      val importer = new ResultFileImporter(
         executionContext,
         resultIdentFile = datFile,
         fileType = "MascotMSParser",

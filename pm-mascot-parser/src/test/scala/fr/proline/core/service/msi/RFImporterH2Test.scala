@@ -45,7 +45,7 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
       propertiedBuilder += ("ion.score.cutoff" -> 0.5)
       propertiedBuilder += ("subset.threshold" -> 0.5)
 
-      val importer = new ResultFileImporterSQLStorer(
+      val importer = new ResultFileImporter(
         executionContext,
         resultIdentFile = datFile,
         fileType = "MascotMSParser",
@@ -114,7 +114,7 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
       propertiedBuilder += ("ion.score.cutoff" -> 0.5)
       propertiedBuilder += ("subset.threshold" -> 0.5)
 
-      val importer = new ResultFileImporterJPAStorer(
+      val importer = new ResultFileImporter(
         executionContext,
         resultIdentFile = datFile,
         fileType = "MascotMSParser",
@@ -165,7 +165,7 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
 
       logger.debug(" --- Get first File " + _datFileName)
 
-      val importer = new ResultFileImporterJPAStorer(
+      val importer = new ResultFileImporter(
         executionContext,
         resultIdentFile = datFile,
         fileType = "MascotMSParser",
@@ -199,7 +199,7 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
       logger.debug(" --- Get second File " + _datFileName)
       datFile = new File(RFImporterH2Test.this.getClass.getResource(_datFileName).toURI)
 
-      val importer2 = new ResultFileImporterJPAStorer(
+      val importer2 = new ResultFileImporter(
         executionContext2,
         resultIdentFile = datFile,
         fileType = "MascotMSParser",
