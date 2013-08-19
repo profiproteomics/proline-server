@@ -45,14 +45,21 @@ object MascotParseParams extends Enumeration {
 class MascotResultFile(
   val fileLocation: File,
   val importProperties: Map[String, Any], // TODO: use the MascotImportProperties class instead ???
-  val parserContext: ProviderDecoratedExecutionContext
-) extends IResultFile with Logging {
+  val parserContext: ProviderDecoratedExecutionContext) extends IResultFile with Logging {
 
   final val LOG_SPECTRA_COUNT = 4000 // Print a log for each created spectrum
 
   // ---- For Java developers ;) : --- Constructor Code 
 
   // Requirements
+  require(fileLocation != null, "FileLocation is null")
+
+  val fileAbsolutePath = fileLocation.getAbsolutePath
+
+  require(fileLocation.isFile, "Invalid fileLocation : " + fileAbsolutePath)
+
+  logger.info("Opening Mascot result file : " + fileAbsolutePath)
+
   require(importProperties != null)
 
   private var _isClosed = false
@@ -61,20 +68,18 @@ class MascotResultFile(
   rsImportProperties.setIonsScoreCutoff(parseProperties.get(MascotParseParams.ION_SCORE_CUTOFF).map(toFloat(_)))
   rsImportProperties.setProteinsPvalueCutoff(parseProperties.get(MascotParseParams.PROTEIN_CUTOFF_PVALUE).map(toFloat(_)))
   rsImportProperties.setSubsetsThreshold(parseProperties.get(MascotParseParams.SUBSET_THRESHOLD).map(toFloat(_)))
-  
-  if (fileLocation == null || !fileLocation.exists()) throw new FileNotFoundException("Invalid specified file")
-  logger.info("Opening Mascot result file " + fileLocation.getAbsoluteFile())
 
   /* Load Matrix Science Mascot Parser native libraries */
-  if (NativeLibrariesLoader.loadNativeLibraries == false) {
+  val loaded = NativeLibrariesLoader.loadNativeLibraries
+  if (!loaded) {
     val message = "Mascot Parser native libraries not loaded"
     logger.error(message)
 
     throw new RuntimeException(message)
   }
-  
+
   // Create Mascot ms_mascotresfile and ms_peptidesummary from specified file name 
-  private val mascotResFile: ms_mascotresfile = new ms_mascotresfile(fileLocation.getAbsolutePath(), 0, "")
+  private val mascotResFile: ms_mascotresfile = new ms_mascotresfile(fileAbsolutePath, 0, "")
   if (!mascotResFile.isValid()) throw new Exception("Invalid Mascot result file " + fileLocation.getAbsolutePath() + " specified")
 
   private val mascotSearchParams: ms_searchparams = this.mascotResFile.params()
@@ -88,22 +93,22 @@ class MascotResultFile(
 
   //--- Lazy attributes --- //
   lazy val ptmHelper: MascotPTMHelper = {
-     val helper = new MascotPTMHelper(parserContext)
-     
-     // Retrieve PTMs, fixed and variable, specified for Mascot Search
-     val mascotVarModsAsStr = this.mascotSearchParams.getIT_MODS()
-     logger.debug("Search variable Ptms using Mascot string : " + mascotVarModsAsStr)
-     val varPtmDefsByModName = helper.createVarPtmDefs(mascotVarModsAsStr)
-     logger.debug("PTMProvider found " + varPtmDefsByModName.size + " variables PTMs")
+    val helper = new MascotPTMHelper(parserContext)
 
-     val mascotFixedModsAsStr = this.mascotSearchParams.getMODS()
-     logger.debug("Search fixed Ptms using Mascot string : " + mascotFixedModsAsStr)
-     val fixedPtmDefsByModName = helper.createFixedPtmDefs(mascotFixedModsAsStr)
-     logger.debug("PTMProvider found " + fixedPtmDefsByModName.size + " fixed PTMs")
+    // Retrieve PTMs, fixed and variable, specified for Mascot Search
+    val mascotVarModsAsStr = this.mascotSearchParams.getIT_MODS()
+    logger.debug("Search variable Ptms using Mascot string : " + mascotVarModsAsStr)
+    val varPtmDefsByModName = helper.createVarPtmDefs(mascotVarModsAsStr)
+    logger.debug("PTMProvider found " + varPtmDefsByModName.size + " variables PTMs")
 
-     helper
+    val mascotFixedModsAsStr = this.mascotSearchParams.getMODS()
+    logger.debug("Search fixed Ptms using Mascot string : " + mascotFixedModsAsStr)
+    val fixedPtmDefsByModName = helper.createFixedPtmDefs(mascotFixedModsAsStr)
+    logger.debug("PTMProvider found " + fixedPtmDefsByModName.size + " fixed PTMs")
+
+    helper
   }
-  
+
   /**
    * Target PepSummary read from Mascot ResultFile
    */
@@ -138,7 +143,7 @@ class MascotResultFile(
       if (pepSummaryOpt == None) None
       else {
         val pepSum = pepSummaryOpt.get
-        var ht: Float = mascotResFile.getSectionValueDouble(ms_mascotresfile.SEC_SUMMARY, "qplughole"+msQueryNum).toFloat        
+        var ht: Float = mascotResFile.getSectionValueDouble(ms_mascotresfile.SEC_SUMMARY, "qplughole" + msQueryNum).toFloat
         val candidatePepCount = pepSum.getQmatch(msQueryNum)
         //val it = pepSum.getPeptideIdentityThreshold(msQueryNum,20)
         val it = if (candidatePepCount > 0) Some(MascotValidationHelper.calcIdentityThreshold(candidatePepCount, 0.05)) else None
@@ -154,14 +159,14 @@ class MascotResultFile(
     }
 
     for (q <- 1 to nbrQueries) { // Go through each Query
-      
+
       val specTitle = URLDecoder.decode(this.mascotResFile.getQuerySectionValueStr(q, "title"), "UTF-8").replace('\\', '/') //WorkAround for \ char in spectrum storer  !
-      
+
       val msQueryProps = new MsQueryProperties(
         targetDbSearch = getMsQueryDbSearchProps(this.targetPepSummary, q),
         decoyDbSearch = getMsQueryDbSearchProps(this.decoyPepSummary, q)
       )
-      
+
       var query = new Ms2Query(
         id = Ms2Query.generateNewId,
         initialId = q,
@@ -187,7 +192,6 @@ class MascotResultFile(
       msLevel = 2
     )
   }
-
 
   /**
    * Create from mascot parser ms_mascotresfile, a MSISearch with all associated information :
@@ -236,7 +240,7 @@ class MascotResultFile(
 
     // Create Peaklist & Enzymes
     val enzymes = Array(new Enzyme(searchParams.getCLE()))
-    
+
     //Create MSISearch regrouping all these information   
     var sSettings: SearchSettings = new SearchSettings(
       id = SearchSettings.generateNewId(),
@@ -262,7 +266,7 @@ class MascotResultFile(
           ms2ChargeStates = searchParams.getCHARGE(), // TODO: check this param
           ms2ErrorTol = searchParams.getITOL(),
           ms2ErrorTolUnit = searchParams.getITOLU())
-        )
+      )
     }
 
     val nbQueries = mascotResFile.getNumQueries()
@@ -319,7 +323,7 @@ class MascotResultFile(
     // subSetThreshold - is the fractional score required for a protein to be counted as a subset. 
     // Its score must be greater than or equal to main_protein_score * (1-scoreFraction)
     // The default value is 1.0  
-    peptideSummary.setSubsetsThreshold( rsImportProperties.getSubsetsThreshold().getOrElse(1.0f).toDouble )
+    peptideSummary.setSubsetsThreshold(rsImportProperties.getSubsetsThreshold().getOrElse(1.0f).toDouble)
 
     Some(peptideSummary)
 
@@ -341,19 +345,19 @@ class MascotResultFile(
 
     pepSummary.get
   }
-  
+
   /**
    * Free all ms_parser attached objects
    */
   def close() {
-    
+
     // Check if the result file is already closed
-    if( _isClosed ) throw new java.lang.IllegalAccessException("MascotResultFile is already closed")
-    
+    if (_isClosed) throw new java.lang.IllegalAccessException("MascotResultFile is already closed")
+
     mascotResFile.delete()
     mascotSearchParams.delete()
-    if( _isTargetSummaryLoaded ) targetPepSummary.get.delete
-    if( _isDecoySummaryLoaded ) decoyPepSummary.get.delete
+    if (_isTargetSummaryLoaded) targetPepSummary.get.delete
+    if (_isDecoySummaryLoaded) decoyPepSummary.get.delete
   }
 
   /**
@@ -362,12 +366,12 @@ class MascotResultFile(
    *
    */
   def getResultSet(wantDecoy: Boolean): ResultSet = {
-    
+
     // Check if the result file is closed
-    if( _isClosed ) throw new java.lang.IllegalAccessException("MascotResultFile is closed")
-    
+    if (_isClosed) throw new java.lang.IllegalAccessException("MascotResultFile is closed")
+
     val start = System.currentTimeMillis;
-    
+
     //---- DEBUG Purpose : to be removed
     // Get Matches information : Read Peptide, Proteins and associated matches
 
@@ -389,7 +393,7 @@ class MascotResultFile(
     else logger.info("Start loading TARGET identification results...")
 
     val pepSummary = this._getPepSummary(wantDecoy)
-    
+
     var dataParser: MascotDataParser = new MascotDataParser(
       pepSummary,
       this.mascotResFile,
@@ -418,7 +422,7 @@ class MascotResultFile(
 
     val rsProps = new ResultSetProperties()
     rsProps.setMascotImportProperties(Some(rsImportProperties))
-    logger.info("Loading identification results done in "+(System.currentTimeMillis - start)+" ms");
+    logger.info("Loading identification results done in " + (System.currentTimeMillis - start) + " ms");
     new ResultSet(
       id = rsId,
       name = this.msiSearch.title,
@@ -481,13 +485,13 @@ class MascotResultFile(
       // Retrieve spectrum title and instrument config id
       val spectrumTitle = msq.asInstanceOf[Ms2Query].spectrumTitle
       val instConfigId = if (this.instrumentConfig.isDefined) this.instrumentConfig.get.id else 0
-      
-      val specTitleFieldMapOpt = this.peaklistSoftware.get.specTitleParsingRule.map( _.parseTitle(spectrumTitle) )
-      val specTitleFieldMap = specTitleFieldMapOpt.getOrElse(Map.empty[SpectrumTitleFields.Value,String])
-      
+
+      val specTitleFieldMapOpt = this.peaklistSoftware.get.specTitleParsingRule.map(_.parseTitle(spectrumTitle))
+      val specTitleFieldMap = specTitleFieldMapOpt.getOrElse(Map.empty[SpectrumTitleFields.Value, String])
+
       def toIntOrZero(v: Any): Int = try { toInt(v) } catch { case _ => 0 }
       def toFloatOrZero(v: Any): Float = try { toFloat(v) } catch { case _ => 0f }
-      
+
       val titleFields = SpectrumTitleFields
 
       val spec = new Spectrum(
@@ -495,12 +499,12 @@ class MascotResultFile(
         title = spectrumTitle,
         precursorMoz = msq.moz,
         precursorCharge = msq.charge,
-        firstCycle = toIntOrZero( specTitleFieldMap.getOrElse(titleFields.FIRST_CYCLE,0) ),
-        lastCycle = toIntOrZero( specTitleFieldMap.getOrElse(titleFields.LAST_CYCLE,0) ),
-        firstScan = toIntOrZero( specTitleFieldMap.getOrElse(titleFields.FIRST_SCAN,0) ),
-        lastScan = toIntOrZero( specTitleFieldMap.getOrElse(titleFields.LAST_SCAN,0) ),
-        firstTime = toFloatOrZero( specTitleFieldMap.getOrElse(titleFields.FIRST_TIME,0f) ),
-        lastTime = toFloatOrZero( specTitleFieldMap.getOrElse(titleFields.LAST_TIME,0f) ),
+        firstCycle = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_CYCLE, 0)),
+        lastCycle = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_CYCLE, 0)),
+        firstScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_SCAN, 0)),
+        lastScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_SCAN, 0)),
+        firstTime = toFloatOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_TIME, 0f)),
+        lastTime = toFloatOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_TIME, 0f)),
         mozList = Some(mozList.toArray),
         intensityList = Some(intensityList.toArray),
         peaksCount = mozList.length,
@@ -515,10 +519,10 @@ class MascotResultFile(
       }
 
       onEachSpectrum(spec)
-      
+
       // --- Free memory --- //
       mascotQ.delete()
-      
+
     }
 
     ()
@@ -532,21 +536,21 @@ class MascotResultFile(
 
   def eachSpectrumMatch(wantDecoy: Boolean,
                         onEachSpectrumMatch: SpectrumMatch => Unit): Unit = {
-    
+
     val mascotVersion = importProperties.getOrElse(
       MascotParseParams.MASCOT_VERSION.toString,
       this.msiSearch.searchSettings.softwareVersion
-      //throw new Exception("mascot version must be provided in the import properties")
+    //throw new Exception("mascot version must be provided in the import properties")
     ).toString
-    
+
     val mascotServerURLAsStr = importProperties.getOrElse(
       MascotParseParams.MASCOT_SERVER_URL.toString,
       "http://www.matrixscience.com/cgi/"
-      //throw new Exception("mascot server url must be provided in the import properties")
+    //throw new Exception("mascot server url must be provided in the import properties")
     ).toString
-    
+
     this.logger.debug("Iterating over spectrum matches of result file '%s' (mascot version=%s ; server URL =%s)".format(
-      fileLocation.getName,mascotVersion,mascotServerURLAsStr
+      fileLocation.getName, mascotVersion, mascotServerURLAsStr
     ))
 
     val mascotConfig = new MascotRemoteConfig(mascotVersion.asInstanceOf[String], mascotServerURLAsStr.asInstanceOf[String])
@@ -565,7 +569,7 @@ class MascotResultFile(
       if (currentMSPep.getAnyMatch) {
         onEachSpectrumMatch(spectrumMatcher.getSpectrumMatch(currentMSPep))
       }
-      
+
       // --- Free memory --- //
       currentMSPep.delete()
     }
