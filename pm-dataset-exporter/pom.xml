@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>ProFI-Pom</artifactId>
+    <groupId>fr.proline</groupId>
+    <version>0.0.3-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>PM-DatasetExporter</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+
+  <name>${project.artifactId}</name>
+  <description>Proline Module dedicated to the export of Proline datasets</description>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <scala.version>2.9.1</scala.version>
+    <core.version>0.1.2-SNAPSHOT</core.version>
+  </properties>
+
+  <dependencies>
+
+    <!-- Scala -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+    </dependency>
+
+    <!-- Logging -->
+    <dependency>
+      <groupId>com.weiglewilczek.slf4s</groupId>
+      <artifactId>slf4s_2.9.1</artifactId>
+    </dependency>
+
+    <!-- If log4j is needed, add log4j-over-slf4j dependency -->
+
+    <dependency>
+      <groupId>antlr</groupId>
+      <artifactId>antlr</artifactId>
+      <version>2.7.7</version>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>1.4</version>
+    </dependency>
+
+    <!-- Proline -->
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-OM</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-DAL</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-Databases</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-DAL</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    
+    <!-- Templating -->
+    <dependency>
+      <groupId>org.clapper</groupId>
+      <artifactId>scalasti_2.9.1</artifactId> <!-- note that another version 2.10_1.0.0 is available -->      
+      <version>0.5.8</version>
+    </dependency>
+    <dependency>
+      <groupId>org.fusesource.scalate</groupId>
+      <artifactId>scalate-wikitext_2.9</artifactId>
+      <version>1.6.1</version>  
+    </dependency>
+    <dependency>
+      <groupId>org.fusesource.scalate</groupId>
+      <artifactId>scalate-page_2.9</artifactId>
+      <version>1.6.1</version>  
+    </dependency>
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi-ooxml</artifactId>
+      <version>3.9</version>
+    </dependency>
+
+    <!-- Tests -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-tools.testing</groupId>
+      <artifactId>specs_2.9.1</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_2.9.1</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+     <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+
+      <plugin>
+        <groupId>org.scala-tools</groupId>
+        <artifactId>maven-scala-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+              <goal>testCompile</goal>
+            </goals>
+            <configuration>
+              <args>
+                <arg>-make:transitive</arg>
+                <arg>-dependencyfile</arg>
+                <arg>${project.build.directory}/.scala_dependencies</arg>
+              </args>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+<!-- 
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+ -->
+
+    </plugins>
+  </build>
+
+</project>
