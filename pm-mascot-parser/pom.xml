@@ -31,6 +31,14 @@
       <artifactId>slf4s_${scala.version}</artifactId>
     </dependency>
 
+    <!-- Proline UnimodUnmarshaller library -->
+    <dependency>
+      <groupId>fr.proline.unimod</groupId>
+      <artifactId>UnimodUnmarshaller</artifactId>
+      <version>0.0.2</version>
+    </dependency>
+
+
     <!-- Mascot Parser native libraries (for all OSes, loaded at runtime)
          msparser.jar dependency is defined via Maven profiles -->
     <dependency>
