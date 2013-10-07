@@ -36,7 +36,7 @@
     <dependency>
       <groupId>matrixscience</groupId>
       <artifactId>MSParser-native-libraries_2.4.00</artifactId>
-      <version>0.0.2</version>
+      <version>0.0.3-SNAPSHOT</version> <!-- SNAPSHOT turnk version -->
     </dependency>
 
     <!-- BioJava -->
@@ -116,6 +116,15 @@
 
   <build>
     <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.15</version>
+        <configuration>
+          <skipTests>false</skipTests>
+        </configuration>
+      </plugin>
 
       <plugin>
         <groupId>org.scala-tools</groupId>
