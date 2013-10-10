@@ -1,19 +1,34 @@
 package fr.proline.module.parser.omssa
 
+import java.io.File
+import java.io.FileNotFoundException
+
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+
 import com.weiglewilczek.slf4s.Logging
-import fr.proline.core.om.model.msi.{ IResultFile, ResultSet, Protein, ProteinMatch, Peptide, PeptideMatch, LocatedPtm, PtmDefinition, Spectrum, SpectrumMatch, Peaklist, MsQuery, Ms2Query, SeqDatabase, SequenceMatch, SearchSettings, MSISearch }
+
+import fr.proline.core.om.model.msi.FragmentationRule
+import fr.proline.core.om.model.msi.IResultFile
+import fr.proline.core.om.model.msi.InstrumentConfig
+import fr.proline.core.om.model.msi.LocatedPtm
+import fr.proline.core.om.model.msi.MSISearch
+import fr.proline.core.om.model.msi.Ms2Query
+import fr.proline.core.om.model.msi.MsQuery
+import fr.proline.core.om.model.msi.Peaklist
+import fr.proline.core.om.model.msi.Peptide
+import fr.proline.core.om.model.msi.PeptideMatch
+import fr.proline.core.om.model.msi.Protein
+import fr.proline.core.om.model.msi.ProteinMatch
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.model.msi.SearchSettings
+import fr.proline.core.om.model.msi.SeqDatabase
+import fr.proline.core.om.model.msi.SequenceMatch
+import fr.proline.core.om.model.msi.Spectrum
+import fr.proline.core.om.model.msi.SpectrumMatch
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPeptideProvider
-import java.io.{ File, FileNotFoundException }
-import javax.xml.stream.XMLInputFactory
-import scala.collection.mutable.{ ArrayBuffer, HashMap }
-import org.codehaus.staxmate.in.{ SMHierarchicCursor, SMInputCursor }
-import org.codehaus.staxmate.SMInputFactory
-import fr.proline.core.om.builder.PtmDefinitionBuilder
 import net.liftweb.json.JsonAST.JObject
-import fr.proline.core.om.model.msi.InstrumentConfig
-import fr.proline.core.om.model.msi.Instrument
-import fr.proline.core.om.model.msi.FragmentationRule
 
 object OmssaParseParams extends Enumeration {
   type OmssaParseParam = Value
@@ -96,7 +111,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
 
   // loader for mandatory files that must be loaded BEFORE the omx file
   private var omssaLoader: OmssaMandatoryFilesLoader = new OmssaMandatoryFilesLoader(
-    parseProperties.get(OmssaParseParams.USERMOD_XML_FILE).toString,
+    parseProperties.get(OmssaParseParams.USERMOD_XML_FILE).getOrElse("").toString,
     parserContext)
   def getOmssaLoader: OmssaMandatoryFilesLoader = omssaLoader
 

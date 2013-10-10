@@ -3,6 +3,7 @@ package fr.proline.module.parser.omssa
 import java.io.File
 import fr.proline.core.om.model.msi.IResultFile
 import fr.proline.core.om.provider.msi.IResultFileProvider
+import fr.proline.core.om.provider.msi.IResultFileVerifier
 //import fr.proline.core.om.model.msi.{IResultFileProvider, IResultFile}
 //import fr.proline.repository.DatabaseContext
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
@@ -37,5 +38,9 @@ class OmssaResultFileProvider extends IResultFileProvider with Logging {
 //	propertiesBuilder += (OmssaParseParams.MOD_XML_FILE.toString -> classOf[File])
 	propertiesBuilder += (OmssaParseParams.USERMOD_XML_FILE.toString -> classOf[File])
 	propertiesBuilder.result
+  }
+  
+  def getResultFileVerifier : IResultFileVerifier = {
+    new OmssaResultFileVerifier()
   }
 }

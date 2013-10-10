@@ -344,8 +344,11 @@ class OmssaReadFile(val omxFile: File,
                                       //                                      case "MSModHit_modtype" => locatedPtmDefinition = omssaLoader.ptmDefinitions.get(MSModHit_firstChild.childElementCursor().advance().collectDescendantText(false).toInt)
                                       case "MSModHit_modtype" =>
                                         val ptmId = MSModHit_firstChild.childElementCursor().advance().collectDescendantText(false).toInt
-                                        if (omssaLoader.ptmDefinitions.get(ptmId).isDefined) {
-                                          locatedPtmDefinition = omssaLoader.ptmDefinitions.get(ptmId)
+                                        val myPtm = omssaLoader.getPtmDefinition(ptmId, peptideSequence.charAt(locatedPtmSite-1))
+                                        if(myPtm.isDefined) {
+                                          locatedPtmDefinition = myPtm
+//                                        if (omssaLoader.ptmDefinitions.get(ptmId).isDefined) {
+//                                          locatedPtmDefinition = omssaLoader.ptmDefinitions.get(ptmId)
                                         } else {
                                           throw new UnknownPTMException()
                                         }
@@ -510,13 +513,15 @@ private def minusLogEValue(evalue: Double): Float = (-1 * scala.math.log10(evalu
 
     searchSettingsReference.filter(element => element.contains("MSSearchSettings_fixed/MSMod/*>")).foreach(
       element => {
-        val ptm: Option[PtmDefinition] = omssaLoader.ptmDefinitions.get(extract(element).toInt)
-        if (ptm != None) msFixedPtms += ptm.get
+//        val ptm: Option[PtmDefinition] = omssaLoader.ptmDefinitions.get(extract(element).toInt)
+//        if (ptm != None) msFixedPtms += ptm.get
+        omssaLoader.getPtmDefinitions(extract(element).toLong).foreach(ptm => msFixedPtms += ptm)
       })
     searchSettingsReference.filter(element => element.contains("MSSearchSettings_variable/MSMod/*>")).foreach(
       element => {
-        val ptm: Option[PtmDefinition] = omssaLoader.ptmDefinitions.get(extract(element).toInt)
-        if (ptm != None) msVarPtms += ptm.get
+//        val ptm: Option[PtmDefinition] = omssaLoader.ptmDefinitions.get(extract(element).toInt)
+//        if (ptm != None) msVarPtms += ptm.get
+        omssaLoader.getPtmDefinitions(extract(element).toLong).foreach(ptm => msVarPtms += ptm)
       })
     searchSettingsReference.filter(element => element.contains("MSSearchSettings_taxids_E/*>")).foreach(
       element => {

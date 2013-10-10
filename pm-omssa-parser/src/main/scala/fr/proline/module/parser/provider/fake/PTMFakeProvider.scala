@@ -7,12 +7,11 @@ import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.PtmNames
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.model.msi.PtmLocation
-//import fr.proline.repository.DatabaseContext
 
 object PTMFakeProvider extends IPTMProvider { 
 
   val psDbCtx = null
-//  val psDbCtx: DatabaseContext = null
+
   var ptmDefByName:HashMap[String, PtmDefinition] = new HashMap[String, PtmDefinition]()
     
   /**

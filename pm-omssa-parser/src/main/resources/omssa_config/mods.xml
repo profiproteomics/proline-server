@@ -214,6 +214,9 @@
     <MSModSpec_monomass>42.046950</MSModSpec_monomass>
     <MSModSpec_averagemass>42.0797</MSModSpec_averagemass>
     <MSModSpec_n15mass>0</MSModSpec_n15mass>
+    <MSModSpec_residues>
+      <MSModSpec_residues_E>A</MSModSpec_residues_E>
+    </MSModSpec_residues>
     <MSModSpec_unimod>37</MSModSpec_unimod>
     <MSModSpec_psi-ms>Trimethyl</MSModSpec_psi-ms>
   </MSModSpec>
@@ -355,7 +358,7 @@
       <MSMod value="ctermpeptrideuteromethyl">21</MSMod>
     </MSModSpec_mod>
     <MSModSpec_type>
-      <MSModType value="modcp">7</MSModType>
+      <MSModType value="modaa">0</MSModType>
     </MSModSpec_type>
     <MSModSpec_name>tri-deuteromethylation of peptide c-term</MSModSpec_name>
     <MSModSpec_monomass>17.034480</MSModSpec_monomass>
@@ -539,9 +542,6 @@
     <MSModSpec_monomass>43.005814</MSModSpec_monomass>
     <MSModSpec_averagemass>43.0247</MSModSpec_averagemass>
     <MSModSpec_n15mass>0</MSModSpec_n15mass>
-    <MSModSpec_residues>
-      <MSModSpec_residues_E>X</MSModSpec_residues_E>
-    </MSModSpec_residues>
     <MSModSpec_unimod>5</MSModSpec_unimod>
     <MSModSpec_psi-ms>Carbamyl</MSModSpec_psi-ms>
   </MSModSpec>
@@ -683,7 +683,7 @@
       <MSMod value="ntermpeptioacetyl">41</MSMod>
     </MSModSpec_mod>
     <MSModSpec_type>
-      <MSModType value="modnp">5</MSModType>
+      <MSModType value="modaa">0</MSModType>
     </MSModSpec_type>
     <MSModSpec_name>gammathiopropionylation of peptide n-term</MSModSpec_name>
     <MSModSpec_monomass>87.998285</MSModSpec_monomass>
@@ -836,9 +836,6 @@
     <MSModSpec_monomass>176.032088</MSModSpec_monomass>
     <MSModSpec_averagemass>176.1241</MSModSpec_averagemass>
     <MSModSpec_n15mass>0</MSModSpec_n15mass>
-    <MSModSpec_residues>
-      <MSModSpec_residues_E>G</MSModSpec_residues_E>
-    </MSModSpec_residues>
     <MSModSpec_unimod>54</MSModSpec_unimod>
     <MSModSpec_psi-ms>Glucuronyl</MSModSpec_psi-ms>
   </MSModSpec>
@@ -922,7 +919,7 @@
     <MSModSpec_averagemass>-22.0519</MSModSpec_averagemass>
     <MSModSpec_n15mass>0</MSModSpec_n15mass>
     <MSModSpec_residues>
-      <MSModSpec_residues_E>D</MSModSpec_residues_E>
+      <MSModSpec_residues_E>H</MSModSpec_residues_E>
     </MSModSpec_residues>
     <MSModSpec_unimod>349</MSModSpec_unimod>
     <MSModSpec_psi-ms>His-&gt;Asp</MSModSpec_psi-ms>
@@ -1198,23 +1195,6 @@
   </MSModSpec>
   <MSModSpec>
     <MSModSpec_mod>
-      <MSMod value="meestery">72</MSMod>
-    </MSModSpec_mod>
-    <MSModSpec_type>
-      <MSModType value="modaa">0</MSModType>
-    </MSModSpec_type>
-    <MSModSpec_name>methyl ester of Y</MSModSpec_name>
-    <MSModSpec_monomass>14.015650</MSModSpec_monomass>
-    <MSModSpec_averagemass>14.0266</MSModSpec_averagemass>
-    <MSModSpec_n15mass>0</MSModSpec_n15mass>
-    <MSModSpec_residues>
-      <MSModSpec_residues_E>Y</MSModSpec_residues_E>
-    </MSModSpec_residues>
-    <MSModSpec_unimod>34</MSModSpec_unimod>
-    <MSModSpec_psi-ms>Methyl</MSModSpec_psi-ms>
-  </MSModSpec>
-  <MSModSpec>
-    <MSModSpec_mod>
       <MSMod value="methylc">73</MSMod>
     </MSModSpec_mod>
     <MSModSpec_type>
@@ -1450,9 +1430,9 @@
       <MSMod value="ctermpepo18">87</MSMod>
     </MSModSpec_mod>
     <MSModSpec_type>
-      <MSModType value="modnp">5</MSModType>
+      <MSModType value="modcp">7</MSModType>
     </MSModSpec_type>
-    <MSModSpec_name>O18 on peptide n-term</MSModSpec_name>
+    <MSModSpec_name>O18 on peptide c-term</MSModSpec_name>
     <MSModSpec_monomass>2.004246</MSModSpec_monomass>
     <MSModSpec_averagemass>1.9998</MSModSpec_averagemass>
     <MSModSpec_n15mass>0</MSModSpec_n15mass>
@@ -1464,9 +1444,9 @@
       <MSMod value="ctermpepdio18">88</MSMod>
     </MSModSpec_mod>
     <MSModSpec_type>
-      <MSModType value="modnp">5</MSModType>
+      <MSModType value="modcp">7</MSModType>
     </MSModSpec_type>
-    <MSModSpec_name>di-O18 on peptide n-term</MSModSpec_name>
+    <MSModSpec_name>di-O18 on peptide c-term</MSModSpec_name>
     <MSModSpec_monomass>4.00849</MSModSpec_monomass>
     <MSModSpec_averagemass>3.9995</MSModSpec_averagemass>
     <MSModSpec_n15mass>0</MSModSpec_n15mass>
@@ -1844,23 +1824,6 @@
   </MSModSpec>
   <MSModSpec>
     <MSModSpec_mod>
-      <MSMod value="ntermpeppyroq">110</MSMod>
-    </MSModSpec_mod>
-    <MSModSpec_type>
-      <MSModType value="modnpaa">6</MSModType>
-    </MSModSpec_type>
-    <MSModSpec_name>pyro-glu from n-term Q</MSModSpec_name>
-    <MSModSpec_monomass>-17.026549</MSModSpec_monomass>
-    <MSModSpec_averagemass>-17.0305</MSModSpec_averagemass>
-    <MSModSpec_n15mass>0</MSModSpec_n15mass>
-    <MSModSpec_residues>
-      <MSModSpec_residues_E>Q</MSModSpec_residues_E>
-    </MSModSpec_residues>
-    <MSModSpec_unimod>385</MSModSpec_unimod>
-    <MSModSpec_psi-ms>Ammonia-loss</MSModSpec_psi-ms>
-  </MSModSpec>
-  <MSModSpec>
-    <MSModSpec_mod>
       <MSMod value="pyroglutamicp">111</MSMod>
     </MSModSpec_mod>
     <MSModSpec_type>
@@ -1983,7 +1946,7 @@
       <MSMod value="ntermpeptripalmitatec">118</MSMod>
     </MSModSpec_mod>
     <MSModSpec_type>
-      <MSModType value="modnpaa">6</MSModType>
+      <MSModType value="modnaa">2</MSModType>
     </MSModSpec_type>
     <MSModSpec_name>n-acyl diglyceride cysteine</MSModSpec_name>
     <MSModSpec_monomass>788.725777</MSModSpec_monomass>
@@ -2115,6 +2078,8 @@
         <MSMassSet_n15mass>0</MSMassSet_n15mass>
       </MSMassSet>
     </MSModSpec_neutralloss>
+    <MSModSpec_unimod>21</MSModSpec_unimod>
+    <MSModSpec_psi-ms>Phospho</MSModSpec_psi-ms>
   </MSModSpec>
   <MSModSpec>
     <MSModSpec_mod>
@@ -2137,6 +2102,8 @@
         <MSMassSet_n15mass>0</MSMassSet_n15mass>
       </MSMassSet>
     </MSModSpec_neutralloss>
+    <MSModSpec_unimod>21</MSModSpec_unimod>
+    <MSModSpec_psi-ms>Phospho</MSModSpec_psi-ms>
   </MSModSpec>
   <MSModSpec>
     <MSModSpec_mod>
@@ -2194,7 +2161,7 @@
       <MSMod value="oxy18">139</MSMod>
     </MSModSpec_mod>
     <MSModSpec_type>
-      <MSModType value="modnpaa">6</MSModType>
+      <MSModType value="modaa">0</MSModType>
     </MSModSpec_type>
     <MSModSpec_name>PNGasF in O18 water</MSModSpec_name>
     <MSModSpec_monomass>2.988261</MSModSpec_monomass>
@@ -2306,6 +2273,8 @@
     <MSModSpec_residues>
       <MSModSpec_residues_E>W</MSModSpec_residues_E>
     </MSModSpec_residues>
+    <MSModSpec_unimod>345</MSModSpec_unimod>
+    <MSModSpec_psi-ms>Trioxidation</MSModSpec_psi-ms>
   </MSModSpec>
   <MSModSpec>
     <MSModSpec_mod>
@@ -2322,6 +2291,7 @@
       <MSModSpec_residues_E>K</MSModSpec_residues_E>
     </MSModSpec_residues>
     <MSModSpec_unimod>846</MSModSpec_unimod>
+    <MSModSpec_psi-ms>EQIGG</MSModSpec_psi-ms>
   </MSModSpec>
   <MSModSpec>
     <MSModSpec_mod>
@@ -2786,21 +2756,6 @@
   </MSModSpec>
 <MSModSpec>
     <MSModSpec_mod>
-      <MSMod value="mod195">195</MSMod>
-    </MSModSpec_mod>
-    <MSModSpec_type>
-      <MSModType value="modaa">0</MSModType>
-    </MSModSpec_type>
-    <MSModSpec_name>Uniblue A on K</MSModSpec_name>
-    <MSModSpec_monomass>484.039891</MSModSpec_monomass>
-    <MSModSpec_averagemass>484.5016</MSModSpec_averagemass>
-    <MSModSpec_n15mass>0</MSModSpec_n15mass>
-    <MSModSpec_residues>
-      <MSModSpec_residues_E>K</MSModSpec_residues_E>
-    </MSModSpec_residues>
-</MSModSpec>
-<MSModSpec>
-    <MSModSpec_mod>
       <MSMod value="mod196">196</MSMod>
     </MSModSpec_mod>
     <MSModSpec_type>
@@ -2848,6 +2803,7 @@
       <MSModSpec_residues_E>K</MSModSpec_residues_E>
     </MSModSpec_residues>
     <MSModSpec_unimod>738</MSModSpec_unimod>
+    <MSModSpec_psi-ms>TMT2plex</MSModSpec_psi-ms>
 </MSModSpec>
   <MSModSpec>
     <MSModSpec_mod>
@@ -2860,43 +2816,9 @@
     <MSModSpec_monomass>225.155833</MSModSpec_monomass>
     <MSModSpec_averagemass>225.2921</MSModSpec_averagemass>
     <MSModSpec_n15mass>0</MSModSpec_n15mass>
-    <MSModSpec_residues>
-      <MSModSpec_residues_E>X</MSModSpec_residues_E>
-    </MSModSpec_residues>
     <MSModSpec_unimod>738</MSModSpec_unimod>
-</MSModSpec>
-<MSModSpec>
-    <MSModSpec_mod>
-      <MSMod value="mod198">198</MSMod>
-    </MSModSpec_mod>
-    <MSModSpec_type>
-      <MSModType value="modaa">0</MSModType>
-    </MSModSpec_type>
-    <MSModSpec_name>TMT 6-plex on K</MSModSpec_name>
-    <MSModSpec_monomass>229.162932</MSModSpec_monomass>
-    <MSModSpec_averagemass>229.2634</MSModSpec_averagemass>
-    <MSModSpec_n15mass>0</MSModSpec_n15mass>
-    <MSModSpec_residues>
-      <MSModSpec_residues_E>K</MSModSpec_residues_E>
-    </MSModSpec_residues>
-    <MSModSpec_unimod>738</MSModSpec_unimod>
-</MSModSpec>
-  <MSModSpec>
-    <MSModSpec_mod>
-      <MSMod value="mod199">199</MSMod>
-    </MSModSpec_mod>
-    <MSModSpec_type>
-      <MSModType value="modnp">5</MSModType>
-    </MSModSpec_type>
-    <MSModSpec_name>TMT 6-plex on n-term peptide</MSModSpec_name>
-    <MSModSpec_monomass>229.162932</MSModSpec_monomass>
-    <MSModSpec_averagemass>229.2634</MSModSpec_averagemass>
-    <MSModSpec_n15mass>0</MSModSpec_n15mass>
-    <MSModSpec_residues>
-      <MSModSpec_residues_E>X</MSModSpec_residues_E>
-    </MSModSpec_residues>
-    <MSModSpec_unimod>738</MSModSpec_unimod>
-</MSModSpec>
+    <MSModSpec_psi-ms>TMT2plex</MSModSpec_psi-ms>
+  </MSModSpec>
   <MSModSpec>
     <MSModSpec_mod>
       <MSMod value="mod200">200</MSMod>
@@ -2909,6 +2831,7 @@
     <MSModSpec_averagemass>304.3074</MSModSpec_averagemass>
     <MSModSpec_n15mass>0</MSModSpec_n15mass>
     <MSModSpec_unimod>730</MSModSpec_unimod>
+    <MSModSpec_psi-ms>iTRAQ8plex</MSModSpec_psi-ms>
   </MSModSpec>
   <MSModSpec>
     <MSModSpec_mod>
@@ -2925,6 +2848,7 @@
       <MSModSpec_residues_E>K</MSModSpec_residues_E>
     </MSModSpec_residues>
     <MSModSpec_unimod>730</MSModSpec_unimod>
+    <MSModSpec_psi-ms>iTRAQ8plex</MSModSpec_psi-ms>
   </MSModSpec>
   <MSModSpec>
     <MSModSpec_mod>
@@ -2941,6 +2865,7 @@
       <MSModSpec_residues_E>Y</MSModSpec_residues_E>
     </MSModSpec_residues>
     <MSModSpec_unimod>730</MSModSpec_unimod>
+    <MSModSpec_psi-ms>iTRAQ8plex</MSModSpec_psi-ms>
   </MSModSpec>
   <MSModSpec>
     <MSModSpec_mod>
@@ -2954,6 +2879,7 @@
     <MSModSpec_averagemass>304.3081</MSModSpec_averagemass>
     <MSModSpec_n15mass>0</MSModSpec_n15mass>
     <MSModSpec_unimod>731</MSModSpec_unimod>
+    <MSModSpec_psi-ms>iTRAQ8plex:13C(6)15N(2)</MSModSpec_psi-ms>
   </MSModSpec>
   <MSModSpec>
     <MSModSpec_mod>
@@ -2970,6 +2896,7 @@
       <MSModSpec_residues_E>K</MSModSpec_residues_E>
     </MSModSpec_residues>
     <MSModSpec_unimod>731</MSModSpec_unimod>
+    <MSModSpec_psi-ms>iTRAQ8plex:13C(6)15N(2)</MSModSpec_psi-ms>
   </MSModSpec>
   <MSModSpec>
     <MSModSpec_mod>
@@ -2986,6 +2913,7 @@
       <MSModSpec_residues_E>Y</MSModSpec_residues_E>
     </MSModSpec_residues>
     <MSModSpec_unimod>731</MSModSpec_unimod>
+    <MSModSpec_psi-ms>iTRAQ8plex:13C(6)15N(2)</MSModSpec_psi-ms>
   </MSModSpec>
   <MSModSpec>
     <MSModSpec_mod>
@@ -3002,20 +2930,6 @@
       <MSModSpec_residues_E>C</MSModSpec_residues_E>
     </MSModSpec_residues>
     <MSModSpec_unimod>162</MSModSpec_unimod>
-  </MSModSpec>
-  <MSModSpec>
-    <MSModSpec_mod>
-      <MSMod value="mod207">207</MSMod>
-    </MSModSpec_mod>
-    <MSModSpec_type>
-      <MSModType value="modaa">0</MSModType>
-    </MSModSpec_type>
-    <MSModSpec_name>carboxymethylated selenocysteine</MSModSpec_name>
-    <MSModSpec_monomass>105.949928</MSModSpec_monomass>
-    <MSModSpec_averagemass>104.9311</MSModSpec_averagemass>
-    <MSModSpec_n15mass>0</MSModSpec_n15mass>
-    <MSModSpec_residues>
-      <MSModSpec_residues_E>C</MSModSpec_residues_E>
-    </MSModSpec_residues>
+    <MSModSpec_psi-ms>Delta:S(-1)Se(1)</MSModSpec_psi-ms>
   </MSModSpec>
 </MSModSpecSet>

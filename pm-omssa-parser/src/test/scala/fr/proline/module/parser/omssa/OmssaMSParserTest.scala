@@ -184,6 +184,37 @@ class OmssaMSParserTest extends Logging {
       //        throw e
     }
   }
+  
+  @Test
+  def testResultFileVerifier_getPtmDefinitions {
+    val method = getMethod()
+    logger.debug("TEST [" + method + "] STARTS")
+    
+    val storer = fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer(executionContext.getPSDbConnectionContext)
+    val resultFileProvider = new OmssaResultFileProvider
+    val verifier = resultFileProvider.getResultFileVerifier
+    val ptms = verifier.getPtmDefinitions(new File(Thread.currentThread.getContextClassLoader.getResource("omssa_config/usermods.xml").getPath()))
+    try {
+    	storer.storePtmDefinitions(ptms.toSeq, executionContext)
+    	logger.debug("TEST [" + method + "] KO: parsing has not failed as expected !!")
+    } catch {
+      case e: IllegalArgumentException => logger.debug("TEST [" + method + "] OK: parsing has failed as expected: ", e)
+      case e: Exception =>
+        logger.debug("TEST [" + method + "] KO: parsing has failed for an unexpected reason : " + e, e)
+        throw e
+    }
+  }
+  
+  @Test
+  def testResultFileVerifier_isValid {
+    val method = getMethod()
+    logger.debug("TEST [" + method + "] STARTS")
+    val resultFileProvider = new OmssaResultFileProvider
+    val verifier = resultFileProvider.getResultFileVerifier
+    val valid = verifier.isValid(new File(Thread.currentThread.getContextClassLoader.getResource(omssaSampleFolder + "/STG_NCSpiste1_OTD_mgfInputFile.omx").toURI()))
+    assertEquals(true, valid)
+    logger.debug("TEST [" + method + "] OK: file is valid")
+  }
 
   @Test
   def testResultFileProvider {
@@ -192,7 +223,7 @@ class OmssaMSParserTest extends Logging {
     val resultFileProvider = new OmssaResultFileProvider
 
     val cl = Thread.currentThread.getContextClassLoader
-
+    
     val resultFile = resultFileProvider.getResultFile(
       fileLocation = new File(cl.getResource(omssaSampleFolder + "/STG_NCSpiste1_OTD_mgfInputFile.omx").toURI()),
       importProperties = propertiesBuilder.result,
@@ -210,9 +241,8 @@ class OmssaMSParserTest extends Logging {
     // test JSON settings
     logger.debug("TEST [" + method + "] read JSon settings")
     val jsonSettings = omssaOmxFile.omssaSettingsInJsonFormat
-    //    logger.debug(pretty(render(jsonSettings)))
+//    logger.debug(pretty(render(jsonSettings)))
     for (setting <- jsonSettings) {
-      //      logger.debug("JSON setting: " + setting.values.first._1 + " => " + setting.values.first._2)
       if (setting.values.first._1 == "MSSearchSettings_numisotopes") assert(setting.values.first._2 == "0")
       else if (setting.values.first._1 == "MSSearchSettings_scale") assert(setting.values.first._2 == "1000")
       else if (setting.values.first._1 == "MSSearchSettings_cutoff") assert(setting.values.first._2 == "10")

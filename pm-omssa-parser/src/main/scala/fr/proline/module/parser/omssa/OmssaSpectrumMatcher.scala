@@ -180,7 +180,8 @@ class OmssaSpectrumMatcher(omxFile: File,
                                       case _ =>
                                     }
                                     // get the ptm from the list read in the mandatory files, check if the ptm is variable of fixed in the search settings
-                                    val ptm = omssaLoader.ptmDefinitions.get(ptmId)
+                                    val ptm = omssaLoader.getPtmDefinition(ptmId, peptideSequence.charAt(modificationSite-1))
+//                                    val ptm = omssaLoader.ptmDefinitions.get(ptmId)
                                     if (ptm != None) {
                                       val isVariable = searchSettings.variablePtmDefs.contains(ptm.get)
                                       modificationMatches+= new FragmentModificationMatch(ptm.get.names.shortName, isVariable, modificationSite)
@@ -201,8 +202,8 @@ class OmssaSpectrumMatcher(omxFile: File,
                         logger.debug("Creating fragment ion table")
                         // filter with wantDecoy value (if true, first protein must be decoy ; if false, first protein must be target)
                           val table = new FragmentIonTable(peptideSequence, 
-                        		  						   proteinAccessionNumbers.toArray, 
-                        		  						   omssaLoader.ptmDefinitions.values.toArray, 
+//                        		  						   proteinAccessionNumbers.toArray, 
+//                        		  						   omssaLoader.ptmDefinitions.values.toArray, 
                         		  						   modificationMatches.toArray, 
                         		  						   currentFragmentIonTypes,
                         		  						   neutralLosses.get) // neutralLosses are not implemented yet in omssa
