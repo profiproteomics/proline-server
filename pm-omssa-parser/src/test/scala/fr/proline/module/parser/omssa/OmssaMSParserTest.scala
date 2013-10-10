@@ -12,9 +12,6 @@ import fr.proline.context.{ DatabaseConnectionContext, BasicExecutionContext }
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.{ IProteinProvider, ISeqDatabaseProvider, IPeptideProvider, IPTMProvider }
 import fr.proline.module.parser.provider.fake.{ ProteinFakeProvider, SeqDbFakeProvider, PeptideFakeProvider, PTMFakeProvider }
-import net.liftweb.json.{ pretty, compact }
-import net.liftweb.json.JsonDSL._
-import net.liftweb.json.JsonAST._
 import java.io.FileNotFoundException
 import fr.proline.module.fragment_match.FragmentTable
 import fr.proline.util.MathUtils
@@ -27,8 +24,6 @@ class OmssaMSParserTest extends Logging {
   var parserContext: ProviderDecoratedExecutionContext = null
   // configuration files
   val omssaConfigFolder: String = "/omssa_config"
-  //  val xsdFileName: String = omssaConfigFolder + "/OMSSA.xsd"
-  //  val modsFileName: String = omssaConfigFolder + "/mods.xml"
   val userModsFileName: String = omssaConfigFolder + "/usermods.xml"
   val omssaSampleFolder: String = "omx_samples"
   val defaultDatasetsFolder: String = "/default_datasets"
@@ -51,8 +46,6 @@ class OmssaMSParserTest extends Logging {
 
   val propertiesBuilder = Map.newBuilder[String, Any]
   propertiesBuilder += (OmssaParseParams.OMSSA_VERSION.toString -> "2.1.9")
-  //  propertiesBuilder += (OmssaParseParams.OMSSA_XSD_FILE.toString -> new File(this.getClass().getResource(xsdFileName).toURI()))
-  //  propertiesBuilder += (OmssaParseParams.MOD_XML_FILE.toString -> new File(this.getClass().getResource(modsFileName).toURI()))
   propertiesBuilder += (OmssaParseParams.USERMOD_XML_FILE.toString -> new File(this.getClass().getResource(userModsFileName).toURI()))
   propertiesBuilder += (OmssaParseParams.FASTA_CONTAINS_TARGET.toString -> true)
   propertiesBuilder += (OmssaParseParams.FASTA_CONTAINS_DECOY.toString -> true)
@@ -238,17 +231,15 @@ class OmssaMSParserTest extends Logging {
     logger.debug("TEST [" + method + "] STARTS")
     val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_mgfInputFile.omx")
     val rs = omssaOmxFile.getResultSet(wantDecoy = false)
-    // test JSON settings
-    logger.debug("TEST [" + method + "] read JSon settings")
-    val jsonSettings = omssaOmxFile.omssaSettingsInJsonFormat
-//    logger.debug(pretty(render(jsonSettings)))
-    for (setting <- jsonSettings) {
-      if (setting.values.first._1 == "MSSearchSettings_numisotopes") assert(setting.values.first._2 == "0")
-      else if (setting.values.first._1 == "MSSearchSettings_scale") assert(setting.values.first._2 == "1000")
-      else if (setting.values.first._1 == "MSSearchSettings_cutoff") assert(setting.values.first._2 == "10")
-      else if (setting.values.first._1 == "MSSearchSettings_db") assert(setting.values.first._2 == "db/spHomo_DCpSP_ABU_20121206")
-      else if (setting.values.first._1 == "MSSearchSettings_exactmass") assert(setting.values.first._2 == "1446.94")
-    }
+    // test hashmapped settings
+    logger.debug("TEST [" + method + "] read hashmapped settings")
+    val settings = omssaOmxFile.omssaSettingsInHashTable
+    settings.foreach { case(key, value) => logger.debug("TEST:"+key+" => "+value) }
+    assert(settings.get("MSSearchSettings_numisotopes").get == "0")
+    assert(settings.get("MSSearchSettings_scale").get == "1000")
+    assert(settings.get("MSSearchSettings_cutoff").get == "10")
+    assert(settings.get("MSSearchSettings_db").get == "db/spHomo_DCpSP_ABU_20121206")
+    assert(settings.get("MSSearchSettings_exactmass").get == "1446.94")
     // test mandatory files
     logger.debug("TEST [" + method + "] read mandatory files")
     val omssaLoader = omssaOmxFile.getOmssaLoader

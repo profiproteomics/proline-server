@@ -1,6 +1,6 @@
 package fr.proline.module.parser.omssa
 
-import fr.proline.core.om.model.msi.{ Protein, ProteinMatch, Peptide, PeptideMatch, Peaklist, Ms2Query, SequenceMatch, MSISearch, SeqDatabase, SearchSettings, SearchSettingsProperties, PtmDefinition, LocatedPtm, /*InstrumentConfig,*/ PeptideMatchProperties }
+import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.{ IProteinProvider, ISeqDatabaseProvider, IPeptideProvider, IPTMProvider }
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.builder.PtmDefinitionBuilder
@@ -11,11 +11,6 @@ import org.codehaus.staxmate.in.{ SMHierarchicCursor, SMInputCursor }
 import org.codehaus.staxmate.SMInputFactory
 import com.weiglewilczek.slf4s.Logging
 import fr.proline.context.DatabaseConnectionContext
-import net.liftweb.json.{ pretty, compact }
-import net.liftweb.json.JsonDSL._
-import net.liftweb.json.JsonAST._
-
-//import fr.proline.core.om.model.msi.PeptideMatchOmssaProperties
 
 case class ProteinWrapper(val seqdbId: Long, val protAccess: String, var wrappedProt: Option[Protein]) {
   override def equals(other: Any): Boolean = {
@@ -57,17 +52,15 @@ class OmssaReadFile(val omxFile: File,
   private var msiSearch: MSISearch = null
   def getMsiSearch: MSISearch = msiSearch
   private val hasTargetResultSet: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_TARGET, true).toString.toBoolean
-//  def searchForTargetEntries: Boolean = hasTargetResultSet
+  //  def searchForTargetEntries: Boolean = hasTargetResultSet
   private val hasDecoyResultSet: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_DECOY, true).toString.toBoolean
-//  def searchForDecoyEntries: Boolean = hasDecoyResultSet
-  //  private var omssaSettingsInJsonFormat: ArrayBuffer[JObject] = null
-  def getSettingsInJsonFormat: ArrayBuffer[JObject] = omssaSettingsInJsonFormat
+  //  def searchForDecoyEntries: Boolean = hasDecoyResultSet
   // the Mz in the omssa files are Integers, they must be divided by this number to get the real value
   // a special class is used to get the value from the file before reading it
   private val mozScaleExtractor = new OmssaMozScaleExtractor(omxFile)
   private var currentFileMzScale = mozScaleExtractor.mozScaleValue()
-//  private val MINUS_LOG_EVALUE_MIN_SCORE = -1
-//  private val MINUS_LOG_EVALUE_MAX_SCORE = 300
+  //  private val MINUS_LOG_EVALUE_MIN_SCORE = -1
+  //  private val MINUS_LOG_EVALUE_MAX_SCORE = 300
   private var _containsTargetProteinMatches: Boolean = false
   def containsTargetProteinMatches = _containsTargetProteinMatches
   private var _containsDecoyProteinMatches: Boolean = false
@@ -77,9 +70,6 @@ class OmssaReadFile(val omxFile: File,
 
   private def _parseOmxFile() {
     pepByUniqueKey = new HashMap[String, Peptide]()
-    //    var pepProvider = entityProviders.peptideProvider
-    //    var ptmProvider = entityProviders.ptmProvider
-    //    var protProvider = entityProviders.proteinProvider
     var pepProvider = parserContext.getProvider(classOf[IPeptideProvider])
     val ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
     var protProvider = parserContext.getProvider(classOf[IProteinProvider])
@@ -232,15 +222,15 @@ class OmssaReadFile(val omxFile: File,
                           while (MSHits_firstChild.getCurrEvent() != null) {
                             MSHits_firstChild.getPrefixedName() match {
                               //                              case "MSHits_evalue" => peptideMatchExpectValue = MSHits_firstChild.collectDescendantText(false).toFloat
-                              case "MSHits_evalue" => 
+                              case "MSHits_evalue" =>
                                 peptideMatchExpectValue = MSHits_firstChild.collectDescendantText(false).toDouble
-                                // exclude this match for e-values too small
-//                                if(minusLogEValue(peptideMatchExpectValue) > MINUS_LOG_EVALUE_MAX_SCORE) {
-//                                  logger.info("Hit "+peptideMatchRank+" for spectrum "+hitSetNumber+" is ignored due to an excessively low e-value ("+peptideMatchExpectValue+")")
-//                                  while (MSHits_firstChild.getCurrEvent() != null) {
-//                                	  MSHits_firstChild.advance()
-//                                  }
-//                                }
+                              // exclude this match for e-values too small
+                              //                                if(minusLogEValue(peptideMatchExpectValue) > MINUS_LOG_EVALUE_MAX_SCORE) {
+                              //                                  logger.info("Hit "+peptideMatchRank+" for spectrum "+hitSetNumber+" is ignored due to an excessively low e-value ("+peptideMatchExpectValue+")")
+                              //                                  while (MSHits_firstChild.getCurrEvent() != null) {
+                              //                                	  MSHits_firstChild.advance()
+                              //                                  }
+                              //                                }
                               case "MSHits_pvalue" => peptideMatchPValue = MSHits_firstChild.collectDescendantText(false).toFloat
                               case "MSHits_charge" => peptideCharge = MSHits_firstChild.collectDescendantText(false).toInt
                               case "MSHits_pephits" => // one MSPepHit per ProteinMatch/SequenceMatch
@@ -273,16 +263,9 @@ class OmssaReadFile(val omxFile: File,
                                   if (proteinMatchGiNumber != "") proteinMatchAccessionNumber = proteinMatchGiNumber // MSPepHit_gi is only given for ncbi databases
 
                                   // check that the sequence match does not already exist (bug in omssa)
-//                                if(simpleSequenceMatches.contains(new simpleSequenceMatch(proteinMatchAccessionNumber, sequenceMatchStart, sequenceMatchStop))) {
-//                                  logger.debug("ABU redundant sequence match on "+proteinMatchAccessionNumber +"/"+ sequenceMatchStart +"/"+ sequenceMatchStop)
-//                                } else {
                                   if (!simpleSequenceMatches.contains(new simpleSequenceMatch(proteinMatchAccessionNumber, sequenceMatchStart, sequenceMatchStop))) {
                                     // create and store the ProteinMatch object
                                     var proteinMatch: ProteinMatch = null
-                                    //                                  if (proteinAccessionNumbersToProteinMatches.contains(proteinMatchAccessionNumber) && proteinAccessionNumbersToProteinMatches.get(proteinMatchAccessionNumber) != None) {
-                                    //                                    // if the protein match already exists
-                                    //                                    proteinMatch = proteinAccessionNumbersToProteinMatches.get(proteinMatchAccessionNumber).get
-                                    //                                  } else { // case of a new protein match
                                     // create or get the Protein object
                                     var protein = Option.empty[Protein]
                                     val protWrapperKey = proteinMatchAccessionNumber + (seqDatabase.id)
@@ -341,14 +324,11 @@ class OmssaReadFile(val omxFile: File,
                                   while (MSModHit_firstChild.getCurrEvent() != null) {
                                     MSModHit_firstChild.getPrefixedName() match {
                                       case "MSModHit_site" => locatedPtmSite = MSModHit_firstChild.collectDescendantText(false).toInt + 1
-                                      //                                      case "MSModHit_modtype" => locatedPtmDefinition = omssaLoader.ptmDefinitions.get(MSModHit_firstChild.childElementCursor().advance().collectDescendantText(false).toInt)
                                       case "MSModHit_modtype" =>
                                         val ptmId = MSModHit_firstChild.childElementCursor().advance().collectDescendantText(false).toInt
-                                        val myPtm = omssaLoader.getPtmDefinition(ptmId, peptideSequence.charAt(locatedPtmSite-1))
-                                        if(myPtm.isDefined) {
+                                        val myPtm = omssaLoader.getPtmDefinition(ptmId, peptideSequence.charAt(locatedPtmSite - 1))
+                                        if (myPtm.isDefined) {
                                           locatedPtmDefinition = myPtm
-//                                        if (omssaLoader.ptmDefinitions.get(ptmId).isDefined) {
-//                                          locatedPtmDefinition = omssaLoader.ptmDefinitions.get(ptmId)
                                         } else {
                                           throw new UnknownPTMException()
                                         }
@@ -374,49 +354,38 @@ class OmssaReadFile(val omxFile: File,
                             MSHits_firstChild.advance()
                           }
                           MSHits.advance()
-//                          if(minusLogEValue(peptideMatchExpectValue) <= MINUS_LOG_EVALUE_MAX_SCORE) {
-	                          // create the Peptide object
-	                          val peptide = this.getOrCreatePeptide(peptideLocatedPtms, peptideSequence, pepProvider)
-	                          // add properties
-	                          //                          val peptideMatchOmssaProperties = new PeptideMatchOmssaProperties( pValue = peptideMatchPValue )
-	                          //                          val peptideMatchProperties = new PeptideMatchProperties( omssaProperties = Some(peptideMatchOmssaProperties) )
-	                          // create the PeptideMatch object
-	                          val peptideMatch = new PeptideMatch(
-	                            id = PeptideMatch.generateNewId,
-	                            rank = peptideMatchRank,
-	//                            score = (-1 * scala.math.log10(peptideMatchExpectValue)).toFloat, // -log(evalue) is stored
-	                            score = minusLogEValue(peptideMatchExpectValue), // -log(evalue) is stored
-	                            scoreType = omssaScoreType,
-	                            deltaMoz = (peptideMatchDeltaMoz / peptideCharge) / currentFileMzScale,
-	                            isDecoy = (proteinMatches.length > 0 && proteinMatches(0).isDecoy), // if the first protein match is tagged as decoy, the peptide match is decoy too
-	                            peptide = peptide,
-	                            missedCleavage = 0, // how to get this ??? count the number of amino acids corresponding to the used enzyme ?
-	                            fragmentMatchesCount = peptideMatchFragmentMatchesCount,
-	                            //                            properties = Some(peptideMatchProperties),
-	                            msQuery = msQueries.get(hitSetNumber).getOrElse(null))
-	                          // add the proteinMatches if the peptideMatch is the best peptideMatch for this peptide
-	                          //                          var bestPeptideMatch = peptideMatch
-	                          //                          for (pm <- peptideToPeptideMatches.get(peptide).getOrElse(new ArrayBuffer[PeptideMatch]())) {
-	                          //                            if (bestPeptideMatch.score < pm.score || (bestPeptideMatch.score == pm.score && bestPeptideMatch.id < pm.id)) bestPeptideMatch = pm
-	                          //                          }
-	                          //                          if (peptideMatch.id == bestPeptideMatch.id) {
-	                          // add the protein matches to the currently best peptide match
-	                          peptideMatchToProteinMatches.put(peptideMatch.id, proteinMatches)
-	                          for ((proteinMatchId, sequenceMatch) <- proteinMatchIdToSequenceMatches) {
-	                            // creating the final SequenceMatch object
-	                            peptideMatchProteinMatchToSequenceMatch(peptideMatch.id, proteinMatchId) = new SequenceMatch(
-	                              start = sequenceMatch.start,
-	                              end = sequenceMatch.end,
-	                              residueBefore = sequenceMatchResidueBefore.getOrElse('-'),
-	                              residueAfter = sequenceMatchResidueAfter.getOrElse('-') //,
-	                            //                                  peptide = Some(bestPeptideMatch.peptide),
-	                            //                                  bestPeptideMatch = Some(bestPeptideMatch),
-	                            //                                  isDecoy = bestPeptideMatch.isDecoy
-	                            )
-	                          }
-	                          //                          }
-	                          peptideToPeptideMatches.getOrElseUpdate(peptide, new ArrayBuffer[PeptideMatch]) += peptideMatch
-//                          }
+                          //                          if(minusLogEValue(peptideMatchExpectValue) <= MINUS_LOG_EVALUE_MAX_SCORE) {
+                          // create the Peptide object
+                          val peptide = this.getOrCreatePeptide(peptideLocatedPtms, peptideSequence, pepProvider)
+                          // add properties
+                          val peptideMatchOmssaProperties = new PeptideMatchOmssaProperties(pValue = peptideMatchPValue)
+                          val peptideMatchProperties = new PeptideMatchProperties(omssaProperties = Some(peptideMatchOmssaProperties))
+                          // create the PeptideMatch object
+                          val peptideMatch = new PeptideMatch(
+                            id = PeptideMatch.generateNewId,
+                            rank = peptideMatchRank,
+                            score = minusLogEValue(peptideMatchExpectValue), // -log(evalue) is stored
+                            scoreType = omssaScoreType,
+                            deltaMoz = (peptideMatchDeltaMoz / peptideCharge) / currentFileMzScale,
+                            isDecoy = (proteinMatches.length > 0 && proteinMatches(0).isDecoy), // if the first protein match is tagged as decoy, the peptide match is decoy too
+                            peptide = peptide,
+                            missedCleavage = 0, // how to get this ??? count the number of amino acids corresponding to the used enzyme ?
+                            fragmentMatchesCount = peptideMatchFragmentMatchesCount,
+                            properties = Some(peptideMatchProperties),
+                            msQuery = msQueries.get(hitSetNumber).getOrElse(null))
+                          // add the protein matches to the currently best peptide match
+                          peptideMatchToProteinMatches.put(peptideMatch.id, proteinMatches)
+                          for ((proteinMatchId, sequenceMatch) <- proteinMatchIdToSequenceMatches) {
+                            // creating the final SequenceMatch object
+                            peptideMatchProteinMatchToSequenceMatch(peptideMatch.id, proteinMatchId) = new SequenceMatch(
+                              start = sequenceMatch.start,
+                              end = sequenceMatch.end,
+                              residueBefore = sequenceMatchResidueBefore.getOrElse('-'),
+                              residueAfter = sequenceMatchResidueAfter.getOrElse('-')
+                            )
+                          }
+                          peptideToPeptideMatches.getOrElseUpdate(peptide, new ArrayBuffer[PeptideMatch]) += peptideMatch
+                          //                          }
                         }
                       case _ => // contains useless information
                     }
@@ -444,10 +413,10 @@ class OmssaReadFile(val omxFile: File,
   }
 
   /**
- * @param evalue the e-value read in the omssa file
- * @return -log(e-value)
- */
-private def minusLogEValue(evalue: Double): Float = (-1 * scala.math.log10(evalue.toFloat)).toFloat
+   * @param evalue the e-value read in the omssa file
+   * @return -log(e-value)
+   */
+  private def minusLogEValue(evalue: Double): Float = (-1 * scala.math.log10(evalue.toFloat)).toFloat
 
   /**
    * Search for OM Peptide corresponding to specified ms_peptide. Search / Creation is done as follow
@@ -486,11 +455,9 @@ private def minusLogEValue(evalue: Double): Float = (-1 * scala.math.log10(evalu
     // prepare variables
     var inputFileType = ""
     var inputFilePath = ""
-    //    var outputFilePath = ""
-    //    var usedEnzymes = new ArrayBuffer[String]()
     var usedEnzymes = new ArrayBuffer[fr.proline.core.om.model.msi.Enzyme]()
     var maxMissedCleavages = -1
-    var msLevel = 1; //var settingId = 0
+    var msLevel = 1;
     var msVarPtms = new ArrayBuffer[PtmDefinition]()
     var msFixedPtms = new ArrayBuffer[PtmDefinition]()
     var dbName = ""
@@ -508,19 +475,14 @@ private def minusLogEValue(evalue: Double): Float = (-1 * scala.math.log10(evalu
     maxMsChargeState = extract(find("MSChargeHandle_maxcharge")).toInt
     ms1ErrorTolUnit = omssaLoader.toleranceUnit(extract(find("MSSearchSettings_pepppm/value")))
     inputFileType = omssaLoader.spectrumFileTypes(extract(find("MSSpectrumFileType")).toInt)
-    //    outputFilePath = omxFile.getAbsolutePath
     inputFilePath = parseProperties.get(OmssaParseParams.PEAK_LIST_FILE_PATH).toString
 
     searchSettingsReference.filter(element => element.contains("MSSearchSettings_fixed/MSMod/*>")).foreach(
       element => {
-//        val ptm: Option[PtmDefinition] = omssaLoader.ptmDefinitions.get(extract(element).toInt)
-//        if (ptm != None) msFixedPtms += ptm.get
         omssaLoader.getPtmDefinitions(extract(element).toLong).foreach(ptm => msFixedPtms += ptm)
       })
     searchSettingsReference.filter(element => element.contains("MSSearchSettings_variable/MSMod/*>")).foreach(
       element => {
-//        val ptm: Option[PtmDefinition] = omssaLoader.ptmDefinitions.get(extract(element).toInt)
-//        if (ptm != None) msVarPtms += ptm.get
         omssaLoader.getPtmDefinitions(extract(element).toLong).foreach(ptm => msVarPtms += ptm)
       })
     searchSettingsReference.filter(element => element.contains("MSSearchSettings_taxids_E/*>")).foreach(
@@ -529,7 +491,6 @@ private def minusLogEValue(evalue: Double): Float = (-1 * scala.math.log10(evalu
       })
     searchSettingsReference.filter(element => element.contains("MSEnzymes/*>")).foreach(
       element => {
-        //        usedEnzymes += omssaLoader.enzymes.get(extract(element).toInt).getOrElse("")
         usedEnzymes += new fr.proline.core.om.model.msi.Enzyme(omssaLoader.enzymes.get(extract(element).toInt).getOrElse(""))
       })
 
@@ -559,8 +520,6 @@ private def minusLogEValue(evalue: Double): Float = (-1 * scala.math.log10(evalu
     var searchSettings: SearchSettings = new SearchSettings(
       id = SearchSettings.generateNewId(),
       softwareName = "OMSSA",
-      //      softwareVersion = parseProperties.getOrElse(OmssaParseParams.OMSSA_VERSION, omssaDefaultVersion).toString, // not in omx file
-      //      taxonomy = parseProperties.getOrElse(OmssaParseParams.FASTA_TAXONOMIES, "").toString, // the mark up exists for this data, but is not used at this moment
       softwareVersion = parseProperties.get(OmssaParseParams.OMSSA_VERSION).toString, // not in omx file
       taxonomy = parseProperties.get(OmssaParseParams.FASTA_TAXONOMIES).toString, // the mark up exists for this data, but is not used at this moment
       maxMissedCleavages = maxMissedCleavages,
@@ -572,8 +531,7 @@ private def minusLogEValue(evalue: Double): Float = (-1 * scala.math.log10(evalu
       variablePtmDefs = msVarPtms.toArray,
       fixedPtmDefs = msFixedPtms.toArray,
       seqDatabases = Array(seqDatabase),
-      //      instrumentConfig = instrumentConfig.getOrElse(null),
-      instrumentConfig = null, // not instanciate at this moment
+      instrumentConfig = null, // not instanciated at this moment
       quantitation = "")
 
     //Create MSISearch regrouping all these information
@@ -586,47 +544,20 @@ private def minusLogEValue(evalue: Double): Float = (-1 * scala.math.log10(evalu
       date = new java.util.Date,
       resultFileDirectory = omxFile.getPath(),
       queriesCount = nbSpectra)
-    //      properties = Some(convertSettingsInJson))
   }
 
   /**
    * The purpose of this function is to create an object that will contain all the omssa settings in Json format
    * Because MSISearch object can not contain all of them, and because these settings can be important
-   * @return a SearchSettingsProperties object (empty for the moment)
+   * @return a hash table with all the settings in their original values
    */
-  private lazy val omssaSettingsInJsonFormat: ArrayBuffer[JObject] = {
-    var tmpOmssaSettingsInJsonFormat = new ArrayBuffer[JObject]
-    searchSettingsReference.filter(element => element.contains("*>")).foreach(element => tmpOmssaSettingsInJsonFormat += putSettingsInJsonCompatibleObjects(element))
-    tmpOmssaSettingsInJsonFormat
-    //    logger.debug(pretty(render(omssaSettingsInJsonFormat)))
-    //    var properties = new SearchSettingsProperties
-    // properties = compact(render(omssaSettingsInJsonFormat))
-    //    return properties
-  }
-  /**
-   * Recursive function to gather all the omssa settings in json
-   * @param setting : the setting returned by the function that parses the omssa xml file
-   * setting should look like one of those :
-   * /MSSearchSettings_precursorsearchtype/MSSearchType/ *>4 => MSSearchSettings_precursorsearchtype->MSSearchType->4
-   * /MSSearchSettings_peptol/ *>0.25 => MSSearchSettings_peptol->0.25
-   * /MSSearchSettings_db/ *>db/spHomo_DCpSP_ABU_20121206 => MSSearchSettings_db => db/spHomo_DCpSP_ABU_20121206
-   * /MSSearchSettings_chargehandling/MSChargeHandle/MSChargeHandle_calcplusone/MSCalcPlusOne/ *>1 => MSSearchSettings_chargehandling->MSChargeHandle->MSChargeHandle_calcplusone->MSCalcPlusOne->1
-   * @return a JObject containing the current level and the children
-   */
-  private def putSettingsInJsonCompatibleObjects(_setting: String): JObject = {
-    // split the setting to separate the current key to the rest of the string
-    val setting = _setting.replaceFirst("/", "")
-    val index = setting.indexOf("/")
-    val key = setting.substring(0, index)
-    val value = setting.substring(index)
-    // if the rest of the string is the value
-    if (value.startsWith("/*>")) {
-      // return the value (exit case)
-      return (key -> value.replace("/*>", ""))
-    } else {
-      // otherwise call the function recursively to get the JObject
-      return (key -> putSettingsInJsonCompatibleObjects(value))
-    }
+  lazy val omssaSettingsInHashTable: Map[String, String] = {
+    var settingsMap = new HashMap[String, String]
+    searchSettingsReference.filter(element => element.contains("*>")).foreach(e => {
+      val kv = e.split("""/\*>""")
+      settingsMap.put(kv(0).replace("*>", "").replaceAll("/", ".").replaceFirst(".", ""), kv(1))
+    })
+    settingsMap.toMap
   }
 
   /*
@@ -703,43 +634,37 @@ private def minusLogEValue(evalue: Double): Float = (-1 * scala.math.log10(evalu
     val mainErrorMessage = "Multiple sets of settings with heterogeneous search settings (this OMSSA file is the merge of different OMSSA searches)"
     searchSettingsReference.foreach(
       (element: String) => if (searchSettingsCandidate.indexOf(element) == -1) {
-        //        throw new NotMatchingSearchSettingsException("|ref| : " + searchSettingsReference.length + " vs |curr| : " + searchSettingsCandidate.length + "\r\nelement : " + element)
         throw new NotMatchingSearchSettingsException(mainErrorMessage + " : The setting '" + element + "' has at least two different values")
         return false
       })
     if (searchSettingsReference.length != searchSettingsCandidate.length) {
-      //      throw new NotMatchingSearchSettingsException("|ref| : " + searchSettingsReference.length + " vs |curr| : " + searchSettingsCandidate.length)
       throw new NotMatchingSearchSettingsException(mainErrorMessage + " : The number of settings is different")
       return false
     }
     true
   }
 
-  /**
-   * this method tells if a proteinMatch object is target or decoy
-   * this method is temporary and should be replaced by a global ProlineCore method
-   * @param proteinMatch the proteinMatch to analyse
-   * @return true if the proteinMatch object is tagged as decoy
-   */
-  private def proteinMatchIsDecoy(proteinMatch: ProteinMatch): Boolean = {
-    // look at the global parameters
-    if (hasTargetResultSet && !hasDecoyResultSet) return false // if the file contains only target entries
-    else if (!hasTargetResultSet && hasDecoyResultSet) return true // if the file contains only decoy entries
-    // otherwise use a regex on the accession number or the description to find to know if the protein is a decoy
-    else if (proteinMatchDescriptionContainsDecoyTag(proteinMatch.description)) return true
-    //logger.debug(proteinMatch.accession + ": "+ proteinMatch.description+ " is decoy : "+isDecoy+" ("+hasTargetResultSet+"/"+hasDecoyResultSet+")")
-    return false
-  }
+  //  /**
+  //   * this method tells if a proteinMatch object is target or decoy
+  //   * this method is temporary and should be replaced by a global ProlineCore method
+  //   * @param proteinMatch the proteinMatch to analyse
+  //   * @return true if the proteinMatch object is tagged as decoy
+  //   */
+  //  private def proteinMatchIsDecoy(proteinMatch: ProteinMatch): Boolean = {
+  //    // look at the global parameters
+  //    if (hasTargetResultSet && !hasDecoyResultSet) return false // if the file contains only target entries
+  //    else if (!hasTargetResultSet && hasDecoyResultSet) return true // if the file contains only decoy entries
+  //    // otherwise use a regex on the accession number or the description to find to know if the protein is a decoy
+  //    else if (proteinMatchDescriptionContainsDecoyTag(proteinMatch.description)) return true
+  //    return false
+  //  }
   private def proteinMatchDescriptionContainsDecoyTag(description: String): Boolean = {
-    if(description.matches("^Reverse sequence, was .*")) {
+    if (description.matches("^Reverse sequence, was .*")) {
       _containsDecoyProteinMatches = true
-//      logger.debug(description+" is decoy")
       true
     } else {
       _containsTargetProteinMatches = true
-//      logger.debug(description+" is target")
       false
     }
-//    return description.matches("^Reverse sequence, was .*")
   }
 }

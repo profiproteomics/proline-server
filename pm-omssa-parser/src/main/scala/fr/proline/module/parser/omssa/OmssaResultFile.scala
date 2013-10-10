@@ -8,27 +8,9 @@ import scala.collection.mutable.HashMap
 
 import com.weiglewilczek.slf4s.Logging
 
-import fr.proline.core.om.model.msi.FragmentationRule
-import fr.proline.core.om.model.msi.IResultFile
-import fr.proline.core.om.model.msi.InstrumentConfig
-import fr.proline.core.om.model.msi.LocatedPtm
-import fr.proline.core.om.model.msi.MSISearch
-import fr.proline.core.om.model.msi.Ms2Query
-import fr.proline.core.om.model.msi.MsQuery
-import fr.proline.core.om.model.msi.Peaklist
-import fr.proline.core.om.model.msi.Peptide
-import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.om.model.msi.Protein
-import fr.proline.core.om.model.msi.ProteinMatch
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.model.msi.SearchSettings
-import fr.proline.core.om.model.msi.SeqDatabase
-import fr.proline.core.om.model.msi.SequenceMatch
-import fr.proline.core.om.model.msi.Spectrum
-import fr.proline.core.om.model.msi.SpectrumMatch
+import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPeptideProvider
-import net.liftweb.json.JsonAST.JObject
 
 object OmssaParseParams extends Enumeration {
   type OmssaParseParam = Value
@@ -83,9 +65,8 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   // users parameters
   private var parseProperties: Map[OmssaParseParams.OmssaParseParam, Any] = importProperties.map(entry => OmssaParseParams.withName(entry._1) -> entry._2)
   // check mandatory parameters
-//      if(parseProperties.get(OmssaParseParams.FASTA_CONTAINS_TARGET) == None)  throw new Exception("User did not indicate '"+OmssaParseParams.FASTA_CONTAINS_TARGET+"' parameter")
-//      if(parseProperties.get(OmssaParseParams.FASTA_CONTAINS_DECOY) == None)  throw new Exception("User did not indicate '"+OmssaParseParams.FASTA_CONTAINS_DECOY+"' parameter")
-  // FIXME adding a default value to these parameters for test
+  //      if(parseProperties.get(OmssaParseParams.FASTA_CONTAINS_TARGET) == None)  throw new Exception("User did not indicate '"+OmssaParseParams.FASTA_CONTAINS_TARGET+"' parameter")
+  //      if(parseProperties.get(OmssaParseParams.FASTA_CONTAINS_DECOY) == None)  throw new Exception("User did not indicate '"+OmssaParseParams.FASTA_CONTAINS_DECOY+"' parameter")
   if (parseProperties.get(OmssaParseParams.FASTA_CONTAINS_TARGET) == None) {
     logger.info("FASTA_CONTAINS_TARGET is missing, default value will be used (true)")
     parseProperties += (OmssaParseParams.FASTA_CONTAINS_TARGET -> true)
@@ -120,14 +101,9 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   val hasMs2Peaklist: Boolean = true // an OMSSA omx  file may not have spectra and search params included
 
   // read omssa file
-  val fileReader = new OmssaReadFile(omxFile, parseProperties, omssaLoader, peaklist, /*Some(this.instrumentConfig),*/ parserContext)
-//  val fastaContainsTarget: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_TARGET, true).toString.toBoolean
-//  val fastaContainsDecoy: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_DECOY, true).toString.toBoolean
-//  val hasDecoyResultSet = (!fileReader.searchForTargetEntries && fileReader.searchForDecoyEntries)
+  val fileReader = new OmssaReadFile(omxFile, parseProperties, omssaLoader, peaklist, parserContext)
   val hasDecoyResultSet = fileReader.containsDecoyProteinMatches
-//  val hasTargetResultSet = fileReader.searchForTargetEntries
-//  val hasDecoyResultSet = fileReader.searchForDecoyEntries
-  val omssaSettingsInJsonFormat: ArrayBuffer[JObject] = fileReader.getSettingsInJsonFormat
+  val omssaSettingsInHashTable = fileReader.omssaSettingsInHashTable
 
   def getMsQueries = fileReader.getMsQueries.values.toArray[Ms2Query]
 
@@ -171,7 +147,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
    */
   def getResultSet(wantDecoy: Boolean): ResultSet = {
 
-    logger.debug("hasDecoyResultSet="+hasDecoyResultSet+" && wantDecoy="+wantDecoy)
+    logger.debug("hasDecoyResultSet=" + hasDecoyResultSet + " && wantDecoy=" + wantDecoy)
     if (!hasDecoyResultSet && wantDecoy) {
       throw new Exception("can't load the peptide summary")
     }
@@ -186,18 +162,20 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
      *  - Identified proteins
      */
     val rsId = ResultSet.generateNewId
-    //    dataParser.parseMatches(rsId)
     parseMatches(fileReader.getPeptideToPeptideMatches,
       fileReader.getPeptideMatchProteinMatchToSequenceMatch,
       fileReader.getPeptideMatchToProteinMatches,
       wantDecoy, rsId)
 
     // --- Create final ResultSet issued from Omssa Result File
-    //    val pepMatchesByPep = dataParser.getPeptideMatchesByPeptide() // this hash contains the peptides/peptidematches corresponding to the target/decoy value given
     val pepMatchesByPep = pepToPeptideMatches.map { case (k, v) => k -> v.toArray } // this hash contains the peptides/peptidematches corresponding to the target/decoy value given
     var allPepMatches = pepMatchesByPep.values.flatMap { p => p } toArray
-    //    val protMatches = dataParser.getProteinMatches
     val protMatches = proteinAccessionNumberToProteinMatch.values.toArray
+
+    val rsProps = new ResultSetProperties()
+    val rsImportProperties = new OmssaImportProperties()
+    rsImportProperties.setRawSettings(Some(omssaSettingsInHashTable))
+    rsProps.setOmssaImportProperties(Some(rsImportProperties))
 
     logger.debug("Parser has read " + fileReader.getMsQueries.size + " spectra")
     logger.debug("Parser has gone through " + pepMatchesByPep.size + " peptides creating " + allPepMatches.length + " peptide matches ")
@@ -209,7 +187,8 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
       proteinMatches = protMatches,
       isDecoy = wantDecoy,
       isNative = true,
-      msiSearch = Some(msiSearch))
+      msiSearch = Some(msiSearch),
+      properties = Some(rsProps))
   }
 
   private var pepToPeptideMatches: HashMap[Peptide, ArrayBuffer[PeptideMatch]] = null
@@ -228,109 +207,81 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
     // Define/reset some vars
     val bestPepMatchByPepKey = new HashMap[String, PeptideMatch]()
     proteinAccessionNumberToProteinMatch = new HashMap[String, ProteinMatch]()
-//    pepToPeptideMatches = new HashMap[Peptide, ArrayBuffer[PeptideMatch]]()
-	// loop for each peptide/peptideMatch
-//    for ((peptide, peptideMatches) <- peptideToPeptideMatches) {
-//      for (peptideMatch <- peptideMatches) {
-//        if (peptideMatch.isDecoy == wantDecoy) { // restrain the resultset to target or decoy entries
-//          pepToPeptideMatches.put(peptide, peptideMatches)
-//          // the protein matches are stored only for the best peptide match
-//          // if (peptideMatchToProteinMatches.contains(peptideMatch.id) && peptideMatchToProteinMatches.get(peptideMatch.id) != None) {
-//          if (peptideMatchToProteinMatches.get(peptideMatch.id).isDefined) {
-//            for (proteinMatch <- peptideMatchToProteinMatches.get(peptideMatch.id).get) {
-//              proteinMatch.resultSetId = resultSetId
-//              proteinAccessionNumberToProteinMatch += (proteinMatch.accession -> proteinMatch)
-//              // Add the sequence Match to Protein Match
-//              val newSeqMatches = new ArrayBuffer[SequenceMatch]()
-//              if (proteinMatch.sequenceMatches != null) newSeqMatches ++= proteinMatch.sequenceMatches
-//              newSeqMatches += peptideMatchProteinMatchToSequenceMatch(peptideMatch.id, proteinMatch.id)
-//              for (sequenceMatch <- newSeqMatches) { sequenceMatch.resultSetId = resultSetId }
-//              proteinMatch.sequenceMatches = newSeqMatches.toArray
-//              proteinMatch.peptideMatchesCount = newSeqMatches.length
-//            } // next proteinMatch
-//          } // end if
-//        } // end if
-//      } // next peptideMatch
-//    } // next peptideToPeptideMatch
-    
-    
+
     pepToPeptideMatches = peptideToPeptideMatches
-    logger.debug(" Go through query / pep done . Found "+pepToPeptideMatches.size+" different peptides" )
+    logger.debug(" Go through query / pep done . Found " + pepToPeptideMatches.size + " different peptides")
 
     val pepsToSearch = Array.newBuilder[Pair[String, Array[LocatedPtm]]]
-    pepToPeptideMatches.foreach( entry => {
+    pepToPeptideMatches.foreach(entry => {
       pepsToSearch += Pair(entry._1.sequence, entry._1.ptms)
-     })
+    })
     val searchPeps = pepsToSearch.result
 
     var pepProvider = parserContext.getProvider(classOf[IPeptideProvider])
     var protProvider = parserContext.getProvider(classOf[fr.proline.core.om.provider.msi.IProteinProvider])
     val pepByUniqueKey = fileReader.getPeptideByUniqueKey
     val foundPep = pepProvider.getPeptidesAsOptionsBySeqAndPtms(searchPeps)
-    logger.debug(" Found Pep in PS : "+foundPep.filter(_.isDefined).size)
+    logger.debug(" Found Pep in PS : " + foundPep.filter(_.isDefined).size)
 
     foundPep.foreach(fPep => {
-      if(fPep.isDefined){
+      if (fPep.isDefined) {
 
-      	val uniqueKey = fPep.get.uniqueKey
-      	logger.trace("Search pep "+uniqueKey+"  => "+uniqueKey)
+        val uniqueKey = fPep.get.uniqueKey
+        logger.trace("Search pep " + uniqueKey + "  => " + uniqueKey)
 
-      	val oldPep = pepByUniqueKey.get(uniqueKey).get
-      	pepByUniqueKey.put(uniqueKey, fPep.get)
-      	if(pepToPeptideMatches.get(oldPep).isDefined){
-      		var pepMatches = pepToPeptideMatches.get(oldPep).get
-      		var newPepMatches = new ArrayBuffer[PeptideMatch]
-      		pepMatches.foreach(f =>  {
-  					  val newPepMatch = new PeptideMatch(
-  		                         id = f.id,
-  		                         rank =f.rank,
-  		                         score = f.score,
-  		                         scoreType = f.scoreType,
-  		                         deltaMoz = f.deltaMoz,
-  		                         isDecoy = f.isDecoy,
-  		                         peptide = fPep.get,
-  		                         missedCleavage = f.missedCleavage,
-  		                         fragmentMatchesCount =f.fragmentMatchesCount,
-  		                         msQuery = f.msQuery,
-  		                         properties = f.properties,
-  		                         resultSetId =f.resultSetId
-  		                      )
-  					  newPepMatches+=newPepMatch
-      	  })
-//      	  pepToPeptideMatches += fPep.get-> newPepMatches
-      	  pepToPeptideMatches.remove(oldPep)
-      	  pepToPeptideMatches.put(fPep.get, newPepMatches)
-      	} // End PepMatch associated to peptide
+        val oldPep = pepByUniqueKey.get(uniqueKey).get
+        pepByUniqueKey.put(uniqueKey, fPep.get)
+        if (pepToPeptideMatches.get(oldPep).isDefined) {
+          var pepMatches = pepToPeptideMatches.get(oldPep).get
+          var newPepMatches = new ArrayBuffer[PeptideMatch]
+          pepMatches.foreach(f => {
+            val newPepMatch = new PeptideMatch(
+              id = f.id,
+              rank = f.rank,
+              score = f.score,
+              scoreType = f.scoreType,
+              deltaMoz = f.deltaMoz,
+              isDecoy = f.isDecoy,
+              peptide = fPep.get,
+              missedCleavage = f.missedCleavage,
+              fragmentMatchesCount = f.fragmentMatchesCount,
+              msQuery = f.msQuery,
+              properties = f.properties,
+              resultSetId = f.resultSetId
+            )
+            newPepMatches += newPepMatch
+          })
+          pepToPeptideMatches.remove(oldPep)
+          pepToPeptideMatches.put(fPep.get, newPepMatches)
+        } // End PepMatch associated to peptide
       } //End peptide found
     })
-//    logger.debug("ABU pepToPeptideMatches has "+pepToPeptideMatches.size+" items")
-    if(pepToPeptideMatches.size == 0) throw new Exception("No pepToPeptideMatches left")
+    if (pepToPeptideMatches.size == 0) throw new Exception("No pepToPeptideMatches left")
 
     // Determine best peptide match for each peptide
     logger.debug("Determining the best peptide match for each peptide...")
-    for( (pep, pepMatches) <- pepToPeptideMatches ) {
+    for ((pep, pepMatches) <- pepToPeptideMatches) {
 
       var bestPepMatch = pepMatches(0)
-      for( i <- 1 until pepMatches.length ) {
+      for (i <- 1 until pepMatches.length) {
         val nextPepMatch = pepMatches(i)
-        if( (bestPepMatch.score < nextPepMatch.score ) || ( (bestPepMatch.score == nextPepMatch.score)&& (bestPepMatch.id < nextPepMatch.id) ))
+        if ((bestPepMatch.score < nextPepMatch.score) || ((bestPepMatch.score == nextPepMatch.score) && (bestPepMatch.id < nextPepMatch.id)))
           bestPepMatch = nextPepMatch
       }
 
-      // currentMSPep.getAmbiguityString() + "%"+
-      bestPepMatchByPepKey.update( pep.uniqueKey, bestPepMatch )
+      bestPepMatchByPepKey.update(pep.uniqueKey, bestPepMatch)
     }
 
     val wrappedProtToProtMatch = new HashMap[ProteinWrapper, ProteinMatch]()
     val protAccSeqDbToProteinWrapper = new HashMap[String, ProteinWrapper]()
     //Get SeqDatabase in which current protein was retrieve from
-    val seqDbs : Array[SeqDatabase] = fileReader.getMsiSearch.searchSettings.seqDatabases
+    val seqDbs: Array[SeqDatabase] = fileReader.getMsiSearch.searchSettings.seqDatabases
     // Second pass to build protein matches and sequence matches
-    logger.debug(" Go through bestPepMatchByPepKey "+bestPepMatchByPepKey.size)
-    for( bestPepMatch <- bestPepMatchByPepKey.values ) {
+    logger.debug(" Go through bestPepMatchByPepKey " + bestPepMatchByPepKey.size)
+    for (bestPepMatch <- bestPepMatchByPepKey.values) {
       val protAcc = peptideMatchToProteinMatches.get(bestPepMatch.id).get
 
-      if ( protAcc.size > 0 ) { // A least one protein matched
+      if (protAcc.size > 0) { // A least one protein matched
 
         var parsedPep = bestPepMatch.peptide
 
@@ -340,54 +291,54 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
           var prot = Option.empty[Protein]
           // Check if the protein has been already accessed
           val protWrapperKey = protMatch.accession + seqDbs(0).id
-          if(protAccSeqDbToProteinWrapper.contains(protWrapperKey)) {
+          if (protAccSeqDbToProteinWrapper.contains(protWrapperKey)) {
             prot = protAccSeqDbToProteinWrapper.get(protWrapperKey).get.wrappedProt
           } else {
-        	// Try to get Protein from repository
-        	prot = protProvider.getProtein(protMatch.accession,seqDbs(0))
-        	protAccSeqDbToProteinWrapper += protWrapperKey -> new ProteinWrapper( seqDbs(0).id, protMatch.accession, prot)
+            // Try to get Protein from repository
+            prot = protProvider.getProtein(protMatch.accession, seqDbs(0))
+            protAccSeqDbToProteinWrapper += protWrapperKey -> new ProteinWrapper(seqDbs(0).id, protMatch.accession, prot)
           }
           val currentSeqMatch = peptideMatchProteinMatchToSequenceMatch(bestPepMatch.id, protMatch.id)
-          //Create SequenceMatch and ProteinMatch, if necessary, for current Matched Protein
+          // Create SequenceMatch and ProteinMatch, if necessary, for current Matched Protein
           var seqMatch = new SequenceMatch(
-                               start = currentSeqMatch.start,
-                               end = currentSeqMatch.end,
-                               residueBefore = currentSeqMatch.residueBefore,
-                               residueAfter = currentSeqMatch.residueAfter,
-                               isDecoy = wantDecoy,
-                               peptide = Some(parsedPep),
-                               bestPeptideMatch = Some(bestPepMatch),
-                               resultSetId = bestPepMatch.resultSetId
-                             )
-          
-          // Get ProteinMatch associated to this protein, through its ProteinWrapper
-          var protMatchOpt : Option[ProteinMatch] = wrappedProtToProtMatch.get(protAccSeqDbToProteinWrapper.get(protWrapperKey).get)
+            start = currentSeqMatch.start,
+            end = currentSeqMatch.end,
+            residueBefore = currentSeqMatch.residueBefore,
+            residueAfter = currentSeqMatch.residueAfter,
+            isDecoy = wantDecoy,
+            peptide = Some(parsedPep),
+            bestPeptideMatch = Some(bestPepMatch),
+            resultSetId = bestPepMatch.resultSetId
+          )
 
-          var newProtMatch : ProteinMatch = null
-          if(protMatchOpt == None) {
+          // Get ProteinMatch associated to this protein, through its ProteinWrapper
+          var protMatchOpt: Option[ProteinMatch] = wrappedProtToProtMatch.get(protAccSeqDbToProteinWrapper.get(protWrapperKey).get)
+
+          var newProtMatch: ProteinMatch = null
+          if (protMatchOpt == None) {
             val seqDbIds = seqDbs map { _.id }
             val protMatchAc = protMatch.accession
             val protMatchDesc = protMatch.description
 
             // Not already define, create ProteinMatch and add new entry in protToProtMatch
-            newProtMatch = new ProteinMatch( id = ProteinMatch.generateNewId,
-                                          accession = protMatchAc,
-                                          description = protMatchDesc,
-                                          peptideMatchesCount = 0, // FIXME: assign the right number
-                                          scoreType = "omssa:expect value",
-                                          isDecoy = wantDecoy,
-                                          protein = (if (prot == None) null else prot), //If prot is None => No protein is defined not protein not retrieve !
-                                          seqDatabaseIds = seqDbIds,
-                                          resultSetId = bestPepMatch.resultSetId
-                                         )
+            newProtMatch = new ProteinMatch(id = ProteinMatch.generateNewId,
+              accession = protMatchAc,
+              description = protMatchDesc,
+              peptideMatchesCount = 0, // FIXME: assign the right number
+              scoreType = "omssa:expect value",
+              isDecoy = wantDecoy,
+              protein = (if (prot == None) null else prot), // If prot is None => No protein is defined not protein not retrieve !
+              seqDatabaseIds = seqDbIds,
+              resultSetId = bestPepMatch.resultSetId
+            )
             wrappedProtToProtMatch += (protAccSeqDbToProteinWrapper.get(protWrapperKey).get -> newProtMatch)
           } else {
-             newProtMatch = protMatchOpt.get
+            newProtMatch = protMatchOpt.get
           }
 
           // Add created seqMatch to Protein Match
           val newSeqMatches = new ArrayBuffer[SequenceMatch]()
-          if( newProtMatch.sequenceMatches != null ) newSeqMatches ++= newProtMatch.sequenceMatches
+          if (newProtMatch.sequenceMatches != null) newSeqMatches ++= newProtMatch.sequenceMatches
           newSeqMatches += seqMatch
 
           newProtMatch.sequenceMatches = newSeqMatches.toArray
@@ -400,10 +351,10 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
         }
       }
     }
-    wrappedProtToProtMatch.values.foreach( protMatch => {
+    wrappedProtToProtMatch.values.foreach(protMatch => {
       proteinAccessionNumberToProteinMatch.put(protMatch.accession, protMatch)
     })
-    
+
   }
 
   def eachSpectrum(onEachSpectrum: Spectrum => Unit): Unit = {
@@ -418,16 +369,16 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   def eachSpectrumMatch(wantDecoy: Boolean, onEachSpectrumMatch: SpectrumMatch => Unit): Unit = {
     logger.info("eachSpectrumMatch(" + wantDecoy + ")")
     try {
-    // first reset the list of spectra
-    // spectra a deleted from this list after being used, because of the important amount of memory that may be needed
-    // this list should already be empty at this point, but reset is forced anyway
-    spectrumList = new ArrayBuffer[Spectrum]
-    // list all the spectra and fill the array
-    eachSpectrum(storeSpectrum)
-    // then read the file (again) to get the detailed PeptideMatches
-    new OmssaSpectrumMatcher(omxFile, wantDecoy, spectrumList, omssaLoader, getMSISearch.searchSettings, fileReader.mzScale, onEachSpectrumMatch)
+      // first reset the list of spectra
+      // spectra a deleted from this list after being used, because of the important amount of memory that may be needed
+      // this list should already be empty at this point, but reset is forced anyway
+      spectrumList = new ArrayBuffer[Spectrum]
+      // list all the spectra and fill the array
+      eachSpectrum(storeSpectrum)
+      // then read the file (again) to get the detailed PeptideMatches
+      new OmssaSpectrumMatcher(omxFile, wantDecoy, spectrumList, omssaLoader, getMSISearch.searchSettings, fileReader.mzScale, onEachSpectrumMatch)
     } catch {
-      case e: Exception => 
+      case e: Exception =>
         logger.error("eachSpectrumMatch in error", e)
         throw e
     }
