@@ -33,7 +33,8 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
    */
   def getPtmDefinitionsByInternalId(fileLocation: File): HashMap[PtmDefinition, Long] = {
     val ptms = new HashMap[PtmDefinition, Long]
-    val invalidCompositionString = "missing"
+    val invalidCompositionString = ""
+    if(!fileLocation.getName().endsWith(".xml")) throw new IllegalArgumentException("Incorrect PTM file type")
     logger.debug("Reading file " + fileLocation.getName())
     val inf: SMInputFactory = new SMInputFactory(XMLInputFactory.newInstance())
 
