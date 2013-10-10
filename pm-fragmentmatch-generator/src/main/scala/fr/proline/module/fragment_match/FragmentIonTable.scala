@@ -36,17 +36,21 @@ object FragmentTable {
 //}
 
 class FragmentIonTable(peptideSequence: String,
-                       proteinAccessionNumbers: Array[String],
-                       ptmDefinitions: Array[PtmDefinition],
+//                       proteinAccessionNumbers: Array[String], 
+//                       ptmDefinitions: Array[PtmDefinition],
                        modificationMatches: Array[FragmentModificationMatch],
                        currentFragmentIonTypes: FragmentIons,
                        neutralLosses: NeutralLossesMap) extends Logging {
 
   // Set the current peptide
-  private val proteins: ArrayList[String] = new ArrayList(asJavaList(proteinAccessionNumbers))
+  // the accession numbers are useless, they where just used for the Peptide instanciation
+  // we can use an empty list instead
+//  private val proteins: ArrayList[String] = new ArrayList(asJavaList(proteinAccessionNumbers))
+  private val proteins: ArrayList[String] = new ArrayList()
+  proteins.add("")
   private val ptms: ArrayList[ModificationMatch] = new ArrayList[ModificationMatch]()
   modificationMatches.foreach(ptm => ptms.add(ptm.toCompomicsObject))
-  PTMsManager.init(ptmDefinitions)
+//  PTMsManager.init(ptmDefinitions)
   private val currentPeptide: Peptide = new Peptide(peptideSequence, proteins, ptms)
 
   // the following object might be needed in FragmentMatchManager.scala to retreive the mass for a neutral loss in a PTM
