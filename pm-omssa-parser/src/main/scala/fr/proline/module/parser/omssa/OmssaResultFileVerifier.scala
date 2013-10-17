@@ -18,7 +18,8 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
 
   // returns PtmDefinitions referenced by the specified file
   def getPtmDefinitions(fileLocation: File): Seq[PtmDefinition] = {
-    getPtmDefinitionsByInternalId(fileLocation).keys.toSeq
+//    getPtmDefinitionsByInternalId(fileLocation).keys.toSeq
+    getPtmDefinitionsByInternalId(fileLocation).getValues
   }
   // can be used to verify that the provider handle this kind of file (ex: MSMS search, error tolerant search, n15 search, PMF, ...)  
   def isValid(fileLocation: File): Boolean = {
@@ -31,8 +32,10 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
    * returns a hashmap containing each definition, and the corresponding omssa id
    * -> the omssa Id is not the key of the hashmap because there can be more than one residue per ptm in the omssa file
    */
-  def getPtmDefinitionsByInternalId(fileLocation: File): HashMap[PtmDefinition, Long] = {
-    val ptms = new HashMap[PtmDefinition, Long]
+//  def getPtmDefinitionsByInternalId(fileLocation: File): HashMap[PtmDefinition, Long] = {
+  def getPtmDefinitionsByInternalId(fileLocation: File): TwoDimensionsMap[Long, Char, PtmDefinition] = {
+    val ptms = new TwoDimensionsMap[Long, Char, PtmDefinition]
+//    val ptms = new HashMap[PtmDefinition, Long]
     val invalidCompositionString = ""
     if(!fileLocation.getName().endsWith(".xml")) throw new IllegalArgumentException("Incorrect PTM file type")
     logger.debug("Reading file " + fileLocation.getName())
@@ -93,7 +96,7 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
 
       if (residues.length == 0) residues += '\0';
       residues.foreach(residue => {
-        ptms.put(new PtmDefinition(
+        ptms.update(id.get, residue, new PtmDefinition(
           id = PtmDefinition.generateNewId(),
           ptmId = unimodId.getOrElse(id.getOrElse(0)),
           location = omssaType.get.toString(),
@@ -109,7 +112,24 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
             averageMass = avgMass.getOrElse(0),
             isRequired = false
           ))
-        ), id.get)
+        ))
+//        ptms.put(new PtmDefinition(
+//          id = PtmDefinition.generateNewId(),
+//          ptmId = unimodId.getOrElse(id.getOrElse(0)),
+//          location = omssaType.get.toString(),
+//          residue = residue,
+//          classification = "Post-translational",
+//          names = new PtmNames(
+//            shortName = (if (psimsName.isDefined && psimsName.get.trim() != "") psimsName.get else shortName.getOrElse("-")), // psimsName should always be filled
+//            fullName = fullName.getOrElse(shortName.getOrElse(""))),
+//          ptmEvidences = Array(new PtmEvidence(
+//            ionType = (if (hasNeutralLoss) IonTypes.NeutralLoss else IonTypes.Precursor),
+//            composition = invalidCompositionString,
+//            monoMass = monoMass.getOrElse(0),
+//            averageMass = avgMass.getOrElse(0),
+//            isRequired = false
+//          ))
+//        ), id.get)
       })
       MSModSpec = MSModSpec.advance()
     }
@@ -117,6 +137,8 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
     // closing the file
     MSModSpecSet.getStreamReader().closeCompletely()
     // return the result as a Seq object
+//    logger.debug("OmssaResultFileVerifier for file "+fileLocation.getName())
+//    ptms.foreach((key, ptm) => logger.debug("  "+key._1+"=>"+key._2+" "+ptm.toString))
     ptms
   }
   

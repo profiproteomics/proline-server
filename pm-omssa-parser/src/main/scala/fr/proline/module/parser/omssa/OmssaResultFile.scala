@@ -40,6 +40,15 @@ case class TwoDimensionsMap[K1, K2, V]() {
   // or use wrapped.update if you don't care about the old value 
   def apply(k1: K1, k2: K2) = wrapped((k1, k2))
   //  def length = wrapped.size
+  def exists(k1: K1, k2: K2) = wrapped.contains(k1, k2)
+  def getOption(k1: K1, k2: K2) = {
+    if(wrapped.contains(k1, k2)) Some(wrapped((k1, k2))) else None
+  }
+  def getOrElse(k1: K1, k2: K2, e: V) = {
+    if(wrapped.contains(k1, k2)) wrapped((k1, k2)) else e
+  }
+  def getValues() = wrapped.values.toSeq
+  def foreach[C](f: ((K1, K2), V) => C): Unit = wrapped.foreach(e => f((e._1._1, e._1._2), e._2))
 }
 
 /**

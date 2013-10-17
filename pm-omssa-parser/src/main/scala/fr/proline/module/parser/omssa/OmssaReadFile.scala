@@ -1,7 +1,8 @@
 package fr.proline.module.parser.omssa
 
 import fr.proline.core.om.model.msi._
-import fr.proline.core.om.provider.msi.{ IProteinProvider, ISeqDatabaseProvider, IPeptideProvider, IPTMProvider }
+//import fr.proline.core.om.provider.msi.{ IProteinProvider, ISeqDatabaseProvider, IPeptideProvider, IPTMProvider }
+import fr.proline.core.om.provider.msi.{ IProteinProvider, ISeqDatabaseProvider, IPeptideProvider }
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.builder.PtmDefinitionBuilder
 import scala.collection.mutable.{ ArrayBuffer, HashMap }
@@ -71,7 +72,7 @@ class OmssaReadFile(val omxFile: File,
   private def _parseOmxFile() {
     pepByUniqueKey = new HashMap[String, Peptide]()
     var pepProvider = parserContext.getProvider(classOf[IPeptideProvider])
-    val ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
+//    val ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
     var protProvider = parserContext.getProvider(classOf[IProteinProvider])
     val seqDbProvider = parserContext.getProvider(classOf[ISeqDatabaseProvider])
     msQueries = new HashMap[Int, Ms2Query]()

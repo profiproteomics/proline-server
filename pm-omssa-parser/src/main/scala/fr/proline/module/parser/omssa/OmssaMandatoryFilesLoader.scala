@@ -33,7 +33,8 @@ class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val parserContext:
   private var _modificationNames: HashMap[Int, String] = null
   //  private var _ptmDefinitions: HashMap[Long, PtmDefinition] = new HashMap[Long, PtmDefinition]
   //  def ptmDefinitions = _ptmDefinitions.toMap
-  private var _ptmDefinitions = new HashMap[PtmDefinition, Long]
+//  private var _ptmDefinitions = new HashMap[PtmDefinition, Long]
+  private var _ptmDefinitions = new TwoDimensionsMap[Long, Char, PtmDefinition]
   private var _modTypes: HashMap[Int, String] = null
   private var _searchTypes: HashMap[Int, String] = null
   private var _serialDataFormat: HashMap[Int, String] = null
@@ -48,19 +49,18 @@ class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val parserContext:
   private var _responseErrors: HashMap[Int, String] = null
 
   def getPtmDefinitions(id: Long): Array[PtmDefinition] = {
-    //    _ptmDefinitions.get(id).getOrElse(new ArrayBuffer).toArray
-    //    val ptms = new ArrayBuffer[PtmDefinition]
-    //    _ptmDefinitions.foreach{ case (_ptm, _id) => 
-    //      if(_id == id) ptms += _ptm
-    //    }
-    //    ptms.toArray
-    _ptmDefinitions.filter(_._2 == id).keys.toArray
+//    _ptmDefinitions.filter(_._2 == id).keys.toArray
+    _ptmDefinitions.wrapped.filter(_._1._1 == id).values.toArray
   }
   def getPtmDefinition(id: Long, site: Char): Option[PtmDefinition] = {
-    logger.debug("Looking for PTM " + id + " with residue '" + site + "'")
-    val ptm = _ptmDefinitions.filter(_._2 == id).keys.filter(_.residue == site).toArray
-    //    val ptm = _ptmDefinitions.get(id).getOrElse(new ArrayBuffer).filter(_.residue == site)
-    if (ptm.size != 0) Some(ptm(0)) else None
+    val ptm = _ptmDefinitions.getOption(id, site)
+    if (ptm.isDefined) logger.debug("Looking for PTM " + id + " with residue '" + site + "'; PTM found is "+ptm.get.toString)
+    else logger.debug("Looking for PTM " + id + " with residue '" + site + "'; no PTM found")
+    ptm
+//    if(_ptmDefinitions.exists(id, site)) {}
+//    val ptm = _ptmDefinitions.wrapped.filter(_._1._1 == id).filter(_._1._2 == site).values.toArray
+////    val ptm = _ptmDefinitions.filter(_._2 == id).keys.filter(_.residue == site).toArray
+//    if (ptm.size != 0) Some(ptm(0)) else None
   }
 
   parseXsd // parse the xsd file as soon as possible
@@ -162,14 +162,26 @@ class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val parserContext:
    * - the ptms 110, 195 and 207 has been removed as they do not exist in unimod
    */
   private def parseMods(modFile: File) {
-    // this method returns a HashMap[PtmDefinition, Long] object
-    (new OmssaResultFileVerifier).getPtmDefinitionsByInternalId(modFile).foreach {
-      case (ptm, id) =>
-        // add the ptm from the PSdb in the hash, instead of the incomplete ptm from the file
-        val _ptm = ptmProvider.getPtmDefinition(ptm.names.shortName, ptm.residue, PtmLocation.withName(ptm.location))
-        if (_ptm.isDefined) _ptmDefinitions.put(_ptm.get, id)
-        else logger.error("Unknown ptm, will not be considered: " + ptm.toString)
-    }
+    (new OmssaResultFileVerifier).getPtmDefinitionsByInternalId(modFile).foreach((key, ptm) => {
+//      logger.debug("  "+key._1+"=>"+key._2+" "+ptm.toString)
+      val _ptm = ptmProvider.getPtmDefinition(ptm.names.shortName, ptm.residue, PtmLocation.withName(ptm.location))
+      if (_ptm.isDefined) _ptmDefinitions.update(key._1, key._2, _ptm.get)
+      else logger.error("Unknown ptm, will not be considered: " + ptm.toString)
+    })
+//    val ptms = (new OmssaResultFileVerifier).getPtmDefinitionsByInternalId(modFile).wrapped
+//    ptms.foreach(ptm => {
+//      val _ptm = ptmProvider.getPtmDefinition(ptm._2.names.shortName, ptm._2.residue, PtmLocation.withName(ptm._2.location))
+//      if (_ptm.isDefined) _ptmDefinitions.update(ptm._1._1, ptm._1._2, ptm._2)
+//      else logger.error("Unknown ptm, will not be considered: " + ptm._2.toString)
+//    })
+//    // this method returns a HashMap[PtmDefinition, Long] object
+//    (new OmssaResultFileVerifier).getPtmDefinitionsByInternalId(modFile).foreach {
+//      case (ptm, id) =>
+//        // add the ptm from the PSdb in the hash, instead of the incomplete ptm from the file
+//        val _ptm = ptmProvider.getPtmDefinition(ptm.names.shortName, ptm.residue, PtmLocation.withName(ptm.location))
+//        if (_ptm.isDefined) _ptmDefinitions.put(_ptm.get, id)
+//        else logger.error("Unknown ptm, will not be considered: " + ptm.toString)
+//    }
   }
 
   /**
