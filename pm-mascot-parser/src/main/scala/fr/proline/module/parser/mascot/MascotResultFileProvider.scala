@@ -40,7 +40,7 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
     this
   }
 
-  def getPtmDefinitions(fileLocation: File): Seq[PtmDefinition] = {
+  def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): Seq[PtmDefinition] = {
     var ptmDefs = Seq.empty[PtmDefinition]
     try {
       val unimodText = extractUnimodSection(fileLocation)
@@ -136,7 +136,7 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
     ptmDefs
   }
 
-  def isValid(fileLocation: File): Boolean = {
+  def isValid(fileLocation: File, importProperties: Map[String, Any]): Boolean = {
     // TODO : check kind of search (ex: MSMS search, error tolerant search, n15 search, PMF, ...)  
     true
   }

@@ -14,13 +14,13 @@ class ResultFileVerifierTest {
   def testPtmExtraction = {
     val provider = new MascotResultFileProvider
     val start = System.currentTimeMillis()
-    val ptmDefs = provider.getPtmDefinitions(file)
+    val ptmDefs = provider.getPtmDefinitions(file, Map.empty[String, Any])
     
     assertEquals( 9, ptmDefs.length )
     assertEquals( "H(3) C(2) N O", ptmDefs(0).ptmEvidences(0).composition)
     assertEquals( "Carbamidomethyl", ptmDefs(0).names.shortName)
     
-    val ptmDefs2 = provider.getPtmDefinitions(file)
+    val ptmDefs2 = provider.getPtmDefinitions(file, Map.empty[String, Any])
     assertEquals( 9, ptmDefs2.length )
     
     var ptms = ptmDefs.toSet
