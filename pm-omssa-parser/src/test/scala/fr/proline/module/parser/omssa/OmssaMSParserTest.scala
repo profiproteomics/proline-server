@@ -15,6 +15,9 @@ import fr.proline.module.parser.provider.fake.{ ProteinFakeProvider, SeqDbFakePr
 import java.io.FileNotFoundException
 import fr.proline.module.fragment_match.FragmentTable
 import fr.proline.util.MathUtils
+import fr.proline.core.service.msi.ResultFileCertifier
+import org.junit.Assert
+import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 
 @Test
 class OmssaMSParserTest extends Logging {
@@ -186,7 +189,7 @@ class OmssaMSParserTest extends Logging {
     val storer = fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer(executionContext.getPSDbConnectionContext)
     val resultFileProvider = new OmssaResultFileProvider
     val verifier = resultFileProvider.getResultFileVerifier
-    val ptms = verifier.getPtmDefinitions(new File(Thread.currentThread.getContextClassLoader.getResource("omssa_config/usermods.xml").getPath()))
+    val ptms = verifier.getPtmDefinitions(new File(Thread.currentThread.getContextClassLoader.getResource("omssa_config/usermods.xml").getPath()), propertiesBuilder.result)
     try {
     	storer.storePtmDefinitions(ptms.toSeq, executionContext)
     	logger.debug("TEST [" + method + "] KO: parsing has not failed as expected !!")
@@ -199,12 +202,38 @@ class OmssaMSParserTest extends Logging {
   }
   
   @Test
+  def testResultFileVerifierWithProvider {
+    val method = getMethod()
+    logger.debug("TEST [" + method + "] STARTS")
+    try {
+    	ResultFileProviderRegistry.register(new OmssaResultFileProvider() )
+	    var rfByFormat = Map("OmssaMSParser" -> Array(new File(Thread.currentThread.getContextClassLoader.getResource(omssaSampleFolder+"/STG_NCSpiste1_OTD_mgfInputFile.omx").getPath())))
+	    val certifier = new ResultFileCertifier(
+	      executionContext,
+	      resultIdentFilesByFormat = rfByFormat,
+	      importProperties = propertiesBuilder.result
+	    )
+	
+	    logger.debug( " --- run service " )
+	    val result = certifier.runService()
+	
+	    Assert.assertTrue( result )
+    } catch {
+      case e: IllegalArgumentException => logger.debug("TEST [" + method + "] OK: parsing has failed as expected: ", e)
+      case e: Exception =>
+        logger.debug("TEST [" + method + "] KO: parsing has failed for an unexpected reason : " + e, e)
+        throw e
+    }
+    logger.debug("TEST [" + method + "] OK: file is valid")
+  }
+  
+  @Test
   def testResultFileVerifier_isValid {
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")
     val resultFileProvider = new OmssaResultFileProvider
     val verifier = resultFileProvider.getResultFileVerifier
-    val valid = verifier.isValid(new File(Thread.currentThread.getContextClassLoader.getResource(omssaSampleFolder + "/STG_NCSpiste1_OTD_mgfInputFile.omx").toURI()))
+    val valid = verifier.isValid(new File(Thread.currentThread.getContextClassLoader.getResource(omssaSampleFolder + "/STG_NCSpiste1_OTD_mgfInputFile.omx").toURI()), propertiesBuilder.result)
     assertEquals(true, valid)
     logger.debug("TEST [" + method + "] OK: file is valid")
   }
