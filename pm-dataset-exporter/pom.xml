@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -41,7 +42,14 @@
       <artifactId>antlr</artifactId>
       <version>2.7.7</version>
     </dependency>
-
+    
+    <!-- Serialization and IO -->
+    <dependency>
+      <groupId>com.lambdaworks</groupId>
+      <artifactId>jacks_2.9.3</artifactId>
+      <version>2.2.3</version>
+    </dependency>
+    
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
@@ -74,22 +82,22 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
-    
+
     <!-- Templating -->
     <dependency>
       <groupId>org.clapper</groupId>
-      <artifactId>scalasti_2.9.1</artifactId> <!-- note that another version 2.10_1.0.0 is available -->      
+      <artifactId>scalasti_2.9.1</artifactId> <!-- note that another version 2.10_1.0.0 is available -->
       <version>0.5.8</version>
     </dependency>
     <dependency>
       <groupId>org.fusesource.scalate</groupId>
       <artifactId>scalate-wikitext_2.9</artifactId>
-      <version>1.6.1</version>  
+      <version>1.6.1</version>
     </dependency>
     <dependency>
       <groupId>org.fusesource.scalate</groupId>
       <artifactId>scalate-page_2.9</artifactId>
-      <version>1.6.1</version>  
+      <version>1.6.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.poi</groupId>
@@ -113,8 +121,13 @@
       <artifactId>scalatest_2.9.1</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.dbunit</groupId>
+      <artifactId>dbunit</artifactId>
+      <scope>test</scope>
+    </dependency>
 
-     <dependency>
+    <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-core</artifactId>
       <scope>test</scope>
