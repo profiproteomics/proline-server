@@ -21,13 +21,15 @@ trait IViewFormatter {
   
   def formatView( view: IDatasetView, os: OutputStream )
   
-  def formatView( view: IDatasetView, location: File ) {
+  def formatView( view: IDatasetView, location: File ): File = {
     
     if( location.isFile() || location.exists() == false ) {
       _formatView( view, location )
+      location
     } else {
       val file = this.getViewLocation( location, view )
       _formatView( view, file )
+      file
     }
 
   }

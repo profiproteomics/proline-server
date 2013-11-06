@@ -16,7 +16,7 @@ trait XDatasetExporter extends IDatasetExporter {
     formatter.formatView(datasetView, outputStream)  
   }
   
-  def exportViewToLocation( location: File ) {
+  def exportViewToLocation( location: File ): File = {
     formatter.formatView(datasetView, location )
   }
   

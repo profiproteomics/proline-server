@@ -14,6 +14,9 @@ trait IDatasetExporter {
   
   def exportViewToStream( outputStream: OutputStream )
   
-  def exportViewToLocation( location: File )
+  /**
+   * Returns the file containing the exported view
+   */
+  def exportViewToLocation( location: File ): File
   
 }
