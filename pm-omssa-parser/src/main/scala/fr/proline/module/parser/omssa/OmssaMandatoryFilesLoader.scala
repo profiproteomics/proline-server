@@ -17,13 +17,13 @@ import javax.xml.stream.XMLInputFactory
 import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.model.msi.PtmLocation
 
-object OmssaMandatoryFilesLoader {
-  val classLoader = OmssaMandatoryFilesLoader.getClass().getClassLoader()
-  private val omssaConfigFolder = "omssa_config"
-  lazy val xsdFile = new File(classLoader.getResource(omssaConfigFolder + "/OMSSA.xsd").getPath())
-  lazy val modFile = new File(classLoader.getResource(omssaConfigFolder + "/mods.xml").getPath())
-  lazy val usermodsFile = new File(classLoader.getResource(omssaConfigFolder + "/usermods.xml").getPath())
-}
+//object OmssaMandatoryFilesLoader {
+//  val classLoader = OmssaMandatoryFilesLoader.getClass().getClassLoader()
+//  private val omssaConfigFolder = "omssa_config"
+//  lazy val xsdFile = new File(classLoader.getResource(omssaConfigFolder + "/OMSSA.xsd").getPath())
+//  lazy val modFile = new File(classLoader.getResource(omssaConfigFolder + "/mods.xml").getPath())
+//  lazy val usermodsFile = new File(classLoader.getResource(omssaConfigFolder + "/usermods.xml").getPath())
+//}
 
 class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val parserContext: ProviderDecoratedExecutionContext) extends Logging {
 
@@ -64,24 +64,25 @@ class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val parserContext:
   }
 
   parseXsd // parse the xsd file as soon as possible
-  parseMods(OmssaMandatoryFilesLoader.modFile)
-  if (_userptmFilePath != "") parseMods(new File(_userptmFilePath)) // parse the user's ptms file as soon as possible
-  else parseMods(OmssaMandatoryFilesLoader.usermodsFile)
+//  parseMods(OmssaMandatoryFilesLoader.modFile)
+//  if (_userptmFilePath != "") parseMods(new File(_userptmFilePath)) // parse the user's ptms file as soon as possible
+//  else parseMods(OmssaMandatoryFilesLoader.usermodsFile)
+  parseMods(this.getClass().getClassLoader().getResource("omssa_config/mods.xml"))
+  if (_userptmFilePath != "") parseMods((new File(_userptmFilePath)).toURL()) // parse the user's ptms file as soon as possible
+  else parseMods(this.getClass().getClassLoader().getResource("omssa_config/usermods.xml"))
 
   /**
    * Reads an OMSSA.xsd file that is the reference of the OMSSA omx file
    * The OMSSA.xsd file is bound to a specific version of OMSSA
-   * @param xsdFile the file to read
    * @return always true
    */
   private def parseXsd {
-    val xsdFile = OmssaMandatoryFilesLoader.xsdFile
-    logger.info("reading xsd file '" + xsdFile.getName() + "'")
+    logger.info("reading xsd file 'OMSSA.xsd'")
 
     // open an input factory
     val inf: SMInputFactory = new SMInputFactory(XMLInputFactory.newInstance())
     // get the root cursor
-    val schema: SMHierarchicCursor = inf.rootElementCursor(xsdFile)
+    val schema: SMHierarchicCursor = inf.rootElementCursor(this.getClass().getClassLoader().getResource("omssa_config/OMSSA.xsd"))
     schema.advance
     // for each child
     var element = schema.childElementCursor().advance()
@@ -161,7 +162,8 @@ class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val parserContext:
    * - the original file given with omssa2.1.9 has been modified to add unimod identiers
    * - the ptms 110, 195 and 207 has been removed as they do not exist in unimod
    */
-  private def parseMods(modFile: File) {
+//  private def parseMods(modFile: File) {
+  private def parseMods(modFile: java.net.URL) {
     (new OmssaResultFileVerifier).getPtmDefinitionsByInternalId(modFile).foreach((key, ptm) => {
 //      logger.debug("  "+key._1+"=>"+key._2+" "+ptm.toString)
       val _ptm = ptmProvider.getPtmDefinition(ptm.names.shortName, ptm.residue, PtmLocation.withName(ptm.location))

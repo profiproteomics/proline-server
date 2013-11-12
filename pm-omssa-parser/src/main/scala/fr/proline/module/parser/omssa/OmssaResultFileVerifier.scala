@@ -28,16 +28,17 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
   
   // get the usermods file from the import properties
   // if missing, take the default usermods file
-  private def getUsermodFileLocation(importProperties: Map[String, Any]): File = {
+//  private def getUsermodFileLocation(importProperties: Map[String, Any]): File = {
+  private def getUsermodFileLocation(importProperties: Map[String, Any]): java.net.URL = {
     val parseProperties: Map[OmssaParseParams.OmssaParseParam, Any] = importProperties.map(entry => OmssaParseParams.withName(entry._1) -> entry._2)
 //    if (parseProperties.get(OmssaParseParams.USERMOD_XML_FILE) == None) new File(this.getClass().getClassLoader().getResource("omssa_config/usermods.xml").getPath())
 //    else new File(parseProperties.get(OmssaParseParams.USERMOD_XML_FILE).toString())
     if(parseProperties.get(OmssaParseParams.USERMOD_XML_FILE) == None) {
 //      logger.debug("No usermod file in importProperties, using "+this.getClass().getClassLoader().getResource("omssa_config/usermods.xml").getPath())
-      new File(this.getClass().getClassLoader().getResource("omssa_config/usermods.xml").getPath())
+      new File(this.getClass().getClassLoader().getResource("omssa_config/usermods.xml").getPath()).toURL()
     } else {
 //      logger.debug("Usermod file found in importProperties is :"+parseProperties.get(OmssaParseParams.USERMOD_XML_FILE).get)
-      new File(parseProperties.get(OmssaParseParams.USERMOD_XML_FILE).get.toString)
+      new File(parseProperties.get(OmssaParseParams.USERMOD_XML_FILE).get.toString).toURL()
     }
   }
   
@@ -47,11 +48,14 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
    * returns a hashmap containing each definition, and the corresponding omssa id
    * -> the omssa Id is not the key of the hashmap because there can be more than one residue per ptm in the omssa file
    */
-  def getPtmDefinitionsByInternalId(fileLocation: File): TwoDimensionsMap[Long, Char, PtmDefinition] = {
+//  def getPtmDefinitionsByInternalId(fileLocation: File): TwoDimensionsMap[Long, Char, PtmDefinition] = {
+  def getPtmDefinitionsByInternalId(fileLocation: java.net.URL): TwoDimensionsMap[Long, Char, PtmDefinition] = {
     val ptms = new TwoDimensionsMap[Long, Char, PtmDefinition]
     val invalidCompositionString = ""
-    if(!fileLocation.getName().endsWith(".xml")) throw new IllegalArgumentException("Incorrect PTM file type")
-    logger.debug("Reading file " + fileLocation.getName())
+//    if(!fileLocation.getName().endsWith(".xml")) throw new IllegalArgumentException("Incorrect PTM file type")
+//    logger.debug("Reading file " + fileLocation.getName())
+    if(!fileLocation.getFile().endsWith(".xml")) throw new IllegalArgumentException("Incorrect PTM file type")
+    logger.debug("Reading file " + fileLocation.getFile())
     val inf: SMInputFactory = new SMInputFactory(XMLInputFactory.newInstance())
 
     val MSModSpecSet: SMHierarchicCursor = inf.rootElementCursor(fileLocation)
