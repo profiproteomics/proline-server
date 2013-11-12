@@ -180,7 +180,8 @@ class OmssaSpectrumMatcher(omxFile: File,
                                       case _ =>
                                     }
                                     // get the ptm from the list read in the mandatory files, check if the ptm is variable of fixed in the search settings
-                                    val ptm = omssaLoader.getPtmDefinition(ptmId, peptideSequence.charAt(modificationSite-1))
+                                    logger.debug("ptmId:"+ptmId+", peptideSequence: "+peptideSequence+", modification site: "+modificationSite)
+                                    val ptm = omssaLoader.getPtmDefinition(ptmId, peptideSequence.charAt(modificationSite))
 //                                    val ptm = omssaLoader.ptmDefinitions.get(ptmId)
                                     if (ptm != None) {
                                       val isVariable = searchSettings.variablePtmDefs.contains(ptm.get)
