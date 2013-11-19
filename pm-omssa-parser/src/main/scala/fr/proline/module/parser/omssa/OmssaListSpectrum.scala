@@ -18,9 +18,10 @@ class OmssaListSpectrum(omxFile: File, peaklistId: Long, instrumentConfig: Instr
     // prepare variable
     var allSpectraParsed: Boolean = false
     // open an input factory
-    val inf: SMInputFactory = new SMInputFactory(XMLInputFactory.newInstance())
+//    val inf: SMInputFactory = new SMInputFactory(XMLInputFactory.newInstance())
     // get the root cursor
-    val MSSearch: SMHierarchicCursor = inf.rootElementCursor(omxFile)
+//    val MSSearch: SMHierarchicCursor = inf.rootElementCursor(omxFile)
+    val MSSearch: SMHierarchicCursor = OmssaReadFile.openOmxFile(new SMInputFactory(XMLInputFactory.newInstance()), omxFile)
     MSSearch.setElementTracking(SMInputCursor.Tracking.PARENTS)
     MSSearch.advance
     // advance the cursor to the first child of <MSSearch>

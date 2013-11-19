@@ -54,8 +54,8 @@ class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val parserContext:
   }
   def getPtmDefinition(id: Long, site: Char): Option[PtmDefinition] = {
     val ptm = _ptmDefinitions.getOption(id, site)
-    if (ptm.isDefined) logger.debug("Looking for PTM " + id + " with residue '" + site + "'; PTM found is "+ptm.get.toString)
-    else logger.debug("Looking for PTM " + id + " with residue '" + site + "'; no PTM found")
+//    if (ptm.isDefined) logger.debug("Looking for PTM " + id + " with residue '" + site + "'; PTM found is "+ptm.get.toString)
+//    else logger.debug("Looking for PTM " + id + " with residue '" + site + "'; no PTM found")
     ptm
 //    if(_ptmDefinitions.exists(id, site)) {}
 //    val ptm = _ptmDefinitions.wrapped.filter(_._1._1 == id).filter(_._1._2 == site).values.toArray

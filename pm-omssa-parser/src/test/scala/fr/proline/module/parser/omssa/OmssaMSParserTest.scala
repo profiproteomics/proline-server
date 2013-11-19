@@ -151,6 +151,29 @@ class OmssaMSParserTest extends Logging {
     logger.debug("TEST [" + method + "] OK: parsing is successful")
   }
   @Test
+  def testBzippedFiles {
+    val method = getMethod()
+    logger.debug("TEST [" + method + "] STARTS")
+    // this file is a simple search that should be correct (it can be used to verify most of the algorithm)
+    val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_bz2.omx.bz2")
+    val rs = omssaOmxFile.getResultSet(wantDecoy = false)
+    assertEquals(2, rs.proteinMatches.length)
+    assertEquals(18, omssaOmxFile.getMsQueries.size)
+
+//    logger.debug("TEST [" + method + "] STARTS")
+//    Thread.sleep(30000) // 30s of sleep
+//    logger.debug("---------------------------------------------")
+//    val files = Array("STG_NCSpiste1_OTD_mgfInputFile.omx", "STG_NCSpiste1_OTD_bz2.omx.bz2", "MsMerge_piste mircroparticules.omx", "MsMerge_piste mircroparticules.omx.bz2")
+//    for (file <- files) {
+//      logger.debug("TEST [" + method + "] parsing file "+file)
+//      val omssaOmxFile = parseOmxFile(file)
+//      val rs = omssaOmxFile.getResultSet(wantDecoy = false)
+//      logger.debug("TEST [" + method + "] file "+file+" is parsed")
+//      logger.debug("---------------------------------------------")
+//    }
+    logger.debug("TEST [" + method + "] OK: parsing is successful")
+  }
+  @Test
   def testSpectrumMatches {
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")

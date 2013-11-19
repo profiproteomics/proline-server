@@ -15,9 +15,10 @@ class OmssaMozScaleExtractor(omxFile: File) extends Logging {
     var MSSearch: SMHierarchicCursor = null
     try {
 	    // open an input factory
-	    val inf: SMInputFactory = new SMInputFactory(XMLInputFactory.newInstance())
-	    // get the root cursor and advance to the MSSearch_response element
-	    MSSearch = inf.rootElementCursor(omxFile)
+//	    val inf: SMInputFactory = new SMInputFactory(XMLInputFactory.newInstance())
+//	    // get the root cursor and advance to the MSSearch_response element
+//	    MSSearch = inf.rootElementCursor(omxFile)
+	    MSSearch = OmssaReadFile.openOmxFile(new SMInputFactory(XMLInputFactory.newInstance()), omxFile)
 	    MSSearch.setElementTracking(SMInputCursor.Tracking.PARENTS)
 	    MSSearch.advance // MSSearch
 	    val MSSearch_request = MSSearch.childElementCursor().advance()

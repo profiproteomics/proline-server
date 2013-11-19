@@ -1,7 +1,6 @@
 package fr.proline.module.parser.omssa
 
 import fr.proline.core.om.model.msi._
-//import fr.proline.core.om.provider.msi.{ IProteinProvider, ISeqDatabaseProvider, IPeptideProvider, IPTMProvider }
 import fr.proline.core.om.provider.msi.{ IProteinProvider, ISeqDatabaseProvider, IPeptideProvider }
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.builder.PtmDefinitionBuilder
@@ -12,6 +11,10 @@ import org.codehaus.staxmate.in.{ SMHierarchicCursor, SMInputCursor }
 import org.codehaus.staxmate.SMInputFactory
 import com.weiglewilczek.slf4s.Logging
 import fr.proline.context.DatabaseConnectionContext
+import java.io.InputStream
+import java.io.FileInputStream
+import java.io.BufferedInputStream
+import org.apache.commons.compress.compressors.CompressorStreamFactory
 
 case class ProteinWrapper(val seqdbId: Long, val protAccess: String, var wrappedProt: Option[Protein]) {
   override def equals(other: Any): Boolean = {
@@ -22,6 +25,22 @@ case class ProteinWrapper(val seqdbId: Long, val protAccess: String, var wrapped
   }
 }
 case class simpleSequenceMatch(val accessionNumber: String, val start: Int, val stop: Int)
+
+object OmssaReadFile {
+  private def getBz2FileAsStream(omxFile: File) : InputStream = {
+    val fis: FileInputStream = new FileInputStream(omxFile)
+    val bis: BufferedInputStream = new BufferedInputStream(fis)
+    new CompressorStreamFactory().createCompressorInputStream(bis)
+//    new CompressorStreamFactory().createCompressorInputStream(new BufferedInputStream(new FileInputStream(omxFile)))
+  }
+  def openOmxFile(inf: SMInputFactory, omxFile: File) : SMHierarchicCursor = {
+//    val inf: SMInputFactory = new SMInputFactory(XMLInputFactory.newInstance())
+    if(omxFile.getName().endsWith(".omx.bz2"))
+      inf.rootElementCursor(this.getBz2FileAsStream(omxFile))
+    else
+      inf.rootElementCursor(omxFile)
+  }
+}
 
 class OmssaReadFile(val omxFile: File,
                     val parseProperties: Map[OmssaParseParams.OmssaParseParam, Any],
@@ -85,9 +104,10 @@ class OmssaReadFile(val omxFile: File,
     logger.info("readOmxFile(" + omxFile.getAbsolutePath() + ")")
     var nbSpectra: Int = 0
     // open an input factory
-    val inf: SMInputFactory = new SMInputFactory(XMLInputFactory.newInstance())
-    // get the root cursor
-    val MSSearch: SMHierarchicCursor = inf.rootElementCursor(omxFile)
+//    val inf: SMInputFactory = new SMInputFactory(XMLInputFactory.newInstance())
+//    // get the root cursor
+//    val MSSearch: SMHierarchicCursor = inf.rootElementCursor(omxFile)
+    val MSSearch: SMHierarchicCursor = OmssaReadFile.openOmxFile(new SMInputFactory(XMLInputFactory.newInstance()), omxFile)
     MSSearch.setElementTracking(SMInputCursor.Tracking.PARENTS)
     MSSearch.advance
     // advance the cursor to the first child of <MSSearch>

@@ -36,9 +36,10 @@ class OmssaSpectrumMatcher(omxFile: File,
 
   private def _parseOmxFile() {
     // open an input factory
-    val inf: SMInputFactory = new SMInputFactory(XMLInputFactory.newInstance())
-    // get the root cursor and advance to the MSSearch_response element
-    val MSSearch: SMHierarchicCursor = inf.rootElementCursor(omxFile)
+//    val inf: SMInputFactory = new SMInputFactory(XMLInputFactory.newInstance())
+//    // get the root cursor and advance to the MSSearch_response element
+//    val MSSearch: SMHierarchicCursor = inf.rootElementCursor(omxFile)
+    val MSSearch: SMHierarchicCursor = OmssaReadFile.openOmxFile(new SMInputFactory(XMLInputFactory.newInstance()), omxFile)
     MSSearch.setElementTracking(SMInputCursor.Tracking.PARENTS)
     MSSearch.advance // MSSearch
     val MSSearch_request = MSSearch.childElementCursor().advance()
@@ -180,7 +181,7 @@ class OmssaSpectrumMatcher(omxFile: File,
                                       case _ =>
                                     }
                                     // get the ptm from the list read in the mandatory files, check if the ptm is variable of fixed in the search settings
-                                    logger.debug("ptmId:"+ptmId+", peptideSequence: "+peptideSequence+", modification site: "+modificationSite)
+//                                    logger.debug("ptmId:"+ptmId+", peptideSequence: "+peptideSequence+", modification site: "+modificationSite)
                                     val ptm = omssaLoader.getPtmDefinition(ptmId, peptideSequence.charAt(modificationSite))
 //                                    val ptm = omssaLoader.ptmDefinitions.get(ptmId)
                                     if (ptm != None) {
@@ -200,7 +201,7 @@ class OmssaSpectrumMatcher(omxFile: File,
                         MSHit.advance()
                       }
                       try {
-                        logger.debug("Creating fragment ion table")
+//                        logger.debug("Creating fragment ion table")
                         // filter with wantDecoy value (if true, first protein must be decoy ; if false, first protein must be target)
                           val table = new FragmentIonTable(peptideSequence, 
 //                        		  						   proteinAccessionNumbers.toArray, 

@@ -2,12 +2,9 @@ package fr.proline.module.parser.omssa
 
 import java.io.File
 import java.io.FileNotFoundException
-
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-
 import com.weiglewilczek.slf4s.Logging
-
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPeptideProvider
@@ -96,7 +93,8 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   private val omxFile = fileLocation
   // check file existancy
   if (omxFile == null || !omxFile.exists()) throw new FileNotFoundException("Specified file does not exist")
-  if (!omxFile.getName().endsWith(".omx")) throw new IllegalArgumentException("Specified file does not have '.omx' suffix")
+//  if (!omxFile.getName().endsWith(".omx")) throw new IllegalArgumentException("Specified file does not have '.omx' suffix")
+  if (!(omxFile.getName().endsWith(".omx") || omxFile.getName().endsWith(".omx.bz2"))) throw new IllegalArgumentException("Specified file does not have '.omx' suffix")
   logger.info("open Omssa omx file " + omxFile.getAbsoluteFile())
 
   // loader for mandatory files that must be loaded BEFORE the omx file
