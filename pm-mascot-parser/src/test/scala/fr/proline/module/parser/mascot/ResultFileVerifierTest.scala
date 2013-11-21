@@ -8,20 +8,21 @@ import fr.proline.core.om.model.msi.PtmDefinition
 @Test
 class ResultFileVerifierTest {
 
-  val file = new File("D:/bruley/Data/Mascot/F067920.dat")
+  val ecoli_datFileName = "/dat_samples/GRE_F068213_M2.4_TD_EColi.dat"
   
   @Test
   def testPtmExtraction = {
+    val f = new File(this.getClass().getResource(ecoli_datFileName).toURI())
     val provider = new MascotResultFileProvider
     val start = System.currentTimeMillis()
-    val ptmDefs = provider.getPtmDefinitions(file, Map.empty[String, Any])
+    val ptmDefs = provider.getPtmDefinitions(f, Map.empty[String, Any])
     
-    assertEquals( 9, ptmDefs.length )
+    assertEquals( 29, ptmDefs.length )
     assertEquals( "H(3) C(2) N O", ptmDefs(0).ptmEvidences(0).composition)
     assertEquals( "Carbamidomethyl", ptmDefs(0).names.shortName)
     
-    val ptmDefs2 = provider.getPtmDefinitions(file, Map.empty[String, Any])
-    assertEquals( 9, ptmDefs2.length )
+    val ptmDefs2 = provider.getPtmDefinitions(f, Map.empty[String, Any])
+    assertEquals( 29, ptmDefs2.length )
     
     var ptms = ptmDefs.toSet
 
@@ -29,7 +30,7 @@ class ResultFileVerifierTest {
       if ( !ptms.exists(_.sameAs(p))) ptms += p 
     }
     
-    assertEquals( 9, ptms.size )
+    assertEquals( 29, ptms.size )
     
   }
   
