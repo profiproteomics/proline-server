@@ -10,7 +10,7 @@ import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import com.weiglewilczek.slf4s.Logging
 
 object OmssaResultFileProviderType {
-   def fileType: String = "OmssaMSParser"
+    final val fileType: String = "OmssaMSParser"
 }
 
 
