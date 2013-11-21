@@ -240,7 +240,7 @@ class MascotDataParser( val pepSummary: ms_peptidesummary,
           if (protMatchOpt == None) {
             val seqDbIds = seqDbs map { _.id }
             val protMatchAc = protAcc.get(indProt)
-            val protMatchDesc = pepSummary.getProteinDescription(protMatchAc)
+            val protMatchDesc = pepSummary.getProteinDescription(protMatchAc, dbs.get(indProt))
 
             // Not already define, create ProteinMatch and add new entry in protToProtMatch
             protMatch = new ProteinMatch(
