@@ -18,10 +18,14 @@ import fr.proline.core.om.model.msi.UnimodEntry
 import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.IonTypes
 
+object MascotResultFileProviderType {
+   def fileType: String = "MascotMSParser"
+}
+
 class MascotResultFileProvider extends IResultFileProvider with IResultFileVerifier with Logging {
 
   final val mascotMultipartBoundary: String = "--gc0p4Jq0M2Yt08jU534c0p"
-  val fileType: String = "MascotMSParser"
+  val fileType: String = MascotResultFileProviderType.fileType
 
   def getResultFile(fileLocation: File, importProperties: Map[String, Any], parserContext: ProviderDecoratedExecutionContext): IResultFile = {
     new MascotResultFile(fileLocation, importProperties, parserContext)
