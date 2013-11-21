@@ -9,9 +9,14 @@ import fr.proline.core.om.provider.msi.IResultFileVerifier
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import com.weiglewilczek.slf4s.Logging
 
+object OmssaResultFileProviderType {
+   def fileType: String = "OmssaMSParser"
+}
+
+
 class OmssaResultFileProvider extends IResultFileProvider with Logging {
 
-  val fileType: String = "OmssaMSParser"
+  val fileType: String = OmssaResultFileProviderType.fileType
 
 //  def getResultFile( fileLocation: File, importProperties : Map[String, Any], providerKey: String ): IResultFile = {   
 ////  def getResultFile( fileLocation: File, providerKey: String, importProperties : Map[String, Any] ): IResultFile = {
