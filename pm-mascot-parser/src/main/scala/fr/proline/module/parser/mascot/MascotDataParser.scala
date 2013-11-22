@@ -328,7 +328,7 @@ class MascotDataParser( val pepSummary: ms_peptidesummary,
  	// 3. create new one
     if (currentPep == None ) {
       // FIXME: include fixed PTMs
-      currentPep = Some( new Peptide( sequence = pepSeq, ptms =varPtmsasArray ) )
+      currentPep = Some( new Peptide( sequence = pepSeq, ptms =varPtmsasArray, calculatedMass = mascotPeptide.getMrCalc() ) )
     }
 
     if (storeInMap) pepByUniqueKey += ( uniqueKey->  currentPep.get)
