@@ -19,7 +19,7 @@ import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.IonTypes
 
 object MascotResultFileProviderType {
-   final val fileType: String = "MascotMSParser"
+  final val fileType: String = "MascotMSParser"
 }
 
 class MascotResultFileProvider extends IResultFileProvider with IResultFileVerifier with Logging {
@@ -45,87 +45,98 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
   }
 
   def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): Seq[PtmDefinition] = {
-    var ptmDefs = Seq.empty[PtmDefinition]
+
+    val ptmDefs = Array.newBuilder[PtmDefinition]
+
     try {
       val unimodText = extractUnimodSection(fileLocation)
       val is = new ByteArrayInputStream(unimodText.getBytes)
-      val unimod = UnimodUnmarshaller.unmarshal(is);
+      val unimod = UnimodUnmarshaller.unmarshal(is)
 
-      val modificationsElement = unimod.getModifications;
+      val modificationsElement = unimod.getModifications
       if (modificationsElement != null) {
 
-        val mods = modificationsElement.getMods();
+        val mods = modificationsElement.getMods()
         if ((mods != null) && !mods.isEmpty) {
           //		    var classifications = new HashMap<String, PtmClassification>();
           val it = mods.iterator
           while (it.hasNext) {
             val mod = it.next()
             val ptmNames = new PtmNames(shortName = mod.getTitle, fullName = mod.getFullName)
-            var ptmEvidences = Seq.empty[PtmEvidence]
-            
+            val ptmEvidences = Array.newBuilder[PtmEvidence]
+
             val delta = mod.getDelta()
             if (delta != null) {
-
-              ptmEvidences = ptmEvidences :+ new PtmEvidence(ionType = IonTypes.Precursor,
-                    composition = delta.getComposition,
-                    monoMass = delta.getMonoMass,
-                    averageMass = delta.getAvgeMass,
-                    isRequired = true);
+              ptmEvidences += new PtmEvidence(
+                ionType = IonTypes.Precursor,
+                composition = delta.getComposition,
+                monoMass = delta.getMonoMass,
+                averageMass = delta.getAvgeMass,
+                isRequired = true
+              )
             }
-            
+
             // then build PtmDefinitions for each specificity
             val itSp = mod.getSpecificities().iterator()
             while (itSp.hasNext) {
               val specificity = itSp.next
 
               //build evidences
-              var specificityEvidences = ptmEvidences
+              val specificityEvidences = Array.newBuilder[PtmEvidence]
               
-              val neutralLosses = specificity.getNeutralLosses;
+              // FIXME: do we need to copy PTM evidence in evidences specific to the specificity ???
+              specificityEvidences ++= ptmEvidences.result
+
+              val neutralLosses = specificity.getNeutralLosses
               if ((neutralLosses != null) && !neutralLosses.isEmpty()) {
                 val nlIt = neutralLosses.iterator()
                 while (nlIt.hasNext) {
                   val neutralLoss = nlIt.next
-                  specificityEvidences = ptmEvidences :+ new PtmEvidence(ionType = IonTypes.NeutralLoss,
+                  specificityEvidences += new PtmEvidence(
+                    ionType = IonTypes.NeutralLoss,
                     composition = neutralLoss.getComposition,
                     monoMass = neutralLoss.getMonoMass,
                     averageMass = neutralLoss.getAvgeMass,
-                    isRequired = !neutralLoss.isFlag());
+                    isRequired = !neutralLoss.isFlag()
+                  )
                 } // End loop for each neutralLoss
               } // End if (neutralLosses is not empty)
 
-              val pepNeutralLosses = specificity.getPepNeutralLosses();
+              val pepNeutralLosses = specificity.getPepNeutralLosses()
               if ((pepNeutralLosses != null) && !pepNeutralLosses.isEmpty()) {
                 val pnlIt = pepNeutralLosses.iterator
                 while (pnlIt.hasNext) {
                   val pepNeutralLoss = pnlIt.next
-                  specificityEvidences = ptmEvidences :+ new PtmEvidence(ionType = IonTypes.PepNeutralLoss,
+                  specificityEvidences += new PtmEvidence(
+                    ionType = IonTypes.PepNeutralLoss,
                     averageMass = pepNeutralLoss.getAvgeMass(),
                     composition = pepNeutralLoss.getComposition(),
                     isRequired = pepNeutralLoss.isRequired(),
-                    monoMass = pepNeutralLoss.getMonoMass())
+                    monoMass = pepNeutralLoss.getMonoMass()
+                  )
                 }
               }
 
               // then build PtmDefinitions for each specificity
-              ptmDefs = ptmDefs :+ (new PtmDefinition(
+              ptmDefs += new PtmDefinition(
                 id = -1,
                 location = specificity.getPosition().value(),
                 names = ptmNames,
-                ptmEvidences = specificityEvidences.toArray,
+                ptmEvidences = specificityEvidences.result,
                 residue = {
                   if (specificity.getSite != null) {
                     val normSite = specificity.getSite().trim
                     if (normSite.length() == 1)
                       normSite.charAt(0)
-                    else 
+                    else
                       '\0'
                   } else {
-                  	'\0'
+                    '\0'
                   }
                 },
                 classification = specificity.getClassification,
-                unimodId = mod.getRecordId.intValue))
+                unimodId = mod.getRecordId.intValue
+              )
             }
 
           } // End loop for each mod
@@ -137,7 +148,8 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
     } catch {
       case e: Exception => {}
     }
-    ptmDefs
+    
+    ptmDefs.result
   }
 
   def isValid(fileLocation: File, importProperties: Map[String, Any]): Boolean = {
@@ -155,7 +167,7 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
     while ((count < maxCount) && (line != null)) {
       if (line == mascotMultipartBoundary) {
         count += 1
-        if (count == (maxCount -1))
+        if (count == (maxCount - 1))
           bfr.readLine() //skip first line following the boundary mark
       } else {
         if (count == (maxCount - 1)) section += line
