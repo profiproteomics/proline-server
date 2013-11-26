@@ -13,48 +13,43 @@ import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.IonTypes
 import fr.proline.core.om.provider.msi.IResultFileVerifier
 import com.weiglewilczek.slf4s.Logging
+import scala.io.Source
+import java.net.URL
 
 class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
 
   // returns PtmDefinitions referenced by the specified file
   def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): Seq[PtmDefinition] = {
-//    getPtmDefinitionsByInternalId(fileLocation).getValues
-    getPtmDefinitionsByInternalId(getUsermodFileLocation(importProperties)).getValues
+    //    getPtmDefinitionsByInternalId(getUsermodFileLocation(importProperties)).getValues
+    getPtmDefinitionsByInternalId(getUsermodFileLocation(importProperties), parsePtmCompositions(getCompositionsFileLocation(importProperties))).getValues
   }
   // can be used to verify that the provider handle this kind of file (ex: MSMS search, error tolerant search, n15 search, PMF, ...)  
   def isValid(fileLocation: File, importProperties: Map[String, Any]): Boolean = {
     return true
   }
-  
+
   // get the usermods file from the import properties
   // if missing, take the default usermods file
-//  private def getUsermodFileLocation(importProperties: Map[String, Any]): File = {
   private def getUsermodFileLocation(importProperties: Map[String, Any]): java.net.URL = {
     val parseProperties: Map[OmssaParseParams.OmssaParseParam, Any] = importProperties.map(entry => OmssaParseParams.withName(entry._1) -> entry._2)
-//    if (parseProperties.get(OmssaParseParams.USERMOD_XML_FILE) == None) new File(this.getClass().getClassLoader().getResource("omssa_config/usermods.xml").getPath())
-//    else new File(parseProperties.get(OmssaParseParams.USERMOD_XML_FILE).toString())
-    if(parseProperties.get(OmssaParseParams.USERMOD_XML_FILE) == None) {
-//      logger.debug("No usermod file in importProperties, using "+this.getClass().getClassLoader().getResource("omssa_config/usermods.xml").getPath())
+    if (parseProperties.get(OmssaParseParams.USERMOD_XML_FILE) == None) {
       new File(this.getClass().getClassLoader().getResource("omssa_config/usermods.xml").getPath()).toURL()
     } else {
-//      logger.debug("Usermod file found in importProperties is :"+parseProperties.get(OmssaParseParams.USERMOD_XML_FILE).get)
       new File(parseProperties.get(OmssaParseParams.USERMOD_XML_FILE).get.toString).toURL()
     }
   }
-  
+
   /**
    * This function reads the xml file using StaxMate
    * It creates the PtmDefinition objects and puts them into the corresponding array (known and unknown)
    * returns a hashmap containing each definition, and the corresponding omssa id
    * -> the omssa Id is not the key of the hashmap because there can be more than one residue per ptm in the omssa file
    */
-//  def getPtmDefinitionsByInternalId(fileLocation: File): TwoDimensionsMap[Long, Char, PtmDefinition] = {
-  def getPtmDefinitionsByInternalId(fileLocation: java.net.URL): TwoDimensionsMap[Long, Char, PtmDefinition] = {
+  //  def getPtmDefinitionsByInternalId(fileLocation: java.net.URL): TwoDimensionsMap[Long, Char, PtmDefinition] = {
+  def getPtmDefinitionsByInternalId(fileLocation: java.net.URL, ptmCompositions: Map[String, String]): TwoDimensionsMap[Long, Char, PtmDefinition] = {
     val ptms = new TwoDimensionsMap[Long, Char, PtmDefinition]
     val invalidCompositionString = ""
-//    if(!fileLocation.getName().endsWith(".xml")) throw new IllegalArgumentException("Incorrect PTM file type")
-//    logger.debug("Reading file " + fileLocation.getName())
-    if(!fileLocation.getFile().endsWith(".xml")) throw new IllegalArgumentException("Incorrect PTM file type")
+    if (!fileLocation.getFile().endsWith(".xml")) throw new IllegalArgumentException("Incorrect PTM file type")
     logger.debug("Reading file " + fileLocation.getFile())
     val inf: SMInputFactory = new SMInputFactory(XMLInputFactory.newInstance())
 
@@ -124,7 +119,8 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
             fullName = fullName.getOrElse(shortName.getOrElse(""))),
           ptmEvidences = Array(new PtmEvidence(
             ionType = (if (hasNeutralLoss) IonTypes.NeutralLoss else IonTypes.Precursor),
-            composition = invalidCompositionString,
+            //            composition = invalidCompositionString,
+            composition = ptmCompositions.getOrElse(shortName.getOrElse(""), invalidCompositionString),
             monoMass = monoMass.getOrElse(0),
             averageMass = avgMass.getOrElse(0),
             isRequired = false
@@ -138,7 +134,7 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
     MSModSpecSet.getStreamReader().closeCompletely()
     ptms
   }
-  
+
   /**
    * PtmLocation is stored as a numeric id in the xml file
    * The name corresponding to the id is given in the OMSSA.xsd file
@@ -158,5 +154,41 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
       case 8 => PtmLocation.ANY_C_TERM // modcpaa : at the C terminus of a peptide at particular amino acids
       case 9 => PtmLocation.ANYWHERE // modmax : the max number of modification types
     }
+  }
+
+  /**
+   * Temporary method !!
+   * This method extracts the URL of the composition file
+   * @param importProperties The properties of the parser
+   * @return URL of the composition file
+   */
+  def getCompositionsFileLocation(importProperties: Map[String, Any]): java.net.URL = {
+    val parseProperties: Map[OmssaParseParams.OmssaParseParam, Any] = importProperties.map(entry => OmssaParseParams.withName(entry._1) -> entry._2)
+    if (parseProperties.get(OmssaParseParams.PTM_COMPOSITION_FILE) != None) {
+      new File(parseProperties.get(OmssaParseParams.PTM_COMPOSITION_FILE).get.toString).toURL()
+    } else {
+      null
+    }
+  }
+  /**
+   * Temporary method !!
+   * This method extracts the compositions for each ptm in the file
+   * @param fileLocation URL of the composition file
+   * @return A map of compositions per ptm
+   */
+  def parsePtmCompositions(fileLocation: java.net.URL): Map[String, String] = {
+    val ptmCompositions = new HashMap[String, String]
+    try {
+      for (line <- Source.fromURL(fileLocation).getLines()) {
+        if (line.matches("^\\w+=.+")) {
+          val items = line.split("=", 2)
+          ptmCompositions.put(items(0), items(1))
+        }
+      }
+    } catch {
+      case e: Exception => logger.error(e.getMessage(), e)
+    }
+    //    ptmCompositions.foreach { case (k, v) => logger.debug("ABUTEST: "+k+" => "+v) }
+    ptmCompositions.toMap
   }
 }

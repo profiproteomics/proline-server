@@ -71,10 +71,8 @@ class OmssaReadFile(val omxFile: File,
   private var seqDatabase: SeqDatabase = null
   private var msiSearch: MSISearch = null
   def getMsiSearch: MSISearch = msiSearch
-  private val hasTargetResultSet: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_TARGET, true).toString.toBoolean
-  //  def searchForTargetEntries: Boolean = hasTargetResultSet
-  private val hasDecoyResultSet: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_DECOY, true).toString.toBoolean
-  //  def searchForDecoyEntries: Boolean = hasDecoyResultSet
+//  private val hasTargetResultSet: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_TARGET, true).toString.toBoolean
+//  private val hasDecoyResultSet: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_DECOY, true).toString.toBoolean
   // the Mz in the omssa files are Integers, they must be divided by this number to get the real value
   // a special class is used to get the value from the file before reading it
   private val mozScaleExtractor = new OmssaMozScaleExtractor(omxFile)
@@ -547,7 +545,8 @@ class OmssaReadFile(val omxFile: File,
       ms1ChargeStates = chargeStates,
       ms1ErrorTol = ms1ErrorTol,
       ms1ErrorTolUnit = ms1ErrorTolUnit,
-      isDecoy = (!hasTargetResultSet && hasDecoyResultSet),
+//      isDecoy = (!hasTargetResultSet && hasDecoyResultSet),
+      isDecoy = parseProperties.getOrElse(OmssaParseParams.DECOY_SEARCH, false).toString.toBoolean,
       usedEnzymes = usedEnzymes.toArray,
       variablePtmDefs = msVarPtms.toArray,
       fixedPtmDefs = msFixedPtms.toArray,

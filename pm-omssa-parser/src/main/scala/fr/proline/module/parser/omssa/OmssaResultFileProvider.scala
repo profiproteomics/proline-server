@@ -34,14 +34,16 @@ class OmssaResultFileProvider extends IResultFileProvider with Logging {
 	val propertiesBuilder = Map.newBuilder[String, Class[_]]
 	propertiesBuilder += (OmssaParseParams.RAW_FILE_PATH.toString -> classOf[String])
 	propertiesBuilder += (OmssaParseParams.PEAK_LIST_FILE_PATH.toString -> classOf[String])
-	propertiesBuilder += (OmssaParseParams.FASTA_CONTAINS_TARGET.toString -> Boolean.getClass())
-	propertiesBuilder += (OmssaParseParams.FASTA_CONTAINS_DECOY.toString -> Boolean.getClass())
+//	propertiesBuilder += (OmssaParseParams.FASTA_CONTAINS_TARGET.toString -> Boolean.getClass())
+//	propertiesBuilder += (OmssaParseParams.FASTA_CONTAINS_DECOY.toString -> Boolean.getClass())
+	propertiesBuilder += (OmssaParseParams.DECOY_SEARCH.toString -> Boolean.getClass())
 	propertiesBuilder += (OmssaParseParams.FASTA_FILE_PATH.toString -> classOf[String])
 	propertiesBuilder += (OmssaParseParams.FASTA_TAXONOMIES.toString -> classOf[String])
 	propertiesBuilder += (OmssaParseParams.OMSSA_VERSION.toString -> classOf[String])
 //	propertiesBuilder += (OmssaParseParams.OMSSA_XSD_FILE.toString -> classOf[File])
 //	propertiesBuilder += (OmssaParseParams.MOD_XML_FILE.toString -> classOf[File])
 	propertiesBuilder += (OmssaParseParams.USERMOD_XML_FILE.toString -> classOf[File])
+	propertiesBuilder += (OmssaParseParams.PTM_COMPOSITION_FILE.toString -> classOf[File])
 	propertiesBuilder.result
   }
   

@@ -14,13 +14,15 @@ object OmssaParseParams extends Enumeration {
   //  val OMSSA_XSD_FILE = Value("omssa.xsd.file")
   //  val MOD_XML_FILE = Value("mods.xml.file")
   val USERMOD_XML_FILE = Value("usermod.xml.file") // must be asked to the user, default file exists in case
-  val FASTA_CONTAINS_TARGET = Value("fasta.contains.target") // must be mandatory
-  val FASTA_CONTAINS_DECOY = Value("fasta.contains.decoy") // must be mandatory
+//  val FASTA_CONTAINS_TARGET = Value("fasta.contains.target") // must be mandatory
+//  val FASTA_CONTAINS_DECOY = Value("fasta.contains.decoy") // must be mandatory
+  val DECOY_SEARCH = Value("decoy.search") // default is false
   val OMSSA_VERSION = Value("omssa.version") // 2.1.9 is default
   val FASTA_FILE_PATH = Value("path.to.fasta.file") // optional
   val FASTA_TAXONOMIES = Value("numeric.taxonomy.ids.separated.by.string.character") // optional
   val PEAK_LIST_FILE_PATH = Value("path.to.peak.list.file") // optional
   val RAW_FILE_PATH = Value("path.to.raw.file") // optional
+  val PTM_COMPOSITION_FILE = Value("ptm.composition.file") // temporary file for ptm compositions
 }
 
 /**
@@ -71,16 +73,15 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   // users parameters
   private var parseProperties: Map[OmssaParseParams.OmssaParseParam, Any] = importProperties.map(entry => OmssaParseParams.withName(entry._1) -> entry._2)
   // check mandatory parameters
-  //      if(parseProperties.get(OmssaParseParams.FASTA_CONTAINS_TARGET) == None)  throw new Exception("User did not indicate '"+OmssaParseParams.FASTA_CONTAINS_TARGET+"' parameter")
-  //      if(parseProperties.get(OmssaParseParams.FASTA_CONTAINS_DECOY) == None)  throw new Exception("User did not indicate '"+OmssaParseParams.FASTA_CONTAINS_DECOY+"' parameter")
-  if (parseProperties.get(OmssaParseParams.FASTA_CONTAINS_TARGET) == None) {
-    logger.info("FASTA_CONTAINS_TARGET is missing, default value will be used (true)")
-    parseProperties += (OmssaParseParams.FASTA_CONTAINS_TARGET -> true)
-  }
-  if (parseProperties.get(OmssaParseParams.FASTA_CONTAINS_DECOY) == None) {
-    logger.info("FASTA_CONTAINS_DECOY is missing, default value will be used (true)")
-    parseProperties += (OmssaParseParams.FASTA_CONTAINS_DECOY -> true)
-  }
+//  if (parseProperties.get(OmssaParseParams.FASTA_CONTAINS_TARGET) == None) {
+//    logger.info("FASTA_CONTAINS_TARGET is missing, default value will be used (true)")
+//    parseProperties += (OmssaParseParams.FASTA_CONTAINS_TARGET -> true)
+//  }
+//  if (parseProperties.get(OmssaParseParams.FASTA_CONTAINS_DECOY) == None) {
+//    logger.info("FASTA_CONTAINS_DECOY is missing, default value will be used (true)")
+//    parseProperties += (OmssaParseParams.FASTA_CONTAINS_DECOY -> true)
+//  }
+  if (parseProperties.get(OmssaParseParams.DECOY_SEARCH) == None) parseProperties += (OmssaParseParams.DECOY_SEARCH -> false)
   // parameters that must be present, at least with a default value
   if (parseProperties.get(OmssaParseParams.USERMOD_XML_FILE) == None) parseProperties += (OmssaParseParams.USERMOD_XML_FILE -> "")
   if (parseProperties.get(OmssaParseParams.OMSSA_VERSION) == None) parseProperties += (OmssaParseParams.OMSSA_VERSION -> "2.1.9")
@@ -100,6 +101,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   // loader for mandatory files that must be loaded BEFORE the omx file
   private var omssaLoader: OmssaMandatoryFilesLoader = new OmssaMandatoryFilesLoader(
     parseProperties.get(OmssaParseParams.USERMOD_XML_FILE).getOrElse("").toString,
+    parseProperties.get(OmssaParseParams.PTM_COMPOSITION_FILE).getOrElse("").toString,
     parserContext)
   def getOmssaLoader: OmssaMandatoryFilesLoader = omssaLoader
 

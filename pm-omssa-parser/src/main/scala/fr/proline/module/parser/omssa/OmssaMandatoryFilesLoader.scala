@@ -17,23 +17,14 @@ import javax.xml.stream.XMLInputFactory
 import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.model.msi.PtmLocation
 
-//object OmssaMandatoryFilesLoader {
-//  val classLoader = OmssaMandatoryFilesLoader.getClass().getClassLoader()
-//  private val omssaConfigFolder = "omssa_config"
-//  lazy val xsdFile = new File(classLoader.getResource(omssaConfigFolder + "/OMSSA.xsd").getPath())
-//  lazy val modFile = new File(classLoader.getResource(omssaConfigFolder + "/mods.xml").getPath())
-//  lazy val usermodsFile = new File(classLoader.getResource(omssaConfigFolder + "/usermods.xml").getPath())
-//}
 
-class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val parserContext: ProviderDecoratedExecutionContext) extends Logging {
+//class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val parserContext: ProviderDecoratedExecutionContext) extends Logging {
+class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val ptmCompositionFilePath: String, val parserContext: ProviderDecoratedExecutionContext) extends Logging {
 
   private val ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
   private var _enzymes: HashMap[Int, String] = null
   def enzymes = _enzymes.toMap
   private var _modificationNames: HashMap[Int, String] = null
-  //  private var _ptmDefinitions: HashMap[Long, PtmDefinition] = new HashMap[Long, PtmDefinition]
-  //  def ptmDefinitions = _ptmDefinitions.toMap
-//  private var _ptmDefinitions = new HashMap[PtmDefinition, Long]
   private var _ptmDefinitions = new TwoDimensionsMap[Long, Char, PtmDefinition]
   private var _modTypes: HashMap[Int, String] = null
   private var _searchTypes: HashMap[Int, String] = null
@@ -49,28 +40,15 @@ class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val parserContext:
   private var _responseErrors: HashMap[Int, String] = null
 
   def getPtmDefinitions(id: Long): Array[PtmDefinition] = {
-//    _ptmDefinitions.filter(_._2 == id).keys.toArray
     _ptmDefinitions.wrapped.filter(_._1._1 == id).values.toArray
   }
-  def getPtmDefinition(id: Long, site: Char): Option[PtmDefinition] = {
-    val ptm = _ptmDefinitions.getOption(id, site)
-//    if (ptm.isDefined) logger.debug("Looking for PTM " + id + " with residue '" + site + "'; PTM found is "+ptm.get.toString)
-//    else logger.debug("Looking for PTM " + id + " with residue '" + site + "'; no PTM found")
-    ptm
-//    if(_ptmDefinitions.exists(id, site)) {}
-//    val ptm = _ptmDefinitions.wrapped.filter(_._1._1 == id).filter(_._1._2 == site).values.toArray
-////    val ptm = _ptmDefinitions.filter(_._2 == id).keys.filter(_.residue == site).toArray
-//    if (ptm.size != 0) Some(ptm(0)) else None
-  }
+  def getPtmDefinition(id: Long, site: Char): Option[PtmDefinition] = _ptmDefinitions.getOption(id, site)
 
   parseXsd // parse the xsd file as soon as possible
-//  parseMods(OmssaMandatoryFilesLoader.modFile)
-//  if (_userptmFilePath != "") parseMods(new File(_userptmFilePath)) // parse the user's ptms file as soon as possible
-//  else parseMods(OmssaMandatoryFilesLoader.usermodsFile)
   parseMods(this.getClass().getClassLoader().getResource("omssa_config/mods.xml"))
   if (_userptmFilePath != "") parseMods((new File(_userptmFilePath)).toURL()) // parse the user's ptms file as soon as possible
   else parseMods(this.getClass().getClassLoader().getResource("omssa_config/usermods.xml"))
-
+  
   /**
    * Reads an OMSSA.xsd file that is the reference of the OMSSA omx file
    * The OMSSA.xsd file is bound to a specific version of OMSSA
@@ -159,31 +137,17 @@ class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val parserContext:
    * @param modFile the ptm file as a parameter for omssa
    * at this point, the ptm file has already been read and all ptms should exist
    * notes about the mods.xml file:
-   * - the original file given with omssa2.1.9 has been modified to add unimod identiers
+   * - the original file given with omssa2.1.9 has been modified to add unimod identifiers (when missing)
    * - the ptms 110, 195 and 207 has been removed as they do not exist in unimod
    */
-//  private def parseMods(modFile: File) {
   private def parseMods(modFile: java.net.URL) {
-    (new OmssaResultFileVerifier).getPtmDefinitionsByInternalId(modFile).foreach((key, ptm) => {
-//      logger.debug("  "+key._1+"=>"+key._2+" "+ptm.toString)
+//    (new OmssaResultFileVerifier).getPtmDefinitionsByInternalId(modFile).foreach((key, ptm) => {
+    val verifier = new OmssaResultFileVerifier
+    verifier.getPtmDefinitionsByInternalId(modFile, verifier.parsePtmCompositions(new File(ptmCompositionFilePath).toURL())).foreach((key, ptm) => {
       val _ptm = ptmProvider.getPtmDefinition(ptm.names.shortName, ptm.residue, PtmLocation.withName(ptm.location))
       if (_ptm.isDefined) _ptmDefinitions.update(key._1, key._2, _ptm.get)
       else logger.error("Unknown ptm, will not be considered: " + ptm.toString)
     })
-//    val ptms = (new OmssaResultFileVerifier).getPtmDefinitionsByInternalId(modFile).wrapped
-//    ptms.foreach(ptm => {
-//      val _ptm = ptmProvider.getPtmDefinition(ptm._2.names.shortName, ptm._2.residue, PtmLocation.withName(ptm._2.location))
-//      if (_ptm.isDefined) _ptmDefinitions.update(ptm._1._1, ptm._1._2, ptm._2)
-//      else logger.error("Unknown ptm, will not be considered: " + ptm._2.toString)
-//    })
-//    // this method returns a HashMap[PtmDefinition, Long] object
-//    (new OmssaResultFileVerifier).getPtmDefinitionsByInternalId(modFile).foreach {
-//      case (ptm, id) =>
-//        // add the ptm from the PSdb in the hash, instead of the incomplete ptm from the file
-//        val _ptm = ptmProvider.getPtmDefinition(ptm.names.shortName, ptm.residue, PtmLocation.withName(ptm.location))
-//        if (_ptm.isDefined) _ptmDefinitions.put(_ptm.get, id)
-//        else logger.error("Unknown ptm, will not be considered: " + ptm.toString)
-//    }
   }
 
   /**
