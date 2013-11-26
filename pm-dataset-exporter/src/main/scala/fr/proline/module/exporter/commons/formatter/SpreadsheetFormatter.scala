@@ -11,7 +11,7 @@ class SpreadsheetFormatter(
   val template: IWorksheetTemplate) extends IViewFormatter {
 
   override def getViewSetLocation(viewDir: File, viewSetName: String): File = {
-    require(((viewDir != null) && viewDir.isDirectory), "viewDir must be a directory")
+    require((viewDir != null) && viewDir.isDirectory, "viewDir must be a directory")
 
     val fileBaseName = viewSetName + '.' + fileExtension
     new File(viewDir, fileBaseName)
@@ -23,7 +23,7 @@ class SpreadsheetFormatter(
 
   // TODO: use Apache POI or equivalent to export some views
   override def formatView(view: IDatasetView, location: File): File = {
-    require(location.isDirectory == false, "location must be a file")
+    require(!location.isDirectory, "location must be a file")
 
     // Create the workbook if it doesn't exist
     if (location.exists() == false) {

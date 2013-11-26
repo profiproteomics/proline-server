@@ -13,25 +13,28 @@ trait IViewFormatter {
   val fileExtension: String = template.fileExtension
 
   def getViewLocation(viewDir: File, view: IDatasetView): File = {
-    require(((viewDir != null) && viewDir.isDirectory), "viewDir must be a directory")
+    require((viewDir != null) && viewDir.isDirectory, "viewDir must be a directory")
 
     // Create a unique name for this view
     val fileBaseName = view.viewName + '_' + UUID.randomUUID().toString + '.' + fileExtension
     new File(viewDir, fileBaseName)
   }
+
   def getViewSetLocation(viewDir: File, viewSetName: String): File = {
-    new File(viewDir.getAbsolutePath())
+    require((viewDir != null) && viewDir.isDirectory, "viewDir must be a directory")
+
+    viewDir.getAbsoluteFile
   }
 
   def formatView(view: IDatasetView, os: OutputStream)
 
   def formatView(view: IDatasetView, location: File): File = {
 
-    if (location.isFile() || location.exists() == false) {
+    if (location.isFile) { // isFile => exist && is a normal File
       _formatView(view, location)
       location
     } else {
-      val file = this.getViewLocation(location, view)
+      val file = getViewLocation(location, view)
       _formatView(view, file)
       file
     }
@@ -40,7 +43,7 @@ trait IViewFormatter {
 
   protected def _formatView(view: IDatasetView, outputFile: File) {
     val fop = new FileOutputStream(outputFile)
-    this.formatView(view, fop)
+    formatView(view, fop)
     fop.close()
   }
 
