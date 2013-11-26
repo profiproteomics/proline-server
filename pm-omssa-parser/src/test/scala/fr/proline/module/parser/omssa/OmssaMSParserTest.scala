@@ -53,7 +53,7 @@ class OmssaMSParserTest extends Logging {
   propertiesBuilder += (OmssaParseParams.USERMOD_XML_FILE.toString -> new File(this.getClass().getResource(userModsFileName).toURI()))
 //  propertiesBuilder += (OmssaParseParams.FASTA_CONTAINS_TARGET.toString -> true)
 //  propertiesBuilder += (OmssaParseParams.FASTA_CONTAINS_DECOY.toString -> true)
-  propertiesBuilder += (OmssaParseParams.DECOY_SEARCH.toString -> false)
+//  propertiesBuilder += (OmssaParseParams.DECOY_SEARCH.toString -> false)
   propertiesBuilder += (OmssaParseParams.FASTA_FILE_PATH.toString -> "")
   propertiesBuilder += (OmssaParseParams.FASTA_TAXONOMIES.toString -> "")
   propertiesBuilder += (OmssaParseParams.PEAK_LIST_FILE_PATH.toString -> "")
@@ -214,7 +214,7 @@ class OmssaMSParserTest extends Logging {
       OmssaParseParams.USERMOD_XML_FILE.toString -> new File(this.getClass().getResource(userModsFileName).toURI()),
 //      OmssaParseParams.FASTA_CONTAINS_TARGET.toString -> true,
 //      OmssaParseParams.FASTA_CONTAINS_DECOY.toString -> true,
-      OmssaParseParams.DECOY_SEARCH.toString -> false,
+//      OmssaParseParams.DECOY_SEARCH.toString -> false,
       OmssaParseParams.FASTA_FILE_PATH.toString -> "",
       OmssaParseParams.FASTA_TAXONOMIES.toString -> "",
       OmssaParseParams.PEAK_LIST_FILE_PATH.toString -> "",

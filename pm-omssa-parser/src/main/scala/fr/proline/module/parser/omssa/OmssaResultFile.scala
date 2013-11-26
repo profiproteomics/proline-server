@@ -16,7 +16,7 @@ object OmssaParseParams extends Enumeration {
   val USERMOD_XML_FILE = Value("usermod.xml.file") // must be asked to the user, default file exists in case
 //  val FASTA_CONTAINS_TARGET = Value("fasta.contains.target") // must be mandatory
 //  val FASTA_CONTAINS_DECOY = Value("fasta.contains.decoy") // must be mandatory
-  val DECOY_SEARCH = Value("decoy.search") // default is false
+//  val DECOY_SEARCH = Value("decoy.search") // default is false
   val OMSSA_VERSION = Value("omssa.version") // 2.1.9 is default
   val FASTA_FILE_PATH = Value("path.to.fasta.file") // optional
   val FASTA_TAXONOMIES = Value("numeric.taxonomy.ids.separated.by.string.character") // optional
@@ -81,7 +81,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
 //    logger.info("FASTA_CONTAINS_DECOY is missing, default value will be used (true)")
 //    parseProperties += (OmssaParseParams.FASTA_CONTAINS_DECOY -> true)
 //  }
-  if (parseProperties.get(OmssaParseParams.DECOY_SEARCH) == None) parseProperties += (OmssaParseParams.DECOY_SEARCH -> false)
+//  if (parseProperties.get(OmssaParseParams.DECOY_SEARCH) == None) parseProperties += (OmssaParseParams.DECOY_SEARCH -> false)
   // parameters that must be present, at least with a default value
   if (parseProperties.get(OmssaParseParams.USERMOD_XML_FILE) == None) parseProperties += (OmssaParseParams.USERMOD_XML_FILE -> "")
   if (parseProperties.get(OmssaParseParams.OMSSA_VERSION) == None) parseProperties += (OmssaParseParams.OMSSA_VERSION -> "2.1.9")

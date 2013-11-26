@@ -36,7 +36,7 @@ class OmssaResultFileProvider extends IResultFileProvider with Logging {
 	propertiesBuilder += (OmssaParseParams.PEAK_LIST_FILE_PATH.toString -> classOf[String])
 //	propertiesBuilder += (OmssaParseParams.FASTA_CONTAINS_TARGET.toString -> Boolean.getClass())
 //	propertiesBuilder += (OmssaParseParams.FASTA_CONTAINS_DECOY.toString -> Boolean.getClass())
-	propertiesBuilder += (OmssaParseParams.DECOY_SEARCH.toString -> Boolean.getClass())
+//	propertiesBuilder += (OmssaParseParams.DECOY_SEARCH.toString -> Boolean.getClass())
 	propertiesBuilder += (OmssaParseParams.FASTA_FILE_PATH.toString -> classOf[String])
 	propertiesBuilder += (OmssaParseParams.FASTA_TAXONOMIES.toString -> classOf[String])
 	propertiesBuilder += (OmssaParseParams.OMSSA_VERSION.toString -> classOf[String])
