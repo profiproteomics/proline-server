@@ -105,7 +105,7 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTest_ {
     var datFile: File = new File(RFCertifierH2CTDTest.this.getClass.getResource(_datFileName).toURI)
     var rfByFormat = Map("MascotMSParser" -> Array(datFile))
 
-    psEM.getTransaction().begin()
+    //psEM.getTransaction().begin()
     val certifier = new ResultFileCertifier(
       executionContext,
       resultIdentFilesByFormat = rfByFormat,
@@ -113,7 +113,7 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTest_ {
 
     logger.debug(" --- run service ")
     val result = certifier.runService()
-    psEM.getTransaction().commit()
+    //psEM.getTransaction().commit()
 
     Assert.assertTrue(result)
     psPtm = PsPtmRepository.findPtmForShortName(psEM, "Carbamidomethyl")
