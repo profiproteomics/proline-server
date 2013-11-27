@@ -194,7 +194,7 @@ Content-Type: application/x-Mascot; name="unimod"
         <umod:url></umod:url>
       </umod:xref>
     </umod:mod>
-    <umod:mod approved="false" date_time_modified="2008-02-15 05:37:07" date_time_posted="2002-08-19 19:17:11" full_name="Oxidation or Hydroxylation" group_of_poster="admin" record_id="35" title="Hydroxylation" username_of_poster="unimod">
+    <umod:mod approved="false" date_time_modified="2008-02-15 05:37:07" date_time_posted="2002-08-19 19:17:11" full_name="Hydroxylation or Oxidation" group_of_poster="admin" record_id="35" title="Hydroxylation" username_of_poster="unimod">
       <umod:specificity classification="Artefact" hidden="false" position="Anywhere" site="W" spec_group="10"/>
       <umod:specificity classification="Artefact" hidden="false" position="Anywhere" site="H" spec_group="10"/>
       <umod:specificity classification="Post-translational" hidden="false" position="Anywhere" site="C" spec_group="9">
