@@ -19,7 +19,7 @@ object ViewSetExporter {
     viewSet.exporters.map { exporter =>
       val viewSetLocation = exporter.formatter.getViewSetLocation(outputDir, viewSet.viewSetName)
       exporter.exportViewToLocation(viewSetLocation)
-    }
+    } distinct
 
   }
 
