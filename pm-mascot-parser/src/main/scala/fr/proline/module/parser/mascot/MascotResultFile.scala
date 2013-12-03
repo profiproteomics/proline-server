@@ -549,11 +549,19 @@ class MascotResultFile(
     //throw new Exception("mascot server url must be provided in the import properties")
     ).toString
 
+    val mascotServerCGIURLAsStr = if(mascotServerURLAsStr.endsWith("/cgi/")) { mascotServerURLAsStr } else {
+      if(mascotServerURLAsStr.endsWith("/cgi") )
+          mascotServerURLAsStr++"/"
+      else
+        mascotServerURLAsStr++"/cgi/"
+    }
+      
+    
     this.logger.debug("Iterating over spectrum matches of result file '%s' (mascot version=%s ; server URL =%s)".format(
-      fileLocation.getName, mascotVersion, mascotServerURLAsStr
+      fileLocation.getName, mascotVersion, mascotServerCGIURLAsStr
     ))
 
-    val mascotConfig = new MascotRemoteConfig(mascotVersion.asInstanceOf[String], mascotServerURLAsStr.asInstanceOf[String])
+    val mascotConfig = new MascotRemoteConfig(mascotVersion.asInstanceOf[String], mascotServerCGIURLAsStr.asInstanceOf[String])
     val spectrumMatcher = new MascotSpectrumMatcher(mascotResFile, mascotConfig, ptmHelper)
 
     // Retrieve peptide summary corresponding to the wanted dataset
