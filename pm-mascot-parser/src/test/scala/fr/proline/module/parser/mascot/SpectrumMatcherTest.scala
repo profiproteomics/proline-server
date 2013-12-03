@@ -9,7 +9,7 @@ import org.junit.Test
 import com.weiglewilczek.slf4s.Logging
 
 import fr.proline.context.BasicExecutionContext
-import fr.proline.core.dal.{ContextFactory, SQLConnectionContext}
+import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.{IPTMProvider, IPeptideProvider, ResultFileProviderRegistry}
 import fr.proline.core.om.provider.msi.impl.{SQLPTMProvider, SQLPeptideProvider}

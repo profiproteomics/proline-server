@@ -7,8 +7,6 @@ import org.junit.Assert._
 import org.junit.Before
 import org.junit.Test
 import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.SQLConnectionContext
-import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.provider.msi.IResultSetProvider

@@ -7,9 +7,7 @@ import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.repository.DriverType
-import fr.proline.core.dal.SQLQueryHelper
 import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.SQLConnectionContext
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.dal.ContextFactory
 
