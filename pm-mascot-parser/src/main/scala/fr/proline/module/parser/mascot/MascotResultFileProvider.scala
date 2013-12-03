@@ -19,7 +19,7 @@ import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.IonTypes
 
 object MascotResultFileProviderType {
-  final val fileType: String = "MascotMSParser"
+  final val fileType: String = "mascot.dat"
 }
 
 class MascotResultFileProvider extends IResultFileProvider with IResultFileVerifier with Logging {
