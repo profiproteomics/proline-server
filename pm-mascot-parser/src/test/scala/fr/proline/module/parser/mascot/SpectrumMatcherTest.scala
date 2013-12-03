@@ -73,7 +73,7 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
     logger.info(" --- SpectrumMatcher  " + datFile.exists)
 
     // Get Right ResultFile provider
-    val rfProvider = ResultFileProviderRegistry.get("MascotMSParser")
+    val rfProvider = ResultFileProviderRegistry.get("mascot.dat")
     if (rfProvider == None) {
       throw new IllegalArgumentException("No ResultFileProvider for specified identification file format")
     }
@@ -119,7 +119,7 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
     logger.info(" --- SpectrumMatcher  " + datFile.exists)
 
     // Get Right ResultFile provider
-    val rfProvider = ResultFileProviderRegistry.get("MascotMSParser")
+    val rfProvider = ResultFileProviderRegistry.get("mascot.dat")
     if (rfProvider == None) {
       throw new IllegalArgumentException("No ResultFileProvider for specified identification file format")
     }
@@ -166,7 +166,7 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
     logger.info(" --- SpectrumMatcher  " + datFile.exists)
 
     // Get Right ResultFile provider
-    val rfProvider = ResultFileProviderRegistry.get("MascotMSParser")
+    val rfProvider = ResultFileProviderRegistry.get("mascot.dat")
     if (rfProvider == None) {
       throw new IllegalArgumentException("No ResultFileProvider for specified identification file format")
     }

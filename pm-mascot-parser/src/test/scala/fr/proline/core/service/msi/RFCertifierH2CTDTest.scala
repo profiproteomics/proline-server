@@ -53,7 +53,7 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTest_ {
     ResultFileProviderRegistry.register(new MascotResultFileProvider())
     logger.debug(" --- Get File " + _datFileName)
     var datFile: File = new File(RFCertifierH2CTDTest.this.getClass.getResource(_datFileName).toURI)
-    var rfByFormat = Map("MascotMSParser" -> Array(datFile))
+    var rfByFormat = Map("mascot.dat" -> Array(datFile))
 
     val certifier = new ResultFileCertifier(
       executionContext,
@@ -75,7 +75,7 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTest_ {
     ResultFileProviderRegistry.register(new MascotResultFileProvider())
     logger.debug(" --- Get File " + _datFileName)
     var datFile: File = new File(RFCertifierH2CTDTest.this.getClass.getResource(_datFileName).toURI)
-    var rfByFormat = Map("MascotMSParser" -> Array(datFile))
+    var rfByFormat = Map("mascot.dat" -> Array(datFile))
 
     val certifier = new ResultFileCertifier(
       executionContext,
@@ -103,7 +103,7 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTest_ {
     ResultFileProviderRegistry.register(new MascotResultFileProvider())
     logger.debug(" --- Get File " + _datFileName)
     var datFile: File = new File(RFCertifierH2CTDTest.this.getClass.getResource(_datFileName).toURI)
-    var rfByFormat = Map("MascotMSParser" -> Array(datFile))
+    var rfByFormat = Map("mascot.dat" -> Array(datFile))
 
     //psEM.getTransaction().begin()
     val certifier = new ResultFileCertifier(
@@ -128,7 +128,7 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTest_ {
     ResultFileProviderRegistry.register(new MascotResultFileProvider())
     logger.debug(" --- Get File " + _datFileName)
     var datFile: File = new File(RFCertifierH2CTDTest.this.getClass.getResource(_datFileName).toURI)
-    var rfByFormat = Map("MascotMSParser" -> Array(datFile, datFile))
+    var rfByFormat = Map("mascot.dat" -> Array(datFile, datFile))
 
     val certifier = new ResultFileCertifier(
       executionContext,

@@ -65,7 +65,7 @@ object RunResultFileService extends Logging {
     val importer = new ResultFileImporter(
       executionContext,
       resultIdentFile = datFile,
-      fileType = "MascotMSParser",
+      fileType = "mascot.dat",
       instrumentConfigId = 1,
       peaklistSoftwareId = 1,
       importerProperties = Map.empty)

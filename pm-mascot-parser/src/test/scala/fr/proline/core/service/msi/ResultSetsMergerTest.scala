@@ -169,7 +169,7 @@ class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
     val importer: ResultFileImporter = new ResultFileImporter(
       localExecutionContext,
       resultIdentFile = datFile,
-      fileType = "MascotMSParser",
+      fileType = "mascot.dat",
       instrumentConfigId = 1,
       peaklistSoftwareId = 1, // TODO : provide the right value
       importerProperties = propertiedBuilder.result,

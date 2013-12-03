@@ -48,7 +48,7 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
       val importer = new ResultFileImporter(
         executionContext,
         resultIdentFile = datFile,
-        fileType = "MascotMSParser",
+        fileType = "mascot.dat",
         instrumentConfigId = 1,
         peaklistSoftwareId = 1, // TODO : provide the right value
         importerProperties = Map.empty, // TODO use propertiedBuilder here ?
@@ -117,7 +117,7 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
       val importer = new ResultFileImporter(
         executionContext,
         resultIdentFile = datFile,
-        fileType = "MascotMSParser",
+        fileType = "mascot.dat",
         instrumentConfigId = 1,
         peaklistSoftwareId = 1, // TODO : provide the right value
         importerProperties = Map.empty, // TODO use propertiedBuilder here ?
@@ -168,7 +168,7 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
       val importer = new ResultFileImporter(
         executionContext,
         resultIdentFile = datFile,
-        fileType = "MascotMSParser",
+        fileType = "mascot.dat",
         instrumentConfigId = 1,
         peaklistSoftwareId = 1, // TODO : provide the right value
         importerProperties = propertiedBuilder.result,
@@ -202,7 +202,7 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
       val importer2 = new ResultFileImporter(
         executionContext2,
         resultIdentFile = datFile,
-        fileType = "MascotMSParser",
+        fileType = "mascot.dat",
         instrumentConfigId = 1,
         peaklistSoftwareId = 1, // TODO : provide the right value
         importerProperties = propertiedBuilder.result,

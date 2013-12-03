@@ -48,7 +48,7 @@ class RFImporterPgTest extends AbstractRFImporterTest_ {
       val importer = new ResultFileImporter(
         executionContext,
         resultIdentFile = datFile,
-        fileType = "MascotMSParser",
+        fileType = "mascot.dat",
         instrumentConfigId = 1,
         peaklistSoftwareId = 1, // TODO : provide the right value
         importerProperties = propertiedBuilder.result,
@@ -99,7 +99,7 @@ class RFImporterPgTest extends AbstractRFImporterTest_ {
       val importer = new ResultFileImporter(
         executionContext,
         resultIdentFile = datFile,
-        fileType = "MascotMSParser",
+        fileType = "mascot.dat",
         instrumentConfigId = 1,
         peaklistSoftwareId = 1, // TODO : provide the right value
         importerProperties = propertiedBuilder.result,

@@ -46,7 +46,7 @@ class RFImporterH2CTDTest extends AbstractRFImporterTest_ {
     val importer = new ResultFileImporter(
       executionContext,
       resultIdentFile = datFile,
-      fileType = "MascotMSParser",
+      fileType = "mascot.dat",
       instrumentConfigId = 1,
       peaklistSoftwareId = 1,// TODO : provide the right value
       importerProperties = Map.empty,      
@@ -86,7 +86,7 @@ class RFImporterH2CTDTest extends AbstractRFImporterTest_ {
     val importer = new ResultFileImporter(
       executionContext,
       resultIdentFile = datFile,
-      fileType = "MascotMSParser",
+      fileType = "mascot.dat",
       instrumentConfigId = 1,
       peaklistSoftwareId = 1,// TODO : provide the right value
       importerProperties = Map.empty,      

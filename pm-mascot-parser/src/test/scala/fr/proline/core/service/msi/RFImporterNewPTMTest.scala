@@ -13,7 +13,7 @@ import fr.proline.core.om.model.msi.IonTypes
 class RFImporterNewPTMTest extends AbstractRFImporterTest_ {
 
   val driverType = DriverType.H2
-  val fileType = "MascotMSParser"
+  val fileType = "mascot.dat"
 
   @Before
   @throws(classOf[Exception])
