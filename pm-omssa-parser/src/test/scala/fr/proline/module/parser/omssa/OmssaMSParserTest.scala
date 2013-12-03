@@ -263,7 +263,7 @@ class OmssaMSParserTest extends Logging {
     logger.debug("TEST [" + method + "] STARTS")
     //    try {
     ResultFileProviderRegistry.register(new OmssaResultFileProvider())
-    var rfByFormat = Map("OmssaMSParser" -> Array(new File(Thread.currentThread.getContextClassLoader.getResource(omssaSampleFolder + "/STG_NCSpiste1_OTD_mgfInputFile.omx").getPath())))
+    var rfByFormat = Map("omssa.omx" -> Array(new File(Thread.currentThread.getContextClassLoader.getResource(omssaSampleFolder + "/STG_NCSpiste1_OTD_mgfInputFile.omx").getPath())))
     val certifier = new ResultFileCertifier(
       executionContext,
       resultIdentFilesByFormat = rfByFormat,
