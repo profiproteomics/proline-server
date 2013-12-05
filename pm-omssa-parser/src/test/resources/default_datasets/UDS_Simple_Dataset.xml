@@ -33,7 +33,9 @@
 
 	<!-- Needed for ResultSet Storer / ResultSetFakeBuilder test -->
 	<SPEC_TITLE_PARSING_RULE ID="1" NAME="ZZZ Distiller TEST" />
+	<SPEC_TITLE_PARSING_RULE ID="2" NAME="ZZZ SpectrumMillBruker TEST" FIRST_TIME="Cmpd.+MSn.+, (\d+\.\d+) min" LAST_TIME="Cmpd.+MSn.+, (\d+\.\d+) min" />
 	<PEAKLIST_SOFTWARE ID="1"  VERSION="4.3.2" NAME="Distiller" SPEC_TITLE_PARSING_RULE_ID="1" />
+	<PEAKLIST_SOFTWARE ID="2"  VERSION="2.3.4" NAME="SpectrumMillBruker" SPEC_TITLE_PARSING_RULE_ID="2" />
 
 
 	<ACTIVATION TYPE="CID"/>

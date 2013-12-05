@@ -6,10 +6,15 @@ import java.io.File
 import javax.xml.stream.XMLInputFactory
 import org.codehaus.staxmate.in.{ SMHierarchicCursor, SMInputCursor }
 import org.codehaus.staxmate.SMInputFactory
-import fr.proline.core.om.model.msi.{ Spectrum, InstrumentConfig }
+import fr.proline.core.om.model.msi.{ Spectrum, InstrumentConfig, SpectrumTitleFields, SpectrumTitleParsingRule }
+import fr.proline.util.primitives._
 //import fr.proline.repository.DatabaseContext
 
-class OmssaListSpectrum(omxFile: File, peaklistId: Long, instrumentConfig: InstrumentConfig, onEachSpectrum: Spectrum => Unit) extends Logging {
+class OmssaListSpectrum(omxFile: File, peaklistId: Long, instrumentConfig: InstrumentConfig, specTitleParsingRule: Option[SpectrumTitleParsingRule], onEachSpectrum: Spectrum => Unit) extends Logging {
+
+  private def toIntOrZero(v: Any): Int = try { toInt(v) } catch { case _ => 0 }
+  private def toFloatOrZero(v: Any): Float = try { toFloat(v) } catch { case _ => 0f }
+  val titleFields = SpectrumTitleFields
 
   _parseOmxFile()
 
@@ -84,15 +89,27 @@ class OmssaListSpectrum(omxFile: File, peaklistId: Long, instrumentConfig: Instr
                       for (i <- 0 until intensityList.length) { intensities(i) = intensityList(i) / scale }
                       // creating the spectrum
                       val instConfigId = if (instrumentConfig != null) instrumentConfig.id else 0
-                      val spec = new Spectrum(id = Spectrum.generateNewId,
+                      val specTitleFieldMap = specTitleParsingRule.map(_.parseTitle(spectrumTitle)).getOrElse(Map.empty[SpectrumTitleFields.Value, String])
+                      val spec = new Spectrum(
+                        id = Spectrum.generateNewId,
                         title = spectrumTitle,
                         precursorMoz = precursorMoz,
+//                        precursorIntensity = 0f,
+//                        isSummed = false,
+//                        properties = None,
                         precursorCharge = precursorCharge,
+				        firstCycle = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_CYCLE, 0)),
+				        lastCycle = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_CYCLE, 0)),
+				        firstScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_SCAN, 0)),
+				        lastScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_SCAN, 0)),
+				        firstTime = toFloatOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_TIME, 0f)),
+				        lastTime = toFloatOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_TIME, 0f)),
                         mozList = Some(mozList.toArray),
                         intensityList = Some(intensities),
                         peaksCount = mozList.length,
                         instrumentConfigId = instConfigId,
-                        peaklistId = peaklistId)
+                        peaklistId = peaklistId
+                      )
                       // calling the function that will process the spectrum
                       onEachSpectrum(spec)
                     case _ => // this case should never occur

@@ -1,89 +1,83 @@
 package fr.proline.module.parser.omssa
 
-import com.weiglewilczek.slf4s.Logging
 import java.io.File
-import org.junit.Assert._
-import org.junit.{ Before, Test, After }
-import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.om.model.msi.{ MsQuery, Ms2Query, ResultSet, SearchSettings, MSISearch, SpectrumMatch, Spectrum }
-import fr.proline.repository.utils.DatabaseTestCase
-import fr.proline.repository.ProlineDatabaseType
-import fr.proline.context.{ DatabaseConnectionContext, BasicExecutionContext }
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.{ IProteinProvider, ISeqDatabaseProvider, IPeptideProvider, IPTMProvider }
-import fr.proline.module.parser.provider.fake.{ ProteinFakeProvider, SeqDbFakeProvider, PeptideFakeProvider, PTMFakeProvider }
 import java.io.FileNotFoundException
-import fr.proline.module.fragment_match.FragmentTable
-import fr.proline.util.MathUtils
-import fr.proline.core.service.msi.ResultFileCertifier
-import org.junit.Assert
-import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
+
+import scala.annotation.elidable
+import scala.annotation.elidable.ASSERTION
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
+import org.junit.After
+import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Before
+import org.junit.Test
+
+import com.weiglewilczek.slf4s.Logging
+
+import fr.proline.context.BasicExecutionContext
+import fr.proline.core.dal.ContextFactory
+import fr.proline.core.om.model.msi.Spectrum
+import fr.proline.core.om.model.msi.SpectrumMatch
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.provider.msi.IPTMProvider
+import fr.proline.core.om.provider.msi.IPeptideProvider
+import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
+import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
+import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
+import fr.proline.core.om.provider.uds.impl.{ SQLPeaklistSoftwareProvider => UdsSQLPklSoftProvider }
+import fr.proline.core.om.utils.AbstractMultipleDBTestCase
+import fr.proline.core.service.msi.ResultFileCertifier
+import fr.proline.module.fragment_match.FragmentTable
+import fr.proline.repository.DriverType
+import fr.proline.util.MathUtils
+
 @Test
-class OmssaMSParserTest extends Logging {
+class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
 
-  var psDBTestCase: DatabaseTestCase = null
-  var executionContext: BasicExecutionContext = null
-  var parserContext: ProviderDecoratedExecutionContext = null
-  // configuration files
-  val omssaConfigFolder: String = "/omssa_config"
-  val userModsFileName: String = omssaConfigFolder + "/usermods.xml"
-  val omssaSampleFolder: String = "omx_samples"
-  val defaultDatasetsFolder: String = "/default_datasets"
-
-  class PSDatabaseTestCase extends DatabaseTestCase {
-
-    override def getProlineDatabaseType() = ProlineDatabaseType.PS
-
-    override def getPropertiesFileName() = "db_settings/h2/db_ps.properties"
-
-  }
-
-  class PDIDatabaseTestCase extends DatabaseTestCase {
-
-    override def getProlineDatabaseType() = ProlineDatabaseType.PDI
-
-    override def getPropertiesFileName() = "db_settings/h2/db_pdi.properties"
-
-  }
+  val driverType = DriverType.H2
 
   val propertiesBuilder = Map.newBuilder[String, Any]
   propertiesBuilder += (OmssaParseParams.OMSSA_VERSION.toString -> "2.1.9")
-  propertiesBuilder += (OmssaParseParams.USERMOD_XML_FILE.toString -> new File(this.getClass().getResource(userModsFileName).toURI()))
-//  propertiesBuilder += (OmssaParseParams.FASTA_CONTAINS_TARGET.toString -> true)
-//  propertiesBuilder += (OmssaParseParams.FASTA_CONTAINS_DECOY.toString -> true)
-//  propertiesBuilder += (OmssaParseParams.DECOY_SEARCH.toString -> false)
+  propertiesBuilder += (OmssaParseParams.USERMOD_XML_FILE.toString -> new File(this.getClass().getResource("/omssa_config/usermods.xml").toURI()))
   propertiesBuilder += (OmssaParseParams.FASTA_FILE_PATH.toString -> "")
   propertiesBuilder += (OmssaParseParams.FASTA_TAXONOMIES.toString -> "")
   propertiesBuilder += (OmssaParseParams.PEAK_LIST_FILE_PATH.toString -> "")
   propertiesBuilder += (OmssaParseParams.RAW_FILE_PATH.toString -> "")
   propertiesBuilder += (OmssaParseParams.PTM_COMPOSITION_FILE.toString -> new File(this.getClass().getResource("/compositions.txt").toURI()))
+  val importProperties = propertiesBuilder.result
 
+  var parserContext: ProviderDecoratedExecutionContext = null
   @Before
   def init() {
-    try {
-      logger.info("Start Logging ")
-      logger.debug("Start Logging Debug ")
-      // Init PS db connexion
-      psDBTestCase = new PSDatabaseTestCase()
-      psDBTestCase.initDatabase()
-      psDBTestCase.loadDataSet(defaultDatasetsFolder + "/Unimod_Dataset.xml")
+    logger.debug("Test initialization")
+    super.initDBsDBManagement(driverType)
 
-      val psDbCtx = new DatabaseConnectionContext(psDBTestCase.getConnector)
-      executionContext = new BasicExecutionContext(null, null, psDbCtx, null, null)
-      parserContext = new ProviderDecoratedExecutionContext(executionContext)
-      parserContext.putProvider(classOf[IProteinProvider], ProteinFakeProvider)
-      parserContext.putProvider(classOf[ISeqDatabaseProvider], SeqDbFakeProvider)
-    } catch {
-      case e: Exception => logger.error("test init failed", e)
-    }
-  }
+    //Load Data
+    logger.info("Initializing Dbs")
+    psDBTestCase.loadDataSet("/default_datasets/Unimod_Dataset.xml")
+    pdiDBTestCase.loadDataSet("/default_datasets/Proteins_Dataset.xml")
+    msiDBTestCase.loadDataSet("/default_datasets/Init_Dataset.xml")
 
-  @After
-  def closeResources() {
-    //    executionContext.closeAll()
-    psDBTestCase.tearDown()
+    logger.info("PS, PDI and MSI dbs succesfully initialized")
+
+    udsDBTestCase.loadDataSet("/default_datasets/UDS_Simple_Dataset.xml")
+    logger.info("UDS db succesfully initialized")
+
+    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, true) // default: false
+    val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true) // default: true
+    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, true) // default: false
+    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), true) // default: false
+
+    val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
+
+    parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
+
+    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx))
+    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx))
+
+    Assert.assertNotNull(parserContext)
   }
 
   private def getMethod(): String = {
@@ -95,39 +89,26 @@ class OmssaMSParserTest extends Logging {
     st(3).getMethodName()
   }
 
-  /**
-   * @param file is the name of the file to parse
-   * @param parserContext is the context of execution
-   * @return the OmssaResultFile object that contains the parse of the omx file
-   */
+  @After
+  def closeResources() {
+    logger.debug("Closing resources")
+    super.tearDown
+  }
   private def parseOmxFile(file: String): OmssaResultFile = {
-    assert(file != null, "parseOmxFile() file is null")
+    logger.info(" --- Get File " + file)
+    var omxFile = new File(getClass.getResource("/omx_samples/" + file).toURI)
+    logger.info(" --- OmssaMSParserTest  " + omxFile.exists)
 
-    val filePath = omssaSampleFolder + "/" + file
+    val resultFile = new OmssaResultFile(
+      fileLocation = omxFile,
+      parserContext = parserContext,
+      importProperties = importProperties
+    )
+    import fr.proline.core.om.provider.uds.impl.{ SQLPeaklistSoftwareProvider => UdsSQLPklSoftProvider }
+    val udsPklSoftProvider = new UdsSQLPklSoftProvider(parserContext.getUDSDbConnectionContext())
+    resultFile.peaklistSoftware = udsPklSoftProvider.getPeaklistSoftware(2)
 
-    logger.debug("Parsing [" + filePath + ']')
-
-    var omx: OmssaResultFile = null
-
-    try {
-      val cl = Thread.currentThread.getContextClassLoader
-
-      omx = new OmssaResultFile(
-        fileLocation = new File(cl.getResource(filePath).toURI()),
-        parserContext = parserContext,
-        importProperties = propertiesBuilder.result)
-
-    } catch {
-
-      case ex: Exception => {
-        logger.error("Error parsing [" + filePath + ']', ex)
-
-        throw ex // Re-throw without changing type of the Exception
-      }
-
-    }
-
-    return omx
+    resultFile
   }
 
   /*
@@ -195,26 +176,24 @@ class OmssaMSParserTest extends Logging {
     }
   }
 
- /**
- * Temporary test
- * The composition file replaces the interface, it should disappear shortly
- */
+  /**
+   * Temporary test
+   * The composition file replaces the interface, it should disappear shortly
+   */
   @Test
   def testResultFileVerifier_getIncompletePtmDefinitions {
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")
 
-    val storer = fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer(executionContext.getPSDbConnectionContext)
+    val storer = fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer(parserContext.getPSDbConnectionContext())
     val resultFileProvider = new OmssaResultFileProvider
     val verifier = resultFileProvider.getResultFileVerifier
 
+    val ptmFile = new File(this.getClass().getResource("/omssa_config/usermods.xml").toURI())
     // fake properties, removed the composition file to force failure
     val properties = HashMap[String, Any](
       OmssaParseParams.OMSSA_VERSION.toString -> "2.1.9",
-      OmssaParseParams.USERMOD_XML_FILE.toString -> new File(this.getClass().getResource(userModsFileName).toURI()),
-//      OmssaParseParams.FASTA_CONTAINS_TARGET.toString -> true,
-//      OmssaParseParams.FASTA_CONTAINS_DECOY.toString -> true,
-//      OmssaParseParams.DECOY_SEARCH.toString -> false,
+      OmssaParseParams.USERMOD_XML_FILE.toString -> ptmFile,
       OmssaParseParams.FASTA_FILE_PATH.toString -> "",
       OmssaParseParams.FASTA_TAXONOMIES.toString -> "",
       OmssaParseParams.PEAK_LIST_FILE_PATH.toString -> "",
@@ -222,9 +201,9 @@ class OmssaMSParserTest extends Logging {
       OmssaParseParams.PTM_COMPOSITION_FILE.toString -> ""
     )
 
-    val ptms = verifier.getPtmDefinitions(new File(Thread.currentThread.getContextClassLoader.getResource("omssa_config/usermods.xml").getPath()), properties.toMap)
+    val ptms = verifier.getPtmDefinitions(ptmFile, properties.toMap)
     try {
-      storer.storePtmDefinitions(ptms.toSeq, executionContext)
+      storer.storePtmDefinitions(ptms.toSeq, parserContext)
       logger.debug("TEST [" + method + "] KO: parsing has not failed as expected !!")
       throw new Exception("Test " + method + " should have failed !!")
     } catch {
@@ -240,12 +219,12 @@ class OmssaMSParserTest extends Logging {
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")
 
-    val storer = fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer(executionContext.getPSDbConnectionContext)
+    val storer = fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer(parserContext.getPSDbConnectionContext)
     val resultFileProvider = new OmssaResultFileProvider
     val verifier = resultFileProvider.getResultFileVerifier
     val ptms = verifier.getPtmDefinitions(new File(Thread.currentThread.getContextClassLoader.getResource("omssa_config/usermods.xml").getPath()), propertiesBuilder.result)
     //    try {
-    storer.storePtmDefinitions(ptms.toSeq, executionContext)
+    storer.storePtmDefinitions(ptms.toSeq, parserContext)
     //    	logger.debug("TEST [" + method + "] KO: parsing has not failed as expected !!")
     logger.debug("TEST [" + method + "] OK: file is valid")
     //    	throw new Exception("Test "+method+" should have failed !!")
@@ -258,14 +237,26 @@ class OmssaMSParserTest extends Logging {
   }
 
   @Test
+  def testFileType {
+    val method = getMethod
+    logger.debug("TEST [" + method + "] STARTS")
+    
+    ResultFileProviderRegistry.get(OmssaResultFileProviderType.fileType).get.getResultFile(
+        fileLocation = new File(Thread.currentThread.getContextClassLoader.getResource("omx_samples/STG_NCSpiste1_OTD_mgfInputFile.omx").toURI()), 
+        importProperties = propertiesBuilder.result, 
+        parserContext = parserContext
+    )
+    logger.debug("TEST [" + method + "] OK: FileType is valid")
+  }
+  @Test
   def testResultFileVerifierWithProvider {
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")
     //    try {
     ResultFileProviderRegistry.register(new OmssaResultFileProvider())
-    var rfByFormat = Map("omssa.omx" -> Array(new File(Thread.currentThread.getContextClassLoader.getResource(omssaSampleFolder + "/STG_NCSpiste1_OTD_mgfInputFile.omx").getPath())))
+    var rfByFormat = Map("omssa.omx" -> Array(new File(Thread.currentThread.getContextClassLoader.getResource("omx_samples/STG_NCSpiste1_OTD_mgfInputFile.omx").getPath())))
     val certifier = new ResultFileCertifier(
-      executionContext,
+      parserContext,
       resultIdentFilesByFormat = rfByFormat,
       importProperties = propertiesBuilder.result
     )
@@ -288,7 +279,7 @@ class OmssaMSParserTest extends Logging {
     logger.debug("TEST [" + method + "] STARTS")
     val resultFileProvider = new OmssaResultFileProvider
     val verifier = resultFileProvider.getResultFileVerifier
-    val valid = verifier.isValid(new File(Thread.currentThread.getContextClassLoader.getResource(omssaSampleFolder + "/STG_NCSpiste1_OTD_mgfInputFile.omx").toURI()), propertiesBuilder.result)
+    val valid = verifier.isValid(new File(Thread.currentThread.getContextClassLoader.getResource("omx_samples/STG_NCSpiste1_OTD_mgfInputFile.omx").toURI()), propertiesBuilder.result)
     assertEquals(true, valid)
     logger.debug("TEST [" + method + "] OK: file is valid")
   }
@@ -302,7 +293,7 @@ class OmssaMSParserTest extends Logging {
     val cl = Thread.currentThread.getContextClassLoader
 
     val resultFile = resultFileProvider.getResultFile(
-      fileLocation = new File(cl.getResource(omssaSampleFolder + "/STG_NCSpiste1_OTD_mgfInputFile.omx").toURI()),
+      fileLocation = new File(cl.getResource("omx_samples/STG_NCSpiste1_OTD_mgfInputFile.omx").toURI()),
       importProperties = propertiesBuilder.result,
       parserContext = parserContext)
     val rs = resultFile.getResultSet(wantDecoy = false)
@@ -422,6 +413,21 @@ class OmssaMSParserTest extends Logging {
     // eachSpectra should return correct abundances
     def onEachSpectrum(spectrum: Spectrum) = {
       if (spectrum.title == " Cmpd 807, +MSn(421.09), 8.5 min") {
+        logger.debug("id = " + spectrum.id)
+        logger.debug("title = " + spectrum.title)
+        logger.debug("precursorMoz = " + spectrum.precursorMoz)
+        logger.debug("precursorCharge = " + spectrum.precursorCharge)
+        logger.debug("firstCycle = " + spectrum.firstCycle)
+        logger.debug("lastCycle = " + spectrum.lastCycle)
+        logger.debug("firstScan = " + spectrum.firstScan)
+        logger.debug("lastScan = " + spectrum.lastScan)
+        logger.debug("firstTime = " + spectrum.firstTime)
+        logger.debug("lastTime = " + spectrum.lastTime)
+        logger.debug("mozList = " + spectrum.mozList.get.mkString("#"))
+        logger.debug("intensityList = " + spectrum.intensityList.get.mkString("#"))
+        logger.debug("peaksCount = " + spectrum.peaksCount)
+        logger.debug("instrumentConfigId = " + spectrum.instrumentConfigId)
+        logger.debug("peaklistId = " + spectrum.peaklistId)
         val intensities = spectrum.intensityList.get
         assert(intensities(0) == 5533260)
       }

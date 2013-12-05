@@ -369,7 +369,8 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   def eachSpectrum(onEachSpectrum: Spectrum => Unit): Unit = {
 
     logger.info("eachSpectrum(" + omxFile.getAbsolutePath() + ")")
-    new OmssaListSpectrum(omxFile, peaklist.id, this.instrumentConfig.getOrElse(null), onEachSpectrum)
+    val specTitleParsingRule = if(this.peaklistSoftware.isDefined) this.peaklistSoftware.get.specTitleParsingRule else None
+    new OmssaListSpectrum(omxFile, peaklist.id, this.instrumentConfig.getOrElse(null), specTitleParsingRule, onEachSpectrum)
     ()
   }
 
