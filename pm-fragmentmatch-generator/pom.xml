@@ -10,7 +10,7 @@
 
   <groupId>fr.proline</groupId>
   <artifactId>PM-FragmentMatchGenerator</artifactId>
-  <version>0.0.3</version>
+  <version>0.0.4-SNAPSHOT</version>
 
   <name>${project.artifactId}</name>
   <description>Proline Module made to generate the fragment matches from a spectrum</description>
