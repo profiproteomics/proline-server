@@ -6,11 +6,11 @@
   <parent>
     <artifactId>ProFI-Pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.0.3-SNAPSHOT</version>
+    <version>0.0.3</version>
   </parent>
 
   <artifactId>PM-DatasetExporter</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.1</version>
 
   <name>${project.artifactId}</name>
   <description>Proline Module dedicated to the export of Proline datasets</description>
@@ -18,7 +18,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <scala.version>2.9.1</scala.version>
-    <core.version>0.1.2-SNAPSHOT</core.version>
+    <core.version>0.1.2</core.version>
   </properties>
 
   <dependencies>
