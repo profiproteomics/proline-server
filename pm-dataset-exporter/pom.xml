@@ -10,7 +10,7 @@
   </parent>
 
   <artifactId>PM-DatasetExporter</artifactId>
-  <version>0.0.1</version>
+  <version>0.0.2-SNAPSHOT</version>
 
   <name>${project.artifactId}</name>
   <description>Proline Module dedicated to the export of Proline datasets</description>
