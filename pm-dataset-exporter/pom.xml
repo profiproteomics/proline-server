@@ -17,7 +17,6 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <scala.version>2.9.1</scala.version>
     <core.version>0.1.2</core.version>
   </properties>
 
@@ -42,14 +41,14 @@
       <artifactId>antlr</artifactId>
       <version>2.7.7</version>
     </dependency>
-    
+
     <!-- Serialization and IO -->
     <dependency>
       <groupId>com.lambdaworks</groupId>
       <artifactId>jacks_2.9.3</artifactId>
       <version>2.2.3</version>
     </dependency>
-    
+
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
@@ -162,21 +161,6 @@
           </execution>
         </executions>
       </plugin>
-
-<!-- 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>compile</phase>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
- -->
 
     </plugins>
   </build>
