@@ -45,7 +45,7 @@ object OmssaReadFile {
 class OmssaReadFile(val omxFile: File,
                     val parseProperties: Map[OmssaParseParams.OmssaParseParam, Any],
                     val omssaLoader: OmssaMandatoryFilesLoader,
-                    val peaklist: Peaklist,
+//                    val peaklist: Peaklist,
                     //                    val instrumentConfig: Option[InstrumentConfig],
                     //  val omssaDefaultVersion: String, 
                     val parserContext: ProviderDecoratedExecutionContext //  entityProviders: EntityProviders
@@ -65,7 +65,7 @@ class OmssaReadFile(val omxFile: File,
   def getPeptideMatchProteinMatchToSequenceMatch: TwoDimensionsMap[Long, Long, SequenceMatch] = peptideMatchProteinMatchToSequenceMatch
   private var proteinAccessionNumbersToProteinMatches: HashMap[String, ProteinMatch] = null
   def mzScale: Int = currentFileMzScale
-  private var nbSequencesInFastaFile: Int = 0
+//  private var nbSequencesInFastaFile: Int = 0
   private var searchSettingsReference: ArrayBuffer[String] = null
   private var searchSettingsCandidate: ArrayBuffer[String] = null
   private var seqDatabase: SeqDatabase = null
@@ -75,14 +75,22 @@ class OmssaReadFile(val omxFile: File,
 //  private val hasDecoyResultSet: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_DECOY, true).toString.toBoolean
   // the Mz in the omssa files are Integers, they must be divided by this number to get the real value
   // a special class is used to get the value from the file before reading it
-  private val mozScaleExtractor = new OmssaMozScaleExtractor(omxFile)
-  private var currentFileMzScale = mozScaleExtractor.mozScaleValue()
+//  private val mozScaleExtractor = new OmssaMozScaleExtractor(omxFile)
+//  private var currentFileMzScale = mozScaleExtractor.mozScaleValue()
+  val omssaPreloader = new OmssaFilePreloader(omxFile)
+  private val currentFileMzScale = omssaPreloader.getMozScaleValue
+  private val nbSequencesInFastaFile = omssaPreloader.getNbSequencesInFastaFile
   //  private val MINUS_LOG_EVALUE_MIN_SCORE = -1
   //  private val MINUS_LOG_EVALUE_MAX_SCORE = 300
   private var _containsTargetProteinMatches: Boolean = false
   def containsTargetProteinMatches = _containsTargetProteinMatches
   private var _containsDecoyProteinMatches: Boolean = false
   def containsDecoyProteinMatches = _containsDecoyProteinMatches
+  private var peaklist: Peaklist = null
+  def getPeaklist: Peaklist = {
+    if(peaklist == null) setPeaklist("")
+    peaklist
+  }
 
   _parseOmxFile()
 
@@ -413,8 +421,11 @@ class OmssaReadFile(val omxFile: File,
                   MSHitSet.advance()
                 }
 
-              case "MSResponse_scale"     => currentFileMzScale = MSResponse_firstChild.collectDescendantText(false).toInt
-              case "MSResponse_dbversion" => nbSequencesInFastaFile = MSResponse_firstChild.collectDescendantText(false).toInt
+//              case "MSResponse_scale"     => currentFileMzScale = MSResponse_firstChild.collectDescendantText(false).toInt
+//              case "MSResponse_dbversion" => {
+//                nbSequencesInFastaFile = MSResponse_firstChild.collectDescendantText(false).toInt
+//                logger.debug("achtung !!! "+nbSequencesInFastaFile)
+//              }
               case _                      => // the bioseq part is not read
             }
             MSResponse_firstChild.advance()
@@ -513,8 +524,9 @@ class OmssaReadFile(val omxFile: File,
         usedEnzymes += new fr.proline.core.om.model.msi.Enzyme(omssaLoader.enzymes.get(extract(element).toInt).getOrElse(""))
       })
 
-    val fastaFilePath = parseProperties.get(OmssaParseParams.FASTA_FILE_PATH).toString
-    var usedSeqSDb = seqDbProvider.getSeqDatabase(dbName, fastaFilePath)
+    val fastaFilePath = if(parseProperties.get(OmssaParseParams.FASTA_FILE_PATH).isDefined) parseProperties.get(OmssaParseParams.FASTA_FILE_PATH).get.toString + File.pathSeparator + dbName else ""
+    val usedSeqSDb = seqDbProvider.getSeqDatabase(dbName, fastaFilePath)
+//    usedSeqSDb = None
 
     seqDatabase = null
     if (usedSeqSDb != None) seqDatabase = usedSeqSDb.get
@@ -523,10 +535,15 @@ class OmssaReadFile(val omxFile: File,
       seqDatabase = new SeqDatabase(
         id = SeqDatabase.generateNewId,
         name = dbName,
-        filePath = parseProperties.get(OmssaParseParams.FASTA_FILE_PATH).toString,
+        filePath = fastaFilePath,
         sequencesCount = nbSequencesInFastaFile,
+        searchedSequencesCount = nbSequencesInFastaFile,
         version = version,
-        releaseDate = new java.util.Date)
+        releaseDate = null,
+        properties = None,
+        searchProperties = None
+      )
+//        releaseDate = new java.util.Date)
     }
 
     var allChargeStates = new ArrayBuffer[String]()
@@ -539,8 +556,8 @@ class OmssaReadFile(val omxFile: File,
     var searchSettings: SearchSettings = new SearchSettings(
       id = SearchSettings.generateNewId(),
       softwareName = "OMSSA",
-      softwareVersion = parseProperties.get(OmssaParseParams.OMSSA_VERSION).toString, // not in omx file
-      taxonomy = parseProperties.get(OmssaParseParams.FASTA_TAXONOMIES).toString, // the mark up exists for this data, but is not used at this moment
+      softwareVersion = parseProperties.get(OmssaParseParams.OMSSA_VERSION).getOrElse("").toString, // not in omx file
+      taxonomy = parseProperties.get(OmssaParseParams.FASTA_TAXONOMIES).getOrElse("").toString, // the mark up exists for this data, but is not used at this moment (check for MSSearchSettings_taxids)
       maxMissedCleavages = maxMissedCleavages,
       ms1ChargeStates = chargeStates,
       ms1ErrorTol = ms1ErrorTol,
@@ -555,6 +572,7 @@ class OmssaReadFile(val omxFile: File,
       instrumentConfig = null, // not instanciated at this moment
       quantitation = "")
 
+    searchSettingsReference.filter(element => element.contains("/MSInFile_infile/")).foreach(element => { setPeaklist(extract(element)) })
     //Create MSISearch regrouping all these information
     msiSearch = new MSISearch(
       id = MSISearch.generateNewId(),
@@ -562,11 +580,30 @@ class OmssaReadFile(val omxFile: File,
       submittedQueriesCount = nbSpectra,
       searchSettings = searchSettings,
       peakList = peaklist,
-      date = new java.util.Date,
+      date = new java.util.Date(omxFile.lastModified()), // the lastModified date of the file will not always correspond to the search date
+      title = "",
       resultFileDirectory = omxFile.getPath(),
-      queriesCount = nbSpectra)
+      jobNumber = 0,
+      userName = "",
+      userEmail = "",
+      queriesCount = nbSpectra,
+      searchedSequencesCount = nbSequencesInFastaFile,
+      properties = None
+    )
   }
 
+  private def setPeaklist(peaklistPath: String) = {
+    var peaklistType = "mgf"; // mgf is the default value
+//    logger.debug("Generating peaklist object with peaklistPath="+peaklistPath)
+    omssaLoader.spectrumFileTypes.foreach { fileType => if (peaklistPath.matches("." + fileType._2 + "$")) peaklistType = fileType._2 } // look at the file extension
+    peaklist = new Peaklist(
+      id = Peaklist.generateNewId,
+      fileType = peaklistType,
+      path = if(peaklistPath != "") peaklistPath else parseProperties.get(OmssaParseParams.PEAK_LIST_FILE_PATH).getOrElse("").toString,
+      rawFileName = parseProperties.get(OmssaParseParams.RAW_FILE_PATH).getOrElse("").toString,
+      msLevel = 2)
+  }
+  
   /**
    * The purpose of this function is to create an object that will contain all the omssa settings in Json format
    * Because MSISearch object can not contain all of them, and because these settings can be important
@@ -627,9 +664,12 @@ class OmssaReadFile(val omxFile: File,
     }
     if (node.getCurrEvent.isElementEvent) {
       val path = node.getPathDesc.replaceAll("\\[...?\\]", "").replaceAll("^.*\\/MSSearchSettings(\\/|$)", "/")
-      if (path.matches(".*MSSearchSettings_settingid$") || path.matches(".*MSInFile_infile$") || path.matches(".*MSOutFile_outfile$")) {
+      if (path.matches(".*MSSearchSettings_settingid$") || path.matches(".*MSOutFile_outfile$")) {
         return goThrough(node.advance)
       }
+//      if (path.matches(".*MSSearchSettings_settingid$") || path.matches(".*MSInFile_infile$") || path.matches(".*MSOutFile_outfile$")) {
+//        return goThrough(node.advance)
+//      }
       var nbAttr = node.getAttrCount()
       if (nbAttr > 0) {
         for (i <- 0.until(nbAttr)) {
@@ -655,8 +695,10 @@ class OmssaReadFile(val omxFile: File,
     val mainErrorMessage = "Multiple sets of settings with heterogeneous search settings (this OMSSA file is the merge of different OMSSA searches)"
     searchSettingsReference.foreach(
       (element: String) => if (searchSettingsCandidate.indexOf(element) == -1) {
-        throw new NotMatchingSearchSettingsException(mainErrorMessage + " : The setting '" + element + "' has at least two different values")
-        return false
+        if(!element.matches(".*MSInFile_infile.*")) { //logger.debug("AAABBBUUU ::: "+element) }
+	        throw new NotMatchingSearchSettingsException(mainErrorMessage + " : The setting '" + element + "' has at least one different setting")
+	        return false
+        }
       })
     if (searchSettingsReference.length != searchSettingsCandidate.length) {
       throw new NotMatchingSearchSettingsException(mainErrorMessage + " : The number of settings is different")

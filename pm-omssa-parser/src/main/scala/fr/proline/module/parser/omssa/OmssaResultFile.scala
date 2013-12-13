@@ -110,26 +110,27 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   val hasMs2Peaklist: Boolean = true // an OMSSA omx  file may not have spectra and search params included
 
   // read omssa file
-  val fileReader = new OmssaReadFile(omxFile, parseProperties, omssaLoader, peaklist, parserContext)
+  val fileReader = new OmssaReadFile(omxFile, parseProperties, omssaLoader, /*peaklist,*/ parserContext)
   val hasDecoyResultSet = fileReader.containsDecoyProteinMatches
   val omssaSettingsInHashTable = fileReader.omssaSettingsInHashTable
 
   def getMsQueries = fileReader.getMsQueries.values.toArray[Ms2Query]
 
-  lazy val peaklist: Peaklist = {
-    val peaklistPath = parseProperties.get(OmssaParseParams.PEAK_LIST_FILE_PATH).toString
-    var peaklistType = "mgf"; // mgf is the default value
-    omssaLoader.spectrumFileTypes.foreach { fileType =>
-      // look at the file extension
-      if (peaklistPath.matches("." + fileType._2 + "$")) peaklistType = fileType._2
-    }
-    new Peaklist(id = Peaklist.generateNewId,
-      fileType = peaklistType,
-      path = peaklistPath,
-      rawFileName = parseProperties.get(OmssaParseParams.RAW_FILE_PATH).toString,
-      msLevel = 2,
-      peaklistSoftware = null)
-  }
+  val peaklist: Peaklist = fileReader.getPeaklist
+//  lazy val peaklist: Peaklist = {
+//    val peaklistPath = parseProperties.get(OmssaParseParams.PEAK_LIST_FILE_PATH).get
+//    var peaklistType = "mgf"; // mgf is the default value
+//    omssaLoader.spectrumFileTypes.foreach { fileType =>
+//      // look at the file extension
+//      if (peaklistPath.matches("." + fileType._2 + "$")) peaklistType = fileType._2
+//    }
+//    new Peaklist(id = Peaklist.generateNewId,
+//      fileType = peaklistType,
+//      path = peaklistPath,
+//      rawFileName = parseProperties.get(OmssaParseParams.RAW_FILE_PATH).get,
+//      msLevel = 2,
+//      peaklistSoftware = null)
+//  }
 
   // Load the MS queries here when requested
   lazy val msQueryByInitialId: Map[Int, MsQuery] = {
@@ -190,6 +191,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
     logger.debug("Parser has gone through " + pepMatchesByPep.size + " peptides creating " + allPepMatches.length + " peptide matches ")
     logger.info("Create ResultSet for " + (if (wantDecoy) "decoy" else "target") + " entries with " + allPepMatches.length + " peptide matches identifying " + protMatches.size + " proteins")
 
+    logger.info("ResultSet created with fasta db: "+msiSearch.searchSettings.seqDatabases(0).toString)
     new ResultSet(id = rsId,
       peptides = pepMatchesByPep.keySet.toArray,
       peptideMatches = allPepMatches,
@@ -369,9 +371,13 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   def eachSpectrum(onEachSpectrum: Spectrum => Unit): Unit = {
 
     logger.info("eachSpectrum(" + omxFile.getAbsolutePath() + ")")
-    val specTitleParsingRule = if(this.peaklistSoftware.isDefined) this.peaklistSoftware.get.specTitleParsingRule else None
-    new OmssaListSpectrum(omxFile, peaklist.id, this.instrumentConfig.getOrElse(null), specTitleParsingRule, onEachSpectrum)
-    ()
+    new OmssaListSpectrum(
+        omxFile, 
+        peaklist.id, 
+        this.instrumentConfig.getOrElse(null), 
+        if(this.peaklistSoftware.isDefined) this.peaklistSoftware.get.specTitleParsingRule else None, 
+        onEachSpectrum
+    )
   }
 
   private var spectrumList: ArrayBuffer[Spectrum] = null
