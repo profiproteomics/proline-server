@@ -41,8 +41,8 @@
          msparser.jar dependency is defined via Maven profiles -->
     <dependency>
       <groupId>matrixscience</groupId>
-      <artifactId>MSParser-native-libraries_2.4.00</artifactId>
-      <version>0.0.3</version>
+      <artifactId>MSParser-native-libraries-2.4.00</artifactId>
+      <version>0.0.4-SNAPSHOT</version>
     </dependency>
 
     <!-- BioJava -->
