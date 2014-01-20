@@ -111,6 +111,17 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
     resultFile
   }
 
+  @Test
+  def testVersion {
+    val method = getMethod()
+    logger.debug("TEST [" + method + "] STARTS")
+    val version = new fr.proline.module.parser.omssa.Version()
+    logger.debug("Module name : "+version.getModuleName)
+    logger.debug("Module version : "+version.getVersion)
+    logger.debug("TEST [" + method + "] OK: versionning is successful")
+  }
+  
+  
   /*
      * main test with a small correct file
      */
