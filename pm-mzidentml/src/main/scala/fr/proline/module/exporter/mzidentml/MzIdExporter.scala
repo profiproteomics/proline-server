@@ -10,7 +10,7 @@ import javax.xml.transform.sax.SAXSource
 import javax.xml.parsers.SAXParserFactory
 import scala.collection.mutable.{ArrayBuffer,HashMap}
 import org.xml.sax.InputSource
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import uk.ac.ebi.jmzidml.model.mzidml._
 import uk.ac.ebi.jmzidml.xml.io.MzIdentMLMarshaller
