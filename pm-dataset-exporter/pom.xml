@@ -6,18 +6,18 @@
   <parent>
     <artifactId>ProFI-Pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.0.4.a-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    <version>0.0.4-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>PM-DatasetExporter</artifactId>
-  <version>0.0.2.a-SNAPSHOT</version>
+  <version>0.0.2-SNAPSHOT</version>
 
   <name>${project.artifactId}</name>
   <description>Proline Module dedicated to the export of Proline datasets</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>0.1.3.a-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
+    <core.version>0.1.3-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
   </properties>
 
   <dependencies>
