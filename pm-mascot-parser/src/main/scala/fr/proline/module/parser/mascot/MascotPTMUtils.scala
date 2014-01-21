@@ -3,7 +3,7 @@ package fr.proline.module.parser.mascot
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.util.matching.Regex
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.util.regex.RegexUtils._
 import fr.proline.core.om.builder.PtmDefinitionBuilder

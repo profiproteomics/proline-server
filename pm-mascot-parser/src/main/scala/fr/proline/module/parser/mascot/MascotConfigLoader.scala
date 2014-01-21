@@ -1,6 +1,6 @@
 package fr.proline.module.parser.mascot
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import matrix_science.msparser.ms_enzymefile
 import matrix_science.msparser.ms_errors

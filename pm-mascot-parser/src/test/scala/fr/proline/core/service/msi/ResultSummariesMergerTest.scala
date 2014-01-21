@@ -1,10 +1,11 @@
 package fr.proline.core.service.msi
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.repository.DriverType
 import org.junit.Before
 import org.junit.After
 import org.junit.Test
+import org.junit.Ignore
 import fr.proline.context.IExecutionContext
 import org.junit.Assert._
 import fr.proline.core.dal.ContextFactory
@@ -13,7 +14,6 @@ import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
 import fr.proline.core.algo.msi.filtering.pepmatch.RankPSMFilter
 import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
-import org.msgpack.annotation.Ignore
 import fr.proline.core.om.model.msi.ResultSummary
 
 class ResultSummariesMergerTest extends ResultSetsMergerTest with Logging {

@@ -6,7 +6,7 @@ import java.net.URLDecoder
 import scala.Array.canBuildFrom
 import scala.collection.mutable.{ HashMap, ArrayBuffer }
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import matrix_science.msparser.{ ms_searchparams, ms_peptidesummary, ms_mascotresults, ms_mascotresfile, ms_inputquery }
 
@@ -489,8 +489,9 @@ class MascotResultFile(
       val specTitleFieldMapOpt = this.peaklistSoftware.get.specTitleParsingRule.map(_.parseTitle(spectrumTitle))
       val specTitleFieldMap = specTitleFieldMapOpt.getOrElse(Map.empty[SpectrumTitleFields.Value, String])
 
-      def toIntOrZero(v: Any): Int = try { toInt(v) } catch { case _ => 0 }
-      def toFloatOrZero(v: Any): Float = try { toFloat(v) } catch { case _ => 0f }
+      // TODO: put in primitives utils
+      def toIntOrZero(v: Any): Int = try { toInt(v) } catch { case e: Throwable => 0 }
+      def toFloatOrZero(v: Any): Float = try { toFloat(v) } catch { case e: Throwable => 0f }
 
       val titleFields = SpectrumTitleFields
 

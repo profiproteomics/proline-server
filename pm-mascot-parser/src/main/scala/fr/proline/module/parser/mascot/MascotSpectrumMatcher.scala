@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.control.Breaks.break
 import scala.util.control.Breaks.breakable
 import org.apache.commons.lang3.StringUtils
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi.Fragmentation
 import fr.proline.core.om.model.msi.FragmentMatch
 import fr.proline.core.om.model.msi.FragmentMatchType

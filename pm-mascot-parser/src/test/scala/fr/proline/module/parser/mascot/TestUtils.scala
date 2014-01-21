@@ -5,7 +5,7 @@ import java.util.Date
 
 import org.junit.Ignore
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.util.system.OSInfo

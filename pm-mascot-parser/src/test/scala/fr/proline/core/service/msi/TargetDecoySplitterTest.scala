@@ -5,7 +5,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.io.File
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import fr.proline.module.parser.provider.fake._

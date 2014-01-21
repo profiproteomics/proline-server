@@ -1,7 +1,7 @@
 package fr.proline.module.parser.mascot.none.junit
 
 import java.io.File
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.provider.msi.impl.ORMPTMProvider
 import fr.proline.core.om.provider.msi.impl.ORMPeptideProvider
 import fr.proline.core.om.provider.msi.impl.ORMProteinProvider

@@ -6,7 +6,7 @@ import org.junit.{ After, AfterClass }
 import org.junit.{ Before, BeforeClass, Test }
 import org.junit.Assert.{ assertNotNull, assertTrue }
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.repository.DriverType

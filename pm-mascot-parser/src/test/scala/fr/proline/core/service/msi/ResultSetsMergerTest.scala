@@ -8,7 +8,7 @@ import org.junit.{ After, Assert }
 import org.junit.{ Before, Ignore, Test }
 import org.junit.Assert._
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.ContextFactory
