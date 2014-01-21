@@ -9,7 +9,7 @@ import scala.collection.mutable.HashMap
 import org.codehaus.staxmate.SMInputFactory
 import org.codehaus.staxmate.in.SMHierarchicCursor
 import org.codehaus.staxmate.in.SMInputCursor
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider

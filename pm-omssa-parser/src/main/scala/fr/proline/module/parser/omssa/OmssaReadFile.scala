@@ -9,7 +9,7 @@ import java.io.File
 import javax.xml.stream.XMLInputFactory
 import org.codehaus.staxmate.in.{ SMHierarchicCursor, SMInputCursor }
 import org.codehaus.staxmate.SMInputFactory
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.DatabaseConnectionContext
 import java.io.InputStream
 import java.io.FileInputStream
@@ -373,8 +373,8 @@ class OmssaReadFile(val omxFile: File,
                                   }
                                   MSModHit.advance()
                                 }
-                              case "MSHits_pepstart" => sequenceMatchResidueBefore = MSHits_firstChild.collectDescendantText(false).firstOption
-                              case "MSHits_pepstop"  => sequenceMatchResidueAfter = MSHits_firstChild.collectDescendantText(false).firstOption
+                              case "MSHits_pepstart" => sequenceMatchResidueBefore = MSHits_firstChild.collectDescendantText(false).headOption
+                              case "MSHits_pepstop"  => sequenceMatchResidueAfter = MSHits_firstChild.collectDescendantText(false).headOption
                               case "MSHits_theomass" => peptideMatchDeltaMoz -= MSHits_firstChild.collectDescendantText(false).toFloat
                               case _                 =>
                             }

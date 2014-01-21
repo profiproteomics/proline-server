@@ -14,7 +14,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.context.BasicExecutionContext
 import fr.proline.core.dal.ContextFactory
@@ -27,7 +27,7 @@ import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.om.provider.uds.impl.{ SQLPeaklistSoftwareProvider => UdsSQLPklSoftProvider }
-import fr.proline.core.om.utils.AbstractMultipleDBTestCase
+import fr.proline.core.om.util.AbstractMultipleDBTestCase
 import fr.proline.core.service.msi.ResultFileCertifier
 import fr.proline.module.fragment_match.FragmentTable
 import fr.proline.repository.DriverType
@@ -468,10 +468,11 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
     val omssaOmxFile = parseOmxFile("STG_W18776LSA_OTD_pklInputFile.omx")
     // parsing should succeed
     val rs = omssaOmxFile.getResultSet(false)
-    assert(omssaOmxFile.getMsQueries.length == 15)
-    assert(omssaOmxFile.getMsQueries(0).spectrumTitle == " Cmpd 5, +MSn(639.824), ? min")
-    assert(rs.peptideMatches.length == 10)
-    assert(rs.proteinMatches.length == 29)
+    assertEquals(15,omssaOmxFile.getMsQueries.length)
+    //assertEquals(" Cmpd 5, +MSn(639.824), ? min",omssaOmxFile.getMsQueries(0).spectrumTitle )
+    assertEquals(" Cmpd 8, +MSn(616.806), ? min",omssaOmxFile.getMsQueries(0).spectrumTitle )    
+    assertEquals(10,rs.peptideMatches.length)
+    assertEquals(29,rs.proteinMatches.length)
     logger.debug("TEST [" + method + "] OK: parsing is successful")
   }
 

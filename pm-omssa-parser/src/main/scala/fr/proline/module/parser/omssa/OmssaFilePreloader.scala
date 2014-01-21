@@ -6,7 +6,7 @@ import org.codehaus.staxmate.SMInputFactory
 import org.codehaus.staxmate.in.SMHierarchicCursor
 import org.codehaus.staxmate.in.SMInputCursor
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import javax.xml.stream.XMLInputFactory
 

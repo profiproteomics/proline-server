@@ -1,6 +1,6 @@
 package fr.proline.module.parser.omssa
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import scala.collection.mutable.ArrayBuffer
 import java.io.File
 import javax.xml.stream.XMLInputFactory
@@ -12,8 +12,8 @@ import fr.proline.util.primitives._
 
 class OmssaListSpectrum(omxFile: File, peaklistId: Long, instrumentConfig: InstrumentConfig, specTitleParsingRule: Option[SpectrumTitleParsingRule], onEachSpectrum: Spectrum => Unit) extends Logging {
 
-  private def toIntOrZero(v: Any): Int = try { toInt(v) } catch { case _ => 0 }
-  private def toFloatOrZero(v: Any): Float = try { toFloat(v) } catch { case _ => 0f }
+  private def toIntOrZero(v: Any): Int = try { toInt(v) } catch { case e: Throwable => 0 }
+  private def toFloatOrZero(v: Any): Float = try { toFloat(v) } catch { case e: Throwable => 0f }
   val titleFields = SpectrumTitleFields
 
   _parseOmxFile()

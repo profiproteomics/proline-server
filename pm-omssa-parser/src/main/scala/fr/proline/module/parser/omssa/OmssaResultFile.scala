@@ -4,7 +4,7 @@ import java.io.File
 import java.io.FileNotFoundException
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPeptideProvider

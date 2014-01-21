@@ -12,7 +12,7 @@ import fr.proline.core.om.model.msi.PtmNames
 import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.IonTypes
 import fr.proline.core.om.provider.msi.IResultFileVerifier
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 import scala.io.Source
 import java.net.URL
 
