@@ -15,7 +15,7 @@ import com.compomics.util.experiment.identification.matches.ModificationMatch
 import com.compomics.util.experiment.biology.PTMFactory
 import fr.proline.core.om.model.msi.TheoreticalFragmentSeries
 import fr.proline.core.om.model.msi.PtmDefinition
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 object FragmentTable {
   def fragmentIonTableAsString(_table: Array[TheoreticalFragmentSeries]): String = {

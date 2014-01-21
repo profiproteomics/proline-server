@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 
 import org.junit.Test
 
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation

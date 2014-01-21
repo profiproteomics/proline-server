@@ -2,7 +2,7 @@ package fr.proline.module.fragment_match
 
 import com.compomics.util.experiment.biology.NeutralLoss
 import com.compomics.util.experiment.identification.NeutralLossesMap
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 object NeutralLossType extends Enumeration {
   val CH4OS = "CH4OS" // 64.1075
@@ -21,11 +21,11 @@ object NeutralLossType extends Enumeration {
     }
   }
   def get(value: Float): NeutralLoss = {
-    if (scala.Math.abs(value - 64.1075) < 0.5) NeutralLoss.CH4OS
-    else if (scala.Math.abs(value - 18.01532) < 0.5) NeutralLoss.H2O
-    else if (scala.Math.abs(value - 97.99532) < 0.5) NeutralLoss.H3PO4
-    else if (scala.Math.abs(value - 79.98000) < 0.5) NeutralLoss.HPO3
-    else if (scala.Math.abs(value - 17.03056) < 0.5) NeutralLoss.NH3
+    if ( math.abs(value - 64.1075) < 0.5) NeutralLoss.CH4OS
+    else if ( math.abs(value - 18.01532) < 0.5) NeutralLoss.H2O
+    else if ( math.abs(value - 97.99532) < 0.5) NeutralLoss.H3PO4
+    else if ( math.abs(value - 79.98000) < 0.5) NeutralLoss.HPO3
+    else if ( math.abs(value - 17.03056) < 0.5) NeutralLoss.NH3
     else null
   }
 }

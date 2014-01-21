@@ -7,7 +7,7 @@ import com.compomics.util.experiment.biology.PTMFactory
 import com.compomics.util.experiment.identification.matches.ModificationMatch
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
-import com.weiglewilczek.slf4s.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 class FragmentModificationMatch(theoreticPtm: String, isVariable: Boolean, modifiedSite: Int) {
   def toCompomicsObject: ModificationMatch = new ModificationMatch(theoreticPtm, isVariable, modifiedSite)
