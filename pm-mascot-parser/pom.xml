@@ -4,11 +4,11 @@
   <parent>
     <artifactId>ProFI-Pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.0.4.a-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    <version>0.0.4-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>PM-MascotParser</artifactId>
-  <version>0.0.11.a-SNAPSHOT</version>
+  <version>0.0.11-SNAPSHOT</version>
 
   <name>${project.artifactId}</name>
   <description>Proline Module which parse a Mascot result file and store its result in databases</description>
@@ -16,7 +16,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>0.1.3.a-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
+    <core.version>0.1.3-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
   </properties>
 
   <dependencies>
