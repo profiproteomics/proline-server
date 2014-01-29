@@ -2,7 +2,7 @@ package fr.proline.core.service.msi
 
 import java.io.File
 
-import org.junit.{Before, Ignore, Test}
+import org.junit.{ Before, Ignore, Test }
 import org.junit.After
 import org.junit.Assert._
 
@@ -67,14 +67,14 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
       assertTrue(rsBackOp.isDefined)
       val rsBack = rsBackOp.get
       assertNotNull(rsBack)
-      
+
       var nbrMascotProperties = 0
-      rsBack.peptideMatches.foreach(psm =>{ 
+      rsBack.peptideMatches.foreach(psm => {
         assertTrue(psm.properties.isDefined)
-        if(psm.properties.get.getMascotProperties.isDefined)
-            nbrMascotProperties +=1        
+        if (psm.properties.get.getMascotProperties.isDefined)
+          nbrMascotProperties += 1
       })
-      assertTrue(nbrMascotProperties>0)
+      assertTrue(nbrMascotProperties > 0)
 
       // Other verifs....
 
@@ -83,15 +83,15 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
       assertTrue(ormLoadedRsOp.isDefined)
       val ormLoadedRs = ormLoadedRsOp.get
       assertNotNull(ormLoadedRs)
-      
+
       nbrMascotProperties = 0
-      ormLoadedRs.peptideMatches.foreach(psm =>{ 
+      ormLoadedRs.peptideMatches.foreach(psm => {
         assertTrue(psm.properties.isDefined)
-        if(psm.properties.get.getMascotProperties.isDefined)
-            nbrMascotProperties +=1        
+        if (psm.properties.get.getMascotProperties.isDefined)
+          nbrMascotProperties += 1
       })
-      assertTrue(nbrMascotProperties>0)
-      
+      assertTrue(nbrMascotProperties > 0)
+
     } finally {
       jpaContext.closeAll()
 
@@ -139,6 +139,19 @@ class RFImporterH2Test extends AbstractRFImporterTest_ {
 
       // Other verifs....
 
+      val msiEM = executionContext.getMSIDbConnectionContext.getEntityManager
+
+      val query = msiEM.createQuery("select count (*) from fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMap")
+
+      var count: Long = -1
+      val countObj = query.getSingleResult()
+
+      if (countObj.isInstanceOf[java.lang.Long]) {
+        count = countObj.asInstanceOf[java.lang.Long].longValue
+      }
+
+      assertTrue("Number of ProteinMatchSeqDatabaseMap created", count > 0L)
+      logger.debug("Number of ProteinMatchSeqDatabaseMap created: " + count)
     } finally {
       executionContext.closeAll()
     }
