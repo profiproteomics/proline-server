@@ -38,13 +38,12 @@ class BasicXLSXTemplate(
     
     // Add header to the worksheet
     var firstRow = sheet.createRow(0)
-    for( header <- selectedFieldsOrFields ) {
-      var colIdx = 0
-      for( field <- selectedFieldsOrFields ) {
-        firstRow.createCell(colIdx).setCellValue( field )        
-        colIdx += 1
-      }
+    var colIdx = 0
+    for (header <- selectedFieldsOrFields) {
+      firstRow.createCell(colIdx).setCellValue(header)
+      colIdx += 1
     }
+
     
     // Iterate over records to append them to the worksheet
     var rowIdx = 1
