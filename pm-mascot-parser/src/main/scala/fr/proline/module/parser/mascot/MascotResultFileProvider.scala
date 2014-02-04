@@ -48,8 +48,9 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
 
     val ptmDefs = Array.newBuilder[PtmDefinition]
 
-    try {
+    //try { // oté en attendant de gérer tout les cas de figure non précédemment traités, ce role est renvoyé à la classe appelante.
       val unimodText = extractUnimodSection(fileLocation)
+      
       val is = new ByteArrayInputStream(unimodText.getBytes)
       val unimod = UnimodUnmarshaller.unmarshal(is)
 
@@ -57,11 +58,14 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
       if (modificationsElement != null) {
 
         val mods = modificationsElement.getMods()
+        
         if ((mods != null) && !mods.isEmpty) {
           //		    var classifications = new HashMap<String, PtmClassification>();
           val it = mods.iterator
           while (it.hasNext) {
             val mod = it.next()
+            
+            
             val ptmNames = new PtmNames(shortName = mod.getTitle, fullName = mod.getFullName)
             val ptmEvidences = Array.newBuilder[PtmEvidence]
 
@@ -135,7 +139,7 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
                   }
                 },
                 classification = specificity.getClassification,
-                unimodId = mod.getRecordId.intValue
+                unimodId = if(mod.getRecordId != null ) mod.getRecordId.intValue else 0
               )
             }
 
@@ -145,10 +149,10 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
 
       } // End if (modificationsElement is not null)
 
-    } catch {
-      case e: Exception => {}
-    }
-    
+    //} catch {
+    //  case e: Exception => {}
+    //}
+   
     ptmDefs.result
   }
 
