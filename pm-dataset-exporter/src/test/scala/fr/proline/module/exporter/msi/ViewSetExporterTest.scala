@@ -1,13 +1,14 @@
 package fr.proline.module.exporter.msi
 
+import java.nio.file.Files
+import scala.collection.mutable.ArrayBuffer
 import org.junit._
 import org.apache.commons.io.FileUtils
-import java.nio.file.Files
 import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.ContextFactory
-import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
+import fr.proline.core.om.provider.msi.impl._
 import fr.proline.core.om.util.AbstractMultipleDBTestCase
 import fr.proline.module.exporter.msi.template.IRMaLikeViewSetTemplateAsXLSX
 import fr.proline.module.exporter.msi.view.BuildResultSummaryViewSet
@@ -56,6 +57,35 @@ class ViewSetExporterTest  extends AbstractMultipleDBTestCase with Logging {
 
     val rsmProvider = new SQLResultSummaryProvider(executionContext.getMSIDbConnectionContext, executionContext.getPSDbConnectionContext, executionContext.getUDSDbConnectionContext)
     val rsm = rsmProvider.getResultSummary(targetRSMId, true).get
+    
+    // ADD CUSTOM CODE FOR SUBSETS LOADING
+    
+    // Instantiate additional providers
+    val pepProvider = new SQLPeptideProvider(executionContext.getPSDbConnectionContext() )
+    val pepInstProvider = new SQLPeptideInstanceProvider(executionContext.getMSIDbConnectionContext, pepProvider)
+    val pepSetProvider = new SQLPeptideSetProvider(executionContext.getMSIDbConnectionContext, pepInstProvider )
+    
+    // Retrieve all subsets ids
+    val allSubsetIds = new ArrayBuffer[Long]
+    rsm.peptideSets.map { peptideSet =>
+      val strictSubsetIds = Option(peptideSet.strictSubsetIds).getOrElse( Array() )
+      val subsumableSubsetIds = Option(peptideSet.subsumableSubsetIds).getOrElse( Array() )
+      allSubsetIds ++= strictSubsetIds ++ subsumableSubsetIds
+    }
+    
+    // Load all subsets
+    val allSubsets = pepSetProvider.getPeptideSets(allSubsetIds.distinct)
+    val subsetById = allSubsets.map( ps => ps.id -> ps ).toMap
+    rsm.peptideSets.map { peptideSet =>
+      if(peptideSet.strictSubsetIds != null && peptideSet.strictSubsets == null) {
+        peptideSet.strictSubsets = Some( peptideSet.strictSubsetIds.map( subsetById(_) ) )
+      }
+      if(peptideSet.subsumableSubsetIds != null && peptideSet.subsumableSubsets == null) {
+        peptideSet.subsumableSubsets = Some( peptideSet.subsumableSubsetIds.map( subsetById(_) ) )
+      }
+    }
+    // END OF CUSTOM CODE FOR SUBSETS LOADING
+    
     val viewSet = BuildResultSummaryViewSet(rsm,fileName,IRMaLikeViewSetTemplateAsXLSX )
     
     // Create TEMP dir
