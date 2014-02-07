@@ -7,6 +7,7 @@ import fr.proline.module.exporter.api.view.IDatasetView
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
 
 trait IProtSetToToTypicalProtMatchViewFields extends IViewFieldEnumeration {
+  val PROTEIN_SET_ID = Field("protein_set_id")
   val ACCESSION = Field("accession")
   val DESCRIPTION = Field("description")
   val GENE_NAME = Field("gene_name")
@@ -37,6 +38,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IDatasetView {
     val subsetProtMatchesCount = subsetPepSets.flatMap( _.proteinMatchIds ).length
     
     Map(
+      protSetFields.PROTEIN_SET_ID -> protSet.id,
       protSetFields.PROTEIN_SET_SCORE -> protSet.peptideSet.score,
       protSetFields.PROTEIN_MATCHES_COUNT -> protSet.getProteinMatchIds.length,
       protSetFields.SUBSET_PROTEIN_MATCHES_COUNT -> subsetProtMatchesCount,
