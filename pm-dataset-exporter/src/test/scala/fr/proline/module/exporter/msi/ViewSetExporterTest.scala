@@ -55,38 +55,7 @@ class ViewSetExporterTest  extends AbstractMultipleDBTestCase with Logging {
   @Test
   def testExportViewSetToDir() {
 
-    val rsmProvider = new SQLResultSummaryProvider(executionContext.getMSIDbConnectionContext, executionContext.getPSDbConnectionContext, executionContext.getUDSDbConnectionContext)
-    val rsm = rsmProvider.getResultSummary(targetRSMId, true).get
-    
-    // ADD CUSTOM CODE FOR SUBSETS LOADING
-    
-    // Instantiate additional providers
-    val pepProvider = new SQLPeptideProvider(executionContext.getPSDbConnectionContext() )
-    val pepInstProvider = new SQLPeptideInstanceProvider(executionContext.getMSIDbConnectionContext, pepProvider)
-    val pepSetProvider = new SQLPeptideSetProvider(executionContext.getMSIDbConnectionContext, pepInstProvider )
-    
-    // Retrieve all subsets ids
-    val allSubsetIds = new ArrayBuffer[Long]
-    rsm.peptideSets.map { peptideSet =>
-      val strictSubsetIds = Option(peptideSet.strictSubsetIds).getOrElse( Array() )
-      val subsumableSubsetIds = Option(peptideSet.subsumableSubsetIds).getOrElse( Array() )
-      allSubsetIds ++= strictSubsetIds ++ subsumableSubsetIds
-    }
-    
-    // Load all subsets
-    val allSubsets = pepSetProvider.getPeptideSets(allSubsetIds.distinct)
-    val subsetById = allSubsets.map( ps => ps.id -> ps ).toMap
-    rsm.peptideSets.map { peptideSet =>
-      if(peptideSet.strictSubsetIds != null && peptideSet.strictSubsets == null) {
-        peptideSet.strictSubsets = Some( peptideSet.strictSubsetIds.map( subsetById(_) ) )
-      }
-      if(peptideSet.subsumableSubsetIds != null && peptideSet.subsumableSubsets == null) {
-        peptideSet.subsumableSubsets = Some( peptideSet.subsumableSubsetIds.map( subsetById(_) ) )
-      }
-    }
-    // END OF CUSTOM CODE FOR SUBSETS LOADING
-    
-    val viewSet = BuildResultSummaryViewSet(rsm,fileName,IRMaLikeViewSetTemplateAsXLSX )
+    val viewSet = BuildResultSummaryViewSet(executionContext, targetRSMId, true, fileName,IRMaLikeViewSetTemplateAsXLSX )
     
     // Create TEMP dir
     val exportPath = Files.createTempDirectory(null)
