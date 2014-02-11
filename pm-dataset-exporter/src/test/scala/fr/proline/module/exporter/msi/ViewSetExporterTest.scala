@@ -24,7 +24,7 @@ class ViewSetExporterTest  extends AbstractMultipleDBTestCase with Logging {
   // Define some vars
   val driverType = DriverType.H2
   val fileName = "STR_F063442_F122817_MergedRSMs"
-  val targetRSMId: Long = 33
+  val targetRSMId: Long = 33 // 2 to have info data
 
   var executionContext: IExecutionContext = null
 
