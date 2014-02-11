@@ -85,7 +85,7 @@ object MascotFragmentationRuleParser {
                                  id = InstrumentConfig.generateNewId(),
                                  instrument = instrument,
                                  ms1Analyzer = analyzers._1,
-                                 msnAnalyzer = analyzers._1,
+                                 msnAnalyzer = analyzers._2,
                                  activationType = activationType,
                                  fragmentationRules = Some(instFragRules)
                                )
