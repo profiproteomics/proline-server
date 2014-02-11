@@ -11,7 +11,8 @@ object BuildResultSummaryView {
     ResultSummaryViewTypes.PEP_SET_TO_PROT_MATCH -> (rsm => new PepSetToProtMatchView(rsm)),
     ResultSummaryViewTypes.PROT_SET_TO_BEST_PEP_MATCH -> (rsm => new ProtSetToBestPepMatchView(rsm)),
     ResultSummaryViewTypes.PROT_SET_TO_PROT_MATCH -> (rsm => new ProtSetToProtMatchView(rsm)),
-    ResultSummaryViewTypes.PROT_SET_TO_TYPICAL_PROT_MATCH -> (rsm => new ProtSetToTypicalProtMatchView(rsm))
+    ResultSummaryViewTypes.PROT_SET_TO_TYPICAL_PROT_MATCH -> (rsm => new ProtSetToTypicalProtMatchView(rsm)),
+    ResultSummaryViewTypes.PROT_SET_TO_BEST_PEPTIDE_MATCH_IRMA -> (rsm => new ProtSetToBestPepMatchIrmaView(rsm))
   ).map( e => e._1.asInstanceOf[IViewTypeEnumeration#Value] -> e._2 )
 
   def apply(rsm: ResultSummary, viewType: IViewTypeEnumeration#Value ): IDatasetView = {    
