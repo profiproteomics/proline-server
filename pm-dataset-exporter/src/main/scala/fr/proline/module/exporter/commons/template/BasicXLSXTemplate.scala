@@ -55,13 +55,9 @@ class BasicXLSXTemplate(
     headerCellStyle.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
     headerCellStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
     
-    // Create a Cell Style for Data
-    /*val dataCellStyleRow1 = wb.createCellStyle();
-    dataCellStyleRow1.cloneStyleFrom(defaultCellStyle);
-    val dataCellStyleRow2 = wb.createCellStyle();
-    dataCellStyleRow2.cloneStyleFrom(dataCellStyleRow1);
-    dataCellStyleRow2.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-    dataCellStyleRow2.setFillPattern(CellStyle.SOLID_FOREGROUND);*/
+    
+    // create an array to control width of column
+    var colSizeArray:Array[Int] = new Array[Int](selectedFieldsOrFields.length)
     
     
     // Add header to the worksheet
@@ -73,11 +69,15 @@ class BasicXLSXTemplate(
       cell.setCellValue(header)
       cell.setCellStyle(headerCellStyle);
 
+      var l = header.length()
+      if (l > colSizeArray(colIdx)) {
+        colSizeArray(colIdx) = l;
+      }
+      
       colIdx += 1
     }
 
-    // create an array to control width of column
-    var colSizeArray:Array[Int] = new Array[Int](colIdx)
+
     
     // Iterate over records to append them to the worksheet
     var rowIdx = 1
@@ -89,26 +89,24 @@ class BasicXLSXTemplate(
       for( field <- selectedFieldsOrFields ) {   
         val cell =  row.createCell(colIdx)
 
-        /*if (rowIdx % 2 == 0) {
-          cell.setCellStyle(dataCellStyleRow1);
-        } else {
-          cell.setCellStyle(dataCellStyleRow2);
-        }*/
-        
         val value = Option(record(field)).getOrElse("")
         
         // TODO: manage Date, timestamp...
+         var l = 12; // default column size
         value match {
           case d: Double => cell.setCellValue(d)
           case num: Number => cell.setCellValue(num.doubleValue)
           case s: String => {
             cell.setCellValue(s)
-            var l = s.length()
-            if (l>colSizeArray(colIdx)) {
-              colSizeArray(colIdx) = l;
-            }
+            l = s.length()
           }
-          case a: Any => cell.setCellValue(a.toString)
+          case a: Any => {
+            cell.setCellValue(a.toString)
+            l = a.toString.length()
+          }
+        }
+        if (l > colSizeArray(colIdx)) {
+        	colSizeArray(colIdx) = l;
         }
       
         colIdx += 1
@@ -117,15 +115,15 @@ class BasicXLSXTemplate(
       rowIdx += 1
     })
     
-    // Auto size columns except when columns would be too large
+    // size columns (they can not exceed MAX_COLUMN_WIDTH_IN_CHARS characters)
     val MAX_COLUMN_WIDTH_IN_CHARS = 30
     for (j <- 0 to colIdx-1) {
-      if (colSizeArray(j)<MAX_COLUMN_WIDTH_IN_CHARS) {
-    	sheet.autoSizeColumn(j);
-      } else {
-        sheet.setColumnWidth(j, MAX_COLUMN_WIDTH_IN_CHARS*256)  // the unit is 1/256 char 
+      if (colSizeArray(j)>MAX_COLUMN_WIDTH_IN_CHARS) {
+    	  colSizeArray(j) = MAX_COLUMN_WIDTH_IN_CHARS
       }
+      sheet.setColumnWidth(j, colSizeArray(j)*256+256)  // the unit is 1/256 char 
     }
+
     
     
     // Write result to the file
