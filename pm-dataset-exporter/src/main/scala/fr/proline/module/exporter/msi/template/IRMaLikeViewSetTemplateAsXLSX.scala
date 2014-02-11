@@ -15,7 +15,7 @@ object IRMaLikeViewSetTemplateAsXLSX extends IViewSetTemplate {
   val templatedViewTypes: Seq[ViewTypeWithTemplate] = Seq(
     ViewTypeWithTemplate( ResultSummaryViewTypes.MSI_SEARCH_EXTENDED, infoXlsxTemplate, viewName = Some("infos") ),
     ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_TYPICAL_PROT_MATCH, xlsxTemplate, viewName = Some("protein sets") ),
-    ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_BEST_PEP_MATCH, xlsxTemplate, viewName = Some("peptides") ),
+    ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_BEST_PEPTIDE_MATCH_IRMA, xlsxTemplate, viewName = Some("peptides") ),
     ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_PROT_MATCH, xlsxTemplate, viewName = Some("protein matches") )
   )
   

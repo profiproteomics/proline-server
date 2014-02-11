@@ -13,7 +13,7 @@ object IRMaLikeViewSetTemplateAsTSV extends IViewSetTemplate {
   val templatedViewTypes: Seq[ViewTypeWithTemplate] = Seq(
     ViewTypeWithTemplate( ResultSummaryViewTypes.MSI_SEARCH_EXTENDED, tsvTemplate, viewName = Some("infos") ),
     ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_TYPICAL_PROT_MATCH, tsvTemplate, viewName = Some("protein sets") ),
-    ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_BEST_PEP_MATCH, tsvTemplate, viewName = Some("peptides") ),
+    ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_BEST_PEPTIDE_MATCH_IRMA, tsvTemplate, viewName = Some("peptides") ),
     ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_PROT_MATCH, tsvTemplate, viewName = Some("protein matches") )
   )
   
