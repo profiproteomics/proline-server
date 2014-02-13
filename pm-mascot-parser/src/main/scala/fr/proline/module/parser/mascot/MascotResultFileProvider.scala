@@ -1,22 +1,19 @@
 package fr.proline.module.parser.mascot
 
+import java.io.BufferedReader
+import java.io.ByteArrayInputStream
+
 import java.io.File
+import java.io.FileReader
+
 import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.core.om.model.msi.IResultFile
+
+import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IResultFileProvider
 import fr.proline.core.om.provider.msi.IResultFileVerifier
-import fr.proline.core.om.model.msi.PtmDefinition
-import scala.io.Source
-import java.io.BufferedReader
-import java.io.FileReader
 import fr.proline.unimod.UnimodUnmarshaller
-import java.io.ByteArrayInputStream
-import fr.proline.core.om.model.msi.PtmSpecificity
-import fr.proline.core.om.model.msi.PtmNames
-import fr.proline.core.om.model.msi.UnimodEntry
-import fr.proline.core.om.model.msi.PtmEvidence
-import fr.proline.core.om.model.msi.IonTypes
+import fr.proline.util.StringUtils
 
 object MascotResultFileProviderType {
   final val fileType: String = "mascot.dat"
@@ -62,10 +59,10 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
         if ((mods != null) && !mods.isEmpty) {
           //		    var classifications = new HashMap<String, PtmClassification>();
           val it = mods.iterator
+          
           while (it.hasNext) {
-            val mod = it.next()
             
-            
+            val mod = it.next()            
             val ptmNames = new PtmNames(shortName = mod.getTitle, fullName = mod.getFullName)
             val ptmEvidences = Array.newBuilder[PtmEvidence]
 
@@ -95,14 +92,19 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
               if ((neutralLosses != null) && !neutralLosses.isEmpty()) {
                 val nlIt = neutralLosses.iterator()
                 while (nlIt.hasNext) {
-                  val neutralLoss = nlIt.next
-                  specificityEvidences += new PtmEvidence(
-                    ionType = IonTypes.NeutralLoss,
-                    composition = neutralLoss.getComposition,
-                    monoMass = neutralLoss.getMonoMass,
-                    averageMass = neutralLoss.getAvgeMass,
-                    isRequired = !neutralLoss.isFlag()
-                  )
+                  val neutralLoss = nlIt.next()
+                  val nlComp = neutralLoss.getComposition()
+                  
+                  // FIXME: workaround for NL without composition => should we import them ???
+                  if( StringUtils.isNotEmpty(nlComp) && neutralLoss.getMonoMass != null ) {
+                    specificityEvidences += new PtmEvidence(
+                      ionType = IonTypes.NeutralLoss,
+                      composition = neutralLoss.getComposition,
+                      monoMass = neutralLoss.getMonoMass,
+                      averageMass = neutralLoss.getAvgeMass,
+                      isRequired = !neutralLoss.isFlag()
+                    )
+                  }
                 } // End loop for each neutralLoss
               } // End if (neutralLosses is not empty)
 
