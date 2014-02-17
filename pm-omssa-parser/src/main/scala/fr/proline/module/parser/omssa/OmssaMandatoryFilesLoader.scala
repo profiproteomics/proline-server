@@ -38,11 +38,19 @@ class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val ptmComposition
   private var _hitErrors: HashMap[Int, String] = null
   private var _userAnnots: HashMap[Int, String] = null
   private var _responseErrors: HashMap[Int, String] = null
+  private val _ptmSpecificity = new HashMap[Long, Boolean]
 
   def getPtmDefinitions(id: Long): Array[PtmDefinition] = {
     _ptmDefinitions.wrapped.filter(_._1._1 == id).values.toArray
   }
-  def getPtmDefinition(id: Long, site: Char): Option[PtmDefinition] = _ptmDefinitions.getOption(id, site)
+  def getPtmDefinition(id: Long, site: Char): Option[PtmDefinition] = {
+    if(ptmExpectsResidue(id)) {
+      _ptmDefinitions.getOption(id, site)
+    } else {
+      _ptmDefinitions.getOption(id, '\0')
+    }
+  }
+  private def ptmExpectsResidue(id: Long): Boolean = _ptmSpecificity.get(id).get
 
   parseXsd // parse the xsd file as soon as possible
   parseMods(this.getClass().getClassLoader().getResource("omssa_config/mods.xml"))
@@ -141,12 +149,14 @@ class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val ptmComposition
    * - the ptms 110, 195 and 207 has been removed as they do not exist in unimod
    */
   private def parseMods(modFile: java.net.URL) {
-//    (new OmssaResultFileVerifier).getPtmDefinitionsByInternalId(modFile).foreach((key, ptm) => {
     val verifier = new OmssaResultFileVerifier
     verifier.getPtmDefinitionsByInternalId(modFile, verifier.parsePtmCompositions(new File(ptmCompositionFilePath).toURL())).foreach((key, ptm) => {
       val _ptm = ptmProvider.getPtmDefinition(ptm.names.shortName, ptm.residue, PtmLocation.withName(ptm.location))
       if (_ptm.isDefined) _ptmDefinitions.update(key._1, key._2, _ptm.get)
       else logger.error("Unknown ptm, will not be considered: " + ptm.toString)
+    })
+    verifier.getPtmSpecificityById(modFile).foreach(s => {
+      _ptmSpecificity.put(s._1, s._2)
     })
   }
 

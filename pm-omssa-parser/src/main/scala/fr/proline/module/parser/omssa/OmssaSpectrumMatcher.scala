@@ -180,16 +180,15 @@ class OmssaSpectrumMatcher(omxFile: File,
                                       case "MSModHit_modtype" => ptmId = MSModHit_items.childElementCursor().advance().collectDescendantText(false).toInt
                                       case _ =>
                                     }
-                                    // get the ptm from the list read in the mandatory files, check if the ptm is variable of fixed in the search settings
-//                                    logger.debug("ptmId:"+ptmId+", peptideSequence: "+peptideSequence+", modification site: "+modificationSite)
-                                    val ptm = omssaLoader.getPtmDefinition(ptmId, peptideSequence.charAt(modificationSite))
-//                                    val ptm = omssaLoader.ptmDefinitions.get(ptmId)
-                                    if (ptm != None) {
-                                      val isVariable = searchSettings.variablePtmDefs.contains(ptm.get)
-                                      modificationMatches+= new FragmentModificationMatch(ptm.get.names.shortName, isVariable, modificationSite)
-                                    }
                                     MSModHit_items.advance()
                                   }
+                                // get the ptm from the list read in the mandatory files, check if the ptm is variable of fixed in the search settings
+//                                    logger.debug("ptmId:"+ptmId+", peptideSequence: "+peptideSequence+", modification site: "+modificationSite)
+                                val ptm = omssaLoader.getPtmDefinition(ptmId, peptideSequence.charAt(modificationSite))
+                                if (ptm != None) {
+                                  val isVariable = searchSettings.variablePtmDefs.contains(ptm.get)
+                                  modificationMatches+= new FragmentModificationMatch(ptm.get.names.shortName, isVariable, modificationSite)
+                                }
                                 case _ =>
                               }
                               MSModHit.advance()

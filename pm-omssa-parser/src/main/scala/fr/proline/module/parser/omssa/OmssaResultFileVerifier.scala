@@ -106,6 +106,10 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
         child.advance()
       }
 
+      // the short name for usermods is fixed, but the content may change for different users
+      if(shortName.isDefined && shortName.get.startsWith("usermod")) {
+        shortName = fullName
+      }
       if (residues.length == 0) residues += '\0';
       residues.foreach(residue => {
         ptms.update(id.get, residue, new PtmDefinition(
@@ -115,6 +119,8 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
           residue = residue,
           classification = "Post-translational",
           names = new PtmNames(
+//            shortName = (if (psimsName.isDefined && psimsName.get.trim() != "") psimsName.get else fullName.getOrElse("")), // psimsName should always be filled, omssa shortname should never be used (especially for usermods)
+//            fullName = fullName.getOrElse(psimsName.getOrElse(""))),
             shortName = (if (psimsName.isDefined && psimsName.get.trim() != "") psimsName.get else shortName.getOrElse("-")), // psimsName should always be filled
             fullName = fullName.getOrElse(shortName.getOrElse(""))),
           ptmEvidences = Array(new PtmEvidence(
@@ -133,6 +139,43 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
     // closing the file
     MSModSpecSet.getStreamReader().closeCompletely()
     ptms
+  }
+
+  def getPtmSpecificityById(fileLocation: java.net.URL): Map[Long, Boolean] = {
+    val ptmIds = new HashMap[Long, Boolean]()
+    if (!fileLocation.getFile().endsWith(".xml")) throw new IllegalArgumentException("Incorrect PTM file type")
+    logger.debug("Reading file " + fileLocation.getFile())
+    val inf: SMInputFactory = new SMInputFactory(XMLInputFactory.newInstance())
+
+    val MSModSpecSet: SMHierarchicCursor = inf.rootElementCursor(fileLocation)
+    MSModSpecSet.advance
+    // for each mod
+    var MSModSpec = MSModSpecSet.childElementCursor().advance()
+    while (MSModSpec.getCurrEvent != null) {
+      // declare ptm variables
+      var id: Long = 0
+      var location: String = ""
+      var child = MSModSpec.childElementCursor().advance()
+      while (child.getCurrEvent() != null) {
+        child.getPrefixedName() match {
+          case "MSModSpec_mod"         => id = child.childElementCursor().advance().collectDescendantText(false).toLong
+          case "MSModSpec_type"        =>
+            location = child.childElementCursor().advance().getAttrValue("value")
+          case _ =>
+        }
+        if(location == "modaa" || location == "modnaa" || location == "modcaa" || location == "modnpaa" || location == "modcpaa") {
+        	ptmIds.put(id, true)
+        } else {
+          ptmIds.put(id, false)
+        }
+        child.advance()
+      }
+      MSModSpec = MSModSpec.advance()
+    }
+
+    // closing the file
+    MSModSpecSet.getStreamReader().closeCompletely()
+    ptmIds.toMap
   }
 
   /**
