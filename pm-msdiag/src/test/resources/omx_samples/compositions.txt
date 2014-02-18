@@ -1,0 +1,46 @@
+# One line per ptm
+# OMSSA allows 30 different PTMs, named usermod1 to usermod30
+# Use the following format: ptmName=composition
+# The ptmName corresponds to MSMod value from the usermods.xml file
+# The composition format must be similar to Unimod's compositions, such as H(-12) C(-6) N(-4) O(-1)
+usermod1=O	TMPP C
+# TMPP KY
+usermod2=C(29) H(33) O(10) P
+# TMPP NTerm
+usermod3=C(29) H(33) O(10) P
+# TMPP protNterm
+usermod4=C(29) H(33) O(10) P
+# TMPP Y
+usermod5=C(29) H(33) O(10) P
+# Acetyl peptide N-term
+usermod6=H(2) C(2) O
+# Asn - Asp
+usermod7=H
+# +1 Da R
+usermod8=H
+# +1 Da K
+usermod9=H
+# BS3 linker + H2O
+usermod10=H(12) C(8) O(3)
+# TMPP-C13
+usermod11=13C(9) C(20) H(33) O(10) P
+# TMPP-C13-KY
+usermod12=13C(9) C(20) H(33) O(10) P
+usermod13=O
+usermod14=O
+usermod15=O
+usermod16=O
+usermod17=O
+usermod18=O
+usermod19=O
+usermod20=O
+usermod21=O
+usermod22=O
+usermod23=O
+usermod24=O
+usermod25=O
+usermod26=O
+usermod27=O
+usermod28=O
+usermod29=O
+usermod30=O
