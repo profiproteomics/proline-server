@@ -223,7 +223,7 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
     val ptmCompositions = new HashMap[String, String]
     try {
       for (line <- Source.fromURL(fileLocation).getLines()) {
-        if (line.matches("^\\w+=.+")) {
+        if (line.matches("^.+=.+")) {
           val items = line.split("=", 2)
           ptmCompositions.put(items(0), items(1))
         }
