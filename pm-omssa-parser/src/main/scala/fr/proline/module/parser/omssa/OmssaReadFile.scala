@@ -91,6 +91,7 @@ class OmssaReadFile(val omxFile: File,
     if(peaklist == null) setPeaklist("")
     peaklist
   }
+  private val proteinSequencesByInternalIds = omssaPreloader.getProteinSequencesByInternalIds
 
   _parseOmxFile()
 
@@ -274,6 +275,7 @@ class OmssaReadFile(val omxFile: File,
                                   var proteinMatchAccessionNumber = ""
                                   var proteinMatchGiNumber = ""
                                   var proteinMatchDescription = ""
+                                  var proteinSequence = ""
                                   val MSPepHit_firstChild = MSPepHit.childElementCursor().advance()
                                   while (MSPepHit_firstChild.getCurrEvent() != null) {
                                     MSPepHit_firstChild.getPrefixedName() match {
@@ -282,6 +284,7 @@ class OmssaReadFile(val omxFile: File,
                                       case "MSPepHit_accession" => proteinMatchAccessionNumber = MSPepHit_firstChild.collectDescendantText(false)
                                       case "MSPepHit_gi"        => proteinMatchGiNumber = MSPepHit_firstChild.collectDescendantText(false)
                                       case "MSPepHit_defline"   => proteinMatchDescription = MSPepHit_firstChild.collectDescendantText(false)
+                                      case "MSPepHit_oid"       => proteinSequence = proteinSequencesByInternalIds.get(MSPepHit_firstChild.collectDescendantText(false).toInt).getOrElse("")
                                       case _                    =>
                                     }
                                     MSPepHit_firstChild.advance()
@@ -300,6 +303,11 @@ class OmssaReadFile(val omxFile: File,
                                       protein = protAccSeqDbToProteinWrapper.get(protWrapperKey).get.wrappedProt
                                     } else { // Try to get Protein from repository  
                                       protein = protProvider.getProtein(proteinMatchAccessionNumber, seqDatabase)
+                                      if(protein == None && proteinSequence != "") {
+//                                        logger.debug("Adding sequence to protein "+proteinMatchAccessionNumber+" ("+proteinSequence+")")
+                                        logger.debug("Adding sequence to protein "+proteinMatchAccessionNumber)
+                                        protein = Some(new Protein(id = Protein.generateNewId, sequence = proteinSequence))
+                                      }
                                       protAccSeqDbToProteinWrapper += protWrapperKey -> new ProteinWrapper(seqDatabase.id, proteinMatchAccessionNumber, protein)
                                     }
                                     // create the protein match
@@ -386,6 +394,10 @@ class OmssaReadFile(val omxFile: File,
                           val peptide = this.getOrCreatePeptide(peptideLocatedPtms, peptideSequence, pepProvider)
                           // add properties
                           val peptideMatchOmssaProperties = new PeptideMatchOmssaProperties(pValue = peptideMatchPValue)
+//                          val peptideMatchOmssaProperties = new PeptideMatchOmssaProperties(
+//                              expectationValue = peptideMatchExpectValue,
+//                              pValue = peptideMatchPValue
+//                          )
                           val peptideMatchProperties = new PeptideMatchProperties(omssaProperties = Some(peptideMatchOmssaProperties))
                           // create the PeptideMatch object
                           val peptideMatch = new PeptideMatch(
@@ -400,6 +412,7 @@ class OmssaReadFile(val omxFile: File,
                             fragmentMatchesCount = peptideMatchFragmentMatchesCount,
                             properties = Some(peptideMatchProperties),
                             msQuery = msQueries.get(hitSetNumber).getOrElse(null))
+//                            charge = Some(peptideCharge))
                           // add the protein matches to the currently best peptide match
                           peptideMatchToProteinMatches.put(peptideMatch.id, proteinMatches)
                           for ((proteinMatchId, sequenceMatch) <- proteinMatchIdToSequenceMatches) {

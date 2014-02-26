@@ -121,6 +121,14 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
     logger.debug("TEST [" + method + "] OK: versionning is successful")
   }
   
+//  @Test
+//  def testProteinReading {
+//    val method = getMethod()
+//    logger.debug("TEST [" + method + "] STARTS")
+//    val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_mgfInputFile.omx")
+//    val rs = omssaOmxFile.getResultSet(wantDecoy = false)
+//    logger.debug("TEST [" + method + "] OK: parsing is successful")
+//  }
   
   /*
      * main test with a small correct file
