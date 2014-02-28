@@ -48,7 +48,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IDatasetView {
       protSetFields.TAXON_ID -> protMatch.taxonId,
       protSetFields.COVERAGE -> protMatch.coverage,
       protSetFields.PEPTIDE_MATCHES_COUNT -> protMatch.peptideMatchesCount,
-      protSetFields.MW -> Option(protMatch.protein).map( _.map( _.mass ).getOrElse(0.) ).getOrElse(0.)
+      protSetFields.MW -> Option(protMatch.protein).map( _.map( _.mass ).getOrElse(0.0) ).getOrElse(0.0)
     ).map( r => r._1.toString -> r._2)    
   }
   
@@ -63,8 +63,11 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IDatasetView {
       
       // Retrieve the typical protein match
       val typicalProtMatchId = protSet.getTypicalProteinMatchId
-      val typicalProtMatch = if( typicalProtMatchId != 0 ) protMatchById(typicalProtMatchId)
-      else protMatchById( protSet.proteinMatchIds(0) )
+      val typicalProtMatch = if( typicalProtMatchId != 0 ) { 
+        protMatchById(typicalProtMatchId)
+      } else {
+        protMatchById( protSet.getSameSetProteinMatchIds(0) )
+      }
       
       val buildingContext = new ProtSetToToTypicalProtMatchBuildingContext(protSet,typicalProtMatch,pepMatchById,pepSetById)
       this.formatRecord( buildingContext, recordFormatter )
