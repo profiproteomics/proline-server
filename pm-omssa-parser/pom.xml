@@ -104,18 +104,22 @@
       <artifactId>PM-FragmentMatchGenerator</artifactId>
       <version>0.0.4-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
     </dependency>
-    
+
     <!-- Testing -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <!--
     <dependency>
       <groupId>org.scala-tools.testing</groupId>
       <artifactId>specs_${scala.version}</artifactId>
       <scope>test</scope>
     </dependency>
+    -->
+
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.version}</artifactId>
