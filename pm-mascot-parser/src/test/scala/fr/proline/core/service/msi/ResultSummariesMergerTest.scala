@@ -15,6 +15,7 @@ import fr.proline.core.algo.msi.filtering.pepmatch.RankPSMFilter
 import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.om.model.msi.ResultSummary
+import java.util.concurrent.TimeUnit
 
 class ResultSummariesMergerTest extends AbstractRFImporterTest_ with Logging {
 
@@ -43,8 +44,10 @@ class ResultSummariesMergerTest extends AbstractRFImporterTest_ with Logging {
 
     try {
       logger.debug("Importing Result Files ...")
-      val rs1Id = importDatFile(sqlExecutionContext, "/dat_samples/STR_F136482_CTD.dat", """sp\|REV_\S+""")
+    
       val rs2Id = importDatFile(sqlExecutionContext, "/dat_samples/STR_F122817_Mascot_v2.3.dat", """sp\|REV_\S+""")
+      TimeUnit.SECONDS.sleep(2)
+      val rs1Id = importDatFile(sqlExecutionContext, "/dat_samples/STR_F136482_CTD.dat", """sp\|REV_\S+""")
 
       logger.debug("Validating ResultSet by Ids ...")
       val rsm1 = validate(sqlExecutionContext, rs1Id)
