@@ -1,22 +1,29 @@
 package fr.proline.core.service.msi
 
-import org.junit.Assert._
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
 import java.io.File
+
+import scala.Array.canBuildFrom
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import org.scalatest.junit.JUnitSuite
+
 import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter
-import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
-import fr.proline.module.parser.provider.fake._
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+
 import fr.proline.context.BasicExecutionContext
-import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
-import fr.proline.core.om.provider.msi.IProteinProvider
+import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter
+import fr.proline.core.om.model.msi.PeptideMatch
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
-import org.scalatest.junit.{ JUnitRunner, JUnitSuite }
-import fr.proline.core.om.model.msi.PeptideMatch
+import fr.proline.core.om.provider.msi.IProteinProvider
+import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
+import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
+import fr.proline.module.parser.provider.fake.PTMFakeProvider
+import fr.proline.module.parser.provider.fake.PeptideFakeProvider
+import fr.proline.module.parser.provider.fake.ProteinFakeProvider
+import fr.proline.module.parser.provider.fake.SeqDbFakeProvider
 
 @Test
 class TargetDecoySplitterTest extends JUnitSuite with Logging { 
