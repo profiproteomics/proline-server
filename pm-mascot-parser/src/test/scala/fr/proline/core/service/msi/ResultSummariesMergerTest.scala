@@ -46,8 +46,11 @@ class ResultSummariesMergerTest extends AbstractRFImporterTest_ with Logging {
       logger.debug("Importing Result Files ...")
     
       val rs2Id = importDatFile(sqlExecutionContext, "/dat_samples/STR_F122817_Mascot_v2.3.dat", """sp\|REV_\S+""")
-         // Ajout d'un timer sinon le test ne marche pas sous Jenkins : Probleme de delai entre l'enregistrement des donnees du resultat1 et lecture dans la base pour le resultat 2!
-      TimeUnit.SECONDS.sleep(2)
+      
+      // Ajout d'un timer sinon le test ne marche pas sous Jenkins : Probleme de delai entre l'enregistrement des donnees du resultat1 et lecture dans la base pour le resultat 2!
+      // TimeUnit.SECONDS.sleep(2)
+      ThreadUtils.traceAllThreads()
+      
       val rs1Id = importDatFile(sqlExecutionContext, "/dat_samples/STR_F136482_CTD.dat", """sp\|REV_\S+""")
 
       logger.debug("Validating ResultSet by Ids ...")
