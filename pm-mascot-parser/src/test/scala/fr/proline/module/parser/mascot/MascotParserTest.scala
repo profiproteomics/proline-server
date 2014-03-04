@@ -4,17 +4,26 @@ import java.io.File
 import java.util.Calendar
 
 import org.hamcrest.CoreMatchers
-import org.junit.{Before, Ignore, Test}
 import org.junit.After
-import org.junit.Assert._
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertThat
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Ignore
+import org.junit.Test
 
 import com.typesafe.scalalogging.slf4j.Logging
 
-import fr.proline.context.{BasicExecutionContext, DatabaseConnectionContext}
-import fr.proline.core.om.model.msi.{PeptideMatch, ResultSet}
+import fr.proline.context.BasicExecutionContext
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.om.model.msi.PeptideMatch
+import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.{IProteinProvider, ISeqDatabaseProvider}
-import fr.proline.module.parser.provider.fake.{ProteinFakeProvider, SeqDbFakeProvider}
+import fr.proline.core.om.provider.msi.IProteinProvider
+import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
+import fr.proline.module.parser.provider.fake.ProteinFakeProvider
+import fr.proline.module.parser.provider.fake.SeqDbFakeProvider
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.repository.util.DatabaseTestCase
 
@@ -40,7 +49,11 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
 
   @After
   def closeResources() {
-    psDBTestCase.tearDown()
+
+    if (psDBTestCase != null) {
+      psDBTestCase.tearDown()
+    }
+
   }
 
   @Test
@@ -122,25 +135,25 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
       //	     logger.debug(" PepPtm \t" + pepMatch.peptide.sequence+"\t"+pepMatch.msQuery.initialId+"\t"+pepMatch.rank+"\t"+pepMatch.peptide.ptmString)
       val pepPtms: Array[fr.proline.core.om.model.msi.LocatedPtm] = pepMatch.peptide.ptms
       pepPtms.foreach { locatedPtm =>
-      	assertTrue(PtmShortNames.contains(locatedPtm.definition.names.shortName))
+        assertTrue(PtmShortNames.contains(locatedPtm.definition.names.shortName))
         if (locatedPtm.definition.names.shortName.equals(PtmShortNames(0)))
           assertTrue(locatedPtm.isNTerm)
-        else if (locatedPtm.definition.names.shortName.equals(PtmShortNames(1))) {          
-        	assertTrue(locatedPtm.definition.residue.equals('M'))
-        	var indexB = Seq.newBuilder[Int]
-        	for (k <- 0 until pepMatch.peptide.sequence.length) {
-            val nextChar =  pepMatch.peptide.sequence.charAt(k)
-            if(nextChar.equals('M'))
-              indexB += k+1
+        else if (locatedPtm.definition.names.shortName.equals(PtmShortNames(1))) {
+          assertTrue(locatedPtm.definition.residue.equals('M'))
+          var indexB = Seq.newBuilder[Int]
+          for (k <- 0 until pepMatch.peptide.sequence.length) {
+            val nextChar = pepMatch.peptide.sequence.charAt(k)
+            if (nextChar.equals('M'))
+              indexB += k + 1
           }
           assertTrue(indexB.result.contains(locatedPtm.seqPosition))
         } else {
           assertTrue(locatedPtm.definition.residue.equals('C'))
           var indexB = Seq.newBuilder[Int]
           for (k <- 0 until pepMatch.peptide.sequence.length) {
-            val nextChar =  pepMatch.peptide.sequence.charAt(k)
-            if(nextChar.equals('C'))
-              indexB += k+1
+            val nextChar = pepMatch.peptide.sequence.charAt(k)
+            if (nextChar.equals('C'))
+              indexB += k + 1
           }
           assertTrue(indexB.result.contains(locatedPtm.seqPosition))
         }

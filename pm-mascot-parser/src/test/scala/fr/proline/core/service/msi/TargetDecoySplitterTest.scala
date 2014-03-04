@@ -70,7 +70,10 @@ class TargetDecoySplitterTest extends JUnitSuite with Logging {
       throw new IllegalArgumentException("No ResultFileProvider for specified identification file format")
 
     // Open the result file
-    val resultFile = rfProvider.get.getResultFile(datFile, Map.empty, buildFakeParserContext)
+    val parserContext = buildFakeParserContext
+    
+    try {     
+    val resultFile = rfProvider.get.getResultFile(datFile, Map.empty, parserContext)
     val rs = resultFile.getResultSet(false)
 
     // Build regex matching decoy accession numbers
@@ -115,6 +118,9 @@ class TargetDecoySplitterTest extends JUnitSuite with Logging {
     val pepMatchQ145 = pepMatchesByMsQueryInitialId.get(145).get.filter(_.peptide.sequence == "VAIPK")
     assertEquals(2, pepMatchQ145.size)
     assertEquals(pepMatchQ145(0).peptideId, pepMatchQ145(1).peptideId)
+    } finally {
+      parserContext.closeAll()
+    }
     
   }
   

@@ -2,8 +2,9 @@ package fr.proline.module.parser.mascot
 
 import java.io.File
 
+import org.junit.After
 import org.junit.Assert
-import org.junit.Assert._
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 import com.typesafe.scalalogging.slf4j.Logging
@@ -11,8 +12,11 @@ import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.BasicExecutionContext
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.{IPTMProvider, IPeptideProvider, ResultFileProviderRegistry}
-import fr.proline.core.om.provider.msi.impl.{SQLPTMProvider, SQLPeptideProvider}
+import fr.proline.core.om.provider.msi.IPTMProvider
+import fr.proline.core.om.provider.msi.IPeptideProvider
+import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
+import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
+import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.om.util.AbstractMultipleDBTestCase
 import fr.proline.repository.DriverType
 
@@ -39,6 +43,11 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
 
     udsDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml")
     logger.info("UDS db succesfully initialized")
+  }
+
+  @After
+  override def tearDown() {
+    super.tearDown()
   }
 
   def buildParserContext() = {
@@ -95,14 +104,14 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
 
     }
     )
-    
+
     // Free memory
     resultFile.close()
 
     assertEquals("SpectrumMatches Count", 2647, spectrumMatchesCount)
     assertEquals("Calculated FragMatches Count", 24569, fragMatchesCount)
   }
-  
+
   @Test
   def testModFileGRE(): Unit = {
     setUp()
@@ -141,15 +150,14 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
 
     }
     )
-    
+
     // Free memory
     resultFile.close()
 
-//    assertEquals("SpectrumMatches Count", EXPECTED_SPECTRUM_MATCHES_COUNT, spectrumMatchesCount)
-//    assertEquals("Calculated FragMatches Count", EXPECTED_FRAG_MATCHES_COUNT, fragMatchesCount)
+    //    assertEquals("SpectrumMatches Count", EXPECTED_SPECTRUM_MATCHES_COUNT, spectrumMatchesCount)
+    //    assertEquals("Calculated FragMatches Count", EXPECTED_FRAG_MATCHES_COUNT, fragMatchesCount)
   }
 
-    
   @Test
   def testModFileSTR(): Unit = {
     setUp()
@@ -188,12 +196,12 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
 
     }
     )
-    
+
     // Free memory
     resultFile.close()
 
-//    assertEquals("SpectrumMatches Count", EXPECTED_SPECTRUM_MATCHES_COUNT, spectrumMatchesCount)
-//    assertEquals("Calculated FragMatches Count", EXPECTED_FRAG_MATCHES_COUNT, fragMatchesCount)
+    //    assertEquals("SpectrumMatches Count", EXPECTED_SPECTRUM_MATCHES_COUNT, spectrumMatchesCount)
+    //    assertEquals("Calculated FragMatches Count", EXPECTED_FRAG_MATCHES_COUNT, fragMatchesCount)
   }
 
 }
