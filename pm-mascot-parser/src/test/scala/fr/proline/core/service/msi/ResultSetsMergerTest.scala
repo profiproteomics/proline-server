@@ -153,70 +153,7 @@ class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
 
   }
 
-  /* Protected methods */
-  protected def importDatFile(localExecutionContext: IExecutionContext, datFileClassPath: String, decoyRegExp: String): Long = {
-    logger.debug(" --- Load Mascot file [" + datFileClassPath + ']')
 
-    val beforePeptideMatch = getPeptideMatchCount
-
-    val datFile = new File(getClass.getResource(datFileClassPath).toURI)
-    val datAbsolutePathname = datFile.getAbsolutePath
-
-    val propertiedBuilder = Map.newBuilder[String, Any]
-    propertiedBuilder += ("ion.score.cutoff" -> 0.0)
-    propertiedBuilder += ("subset.threshold" -> 1.0)
-
-    val importer: ResultFileImporter = new ResultFileImporter(
-      localExecutionContext,
-      resultIdentFile = datFile,
-      fileType = "mascot.dat",
-      instrumentConfigId = 1,
-      peaklistSoftwareId = 1, // TODO : provide the right value
-      importerProperties = propertiedBuilder.result,
-      acDecoyRegex = Some(decoyRegExp.r))
-
-    val result = importer.runService()
-    assertTrue("ResultFile [" + datAbsolutePathname + "] importer service result", result)
-
-    val rsId = importer.getTargetResultSetId
-
-    logger.debug("ResultFile [" + datAbsolutePathname + "] imported as TARGET ResultSet Id: " + rsId)
-
-    val afterPeptideMatch = getPeptideMatchCount
-
-    logger.info("TOTAL PeptideMatches created : " + (afterPeptideMatch - beforePeptideMatch))
-
-    rsId
-  }
-
-  protected def getPeptideMatchCount(): Long = {
-    var result: Long = 0
-
-    val msiEM = dsConnectorFactoryForTest.getMsiDbConnector(1).getEntityManagerFactory.createEntityManager()
-
-    try {
-      val query = msiEM.createQuery("select count(distinct pm) from fr.proline.core.orm.msi.PeptideMatch pm")
-
-      val obj = query.getSingleResult
-
-      if (obj.isInstanceOf[java.lang.Long]) {
-        result = obj.asInstanceOf[java.lang.Long].longValue
-      }
-
-    } finally {
-
-      if (msiEM != null) {
-        try {
-          msiEM.close()
-        } catch {
-          case exClose: Exception => logger.error("Error closing MSI EntityManager", exClose)
-        }
-      }
-
-    }
-
-    result
-  }
 
   protected def loadResultSetsWithDecoy(rsProvider: IResultSetProvider, rsIds: Seq[Long]): Seq[ResultSet] = {
     val loadedRS = ListBuffer.empty[ResultSet]

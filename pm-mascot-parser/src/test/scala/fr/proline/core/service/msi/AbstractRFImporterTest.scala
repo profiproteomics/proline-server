@@ -1,11 +1,9 @@
 package fr.proline.core.service.msi
 
 import java.sql.{ Connection, SQLException }
-
 import org.junit.Ignore
-
+import org.junit.Assert.assertTrue
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.proline.context.{ BasicExecutionContext, IExecutionContext }
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
@@ -14,6 +12,7 @@ import fr.proline.core.om.provider.msi.impl.{ ORMResultSetProvider, SQLPTMProvid
 import fr.proline.core.om.util.AbstractMultipleDBTestCase
 import fr.proline.repository.DriverType
 import javax.persistence.EntityManager
+import java.io.File
 
 // Note: the name of the trait ends with an underscore to indicate it must not be tested directly
 @Ignore
@@ -88,7 +87,72 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
 
     (executionContext, rsProvider)
   }
+  
+    /* Protected methods */
+  protected def importDatFile(localExecutionContext: IExecutionContext, datFileClassPath: String, decoyRegExp: String): Long = {
+    logger.debug(" --- Load Mascot file [" + datFileClassPath + ']')
 
+    val beforePeptideMatch = getPeptideMatchCount
+
+    val datFile = new File(getClass.getResource(datFileClassPath).toURI)
+    val datAbsolutePathname = datFile.getAbsolutePath
+
+    val propertiedBuilder = Map.newBuilder[String, Any]
+    propertiedBuilder += ("ion.score.cutoff" -> 0.0)
+    propertiedBuilder += ("subset.threshold" -> 1.0)
+
+    val importer: ResultFileImporter = new ResultFileImporter(
+      localExecutionContext,
+      resultIdentFile = datFile,
+      fileType = "mascot.dat",
+      instrumentConfigId = 1,
+      peaklistSoftwareId = 1, // TODO : provide the right value
+      importerProperties = propertiedBuilder.result,
+      acDecoyRegex = Some(decoyRegExp.r))
+
+    val result = importer.runService()
+    assertTrue("ResultFile [" + datAbsolutePathname + "] importer service result", result)
+
+    val rsId = importer.getTargetResultSetId
+
+    logger.debug("ResultFile [" + datAbsolutePathname + "] imported as TARGET ResultSet Id: " + rsId)
+
+    val afterPeptideMatch = getPeptideMatchCount
+
+    logger.info("TOTAL PeptideMatches created : " + (afterPeptideMatch - beforePeptideMatch))
+
+    rsId
+  }
+
+  
+  protected def getPeptideMatchCount(): Long = {
+    var result: Long = 0
+
+    val msiEM = dsConnectorFactoryForTest.getMsiDbConnector(1).getEntityManagerFactory.createEntityManager()
+
+    try {
+      val query = msiEM.createQuery("select count(distinct pm) from fr.proline.core.orm.msi.PeptideMatch pm")
+
+      val obj = query.getSingleResult
+
+      if (obj.isInstanceOf[java.lang.Long]) {
+        result = obj.asInstanceOf[java.lang.Long].longValue
+      }
+
+    } finally {
+
+      if (msiEM != null) {
+        try {
+          msiEM.close()
+        } catch {
+          case exClose: Exception => logger.error("Error closing MSI EntityManager", exClose)
+        }
+      }
+
+    }
+
+    result
+  }
   def countPsPeptide(executionContext: IExecutionContext): Long = {
     var peptideCount: Long = -1L
 

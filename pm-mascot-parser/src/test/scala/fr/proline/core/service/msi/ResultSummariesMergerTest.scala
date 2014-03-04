@@ -16,26 +16,23 @@ import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.om.model.msi.ResultSummary
 
-class ResultSummariesMergerTest extends ResultSetsMergerTest with Logging {
+class ResultSummariesMergerTest extends AbstractRFImporterTest_ with Logging {
+
+  val driverType = DriverType.H2
+  // For manual postgres test !! If use, should comment all loadDataSet from setUp and AbstractRFImporterTest_.setUp
+  //   val driverType = DriverType.POSTGRESQL 
 
   @Before
   override def setUp() = {
     super.setUp()
+    
+    udsDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml")
+    logger.info("UDS db succesfully initialized")
   }
 
   @After
   override def tearDown() {
     super.tearDown()
-  }
-
-  @Ignore
-  override def testMergeOneRS() {
-    /* Do not run inherited tests */
-  }
-
-  @Ignore
-  override def testMergeTwoRS() {
-    /* Do not run inherited tests */
   }
 
   @Test
