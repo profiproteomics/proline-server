@@ -1,21 +1,18 @@
 package fr.proline.core.service.msi
 
 import java.io.File
-
 import scala.collection.mutable.ListBuffer
-
 import org.junit.{ After, Assert }
 import org.junit.{ Before, Ignore, Test }
 import org.junit.Assert._
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.repository.DriverType
+import java.util.concurrent.TimeUnit
 
 class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
 
@@ -102,6 +99,8 @@ class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
 
     try {
       val rs1Id = importDatFile(sqlExecutionContext, "/dat_samples/STR_F136482_CTD.dat", """sp\|REV_\S+""")
+      // Ajout d'un timer sinon le test ne marche pas sous Jenkins : Probleme de delai entre l'enregistrement des donnees du resultat1 et lecture dans la base pour le resultat 2!
+      TimeUnit.SECONDS.sleep(2)       
       val rs2Id = importDatFile(sqlExecutionContext, "/dat_samples/STR_F122817_Mascot_v2.3.dat", """sp\|REV_\S+""")
 
       val rsIds = Seq(rs1Id, rs2Id)
