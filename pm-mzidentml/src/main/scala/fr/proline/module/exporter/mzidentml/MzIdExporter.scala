@@ -398,7 +398,7 @@ class MzIdExporter(
       
       val protDetectHypoList = protAmbGroup.getProteinDetectionHypothesis()
       
-      for( protMatchId <- protSet.proteinMatchIds ) {
+      for( protMatchId <- protSet.getSameSetProteinMatchIds ) {
         
         val protMatch = protMatchById(protMatchId)
         
