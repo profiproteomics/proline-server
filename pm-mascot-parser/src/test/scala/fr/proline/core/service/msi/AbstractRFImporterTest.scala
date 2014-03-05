@@ -31,6 +31,9 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
     logger.info("Initializing Dbs")
     super.initDBsDBManagement(driverType)
     logger.info("initDBsDBManagement DONE")
+
+    SQLPeptideProvider.clear() // Clear peptide cache between tests
+
     //Load Data
     logger.info("psDBTestCase.loadDataSet")
     psDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/Unimod_Dataset.xml")
@@ -43,7 +46,13 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
   }
 
   override def tearDown() {
-    super.tearDown()
+
+    try {
+      SQLPeptideProvider.clear() // Clear peptide cache between tests
+    } finally {
+      super.tearDown()
+    }
+
   }
 
   def buildSQLContext() = {
@@ -87,8 +96,8 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
 
     (executionContext, rsProvider)
   }
-  
-    /* Protected methods */
+
+  /* Protected methods */
   protected def importDatFile(localExecutionContext: IExecutionContext, datFileClassPath: String, decoyRegExp: String): Long = {
     logger.debug(" --- Load Mascot file [" + datFileClassPath + ']')
 
@@ -124,7 +133,6 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
     rsId
   }
 
-  
   protected def getPeptideMatchCount(): Long = {
     var result: Long = 0
 
