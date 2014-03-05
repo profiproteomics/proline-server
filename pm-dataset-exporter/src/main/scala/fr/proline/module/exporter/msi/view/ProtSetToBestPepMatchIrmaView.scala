@@ -3,6 +3,7 @@ package fr.proline.module.exporter.msi.view
 import fr.proline.core.om.model.msi._
 import fr.proline.module.exporter.api.view._
 
+// TODO: remove me (replaced by applying the appropriate set of selected fields in corresponding template)
 object ProtSetToBestPepMatchIrmaViewFields extends IViewFieldEnumeration {
   val PROTEIN_SET_ID = Field("protein_set_id")
   val ACCESSION = Field("accession")

@@ -12,10 +12,14 @@ import fr.proline.module.exporter.api.view.IRecordBuildingContext
 
 object ProtSetToBestPepMatchViewFields extends IProtSetToToTypicalProtMatchViewFields {
   val SEQUENCE = Field("sequence")
+  val PEPMATCH_SCORE = Field("score")
   val CALCULATED_MASS = Field("calculated_mass")
   val MISSED_CLEAVAGES = Field("missed_cleavages")
+  val EXPERIMENTAL_MOZ = Field("experimental_moz")
   val DELTA_MOZ = Field("delta_moz")
-  val FRAGMENT_MATCHES_COUNT = Field("fragment_matches_count")  
+  val RANK = Field("rank")
+  val FRAGMENT_MATCHES_COUNT = Field("fragment_matches_count")
+  val SPECTRUM_TITLE = Field("spectrum_title")
 }
 
 class ProtSetToBestPepMatchView( val rsm: ResultSummary ) extends AbstractProtSetToTypicalProtMatchView {
@@ -37,15 +41,22 @@ class ProtSetToBestPepMatchView( val rsm: ResultSummary ) extends AbstractProtSe
       
       // TODO: add seq match data
       for( pepMatch <- pepMatchOpt ) {
+        
         val peptide = pepMatch.peptide
+        val experimentalMoz = peptide.calculatedMass + pepMatch.deltaMoz        
         
         val protMatchRecord = this.buildRecord(myBuildingCtx)
+        
         val record = protMatchRecord ++ Map(
-          fields.DELTA_MOZ -> pepMatch.deltaMoz,
-          fields.FRAGMENT_MATCHES_COUNT -> pepMatch.fragmentMatchesCount,
-          fields.MISSED_CLEAVAGES -> pepMatch.missedCleavage,
           fields.SEQUENCE -> peptide.sequence,
-          fields.CALCULATED_MASS -> peptide.calculatedMass
+          fields.PEPMATCH_SCORE -> pepMatch.score,
+          fields.CALCULATED_MASS -> peptide.calculatedMass,
+          fields.MISSED_CLEAVAGES -> pepMatch.missedCleavage,
+          fields.EXPERIMENTAL_MOZ -> experimentalMoz,
+          fields.DELTA_MOZ -> pepMatch.deltaMoz,
+          fields.RANK -> pepMatch.rank,
+          fields.FRAGMENT_MATCHES_COUNT -> pepMatch.fragmentMatchesCount,
+          fields.SPECTRUM_TITLE -> Option(pepMatch.getMs2Query).map( _.spectrumTitle ).getOrElse("")
         ).map( r => r._1.toString -> r._2)
         
         recordFormatter( record )
@@ -54,43 +65,6 @@ class ProtSetToBestPepMatchView( val rsm: ResultSummary ) extends AbstractProtSe
   }
   
 
-  /*
-  def onEachRecord( recordFormatter: Map[String,Any] => Unit ) {
-    
-    val rs = rsm.resultSet.get
-    val protMatchById = rs.proteinMatchById
-    val pepMatchById = rs.peptideMatchById    
-    
-    for( protSet <- rsm.proteinSets ) {
-      
-      // Retrieve the typical protein match
-      val typicalProtMatchId = protSet.getTypicalProteinMatchId
-      val typicalProtMatch = if( typicalProtMatchId != 0 ) protMatchById(typicalProtMatchId)
-      else protMatchById( protSet.proteinMatchIds(0) )
-      
-      typicalProtMatch.sequenceMatches.foreach { seqMatch =>
-        
-        val pepMatchOpt = pepMatchById.get( seqMatch.bestPeptideMatchId )
-        
-        // TODO: add seq match data
-        for( pepMatch <- pepMatchOpt ) {
-          val peptide = pepMatch.peptide
-          
-          val record = protSetAndProtMatchToRecord(protSet,typicalProtMatch,pepSetById)
-          val record = protMatchRecord ++ Map(
-            fields.DELTA_MOZ -> pepMatch.deltaMoz,
-            fields.FRAGMENT_MATCHES_COUNT -> pepMatch.fragmentMatchesCount,
-            fields.MISSED_CLEAVAGES -> pepMatch.missedCleavage,
-            fields.SEQUENCE -> peptide.sequence,
-            fields.CALCULATED_MASS -> peptide.calculatedMass
-          ).map( r => r._1.toString -> r._2)
-          
-          recordFormatter( record )
-        }
-      }
-      
-    }
-    
-  }*/
+  // def onEachRecord is inherited from AbstractProtSetToTypicalProtMatchView
 
 }

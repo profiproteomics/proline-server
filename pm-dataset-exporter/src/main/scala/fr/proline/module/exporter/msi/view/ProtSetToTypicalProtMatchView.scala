@@ -1,10 +1,7 @@
 package fr.proline.module.exporter.msi.view
 
-import fr.proline.module.exporter.api.view.IDatasetView
-import fr.proline.module.exporter.api.view.IViewFieldEnumeration
 import fr.proline.core.om.model.msi._
-import fr.proline.module.exporter.api.view.IDatasetView
-import fr.proline.module.exporter.api.view.IRecordBuildingContext
+import fr.proline.module.exporter.api.view._
 
 trait IProtSetToToTypicalProtMatchViewFields extends IViewFieldEnumeration {
   val PROTEIN_SET_ID = Field("protein_set_id")
@@ -49,7 +46,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IDatasetView {
       protSetFields.COVERAGE -> protMatch.coverage,
       protSetFields.PEPTIDE_MATCHES_COUNT -> protMatch.peptideMatchesCount,
       protSetFields.MW -> Option(protMatch.protein).map( _.map( _.mass ).getOrElse(0.0) ).getOrElse(0.0)
-    ).map( r => r._1.toString -> r._2)    
+    ).map( r => r._1.toString -> r._2 )
   }
   
   def onEachRecord( recordFormatter: Map[String,Any] => Unit ) {
@@ -60,13 +57,16 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IDatasetView {
     val pepSetById = Map() ++ rsm.peptideSets.map( ps => ps.id -> ps )
     
     for( protSet <- rsm.proteinSets ) {
+      // Note that we export only protein matches which are loaded with the RSM
+      // The result will depend of provider which have been used
       
-      // Retrieve the typical protein match
+      // Typical Protein Match is put first
       val typicalProtMatchId = protSet.getTypicalProteinMatchId
+      
       val typicalProtMatch = if( typicalProtMatchId != 0 ) { 
         protMatchById(typicalProtMatchId)
       } else {
-        protMatchById( protSet.getSameSetProteinMatchIds(0) )
+        protMatchById( protSet.getSameSetProteinMatchIds.head )
       }
       
       val buildingContext = new ProtSetToToTypicalProtMatchBuildingContext(protSet,typicalProtMatch,pepMatchById,pepSetById)
