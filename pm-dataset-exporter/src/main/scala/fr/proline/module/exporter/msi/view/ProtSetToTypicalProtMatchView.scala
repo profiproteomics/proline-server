@@ -10,6 +10,7 @@ trait IProtSetToToTypicalProtMatchViewFields extends IViewFieldEnumeration {
   val GENE_NAME = Field("gene_name")
   val TAXON_ID = Field("taxon_id")
   val PROTEIN_SET_SCORE = Field("protein_set_score")
+  val IS_PROTEIN_SET_VALIDATED = Field("is_protein_set_validated")
   val PROTEIN_MATCHES_COUNT = Field("#protein_matches")
   val SUBSET_PROTEIN_MATCHES_COUNT = Field("#subset_protein_matches")
   val PEPTIDE_MATCHES_COUNT = Field("#peptide_matches")
@@ -37,6 +38,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IDatasetView {
     Map(
       protSetFields.PROTEIN_SET_ID -> protSet.id,
       protSetFields.PROTEIN_SET_SCORE -> protSet.peptideSet.score,
+      protSetFields.IS_PROTEIN_SET_VALIDATED -> protSet.isValidated.toString,
       protSetFields.PROTEIN_MATCHES_COUNT -> protSet.getProteinMatchIds.length,
       protSetFields.SUBSET_PROTEIN_MATCHES_COUNT -> subsetProtMatchesCount,
       protSetFields.ACCESSION -> protMatch.accession,

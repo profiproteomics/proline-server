@@ -6,10 +6,7 @@ import fr.proline.module.exporter.api.template.ViewWithTemplate
 import fr.proline.module.exporter.api.template._
 import fr.proline.context.IExecutionContext
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.core.om.provider.msi.impl.SQLPeptideInstanceProvider
-import fr.proline.core.om.provider.msi.impl.SQLPeptideSetProvider
+import fr.proline.core.om.provider.msi.impl._
 import scala.collection.mutable.ArrayBuffer
 
 object BuildResultSummaryViewSet {
@@ -26,7 +23,14 @@ object BuildResultSummaryViewSet {
     new ResultSummaryViewSet(viewSetName,templatedViews)
   }
   
-  def apply(executionContext: IExecutionContext, rsmId: Long, peptideSetExport : Boolean, viewSetName: String, viewSetTemplate: IViewSetTemplate ): ResultSummaryViewSet = {
+  def apply(
+    executionContext: IExecutionContext,
+    rsmId: Long,
+    loadAllPSMs: Boolean,
+    loadSubsets: Boolean,
+    viewSetName: String,
+    viewSetTemplate: IViewSetTemplate
+  ): ResultSummaryViewSet = {
     
     var udsSQLCtx: DatabaseConnectionContext = null
     var psSQLCtx: DatabaseConnectionContext = null
@@ -37,13 +41,19 @@ object BuildResultSummaryViewSet {
     msiSQLCtx = executionContext.getMSIDbConnectionContext()
 
     val rsmProvider = new SQLResultSummaryProvider(msiSQLCtx, psSQLCtx, udsSQLCtx)
-    val rsm = rsmProvider.getResultSummary(rsmId, true).get
-
+    
+    val rsm = if( loadAllPSMs == false ) rsmProvider.getResultSummary(rsmId, true).get
+    else {
+      val tmpRsm = rsmProvider.getResultSummary(rsmId, false).get
+      val rsProvider = new SQLResultSetProvider(msiSQLCtx, psSQLCtx, udsSQLCtx)
+      tmpRsm.resultSet = rsProvider.getResultSet(tmpRsm.getResultSetId)
+      tmpRsm
+    }
     
     //
     // Load all Subsets of Protein Sets
     //
-    if (peptideSetExport) {
+    if (loadSubsets) {
 
       // Instantiate additional providers
       val pepProvider = new SQLPeptideProvider(executionContext.getPSDbConnectionContext())

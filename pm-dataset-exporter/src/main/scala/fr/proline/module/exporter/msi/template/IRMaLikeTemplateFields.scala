@@ -10,13 +10,18 @@ object IRMaLikeTemplateFields {
   val peptidesFields = Seq(
     PeptideViewFields.PROTEIN_SET_ID,
     PeptideViewFields.ACCESSION,
+    PeptideViewFields.IS_PROTEIN_SET_VALIDATED,
+    PeptideViewFields.START,
+    PeptideViewFields.END,
     PeptideViewFields.SEQUENCE,
+    PeptideViewFields.MODIFICATIONS,
+    PeptideViewFields.MISSED_CLEAVAGES,
+    PeptideViewFields.RANK,
     PeptideViewFields.PEPMATCH_SCORE,
     PeptideViewFields.CALCULATED_MASS,
-    PeptideViewFields.MISSED_CLEAVAGES,
+    PeptideViewFields.CHARGE,
     PeptideViewFields.EXPERIMENTAL_MOZ,
     PeptideViewFields.DELTA_MOZ,
-    PeptideViewFields.RANK,
     PeptideViewFields.FRAGMENT_MATCHES_COUNT,
     PeptideViewFields.SPECTRUM_TITLE
   )

@@ -55,7 +55,14 @@ class ViewSetExporterTest  extends AbstractMultipleDBTestCase with Logging {
   @Test
   def testExportViewSetToDir() {
 
-    val viewSet = BuildResultSummaryViewSet(executionContext, targetRSMId, true, fileName,IRMaLikeViewSetTemplateAsXLSX )
+    val viewSet = BuildResultSummaryViewSet(
+      executionContext,
+      targetRSMId,
+      true,
+      true,
+      fileName,
+      IRMaLikeViewSetTemplateAsXLSX
+    )
     
     // Create TEMP dir
     val exportPath = Files.createTempDirectory(null)
