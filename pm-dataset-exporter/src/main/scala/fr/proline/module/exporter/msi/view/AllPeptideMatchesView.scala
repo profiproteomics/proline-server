@@ -10,7 +10,8 @@ import fr.proline.module.exporter.api.view._
 
 case class AllPepMatchesBuildingContext(
   pepMatch: PeptideMatch,
-  seqMatch: Option[SequenceMatch] = None,
+  protMatch: ProteinMatch,
+  seqMatch: SequenceMatch,
   protSetBuildingCtx: Option[ProtSetToToTypicalProtMatchBuildingContext] = None
 ) extends IRecordBuildingContext
 
@@ -34,27 +35,35 @@ class AllPepMatchesView( override val rsm: ResultSummary ) extends AbstractProtS
     
     // Build a protein match record if the protein set building context is defined
     val protSetBuildingCtxOpt = allPepMatchesBuildingCtx.protSetBuildingCtx
-    val protMatchRecord = if( protSetBuildingCtxOpt.isEmpty ) emptyProtMatchRecord
+    val protMatchRecord = if( protSetBuildingCtxOpt.isEmpty ) {
+      val protMatch = allPepMatchesBuildingCtx.protMatch
+      Map(
+        fields.ACCESSION -> protMatch.accession,
+        fields.DESCRIPTION -> protMatch.description,
+        fields.GENE_NAME -> protMatch.geneName,
+        fields.TAXON_ID -> protMatch.taxonId,
+        fields.COVERAGE -> protMatch.coverage,
+        fields.PEPTIDE_MATCHES_COUNT -> protMatch.peptideMatchesCount,
+        fields.MW -> Option(protMatch.protein).map( _.map( _.mass ).getOrElse(0.0) ).getOrElse(0.0)
+      ).map( r => r._1.toString -> r._2 )
+    }
     else this.buildRecord(protSetBuildingCtxOpt.get)
 
     // Retrieve some values
-    val seqMatchOpt = allPepMatchesBuildingCtx.seqMatch
+    val seqMatch = allPepMatchesBuildingCtx.seqMatch
     val pepMatch = allPepMatchesBuildingCtx.pepMatch
     val peptide = pepMatch.peptide
     val experimentalMoz = Option(pepMatch.msQuery).map(_.moz).getOrElse(null)
     
-    val pepSeq = if( seqMatchOpt.isEmpty ) peptide.sequence
-    else {
-      val seqMatch = seqMatchOpt.get
-      val resBefore = if( seqMatch.residueBefore == '\0' ) '-' else seqMatch.residueBefore
-      val resAfter = if( seqMatch.residueAfter == '\0' ) '-' else seqMatch.residueAfter
-      List(resBefore,peptide.sequence,resAfter).mkString(".")
-    }
+    val pepSeq = peptide.sequence
+    val resBefore = if( seqMatch.residueBefore == '\0' ) '-' else seqMatch.residueBefore
+    val resAfter = if( seqMatch.residueAfter == '\0' ) '-' else seqMatch.residueAfter
+    List(resBefore,peptide.sequence,resAfter).mkString(".")
     
     // Build the full record
     val record = protMatchRecord ++ Map(
-      fields.START -> seqMatchOpt.map( _.start ).getOrElse(null),
-      fields.END -> seqMatchOpt.map( _.end ).getOrElse(null),
+      fields.START -> seqMatch.start,
+      fields.END -> seqMatch.end,
       fields.SEQUENCE -> pepSeq,
       fields.MODIFICATIONS -> peptide.readablePtmString,
       fields.MISSED_CLEAVAGES -> pepMatch.missedCleavage,
@@ -106,7 +115,8 @@ class AllPepMatchesView( override val rsm: ResultSummary ) extends AbstractProtS
           
           val buildingContext = new AllPepMatchesBuildingContext(
             pepMatch = pepMatch,
-            seqMatch = Some(seqMatch),
+            protMatch = typicalProtMatch,
+            seqMatch = seqMatch,            
             protSetBuildingCtx = Some(protSetBuildingContext)
           )
           
@@ -116,13 +126,26 @@ class AllPepMatchesView( override val rsm: ResultSummary ) extends AbstractProtS
       }
     }
     
+    // Map protein matches and sequences matches by peptide
+    val protAndSeqMatchByPep = ( for(
+      protMatch <- rs.proteinMatches;
+      seqMatch <- protMatch.sequenceMatches;
+      peptide <- seqMatch.peptide
+    ) yield peptide -> Pair(protMatch,seqMatch) ).toMap
+     
     // Iterate over all result set peptide matches
     for( pepMatch <- rs.peptideMatches ) {
       
       // Export only peptide matches which have not been already exported
       if( exportedPepSet.contains(pepMatch.peptide) == false ) {
         
-        val buildingContext = new AllPepMatchesBuildingContext( pepMatch )
+        val protAndSeqMatch = protAndSeqMatchByPep(pepMatch.peptide)
+        
+        val buildingContext = new AllPepMatchesBuildingContext(
+          pepMatch = pepMatch,
+          protMatch = protAndSeqMatch._1,
+          seqMatch = protAndSeqMatch._2
+        )
         
         // Format this unassigned peptide match
         this.formatRecord( buildingContext, recordFormatter )

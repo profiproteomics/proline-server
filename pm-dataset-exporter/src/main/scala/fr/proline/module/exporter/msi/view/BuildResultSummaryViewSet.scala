@@ -25,9 +25,9 @@ object BuildResultSummaryViewSet {
   
   def apply(
     executionContext: IExecutionContext,
-    rsmId: Long,
-    loadAllPSMs: Boolean,
+    rsmId: Long,    
     loadSubsets: Boolean,
+    loadFullResultSet: Boolean,
     viewSetName: String,
     viewSetTemplate: IViewSetTemplate
   ): ResultSummaryViewSet = {
@@ -42,7 +42,7 @@ object BuildResultSummaryViewSet {
 
     val rsmProvider = new SQLResultSummaryProvider(msiSQLCtx, psSQLCtx, udsSQLCtx)
     
-    val rsm = if( loadAllPSMs == false ) rsmProvider.getResultSummary(rsmId, true).get
+    val rsm = if( loadFullResultSet == false ) rsmProvider.getResultSummary(rsmId, true).get
     else {
       val tmpRsm = rsmProvider.getResultSummary(rsmId, false).get
       val rsProvider = new SQLResultSetProvider(msiSQLCtx, psSQLCtx, udsSQLCtx)
