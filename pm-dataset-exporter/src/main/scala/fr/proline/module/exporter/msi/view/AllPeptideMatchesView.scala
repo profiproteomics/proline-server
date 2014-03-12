@@ -127,19 +127,18 @@ class AllPepMatchesView( override val rsm: ResultSummary ) extends AbstractProtS
     }
     
     // Map protein matches and sequences matches by peptide
-    val protAndSeqMatchByPep = ( for(
+    val protAndSeqMatchByPepId = ( for(
       protMatch <- rs.proteinMatches;
-      seqMatch <- protMatch.sequenceMatches;
-      peptide <- seqMatch.peptide
-    ) yield peptide -> Pair(protMatch,seqMatch) ).toMap
-     
+      seqMatch <- protMatch.sequenceMatches
+    ) yield seqMatch.peptide.get.id -> Pair(protMatch,seqMatch) ).toMap
+    
     // Iterate over all result set peptide matches
     for( pepMatch <- rs.peptideMatches ) {
       
       // Export only peptide matches which have not been already exported
       if( exportedPepSet.contains(pepMatch.peptide) == false ) {
         
-        val protAndSeqMatch = protAndSeqMatchByPep(pepMatch.peptide)
+        val protAndSeqMatch = protAndSeqMatchByPepId(pepMatch.peptide.id)
         
         val buildingContext = new AllPepMatchesBuildingContext(
           pepMatch = pepMatch,
