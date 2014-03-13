@@ -8,7 +8,8 @@ import fr.proline.module.exporter.api.formatter.IViewFormatter
 import fr.proline.module.exporter.commons.template.IWorksheetTemplate
 
 class SpreadsheetFormatter(
-  val template: IWorksheetTemplate) extends IViewFormatter {
+  val template: IWorksheetTemplate
+) extends IViewFormatter {
 
   override def getViewSetLocation(viewDir: File, viewSetName: String): File = {
     require((viewDir != null) && viewDir.isDirectory, "viewDir must be a directory")
@@ -20,8 +21,7 @@ class SpreadsheetFormatter(
   def formatView(view: IDatasetView, os: OutputStream) {
     throw new Exception("not yet implemented")
   }
-
-  // TODO: use Apache POI or equivalent to export some views
+  
   override def formatView(view: IDatasetView, location: File): File = {
     require(!location.isDirectory, "location must be a file")
 

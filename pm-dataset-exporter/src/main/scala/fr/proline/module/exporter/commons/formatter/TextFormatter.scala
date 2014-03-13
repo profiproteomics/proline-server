@@ -30,7 +30,7 @@ class TextFormatter(
     }
     
     def mkRow( record: Map[String,Any] ): String = {
-      selectedFieldsOrFields.map( field => Option(record(field)).getOrElse("").toString() ).mkString(sepChar)
+      selectedFieldsOrFields.map( field => record.get(field).flatMap( Option(_) ).getOrElse("").toString() ).mkString(sepChar)
     }
   }
   

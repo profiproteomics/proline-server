@@ -121,7 +121,7 @@ class InfoXLSXTemplate(
           cell.setCellStyle(dataCellStyleRow2);
         }
         
-        val value = Option(record(field)).getOrElse("")
+        val value = record.get(field).flatMap( Option(_) ).getOrElse("")
 
         // TODO: manage Date, timestamp...
         var l = 12; // default column size

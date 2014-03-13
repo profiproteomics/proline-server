@@ -83,7 +83,7 @@ class BasicXLSXTemplate(
       for (field <- selectedFieldsOrFields) {
         val cell = row.createCell(colIdx)
 
-        val value = Option(record(field)).getOrElse("")
+        val value = record.get(field).flatMap( Option(_) ).getOrElse("")
 
         // TODO: manage Date, timestamp...
         var l = 12; // default column size
