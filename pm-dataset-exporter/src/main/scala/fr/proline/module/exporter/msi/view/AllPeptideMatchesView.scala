@@ -130,7 +130,7 @@ class AllPepMatchesView( override val rsm: ResultSummary ) extends AbstractProtS
     val protAndSeqMatchByPepId = ( for(
       protMatch <- rs.proteinMatches;
       seqMatch <- protMatch.sequenceMatches
-    ) yield seqMatch.peptide.get.id -> Pair(protMatch,seqMatch) ).toMap
+    ) yield seqMatch.getPeptideId -> Pair(protMatch,seqMatch) ).toMap
     
     // Iterate over all result set peptide matches
     for( pepMatch <- rs.peptideMatches ) {
