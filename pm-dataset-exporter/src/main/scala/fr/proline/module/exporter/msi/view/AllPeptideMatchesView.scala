@@ -89,7 +89,7 @@ class AllPepMatchesView( override val rsm: ResultSummary ) extends AbstractProtS
     val pepSetById = Map() ++ rsm.peptideSets.map( ps => ps.id -> ps )
     
     // Keep track of peptide matches which are exported in the next loop
-    val exportedPepSet = new collection.mutable.HashSet[Peptide]
+    val exportedPepMatchIds = new collection.mutable.HashSet[Long]
     
     // Iterate over RSM protein sets
     for( protSet <- rsm.proteinSets ) {
@@ -111,7 +111,7 @@ class AllPepMatchesView( override val rsm: ResultSummary ) extends AbstractProtS
         val pepMatchOpt = pepMatchById.get( seqMatch.bestPeptideMatchId )
         
         for( pepMatch <- pepMatchOpt ) {
-          exportedPepSet += pepMatch.peptide
+          exportedPepMatchIds += pepMatch.id
           
           val buildingContext = new AllPepMatchesBuildingContext(
             pepMatch = pepMatch,
@@ -136,7 +136,7 @@ class AllPepMatchesView( override val rsm: ResultSummary ) extends AbstractProtS
     for( pepMatch <- rs.peptideMatches ) {
       
       // Export only peptide matches which have not been already exported
-      if( exportedPepSet.contains(pepMatch.peptide) == false ) {
+      if( exportedPepMatchIds.contains(pepMatch.id) == false ) {
         
         val protAndSeqMatch = protAndSeqMatchByPepId(pepMatch.peptide.id)
         
