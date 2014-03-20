@@ -45,7 +45,12 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
   val mascotFragRules = mascotConfig.fragmentationRulesFile.getInstrumentByName(mascotSearchParams.getINSTRUMENT())  
   val aaHelpersByQuantComp = mutable.Map.empty[String, ms_aahelper]
   final val DEFAULT_QUANT_COMP_KEY = "DEFAULT"
-
+ 
+    require(
+	mascotFragRules != null, "can't find fragmentation rules for instrument named " + mascotSearchParams.getINSTRUMENT() +
+	" please check that your Mascot 'fragmentation_rules' config file contains this instrument " +
+	"and that you provided an URL targeting your own Mascot server"
+	)
   // Map Mascot fragmentation series names by internal ones (handle doubly charged state)
   val fragSeriesByMascotFragSeries = Map() ++
     Fragmentation.defaultIonTypeByMascotSeriesName.map(p => p._1 -> p._2.toString) ++
@@ -241,7 +246,6 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
     // Instantiate two ms_fragment vectors
     val fragments = new ms_fragmentvector()
     val all_fragments = new ms_fragmentvector() // Keep a list of fragments from all series
-
     //    logger.debug("### calc fragments for each serie configured in fragmentation rules")
     for (series <- ms_fragmentationrules.getFirstSeries to ms_fragmentationrules.getLastSeries) {
 
@@ -279,9 +283,12 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
 
         // If peptide is doubly charged
         // TODO: why charge > 1 ? this should be > 2 to have fragments doubly charged
-        if ((new_ms_pep.getCharge > 1) && mascotFragRules.isCharged2Plus) {
+        if ((new_ms_pep.getCharge > 1) && mascotFragRules.isCharged2Plus ) {
+          //mascotFragRules.isCharged2Plus  means cahrge2+ specified in fragrules file for the used instrument.
           //calculate 2+ fragments
-          calcFragments(isDoublyCharged = true)
+          // AW: we need to make it impossible to calculate 2+ charged for ion serie 4.
+          if(series !=4)  calcFragments(isDoublyCharged = true)
+          else            calcFragments(isDoublyCharged = false)
         }
       }
     }
