@@ -42,7 +42,7 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
   val FREE_MEMORY = true // TODO: remove me when the memory leaks have been solved
   val mascotSearchParams = mascotResFile.params
   val mascotVersion = mascotResFile.getMascotVer
-  val mascotFragRules = mascotConfig.fragmentationRulesFile.getInstrumentByName(mascotSearchParams.getINSTRUMENT())  
+  val mascotFragRules = mascotConfig.fragmentationRulesFile.getInstrumentByName(mascotSearchParams.getINSTRUMENT())
   val aaHelpersByQuantComp = mutable.Map.empty[String, ms_aahelper]
   final val DEFAULT_QUANT_COMP_KEY = "DEFAULT"
  
@@ -283,12 +283,15 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
 
         // If peptide is doubly charged
         // TODO: why charge > 1 ? this should be > 2 to have fragments doubly charged
+
         if ((new_ms_pep.getCharge > 1) && mascotFragRules.isCharged2Plus ) {
           //mascotFragRules.isCharged2Plus  means cahrge2+ specified in fragrules file for the used instrument.
           //calculate 2+ fragments
           // AW: we need to make it impossible to calculate 2+ charged for ion serie 4.
-          if(series !=4)  calcFragments(isDoublyCharged = true)
-          else            calcFragments(isDoublyCharged = false)
+          if(series != ms_fragmentationrules.FRAG_IMMONIUM ) 
+        	calcFragments(isDoublyCharged = true)
+          else      
+            calcFragments(isDoublyCharged = false)
         }
       }
     }
