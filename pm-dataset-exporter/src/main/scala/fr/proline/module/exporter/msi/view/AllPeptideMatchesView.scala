@@ -55,16 +55,16 @@ class AllPepMatchesView( override val rsm: ResultSummary ) extends AbstractProtS
     val peptide = pepMatch.peptide
     val experimentalMoz = Option(pepMatch.msQuery).map(_.moz).getOrElse(null)
     
-    val pepSeq = peptide.sequence
     val resBefore = if( seqMatch.residueBefore == '\0' ) '-' else seqMatch.residueBefore
     val resAfter = if( seqMatch.residueAfter == '\0' ) '-' else seqMatch.residueAfter
-    List(resBefore,peptide.sequence,resAfter).mkString(".")
     
     // Build the full record
     val record = protMatchRecord ++ Map(
       fields.START -> seqMatch.start,
       fields.END -> seqMatch.end,
-      fields.SEQUENCE -> pepSeq,
+      fields.SEQUENCE -> peptide.sequence,
+      fields.RESIDUE_BEFORE -> resBefore,
+      fields.RESIDUE_AFTER -> resAfter,
       fields.MODIFICATIONS -> peptide.readablePtmString,
       fields.MISSED_CLEAVAGES -> pepMatch.missedCleavage,
       fields.RANK -> pepMatch.rank,

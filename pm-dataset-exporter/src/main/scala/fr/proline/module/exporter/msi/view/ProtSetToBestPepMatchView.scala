@@ -13,7 +13,9 @@ import fr.proline.module.exporter.api.view.IRecordBuildingContext
 object ProtSetToBestPepMatchViewFields extends IProtSetToToTypicalProtMatchViewFields {  
   val START = Field("start")
   val END = Field("end")
+  val RESIDUE_BEFORE = Field("residue_before")
   val SEQUENCE = Field("sequence")
+  val RESIDUE_AFTER = Field("residue_after")
   val MODIFICATIONS = Field("modifications")
   val MISSED_CLEAVAGES = Field("missed_cleavages")
   val RANK = Field("rank")
@@ -50,14 +52,15 @@ class ProtSetToBestPepMatchView( val rsm: ResultSummary ) extends AbstractProtSe
         val experimentalMoz = Option(pepMatch.msQuery).map(_.moz).getOrElse(null)  
         val resBefore = if( seqMatch.residueBefore == '\0' ) '-' else seqMatch.residueBefore
         val resAfter = if( seqMatch.residueAfter == '\0' ) '-' else seqMatch.residueAfter
-        val pepSeq = List(resBefore,peptide.sequence,resAfter).mkString(".")
         
         val protMatchRecord = this.buildRecord(myBuildingCtx)
         
         val record = protMatchRecord ++ Map(
           fields.START -> seqMatch.start,
           fields.END -> seqMatch.end,
-          fields.SEQUENCE -> pepSeq,
+          fields.SEQUENCE -> peptide.sequence,
+          fields.RESIDUE_BEFORE -> resBefore,
+          fields.RESIDUE_AFTER -> resAfter,
           fields.MODIFICATIONS -> peptide.readablePtmString,
           fields.MISSED_CLEAVAGES -> pepMatch.missedCleavage,
           fields.RANK -> pepMatch.rank,
