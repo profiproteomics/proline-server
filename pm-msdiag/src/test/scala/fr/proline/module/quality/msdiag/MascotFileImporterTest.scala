@@ -27,6 +27,7 @@ object MascotFileImporterTest extends Logging {
       peaklistSoftwareId = 8,
       importerProperties = propertiesBuilder.result,
       acDecoyRegex = Some("""REVERSED_gi\|\S+""".r)
+//      acDecoyRegex = Some("""sp\|REV_\S+""".r)
     )
     importer
   }

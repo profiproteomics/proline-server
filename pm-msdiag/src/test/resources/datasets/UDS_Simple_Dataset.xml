@@ -39,7 +39,7 @@
 	<SPEC_TITLE_PARSING_RULE ID="5" FIRST_SCAN="Spectrum\d+\s+scans:(\d+?)," LAST_SCAN="Spectrum\d+\s+scans:(\d+?)," NAME="Proteome Discoverer"/>
 	<SPEC_TITLE_PARSING_RULE ID="6" FIRST_SCAN="scan=(\d+)" LAST_SCAN="scan=(\d+)" NAME="ProteoWizard 2.0"/>
 	<SPEC_TITLE_PARSING_RULE ID="7" RAW_FILE_NAME="(.+)\.\d+\.\d+\.\d+$" FIRST_SCAN=".+\.(\d+)\.\d+\.\d+$" LAST_SCAN=".+\.\d+\.(\d+)\.\d+$" NAME="ProteoWizard 2.1"/>
-	<SPEC_TITLE_PARSING_RULE ID="8" FIRST_TIME="Cmpd.+MS.+, (\d+\.\d+) min" LAST_TIME="Cmpd.+MS.+, (\d+\.\d+) min" NAME="Spectrum Mill/Bruker"/>
+	<SPEC_TITLE_PARSING_RULE ID="8" FIRST_TIME="Cmpd.+MS.+, (\d+\.\d+)(?:-\d+\.\d+)? min" LAST_TIME="Cmpd.+MS.+, (?:\d+\.\d+-)?(\d+\.\d+) min" NAME="Spectrum Mill/Bruker"/>
 	<PEAKLIST_SOFTWARE ID="1" NAME="extract_msn.exe" SPEC_TITLE_PARSING_RULE_ID="1"/>
 	<PEAKLIST_SOFTWARE ID="2" NAME="mascot.dll" SPEC_TITLE_PARSING_RULE_ID="2"/>
 	<PEAKLIST_SOFTWARE ID="3" NAME="Mascot Distiller" SPEC_TITLE_PARSING_RULE_ID="3"/>

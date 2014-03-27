@@ -5,6 +5,8 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.module.quality.msdiag.msi._
 import fr.proline.core.om.model.msi.SpectrumTitleParsingRule
+//import org.joda.convert.ToString
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 
 /**
  * @author Alexandre Burel (LSMBO IPHC CNRS)
@@ -27,56 +29,71 @@ import fr.proline.core.om.model.msi.SpectrumTitleParsingRule
  * This module is meant to be called by a GUI that will create the report
  *
  * Add a comparison function between 2 or more msdiags ?
+ * 
+ * 2014/03/12
+ * This module must have a ProviderDecoratedExecutionContext so it can get data from the MSIdb
+ * The input should be either a RSid or a RSMid
+ * ResultSets target/decoy or ResultSummaries should be extracted from the databases
+ * Unassigned queries should be extracted from the databases
+ * 
  *
  */
-//object MSDiag extends Logging {
-//  def getPeptideMatches(rs: ResultSet, wantDecoy: Boolean): Array[PeptideMatch] = {
-//    if(wantDecoy) {
-//      if(rs.decoyResultSet.isDefined) rs.decoyResultSet.get.peptideMatches
-//      else null
-//    } else rs.peptideMatches
-//  }
-////  def getAllPeptideMatches(rs: ResultSet): Array[PeptideMatch] = getPeptideMatches(rs, false) ++ getPeptideMatches(rs, true)
-//  def getAllPeptideMatches(rs: ResultSet): Array[PeptideMatch] = {
-//    val t = getPeptideMatches(rs, false)
-//    logger.debug("Target peptide matches count : "+t.size)
-//    val d = getPeptideMatches(rs, true)
-//    if(d != null) {
-//	    logger.debug("Decoy peptide matches count : "+d.size)
-//	    t ++ d
-//    } else t
-//  }
-//}
-//
-//class MSDiag(val rs: ResultSet) extends Logging {
-//
-//  // Main MSDiag results
-//  def getMSDiagByCharge(scores: Array[Float]): Array[Array[MSDiagChargeMatch]] = GroupByCharge.sortByScoreAndCharge(rs, scores)
-//
-//  // Sort by retention time (used for generating histogram)
-//  def getMSDiagByRetentionTimes(scores: Array[Float]): Array[Array[MSDiagRTMatch]] = GroupByRT.sortByScoreAndRT(rs, scores)
-//
-//  // Redundant matches
-//  lazy val getTargetRedundantMatches: Array[PeptideMatch] = RedundancyExtractor.getRedundantMatches(MSDiag.getPeptideMatches(rs, false))
-//  lazy val getDecoyRedundantMatches: Array[PeptideMatch] = RedundancyExtractor.getRedundantMatches(MSDiag.getPeptideMatches(rs, true))
-//  def countAllRedundantMatches: Int = getTargetRedundantMatches.size + getDecoyRedundantMatches.size
-//
-//}
 
-class MSDiag(val rsTarget: ResultSet, val rsDecoyOpt: Option[ResultSet]) extends Logging {
+class MSDiag(val rsId: Long, val parserContext: ProviderDecoratedExecutionContext) extends Logging {
+  
+  // this variable is the only access to the data stored in the databases
+  private val rs = new MSDiagResultSetManager(parserContext, rsId)
 
-  val rs = new MSDiagResultSetManager(rsTarget, rsDecoyOpt)
+  // this array is used to split the PSMs upon their score
+  // a default window should be defined by the full range (min -> max) divided in 3 or 4 equivalent area (ie. less than 20 ; 20->40 ; 40->60 ; more than 60)
+  // the unassigned spectra should be systematically added as first item of the score window
+  private var scoreWindow: Array[Float] = Array(20, 40, 60)
+  def setScoreWindow(_scoreWindow: Array[Float]) { scoreWindow = _scoreWindow }
+  
+  // Original MSDiag only considers matches with rank=1
+  // It might be interesting to be able to see further
+  private var maxRank: Integer = 1
+  def setMaxRank(_maxRank: Integer) { maxRank = _maxRank }
+  def unsetMaxRank(_maxRank: Integer) { maxRank = 0 }
+  
+  // this is needed to extract retention times
+  private var parsingRules: Option[SpectrumTitleParsingRule] = None
+  def setParsingRules(pr: Option[SpectrumTitleParsingRule]) { parsingRules = pr }
+  
+  private var nbScansPerGroup: Integer = 100
+  def setNbScansPerGroup(nb: Integer) { nbScansPerGroup = nb }
 
-  // Main MSDiag results
-  def getMSDiagByCharge(scores: Array[Float]): Array[Array[MSDiagChargeMatch]] = GroupByCharge.sortByScoreAndCharge(rs, scores)
-  def getCharges: Array[Int] = GroupByCharge.getCharges(rs)
-
-  // Sort by retention time (used for generating histogram)
-  def getMSDiagByRetentionTimes(scores: Array[Float], parsingRules: Option[SpectrumTitleParsingRule]): Array[Array[MSDiagRTMatch]] = GroupByRT.sortByScoreAndRT(rs, scores, parsingRules)
-
-  // Redundant matches
-  lazy val getTargetRedundantMatches: Array[PeptideMatch] = RedundancyExtractor.getRedundantMatches(rs.getPeptideMatches(false))
-  lazy val getDecoyRedundantMatches: Array[PeptideMatch] = RedundancyExtractor.getRedundantMatches(rs.getPeptideMatches(true))
-  def countAllRedundantMatches: Int = getTargetRedundantMatches.size + getDecoyRedundantMatches.size
+  private val authorizedMethodRegex = "^getMSDiag.*"
+  /**
+   * Access the list of methods available in MSDiag
+   * @return the list of methods with a name starting with "getMSDiag"
+   */
+  def getMethods: Array[String] = this.getClass().getMethods().map(_.getName()).sorted.filter(_ matches authorizedMethodRegex)
+  
+  /**
+   * @param method the name of the method to call
+   * @return
+   */
+  def executeMethod(method: String): Any = {
+    if (method.matches(authorizedMethodRegex)) {
+      this.getClass().getMethod(method).invoke(this)
+    } else {
+      throw new Exception("Unknown or unavailable method")
+    }
+  }
+  
+  def getMSDiagMatchesPerChargeAndScore: MSDiagOutput = MatchesPerChargeAndScore.get(rs, scoreWindow, maxRank)
+  
+  def getMSDiagMatchesPerMinuteAndScore: MSDiagOutput = MatchesPerMinuteAndScore.get(rs, scoreWindow, maxRank, parsingRules)
+  
+  def getMSDiagMatchesPerScanAndScore: MSDiagOutput = MatchesPerScanAndScore.get(rs, scoreWindow, maxRank, nbScansPerGroup)
+  
+  def getMSDiagMatchesPerResultSetAndScore: MSDiagOutput = MatchesPerResultSetAndScore.get(rs, scoreWindow, maxRank)
+  
+  def getMSDiagMassesPerCharge: MSDiagOutput = MassesPerCharge.get(rs, maxRank)
+  
+  def getMSDiagAssignementRepartition: MSDiagOutput = AssignementRepartition.get(rs)
+  
+  def getMSDiagMassesPerScore: MSDiagOutput = null
 
 }
