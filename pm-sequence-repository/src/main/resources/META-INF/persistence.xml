@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+  version="2.0">
+
+  <persistence-unit name="seqdb_production" transaction-type="RESOURCE_LOCAL">
+    <provider>org.hibernate.ejb.HibernatePersistence</provider>
+    <class>fr.proline.module.seq.orm.BioSequence</class>
+    <class>fr.proline.module.seq.orm.ParsingRule</class>
+    <class>fr.proline.module.seq.orm.Repository</class>
+    <class>fr.proline.module.seq.orm.RepositoryIdentifier</class>    
+    <class>fr.proline.module.seq.orm.SEDb</class>
+    <class>fr.proline.module.seq.orm.SEDbIdentifier</class>
+    <class>fr.proline.module.seq.orm.SEDbInstance</class>
+  </persistence-unit>
+
+</persistence>
