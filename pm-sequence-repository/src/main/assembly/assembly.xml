@@ -36,6 +36,13 @@
       <outputDirectory>lib</outputDirectory>
     </fileSet>
 
+    <!-- Launching scripts with filtering to replace project.version properties -->
+    <fileSet>
+      <directory>${basedir}/Scripts</directory>
+      <outputDirectory>/</outputDirectory>
+      <filtered>true</filtered>
+    </fileSet>
+
   </fileSets>
 
 </assembly>
