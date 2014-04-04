@@ -38,7 +38,7 @@
 
     <!-- Launching scripts with filtering to replace project.version properties -->
     <fileSet>
-      <directory>${basedir}/Scripts</directory>
+      <directory>${basedir}/scripts</directory>
       <outputDirectory>/</outputDirectory>
       <filtered>true</filtered>
     </fileSet>
