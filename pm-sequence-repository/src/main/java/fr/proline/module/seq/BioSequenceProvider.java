@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import fr.proline.module.seq.dto.BioSequenceWrapper;
 import fr.proline.module.seq.dto.RepositoryIdentifierWrapper;
 import fr.proline.module.seq.dto.SEDbInstanceWrapper;
+import fr.proline.module.seq.orm.Alphabet;
 import fr.proline.module.seq.orm.BioSequence;
 import fr.proline.module.seq.orm.Repository;
 import fr.proline.module.seq.orm.RepositoryIdentifier;
@@ -100,8 +101,9 @@ public final class BioSequenceProvider {
 
 	final SEDb seDb = seDbInstance.getSEDb(); // Should not be null
 	final String seDbName = seDb.getName(); // Should not be null
+	final Alphabet alphabet = seDb.getAlphabet(); // Should not be null
 
-	final SEDbInstanceWrapper seDbInstanceW = new SEDbInstanceWrapper(seDbName, sourcePath);
+	final SEDbInstanceWrapper seDbInstanceW = new SEDbInstanceWrapper(seDbName, alphabet, sourcePath);
 
 	RepositoryIdentifierWrapper repositoryIdentValue = null;
 

@@ -165,7 +165,7 @@ public class ProjectHandler {
 			    LOG.error("SeqDb #{} fastaFilePath is empty", seqDbId);
 			} else {
 			    final SEDbInstanceWrapper seDbInstanceW = new SEDbInstanceWrapper(trimmedName,
-				    fastaFilePath);
+				    null, fastaFilePath);
 			    result.put(Long.valueOf(seqDbId), seDbInstanceW);
 			} // End if (fastaFilePath is valid)
 

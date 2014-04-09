@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
-import fr.proline.util.StringUtils;
+import fr.proline.module.seq.util.PeptideUtils;
 
 /**
  * DataSource to parse BioSequences from FASTA files.
@@ -198,7 +198,7 @@ public class FastaSource implements DataSource {
 
 	final String normalizedSequence = sequenceBuilder.toString().toUpperCase();
 
-	if (checkSequence(normalizedSequence)) {
+	if (PeptideUtils.checkSequence(normalizedSequence)) {
 	    foundSequences.put(readingSEDbIdentifier, normalizedSequence);
 
 	    remainingSEDbIdentifiers.remove(identValue);
@@ -299,28 +299,6 @@ public class FastaSource implements DataSource {
 	} // End if (m_seDbIdentPattern is found)
 
 	return foundSEDbIdent;
-    }
-
-    private static boolean checkSequence(final String normalizedSequence) {
-	boolean valid = false;
-
-	if (!StringUtils.isEmpty(normalizedSequence)) {
-	    valid = true; // Optimistic initialization
-
-	    final int sequenceLength = normalizedSequence.length();
-
-	    for (int i = 0; valid && (i < sequenceLength); ++i) {
-		final char currentResidue = normalizedSequence.charAt(i);
-
-		if ((currentResidue < 'A') || (currentResidue > 'Z')) {
-		    valid = false;
-		}
-
-	    }
-
-	}
-
-	return valid;
     }
 
     protected void parseRepositoryIdent(final String header, final SEDbIdentifierWrapper seDbIdentifier) {

@@ -12,6 +12,12 @@ import org.junit.Ignore;
 import fr.proline.module.seq.dto.BioSequenceWrapper;
 import fr.proline.module.seq.dto.RepositoryIdentifierWrapper;
 
+/**
+ * Manual test : requires PostgreSQL connection.
+ * 
+ * @author LMN
+ * 
+ */
 @Ignore
 public final class TestBioSequenceProvider {
 
@@ -66,6 +72,12 @@ public final class TestBioSequenceProvider {
 	buff.append(SEPARATOR);
 
 	buff.append(bioSequenceW.getSequence());
+	buff.append(SEPARATOR);
+
+	buff.append(bioSequenceW.getMass());
+	buff.append(SEPARATOR);
+
+	buff.append(bioSequenceW.getPI());
 
 	final RepositoryIdentifierWrapper repositoryIdentW = bioSequenceW.getRepositoryIdentifier();
 

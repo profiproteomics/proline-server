@@ -30,6 +30,19 @@
       <version>${core.version}</version>
     </dependency>
 
+    <!-- BioJava 3.0.8 used to calculate Peptide mass and pI -->
+    <dependency>
+      <groupId>org.biojava</groupId>
+      <artifactId>biojava3-core</artifactId>
+      <version>3.0.8</version>
+    </dependency>
+
+     <dependency>
+      <groupId>org.biojava</groupId>
+      <artifactId>biojava3-aa-prop</artifactId>
+      <version>3.0.8</version>
+    </dependency>
+
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-core</artifactId>

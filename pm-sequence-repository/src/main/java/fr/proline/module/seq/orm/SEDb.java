@@ -19,11 +19,7 @@ import javax.persistence.Table;
 @NamedQuery(name = "findSEDbByName", query = "SELECT sd from fr.proline.module.seq.orm.SEDb sd where sd.name = :name")
 public class SEDb implements Serializable {
 
-    public enum Alphabet {
-	AA, DNA
-    }
-
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

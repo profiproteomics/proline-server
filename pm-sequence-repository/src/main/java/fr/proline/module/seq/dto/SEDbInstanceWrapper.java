@@ -2,23 +2,28 @@ package fr.proline.module.seq.dto;
 
 import java.io.Serializable;
 
+import fr.proline.module.seq.orm.Alphabet;
 import fr.proline.util.StringUtils;
 
 public class SEDbInstanceWrapper implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final String m_name;
 
+    private final Alphabet m_alphabet;
+
     private final String m_sourcePath;
 
-    public SEDbInstanceWrapper(final String name, final String sourcePath) {
+    public SEDbInstanceWrapper(final String name, final Alphabet alphabet, final String sourcePath) {
 
 	if (StringUtils.isEmpty(name)) {
 	    throw new IllegalArgumentException("Invalid name");
 	}
 
 	m_name = name;
+
+	m_alphabet = alphabet;
 
 	if (StringUtils.isEmpty(sourcePath)) {
 	    throw new IllegalArgumentException("Invalid sourcePath");
@@ -33,6 +38,15 @@ public class SEDbInstanceWrapper implements Serializable {
 
     public String getSourcePath() {
 	return m_sourcePath;
+    }
+
+    /**
+     * Can be <code>null</code>.
+     * 
+     * @return
+     */
+    public Alphabet getAlphabet() {
+	return m_alphabet;
     }
 
     @Override

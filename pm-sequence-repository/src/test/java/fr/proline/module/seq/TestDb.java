@@ -4,6 +4,12 @@ import org.junit.Ignore;
 
 import fr.proline.repository.IDatabaseConnector;
 
+/**
+ * Manual test : requires PostgreSQL connection.
+ * 
+ * @author LMN
+ * 
+ */
 @Ignore
 public final class TestDb {
 

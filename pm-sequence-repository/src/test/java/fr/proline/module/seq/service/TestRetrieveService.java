@@ -2,10 +2,16 @@ package fr.proline.module.seq.service;
 
 import org.junit.Ignore;
 
+/**
+ * Manual test : requires PostgreSQL connection.
+ * 
+ * @author LMN
+ * 
+ */
 @Ignore
-public class TestRetrieveService {
+public final class TestRetrieveService {
 
-    private static final long PROJECT_ID = 19L;
+    private static final long PROJECT_ID = 8L;
 
     /* Private constructor (Utility class) */
     private TestRetrieveService() {

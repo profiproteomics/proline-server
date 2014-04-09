@@ -32,6 +32,7 @@ import fr.proline.module.seq.DatabaseAccess;
 import fr.proline.module.seq.ServiceConfiguration;
 import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
 import fr.proline.module.seq.dto.SEDbInstanceWrapper;
+import fr.proline.module.seq.orm.Alphabet;
 import fr.proline.module.seq.orm.BioSequence;
 import fr.proline.module.seq.orm.ParsingRule;
 import fr.proline.module.seq.orm.Repository;
@@ -304,7 +305,7 @@ public final class BioSequenceRetriever {
 			LOG.info("Trying to load [{}] sequences from [{}]", sourcePath,
 				bestFastaFile.getAbsolutePath());
 
-			final SEDbInstanceWrapper fakeSEDbInstance = new SEDbInstanceWrapper(seDbName,
+			final SEDbInstanceWrapper fakeSEDbInstance = new SEDbInstanceWrapper(seDbName, null,
 				bestFastaFile.getName());
 
 			nHandledSEDbIdents = retrieveBioSequences(seqEM, fakeSEDbInstance, seDbIdentifiers,
@@ -750,7 +751,7 @@ public final class BioSequenceRetriever {
 	if (result == null) {
 	    result = new SEDb();
 	    result.setName(seDbName);
-	    result.setAlphabet(SEDb.Alphabet.AA);
+	    result.setAlphabet(Alphabet.AA); // Default to Amino Acid sequence
 
 	    if (possibleUniprot) {
 		final ParsingRule uniprotParsingRule = loadOrCreateUniProtParsingRule(seqEM);
