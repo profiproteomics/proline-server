@@ -29,3 +29,8 @@
 .table-row-cell:empty .table-cell {
     -fx-border-width: 0px;
 }
+
+/* remove border radius on bar charts (ugly on a stacked-bar chart) */
+.chart-bar {
+	-fx-background-radius: 0, 0, 0, 0;
+}

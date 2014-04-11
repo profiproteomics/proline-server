@@ -19,7 +19,7 @@ object MSDiagViewer {
   private var msdiag: MSDiag = null
   private var msdiagStage: Stage = null
   private var vboxMSDiags: VBox = null
-  private val cssFile: String = this.getClass.getClassLoader().getResource("application.css").toString()
+  private val cssFile: String = this.getClass.getClassLoader().getResource("application.css").toExternalForm()
 
   // load the MSDiag charts and show the window
   def load(msdiag: MSDiag) {
