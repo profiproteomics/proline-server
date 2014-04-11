@@ -57,14 +57,7 @@ class MSDiagTest extends AbstractResultFileImporterTest with Logging {
     val id = loadFile("SGI_F154964.dat")
     val msdiag = new MSDiag(id, parserContext)
     msdiag.setParsingRules(super.getParsingRules(8))
-    msdiag.getMethods.foreach(m => {
-      logger.debug("MSDiag." + m + "()")
-      msdiag.executeMethod(m) match {
-        case msd: MSDiagOutput => MSDiagViewer.addNewChart(msd)
-        case _ => logger.debug("Unexpected output type")
-      }
-    })
-    MSDiagViewer.start
+    MSDiagViewer.load(msdiag)
   }
   
   @Test

@@ -6,6 +6,6 @@ class Version extends IVersion {
 
   override val getModuleName = "PM-MSDiag"
 
-  override val getVersion = "0.0.2-SNAPSHOT_20140327-1610_abu"
+  override val getVersion = "0.0.2-SNAPSHOT_20140411-1416_abu"
 
 }

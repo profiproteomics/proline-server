@@ -5,8 +5,8 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.module.quality.msdiag.msi._
 import fr.proline.core.om.model.msi.SpectrumTitleParsingRule
-//import org.joda.convert.ToString
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * @author Alexandre Burel (LSMBO IPHC CNRS)
@@ -49,6 +49,7 @@ class MSDiag(val rsId: Long, val parserContext: ProviderDecoratedExecutionContex
   // the unassigned spectra should be systematically added as first item of the score window
   private var scoreWindow: Array[Float] = Array(20, 40, 60)
   def setScoreWindow(_scoreWindow: Array[Float]) { scoreWindow = _scoreWindow }
+//  def getScoreWindow = scoreWindow
   
   // Original MSDiag only considers matches with rank=1
   // It might be interesting to be able to see further
@@ -62,7 +63,25 @@ class MSDiag(val rsId: Long, val parserContext: ProviderDecoratedExecutionContex
   
   private var nbScansPerGroup: Integer = 100
   def setNbScansPerGroup(nb: Integer) { nbScansPerGroup = nb }
-
+  
+  def getSettings: Map[String, Any] = Map("Score window" -> scoreWindow.mkString("-"), 
+									      "Max rank" -> maxRank,
+									      "Scan groups size" -> nbScansPerGroup)
+  def setSettings(settings: Map[String, Any]) {
+    settings.keys.foreach(setting => {
+        setting match {
+          case "Score window" => {
+            val newScores = new ArrayBuffer[Float]()
+            settings.get(setting).get.toString.split("-").foreach(newScores += _.toFloat)
+            setScoreWindow(newScores.toArray)
+          }
+          case "Max rank" => setMaxRank(settings.get(setting).get.toString.toInt)
+          case "Scan groups size" => setNbScansPerGroup(settings.get(setting).get.toString.toInt)
+          case _ =>
+        } 
+    })
+  }
+									      
   private val authorizedMethodRegex = "^getMSDiag.*"
   /**
    * Access the list of methods available in MSDiag
