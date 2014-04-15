@@ -46,7 +46,7 @@ class OmssaFilePreloader(omxFile: File) extends Logging {
     }
     fileParsed = true
   } catch {
-    case e: Exception => logger.warn("OmssaFilePreloader failed" + e)
+    case e: Exception => logger.error("OmssaFilePreloader failed", e)
   } finally {
     MSSearch.getStreamReader().closeCompletely()
   }

@@ -193,6 +193,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
 
     logger.info("ResultSet created with fasta db: "+msiSearch.searchSettings.seqDatabases(0).toString)
     new ResultSet(id = rsId,
+      name = this.msiSearch.title,
       peptides = pepMatchesByPep.keySet.toArray,
       peptideMatches = allPepMatches,
       proteinMatches = protMatches,

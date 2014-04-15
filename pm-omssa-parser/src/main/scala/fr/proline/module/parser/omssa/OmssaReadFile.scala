@@ -165,7 +165,7 @@ class OmssaReadFile(val omxFile: File,
                       msQueries.put(
                         spectrumId,
                         new Ms2Query(
-                          id = spectrumId,
+                          id = Ms2Query.generateNewId,
                           initialId = spectrumId,
                           moz = precursorMz,
                           charge = precursorCharge,
@@ -400,6 +400,7 @@ class OmssaReadFile(val omxFile: File,
 //                          )
                           val peptideMatchProperties = new PeptideMatchProperties(omssaProperties = Some(peptideMatchOmssaProperties))
                           // create the PeptideMatch object
+                          if(!msQueries.isDefinedAt(hitSetNumber)) { logger.warn("No MSQuery for query "+hitSetNumber) }
                           val peptideMatch = new PeptideMatch(
                             id = PeptideMatch.generateNewId,
                             rank = peptideMatchRank,
@@ -552,11 +553,11 @@ class OmssaReadFile(val omxFile: File,
         sequencesCount = nbSequencesInFastaFile,
         searchedSequencesCount = nbSequencesInFastaFile,
         version = version,
-        releaseDate = null,
+//        releaseDate = null,
+        releaseDate = new java.util.Date,
         properties = None,
         searchProperties = None
       )
-//        releaseDate = new java.util.Date)
     }
 
     var allChargeStates = new ArrayBuffer[String]()
@@ -594,14 +595,14 @@ class OmssaReadFile(val omxFile: File,
       searchSettings = searchSettings,
       peakList = peaklist,
       date = new java.util.Date(omxFile.lastModified()), // the lastModified date of the file will not always correspond to the search date
-      title = "",
-      resultFileDirectory = omxFile.getPath(),
+      title = omxFile.getName(),
+//      resultFileDirectory = omxFile.getPath(),
+      resultFileDirectory = omxFile.getParentFile().getAbsolutePath(),
       jobNumber = 0,
       userName = "",
       userEmail = "",
       queriesCount = nbSpectra,
-      searchedSequencesCount = nbSequencesInFastaFile,
-      properties = None
+      searchedSequencesCount = nbSequencesInFastaFile
     )
   }
 
