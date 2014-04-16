@@ -79,6 +79,7 @@ public class FastaSource implements DataSource {
 	return parseFile(identByValues);
     }
 
+    /* Private methods */
     private Map<SEDbIdentifierWrapper, String> parseFile(
 	    final Map<String, List<SEDbIdentifierWrapper>> identByValues) {
 	final String fastaAbsolutePathname = m_fastaFile.getAbsolutePath();
@@ -196,7 +197,13 @@ public class FastaSource implements DataSource {
 	    final Map<String, List<SEDbIdentifierWrapper>> remainingSEDbIdentifiers) {
 	final String identValue = readingSEDbIdentifier.getValue();
 
-	final String normalizedSequence = sequenceBuilder.toString().toUpperCase();
+	String normalizedSequence = sequenceBuilder.toString().toUpperCase();
+
+	/* Remove potential '*' char (translation stop marker) */
+	final int starIndex = normalizedSequence.indexOf('*');
+	if (starIndex != -1) {
+	    normalizedSequence = normalizedSequence.substring(0, starIndex);
+	}
 
 	if (PeptideUtils.checkSequence(normalizedSequence)) {
 	    foundSequences.put(readingSEDbIdentifier, normalizedSequence);
