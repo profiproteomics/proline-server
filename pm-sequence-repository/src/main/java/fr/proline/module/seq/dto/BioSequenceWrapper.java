@@ -8,12 +8,15 @@ import fr.proline.util.StringUtils;
 
 public class BioSequenceWrapper implements Serializable {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
+
+    private final long m_sequenceId;
 
     private final String m_sequence;
 
     private final Object m_lazyLock = new Object();
 
+    /* All mutable fields are @GuardedBy("m_lazyLock") */
     private Double m_mass;
 
     private Double m_pi;
@@ -24,8 +27,11 @@ public class BioSequenceWrapper implements Serializable {
 
     private final RepositoryIdentifierWrapper m_repositoryIdentifier;
 
-    public BioSequenceWrapper(final String sequence, final SEDbInstanceWrapper seDbInstance,
-	    final String seDbRelease, final RepositoryIdentifierWrapper repositoryIdentifier) {
+    public BioSequenceWrapper(final long sequenceId, final String sequence,
+	    final SEDbInstanceWrapper seDbInstance, final String seDbRelease,
+	    final RepositoryIdentifierWrapper repositoryIdentifier) {
+
+	m_sequenceId = sequenceId;
 
 	if (StringUtils.isEmpty(sequence)) {
 	    throw new IllegalArgumentException("Invalid sequence");
@@ -48,6 +54,20 @@ public class BioSequenceWrapper implements Serializable {
 	m_repositoryIdentifier = repositoryIdentifier;
     }
 
+    /**
+     * Id of the BioSequence Entity.
+     * 
+     * @return Id of the BioSequence Entity in SEQ Db.
+     */
+    public long getSequenceId() {
+	return m_sequenceId;
+    }
+
+    /**
+     * Value of the sequence.
+     * 
+     * @return Value of the sequence (normalized to Upper Case [A-Z] without whitespace chars).
+     */
     public String getSequence() {
 	return m_sequence;
     }

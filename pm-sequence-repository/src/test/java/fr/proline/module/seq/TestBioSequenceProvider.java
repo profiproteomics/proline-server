@@ -34,6 +34,7 @@ public final class TestBioSequenceProvider {
 	values.add("#C#Q9U6Y5");
 	values.add("Human");
 	values.add("###REV###H0QFK6_ECOLI");
+	values.add("K7EIV0_HUMAN");
 	values.add("ZZZ toto");
 
 	final Map<String, List<BioSequenceWrapper>> result = BioSequenceProvider
@@ -69,6 +70,9 @@ public final class TestBioSequenceProvider {
 	buff.append(SEPARATOR);
 
 	buff.append(bioSequenceW.getSEDbInstance().getSourcePath());
+	buff.append(SEPARATOR);
+
+	buff.append(bioSequenceW.getSequenceId());
 	buff.append(SEPARATOR);
 
 	buff.append(bioSequenceW.getSequence());

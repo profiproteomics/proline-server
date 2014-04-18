@@ -92,6 +92,7 @@ public final class BioSequenceProvider {
 	assert (seDbIdent != null) : "buildBioSequenceWrapper() seDbIdent is null";
 
 	final BioSequence bioSequence = seDbIdent.getBioSequence(); // Should not be null
+	final long sequenceId = bioSequence.getId();
 	final String sequence = bioSequence.getSequence(); // Should not be null
 
 	final SEDbInstance seDbInstance = seDbIdent.getSEDbInstance(); // Should not be null
@@ -113,7 +114,7 @@ public final class BioSequenceProvider {
 	    repositoryIdentValue = buildRepositoryIdentifierWrapper(repositoryIdent);
 	}
 
-	return new BioSequenceWrapper(sequence, seDbInstanceW, seDbRelease, repositoryIdentValue);
+	return new BioSequenceWrapper(sequenceId, sequence, seDbInstanceW, seDbRelease, repositoryIdentValue);
     }
 
     private static RepositoryIdentifierWrapper buildRepositoryIdentifierWrapper(
