@@ -393,7 +393,7 @@ class OmssaReadFile(val omxFile: File,
                           // create the Peptide object
                           val peptide = this.getOrCreatePeptide(peptideLocatedPtms, peptideSequence, pepProvider)
                           // add properties
-                          val peptideMatchOmssaProperties = new PeptideMatchOmssaProperties(pValue = peptideMatchPValue)
+                          val peptideMatchOmssaProperties = new PeptideMatchOmssaProperties(pValue = peptideMatchPValue, correctedCharge = peptideCharge)
 //                          val peptideMatchOmssaProperties = new PeptideMatchOmssaProperties(
 //                              expectationValue = peptideMatchExpectValue,
 //                              pValue = peptideMatchPValue
