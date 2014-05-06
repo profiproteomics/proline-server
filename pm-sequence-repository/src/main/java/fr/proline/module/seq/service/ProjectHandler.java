@@ -228,10 +228,9 @@ public class ProjectHandler {
 			final SEDbIdentifierWrapper seDbIdentifierW = new SEDbIdentifierWrapper(value,
 				description);
 
-			if (seDbIdents.add(seDbIdentifierW)) {
-			    ++nIdentifiers;
-			}
+			seDbIdents.add(seDbIdentifierW);
 
+			++nIdentifiers; // Found a valid SEDbIdentifier
 		    }
 
 		} // End if (identValue is valid)
