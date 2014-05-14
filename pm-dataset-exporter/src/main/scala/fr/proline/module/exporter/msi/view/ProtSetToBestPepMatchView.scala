@@ -20,7 +20,8 @@ object ProtSetToBestPepMatchViewFields extends IProtSetToToTypicalProtMatchViewF
   val MISSED_CLEAVAGES = Field("missed_cleavages")
   val RANK = Field("rank")
   val PEPMATCH_SCORE = Field("score")
-  val CALCULATED_MASS = Field("calculated_mass")  
+  val IS_PSM_VALIDATED = Field("is_psm_validated")
+  val CALCULATED_MASS = Field("calculated_mass")
   val CHARGE = Field("charge") 
   val EXPERIMENTAL_MOZ = Field("experimental_moz")
   val DELTA_MOZ = Field("delta_moz")  
@@ -49,7 +50,7 @@ class ProtSetToBestPepMatchView( val rsm: ResultSummary ) extends AbstractProtSe
       for( pepMatch <- pepMatchOpt ) {
         
         val peptide = pepMatch.peptide
-        val experimentalMoz = Option(pepMatch.msQuery).map(_.moz).getOrElse(null)  
+        val experimentalMoz = Option(pepMatch.msQuery).map(_.moz).getOrElse(null)
         val resBefore = if( seqMatch.residueBefore == '\0' ) '-' else seqMatch.residueBefore
         val resAfter = if( seqMatch.residueAfter == '\0' ) '-' else seqMatch.residueAfter
         
@@ -65,6 +66,7 @@ class ProtSetToBestPepMatchView( val rsm: ResultSummary ) extends AbstractProtSe
           fields.MISSED_CLEAVAGES -> pepMatch.missedCleavage,
           fields.RANK -> pepMatch.rank,
           fields.PEPMATCH_SCORE -> pepMatch.score,
+          fields.IS_PSM_VALIDATED -> pepMatch.isValidated,
           fields.CALCULATED_MASS -> peptide.calculatedMass,
           fields.CHARGE -> Option(pepMatch.msQuery).map(_.charge).getOrElse(null),
           fields.EXPERIMENTAL_MOZ -> experimentalMoz,

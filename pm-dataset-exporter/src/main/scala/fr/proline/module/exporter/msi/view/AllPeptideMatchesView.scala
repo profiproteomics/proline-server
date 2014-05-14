@@ -48,7 +48,7 @@ class AllPepMatchesView( override val rsm: ResultSummary ) extends AbstractProtS
       ).map( r => r._1.toString -> r._2 )
     }
     else this.buildRecord(protSetBuildingCtxOpt.get)
-
+    
     // Retrieve some values
     val seqMatch = allPepMatchesBuildingCtx.seqMatch
     val pepMatch = allPepMatchesBuildingCtx.pepMatch
@@ -69,6 +69,7 @@ class AllPepMatchesView( override val rsm: ResultSummary ) extends AbstractProtS
       fields.MISSED_CLEAVAGES -> pepMatch.missedCleavage,
       fields.RANK -> pepMatch.rank,
       fields.PEPMATCH_SCORE -> pepMatch.score,
+      fields.IS_PSM_VALIDATED -> pepMatch.isValidated,
       fields.CALCULATED_MASS -> peptide.calculatedMass, 
       fields.CHARGE -> Option(pepMatch.msQuery).map(_.charge).getOrElse(null),
       fields.EXPERIMENTAL_MOZ -> experimentalMoz,
@@ -116,7 +117,7 @@ class AllPepMatchesView( override val rsm: ResultSummary ) extends AbstractProtS
           val buildingContext = new AllPepMatchesBuildingContext(
             pepMatch = pepMatch,
             protMatch = typicalProtMatch,
-            seqMatch = seqMatch,            
+            seqMatch = seqMatch,
             protSetBuildingCtx = Some(protSetBuildingContext)
           )
           
