@@ -454,7 +454,7 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
     omssaOmxFile.eachSpectrum(onEachSpectrum)
     logger.debug("TEST [" + method + "] OK : First intensity for compound 807 is correct (5533260)")
   }
-  @Test
+//  @Test
   def testDtaInputFile {
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")
@@ -468,7 +468,7 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
     omssaOmxFile.eachSpectrum(onEachSpectrum)
     logger.debug("TEST [" + method + "] OK: parsing is successful")
   }
-  @Test
+//  @Test
   def testPklInputFile {
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")
@@ -679,6 +679,25 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
     }
   }
   @Test
+  def testMissedCleavages {
+    val method = getMethod()
+    logger.debug("TEST [" + method + "] STARTS")
+    val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_miscleavages.omx")
+    // parsing should succeed
+    val rs = omssaOmxFile.getResultSet(false)
+    val enzymeName = rs.msiSearch.get.searchSettings.usedEnzymes.head.name
+    rs.peptideMatches.foreach(pm => {
+      if(pm.peptide.sequence == "YPGFLDVRAAPLLADDNKLR") {
+        logger.debug(pm.peptide.sequence + " has " + pm.missedCleavage + " missed cleavages with enzyme="+enzymeName)
+        assert(pm.missedCleavage == 2)
+      } else if(pm.peptide.sequence == "EGQELGTADCSVPGDPEGLETAK") {
+        logger.debug(pm.peptide.sequence + " has " + pm.missedCleavage + " missed cleavages with enzyme="+enzymeName)
+        assert(pm.missedCleavage == 0)
+      }
+    })
+    logger.debug("TEST [" + method + "] OK: parsing is successful")
+  }
+  @Test
   def testShortFormat {
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")
@@ -694,7 +713,7 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
     logger.debug("TEST [" + method + "] OK: parsing is successful")
   }
 
-  @Test
+//  @Test
   def testUnimodMatch {
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")
@@ -793,7 +812,7 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
   //    logger.debug("TEST [" + method + "] OK: parsing is successful")
   //  }
 
-  @Test
+//  @Test
   def testPtmPosition {
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")

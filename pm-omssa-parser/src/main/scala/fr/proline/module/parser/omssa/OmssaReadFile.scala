@@ -2,6 +2,7 @@ package fr.proline.module.parser.omssa
 
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.{ IProteinProvider, ISeqDatabaseProvider, IPeptideProvider }
+import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.builder.PtmDefinitionBuilder
 import scala.collection.mutable.{ ArrayBuffer, HashMap }
@@ -409,7 +410,7 @@ class OmssaReadFile(val omxFile: File,
                             deltaMoz = (peptideMatchDeltaMoz / peptideCharge) / currentFileMzScale,
                             isDecoy = (proteinMatches.length > 0 && proteinMatches(0).isDecoy), // if the first protein match is tagged as decoy, the peptide match is decoy too
                             peptide = peptide,
-                            missedCleavage = 0, // how to get this ??? count the number of amino acids corresponding to the used enzyme ?
+                            missedCleavage = PeptideMatch.countMissedCleavages(peptideSequence, sequenceMatchResidueBefore, sequenceMatchResidueAfter, msiSearch.searchSettings.usedEnzymes), 
                             fragmentMatchesCount = peptideMatchFragmentMatchesCount,
                             properties = Some(peptideMatchProperties),
                             msQuery = msQueries.get(hitSetNumber).getOrElse(null))
@@ -497,9 +498,10 @@ class OmssaReadFile(val omxFile: File,
    */
   private def parseMSISearch(nbSpectra: Int, seqDbProvider: ISeqDatabaseProvider) = {
     // prepare variables
+    val msiSearchProvider = new SQLMsiSearchProvider(parserContext.getUDSDbConnectionContext(), parserContext.getMSIDbConnectionContext(), parserContext.getPSDbConnectionContext())
     var inputFileType = ""
     var inputFilePath = ""
-    var usedEnzymes = new ArrayBuffer[fr.proline.core.om.model.msi.Enzyme]()
+//    var usedEnzymes = new ArrayBuffer[fr.proline.core.om.model.msi.Enzyme]()
     var maxMissedCleavages = -1
     var msLevel = 1;
     var msVarPtms = new ArrayBuffer[PtmDefinition]()
@@ -533,10 +535,11 @@ class OmssaReadFile(val omxFile: File,
       element => {
         taxonomies += extract(element)
       })
-    searchSettingsReference.filter(element => element.contains("MSEnzymes/*>")).foreach(
-      element => {
-        usedEnzymes += new fr.proline.core.om.model.msi.Enzyme(omssaLoader.enzymes.get(extract(element).toInt).getOrElse(""))
-      })
+    var usedEnzymes = msiSearchProvider.getEnzymesByName(searchSettingsReference.filter(element => element.contains("MSEnzymes/*>")).map(e => omssaLoader.enzymes.get(extract(e).toInt).getOrElse("")).toSeq)
+//    searchSettingsReference.filter(element => element.contains("MSEnzymes/*>")).foreach(
+//      element => {
+//        usedEnzymes += new fr.proline.core.om.model.msi.Enzyme(omssaLoader.enzymes.get(extract(element).toInt).getOrElse(""))
+//      })
 
     val fastaFilePath = if(parseProperties.get(OmssaParseParams.FASTA_FILE_PATH).isDefined) parseProperties.get(OmssaParseParams.FASTA_FILE_PATH).get.toString + File.pathSeparator + dbName else ""
     val usedSeqSDb = seqDbProvider.getSeqDatabase(dbName, fastaFilePath)
@@ -579,7 +582,8 @@ class OmssaReadFile(val omxFile: File,
 //      isDecoy = (!hasTargetResultSet && hasDecoyResultSet),
 //      isDecoy = parseProperties.getOrElse(OmssaParseParams.DECOY_SEARCH, false).toString.toBoolean,
       isDecoy = false,
-      usedEnzymes = usedEnzymes.toArray,
+//      usedEnzymes = usedEnzymes.toArray,
+      usedEnzymes = usedEnzymes,
       variablePtmDefs = msVarPtms.toArray,
       fixedPtmDefs = msFixedPtms.toArray,
       seqDatabases = Array(seqDatabase),

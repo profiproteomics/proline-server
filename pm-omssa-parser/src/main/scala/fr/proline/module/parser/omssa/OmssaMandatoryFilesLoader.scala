@@ -123,7 +123,7 @@ class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val ptmComposition
           case "trypsin-p"     => "Trypsin/P"
           case "argc"          => "Arg-C"
           case "aspn"          => "Asp-N"
-          case "chymotrypsin"  => "Chymotrypsin"
+          case "chymotrypsin-p"=> "Chymotrypsin"
           case "cnbr"          => "CNBr"
           case "tryp-cnbr"     => "CNBr+Trypsin"
           case "formicacid"    => "Formic_acid"
@@ -134,8 +134,7 @@ class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val ptmComposition
           case "semi-tryptic"  => "semiTrypsin"
           case "tryp-chymo"    => "TrypChymo"
           case "no-enzyme"     => "None"
-          case "thermolysin-p" => "thermolysin"
-          case _               => enzyme._2
+          case _               => enzyme._2 // unknown so far : whole-protein, gluc, aspngluc, top-down, chymotrypsin, aspn-de, gluc-de, thermolysin-p
         })
     }
     return correctedEnzymes
