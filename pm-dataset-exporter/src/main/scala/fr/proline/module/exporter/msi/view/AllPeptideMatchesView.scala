@@ -62,8 +62,8 @@ class AllPepMatchesView( override val rsm: ResultSummary ) extends AbstractProtS
     val record = protMatchRecord ++ Map(
       fields.START -> seqMatch.start,
       fields.END -> seqMatch.end,
-      fields.SEQUENCE -> peptide.sequence,
       fields.RESIDUE_BEFORE -> resBefore,
+      fields.SEQUENCE -> peptide.sequence,
       fields.RESIDUE_AFTER -> resAfter,
       fields.MODIFICATIONS -> peptide.readablePtmString,
       fields.MISSED_CLEAVAGES -> pepMatch.missedCleavage,
