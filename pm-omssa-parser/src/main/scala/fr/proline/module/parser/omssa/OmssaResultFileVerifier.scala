@@ -11,6 +11,7 @@ import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.core.om.model.msi.PtmNames
 import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.IonTypes
+import fr.proline.core.om.model.msi.Enzyme
 import fr.proline.core.om.provider.msi.IResultFileVerifier
 import com.typesafe.scalalogging.slf4j.Logging
 import scala.io.Source
@@ -25,7 +26,27 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
   }
   // can be used to verify that the provider handle this kind of file (ex: MSMS search, error tolerant search, n15 search, PMF, ...)  
   def isValid(fileLocation: File, importProperties: Map[String, Any]): Boolean = {
+    // parser should raise an exception if more than one enzyme is used (impossible with omssa)
+    // parser should try to store the enzyme if it is not in the database
     return true
+  }
+  // TODO ABU
+  def getEnzyme(fileLocation: File, importProperties: Map[String, Any]): Array[Enzyme] = {
+    // put enzyme omssa ids into a map
+    val enzymeIdToName = Map[Int, String](0 -> "trypsin", 1 -> "argc", 2 -> "cnbr", 3 -> "chymotrypsin", 4 -> "formicacid", 5 -> "lysc", 6 -> "lysc-p", 7 -> "pepsin-a", 8 -> "tryp-cnbr",
+		9 -> "tryp-chymo", 10 -> "trypsin-p", 11 -> "whole-protein", 12 -> "aspn", 13 -> "gluc", 14 -> "aspngluc", 15 -> "top-down", 16 -> "semi-tryptic", 17 -> "no-enzyme", 18 -> "chymotrypsin-p",
+		19 -> "aspn-de", 20 -> "gluc-de", 21 -> "lysn", 22 -> "thermolysin-p", 23 -> "max", 255 -> "none")
+	// read omssa file and extract the enzyme id
+	val omssaPreloader = new OmssaFilePreloader(fileLocation)
+	// create a fake Enzyme with just its name and return it
+    val enzyme = new Enzyme(id = -1,
+          name = enzymeIdToName.get(omssaPreloader.enzymeId).getOrElse("Unknown"),
+          enzymeCleavages = Array.empty,
+          cleavageRegexp = None,
+          isIndependant = false,
+          isSemiSpecific = false,
+          properties = None)
+    Array(enzyme)
   }
 
   // get the usermods file from the import properties

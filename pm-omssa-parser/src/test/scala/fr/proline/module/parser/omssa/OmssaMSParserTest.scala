@@ -857,4 +857,27 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
     }
   }
 
+  @Test
+  def testUnknwonEnzyme() = {
+    val method = getMethod()
+    logger.debug("TEST [" + method + "] STARTS")
+    ResultFileProviderRegistry.register(new OmssaResultFileProvider())
+    var rfByFormat = Map("omssa.omx" -> Array(new File(Thread.currentThread.getContextClassLoader.getResource("omx_samples/STG_NCSpiste1_OTD_unknownEnzyme.omx").getPath())))
+    val certifier = new ResultFileCertifier(
+      parserContext,
+      resultIdentFilesByFormat = rfByFormat,
+      importProperties = propertiesBuilder.result
+    )
+    logger.debug(" --- run service ")
+    try {
+      val result = certifier.runService()
+    } catch {
+      case e: IllegalArgumentException => logger.debug("TEST [" + method + "] OK: parsing has failed as expected")
+      case e: Exception =>
+        logger.error("TEST [" + method + "] FAILED", e)
+        throw e
+    }
+    logger.debug("TEST [" + method + "] KO: parsing has not failed as expected !!")
+  }
+
 }

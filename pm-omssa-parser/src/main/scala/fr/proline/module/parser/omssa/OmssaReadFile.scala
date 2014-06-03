@@ -79,8 +79,10 @@ class OmssaReadFile(val omxFile: File,
 //  private val mozScaleExtractor = new OmssaMozScaleExtractor(omxFile)
 //  private var currentFileMzScale = mozScaleExtractor.mozScaleValue()
   val omssaPreloader = new OmssaFilePreloader(omxFile)
-  private val currentFileMzScale = omssaPreloader.getMozScaleValue
-  private val nbSequencesInFastaFile = omssaPreloader.getNbSequencesInFastaFile
+  private val currentFileMzScale = omssaPreloader.mozScaleValue
+  private val nbSequencesInFastaFile = omssaPreloader.nbSequencesInFastaFile
+//  private val currentFileMzScale = omssaPreloader.getMozScaleValue
+//  private val nbSequencesInFastaFile = omssaPreloader.getNbSequencesInFastaFile
   //  private val MINUS_LOG_EVALUE_MIN_SCORE = -1
   //  private val MINUS_LOG_EVALUE_MAX_SCORE = 300
   private var _containsTargetProteinMatches: Boolean = false
@@ -92,7 +94,8 @@ class OmssaReadFile(val omxFile: File,
     if(peaklist == null) setPeaklist("")
     peaklist
   }
-  private val proteinSequencesByInternalIds = omssaPreloader.getProteinSequencesByInternalIds
+//  private val proteinSequencesByInternalIds = omssaPreloader.getProteinSequencesByInternalIds
+  private val proteinSequencesByInternalIds = omssaPreloader.proteinInternalIdToSequence
 
   _parseOmxFile()
 
