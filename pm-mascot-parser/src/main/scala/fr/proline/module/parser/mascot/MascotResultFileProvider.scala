@@ -2,18 +2,16 @@ package fr.proline.module.parser.mascot
 
 import java.io.BufferedReader
 import java.io.ByteArrayInputStream
-
 import java.io.File
 import java.io.FileReader
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IResultFileProvider
 import fr.proline.core.om.provider.msi.IResultFileVerifier
 import fr.proline.unimod.UnimodUnmarshaller
 import fr.proline.util.StringUtils
+import scala.collection.mutable.ArrayBuffer
 
 object MascotResultFileProviderType {
   final val fileType: String = "mascot.dat"
@@ -182,5 +180,26 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
     }
     bfr.close
     section
+  }
+  
+  // TODO ABU
+  def getEnzyme(fileLocation: File, importProperties: Map[String, Any]): Array[Enzyme] = {
+    
+    val mascotEnzymes = MascotEnzymeParser.getEnzymeDefinitions(fileLocation)
+    val enzymes = new ArrayBuffer[Enzyme]
+    mascotEnzymes.foreach(e => {
+      val enzymeCleavages = new ArrayBuffer[fr.proline.core.om.model.msi.EnzymeCleavage]
+      e.cleavages.foreach(ec => {
+        enzymeCleavages += new fr.proline.core.om.model.msi.EnzymeCleavage(id = -1, residues = ec.residues, restrictiveResidues = ec.restrict, site = if(ec.isNterm) "N-term" else "C-term")
+      })
+      enzymes += new Enzyme(id = -1,
+          name = e.name,
+          enzymeCleavages = enzymeCleavages.toArray,
+          cleavageRegexp = None,
+          isIndependant = e.independent,
+          isSemiSpecific = e.semiSpecific,
+          properties = None)
+    })
+    enzymes.toArray
   }
 }

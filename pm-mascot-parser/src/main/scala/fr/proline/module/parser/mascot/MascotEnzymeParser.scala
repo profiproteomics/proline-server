@@ -31,10 +31,17 @@ object MascotEnzymeParser {
     
     val enzymeDefByName = new collection.mutable.HashMap[String,EnzymeDefinition]()
     var enzymeName = ""      
+    // mascot dat files have sections, enzyme config file do not
+    // considering sections allows this method to be able to read both files
+    var currentSection = ""
+    val r = """^Content-Type:.+name=\"(.+)\"""".r
     
+    // TODO: quit reading after enzyme section
     Source.fromInputStream(inputStream).eachLine( line =>
-      
-      if( line != "*" ) {
+      if( line =~ "^Content-Type:.+" ) {
+        r.findAllIn(line).matchData.foreach(m => currentSection = m.group(1))
+      }
+      else if( line != "*" && (currentSection == "" || currentSection == "enzyme") ) {
         // Create new enzyme definition for each found title
         if( line =~ "^Title:.+" ) {
           enzymeName = _parseLine(line)._3
@@ -42,7 +49,6 @@ object MascotEnzymeParser {
         }
         // Parse enzyme definition attributes
         else if( line =~ ".+:.+" || line =~ "[CN]term.*" ) {
-          
           for( enzymeDef <- enzymeDefByName.get(enzymeName) ) {
             //enzymeDef = { cleavages = () } if !defined enzymeDef     
             

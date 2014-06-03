@@ -179,4 +179,25 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTest_ {
     psEM.getTransaction().commit()
   }
 
+  @Test
+  def testRFCertifierWithUnknwonEnzyme() = {
+    val (executionContext, rsProvider) = buildJPAContext()
+    ResultFileProviderRegistry.register(new MascotResultFileProvider())
+    val unkownEnzyme_datFileName = "/dat_samples/F159835_unknown_enzyme.dat"
+    logger.debug(" --- Get File " + unkownEnzyme_datFileName)
+    var datFile: File = new File(RFCertifierH2CTDTest.this.getClass.getResource(unkownEnzyme_datFileName).toURI)
+    var rfByFormat = Map("mascot.dat" -> Array(datFile))
+
+    val certifier = new ResultFileCertifier(
+      executionContext,
+      resultIdentFilesByFormat = rfByFormat,
+      importProperties = Map.empty[String, Any])
+
+    logger.debug(" --- run service ")
+    val result = certifier.runService()
+
+    Assert.assertTrue(result)
+    executionContext.closeAll()
+  }
+
 }
