@@ -21,23 +21,15 @@ object FragmentTable {
   def fragmentIonTableAsString(_table: Array[TheoreticalFragmentSeries]): String = {
     var text = "Fragment ion table:\n"
     _table.foreach(serie => {
-      text += "Serie " + serie.ionSeries + " ("
-      for (mass <- serie.masses) text += mass + ";"
-      text += ")\n"
+      text += "Serie " + serie.fragSeries + "\n"
+      for (mass <- serie.masses) text += "\t" + mass + "\n"
+      text += "\n"
     })
     text
   }
 }
 
-//case class TwoDimensionsMap[K1, K2, V]() {
-//  val wrapped = new scala.collection.mutable.HashMap[(K1, K2), V]
-//  def update(k1: K1, k2: K2, v: V) = wrapped.put((k1, k2), v)
-//  def apply(k1: K1, k2: K2) = wrapped((k1, k2))
-//}
-
 class FragmentIonTable(peptideSequence: String,
-//                       proteinAccessionNumbers: Array[String], 
-//                       ptmDefinitions: Array[PtmDefinition],
                        modificationMatches: Array[FragmentModificationMatch],
                        currentFragmentIonTypes: FragmentIons,
                        neutralLosses: NeutralLossesMap) extends Logging {
@@ -45,12 +37,10 @@ class FragmentIonTable(peptideSequence: String,
   // Set the current peptide
   // the accession numbers are useless, they where just used for the Peptide instanciation
   // we can use an empty list instead
-//  private val proteins: ArrayList[String] = new ArrayList(asJavaList(proteinAccessionNumbers))
   private val proteins: ArrayList[String] = new ArrayList()
   proteins.add("")
   private val ptms: ArrayList[ModificationMatch] = new ArrayList[ModificationMatch]()
   modificationMatches.foreach(ptm => ptms.add(ptm.toCompomicsObject))
-//  PTMsManager.init(ptmDefinitions)
   private val currentPeptide: Peptide = new Peptide(peptideSequence, proteins, ptms)
 
   // the following object might be needed in FragmentMatchManager.scala to retreive the mass for a neutral loss in a PTM
@@ -68,7 +58,6 @@ class FragmentIonTable(peptideSequence: String,
     // add the theoretical masses to the table
     for (i <- 0 until fragmentIons.size()) {
       val ion = fragmentIons.get(i)
-      // @TODO: implement neutral losses
       if (ion.getType() == Ion.IonType.PEPTIDE_FRAGMENT_ION && ion.getNeutralLosses().isEmpty()) {
         ion match {
           case fragmentIon: PeptideFragmentIon => {
@@ -101,7 +90,13 @@ class FragmentIonTable(peptideSequence: String,
     // convert the table to an array of Proline TheoreticalFragmentSeries objects
     val fragmentIonTable = new ArrayBuffer[TheoreticalFragmentSeries]
     try {
-      for (item <- _table) fragmentIonTable += new TheoreticalFragmentSeries(item._1, item._2.toArray)
+      for(serie <- _table.keys.toSeq.sorted) {
+        if(serie.startsWith("x") || serie.startsWith("y") || serie.startsWith("z")) {
+          fragmentIonTable += new TheoreticalFragmentSeries(serie, _table.get(serie).get.reverse.toArray)
+        } else {
+          fragmentIonTable += new TheoreticalFragmentSeries(serie, _table.get(serie).get.toArray)
+        }
+      }
     } catch {
       case e: Exception => logger.warn("The fragment ion table could not be generated, default value is 'new ArrayBuffer[TheoreticalFragmentSeries]'")
     }
@@ -117,25 +112,15 @@ class FragmentIonTable(peptideSequence: String,
   private def addSeries(_table: HashMap[String, ArrayBuffer[Double]], seriePrefix: String, charge: Int, mz: Double, fragmentIon: PeptideFragmentIon) {
     var serie = seriePrefix
     addFragmentMz(_table, serie, mz)
-    // neutralLossTable.update(serie, fragmentIon.getNumber(), sumNeutralLossMasses(fragmentIon))
     if (charge > 1) {
       serie += "+" // "+" is not indicated for singly charged ion (implicit)
       // for each charge in the serie (ie. b, b++, b+++), add the corresponding moz
       for (c <- 2 to charge) {
         serie += "+"
         addFragmentMz(_table, serie, mz / c) // divide the mass by the charge to get the moz
-        // neutralLossTable.update(serie, fragmentIon.getNumber(), sumNeutralLossMasses(fragmentIon))
       }
     }
   }
-
-  //  private def sumNeutralLossMasses(fragmentIon: PeptideFragmentIon): Double = {
-  //    var mass: Double = 0
-  //    for(i <- 0 until fragmentIon.getNeutralLosses().size()) {
-  //      mass += fragmentIon.getNeutralLosses().get(i).mass
-  //    }
-  //    mass
-  //  }
 
   override def toString: String = FragmentTable.fragmentIonTableAsString(table)
 

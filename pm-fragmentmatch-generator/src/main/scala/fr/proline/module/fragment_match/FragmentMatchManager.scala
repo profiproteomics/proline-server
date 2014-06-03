@@ -9,7 +9,6 @@ import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.om.model.msi.TheoreticalFragmentSeries
 import com.typesafe.scalalogging.slf4j.Logging
 
-//class FragmentMatchManager(fragmentIonTable: HashMap[String, ArrayBuffer[Double]], neutralLossTable: TwoDimensionsMap[String, Int, Double]) {
 class FragmentMatchManager extends Logging {
 
   private val fragmentMatches = new ArrayBuffer[FragmentMatch]

@@ -22,6 +22,7 @@ class FragmentMatchGeneratorTest extends Logging {
 
   @Test
   def test1() {
+    logger.debug("Start test1")
     try {
       // prepare the information for the creation of the objects
       val mozList: Array[Double] = Array(225.762, 256.918, 304.042, 336.552, 344.929, 348.653, 354.928, 357.59, 374.053, 391.13, 393.579, 397.679, 402.552, 411.001, 418.952, 430.236, 437.177, 442.052, 454.552, 461.174, 470.927, 482.097, 487.634, 493.053, 502.778, 506.353, 507.802, 511.428, 511.922, 513.222, 517.122, 518.673, 521.537, 523.552, 525.554, 526.165, 530.418, 535.845, 539.172, 541.179, 544.099, 552.148, 555.18, 557.218, 559.156, 559.6, 561.428, 562.699, 564.408, 593.075, 595.752, 599.553, 604.43, 611.744, 621.303, 631.177, 643.427, 655.303, 677.053, 682.46, 688.071, 693.552, 703.6, 704.038, 707.802, 713.177, 725.575, 726.901, 747.181, 763.677, 765.183, 770.302, 783.302, 791.185, 791.691, 796.677, 798.307, 805.178, 833.052, 844.543, 860.181, 863.426, 889.053, 893.303, 1018.179, 1020.178, 1097.305)
@@ -37,15 +38,9 @@ class FragmentMatchGeneratorTest extends Logging {
         instrumentConfigId = 7,
         peaklistId = 1)
       val peptideSequence = "APGFGDNR"
-//      val proteinAccessionNumbers = Array("CH60_HUMAN")
       val msQueryId = 11
       val peptideMatchRank = 1
-//      var ptms: ArrayBuffer[PtmDefinition] = new ArrayBuffer[PtmDefinition]()
-      // TODO add all the modifications (it should contain all the ptms, not just one !!)
-//      ptms += PTMFakeProvider.getPtmDefinition("Oxydation of M", 'M', PtmLocation.ANYWHERE).get
       val modificationMatches: Array[FragmentModificationMatch] = Array( // the name of a FragmentModificationMatch must match a ptm name in 'ptms: ArrayBuffer[PtmDefinition]' !
-      //        new FragmentModificationMatch("deamidation of N and Q", true, 3),
-      //        new FragmentModificationMatch("deamidation of N and Q", true, 7)
       )
       val currentFragmentIonTypes = new FragmentIons(ionTypeB = true, ionTypeY = true, chargeForIonsB = 2, chargeForIonsY = 2)
       val neutralLosses: NeutralLosses = new NeutralLosses
@@ -54,16 +49,11 @@ class FragmentMatchGeneratorTest extends Logging {
 
       // create the fragment ion table
       val table = new FragmentIonTable(	peptideSequence,
-//    		  							proteinAccessionNumbers,
-//								        ptms.toArray,
 								        modificationMatches,
 								        currentFragmentIonTypes, // The list of currently selected fragment ion types
-//								        neutralLosses.getNeutralLossMap) // The list of the currently selected neutral loss types
 								        neutralLosses.get) // The list of the currently selected neutral loss types
-//								        2)
 
       // create the fragment matches
-//      val fragmentMatches = new FragmentMatchManager(table.get, /*table.getNeutralLossTable,*/ spectrum)
       val fragmentMatches = new FragmentMatchManager
       fragmentMatches.add("b", 1, 72.0444)
       fragmentMatches.add("b", 2, 169.0972)
@@ -71,7 +61,6 @@ class FragmentMatchGeneratorTest extends Logging {
       fragmentMatches.add("b0", 6, 527.2249)
 
       // create the spectrum match with the previous information
-//      val spectrumMatch = new SpectrumMatch(msQueryId, peptideMatchRank, table.get, fragmentMatches.get)
       val spectrumMatch = new SpectrumMatch(msQueryId, peptideMatchRank, table.get, fragmentMatches.get(table.get, /*table.getNeutralLossTable,*/ spectrum))
 
       // print the content of the spectrum match
@@ -88,6 +77,7 @@ class FragmentMatchGeneratorTest extends Logging {
 
   @Test
   def test2() {
+    logger.debug("Start test2")
     try {
       // prepare the information for the creation of the objects
       val mozList: Array[Double] = Array(225.762, 256.918, 304.042, 336.552, 344.929, 348.653, 354.928, 357.59, 374.053, 391.13, 393.579, 397.679, 402.552, 411.001, 418.952, 430.236, 437.177, 442.052, 454.552, 461.174, 470.927, 482.097, 487.634, 493.053, 502.778, 506.353, 507.802, 511.428, 511.922, 513.222, 517.122, 518.673, 521.537, 523.552, 525.554, 526.165, 530.418, 535.845, 539.172, 541.179, 544.099, 552.148, 555.18, 557.218, 559.156, 559.6, 561.428, 562.699, 564.408, 593.075, 595.752, 599.553, 604.43, 611.744, 621.303, 631.177, 643.427, 655.303, 677.053, 682.46, 688.071, 693.552, 703.6, 704.038, 707.802, 713.177, 725.575, 726.901, 747.181, 763.677, 765.183, 770.302, 783.302, 791.185, 791.691, 796.677, 798.307, 805.178, 833.052, 844.543, 860.181, 863.426, 889.053, 893.303, 1018.179, 1020.178, 1097.305)
@@ -103,15 +93,9 @@ class FragmentMatchGeneratorTest extends Logging {
         instrumentConfigId = 7,
         peaklistId = 1)
       val peptideSequence = "APGFGDNR"
-//      val proteinAccessionNumbers: Array[String] = Array("")
       val msQueryId = 11
       val peptideMatchRank = 1
-//      var ptms: ArrayBuffer[PtmDefinition] = new ArrayBuffer[PtmDefinition]()
-      // TODO add all the modifications (it should contain all the ptms, not just one !!)
-//      ptms += PTMFakeProvider.getPtmDefinition("Oxydation of M", 'M', PtmLocation.ANYWHERE).get
       val modificationMatches: Array[FragmentModificationMatch] = Array( // the name of a FragmentModificationMatch must match a ptm name in 'ptms: ArrayBuffer[PtmDefinition]' !
-      //        new FragmentModificationMatch("deamidation of N and Q", true, 3),
-      //        new FragmentModificationMatch("deamidation of N and Q", true, 7)
       )
       val currentFragmentIonTypes = new FragmentIons(ionTypeB = true, ionTypeY = true, chargeForIonsB = 2, chargeForIonsY = 2)
       val neutralLosses: NeutralLosses = new NeutralLosses
@@ -120,16 +104,11 @@ class FragmentMatchGeneratorTest extends Logging {
 
       // create the fragment ion table
       val table = new FragmentIonTable(	peptideSequence,
-//    		  							proteinAccessionNumbers,
-//								        ptms.toArray,
 								        modificationMatches,
 								        currentFragmentIonTypes, // The list of currently selected fragment ion types
-//								        neutralLosses.getNeutralLossMap) // The list of the currently selected neutral loss types
 								        neutralLosses.get) // The list of the currently selected neutral loss types
-//								        2)
 
       // create the fragment matches
-//      val fragmentMatches = new FragmentMatchManager(table.get, /*table.getNeutralLossTable,*/ spectrum)
       val fragmentMatches = new FragmentMatchManager
       fragmentMatches.add("b", 1, 72.0444)
       fragmentMatches.add("b", 2, 169.0972)
@@ -137,7 +116,6 @@ class FragmentMatchGeneratorTest extends Logging {
       fragmentMatches.add("b0", 6, 527.2249)
 
       // create the spectrum match with the previous information
-//      val spectrumMatch = new SpectrumMatch(msQueryId, peptideMatchRank, table.get, fragmentMatches.get)
       val spectrumMatch = new SpectrumMatch(msQueryId, peptideMatchRank, table.get, fragmentMatches.get(table.get, /*table.getNeutralLossTable,*/ spectrum))
 
       // print the content of the spectrum match
