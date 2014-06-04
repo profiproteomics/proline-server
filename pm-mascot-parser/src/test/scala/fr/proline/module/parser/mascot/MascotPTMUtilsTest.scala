@@ -7,23 +7,29 @@ import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.module.parser.provider.fake.EmptyPTMProvider
 import fr.proline.module.parser.provider.fake.PeptideFakeProvider
 import fr.proline.module.parser.provider.fake.PTMFakeProvider
 import fr.proline.core.om.model.msi.PtmLocation
+import scala.collection.mutable.HashMap
+import org.junit.After
 
 @Test
 class MascotPTMUtilsTest extends Logging {
 
+
   @Before
   def init() {
     logger.debug("Start Logging MascotPTMUtilsTest")
-
     MascotPTMUtils.ptmDefsByMascotModName.clear()
   }
 
+  @After
+  def tearDown() {
+    MascotPTMUtils.ptmDefsByMascotModName.clear()
+  }
+  
   @Test
   def testParseSimplePTM() = {
     val ptmToParse = "Oxidation (M)"
