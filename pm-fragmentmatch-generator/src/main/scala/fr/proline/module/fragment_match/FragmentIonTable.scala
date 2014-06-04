@@ -21,9 +21,9 @@ object FragmentTable {
   def fragmentIonTableAsString(_table: Array[TheoreticalFragmentSeries]): String = {
     var text = "Fragment ion table:\n"
     _table.foreach(serie => {
-      text += "Serie " + serie.fragSeries + "\n"
-      for (mass <- serie.masses) text += "\t" + mass + "\n"
-      text += "\n"
+      text += "Serie " + serie.ionSeries + List.fill(serie.charge)("+").mkString + " ("
+      text += serie.masses.map("%1.4f".format(_)).mkString(";")
+      text += ")\n"
     })
     text
   }
@@ -117,7 +117,7 @@ class FragmentIonTable(peptideSequence: String,
       // for each charge in the serie (ie. b, b++, b+++), add the corresponding moz
       for (c <- 2 to charge) {
         serie += "+"
-        addFragmentMz(_table, serie, mz / c) // divide the mass by the charge to get the moz
+        addFragmentMz(_table, serie, (mz + 1 * ElementaryIon.proton.getTheoreticMass()) / c) // divide the mass by the charge to get the moz
       }
     }
   }
