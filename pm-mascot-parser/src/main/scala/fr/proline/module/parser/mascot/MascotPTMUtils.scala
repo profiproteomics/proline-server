@@ -14,6 +14,10 @@ import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.core.om.model.msi.IonTypes
 import fr.proline.core.om.provider.msi.IPTMProvider
 
+// TODO conception a revoir : cet objet est un singleton qui garde un etat des resultats de recherche alors
+// que ces recherches sont faites dans avec IPTMProvider qui est passe en parametre, donc susceptible de changer
+// d'un appel a l'autre. Cela peut mener a des incoherences.
+
 object MascotPTMUtils extends Logging {
 
   val accessedPtms = new ArrayBuffer[PtmDefinition]

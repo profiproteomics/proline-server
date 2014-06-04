@@ -100,6 +100,16 @@ class MascotDataParser(
             pepMatchMascotProps.setReadableVarMods(Some(readableVarMods))
             pepMatchMascotProps.setVarModsPositions(Some(currentMSPep.getVarModsStr))
           }
+          var nlString = currentMSPep.getPrimaryNlStr()
+          if (!nlString.isEmpty() && mascotResFile.getMascotVer.startsWith("2.2")) {
+            // swap 1 and 2 indices
+            nlString = nlString.replace('2', 'X').replace('1', '2').replace('X', '1')
+          }
+          if (!nlString.isEmpty()) {
+            pepMatchMascotProps.setNlString(Some(nlString))
+          }
+          pepMatchMascotProps.setUsedPeaksCount(Some(currentMSPep.getPeaksUsedFromIons1()))
+          
           val ambiguityStr = currentMSPep.getAmbiguityString()
           if (ambiguityStr.length > 0) {
             pepMatchMascotProps.setAmbiguityString(Some(ambiguityStr))

@@ -357,7 +357,7 @@ class MascotResultFile(
     mascotResFile.delete()
     mascotSearchParams.delete()
     if (_isTargetSummaryLoaded) targetPepSummary.get.delete
-    if (_isDecoySummaryLoaded) decoyPepSummary.get.delete
+    if (_isDecoySummaryLoaded && decoyPepSummary.isDefined) decoyPepSummary.get.delete
   }
 
   /**
@@ -486,7 +486,7 @@ class MascotResultFile(
       val spectrumTitle = msq.asInstanceOf[Ms2Query].spectrumTitle
       val instConfigId = if (this.instrumentConfig.isDefined) this.instrumentConfig.get.id else 0
 
-      val specTitleFieldMapOpt = this.peaklistSoftware.get.specTitleParsingRule.map(_.parseTitle(spectrumTitle))
+      val specTitleFieldMapOpt = if (this.peaklistSoftware.isDefined) this.peaklistSoftware.get.specTitleParsingRule.map(_.parseTitle(spectrumTitle)) else None
       val specTitleFieldMap = specTitleFieldMapOpt.getOrElse(Map.empty[SpectrumTitleFields.Value, String])
 
       // TODO: put in primitives utils
