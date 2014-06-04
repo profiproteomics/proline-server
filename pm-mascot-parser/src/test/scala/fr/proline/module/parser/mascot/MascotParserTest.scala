@@ -2,7 +2,6 @@ package fr.proline.module.parser.mascot
 
 import java.io.File
 import java.util.Calendar
-
 import org.hamcrest.CoreMatchers
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -12,9 +11,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi.PeptideMatch
@@ -26,6 +23,7 @@ import fr.proline.module.parser.provider.fake.ProteinFakeProvider
 import fr.proline.module.parser.provider.fake.SeqDbFakeProvider
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.repository.util.DatabaseTestCase
+import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 
 @Test
 class MascotParserTest extends Logging { // }extends DatabaseTestCase {
@@ -53,7 +51,7 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
     if (psDBTestCase != null) {
       psDBTestCase.tearDown()
     }
-
+    SQLPeptideProvider.clear()
   }
 
   @Test
