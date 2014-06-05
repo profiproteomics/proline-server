@@ -562,7 +562,7 @@ public final class BioSequenceRetriever {
 
 			    final Map.Entry<String, File> floorEntry = sortedFiles.floorEntry(release);
 			    if (floorEntry != null) {
-				result = ceilingEntry.getValue();
+				result = floorEntry.getValue();
 			    }
 
 			}
