@@ -67,23 +67,22 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
 
   def getSpectrumMatch(mascotPep: ms_peptide): SpectrumMatch = { //, spectrum: Spectrum
 
+    var start = System.currentTimeMillis()
+    
     val pepSequence = mascotPep.getPeptideStr
     val mascotQueryId = mascotPep.getQuery
 
-    //    this.logger.debug("generate fragments and matches for query="+ mascotQueryId +" and seq="+pepSequence )
     val usedPeaksCount = mascotPep.getPeaksUsedFromIons1() // was numUsed    
 
     val (ms2ErrorTol, ms2ErrorTolUnitStr) = (mascotSearchParams.getITOL, mascotSearchParams.getITOLU)
     val ms2ErrorTolUnit = MassTolUnit.withName(ms2ErrorTolUnitStr)
-    //val ms2ErrorTolInDa = calcMozTolInDalton( )
-
+    
     // To find the matching peaks we need to have them in the correct order
     // Mascot store peaks in a custom order so we have to parse again the data
     val ionsStr = mascotResFile.getQuerySectionValueStr(mascotQueryId, "Ions1")
     val allPeaks = this.parseMascotQueryIonsStr(ionsStr)
-
     var usedPeaks = new ArrayBuffer[Peak](usedPeaksCount + 2)
-
+    
     // Fill usedPeaks with firstSortedPeaks data  
     usedPeaks += Peak(0.0, 0f)
     usedPeaks ++= allPeaks.take(usedPeaksCount).sortBy(_.moz)
@@ -93,44 +92,42 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
     //intensities.put(m.get(0), intensities.get(m.get(1)))
     //intensities.put(m.get(m.size() - 1), intensities.get(m.get(m.size() - 2)))
 
-    // Retrieve full spectrum peaks
-    val allPeaksSorted = allPeaks.sortBy(_.moz)
-    //val allMozList = spectrum.mozList.get
-    //val allIntList = spectrum.intensityList.get
-
-    // Define some vars
-    var prevPeak: Peak = null
-    var j = 0
-
-    // Iterate over matching peaks
-    for (i <- 0 until usedPeaks.length) {
-      val peak = usedPeaks(i)
-      var intThresh = peak.intensity
-
-      // TODO: explain this computation
-      if ((i > 0) && (i < (usedPeaks.length - 1)) && (prevPeak.intensity < peak.intensity)) {
-        intThresh = prevPeak.intensity
-      }
-
-      while ((j < allPeaksSorted.length) && (allPeaksSorted(j).moz < peak.moz)) {
-        val newPeak = allPeaksSorted(j)
-        if (newPeak.intensity >= intThresh) {
-          usedPeaks += newPeak
-        }
-        j += 1
-      }
-      j += 1
-
-      prevPeak = peak
-    }
-
-    // Sort peaks again because some peaks have been added since the first sorting
-    usedPeaks = usedPeaks.sortBy(_.moz)
-    //val mozList = sortedPeaks.map(_._1).sortBy(_.asInstanceOf[Double])    
-
+//    // Retrieve full spectrum peaks
+//    val allPeaksSorted = allPeaks.sortBy(_.moz)
+//
+//    // Define some vars
+//    var prevPeak: Peak = null
+//    var j = 0
+//
+//    // Iterate over matching peaks
+//    for (i <- 0 until usedPeaks.length) {
+//      val peak = usedPeaks(i)
+//      var intThresh = peak.intensity
+//
+//      // TODO: explain this computation
+//      if ((i > 0) && (i < (usedPeaks.length - 1)) && (prevPeak.intensity < peak.intensity)) {
+//        intThresh = prevPeak.intensity
+//      }
+//
+//      while ((j < allPeaksSorted.length) && (allPeaksSorted(j).moz < peak.moz)) {
+//        val newPeak = allPeaksSorted(j)
+//        if (newPeak.intensity >= intThresh) {
+//          usedPeaks += newPeak
+//        }
+//        j += 1
+//      }
+//      j += 1
+//
+//      prevPeak = peak
+//    }
+//
+//  
+//    // Sort peaks again because some peaks have been added since the first sorting
+//    usedPeaks = usedPeaks.sortBy(_.moz)
+    
     val theoFragments = this._getTheoreticalFragments(mascotPep)
     val fragMatches = new ArrayBuffer[FragmentMatch]()
-
+    
     for (k <- 0 until theoFragments.getNumberOfFragments) {
 
       val fragment = theoFragments.getFragmentByNumber(k)
@@ -149,7 +146,7 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
             val fragType = if (fragment.isRegular) None
             else if (fragment.isInternal) Some(FragmentMatchType.INTERNAL.toString)
             else Some(FragmentMatchType.IMMONIUM.toString)
-
+            
             val fragMatch = new FragmentMatch(
               label = fragment.getLabel,
               //ionSeries = fragment.getSeriesName,
@@ -175,7 +172,7 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
 
       if (bestMatch != null) fragMatches += bestMatch
     }
-
+    
     val fragmentationTable = this._buildFragmentationTable(pepSequence, theoFragments)
     
     // --- Free memory --- //
@@ -186,6 +183,8 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
       }
       theoFragments.delete()
     }
+
+   
 
     new SpectrumMatch(mascotQueryId, mascotPep.getRank, fragmentationTable, fragMatches.toArray)
     /*new PeptideMatchDetail(
@@ -204,10 +203,11 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
     val peaks = mascotQueryPeaksStr.split(",")
     //val firstPeaks = if( maxNbPeaks > 0 ) peaks.take(maxNbPeaks) else peaks
 
-    peaks.map { peakAsStr =>
+    val result = peaks.map { peakAsStr =>
       val values = peakAsStr.split(":")
       Peak(values(0).toDouble, values(1).toFloat)
     }
+    result
   }
 
   private def _getTheoreticalFragments(ms_pep: ms_peptide): ms_fragmentvector = {
@@ -218,8 +218,9 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
     val hasMod = varModString matches "0+"
     var nlString = ms_pep.getPrimaryNlStr()
     
-    //    this.logger.debug("mod String = "+ varModString)
-    //    this.logger.debug("nl String = "+ nlString)
+//    	this.logger.debug("seq = "+ms_pep.getPeptideStr())
+//        this.logger.debug("mod String = "+ varModString)
+//        this.logger.debug("nl String = "+ nlString)
 
     // Test if empty nlString can influence the call to calcFragment ?? NO
     val hasNL = if (nlString.isEmpty) {
@@ -231,7 +232,7 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
     } else true
 
     if (mascotVersion.startsWith("2.2")) {
-
+      // swap 1 and 2 indices
       nlString = nlString.replace('2', 'X').replace('1', '2').replace('X', '1')
       ms_pep.setPrimaryNlStr(nlString)
 
@@ -339,7 +340,7 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
                   val newFragment = new ms_fragment(
                     frag.getSeriesName,
                     frag.getMass - (delta / frag.getCharge.toDouble),
-                    scala.math.round(modificationNLVector.get(nlIdx) / frag.getCharge.toDouble),
+                    scala.math.round(modCount*modificationNLVector.get(nlIdx)),
                     frag.getColumn,
                     frag.getCharge
                   )
