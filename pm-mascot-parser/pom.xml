@@ -74,7 +74,11 @@
       <artifactId>Proline-OMP</artifactId>
       <version>${core.version}</version>
     </dependency>
-
+	<dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>PM-FragmentMatchGenerator</artifactId>
+      <version>0.0.4-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    </dependency>
     <!-- Tests -->
     <dependency>
       <groupId>junit</groupId>
