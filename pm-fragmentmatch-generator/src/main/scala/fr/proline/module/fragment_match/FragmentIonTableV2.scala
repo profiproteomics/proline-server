@@ -209,10 +209,10 @@ class FragmentIonTableV2(peptide: Peptide,
         val includedPtmsByDefinition = includedPtms.groupBy(_.definition)
         for (ptmDef <- includedPtmsByDefinition.keys) {
           for (nl <- ptmDef.neutralLosses) {
-            if ((nl.monoMass - fragment.neutralLoss).abs > MathUtils.EPSILON_FLOAT) {
+            if ((includedPtmsByDefinition(ptmDef).size*nl.monoMass - fragment.neutralLoss).abs > MathUtils.EPSILON_FLOAT) {
               // Add a new fragment 
               addFragment(_table, seriesName, new Fragment( 
-            		  moz = fragment.moz - includedPtmsByDefinition(ptmDef).size*(nl.monoMass - fragment.neutralLoss)/fragment.charge.toDouble , 
+            		  moz = fragment.moz - (includedPtmsByDefinition(ptmDef).size*nl.monoMass - fragment.neutralLoss)/fragment.charge.toDouble , 
             		  position = fragment.position, 
             		  neutralLoss = includedPtmsByDefinition(ptmDef).size*nl.monoMass,
             		  fragmentType = fragment.fragmentType,
