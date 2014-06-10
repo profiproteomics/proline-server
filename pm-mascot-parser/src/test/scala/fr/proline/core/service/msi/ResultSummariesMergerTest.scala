@@ -45,7 +45,7 @@ class ResultSummariesMergerTest extends AbstractRFImporterTest_ with Logging {
     try {
       logger.debug("Importing Result Files ...")
 
-      val rs2Id = importDatFile(sqlExecutionContext, "/dat_samples/STR_F122817_Mascot_v2.3.dat", """sp\|REV_\S+""")
+      val rs2Id = importDatFile(sqlExecutionContext, "/dat_samples/STR_F063442_Mascot_v2.2.dat", """REV_\S+""")
 
       val rs1Id = importDatFile(sqlExecutionContext, "/dat_samples/STR_F136482_CTD.dat", """sp\|REV_\S+""")
 
