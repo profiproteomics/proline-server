@@ -291,7 +291,7 @@ class MascotDataParser(
         } // End current Peptide match at least one Protein.
 
       } finally {
-        /* Free memory in finally block reverse order */
+        /* Free memory in finally block (reverse order) */
 
         if (protAcc != null) {
           try {

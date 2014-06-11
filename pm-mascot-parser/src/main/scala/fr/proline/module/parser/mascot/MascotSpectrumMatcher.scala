@@ -129,9 +129,10 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
 
     var fragmentationTable: Array[TheoreticalFragmentSeries] = null
 
-    val theoFragments = _getTheoreticalFragments(mascotPep)
+    var theoFragments: ms_fragmentvector = null
 
     try {
+      theoFragments = _getTheoreticalFragments(mascotPep)
 
       for (k <- 0 until theoFragments.getNumberOfFragments) {
 
@@ -236,10 +237,10 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
     /* Returned value DO NOT delete ! */
     val all_fragments = new ms_fragmentvector() // Keep a list of fragments from all series
 
-    /* MS Objetcs to delete */
-    var new_ms_pep: ms_peptide = null
+    /* Allocated MS objetcs to delete */
     val mascotErrs = new ms_errs() // mascotAAHelper.getErrorHandler()
     val fragments = new ms_fragmentvector()
+    var new_ms_pep: ms_peptide = null
 
     try {
       val mascotAAHelper = getMascotAAHelper(ms_pep, ptmHelper)
@@ -383,9 +384,9 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
     } finally {
 
       if (FREE_MEMORY) {
-        /* Free memory in finally block reverse order */
+        /* Free memory in finally block (reverse order) */
 
-        if ((new_ms_pep != null) && (new_ms_pep != ms_pep)) {
+        if ((new_ms_pep != null) && (new_ms_pep ne ms_pep)) {
           try {
             new_ms_pep.delete() // delete only newly created peptides
           } catch {
@@ -398,7 +399,7 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
           try {
             fragments.getFragmentByNumber(i).delete()
           } catch {
-            case t: Throwable => logger.error("Error deleting fragments #" + i, t)
+            case t: Throwable => logger.error("Error deleting fragment #" + i, t)
           }
         }
 
@@ -468,7 +469,7 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
     } finally {
       // Free memory
       if (FREE_MEMORY) {
-        /* Free memory in finally block reverse order */
+        /* Free memory in finally block (reverse order) */
 
         try {
           whichNL.clear()
@@ -635,6 +636,7 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
     aaHelpersByQuantComp(msQuantComp.getOrElse(DEFAULT_QUANT_COMP_KEY))
   }
 
+  // FIXME LMN created ms_aahelper are never deleted ?
   private def _buildMascotAAHelper(ms_pep: ms_peptide, ptmHelper: MascotPTMHelper, masses: ms_masses): ms_aahelper = {
 
     val aahelper = new ms_aahelper()
