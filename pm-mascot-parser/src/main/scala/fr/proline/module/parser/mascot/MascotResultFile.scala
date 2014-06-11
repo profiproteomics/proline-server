@@ -359,7 +359,9 @@ class MascotResultFile(
       if (!_isClosed) {
         _isClosed = true
 
-        /* Free memory reverse order */
+        logger.debug("Closing MascotResultFile resources...")
+
+        /* Free memory (reverse order) */
 
         if (_isDecoySummaryLoaded && decoyPepSummary.isDefined) {
           val decoyPepSumValue = decoyPepSummary.get
