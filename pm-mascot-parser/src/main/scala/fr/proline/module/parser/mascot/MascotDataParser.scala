@@ -16,8 +16,7 @@ class MascotDataParser(
   val searchSettings: SearchSettings,
   val msQueryByInitialId: Map[Int, MsQuery],
   val parserContext: ProviderDecoratedExecutionContext,
-  val isDecoy: Boolean
-) extends Logging {
+  val isDecoy: Boolean) extends Logging {
 
   private var pepByUniqueKey: HashMap[String, Peptide] = null
   private var pepToPeptideMatches: HashMap[Peptide, ArrayBuffer[PeptideMatch]] = null
@@ -36,7 +35,7 @@ class MascotDataParser(
    *  Get Resulting Peptide Matches (for each identified peptide)
    */
   def getPeptideMatchesByPeptide(): HashMap[Peptide, Array[PeptideMatch]] = {
-    this.pepToPeptideMatches.map { case (k, v) => k -> v.toArray }
+    pepToPeptideMatches.map { case (k, v) => k -> v.toArray }
   }
 
   /**
@@ -84,18 +83,18 @@ class MascotDataParser(
         // Check that the peptide is not empty
         if (currentMSPep.getAnyMatch()) {
 
-          var parsedPep = this.getOrCreatePeptide(currentMSPep, ptmProvider, pepProvider)
+          var parsedPep = getOrCreatePeptide(currentMSPep, ptmProvider, pepProvider)
 
           // --- Retrieve some properties values --- //
 
           val pepMatchScore = currentMSPep.getIonsScore().floatValue()
-          val pepMatchExpectValue = this.pepSummary.getPeptideExpectationValue(pepMatchScore, q)
+          val pepMatchExpectValue = pepSummary.getPeptideExpectationValue(pepMatchScore, q)
 
           // Create peptide match Mascot properties
           val pepMatchMascotProps = new PeptideMatchMascotProperties(expectationValue = pepMatchExpectValue)
 
           // Add readable variable mods and positions if the peptide has at least one PTM
-          val readableVarMods = this.pepSummary.getReadableVarMods(q, k)
+          val readableVarMods = pepSummary.getReadableVarMods(q, k)
           if (readableVarMods.length > 0) {
             pepMatchMascotProps.setReadableVarMods(Some(readableVarMods))
             pepMatchMascotProps.setVarModsPositions(Some(currentMSPep.getVarModsStr))
@@ -109,7 +108,7 @@ class MascotDataParser(
             pepMatchMascotProps.setNlString(Some(nlString))
           }
           pepMatchMascotProps.setUsedPeaksCount(Some(currentMSPep.getPeaksUsedFromIons1()))
-          
+
           val ambiguityStr = currentMSPep.getAmbiguityString()
           if (ambiguityStr.length > 0) {
             pepMatchMascotProps.setAmbiguityString(Some(ambiguityStr))
@@ -123,7 +122,7 @@ class MascotDataParser(
             score = pepMatchScore,
             scoreType = "mascot:ions score",
             deltaMoz = (currentMSPep.getDelta() / query.charge).toFloat, // getDelta returns expMass - calcMass
-            isDecoy = this.isDecoy,
+            isDecoy = isDecoy,
             peptide = parsedPep,
             missedCleavage = currentMSPep.getMissedCleavages(),
             fragmentMatchesCount = currentMSPep.getNumIonsMatched(),
@@ -205,99 +204,155 @@ class MascotDataParser(
       var dbs = new vectori()
       var protAcc: VectorString = pepSummary.getAllProteinsWithThisPepMatch(q, k, starts, ends, preAAs, postAAs, frames, multiplicity, dbs)
 
-      if (protAcc.size() > 0) { // A least one protein matched
+      try {
 
-        var parsedPep = bestPepMatch.peptide
+        if (protAcc.size() > 0) { // A least one protein matched
 
-        // *****  go through matched proteins
-        for (indProt <- 0 until protAcc.size().intValue()) {
+          var parsedPep = bestPepMatch.peptide
 
-          totalNbrSeqMatches += 1
+          // *****  go through matched proteins
+          for (indProt <- 0 until protAcc.size().intValue()) {
 
-          // matchedProt is valid only if parse using grouping !
-          // val matchedProt: ms_protein = pepSummary.getProtein(protAcc.get(indProt), dbs.get(indProt))
+            totalNbrSeqMatches += 1
 
-          //Get SeqDatabase in which current protein was retrieve from
-          val seqDbs: Array[SeqDatabase] = searchSettings.seqDatabases filter { _.name == mascotResFile.params.getDB(dbs.get(indProt)) }
+            // matchedProt is valid only if parse using grouping !
+            // val matchedProt: ms_protein = pepSummary.getProtein(protAcc.get(indProt), dbs.get(indProt))
 
-          //****  Get or created ProteinWrapper, and Protein if defined, for matched Protein
-          var prot = Option.empty[Protein]
+            //Get SeqDatabase in which current protein was retrieve from
+            val seqDbs: Array[SeqDatabase] = searchSettings.seqDatabases filter { _.name == mascotResFile.params.getDB(dbs.get(indProt)) }
 
-          // Check if the protein has been already accessed
-          val protWrapperKey = protAcc.get(indProt) + (dbs.get(indProt).toString)
-          if (protAccSeqDbToProteinWrapper.contains(protWrapperKey)) {
-            prot = protAccSeqDbToProteinWrapper.get(protWrapperKey).get.wrappedProt
-          } else {
-            // Try to get Protein from repository
-            prot = protProvider.getProtein(protAcc.get(indProt), seqDbs(0))
-            protAccSeqDbToProteinWrapper += protWrapperKey -> new ProteinWrapper(dbs.get(indProt), protAcc.get(indProt), prot)
-          }
+            //****  Get or created ProteinWrapper, and Protein if defined, for matched Protein
+            var prot = Option.empty[Protein]
 
-          //Create SequenceMatch and ProteinMatch, if necessary, for current Matched Protein
-          var seqMatch = new SequenceMatch(
-            start = starts.get(indProt),
-            end = ends.get(indProt),
-            residueBefore = preAAs.get(indProt).charAt(0),
-            residueAfter = postAAs.get(indProt).charAt(0),
-            isDecoy = this.isDecoy,
-            peptide = Some(parsedPep),
-            bestPeptideMatch = Some(bestPepMatch),
-            resultSetId = rsId
-          )
+            // Check if the protein has been already accessed
+            val protWrapperKey = protAcc.get(indProt) + (dbs.get(indProt).toString)
+            if (protAccSeqDbToProteinWrapper.contains(protWrapperKey)) {
+              prot = protAccSeqDbToProteinWrapper.get(protWrapperKey).get.wrappedProt
+            } else {
+              // Try to get Protein from repository
+              prot = protProvider.getProtein(protAcc.get(indProt), seqDbs(0))
+              protAccSeqDbToProteinWrapper += protWrapperKey -> new ProteinWrapper(dbs.get(indProt), protAcc.get(indProt), prot)
+            }
 
-          // Get ProteinMatch associated to this protein, through its ProteinWrapper
-          var protMatchOpt: Option[ProteinMatch] = wrappedProtToProtMatch.get(protAccSeqDbToProteinWrapper.get(protWrapperKey).get)
-
-          var protMatch: ProteinMatch = null
-          if (protMatchOpt == None) {
-            val seqDbIds = seqDbs map { _.id }
-            val protMatchAc = protAcc.get(indProt)
-            val protMatchDesc = pepSummary.getProteinDescription(protMatchAc, dbs.get(indProt))
-
-            // Not already define, create ProteinMatch and add new entry in protToProtMatch
-            protMatch = new ProteinMatch(
-              id = ProteinMatch.generateNewId,
-              accession = protMatchAc,
-              description = protMatchDesc,
-              peptideMatchesCount = 0, // FIXME: assign the right number
-              scoreType = "mascot:standard score",
-              isDecoy = this.isDecoy,
-              protein = (if (prot == None) null else prot), //If prot is None => No protein is defined not protein not retrieve !
-              seqDatabaseIds = seqDbIds,
+            //Create SequenceMatch and ProteinMatch, if necessary, for current Matched Protein
+            var seqMatch = new SequenceMatch(
+              start = starts.get(indProt),
+              end = ends.get(indProt),
+              residueBefore = preAAs.get(indProt).charAt(0),
+              residueAfter = postAAs.get(indProt).charAt(0),
+              isDecoy = isDecoy,
+              peptide = Some(parsedPep),
+              bestPeptideMatch = Some(bestPepMatch),
               resultSetId = rsId
             )
 
-            wrappedProtToProtMatch += (protAccSeqDbToProteinWrapper.get(protWrapperKey).get -> protMatch)
-          } else {
-            protMatch = protMatchOpt.get
+            // Get ProteinMatch associated to this protein, through its ProteinWrapper
+            var protMatchOpt: Option[ProteinMatch] = wrappedProtToProtMatch.get(protAccSeqDbToProteinWrapper.get(protWrapperKey).get)
+
+            var protMatch: ProteinMatch = null
+            if (protMatchOpt == None) {
+              val seqDbIds = seqDbs map { _.id }
+              val protMatchAc = protAcc.get(indProt)
+              val protMatchDesc = pepSummary.getProteinDescription(protMatchAc, dbs.get(indProt))
+
+              // Not already define, create ProteinMatch and add new entry in protToProtMatch
+              protMatch = new ProteinMatch(
+                id = ProteinMatch.generateNewId,
+                accession = protMatchAc,
+                description = protMatchDesc,
+                peptideMatchesCount = 0, // FIXME: assign the right number
+                scoreType = "mascot:standard score",
+                isDecoy = isDecoy,
+                protein = (if (prot == None) null else prot), //If prot is None => No protein is defined not protein not retrieve !
+                seqDatabaseIds = seqDbIds,
+                resultSetId = rsId
+              )
+
+              wrappedProtToProtMatch += (protAccSeqDbToProteinWrapper.get(protWrapperKey).get -> protMatch)
+            } else {
+              protMatch = protMatchOpt.get
+            }
+
+            // Add created seqMatch to Protein Match
+            val newSeqMatches = new ArrayBuffer[SequenceMatch]()
+            if (protMatch.sequenceMatches != null) newSeqMatches ++= protMatch.sequenceMatches
+            newSeqMatches += seqMatch
+
+            protMatch.sequenceMatches = newSeqMatches.toArray
+
+            // Update Protein Match score
+            protMatch.score = protMatch.score + bestPepMatch.score
+
+            //Update  Protein Match peptideMatchesCount
+            protMatch.peptideMatchesCount = protMatch.peptideMatchesCount + pepToPeptideMatches.get(bestPepMatch.peptide).get.length
+
+          } //End go through matched proteins
+
+        } // End current Peptide match at least one Protein.
+
+      } finally {
+        /* Free memory in finally block reverse order */
+
+        if (protAcc != null) {
+          try {
+            protAcc.clear()
+            protAcc.delete()
+          } catch {
+            case t: Throwable => logger.error("Error deleting protAcc", t)
           }
+        }
 
-          // Add created seqMatch to Protein Match
-          val newSeqMatches = new ArrayBuffer[SequenceMatch]()
-          if (protMatch.sequenceMatches != null) newSeqMatches ++= protMatch.sequenceMatches
-          newSeqMatches += seqMatch
+        try {
+          dbs.clear()
+          dbs.delete()
+        } catch {
+          case t: Throwable => logger.error("Error deleting dbs", t)
+        }
 
-          protMatch.sequenceMatches = newSeqMatches.toArray
+        try {
+          multiplicity.clear()
+          multiplicity.delete()
+        } catch {
+          case t: Throwable => logger.error("Error deleting multiplicity", t)
+        }
 
-          // Update Protein Match score
-          protMatch.score = protMatch.score + bestPepMatch.score
+        try {
+          frames.clear()
+          frames.delete()
+        } catch {
+          case t: Throwable => logger.error("Error deleting frames", t)
+        }
 
-          //Update  Protein Match peptideMatchesCount
-          protMatch.peptideMatchesCount = protMatch.peptideMatchesCount + pepToPeptideMatches.get(bestPepMatch.peptide).get.length
+        try {
+          ends.clear()
+          ends.delete()
+        } catch {
+          case t: Throwable => logger.error("Error deleting ends", t)
+        }
 
-        } //End go through matched proteins
+        try {
+          starts.clear()
+          starts.delete()
+        } catch {
+          case t: Throwable => logger.error("Error deleting starts", t)
+        }
 
-      } // End current Peptide match at least one Protein.
+        try {
+          postAAs.clear()
+          postAAs.delete()
+        } catch {
+          case t: Throwable => logger.error("Error deleting postAAs", t)
+        }
 
-      // --- Free memory --- //
-      preAAs.delete()
-      postAAs.delete()
-      starts.delete()
-      ends.delete()
-      frames.delete()
-      multiplicity.delete()
-      dbs.delete()
-      protAcc.delete()
+        try {
+          preAAs.clear()
+          preAAs.delete()
+        } catch {
+          case t: Throwable => logger.error("Error deleting preAAs", t)
+        }
+
+      } // End of try - finally block
+
     }
 
     logger.debug("Found " + totalNbrSeqMatches + " SeqMatches for " + totalNbrPepMatches + " PeptidesMatches")
@@ -322,8 +377,8 @@ class MascotDataParser(
 
     //--- Create PTMs : from search settings variable and fixed PTM
     var pepVarAndFixedPtm = new ArrayBuffer[LocatedPtm](0)
-    pepVarAndFixedPtm ++= this.createPeptidePtmFromVarPtm(mascotPeptide, ptmProvider)
-    pepVarAndFixedPtm ++= this.createPeptidePtmFromFixedPtm(mascotPeptide)
+    pepVarAndFixedPtm ++= createPeptidePtmFromVarPtm(mascotPeptide, ptmProvider)
+    pepVarAndFixedPtm ++= createPeptidePtmFromFixedPtm(mascotPeptide)
     val varPtmsasArray = pepVarAndFixedPtm.toArray[LocatedPtm]
 
     // 1. retrieve peptide from pepByUniqueKey

@@ -47,7 +47,7 @@ class MascotResultFile(
   val importProperties: Map[String, Any], // TODO: use the MascotImportProperties class instead ???
   val parserContext: ProviderDecoratedExecutionContext) extends IResultFile with Logging {
 
-  final val LOG_SPECTRA_COUNT = 4000 // Print a log for each created spectrum
+  val LOG_SPECTRA_COUNT = 4000 // Print a log for each created spectrum
 
   // ---- For Java developers ;) : --- Constructor Code 
 
@@ -62,7 +62,10 @@ class MascotResultFile(
 
   require(importProperties != null)
 
-  private var _isClosed = false
+  private val m_closeLock = new Object()
+
+  private var _isClosed = false // Mutable field guarded by m_closeLock
+
   val parseProperties: Map[MascotParseParams.MascotParseParam, Any] = importProperties.map(entry => MascotParseParams.withName(entry._1) -> entry._2)
   val rsImportProperties = new MascotImportProperties()
   rsImportProperties.setIonsScoreCutoff(parseProperties.get(MascotParseParams.ION_SCORE_CUTOFF).map(toFloat(_)))
@@ -82,7 +85,7 @@ class MascotResultFile(
   private val mascotResFile: ms_mascotresfile = new ms_mascotresfile(fileAbsolutePath, 0, "")
   if (!mascotResFile.isValid()) throw new Exception("Invalid Mascot result file " + fileLocation.getAbsolutePath() + " specified")
 
-  private val mascotSearchParams: ms_searchparams = this.mascotResFile.params()
+  private val mascotSearchParams: ms_searchparams = mascotResFile.params()
 
   /** IResultFile values **/
   val msLevel: Int = 2 // Disable support for PMF data  
@@ -96,12 +99,12 @@ class MascotResultFile(
     val helper = new MascotPTMHelper(parserContext)
 
     // Retrieve PTMs, fixed and variable, specified for Mascot Search
-    val mascotVarModsAsStr = this.mascotSearchParams.getIT_MODS()
+    val mascotVarModsAsStr = mascotSearchParams.getIT_MODS()
     logger.debug("Search variable Ptms using Mascot string : " + mascotVarModsAsStr)
     val varPtmDefsByModName = helper.createVarPtmDefs(mascotVarModsAsStr)
     logger.debug("PTMProvider found " + varPtmDefsByModName.size + " variables PTMs")
 
-    val mascotFixedModsAsStr = this.mascotSearchParams.getMODS()
+    val mascotFixedModsAsStr = mascotSearchParams.getMODS()
     logger.debug("Search fixed Ptms using Mascot string : " + mascotFixedModsAsStr)
     val fixedPtmDefsByModName = helper.createFixedPtmDefs(mascotFixedModsAsStr)
     logger.debug("PTMProvider found " + fixedPtmDefsByModName.size + " fixed PTMs")
@@ -137,7 +140,7 @@ class MascotResultFile(
     import java.net.URLDecoder
 
     val msQueryMapBuilder = scala.collection.immutable.Map.newBuilder[Int, MsQuery]
-    val nbrQueries: Int = this.mascotResFile.getNumQueries()
+    val nbrQueries: Int = mascotResFile.getNumQueries()
 
     def getMsQueryDbSearchProps(pepSummaryOpt: Option[ms_peptidesummary], msQueryNum: Int) = {
       if (pepSummaryOpt == None) None
@@ -160,18 +163,18 @@ class MascotResultFile(
 
     for (q <- 1 to nbrQueries) { // Go through each Query
 
-      val specTitle = URLDecoder.decode(this.mascotResFile.getQuerySectionValueStr(q, "title"), "UTF-8").replace('\\', '/') //WorkAround for \ char in spectrum storer  !
+      val specTitle = URLDecoder.decode(mascotResFile.getQuerySectionValueStr(q, "title"), "UTF-8").replace('\\', '/') //WorkAround for \ char in spectrum storer  !
 
       val msQueryProps = new MsQueryProperties(
-        targetDbSearch = getMsQueryDbSearchProps(this.targetPepSummary, q),
-        decoyDbSearch = getMsQueryDbSearchProps(this.decoyPepSummary, q)
+        targetDbSearch = getMsQueryDbSearchProps(targetPepSummary, q),
+        decoyDbSearch = getMsQueryDbSearchProps(decoyPepSummary, q)
       )
 
       var query = new Ms2Query(
         id = Ms2Query.generateNewId,
         initialId = q,
-        moz = this.mascotResFile.getObservedMass(q),
-        charge = this.mascotResFile.getObservedCharge(q),
+        moz = mascotResFile.getObservedMass(q),
+        charge = mascotResFile.getObservedCharge(q),
         spectrumTitle = specTitle,
         properties = Some(msQueryProps)
       )
@@ -186,8 +189,8 @@ class MascotResultFile(
   lazy val peaklist: Peaklist = {
     new Peaklist(
       id = Peaklist.generateNewId,
-      fileType = this.mascotSearchParams.getFORMAT(), // TODO: check file extension first (ex: .raw)
-      path = this.mascotSearchParams.getFILENAME(),
+      fileType = mascotSearchParams.getFORMAT(), // TODO: check file extension first (ex: .raw)
+      path = mascotSearchParams.getFILENAME(),
       rawFileName = "", // TODO: retrieve this
       msLevel = 2
     )
@@ -203,7 +206,7 @@ class MascotResultFile(
     logger.info("Parse Marcot Search Settings information ...")
 
     val ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
-    val searchParams = this.mascotSearchParams
+    val searchParams = mascotSearchParams
 
     val nbrSearchedQueries = mascotResFile.getNumSeqsAfterTax(0) //Get num of seq in all dbs after taxonomy filter
 
@@ -256,7 +259,7 @@ class MascotResultFile(
       variablePtmDefs = ptmHelper.varPtmDefsByModName.values.flatMap { p => p } toArray,
       fixedPtmDefs = ptmHelper.fixedPtmDefsByModName.values.flatMap { p => p } toArray,
       seqDatabases = seqDbs,
-      instrumentConfig = this.instrumentConfig.getOrElse(null),
+      instrumentConfig = instrumentConfig.getOrElse(null),
       quantitation = ""
     )
 
@@ -275,7 +278,7 @@ class MascotResultFile(
       resultFileName = fileLocation.getName(), //mascotResFile.getFileName(),
       submittedQueriesCount = nbQueries,
       searchSettings = sSettings,
-      peakList = this.peaklist,
+      peakList = peaklist,
       title = searchParams.getCOM(),
       date = new java.util.Date(mascotResFile.getDate().toLong * 1000),
       resultFileDirectory = fileLocation.getParentFile().getAbsolutePath(),
@@ -338,7 +341,7 @@ class MascotResultFile(
   private def _getPepSummary(wantDecoy: Boolean): ms_peptidesummary = {
 
     // Retrieve peptide summary corresponding to the wanted dataset
-    val pepSummary = if (wantDecoy) this.decoyPepSummary else this.targetPepSummary
+    val pepSummary = if (wantDecoy) decoyPepSummary else targetPepSummary
     if (pepSummary == None) {
       throw new Exception("can't load the peptide summary")
     }
@@ -351,13 +354,69 @@ class MascotResultFile(
    */
   def close() {
 
-    // Check if the result file is already closed
-    if (_isClosed) throw new java.lang.IllegalAccessException("MascotResultFile is already closed")
+    m_closeLock.synchronized {
 
-    mascotResFile.delete()
-    mascotSearchParams.delete()
-    if (_isTargetSummaryLoaded) targetPepSummary.get.delete
-    if (_isDecoySummaryLoaded && decoyPepSummary.isDefined) decoyPepSummary.get.delete
+      if (!_isClosed) {
+        _isClosed = true
+
+        /* Free memory reverse order */
+
+        if (_isDecoySummaryLoaded && decoyPepSummary.isDefined) {
+          val decoyPepSumValue = decoyPepSummary.get
+
+          try {
+            decoyPepSumValue.delete()
+          } catch {
+            case t: Throwable => logger.error("Error deleting decoyPepSumValue value", t)
+          }
+
+        }
+
+        if (_isTargetSummaryLoaded && targetPepSummary.isDefined) {
+          val targetPepSumValue = targetPepSummary.get
+
+          try {
+            targetPepSumValue.delete()
+          } catch {
+            case t: Throwable => logger.error("Error deleting targetPepSumValue value", t)
+          }
+
+        }
+
+        try {
+          mascotSearchParams.delete()
+        } catch {
+          case t: Throwable => logger.error("Error deleting mascotSearchParams", t)
+        }
+
+        try {
+          mascotResFile.delete()
+        } catch {
+          case t: Throwable => logger.error("Error deleting mascotResFile", t)
+        }
+
+      }
+      // Do nothing if already closed
+
+    } // End of synchronized block on m_closeLock
+
+  }
+
+  override def finalize() {
+
+    try {
+      logger.warn("Closing MascotResultFile from finalize block")
+
+      try {
+        close()
+      } catch {
+        case ex: Exception => logger.error("Error closing MascotResultFile", ex)
+      }
+
+    } finally {
+      super.finalize()
+    }
+
   }
 
   /**
@@ -367,8 +426,14 @@ class MascotResultFile(
    */
   def getResultSet(wantDecoy: Boolean): ResultSet = {
 
-    // Check if the result file is closed
-    if (_isClosed) throw new java.lang.IllegalAccessException("MascotResultFile is closed")
+    m_closeLock.synchronized {
+
+      // Check if the result file is closed
+      if (_isClosed) {
+        throw new IllegalStateException("MascotResultFile is closed")
+      }
+
+    } // End of synchronized block on m_closeLock
 
     val start = System.currentTimeMillis;
 
@@ -392,13 +457,13 @@ class MascotResultFile(
     if (wantDecoy) logger.info("Start loading DECOY identification results...")
     else logger.info("Start loading TARGET identification results...")
 
-    val pepSummary = this._getPepSummary(wantDecoy)
+    val pepSummary = _getPepSummary(wantDecoy)
 
     var dataParser: MascotDataParser = new MascotDataParser(
       pepSummary,
-      this.mascotResFile,
-      this.msiSearch.searchSettings,
-      this.msQueryByInitialId,
+      mascotResFile,
+      msiSearch.searchSettings,
+      msQueryByInitialId,
       parserContext,
       wantDecoy
     )
@@ -425,13 +490,13 @@ class MascotResultFile(
     logger.info("Loading identification results done in " + (System.currentTimeMillis - start) + " ms");
     new ResultSet(
       id = rsId,
-      name = this.msiSearch.title,
+      name = msiSearch.title,
       peptides = pepMatchesByPep.keySet.toArray,
       peptideMatches = allPepMatches,
       proteinMatches = protMatches,
       isDecoy = wantDecoy,
       isNative = true,
-      msiSearch = Some(this.msiSearch),
+      msiSearch = Some(msiSearch),
       properties = Some(rsProps)
     )
   }
@@ -443,7 +508,7 @@ class MascotResultFile(
    */
   def eachSpectrum(onEachSpectrum: Spectrum => Unit): Unit = {
 
-    val querybyInitialId = this.msQueryByInitialId
+    val querybyInitialId = msQueryByInitialId
     logger.info("Start iterate over MSQueries")
 
     var count = 0
@@ -455,74 +520,85 @@ class MascotResultFile(
 
       // Extract peak data
       val mascotQ = new ms_inputquery(mascotResFile, initialId)
-      /*for( j <- 1 to mascotQ.getNumberOfPeaks(1) ) {
+
+      try {
+
+        /*for( j <- 1 to mascotQ.getNumberOfPeaks(1) ) {
         mozList += mascotQ.getPeakMass(1,j)
         intensityList += mascotQ.getPeakIntensity(1,j).toFloat
       }*/
 
-      // --- Parse peaks --- //
-      val msqIonsString = mascotQ.getStringIons1
-      if (msqIonsString.isEmpty == false) {
+        // --- Parse peaks --- //
+        val msqIonsString = mascotQ.getStringIons1
+        if (msqIonsString.isEmpty == false) {
 
-        val peaksAsStr = msqIonsString.split(",")
-        val peaks = new ArrayBuffer[Tuple2[Double, Float]](peaksAsStr.length)
+          val peaksAsStr = msqIonsString.split(",")
+          val peaks = new ArrayBuffer[Tuple2[Double, Float]](peaksAsStr.length)
 
-        peaksAsStr.foreach { peakAsStr =>
-          val values = peakAsStr.split(":")
-          peaks += Tuple2(values(0).toDouble, values(1).toFloat)
+          peaksAsStr.foreach { peakAsStr =>
+            val values = peakAsStr.split(":")
+            peaks += Tuple2(values(0).toDouble, values(1).toFloat)
+          }
+
+          // Sort peaks by moz and build moz and intensity lists
+          peaks.sortBy(_._1).foreach { peak =>
+            mozList += peak._1
+            intensityList += peak._2
+          }
+
+        } else {
+          logger.debug("Spectrum of query#" + initialId + " is empty")
         }
 
-        // Sort peaks by moz and build moz and intensity lists
-        peaks.sortBy(_._1).foreach { peak =>
-          mozList += peak._1
-          intensityList += peak._2
+        // Retrieve spectrum title and instrument config id
+        val spectrumTitle = msq.asInstanceOf[Ms2Query].spectrumTitle
+        val instConfigId = if (instrumentConfig.isDefined) instrumentConfig.get.id else 0
+
+        val specTitleFieldMapOpt = if (peaklistSoftware.isDefined) peaklistSoftware.get.specTitleParsingRule.map(_.parseTitle(spectrumTitle)) else None
+        val specTitleFieldMap = specTitleFieldMapOpt.getOrElse(Map.empty[SpectrumTitleFields.Value, String])
+
+        // TODO: put in primitives utils
+        def toIntOrZero(v: Any): Int = try { toInt(v) } catch { case e: Throwable => 0 }
+        def toFloatOrZero(v: Any): Float = try { toFloat(v) } catch { case e: Throwable => 0f }
+
+        val titleFields = SpectrumTitleFields
+
+        val spec = new Spectrum(
+          id = Spectrum.generateNewId,
+          title = spectrumTitle,
+          precursorMoz = msq.moz,
+          precursorCharge = msq.charge,
+          firstCycle = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_CYCLE, 0)),
+          lastCycle = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_CYCLE, 0)),
+          firstScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_SCAN, 0)),
+          lastScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_SCAN, 0)),
+          firstTime = toFloatOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_TIME, 0f)),
+          lastTime = toFloatOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_TIME, 0f)),
+          mozList = Some(mozList.toArray),
+          intensityList = Some(intensityList.toArray),
+          peaksCount = mozList.length,
+          instrumentConfigId = instConfigId,
+          peaklistId = peaklist.id
+        )
+
+        count += 1
+
+        if ((count % LOG_SPECTRA_COUNT) == 0) {
+          logger.debug("Created Spectra: " + count)
         }
 
-      } else {
-        this.logger.debug("Spectrum of query#" + initialId + " is empty")
-      }
+        onEachSpectrum(spec)
 
-      // Retrieve spectrum title and instrument config id
-      val spectrumTitle = msq.asInstanceOf[Ms2Query].spectrumTitle
-      val instConfigId = if (this.instrumentConfig.isDefined) this.instrumentConfig.get.id else 0
+      } finally {
+        /* Free memory in finally block */
 
-      val specTitleFieldMapOpt = if (this.peaklistSoftware.isDefined) this.peaklistSoftware.get.specTitleParsingRule.map(_.parseTitle(spectrumTitle)) else None
-      val specTitleFieldMap = specTitleFieldMapOpt.getOrElse(Map.empty[SpectrumTitleFields.Value, String])
+        try {
+          mascotQ.delete()
+        } catch {
+          case t: Throwable => logger.error("Error deleting mascotQ", t)
+        }
 
-      // TODO: put in primitives utils
-      def toIntOrZero(v: Any): Int = try { toInt(v) } catch { case e: Throwable => 0 }
-      def toFloatOrZero(v: Any): Float = try { toFloat(v) } catch { case e: Throwable => 0f }
-
-      val titleFields = SpectrumTitleFields
-
-      val spec = new Spectrum(
-        id = Spectrum.generateNewId,
-        title = spectrumTitle,
-        precursorMoz = msq.moz,
-        precursorCharge = msq.charge,
-        firstCycle = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_CYCLE, 0)),
-        lastCycle = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_CYCLE, 0)),
-        firstScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_SCAN, 0)),
-        lastScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_SCAN, 0)),
-        firstTime = toFloatOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_TIME, 0f)),
-        lastTime = toFloatOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_TIME, 0f)),
-        mozList = Some(mozList.toArray),
-        intensityList = Some(intensityList.toArray),
-        peaksCount = mozList.length,
-        instrumentConfigId = instConfigId,
-        peaklistId = peaklist.id
-      )
-
-      count += 1
-
-      if ((count % LOG_SPECTRA_COUNT) == 0) {
-        logger.debug("Created Spectra: " + count)
-      }
-
-      onEachSpectrum(spec)
-
-      // --- Free memory --- //
-      mascotQ.delete()
+      } // End of try - finally block
 
     }
 
@@ -540,7 +616,7 @@ class MascotResultFile(
 
     val mascotVersion = importProperties.getOrElse(
       MascotParseParams.MASCOT_VERSION.toString,
-      this.msiSearch.searchSettings.softwareVersion
+      msiSearch.searchSettings.softwareVersion
     //throw new Exception("mascot version must be provided in the import properties")
     ).toString
 
@@ -550,15 +626,14 @@ class MascotResultFile(
     //throw new Exception("mascot server url must be provided in the import properties")
     ).toString
 
-    val mascotServerCGIURLAsStr = if(mascotServerURLAsStr.endsWith("/cgi/")) { mascotServerURLAsStr } else {
-      if(mascotServerURLAsStr.endsWith("/cgi") )
-          mascotServerURLAsStr++"/"
+    val mascotServerCGIURLAsStr = if (mascotServerURLAsStr.endsWith("/cgi/")) { mascotServerURLAsStr } else {
+      if (mascotServerURLAsStr.endsWith("/cgi"))
+        mascotServerURLAsStr ++ "/"
       else
-        mascotServerURLAsStr++"/cgi/"
+        mascotServerURLAsStr ++ "/cgi/"
     }
-      
-    
-    this.logger.debug("Iterating over spectrum matches of result file '%s' (mascot version=%s ; server URL =%s)".format(
+
+    logger.debug("Iterating over spectrum matches of result file '%s' (mascot version=%s ; server URL =%s)".format(
       fileLocation.getName, mascotVersion, mascotServerCGIURLAsStr
     ))
 
@@ -566,21 +641,34 @@ class MascotResultFile(
     val spectrumMatcher = new MascotSpectrumMatcher(mascotResFile, mascotConfig, ptmHelper)
 
     // Retrieve peptide summary corresponding to the wanted dataset
-    val pepSummary = this._getPepSummary(wantDecoy)
-    val nbrQueries = this.mascotResFile.getNumQueries()
+    val pepSummary = _getPepSummary(wantDecoy)
+    val nbrQueries = mascotResFile.getNumQueries()
 
     val maxRankPerQuery = pepSummary.getMaxRankValue()
 
     for (q <- 1 to nbrQueries; k <- 1 to maxRankPerQuery) { // Go through each Query        
       var currentMSPep = pepSummary.getPeptide(q, k)
 
-      // Check that the peptide is not empty
-      if (currentMSPep.getAnyMatch) {
-        onEachSpectrumMatch(spectrumMatcher.getSpectrumMatch(currentMSPep))
-      }
+      try {
 
-      // --- Free memory --- //
-      currentMSPep.delete()
+        // Check that the peptide is not empty
+        if (currentMSPep.getAnyMatch) {
+          onEachSpectrumMatch(spectrumMatcher.getSpectrumMatch(currentMSPep))
+        }
+
+      } finally {
+        /* Free memory in finally block */
+
+        if (currentMSPep != null) {
+          try {
+            currentMSPep.delete()
+          } catch {
+            case t: Throwable => logger.error("Error deleting currentMSPep", t)
+          }
+        }
+
+      } // End of try - finally block
+
     }
 
   }
