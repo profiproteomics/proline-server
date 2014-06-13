@@ -353,13 +353,37 @@ class MascotResultFile(
    * Free all ms_parser attached objects
    */
   def close() {
+    doClose(false)
+  }
+
+  override def finalize() {
+
+    try {
+
+      try {
+        doClose(true)
+      } catch {
+        case ex: Exception => logger.error("Error closing MascotResultFile", ex)
+      }
+
+    } finally {
+      super.finalize()
+    }
+
+  }
+
+  private def doClose(fromFinalize: Boolean) {
 
     m_closeLock.synchronized {
 
       if (!_isClosed) {
         _isClosed = true
 
-        logger.debug("Closing MascotResultFile resources...")
+        if (fromFinalize) {
+          logger.warn("Closing MascotResultFile resources from finalize block")
+        } else {
+          logger.debug("Closing MascotResultFile resources ...")
+        }
 
         /* Free memory (reverse order) */
 
@@ -401,24 +425,6 @@ class MascotResultFile(
       // Do nothing if already closed
 
     } // End of synchronized block on m_closeLock
-
-  }
-
-  override def finalize() {
-
-    try {
-      logger.warn("Closing MascotResultFile from finalize block")
-
-      try {
-        close()
-      } catch {
-        case ex: Exception => logger.error("Error closing MascotResultFile", ex)
-      }
-
-    } finally {
-      super.finalize()
-    }
-
   }
 
   /**
