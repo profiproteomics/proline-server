@@ -46,6 +46,9 @@ public final class RetrieveService {
     public static void main(final String[] args) {
 	Thread.currentThread().setUncaughtExceptionHandler(new ThreadLogger(LOG));
 
+	/* Force initialization of seq_db on service starting */
+	DatabaseAccess.getSEQDatabaseConnector(true);
+
 	int hourDelay = -1;
 
 	if ((args != null) && (args.length > 0)) {
