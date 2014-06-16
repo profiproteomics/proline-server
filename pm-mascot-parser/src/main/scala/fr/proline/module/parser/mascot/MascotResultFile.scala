@@ -425,6 +425,7 @@ class MascotResultFile(
       // Do nothing if already closed
 
     } // End of synchronized block on m_closeLock
+
   }
 
   /**
@@ -648,34 +649,46 @@ class MascotResultFile(
     val mascotConfig = new MascotRemoteConfig(mascotVersion.asInstanceOf[String], mascotServerCGIURLAsStr.asInstanceOf[String])
     val spectrumMatcher = new MascotSpectrumMatcher(mascotResFile, mascotConfig, ptmHelper)
 
-    // Retrieve peptide summary corresponding to the wanted dataset
-    val pepSummary = _getPepSummary(wantDecoy)
-    val nbrQueries = mascotResFile.getNumQueries()
+    try {
 
-    val maxRankPerQuery = pepSummary.getMaxRankValue()
+      // Retrieve peptide summary corresponding to the wanted dataset
+      val pepSummary = _getPepSummary(wantDecoy)
+      val nbrQueries = mascotResFile.getNumQueries()
 
-    for (q <- 1 to nbrQueries; k <- 1 to maxRankPerQuery) { // Go through each Query        
-      var currentMSPep = pepSummary.getPeptide(q, k)
+      val maxRankPerQuery = pepSummary.getMaxRankValue()
+
+      for (q <- 1 to nbrQueries; k <- 1 to maxRankPerQuery) { // Go through each Query        
+        var currentMSPep = pepSummary.getPeptide(q, k)
+
+        try {
+
+          // Check that the peptide is not empty
+          if (currentMSPep.getAnyMatch) {
+            onEachSpectrumMatch(spectrumMatcher.getSpectrumMatch(currentMSPep))
+          }
+
+        } finally {
+          /* Free memory in finally block */
+
+          if (currentMSPep != null) {
+            try {
+              currentMSPep.delete()
+            } catch {
+              case t: Throwable => logger.error("Error deleting currentMSPep", t)
+            }
+          }
+
+        } // End of try - finally block
+
+      }
+
+    } finally {
 
       try {
-
-        // Check that the peptide is not empty
-        if (currentMSPep.getAnyMatch) {
-          onEachSpectrumMatch(spectrumMatcher.getSpectrumMatch(currentMSPep))
-        }
-
-      } finally {
-        /* Free memory in finally block */
-
-        if (currentMSPep != null) {
-          try {
-            currentMSPep.delete()
-          } catch {
-            case t: Throwable => logger.error("Error deleting currentMSPep", t)
-          }
-        }
-
-      } // End of try - finally block
+        spectrumMatcher.clear()
+      } catch {
+        case t: Throwable => logger.error("Error clearing spectrumMatcher", t)
+      }
 
     }
 

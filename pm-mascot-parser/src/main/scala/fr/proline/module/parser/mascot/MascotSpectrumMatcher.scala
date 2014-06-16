@@ -44,6 +44,10 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
   val mascotVersion = mascotResFile.getMascotVer
   val mascotFragRules = mascotConfig.fragmentationRulesFile.getInstrumentByName(mascotSearchParams.getINSTRUMENT())
   val aaHelpersByQuantComp = mutable.Map.empty[String, ms_aahelper]
+
+  /* Mutable collection @GuardedBy("itself") */
+  val m_createdAAHelpers = ArrayBuffer.empty[ms_aahelper]
+
   final val DEFAULT_QUANT_COMP_KEY = "DEFAULT"
 
   require(
@@ -220,6 +224,26 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
                 allFragments.getNumberOfFragments()
               )
          )*/
+  }
+
+  def clear() {
+    doClear(false)
+  }
+
+  override def finalize() {
+
+    try {
+
+      try {
+        doClear(true)
+      } catch {
+        case ex: Exception => logger.error("Error clearing MascotSpectrumMatcher", ex)
+      }
+
+    } finally {
+      super.finalize()
+    }
+
   }
 
   protected def parseMascotQueryIonsStr(mascotQueryPeaksStr: String): Array[Peak] = {
@@ -636,7 +660,7 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
     aaHelpersByQuantComp(msQuantComp.getOrElse(DEFAULT_QUANT_COMP_KEY))
   }
 
-  // FIXME LMN created ms_aahelper are never deleted ?
+  /* Created ms_aahelper are deleted by calling clear() */
   private def _buildMascotAAHelper(ms_pep: ms_peptide, ptmHelper: MascotPTMHelper, masses: ms_masses): ms_aahelper = {
 
     val aahelper = new ms_aahelper()
@@ -731,6 +755,10 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
       //      MascotErrorsHelper.logMods(vecVariable)
     }
 
+    m_createdAAHelpers.synchronized {
+      m_createdAAHelpers += aahelper
+    } // End of synchronized block on m_createdAAHelpers
+
     aahelper
   }
 
@@ -801,6 +829,35 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
     }
 
     mod
+  }
+
+  private def doClear(fromFinalize: Boolean) {
+
+    m_createdAAHelpers.synchronized {
+
+      if (!m_createdAAHelpers.isEmpty) {
+
+        if (fromFinalize) {
+          logger.warn("Clearing MascotSpectrumMatcher ms_aahelper from finalize block")
+        } else {
+          logger.debug("Clearing MascotSpectrumMatcher ms_aahelper ...")
+        }
+
+        for (aahelper <- m_createdAAHelpers) {
+
+          try {
+            aahelper.delete()
+          } catch {
+            case t: Throwable => logger.error("Error deleting aahelper", t)
+          }
+
+        } // End loop for each aahelper
+
+      } // End if (m_createdAAHelpers is not empty)
+
+      m_createdAAHelpers.clear()
+    } // End of synchronized block on m_createdAAHelpers
+
   }
 
 }
