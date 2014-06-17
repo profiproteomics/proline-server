@@ -838,7 +838,7 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
       if (!m_createdAAHelpers.isEmpty) {
 
         if (fromFinalize) {
-          logger.warn("Clearing MascotSpectrumMatcher ms_aahelper from finalize block")
+          logger.warn("Clearing MascotSpectrumMatcher ms_aahelper from finalize")
         } else {
           logger.debug("Clearing MascotSpectrumMatcher ms_aahelper ...")
         }

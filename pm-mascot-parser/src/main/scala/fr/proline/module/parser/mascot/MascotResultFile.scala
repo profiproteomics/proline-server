@@ -163,15 +163,15 @@ class MascotResultFile(
 
     for (q <- 1 to nbrQueries) { // Go through each Query
       //  AW: ticket #10344 fix 
-      var specTitle =  s"Cmpd ${q}, +MSn(${mascotResFile.getObservedMass(q)}), ? min"
-      try{ 
-         specTitle = URLDecoder.decode(mascotResFile.getQuerySectionValueStr(q, "title"), "UTF-8").replace('\\', '/') //WorkAround for \ char in spectrum storer  !
+      var specTitle = s"Cmpd ${q}, +MSn(${mascotResFile.getObservedMass(q)}), ? min"
+      try {
+        specTitle = URLDecoder.decode(mascotResFile.getQuerySectionValueStr(q, "title"), "UTF-8").replace('\\', '/') //WorkAround for \ char in spectrum storer  !
 
-       } catch {
+      } catch {
         case ex: Exception => logger.error("Error parsing MascotResultFile with empty? Title", ex)
       }
       // ----------------- 
-       
+
       val msQueryProps = new MsQueryProperties(
         targetDbSearch = getMsQueryDbSearchProps(targetPepSummary, q),
         decoyDbSearch = getMsQueryDbSearchProps(decoyPepSummary, q)
@@ -387,7 +387,7 @@ class MascotResultFile(
         _isClosed = true
 
         if (fromFinalize) {
-          logger.warn("Closing MascotResultFile resources from finalize block")
+          logger.warn("Closing MascotResultFile resources from finalize")
         } else {
           logger.debug("Closing MascotResultFile resources ...")
         }
