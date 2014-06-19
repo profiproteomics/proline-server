@@ -8,7 +8,7 @@ import org.junit.Ignore
 import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.util.system.OSInfo
+import fr.profi.util.system.OSInfo
 
 @Ignore
 object TestUtils extends Logging {

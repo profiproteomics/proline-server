@@ -10,7 +10,7 @@ import fr.proline.core.om.model.msi.FragmentMatch
 import fr.proline.core.om.model.msi.FragmentMatchType
 import fr.proline.core.om.model.msi.SpectrumMatch
 import fr.proline.core.om.model.msi.TheoreticalFragmentSeries
-import fr.proline.util.ms.{ calcMozTolInDalton, MassTolUnit }
+import fr.profi.util.ms.{ calcMozTolInDalton, MassTolUnit }
 import matrix_science.msparser.ms_aahelper
 import matrix_science.msparser.ms_errs
 import matrix_science.msparser.ms_fragment

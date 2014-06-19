@@ -10,7 +10,7 @@ import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IResultFileProvider
 import fr.proline.core.om.provider.msi.IResultFileVerifier
 import fr.proline.unimod.UnimodUnmarshaller
-import fr.proline.util.StringUtils
+import fr.profi.util.StringUtils
 import scala.collection.mutable.ArrayBuffer
 
 object MascotResultFileProviderType {

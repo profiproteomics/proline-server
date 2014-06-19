@@ -6,7 +6,7 @@ import org.junit.Ignore
 
 import com.typesafe.scalalogging.slf4j.Logging
 
-import fr.proline.util.StringUtils.LINE_SEPARATOR
+import fr.profi.util.StringUtils.LINE_SEPARATOR
 import javax.swing.SwingUtilities
 
 @Ignore

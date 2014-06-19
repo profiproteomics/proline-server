@@ -5,7 +5,7 @@ import scala.collection.mutable.HashMap
 import scala.util.matching.Regex
 import com.typesafe.scalalogging.slf4j.Logging
 
-import fr.proline.util.regex.RegexUtils._
+import fr.profi.util.regex.RegexUtils._
 import fr.proline.core.om.builder.PtmDefinitionBuilder
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmEvidence

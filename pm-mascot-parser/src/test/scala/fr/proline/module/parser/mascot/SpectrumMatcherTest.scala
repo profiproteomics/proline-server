@@ -130,7 +130,7 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
     }
 
     //import com.codahale.jerkson.Json.generate
-    import fr.proline.core.utils.serialization.ProlineJson
+    import fr.proline.core.util.serialization.ProlineJson
 
     // Open the result file
     val resultFile = rfProvider.get.getResultFile(datFile, importProperties, parserContext)
@@ -213,7 +213,7 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
     }
 
     //import com.codahale.jerkson.Json.generate
-    import fr.proline.core.utils.serialization.ProlineJson
+    import fr.proline.core.util.serialization.ProlineJson
 
     // Open the result file
     val resultFile = rfProvider.get.getResultFile(datFile, importProperties, parserContext)

@@ -3,8 +3,8 @@ package fr.proline.module.parser.mascot
 import java.io.{InputStream,File,FileInputStream}
 import scala.io.Source
 import scala.collection.mutable.ArrayBuffer
-import fr.proline.util.io._
-import fr.proline.util.regex.RegexUtils._
+import fr.profi.util.io._
+import fr.profi.util.regex.RegexUtils._
 
 /**
  * @author David Bouyssie

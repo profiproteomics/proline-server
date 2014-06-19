@@ -17,7 +17,7 @@ import fr.proline.repository.DriverType
 import fr.proline.core.orm.ps.PtmEvidence
 import scala.collection.JavaConversions._
 import fr.proline.core.orm.ps.PtmSpecificity
-import fr.proline.core.utils.ResidueUtils._
+import fr.proline.core.util.ResidueUtils._
 
 @Test
 class RFCertifierH2CTDTest extends AbstractRFImporterTest_ {

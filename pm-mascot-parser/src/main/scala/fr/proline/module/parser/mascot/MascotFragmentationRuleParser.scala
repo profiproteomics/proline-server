@@ -6,8 +6,8 @@ import scala.io.Source
 import fr.proline.core.om.model.msi.{Activation,ChargeConstraint,Instrument,InstrumentConfig,
                                      FragmentIonRequirement,FragmentIonSeries,Fragmentation,
                                      FragmentationRule,RequiredSeries}
-import fr.proline.util.regex.RegexUtils._
-import fr.proline.util.io._
+import fr.profi.util.regex.RegexUtils._
+import fr.profi.util.io._
 
 /**
  * @author David Bouyssie

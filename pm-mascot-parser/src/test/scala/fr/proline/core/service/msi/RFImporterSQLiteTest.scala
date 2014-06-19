@@ -10,7 +10,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.repository.DriverType
-import fr.proline.util.StringUtils
+import fr.profi.util.StringUtils
 
 object RFImporterSQLiteTest extends Logging {
 

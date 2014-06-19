@@ -15,7 +15,7 @@ import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.{ ISeqDatabaseProvider, IProteinProvider, IPeptideProvider, IPTMProvider }
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 
 import matrixscience.NativeLibrariesLoader
 
