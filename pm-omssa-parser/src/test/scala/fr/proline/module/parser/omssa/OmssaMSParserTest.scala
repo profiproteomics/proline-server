@@ -31,7 +31,7 @@ import fr.proline.core.om.util.AbstractMultipleDBTestCase
 import fr.proline.core.service.msi.ResultFileCertifier
 import fr.proline.module.fragment_match.FragmentTable
 import fr.proline.repository.DriverType
-import fr.proline.util.MathUtils
+import fr.profi.util.MathUtils
 
 @Test
 class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {

@@ -7,7 +7,7 @@ import javax.xml.stream.XMLInputFactory
 import org.codehaus.staxmate.in.{ SMHierarchicCursor, SMInputCursor }
 import org.codehaus.staxmate.SMInputFactory
 import fr.proline.core.om.model.msi.{ Spectrum, InstrumentConfig, SpectrumTitleFields, SpectrumTitleParsingRule }
-import fr.proline.util.primitives._
+import fr.profi.util.primitives._
 //import fr.proline.repository.DatabaseContext
 
 class OmssaListSpectrum(omxFile: File, peaklistId: Long, instrumentConfig: InstrumentConfig, specTitleParsingRule: Option[SpectrumTitleParsingRule], onEachSpectrum: Spectrum => Unit) extends Logging {
