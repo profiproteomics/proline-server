@@ -10,10 +10,10 @@ import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.proline.util.StringUtils;
-import fr.proline.util.ThreadLogger;
-import fr.proline.util.system.OSInfo;
-import fr.proline.util.system.OSType;
+import fr.profi.util.StringUtils;
+import fr.profi.util.ThreadLogger;
+import fr.profi.util.system.OSInfo;
+import fr.profi.util.system.OSType;
 
 /**
  * Utility class used to load the appropriate Mascot Parser native libraries (libmsparserj.so or
