@@ -13,9 +13,9 @@ import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.om.model.msi.SpectrumMatch
-import fr.proline.util.ms.MassTolUnit
-import fr.proline.util.ms.calcMozTolInDalton
-import fr.proline.util.MathUtils
+import fr.profi.util.ms.MassTolUnit
+import fr.profi.util.ms.calcMozTolInDalton
+import fr.profi.util.MathUtils
 
 case class Peak(moz: Double, intensity: Float)
 

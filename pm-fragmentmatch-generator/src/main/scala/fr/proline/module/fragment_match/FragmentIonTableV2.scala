@@ -19,7 +19,7 @@ import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.FragmentMatchType
 import fr.proline.core.om.model.msi.FragmentIonType
 import fr.proline.core.om.model.msi.Fragmentation
-import fr.proline.util.MathUtils
+import fr.profi.util.MathUtils
 
 
 case class Fragment(moz: Double, position: Int, neutralLoss: Double = 0.0, fragmentType: Option[FragmentMatchType.Value] = None, series: Option[String] = None, charge: Int = 1)
