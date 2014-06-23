@@ -140,13 +140,15 @@ class MascotDataParser(
       } // End go through current query Peptide
     } // End go through Queries
 
-    /*logger.debug("Go through Queries/PSM done")
+    logger.debug("Go through Queries/PSM done")
     logger.debug("Search for " + pepToPeptideMatches.size + " different Peptides.")
-    val pepsToSearch = pepToPeptideMatches.keys.toArray.map { pep => 
-      Pair(pep.sequence, pep.ptms)
-    }
+    val pepsToSearch = Array.newBuilder[Pair[String, Array[LocatedPtm]]]
+    pepToPeptideMatches.foreach(entry => {
+      pepsToSearch += Pair(entry._1.sequence, entry._1.ptms)
+    })
+    val searchPeps = pepsToSearch.result
 
-    val foundPeps = pepProvider.getPeptidesAsOptionsBySeqAndPtms(pepsToSearch)
+    val foundPeps = pepProvider.getPeptidesAsOptionsBySeqAndPtms(searchPeps)
     logger.debug("Peptides found in PSdb : " + foundPeps.filter(_.isDefined).size)
 
     // Iterate over found peptides in order to put them into existing peptide matches
@@ -167,7 +169,7 @@ class MascotDataParser(
         pepToPeptideMatches += fPep -> pepMatches.map(_.copy(peptide = fPep))
 
       }
-    } // End of for loop*/
+    } // End of for loop
 
     // Determine best peptide match for each peptide
     logger.debug("Determining the best PeptideMatch for each Peptide...")
