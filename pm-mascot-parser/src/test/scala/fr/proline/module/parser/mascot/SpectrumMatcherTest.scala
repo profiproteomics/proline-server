@@ -260,4 +260,37 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
       }
     }
   }
+  
+  @Test
+  def testPklInputFileSTR(): Unit = {
+    
+    val parserContext = buildParserContext()
+    Assert.assertNotNull(parserContext)
+
+    val datFileName: String = "/dat_samples/STR_F159394_pkl_input.dat"
+
+    logger.info(" --- Get File " + datFileName)
+
+    var datFile = new File(getClass.getResource(datFileName).toURI)
+    // Get Right ResultFile provider
+    val rfProvider = ResultFileProviderRegistry.get("mascot.dat")
+    if (rfProvider == None) {
+      throw new IllegalArgumentException("No ResultFileProvider for specified identification file format")
+    }
+
+    //import com.codahale.jerkson.Json.generate
+    import fr.proline.core.util.serialization.ProlineJson
+
+    // Open the result file
+    val resultFile = rfProvider.get.getResultFile(datFile, importProperties, parserContext)
+    
+    for (peptideMatch <- resultFile.getResultSet(false).peptideMatches) {
+      val query = peptideMatch.getMs2Query
+//      logger.debug("ABU "+query.spectrumTitle+" == Cmpd "+query.initialId+", +MSn("+query.moz+"), ? min ???")
+      assertEquals(query.spectrumTitle, "Cmpd "+query.initialId+", +MSn("+query.moz+"), ? min")
+    }
+
+    // Free memory
+    resultFile.close()
+  }
 }

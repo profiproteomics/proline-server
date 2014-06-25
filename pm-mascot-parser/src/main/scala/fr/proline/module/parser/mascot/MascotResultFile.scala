@@ -161,14 +161,18 @@ class MascotResultFile(
       }
     }
 
+    var fileComesFromPklInput = false
     for (q <- 1 to nbrQueries) { // Go through each Query
-      //  AW: ticket #10344 fix 
-      var specTitle = s"Cmpd ${q}, +MSn(${mascotResFile.getObservedMass(q)}), ? min"
+      //  AW/ABU: ticket #10344 fix
+//      var specTitle = s"Cmpd ${q}, +MSn(${mascotResFile.getObservedMass(q)}), ? min" 
+      var specTitle = "Cmpd "+q+", +MSn("+mascotResFile.getObservedMass(q)+"), ? min" // back to a simple format because query number was always at '0'
       try {
-        specTitle = URLDecoder.decode(mascotResFile.getQuerySectionValueStr(q, "title"), "UTF-8").replace('\\', '/') //WorkAround for \ char in spectrum storer  !
-
+        val tmp = URLDecoder.decode(mascotResFile.getQuerySectionValueStr(q, "title"), "UTF-8").replace('\\', '/') //WorkAround for \ char in spectrum storer  !
+        if(!tmp.trim().equals("")) {
+          specTitle = tmp
+        }
       } catch {
-        case ex: Exception => logger.error("Error parsing MascotResultFile with empty? Title", ex)
+        case ex: Exception => fileComesFromPklInput = true
       }
       // ----------------- 
 
@@ -187,6 +191,9 @@ class MascotResultFile(
       )
 
       msQueryMapBuilder += (q -> query)
+    }
+    if(fileComesFromPklInput) {
+      logger.info("Peaklist format looks like PKL, spectrum fake titles have been generated")
     }
 
     msQueryMapBuilder.result()
