@@ -8,7 +8,7 @@ import javax.persistence.TypedQuery;
 
 import fr.proline.module.seq.orm.Repository;
 import fr.proline.repository.util.JPAUtils;
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 public final class RepositoryRepository {
 

@@ -2,7 +2,7 @@ package fr.proline.module.seq.dto;
 
 import java.util.Objects;
 
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 public class SEDbIdentifierWrapper {
 

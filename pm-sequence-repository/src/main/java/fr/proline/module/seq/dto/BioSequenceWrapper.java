@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 import fr.proline.module.seq.orm.Alphabet;
 import fr.proline.module.seq.util.PeptideUtils;
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 public class BioSequenceWrapper implements Serializable {
 

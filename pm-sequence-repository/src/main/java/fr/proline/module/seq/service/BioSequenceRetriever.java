@@ -48,10 +48,10 @@ import fr.proline.module.seq.orm.repository.SEDbIdentifierRepository;
 import fr.proline.module.seq.orm.repository.SEDbRepository;
 import fr.proline.module.seq.util.HashUtil;
 import fr.proline.repository.IDatabaseConnector;
-import fr.proline.util.DateUtils;
-import fr.proline.util.FileUtils;
-import fr.proline.util.StringUtils;
-import fr.proline.util.ThreadLogger;
+import fr.profi.util.DateUtils;
+import fr.profi.util.FileUtils;
+import fr.profi.util.StringUtils;
+import fr.profi.util.ThreadLogger;
 
 public final class BioSequenceRetriever {
 

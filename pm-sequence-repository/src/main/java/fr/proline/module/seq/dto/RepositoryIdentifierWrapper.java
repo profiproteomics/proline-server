@@ -2,7 +2,7 @@ package fr.proline.module.seq.dto;
 
 import java.io.Serializable;
 
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 public class RepositoryIdentifierWrapper implements Serializable {
 

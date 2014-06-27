@@ -17,8 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.proline.module.seq.Constants;
-import fr.proline.util.StringUtils;
-import fr.proline.util.ThreadLogger;
+import fr.profi.util.StringUtils;
+import fr.profi.util.ThreadLogger;
 
 public class FastaPathsScanner {
 

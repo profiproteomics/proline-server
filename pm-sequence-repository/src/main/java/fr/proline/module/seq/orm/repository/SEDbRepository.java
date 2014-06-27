@@ -12,7 +12,7 @@ import fr.proline.module.seq.orm.SEDb;
 import fr.proline.module.seq.orm.SEDbInstance;
 import fr.proline.module.seq.orm.SEDbInstanceComparator;
 import fr.proline.repository.util.JPAUtils;
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 public final class SEDbRepository {
 

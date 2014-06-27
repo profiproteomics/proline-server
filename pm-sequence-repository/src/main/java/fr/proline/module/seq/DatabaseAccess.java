@@ -22,7 +22,7 @@ import fr.proline.repository.DatabaseUpgrader;
 import fr.proline.repository.DriverType;
 import fr.proline.repository.IDatabaseConnector;
 import fr.proline.repository.ProlineDatabaseType;
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 /**
  * Handle <code>DataStoreConnectorFactory</code> and DatabaseConnector keeping and initialization for

@@ -20,7 +20,7 @@ import fr.proline.module.seq.DatabaseAccess;
 import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
 import fr.proline.module.seq.dto.SEDbInstanceWrapper;
 import fr.proline.repository.IDatabaseConnector;
-import fr.proline.util.ThreadLogger;
+import fr.profi.util.ThreadLogger;
 
 /**
  * Launchs Sequence-Repository retrieve Service as single pass or as scheduled task (timer).

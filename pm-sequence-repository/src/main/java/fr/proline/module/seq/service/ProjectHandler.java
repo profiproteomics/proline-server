@@ -20,7 +20,7 @@ import fr.proline.module.seq.DatabaseAccess;
 import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
 import fr.proline.module.seq.dto.SEDbInstanceWrapper;
 import fr.proline.repository.IDatabaseConnector;
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 public class ProjectHandler {
 

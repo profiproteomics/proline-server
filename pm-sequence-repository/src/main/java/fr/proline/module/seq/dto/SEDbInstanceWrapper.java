@@ -3,7 +3,7 @@ package fr.proline.module.seq.dto;
 import java.io.Serializable;
 
 import fr.proline.module.seq.orm.Alphabet;
-import fr.proline.util.StringUtils;
+import fr.profi.util.StringUtils;
 
 public class SEDbInstanceWrapper implements Serializable {
 

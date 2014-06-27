@@ -1,6 +1,6 @@
 package fr.proline.module.seq;
 
-import static fr.proline.util.StringUtils.LINE_SEPARATOR;
+import static fr.profi.util.StringUtils.LINE_SEPARATOR;
 
 import java.util.ArrayList;
 import java.util.List;

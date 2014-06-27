@@ -1,7 +1,7 @@
 package fr.proline.module.seq.service;
 
 import static fr.proline.module.seq.Constants.LATIN_1_CHARSET;
-import static fr.proline.util.StringUtils.LINE_SEPARATOR;
+import static fr.profi.util.StringUtils.LINE_SEPARATOR;
 
 import java.io.BufferedReader;
 import java.io.File;
