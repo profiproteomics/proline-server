@@ -8,7 +8,7 @@ import fr.proline.module.exporter.msi.view.ResultSummaryViewTypes
 import fr.proline.module.exporter.commons.template.BasicXLSXTemplate
 import fr.proline.module.exporter.commons.template.InfoXLSXTemplate
 
-object IRMaLikeViewSetTemplateAsXLSX extends IViewSetTemplate {
+object IRMaLikeFullViewSetTemplateAsXLSX extends IViewSetTemplate {
 
   // Create a generic XLSX template for views
   private val xlsxTemplate = new BasicXLSXTemplate()
@@ -26,7 +26,8 @@ object IRMaLikeViewSetTemplateAsXLSX extends IViewSetTemplate {
     ViewTypeWithTemplate( ResultSummaryViewTypes.RESULTS_PARSE_FILTERS, infoXlsxTemplate, viewName = Some("filters") ),
     ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_TYPICAL_PROT_MATCH, xlsxTemplate, viewName = Some("protein sets") ),
     ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_BEST_PEPTIDE_MATCH, irmaPeptidesXlsxTemplate, viewName = Some("peptides") ),
-    ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_PROT_MATCH, xlsxTemplate, viewName = Some("protein matches") )
+    ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_PROT_MATCH, xlsxTemplate, viewName = Some("protein matches") ),   
+    ViewTypeWithTemplate( ResultSummaryViewTypes.ALL_PEPTIDE_MATCHES, irmaPeptidesXlsxTemplate, viewName = Some("all peptides") )
   )
   
 }
