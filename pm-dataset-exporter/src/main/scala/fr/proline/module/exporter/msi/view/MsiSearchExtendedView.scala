@@ -21,8 +21,8 @@ object MsiSearchExtendedViewFields extends IViewFieldEnumeration {
   val SOFTWARE_NAME = Field("software_name")
   val SOFTWARE_VERSION = Field("software_version")
   
-  val MAIN_DATABASE_NAME = Field("main_database_name")
-  val MAIN_DATABASE_RELEASE = Field("main_database_release")
+  val DATABASES_NAMES = Field("database_names")
+  val DATABASES_RELEASES = Field("database_releases")
   val TAXONOMY = Field("taxonomy")
   val ENZYMES = Field("enzymes")
   val MAX_MISSED_CLEAVAGES = Field("max_missed_cleavages")
@@ -73,6 +73,13 @@ class MsiSearchExtendedView( val rsm: ResultSummary ) extends IDatasetView {
     val pkl = msiSearch.peakList
     val searchSettings = msiSearch.searchSettings
 
+    val dbNamesBuilder = new StringBuilder()
+    val dbReleaseBuilder = new StringBuilder()
+    searchSettings.seqDatabases.foreach(db =>{
+      dbNamesBuilder.append(db.name).append("; ")
+      dbReleaseBuilder.append(db.releaseDate).append("; ")
+    })
+    
     // TODO: add missing fields (from other tables than msi_search and search_settings)
     Map(
       fields.SEARCH_TITLE -> msiSearch.title,
@@ -89,8 +96,8 @@ class MsiSearchExtendedView( val rsm: ResultSummary ) extends IDatasetView {
       fields.SEARCHED_SEQUENCES_COUNT -> msiSearch.searchedSequencesCount,
       fields.SOFTWARE_NAME -> searchSettings.softwareName,
       fields.SOFTWARE_VERSION -> searchSettings.softwareVersion,
-      fields.MAIN_DATABASE_NAME -> searchSettings.seqDatabases(0).name,
-      fields.MAIN_DATABASE_RELEASE -> searchSettings.seqDatabases(0).releaseDate,
+      fields.DATABASES_NAMES -> dbNamesBuilder.result,
+      fields.DATABASES_RELEASES -> dbReleaseBuilder.result,
       fields.TAXONOMY -> searchSettings.taxonomy,
       fields.ENZYMES -> searchSettings.usedEnzymes.map(_.name).mkString(", "),
       fields.MAX_MISSED_CLEAVAGES -> searchSettings.maxMissedCleavages,
