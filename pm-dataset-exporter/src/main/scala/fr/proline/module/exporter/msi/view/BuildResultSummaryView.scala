@@ -8,11 +8,12 @@ object BuildResultSummaryView {
   
   private def _builders = Map( 
     ResultSummaryViewTypes.MSI_SEARCH_EXTENDED -> (rsm => new MsiSearchExtendedView(rsm)),
+    ResultSummaryViewTypes.RESULTS_PARSE_FILTERS-> (rsm => new ResultParseAndFiltersView(rsm)),
     ResultSummaryViewTypes.PEP_SET_TO_PROT_MATCH -> (rsm => new PepSetToProtMatchView(rsm)),
-    ResultSummaryViewTypes.PROT_SET_TO_BEST_PEP_MATCH -> (rsm => new ProtSetToBestPepMatchView(rsm)),
     ResultSummaryViewTypes.PROT_SET_TO_PROT_MATCH -> (rsm => new ProtSetToProtMatchView(rsm)),
     ResultSummaryViewTypes.PROT_SET_TO_TYPICAL_PROT_MATCH -> (rsm => new ProtSetToTypicalProtMatchView(rsm)),
     ResultSummaryViewTypes.PROT_SET_TO_BEST_PEPTIDE_MATCH -> (rsm => new ProtSetToBestPepMatchView(rsm)),
+    
     ResultSummaryViewTypes.ALL_PEPTIDE_MATCHES -> (rsm => new AllPepMatchesView(rsm))
   ).map( e => e._1.asInstanceOf[IViewTypeEnumeration#Value] -> e._2 )
 
