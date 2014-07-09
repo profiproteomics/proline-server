@@ -1,20 +1,21 @@
 package fr.proline.module.exporter.msi.view
 
-import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.module.exporter.api.view.IDatasetView
-import fr.proline.module.exporter.api.template.ViewWithTemplate
-import fr.proline.module.exporter.api.template._
-import fr.proline.context.IExecutionContext
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.om.provider.msi.impl._
 import scala.collection.mutable.ArrayBuffer
+
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.IExecutionContext
+import fr.proline.core.om.model.msi.ResultSummary
+import fr.proline.core.om.provider.msi.impl._
+import fr.proline.module.exporter.api.template._
+import fr.proline.module.exporter.api.template.ViewWithTemplate
+import fr.proline.module.exporter.api.view.IDatasetView
 
 object BuildResultSummaryViewSet {
 
-  def apply(rsm: ResultSummary, viewSetName: String, viewSetTemplate: IViewSetTemplate ): ResultSummaryViewSet = {
+  def apply(ds: DataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate ): ResultSummaryViewSet = {
     
     val templatedViews = viewSetTemplate.templatedViewTypes.map { templatedViewType =>
-      val viewWithTpl = ViewWithTemplate( BuildResultSummaryView(rsm,templatedViewType.viewType), templatedViewType.template )
+      val viewWithTpl = ViewWithTemplate( BuildResultSummaryView(ds,templatedViewType.viewType), templatedViewType.template )
       if( templatedViewType.viewName.isDefined ) viewWithTpl.datasetView.viewName = templatedViewType.viewName.get
       
       viewWithTpl
@@ -25,7 +26,8 @@ object BuildResultSummaryViewSet {
   
   def apply(
     executionContext: IExecutionContext,
-    rsmId: Long,    
+    projectId: Long,
+    rsmId: Long,
     loadSubsets: Boolean,
     loadFullResultSet: Boolean,
     viewSetName: String,
@@ -39,6 +41,9 @@ object BuildResultSummaryViewSet {
     udsSQLCtx = executionContext.getUDSDbConnectionContext()
     psSQLCtx = executionContext.getPSDbConnectionContext()
     msiSQLCtx = executionContext.getMSIDbConnectionContext()
+    
+    // FIXME: load the project name
+    val projectName = ""
 
     val rsmProvider = new SQLResultSummaryProvider(msiSQLCtx, psSQLCtx, udsSQLCtx)
     
@@ -81,7 +86,7 @@ object BuildResultSummaryViewSet {
       }
     }
     
-    return apply(rsm, viewSetName, viewSetTemplate)
+    return apply( DataSet( projectName, rsm), viewSetName, viewSetTemplate)
 
   }
   

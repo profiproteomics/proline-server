@@ -1,5 +1,8 @@
 package fr.proline.module.exporter.msi.view
 
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.HashSet
 import fr.proline.core.om.model.msi._
 import fr.proline.module.exporter.api.view._
 
@@ -7,15 +10,20 @@ trait IProtSetToToTypicalProtMatchViewFields extends IViewFieldEnumeration {
   val PROTEIN_SET_ID = Field("protein_set_id")
   val ACCESSION = Field("accession")
   val DESCRIPTION = Field("description")
-  val GENE_NAME = Field("gene_name")
-  val TAXON_ID = Field("taxon_id")
+  //val GENE_NAME = Field("gene_name")
+  //val TAXON_ID = Field("taxon_id")
   val PROTEIN_SET_SCORE = Field("protein_set_score")
   val IS_PROTEIN_SET_VALIDATED = Field("is_protein_set_validated")
-  val PROTEIN_MATCHES_COUNT = Field("#protein_matches")
-  val SUBSET_PROTEIN_MATCHES_COUNT = Field("#subset_protein_matches")
-  val PEPTIDE_MATCHES_COUNT = Field("#peptide_matches")
+  val SAMESET_PROTEIN_MATCHES_COUNT = Field("#sameset_protein_matches")
+  val SUBSET_PROTEIN_MATCHES_COUNT = Field("#subset_protein_matches")  
   val COVERAGE = Field("coverage")
   val MW = Field("MW")
+  val SEQUENCES_COUNT = Field("#sequences")
+  val SPECIFIC_SEQUENCES_COUNT = Field("#specific_sequences")
+  val PEPTIDES_COUNT = Field("#peptides")
+  val SPECIFIC_PEPTIDES_COUNT = Field("#specific_peptides")
+  val PEPTIDE_MATCHES_COUNT = Field("#peptide_matches")
+  val SPECIFIC_PEPTIDE_MATCHES_COUNT = Field("#specific_peptide_matches")
 }
 
 object ProtSetToToTypicalProtMatchViewFields extends IProtSetToToTypicalProtMatchViewFields
@@ -32,22 +40,42 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IDatasetView {
     val protMatch = myBuildingCtx.typicalProtMatch
     val pepSetById = myBuildingCtx.pepSetById
     
-    val subsetPepSets = Option( protSet.peptideSet.strictSubsetIds ).map( _.map( pepSetById(_) ) ).getOrElse(Array.empty[PeptideSet])
-    val subsetProtMatchesCount = subsetPepSets.flatMap( _.proteinMatchIds ).length
+    //val subsetPepSets = Option( protSet.peptideSet.strictSubsetIds ).map( _.map( pepSetById(_) ) ).getOrElse(Array.empty[PeptideSet])
+    //val subsetProtMatchesCount = subsetPepSets.flatMap( _.proteinMatchIds ).length
+    
+    val pepCount = protSet.peptideSet.items.length
+    val speSeqs = new ArrayBuffer[String]( pepCount )
+    val spePeps = new ArrayBuffer[Peptide]( pepCount )
+    val spePsmsIds = new ArrayBuffer[Long]( pepCount )
+    
+    for(item <- protSet.peptideSet.items ) {
+      val pepInst = item.peptideInstance
+      
+      if( pepInst.isProteinSetSpecific ) {        
+        speSeqs += pepInst.peptide.sequence
+        spePeps += pepInst.peptide
+        spePsmsIds ++= pepInst.getPeptideMatchIds
+      }
+    }
     
     Map(
       protSetFields.PROTEIN_SET_ID -> protSet.id,
-      protSetFields.PROTEIN_SET_SCORE -> protSet.peptideSet.score,
-      protSetFields.IS_PROTEIN_SET_VALIDATED -> protSet.isValidated.toString,
-      protSetFields.PROTEIN_MATCHES_COUNT -> protSet.getProteinMatchIds.length,
-      protSetFields.SUBSET_PROTEIN_MATCHES_COUNT -> subsetProtMatchesCount,
       protSetFields.ACCESSION -> protMatch.accession,
       protSetFields.DESCRIPTION -> protMatch.description,
-      protSetFields.GENE_NAME -> protMatch.geneName,
-      protSetFields.TAXON_ID -> protMatch.taxonId,
-      protSetFields.COVERAGE -> protMatch.coverage,
+      //protSetFields.GENE_NAME -> protMatch.geneName,
+      //protSetFields.TAXON_ID -> protMatch.taxonId,
+      protSetFields.PROTEIN_SET_SCORE -> "%.1f".format(protSet.peptideSet.score).toDouble,
+      protSetFields.IS_PROTEIN_SET_VALIDATED -> protSet.isValidated.toString,
+      protSetFields.SAMESET_PROTEIN_MATCHES_COUNT -> protSet.getSameSetProteinMatchIds.length,
+      protSetFields.SUBSET_PROTEIN_MATCHES_COUNT -> protSet.getSubSetProteinMatchIds.length,
+      protSetFields.COVERAGE -> "%.1f".format(protMatch.coverage).toDouble,
+      protSetFields.MW -> Option(protMatch.protein).flatMap( _.map( _.mass ) ).getOrElse(0.0),
+      protSetFields.SEQUENCES_COUNT -> protMatch.sequenceMatches.length,
+      protSetFields.SPECIFIC_SEQUENCES_COUNT -> speSeqs.distinct.length,
+      protSetFields.PEPTIDES_COUNT -> pepCount,
+      protSetFields.SPECIFIC_PEPTIDES_COUNT -> spePeps.length,
       protSetFields.PEPTIDE_MATCHES_COUNT -> protMatch.peptideMatchesCount,
-      protSetFields.MW -> Option(protMatch.protein).map( _.map( _.mass ).getOrElse(0.0) ).getOrElse(0.0)
+      protSetFields.SPECIFIC_PEPTIDE_MATCHES_COUNT -> spePsmsIds.length
     ).map( r => r._1.toString -> r._2 )
   }
   
@@ -58,6 +86,23 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IDatasetView {
     val pepMatchById = rs.peptideMatchById    
     val pepSetById = Map() ++ rsm.peptideSets.map( ps => ps.id -> ps )
     
+    // BEGIN OF CODE DUPLICATED WITH AllPepMatchesView
+    // Count the number of protein sets and proteins matches related to a given peptide match
+    val protSetIdSetByPepMatchId = new HashMap[Long,HashSet[Long]]()
+    val protMatchIdSetByPepMatchId = new HashMap[Long,HashSet[Long]]()
+    
+    for(
+      protSet <- rsm.proteinSets;
+      protMatchId <- protSet.getProteinMatchIds;
+      pepInst <- protSet.peptideSet.getPeptideInstances;
+      pepMatchId <- pepInst.getPeptideMatchIds
+    ) {
+      protSetIdSetByPepMatchId.getOrElseUpdate(pepMatchId, new HashSet[Long] ) += protSet.id
+      protMatchIdSetByPepMatchId.getOrElseUpdate(pepMatchId, new HashSet[Long] ) += protMatchId      
+    }
+    // END OF CODE DUPLICATED WITH AllPepMatchesView
+    
+    // Go through protein sets
     for( protSet <- rsm.proteinSets ) {
       // Note that we export only protein matches which are loaded with the RSM
       // The result will depend of provider which have been used
@@ -71,7 +116,14 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IDatasetView {
         protMatchById( protSet.getSameSetProteinMatchIds.head )
       }
       
-      val buildingContext = new ProtSetToToTypicalProtMatchBuildingContext(protSet,typicalProtMatch,pepMatchById,pepSetById)
+      val buildingContext = new ProtSetToToTypicalProtMatchBuildingContext(
+        protSet,
+        typicalProtMatch,
+        pepMatchById,
+        pepSetById,
+        protSetIdSetByPepMatchId,
+        protMatchIdSetByPepMatchId
+      )
       this.formatRecord( buildingContext, recordFormatter )
     }
   }
@@ -82,7 +134,9 @@ case class ProtSetToToTypicalProtMatchBuildingContext(
   protSet: ProteinSet,
   typicalProtMatch: ProteinMatch,
   pepMatchById: Map[Long,PeptideMatch],
-  pepSetById: Map[Long,PeptideSet]
+  pepSetById: Map[Long,PeptideSet],
+  protSetIdSetByPepMatchId: HashMap[Long,HashSet[Long]],
+  protMatchIdSetByPepMatchId: HashMap[Long,HashSet[Long]] 
 ) extends IRecordBuildingContext
 
 class ProtSetToTypicalProtMatchView( val rsm: ResultSummary ) extends AbstractProtSetToTypicalProtMatchView {

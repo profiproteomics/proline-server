@@ -25,5 +25,7 @@ trait IDatasetView {
 
     records
   }
+  
+  def formatFloat( float: Float ): String = "%.2f".format(float)
 
 }

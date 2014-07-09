@@ -4,7 +4,8 @@ import fr.proline.module.exporter.api.view.IViewTypeEnumeration
 
 object ResultSummaryViewTypes extends IViewTypeEnumeration {
   val MSI_SEARCH_EXTENDED = Value("MSI_SEARCH_EXTENDED")
-  val RESULTS_PARSE_FILTERS = Value("RESULTS_PARSE_FILTERS")
+  val IMPORT_AND_VALIDATION_PROPS = Value("IMPORT_AND_VALIDATION_PROPS")
+  val STATISTICS = Value("STATISTICS")
   val PEP_SET_TO_PROT_MATCH = Value("PEP_SET_TO_PROT_MATCH")
   val PROT_SET_TO_PROT_MATCH = Value("PROT_SET_TO_PROT_MATCH")
   val PROT_SET_TO_TYPICAL_PROT_MATCH = Value("PROT_SET_TO_TYPICAL_PROT_MATCH")
