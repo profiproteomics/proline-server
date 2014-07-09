@@ -10,7 +10,7 @@ import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.provider.msi.impl._
 import fr.proline.core.om.util.AbstractMultipleDBTestCase
-import fr.proline.module.exporter.msi.template.IRMaLikeViewSetTemplateAsXLSX
+import fr.proline.module.exporter.msi.template.ProlineViewSetTemplateAsXLSX
 import fr.proline.module.exporter.msi.view.BuildResultSummaryViewSet
 import fr.proline.module.exporter.commons.ViewSetExporter
 import fr.proline.repository.DriverType
@@ -19,11 +19,12 @@ import fr.proline.repository.DriverType
  * @author David Bouyssie
  *
  */
-class ViewSetExporterTest  extends AbstractMultipleDBTestCase with Logging {
+class ViewSetExporterTest extends AbstractMultipleDBTestCase with Logging {
 
   // Define some vars
   val driverType = DriverType.H2
   val fileName = "STR_F063442_F122817_MergedRSMs"
+  val projectId = 1
   val targetRSMId: Long = 33 // 2 to have info data
 
   var executionContext: IExecutionContext = null
@@ -31,6 +32,8 @@ class ViewSetExporterTest  extends AbstractMultipleDBTestCase with Logging {
   @Before
   @throws(classOf[Exception])
   def setUp() = {
+    
+    java.util.Locale.setDefault(new java.util.Locale("en", "US"))
 
     logger.info("Initializing DBs")
     super.initDBsDBManagement(driverType)
@@ -57,11 +60,12 @@ class ViewSetExporterTest  extends AbstractMultipleDBTestCase with Logging {
 
     val viewSet = BuildResultSummaryViewSet(
       executionContext,
+      projectId,
       targetRSMId,
       true,
       true,
       fileName,
-      IRMaLikeViewSetTemplateAsXLSX
+      ProlineViewSetTemplateAsXLSX
     )
     
     // Create TEMP dir
@@ -73,6 +77,9 @@ class ViewSetExporterTest  extends AbstractMultipleDBTestCase with Logging {
       
       // Export the RSM
       ViewSetExporter.exportViewSetToDirectory(viewSet, exportLoc )
+      
+      //println(exportLoc)
+      //Thread.sleep(100000)
       
       // TODO: compare the content of the exported file with an expected content
       
