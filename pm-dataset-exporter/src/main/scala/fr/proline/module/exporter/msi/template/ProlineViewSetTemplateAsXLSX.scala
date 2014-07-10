@@ -5,7 +5,7 @@ import fr.proline.module.exporter.api.template._
 import fr.proline.module.exporter.commons.template.BasicXLSXTemplate
 import fr.proline.module.exporter.commons.template.InfoXLSXTemplate
 import fr.proline.module.exporter.msi.view._
-import fr.proline.module.exporter.msi.view.{ ProtSetToBestPepMatchViewFields => PeptideViewFields }
+import fr.proline.module.exporter.msi.view.{ ProtSetToPepMatchViewFields => PeptideViewFields }
 
 object ProlineViewSetTemplateAsXLSX extends IViewSetTemplate {
 
@@ -40,7 +40,7 @@ object ProlineViewSetTemplateAsXLSX extends IViewSetTemplate {
         MsiSearchExtendedViewFields.FRAGMENT_MASS_ERROR_TOLERANCE,
         MsiSearchExtendedViewFields.IS_DECOY
         // option C13 is missing
-      )
+      ).map(_.toString)
     )
   )
   
@@ -57,7 +57,7 @@ object ProlineViewSetTemplateAsXLSX extends IViewSetTemplate {
         MsiSearchExtendedViewFields.PEAKLIST_FILE_PATH,
         MsiSearchExtendedViewFields.SEARCH_TITLE,
         MsiSearchExtendedViewFields.SEARCH_DATE
-      )
+      ).map(_.toString)
     )
   )
   
@@ -90,7 +90,7 @@ object ProlineViewSetTemplateAsXLSX extends IViewSetTemplate {
         PeptideViewFields.END,
         PeptideViewFields.RESIDUE_BEFORE,
         PeptideViewFields.RESIDUE_AFTER
-      )
+      ).map(_.toString)
     )
   )
   

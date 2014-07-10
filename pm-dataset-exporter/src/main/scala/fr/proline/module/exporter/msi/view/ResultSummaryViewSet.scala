@@ -11,7 +11,7 @@ class ResultSummaryViewSet(
 ) extends IViewSet {
 
   lazy val exporters = templatedViews.map { templatedView =>
-    new ResultSummaryExporter( templatedView.datasetView, templatedView.template )
+    new ResultSummaryExporter( templatedView.dataView, templatedView.template )
   }
   
 }

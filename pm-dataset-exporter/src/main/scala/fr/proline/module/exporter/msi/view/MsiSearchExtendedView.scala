@@ -40,8 +40,9 @@ object MsiSearchExtendedViewFields extends IViewFieldEnumeration {
   // option C13 is missing => we need to import this information ?
 }
 
-class MsiSearchExtendedView( val projectName: String, val rsm: ResultSummary ) extends IDatasetView {
+class MsiSearchExtendedView( val identDS: IdentDataSet ) extends IFixedDatasetView {
   
+  val rsm = identDS.resultSummary
   var viewName = "msi_search"
   val fields = MsiSearchExtendedViewFields
   
@@ -59,7 +60,7 @@ class MsiSearchExtendedView( val projectName: String, val rsm: ResultSummary ) e
     else ms2SettingsOpt.get.ms2ErrorTol + " " + ms2SettingsOpt.get.ms2ErrorTolUnit
     
     Map(
-      fields.PROJECT_NAME -> projectName,
+      fields.PROJECT_NAME -> identDS.projectName,
       fields.RESULT_SET_NAME -> rsm.resultSet.map(_.name).getOrElse(""),
       fields.SEARCH_TITLE -> msiSearch.title,
       fields.SEARCH_DATE -> msiSearch.date,

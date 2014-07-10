@@ -4,17 +4,12 @@ import scala.collection.mutable.ArrayBuffer
 
 trait IRecordBuildingContext
 
-trait IDatasetView {
-  
-  var viewName: String
-  val fields: IViewFieldEnumeration
-  
+trait IDatasetView extends IDataView {  
+
   def buildRecord( buildingContext: IRecordBuildingContext ): Map[String,Any]
   def formatRecord( buildingContext: IRecordBuildingContext, recordFormatter: Map[String,Any] => Unit ) {
     recordFormatter( this.buildRecord(buildingContext) )
   }
-  
-  def onEachRecord( recordFormatter: Map[String,Any] => Unit )
   
   def getAllRecords(): Seq[Map[String,Any]] = {
     val records = new ArrayBuffer[Map[String,Any]]()
@@ -26,6 +21,13 @@ trait IDatasetView {
     records
   }
   
-  def formatFloat( float: Float ): String = "%.2f".format(float)
+}
 
+trait IFixedDatasetView extends IDatasetView {
+  
+  val fields: IViewFieldEnumeration
+  
+  private lazy val fieldsNames = fields.values.toArray.map(_.toString)  
+  def getFieldsNames(): Array[String] = fieldsNames
+  
 }

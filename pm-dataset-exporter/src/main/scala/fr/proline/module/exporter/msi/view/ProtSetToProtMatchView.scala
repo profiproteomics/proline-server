@@ -23,36 +23,17 @@ object ProtSetToProtMatchViewFields extends IViewFieldEnumeration {
   val SPECIFIC_PEPTIDE_MATCHES_COUNT = Field("#specific_peptide_matches")
 }
 
-class ProtSetToProtMatchView( rsm: ResultSummary ) extends IDatasetView {
+class ProtSetToProtMatchView( val identDS: IdentDataSet ) extends IFixedDatasetView {
 
   var viewName = "prot_set_to_prot_match"
   val fields = ProtSetToProtMatchViewFields
   
-  case class MyBuildingContext( protSet: ProteinSet, peptideSet: PeptideSet, protMatch: ProteinMatch ) extends IRecordBuildingContext
   def buildRecord( buildingContext: IRecordBuildingContext ): Map[String,Any] = {
     
-    val myBuildingContext = buildingContext.asInstanceOf[MyBuildingContext]
-    val protSet = myBuildingContext.protSet
-    val protMatch = myBuildingContext.protMatch
-    val peptideSet = myBuildingContext.peptideSet
-    
-    // --- BEGIN OF CODE DUPLICATED WITH AbstractProtSetToTypicalProtMatchView ---
-    // TODO: put this in a trait or a singleton ???
-    val pepCount = peptideSet.items.length
-    val speSeqs = new ArrayBuffer[String]( pepCount )
-    val spePeps = new ArrayBuffer[Peptide]( pepCount )
-    val spePsmsIds = new ArrayBuffer[Long]( pepCount )
-    
-    for(item <- protSet.peptideSet.items ) {
-      val pepInst = item.peptideInstance
-      
-      if( pepInst.isProteinSetSpecific ) {        
-        speSeqs += pepInst.peptide.sequence
-        spePeps += pepInst.peptide
-        spePsmsIds ++= pepInst.getPeptideMatchIds
-      }
-    }
-    // --- END OF CODE DUPLICATED WITH AbstractProtSetToTypicalProtMatchView ---
+    val buildingCtx = buildingContext.asInstanceOf[ProtMatchBuildingContext]
+    val protSet = buildingCtx.protSet
+    val protMatch = buildingCtx.protMatch
+    val peptideSet = buildingCtx.peptideSet
     
     Map(
       fields.PROTEIN_SET_ID -> protSet.id,
@@ -67,16 +48,17 @@ class ProtSetToProtMatchView( rsm: ResultSummary ) extends IDatasetView {
       fields.MW -> Option(protMatch.protein).flatMap( _.map( _.mass ) ).getOrElse(0.0),
       fields.PEPTIDE_MATCHES_COUNT -> peptideSet.peptideMatchesCount,
       fields.SEQUENCES_COUNT -> protMatch.sequenceMatches.length,
-      fields.SPECIFIC_SEQUENCES_COUNT -> speSeqs.distinct.length,
-      fields.PEPTIDES_COUNT -> pepCount,
-      fields.SPECIFIC_PEPTIDES_COUNT -> spePeps.length,
+      fields.SPECIFIC_SEQUENCES_COUNT -> buildingCtx.specificSeqs.distinct.length,
+      fields.PEPTIDES_COUNT -> buildingCtx.peptideCount,
+      fields.SPECIFIC_PEPTIDES_COUNT -> buildingCtx.specificPeps.length,
       fields.PEPTIDE_MATCHES_COUNT -> protMatch.peptideMatchesCount,
-      fields.SPECIFIC_PEPTIDE_MATCHES_COUNT -> spePsmsIds.length
+      fields.SPECIFIC_PEPTIDE_MATCHES_COUNT -> buildingCtx.specificPepMatchIds.length
     ).map( r => r._1.toString -> r._2)
   }
   
   def onEachRecord( recordFormatter: Map[String,Any] => Unit ) {
     
+    val rsm = identDS.resultSummary
     val rs = rsm.resultSet.get
     val protMatchById = rs.proteinMatchById
     
@@ -87,7 +69,7 @@ class ProtSetToProtMatchView( rsm: ResultSummary ) extends IDatasetView {
       // Typical Protein Match is put first
       val typicalProteinMatchId = protSet.getTypicalProteinMatchId
       val typicalProtMatch = protMatchById.get(typicalProteinMatchId).get
-      this.formatRecord(MyBuildingContext(protSet, protSet.peptideSet, typicalProtMatch ), recordFormatter)
+      this.formatRecord(ProtMatchBuildingContext(protSet, protSet.peptideSet, typicalProtMatch ), recordFormatter)
 
       // Sort strict subsets by descending score
       val strictSubsetsSortedByDescScore = protSet.peptideSet.strictSubsets.get.sortWith(_.score > _.score)
@@ -100,7 +82,7 @@ class ProtSetToProtMatchView( rsm: ResultSummary ) extends IDatasetView {
         // Retrieve the protein match
         protMatch <- protMatchById.get(protMatchId)
       ) {
-         this.formatRecord(MyBuildingContext(protSet, peptideSet, protMatch ), recordFormatter)
+         this.formatRecord(ProtMatchBuildingContext(protSet, peptideSet, protMatch ), recordFormatter)
       }
       
     }

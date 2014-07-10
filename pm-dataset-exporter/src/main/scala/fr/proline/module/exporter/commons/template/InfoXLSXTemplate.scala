@@ -10,12 +10,11 @@ import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 
-import fr.proline.module.exporter.api.view.IDatasetView
+import fr.proline.module.exporter.api.view.IDataView
 import fr.proline.module.exporter.api.view.IViewFieldEnumeration
 
-
 class InfoXLSXTemplate(
-  val selectedFields: Option[Seq[IViewFieldEnumeration#Value]] = None
+  val selectedFields: Option[Seq[String]] = None
 ) extends IWorksheetTemplate {
   
   val fileExtension: String = "xlsx"
@@ -27,11 +26,11 @@ class InfoXLSXTemplate(
     fileOut.close()
   }
   
-  def newWorksheet( view: IDatasetView, workbookLocation: File ) {
+  def newWorksheet( view: IDataView, workbookLocation: File ) {
     
     val selectedFieldsOrFields: Seq[String] = {
-      if( selectedFields.isDefined ) selectedFields.get.map(_.toString)
-      else view.fields.values.toSeq.map(_.toString)
+      if( selectedFields.isDefined ) selectedFields.get
+      else view.getFieldsNames
     }
     
     // Open workbook

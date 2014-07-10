@@ -3,7 +3,7 @@ package fr.proline.module.exporter.api.formatter
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
-import fr.proline.module.exporter.api.view.IDatasetView
+import fr.proline.module.exporter.api.view.IDataView
 import fr.proline.module.exporter.api.template.IViewTemplate
 import java.util.UUID
 
@@ -12,7 +12,7 @@ trait IViewFormatter {
   val template: IViewTemplate
   val fileExtension: String = template.fileExtension
 
-  def getViewLocation(viewDir: File, view: IDatasetView): File = {
+  def getViewLocation(viewDir: File, view: IDataView): File = {
     require((viewDir != null) && viewDir.isDirectory, "viewDir must be a directory")
 
     // Create a unique name for this view
@@ -26,9 +26,9 @@ trait IViewFormatter {
     viewDir.getAbsoluteFile
   }
 
-  def formatView(view: IDatasetView, os: OutputStream)
+  def formatView(view: IDataView, os: OutputStream)
 
-  def formatView(view: IDatasetView, location: File): File = {
+  def formatView(view: IDataView, location: File): File = {
 
     if (location.isFile) { // isFile => exist && is a normal File
       _formatView(view, location)
@@ -41,7 +41,7 @@ trait IViewFormatter {
 
   }
 
-  protected def _formatView(view: IDatasetView, outputFile: File) {
+  protected def _formatView(view: IDataView, outputFile: File) {
     val fop = new FileOutputStream(outputFile)
     formatView(view, fop)
     fop.close()

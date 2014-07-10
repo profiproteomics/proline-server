@@ -12,11 +12,11 @@ import fr.proline.module.exporter.api.view.IDatasetView
 
 object BuildResultSummaryViewSet {
 
-  def apply(ds: DataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate ): ResultSummaryViewSet = {
+  def apply(ds: IdentDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate ): ResultSummaryViewSet = {
     
     val templatedViews = viewSetTemplate.templatedViewTypes.map { templatedViewType =>
       val viewWithTpl = ViewWithTemplate( BuildResultSummaryView(ds,templatedViewType.viewType), templatedViewType.template )
-      if( templatedViewType.viewName.isDefined ) viewWithTpl.datasetView.viewName = templatedViewType.viewName.get
+      if( templatedViewType.viewName.isDefined ) viewWithTpl.dataView.viewName = templatedViewType.viewName.get
       
       viewWithTpl
     }
@@ -86,7 +86,7 @@ object BuildResultSummaryViewSet {
       }
     }
     
-    return apply( DataSet( projectName, rsm), viewSetName, viewSetTemplate)
+    return apply( IdentDataSet( projectName, rsm), viewSetName, viewSetTemplate)
 
   }
   

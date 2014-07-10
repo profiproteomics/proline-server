@@ -18,7 +18,7 @@ object IRMaLikeFullViewSetTemplateAsXLSX extends IViewSetTemplate {
   
   // Create an XLSX template specific to the peptides view
   private val irmaPeptidesXlsxTemplate = new BasicXLSXTemplate(
-    selectedFields = Some( IRMaLikeTemplateFields.peptidesFields )
+    selectedFields = Some( IRMaLikeTemplateFields.peptidesFields.map(_.toString) )
   )
   
   val templatedViewTypes: Seq[ViewTypeWithTemplate] = Seq(

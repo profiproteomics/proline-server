@@ -16,7 +16,8 @@ object PepSetToProtMatchViewFields extends IViewFieldEnumeration {
   
 }
 
-class PepSetToProtMatchView( rsm: ResultSummary ) extends IDatasetView {
+// TODO: remove this view ???
+class PepSetToProtMatchView( val identDS: IdentDataSet ) extends IFixedDatasetView {
 
   var viewName = "pep_set_to_prot_match"
   val fields = PepSetToProtMatchViewFields
@@ -43,6 +44,7 @@ class PepSetToProtMatchView( rsm: ResultSummary ) extends IDatasetView {
   
   def onEachRecord( recordFormatter: Map[String,Any] => Unit ) {
     
+    val rsm = identDS.resultSummary
     val rs = rsm.resultSet.get
     val protMatchById = rs.proteinMatchById
     

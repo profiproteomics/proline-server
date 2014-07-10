@@ -6,90 +6,73 @@ import scala.collection.mutable.HashMap
 
 // TODO: rename into ImportAndValidationPropsFields
 object ResultParseAndFiltersFields extends IViewFieldEnumeration {
-
-  //TODO : Better management of multiple filters ...
-  val PARSE_PARAM = Field("parse_param")
+  val IMPORT_PARAMS = Field("import_params")
   val PSM_FILTER_EXPECTED_FDR = Field("psm_filter_expected_fdr")
-  val PSM_FILTER_1 = Field("psm_filter_1")
-  val PSM_FILTER_2 = Field("psm_filter_2")
-  val PSM_FILTER_3 = Field("psm_filter_3")
-  val PSM_FILTER_4 = Field("psm_filter_4")
-  val PSM_FILTER_5 = Field("psm_filter_5")
-  val PSM_FILTER_6 = Field("psm_filter_6")
-  val PSM_FILTER_7 = Field("psm_filter_7")
-  val PSM_FILTER_8 = Field("psm_filter_8")
-  val PSM_FILTER_9 = Field("psm_filter_9")
-  val PSM_FILTER_10 = Field("psm_filter_10")
-
   val PROT_FILTER_EXPECTED_FDR = Field("prot_filter_expected_fdr")
-  val PROT_FILTER_1 = Field("prot_filter_1")
-  val PROT_FILTER_2 = Field("prot_filter_2")
-  val PROT_FILTER_3 = Field("prot_filter_3")
-  val PROT_FILTER_4 = Field("prot_filter_4")
 }
 
 // TODO: rename into ImportAndValidationPropsView
-class ResultParseAndFiltersView(val rsm: ResultSummary) extends IDatasetView {
+class ResultParseAndFiltersView(val rsm: ResultSummary) extends IFormLikeView {
 
   var viewName = "import and validation"
-  val fields = ResultParseAndFiltersFields
+  private val rs = rsm.resultSet
+  private val fields = ResultParseAndFiltersFields
+  
+  def getFieldValueMap() = _fieldValueMap
+  def getFieldsNames() = _fieldValueMap.keys.toArray
 
-  case class MyBuildingContext(rsm: ResultSummary) extends IRecordBuildingContext
-  def buildRecord(buildingContext: IRecordBuildingContext): Map[String, Any] = {
-
-    val myBuildingContext = buildingContext.asInstanceOf[MyBuildingContext]
-    val rsm = myBuildingContext.rsm
-    val rs = rsm.resultSet
-
+  private val _fieldValueMap = {
+    
     val resultMapBuilder = Map.newBuilder[String, Any]
-
-    // *** Get Parser Parameters
-    val parseBuilder = new StringBuilder("")
+  
+    // *** Get import Parameters
+    val importParamsBuilder = new StringBuilder("")
     if (rs.isDefined && rs.get.properties.isDefined) {
       val rsProp = rs.get.properties.get
-
+  
       // Targer/Decoy Mode 
       if (rsProp.getTargetDecoyMode.isDefined)
-        parseBuilder.append("Target-Decoy Mode : ").append(rs.get.properties.get.getTargetDecoyMode.get).append("; ")
-
+        importParamsBuilder.append("Target-Decoy Mode : ").append(rs.get.properties.get.getTargetDecoyMode.get).append("; ")
+        
+      // TODO: more generic way to handle search engine specific params (iterate over bean properties)
+  
       // Search engine specific params  
       if (rsProp.getMascotImportProperties.isDefined) { // MASCOT
         if (rsProp.getMascotImportProperties.get.getIonsScoreCutoff.isDefined) {
-          parseBuilder.append("Mascot Ions Score Cut-off : ").append(rsProp.getMascotImportProperties.get.getIonsScoreCutoff.get).append("; ")
+          importParamsBuilder.append("Mascot Ions Score Cut-off : ").append(rsProp.getMascotImportProperties.get.getIonsScoreCutoff.get).append("; ")
         }
         if (rsProp.getMascotImportProperties.get.getSubsetsThreshold.isDefined) {
-          parseBuilder.append("Mascot Subsets Threshold : ").append(rsProp.getMascotImportProperties.get.getSubsetsThreshold.get).append("; ")
+          importParamsBuilder.append("Mascot Subsets Threshold : ").append(rsProp.getMascotImportProperties.get.getSubsetsThreshold.get).append("; ")
         }
         if (rsProp.getMascotImportProperties.get.getProteinsPvalueCutoff.isDefined) {
-          parseBuilder.append("Mascot Proteins Pvalue Cut-off: ").append(rsProp.getMascotImportProperties.get.getProteinsPvalueCutoff.get).append("; ")
+          importParamsBuilder.append("Mascot Proteins Pvalue Cut-off: ").append(rsProp.getMascotImportProperties.get.getProteinsPvalueCutoff.get).append("; ")
         }
-
+  
       } else if (rsProp.getOmssaImportProperties.isDefined) { // OMSSA
         if (rsProp.getOmssaImportProperties.get.getRawSettings.isDefined) {
-          parseBuilder.append("Omssa params : ")
+          importParamsBuilder.append("Omssa import params : ")
           rsProp.getOmssaImportProperties.get.getRawSettings.get.foreach(entry => {
-            parseBuilder.append(entry._1).append(" : ").append(entry._2).append("; ")
+            importParamsBuilder.append(entry._1).append(" : ").append(entry._2).append("; ")
           })
         }
       }
     } //End get Parser parameters
-
-    resultMapBuilder += (fields.PARSE_PARAM.toString -> parseBuilder.result) // Save Parser Params
-
+  
+    resultMapBuilder += (fields.IMPORT_PARAMS.toString -> importParamsBuilder.result) // Save Parser Params
+  
     // *** Get Filters Parameters 
     if (rsm.properties.isDefined) {
       if (rsm.properties.get.getValidationProperties.isDefined) {
         val rsmValProp = rsm.properties.get.getValidationProperties.get
-
+  
         //Add Peptide Expected FDR
         resultMapBuilder += (fields.PSM_FILTER_EXPECTED_FDR.toString -> { if (rsmValProp.getParams.getPeptideExpectedFdr.isDefined) rsmValProp.getParams.getPeptideExpectedFdr.get else "-" })
-
+  
         //Add PSM Filters
         if (rsmValProp.getParams.getPeptideFilters.isDefined) {
-          var fIndex = 0;
-          //TODO Better managments of multiples filters !!
-          //Indexed array (^^) of filters fields 
-          val fieldArray = Seq(fields.PSM_FILTER_1, fields.PSM_FILTER_2, fields.PSM_FILTER_3, fields.PSM_FILTER_4, fields.PSM_FILTER_5, fields.PSM_FILTER_6, fields.PSM_FILTER_7, fields.PSM_FILTER_8, fields.PSM_FILTER_9, fields.PSM_FILTER_10)
+          
+          var fNumber = 1
+
           //Go through applied PSM filters and register them 
           rsmValProp.getParams.getPeptideFilters.get.foreach(filter => {
             val fBuilder = new StringBuilder()
@@ -104,24 +87,21 @@ class ResultParseAndFiltersView(val rsm: ResultSummary) extends IDatasetView {
               })
               fBuilder.append("]; ")
             }
-
-            resultMapBuilder += (fieldArray(fIndex).toString -> fBuilder.result) //Save current PSM Filter
-            fIndex += 1
+  
+            resultMapBuilder += ( "psm_filter_"+fNumber -> fBuilder.result) //Save current PSM Filter
+            fNumber += 1
           })
-
+  
         } //End getPeptideFilters defined
-
+  
         //Add Protein Expected FDR
         resultMapBuilder += (fields.PROT_FILTER_EXPECTED_FDR.toString -> { if (rsmValProp.getParams.getProteinExpectedFdr.isDefined) rsmValProp.getParams.getProteinExpectedFdr.get else "-" })
-
+  
         //Add Protein Filters
         if (rsmValProp.getParams.getProteinFilters.isDefined) {
           
-          var fIndex = 0
+          var fNumber = 0
           
-          //TODO Better multiples filters fields
-          val fieldArray = Seq(fields.PROT_FILTER_1, fields.PROT_FILTER_2, fields.PROT_FILTER_3, fields.PROT_FILTER_4)
-
           rsmValProp.getParams.getProteinFilters.get.foreach(filter => {
             val fBuilder = new StringBuilder()
             fBuilder.append("Protein FILTER : ").append(filter.getParameter).append("; ")
@@ -135,26 +115,24 @@ class ResultParseAndFiltersView(val rsm: ResultSummary) extends IDatasetView {
               })
               fBuilder.append("]; ")
             }
-
-            resultMapBuilder += (fieldArray(fIndex).toString -> fBuilder.result) //Save current prot filter
-            fIndex += 1
+  
+            resultMapBuilder += ( "prot_filter_"+ fNumber -> fBuilder.result) //Save current prot filter
+            
+            fNumber += 1
           })
-
+  
         } //End getProteinFilters defined
-
+  
       } //End Validation properties defined
-
+  
       resultMapBuilder.result
-
+  
     } else { // No rsm.properties
       Map(
-        fields.PARSE_PARAM -> parseBuilder.result
+        fields.IMPORT_PARAMS -> importParamsBuilder.result
       ).map(r => r._1.toString -> r._2)
     }
-  }
-
-  def onEachRecord(recordFormatter: Map[String, Any] => Unit) {
-    this.formatRecord(MyBuildingContext(rsm), recordFormatter)
+    
   }
 
 }

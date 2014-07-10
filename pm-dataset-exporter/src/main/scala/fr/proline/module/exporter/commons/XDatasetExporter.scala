@@ -13,11 +13,11 @@ trait XDatasetExporter extends IDatasetExporter {
   val formatter = BuildViewFormatter( template )
 
   def exportViewToStream( outputStream: OutputStream ) {
-    formatter.formatView(datasetView, outputStream)  
+    formatter.formatView(dataView, outputStream)  
   }
   
   def exportViewToLocation( location: File ): File = {
-    formatter.formatView(datasetView, location )
+    formatter.formatView(dataView, location )
   }
   
   /*def exportViewToDirectory( outputDir: File ) {

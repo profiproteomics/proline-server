@@ -24,16 +24,19 @@ object StatisticsFields extends IViewFieldEnumeration {
   val SINGLE_SPECIFIC_SEQ_PROTEIN_SETS_COUNT = Field("#protein_sets_with_single_specific_peptide")
   val MULITPLE_SPECIFIC_SEQ_PROTEIN_SETS_COUNT = Field("#protein_sets_with_multiple_specific_peptides")
   
-  // nb peptides par modifications => needs an other kind of views
+  // TODO: retrieve nb peptides par modifications
   
 }
 
-class StatisticsView( val rsm: ResultSummary ) extends IDatasetView {
+class StatisticsView( val rsm: ResultSummary ) extends IFormLikeView {
   
   var viewName = "stats"
-  val fields = StatisticsFields
+  private val fields = StatisticsFields
   
-  def buildRecord( nullBuildingContext: IRecordBuildingContext ): Map[String,Any] = {    
+  def getFieldValueMap() = _fieldValueMap
+  def getFieldsNames() = _fieldValueMap.keys.toArray  
+
+  private val _fieldValueMap = {
     require( rsm.resultSet.isDefined, "a result set must loaded and attached to the result summary")
     
     val rsmValResultsOpt = rsm.properties.flatMap( _.getValidationProperties.map( _.getResults ) )
@@ -88,10 +91,6 @@ class StatisticsView( val rsm: ResultSummary ) extends IDatasetView {
       fields.MULITPLE_SPECIFIC_SEQ_PROTEIN_SETS_COUNT -> multiSpeSeqsProtSetCount
     ).map( r => r._1.toString -> r._2)
     
-  }
-  
-  def onEachRecord( recordFormatter: Map[String,Any] => Unit ) {    
-    this.formatRecord(null, recordFormatter)
   }
   
   private def _stringifyValResults( valResultsOpt: Option[RsmValidationResultProperties] ): String = {

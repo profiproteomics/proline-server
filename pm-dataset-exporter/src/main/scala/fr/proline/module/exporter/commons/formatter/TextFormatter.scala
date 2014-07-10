@@ -2,7 +2,7 @@ package fr.proline.module.exporter.commons.formatter
 
 import java.io.OutputStream
 import java.io.PrintWriter
-import fr.proline.module.exporter.api.view.IDatasetView
+import fr.proline.module.exporter.api.view.IDataView
 import fr.proline.module.exporter.commons.template.ITextTemplate
 import fr.proline.module.exporter.api.formatter.IViewFormatter
 
@@ -14,7 +14,7 @@ class TextFormatter(
   //protected val locale = java.util.Locale.ENGLISH 
   
   protected class ViewToTextHelper(
-    val view: IDatasetView
+    val view: IDataView
   ) {
 
     val selectedFields = template.selectedFields
@@ -22,7 +22,7 @@ class TextFormatter(
     
     protected lazy val selectedFieldsOrFields: Seq[String] = {
       if( selectedFields.isDefined ) selectedFields.get.map(_.toString)
-      else view.fields.values.toSeq.map(_.toString)
+      else view.getFieldsNames
     }
     
     def mkRowHeader(): String = {
@@ -34,7 +34,7 @@ class TextFormatter(
     }
   }
   
-  def formatView( view: IDatasetView, os: OutputStream ) {
+  def formatView( view: IDataView, os: OutputStream ) {
     
     val writer = new PrintWriter( os )
     val helper = new ViewToTextHelper( view )

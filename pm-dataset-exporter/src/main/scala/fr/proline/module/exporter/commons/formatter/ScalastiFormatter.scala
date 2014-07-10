@@ -2,7 +2,7 @@ package fr.proline.module.exporter.commons.formatter
 
 import java.io.OutputStream
 import fr.proline.module.exporter.commons.template.ScalastiTemplate
-import fr.proline.module.exporter.api.view.IDatasetView
+import fr.proline.module.exporter.api.view.IDataView
 import fr.proline.module.exporter.api.formatter.IViewFormatter
 
 /**
@@ -13,7 +13,7 @@ class ScalastiFormatter(
   val template: ScalastiTemplate
 ) extends IViewFormatter {
   
-  def formatView( view: IDatasetView, os: OutputStream ) {
+  def formatView( view: IDataView, os: OutputStream ) {
     
   }
 
