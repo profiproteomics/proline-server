@@ -6,13 +6,13 @@ import org.junit.Test
 
 import com.typesafe.scalalogging.slf4j.Logging
 
-class JerksonJSONRPC2ResponseTest extends Logging {
+class ProfiJSONRPC2ResponseTest extends Logging {
 
   private val MAGIC_NUMBER = 42
 
   @Test
-  def testJerksonResponse() {
-    val response = new JerksonJSONRPC2Response("toto", "1")
+  def testProfiResponse() {
+    val response = new ProfiJSONRPC2Response("toto", "1")
 
     val str1 = response.toJSONString
     logger.debug(str1)
