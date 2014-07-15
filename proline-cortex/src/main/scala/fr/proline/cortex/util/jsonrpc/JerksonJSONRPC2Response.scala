@@ -7,24 +7,23 @@ import fr.profi.util.serialization.ProfiJson
 /**
  * JerksonJSONRPC2Response uses Jerkson for JSON response generation.
  *
- * WARN Only use this class for serializtion of Proline "result" objects.
+ * WARN Only use this class for serializtion of Profi "result" objects.
  * For standard or error response use base JSONRPC2Response class.
  *
- * @param result The response result (must be Jerkson serializable).
- * @param id The request ID (must be Jerkson serializable).
+ * @param profiResult The Response result (must be serializable via ProfiJson).
+ * @param jerksonId The JSON-RPC Request Id (must be serializable via ProfiJson).
  */
-/* Implementation note : result and id fields are shadowing base JSONRPC2Response fields ! Use getters */
-class JerksonJSONRPC2Response(private var result: java.lang.Object,
-                              id: java.lang.Object) extends JSONRPC2Response(result, id) {
+class JerksonJSONRPC2Response(private var profiResult: java.lang.Object,
+                              profiId: java.lang.Object) extends JSONRPC2Response(profiResult, profiId) {
 
-  def this(id: java.lang.Object) = this(null, id)
+  def this(jerksonId: java.lang.Object) = this(null, jerksonId)
 
   override def setResult(pResult: java.lang.Object) = {
-    result = pResult
+    profiResult = pResult
   }
 
   override def getResult(): java.lang.Object = {
-    result
+    profiResult
   }
 
   /* JMS ServiceRunner uses toJSONString() */
@@ -32,7 +31,6 @@ class JerksonJSONRPC2Response(private var result: java.lang.Object,
     ProfiJson.serialize(new Response(getResult, getID))
   }
 
-  /* Inner class */
-  case class Response(result: java.lang.Object, id: java.lang.Object, jsonrpc: String = "2.0")
-
 }
+
+case class Response(result: java.lang.Object, id: java.lang.Object, jsonrpc: String = "2.0")
