@@ -1,0 +1,127 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>fr.proline</groupId>
+    <artifactId>ProFI-Pom</artifactId>
+    <version>0.0.5-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+  </parent>
+
+  <groupId>fr.proline</groupId>
+  <artifactId>Proline-Cortex</artifactId>
+  <version>0.0.3-SNAPSHOT</version>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <core.version>0.2.0-SNAPSHOT</core.version> <!-- Snapshot Trunk version -->
+  </properties>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+    </dependency>
+
+    <!-- Logging -->
+    <dependency>
+      <groupId>com.typesafe</groupId>
+      <artifactId>scalalogging-slf4j_2.10</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
+    </dependency>
+
+    <!-- JMS Spec 2.0 + HornetQ JMS client + Netty (versions checked 10 july 2014) -->
+    <dependency>
+      <groupId>org.jboss.spec.javax.jms</groupId>
+	  <artifactId>jboss-jms-api_2.0_spec</artifactId>
+	  <version>1.0.0.Final</version>
+    </dependency>
+    <dependency>
+	  <groupId>org.hornetq</groupId>
+	  <artifactId>hornetq-jms-client</artifactId>
+	  <version>2.4.1.Final</version>
+    </dependency>
+    <dependency>
+	  <groupId>io.netty</groupId>
+      <artifactId>netty-all</artifactId>
+      <version>4.0.20.Final</version>
+    </dependency>
+
+    <!-- JSON-RPC -->
+    <dependency>
+      <groupId>com.thetransactioncompany</groupId>
+      <artifactId>jsonrpc2-base</artifactId>
+    </dependency>
+
+    <!-- ProFI Commons -->
+    <dependency>
+       <groupId>fr.proline.util</groupId>
+       <artifactId>ProFI-Commons-Java</artifactId>
+       <version>0.0.7-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+    </dependency>
+
+    <!-- Proline-Core Service layer -->
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-OMP</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+
+
+    <!-- Proline-Admin -->
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-Admin</artifactId>
+      <version>0.0.10-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    </dependency>
+
+    <!-- Test -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <sourceDirectory>src/main/scala</sourceDirectory>
+    <testSourceDirectory>src/test/scala</testSourceDirectory>
+
+    <plugins>
+      <plugin>
+        <groupId>org.scala-tools</groupId>
+        <artifactId>maven-scala-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <scalaVersion>${scala.version}</scalaVersion>
+          <args>
+            <arg>-target:jvm-1.5</arg>
+          </args>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
+
+</project>
