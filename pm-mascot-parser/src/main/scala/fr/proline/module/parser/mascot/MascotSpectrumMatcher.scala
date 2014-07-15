@@ -341,8 +341,9 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
             //mascotFragRules.isCharged2Plus  means cahrge2+ specified in fragrules file for the used instrument.
             //calculate 2+ fragments
             // AW: we need to make it impossible to calculate 2+ charged for ion serie 4. 
-            // issue #9689: https://bioproj.extra.cea.fr/redmine/issues/9689 
-            if (series != ms_fragmentationrules.FRAG_IMMONIUM)
+            // issue #9689: https://bioproj.extra.cea.fr/redmine/issues/9689
+            // And issue #10682 https://bioproj.extra.cea.fr/redmine/issues/10682 : Same error with INTERNAL_YB & INTERNAL_YA series 
+            if (series != ms_fragmentationrules.FRAG_IMMONIUM && series != ms_fragmentationrules.FRAG_INTERNAL_YA && series != ms_fragmentationrules.FRAG_INTERNAL_YB)
               calcFragments(isDoublyCharged = true)
             else
               calcFragments(isDoublyCharged = false)
