@@ -1,119 +1,145 @@
 package fr.proline.module.parser.mascot
 
-import java.io.{InputStream,File,FileInputStream}
+import java.io.{ InputStream, File, FileInputStream }
 import scala.io.Source
-
-import fr.proline.core.om.model.msi.{Activation,ChargeConstraint,Instrument,InstrumentConfig,
-                                     FragmentIonRequirement,FragmentIonSeries,Fragmentation,
-                                     FragmentationRule,RequiredSeries}
+import fr.proline.core.om.model.msi.{
+  Activation,
+  ChargeConstraint,
+  Instrument,
+  InstrumentConfig,
+  FragmentIonRequirement,
+  FragmentIonSeries,
+  Fragmentation,
+  FragmentationRule,
+  RequiredSeries
+}
 import fr.profi.util.regex.RegexUtils._
 import fr.profi.util.io._
+import com.typesafe.scalalogging.slf4j.Logging
 
 /**
  * @author David Bouyssie
  *
  */
-object MascotFragmentationRuleParser {
-  
-  def getInstrumentConfigurations( fileLocation: File ): Array[InstrumentConfig] = {
-    getInstrumentConfigurations( new FileInputStream(fileLocation.getAbsolutePath) )
-  }
-  
-  def getInstrumentConfigurations( inputStream: InputStream ): Array[InstrumentConfig] = {
-    
-    val instrumentConfigs = Array.newBuilder[InstrumentConfig]
-    
-    Source.fromInputStream(inputStream).eachLine("*", block => {
-      
-      val lines = block.split("\r\n")
-      val titleLine = lines.find( _ =~ "^title:.+" )
-      
-      if( titleLine != None ) {
-        val instrumentType = titleLine.get.split(":")(1)
-        
-        val ruleNumbers = lines.filter { _ =~ """^\d+.+""" }
-                               .map { l => (l =# """^(\d+).+""").get.group(1).toInt }        
-        
-        val instConfig = this._buildInstrumentConfig( instrumentType, ruleNumbers )
-        if( instConfig != None ) instrumentConfigs += instConfig.get
+object MascotFragmentationRuleParser extends Logging {
+
+  def getInstrumentConfigurations(fileLocation: File): Array[InstrumentConfig] = {
+    require((fileLocation != null) && fileLocation.isFile, "Invalid fileLocation")
+
+    val absolutePathname = fileLocation.getAbsolutePath
+
+    val is = new FileInputStream(fileLocation)
+
+    try {
+      getInstrumentConfigurations(is)
+    } finally {
+
+      try {
+        is.close()
+      } catch {
+        case exClose: Exception => logger.error("Error closing [" + absolutePathname + ']', exClose)
       }
-      
+
+    }
+
+  }
+
+  def getInstrumentConfigurations(inputStream: InputStream): Array[InstrumentConfig] = {
+
+    val instrumentConfigs = Array.newBuilder[InstrumentConfig]
+
+    // Force ANSI ISO-8859-1 to read Mascot .dat files
+    Source.fromInputStream(inputStream, "ISO-8859-1").eachLine("*", block => {
+
+      val lines = block.split("\r\n")
+      val titleLine = lines.find(_ =~ "^title:.+")
+
+      if (titleLine != None) {
+        val instrumentType = titleLine.get.split(":")(1)
+
+        val ruleNumbers = lines.filter { _ =~ """^\d+.+""" }
+          .map { l => (l =# """^(\d+).+""").get.group(1).toInt }
+
+        val instConfig = this._buildInstrumentConfig(instrumentType, ruleNumbers)
+        if (instConfig != None) instrumentConfigs += instConfig.get
+      }
+
       ()
     })
-    
+
     instrumentConfigs.result
   }
-  
-  private def _buildInstrumentConfig( instrumentType: String,
-                                      ruleNumbers: Array[Int] ): Option[InstrumentConfig] = {
-    
+
+  private def _buildInstrumentConfig(instrumentType: String,
+                                     ruleNumbers: Array[Int]): Option[InstrumentConfig] = {
+
     // Define some vars
-    var analyzers = ("","")
-    var( instSource, activationType ) = ( "ESI", "CID" )
-    
+    var analyzers = ("", "")
+    var (instSource, activationType) = ("ESI", "CID")
+
     // Retrieve source
     val instrumentParts = instrumentType.split("-")
-    if( instrumentParts.length == 1 ) return None // skip Default and All
+    if (instrumentParts.length == 1) return None // skip Default and All
     else {
-      
-      if( instrumentParts(0) == "ESI" || instrumentParts(0) == "MALDI" ) instSource = instrumentParts(0)
-      else if( instrumentParts(0) == "ETD" ) activationType = "ETD"
-    
+
+      if (instrumentParts(0) == "ESI" || instrumentParts(0) == "MALDI") instSource = instrumentParts(0)
+      else if (instrumentParts(0) == "ETD") activationType = "ETD"
+
       // Retrieve activation type
-      if( instrumentParts(1) == "ECD" ) activationType = "ECD"
-      else if( instrumentParts.length == 3 && instrumentParts(2) == "PSD" ) activationType = "PSD"
-      
-      if( instrumentType =~ "TOF-TOF" ) { analyzers = ("TOF", "TOF") }
-      else if( instrumentType =~ "QUAD-TOF" ) { analyzers = ("QUAD","TOF") }
-      else if( instrumentType == "FTMS-ECD" ) { analyzers = ("FTMS","FTMS") }
-      else { analyzers = ( instrumentParts(1), instrumentParts(1)) }
+      if (instrumentParts(1) == "ECD") activationType = "ECD"
+      else if (instrumentParts.length == 3 && instrumentParts(2) == "PSD") activationType = "PSD"
+
+      if (instrumentType =~ "TOF-TOF") { analyzers = ("TOF", "TOF") }
+      else if (instrumentType =~ "QUAD-TOF") { analyzers = ("QUAD", "TOF") }
+      else if (instrumentType == "FTMS-ECD") { analyzers = ("FTMS", "FTMS") }
+      else { analyzers = (instrumentParts(1), instrumentParts(1)) }
     }
-    
+
     // Create new instrument
     val instrument = new Instrument(
-                           id = Instrument.generateNewId(), 
-                           name = instrumentType,
-                           source = instSource
-                         )
-    
+      id = Instrument.generateNewId(),
+      name = instrumentType,
+      source = instSource
+    )
+
     // Retrieve fragmentation rules of the instrument configuration
     val fragRules = MascotFragmentation.rules
-    val instFragRules = ruleNumbers.map( i => fragRules(i - 1 ) )
-    
+    val instFragRules = ruleNumbers.map(i => fragRules(i - 1))
+
     // Create new instrument config
     val instrumentConfig = new InstrumentConfig(
-                                 id = InstrumentConfig.generateNewId(),
-                                 instrument = instrument,
-                                 ms1Analyzer = analyzers._1,
-                                 msnAnalyzer = analyzers._2,
-                                 activationType = activationType,
-                                 fragmentationRules = Some(instFragRules)
-                               )
-    
+      id = InstrumentConfig.generateNewId(),
+      instrument = instrument,
+      ms1Analyzer = analyzers._1,
+      msnAnalyzer = analyzers._2,
+      activationType = activationType,
+      fragmentationRules = Some(instFragRules)
+    )
+
     Some(instrumentConfig)
   }
 
 }
 
 object MascotFragmentation {
-  
+
   val rules: Array[FragmentationRule] = {
-    
+
     val ionTypes = Fragmentation.defaultIonTypes
     val ionTypeMap = Map() ++ ionTypes.map { ionType => ionType.toString -> ionType }
     val ionSeries = FragmentIonSeries
-      
+
     // Create fragmentation rules
     Array(
       ChargeConstraint(
         description = "singly charged",
         fragmentCharge = 1
-        ),
+      ),
       ChargeConstraint(
         description = "doubly charged if precursor 2+ or higher (not internal or immonium)",
         fragmentCharge = 2,
         precursorMinCharge = Some(2)
-        ),
+      ),
       ChargeConstraint(
         description = "doubly charged if precursor 3+ or higher (not internal or immonium)",
         fragmentCharge = 2,
