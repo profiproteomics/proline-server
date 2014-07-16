@@ -1,19 +1,21 @@
-package fr.proline.cortex.service
+package fr.proline.cortex.service.misc
 
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
+import java.io.IOException
+
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.typesafe.scalalogging.slf4j.Logging
+
 import fr.profi.util.StringUtils
 import fr.proline.cortex.ServiceRunner
 import javax.jms.Message
 import javax.jms.MessageProducer
 import javax.jms.Session
 import javax.jms.TextMessage
-import java.io.IOException
 
 class ResourceService extends Logging {
 
@@ -23,7 +25,7 @@ class ResourceService extends Logging {
 
   val JMS_HORNET_Q_INPUT_STREAM_KEY = "JMS_HQ_InputStream"
 
-  val serviceName = "proline/admin/ResourceService"
+  val serviceName = "proline/misc/ResourceService"
 
   /* About the same code as ServiceRunner.handleMessage() but can return either a JMS BytesMessage with JMS_HQ_InputStream property 
      either a JMS TextMessage containing a standard JSON-RPC Response string (in case of service or file error) */

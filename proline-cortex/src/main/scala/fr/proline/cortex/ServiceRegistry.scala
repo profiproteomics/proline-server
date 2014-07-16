@@ -1,12 +1,12 @@
 package fr.proline.cortex
 
 import scala.collection.mutable
-import fr.profi.util.StringUtils
-import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+
+import fr.profi.util.StringUtils
 import fr.proline.cortex.service.IRemoteService
 import fr.proline.cortex.service.ISingleThreadedService
-import fr.proline.cortex.service.ResourceService
+import fr.proline.cortex.service.misc.ResourceService
 
 /**
  * Singleton Registry providing all {{{IRemoteService}}} instances.

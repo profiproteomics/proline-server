@@ -2,26 +2,30 @@ package fr.proline.cortex.service.monitoring
 
 import java.net.NetworkInterface
 import java.util.UUID
+
 import scala.Array.canBuildFrom
+
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.cortex.service.IRemoteService
-import fr.profi.util.StringUtils._
-import fr.proline.cortex.ServiceRegistry
+
+import fr.profi.util.StringUtils.LINE_SEPARATOR
 import fr.proline.cortex.NodeConfig
+import fr.proline.cortex.ServiceRegistry
+import fr.proline.cortex.service.IRemoteService
+import fr.proline.util.version.VersionHelper
 
 /**
  * Simple "info" Service : return "OK" on "test" method and an info string (instance and host IP) an any other method call.
  */
 class InfoService extends IRemoteService with Logging {
 
+  /* Constants */
   val SMALL_TAB = "  "
 
+  /* JMS Service identification */
   val serviceName = "proline/monitoring/Info"
-
   val serviceVersion = "1.0"
-
   override val defaultVersion = true
 
   /* Uniquely identify this instance */
@@ -35,8 +39,18 @@ class InfoService extends IRemoteService with Logging {
 
     /* Method dispatcher */
     method match {
-      case "test"  => new JSONRPC2Response("OK", requestId)
+      case "test" => new JSONRPC2Response("OK", requestId)
+
+      case "version" => {
+        val buff = new StringBuilder()
+
+        appendVersions(buff)
+
+        new JSONRPC2Response(buff.toString, requestId)
+      }
+
       case "error" => throw new RuntimeException("Fake Exception thrown by " + getClass.getSimpleName)
+
       case _       => new JSONRPC2Response(buildMessage(requestId, method), requestId)
     }
 
@@ -45,6 +59,7 @@ class InfoService extends IRemoteService with Logging {
   private def buildMessage(requestId: java.lang.Object, methodName: String): String = {
     val buff = new StringBuilder()
 
+    /* This Node and Network infos */
     buff.append("Proline-Cortex JMS NODE_ID : ").append(NodeConfig.NODE_ID)
     buff.append(LINE_SEPARATOR)
 
@@ -52,6 +67,7 @@ class InfoService extends IRemoteService with Logging {
 
     buff.append(LINE_SEPARATOR)
 
+    /* Current Service instance and Thread */
     buff.append(getClass.getSimpleName).append(" instance UUID : ").append(instanceUniqueIdentifier)
     buff.append(LINE_SEPARATOR)
 
@@ -61,6 +77,7 @@ class InfoService extends IRemoteService with Logging {
 
     buff.append(LINE_SEPARATOR)
 
+    /* JSON Request infos */
     buff.append("JSON Request Id ")
     append(buff, requestId)
     buff.append(LINE_SEPARATOR)
@@ -68,6 +85,11 @@ class InfoService extends IRemoteService with Logging {
     buff.append("JSON Request Method ")
     append(buff, methodName)
     buff.append(LINE_SEPARATOR)
+
+    buff.append(LINE_SEPARATOR)
+
+    /* Proline Module Versions */
+    appendVersions(buff)
 
     buff.append(LINE_SEPARATOR)
 
@@ -111,8 +133,6 @@ class InfoService extends IRemoteService with Logging {
       buff.append("Handled Parallelizable Services :")
       buff.append(LINE_SEPARATOR)
 
-      var first: Boolean = true
-
       for (service <- handledParallelizableServices) {
         buff.append(SMALL_TAB)
         appendService(buff, service)
@@ -122,27 +142,6 @@ class InfoService extends IRemoteService with Logging {
     }
 
     buff.toString
-  }
-
-  private def appendService(sb: StringBuilder, service: IRemoteService) {
-    append(sb, service.serviceName)
-    sb.append(" version ")
-    append(sb, service.serviceVersion)
-
-    if (service.defaultVersion) {
-      sb.append(" *")
-    }
-
-  }
-
-  private def append(sb: StringBuilder, obj: AnyRef) {
-
-    if (obj == null) {
-      sb.append("NULL")
-    } else {
-      sb.append('[').append(obj).append(']')
-    }
-
   }
 
   private def appendNetwork(sb: StringBuilder) {
@@ -209,6 +208,47 @@ class InfoService extends IRemoteService with Logging {
 
   private def formatMac(mac: Array[Byte]): String = {
     mac.map("%02X".format(_)).mkString("<", ":", ">")
+  }
+
+  private def appendVersions(sb: StringBuilder) {
+    sb.append("Proline Module Versions")
+    sb.append(LINE_SEPARATOR)
+
+    val versions = VersionHelper.getVersions
+
+    sb.append("Number of IVersion services : ").append(versions.length)
+    sb.append(LINE_SEPARATOR)
+
+    if (!versions.isEmpty) {
+
+      for (v <- versions) {
+        sb.append(v.getClass.getName).append("  Module: ").append(v.getModuleName).append("  Version: ").append(v.getVersion)
+        sb.append(LINE_SEPARATOR)
+      }
+
+    }
+
+  }
+
+  private def appendService(sb: StringBuilder, service: IRemoteService) {
+    append(sb, service.serviceName)
+    sb.append(" version ")
+    append(sb, service.serviceVersion)
+
+    if (service.defaultVersion) {
+      sb.append(" *")
+    }
+
+  }
+
+  private def append(sb: StringBuilder, obj: AnyRef) {
+
+    if (obj == null) {
+      sb.append("NULL")
+    } else {
+      sb.append('[').append(obj).append(']')
+    }
+
   }
 
 }
