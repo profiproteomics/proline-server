@@ -13,7 +13,15 @@ import fr.profi.util.regex.RegexUtils._
 object MascotEnzymeParser {
   
   def getEnzymeDefinitions( fileLocation: File ): Iterable[EnzymeDefinition] = {
-    getEnzymeDefinitions( new FileInputStream(fileLocation.getAbsolutePath) )
+    
+    val fs = new FileInputStream(fileLocation.getAbsolutePath)
+    
+    try {
+      getEnzymeDefinitions( fs )
+    } finally {
+      fs.close()
+    }
+    
   }
   
   def getEnzymeDefinitions( inputStream: InputStream ): Iterable[EnzymeDefinition] = {
