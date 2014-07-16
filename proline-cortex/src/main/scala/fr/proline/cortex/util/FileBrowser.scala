@@ -110,7 +110,7 @@ object FileBrowser extends Logging {
 
     if (!rootDir.isDirectory) {
       logger.debug(s"Unable to open root directory root=${localPathname} !")
-      Array()
+
     } else {
 
       //logger.debug( s"Browsing directories from root=${root}" )
