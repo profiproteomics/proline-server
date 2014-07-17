@@ -10,6 +10,12 @@ import matrix_science.msparser.{ ms_mascotresfile, ms_peptide, ms_peptidesummary
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import scala.collection.mutable.ArrayBuilder
 
+object MascotDataParser {
+
+  val LATIN_1_CHARSET = "ISO-8859-1"
+
+}
+
 class MascotDataParser(
   val pepSummary: ms_peptidesummary,
   val mascotResFile: ms_mascotresfile,

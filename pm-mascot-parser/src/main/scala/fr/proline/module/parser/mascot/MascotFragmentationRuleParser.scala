@@ -17,6 +17,8 @@ import fr.profi.util.regex.RegexUtils._
 import fr.profi.util.io._
 import com.typesafe.scalalogging.slf4j.Logging
 
+import fr.proline.module.parser.mascot.MascotDataParser.LATIN_1_CHARSET
+
 /**
  * @author David Bouyssie
  *
@@ -49,7 +51,7 @@ object MascotFragmentationRuleParser extends Logging {
     val instrumentConfigs = Array.newBuilder[InstrumentConfig]
 
     // Force ANSI ISO-8859-1 to read Mascot .dat files
-    Source.fromInputStream(inputStream, "ISO-8859-1").eachLine("*", block => {
+    Source.fromInputStream(inputStream, LATIN_1_CHARSET).eachLine("*", block => {
 
       val lines = block.split("\r\n")
       val titleLine = lines.find(_ =~ "^title:.+")

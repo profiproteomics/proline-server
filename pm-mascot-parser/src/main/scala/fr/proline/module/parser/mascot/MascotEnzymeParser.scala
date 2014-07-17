@@ -7,6 +7,8 @@ import fr.profi.util.io._
 import fr.profi.util.regex.RegexUtils._
 import com.typesafe.scalalogging.slf4j.Logging
 
+import fr.proline.module.parser.mascot.MascotDataParser.LATIN_1_CHARSET
+
 /**
  * @author David Bouyssie
  *
@@ -56,7 +58,7 @@ object MascotEnzymeParser extends Logging {
 
     // TODO: quit reading after enzyme section
     // Force ANSI ISO-8859-1 to read Mascot files
-    Source.fromInputStream(inputStream, "ISO-8859-1").eachLine(line =>
+    Source.fromInputStream(inputStream, LATIN_1_CHARSET).eachLine(line =>
       if (line =~ "^Content-Type:.+") {
         r.findAllIn(line).matchData.foreach(m => currentSection = m.group(1))
       } else if (line != "*" && (currentSection == "" || currentSection == "enzyme")) {

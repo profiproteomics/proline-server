@@ -15,6 +15,8 @@ import scala.collection.mutable.ArrayBuffer
 import java.io.InputStreamReader
 import java.io.FileInputStream
 
+import fr.proline.module.parser.mascot.MascotDataParser.LATIN_1_CHARSET
+
 object MascotResultFileProviderType {
   final val fileType: String = "mascot.dat"
 }
@@ -48,8 +50,10 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
     //try { // oté en attendant de gérer tout les cas de figure non précédemment traités, ce role est renvoyé à la classe appelante.
     val unimodText = extractUnimodSection(fileLocation)
 
-    val is = new ByteArrayInputStream(unimodText.getBytes)
+    /* Unimod xml part expected UTF-8 stream : <?xml version="1.0" encoding="UTF-8" ?> */
+    val is = new ByteArrayInputStream(unimodText.getBytes("UTF-8"))
     val unimod = UnimodUnmarshaller.unmarshal(is)
+    // No need to close a ByteArrayInputStream
 
     val modificationsElement = unimod.getModifications
     if (modificationsElement != null) {
@@ -171,7 +175,7 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
     var section: String = ""
 
     // Force ANSI ISO-8859-1 to read Mascot .dat files
-    val bfr = new BufferedReader(new InputStreamReader(new FileInputStream(f), "ISO-8859-1"))
+    val bfr = new BufferedReader(new InputStreamReader(new FileInputStream(f), LATIN_1_CHARSET))
 
     try {
       var line: String = ""
