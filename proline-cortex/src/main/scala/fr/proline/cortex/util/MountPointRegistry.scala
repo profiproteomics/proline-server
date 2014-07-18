@@ -351,7 +351,7 @@ object MountPointRegistry extends Logging {
 
   private def parseConfig(directoryType: String, config: Config) {
     assert(!StringUtils.isEmpty(directoryType), "Invalid directoryType")
-    assert(config != null, "Config is null")
+    assert((config != null), "Config is null")
 
     val defaultFileSystem = FileSystems.getDefault
 
@@ -403,7 +403,7 @@ object MountPointRegistry extends Logging {
   }
 
   private def addMountPoint(mountPoint: MountPoint) {
-    assert(mountPoint != null, "MountPoint is null")
+    assert((mountPoint != null), "MountPoint is null")
 
     m_registryLock.synchronized {
 

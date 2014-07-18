@@ -22,7 +22,7 @@ trait IRemoteService {
   val defaultVersion: Boolean = false
 
   def process(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
-    require(req != null, "Req is null")
+    require((req != null), "Req is null")
 
     val requestId = req.getID
 

@@ -30,9 +30,9 @@ class ResourceService extends Logging {
   /* About the same code as ServiceRunner.handleMessage() but can return either a JMS BytesMessage with JMS_HQ_InputStream property 
      either a JMS TextMessage containing a standard JSON-RPC Response string (in case of service or file error) */
   def handleMessage(session: Session, message: Message, replyProducer: MessageProducer) {
-    require(session != null, "Session is null")
-    require(message != null, "Message is null")
-    require(replyProducer != null, "ReplyProducer is null")
+    require((session != null), "Session is null")
+    require((message != null), "Message is null")
+    require((replyProducer != null), "ReplyProducer is null")
 
     val jmsMessageId = message.getJMSMessageID
 
@@ -117,7 +117,7 @@ class ResourceService extends Logging {
   }
 
   private def process(session: Session, jmsMessageContext: Map[String, Any], req: JSONRPC2Request): ResourceResult = {
-    assert(req != null, "process() req is null")
+    assert((req != null), "process() req is null")
 
     val jsonRequestId = req.getID
     val method = req.getMethod
@@ -132,8 +132,8 @@ class ResourceService extends Logging {
   }
 
   private def getResourceAsStream(session: Session, jmsMessageContext: Map[String, Any], req: JSONRPC2Request): ResourceResult = {
-    assert(session != null, "getResourceAsStream() session is null")
-    assert(req != null, "getResourceAsStream() req is null")
+    assert((session != null), "getResourceAsStream() session is null")
+    assert((req != null), "getResourceAsStream() req is null")
 
     val jsonRequestId = req.getID
 
@@ -202,6 +202,6 @@ class ResourceService extends Logging {
 }
 
 class ResourceResult(val jmsResponseMessage: Message, val jsonResponse: JSONRPC2Response) {
-  require((jmsResponseMessage != null) || (jsonResponse != null), "jmsResponseMessage and jsonResponse cannot be both null")
+  require(((jmsResponseMessage != null) || (jsonResponse != null)), "jmsResponseMessage and jsonResponse cannot be both null")
 
 }

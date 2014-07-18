@@ -44,7 +44,7 @@ object ProcessingNode extends Logging {
   }
 
   private def addShutdownHook(server: ProcessingNode) {
-    assert(server != null, "addShutdownHook() server is null")
+    assert((server != null), "addShutdownHook() server is null")
 
     val target = new Runnable {
 
@@ -70,7 +70,8 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
 
   /* Constructor checks */
   require(!StringUtils.isEmpty(jmsServerHost), "Invalid JMS Server Host name or address")
-  require((0 < jmsServerPort) && (jmsServerPort <= MAX_PORT), "Invalid JMS Server port")
+
+  require(((0 < jmsServerPort) && (jmsServerPort <= MAX_PORT)), "Invalid JMS Server port")
 
   private val m_lock = new Object()
 

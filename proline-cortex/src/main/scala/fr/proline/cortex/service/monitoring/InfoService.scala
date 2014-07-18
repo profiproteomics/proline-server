@@ -32,7 +32,7 @@ class InfoService extends IRemoteService with Logging {
   val instanceUniqueIdentifier = UUID.randomUUID().toString
 
   override def process(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
-    require(req != null, "Req is null")
+    require((req != null), "Req is null")
 
     val requestId = req.getID
     val method = req.getMethod
@@ -143,7 +143,7 @@ class InfoService extends IRemoteService with Logging {
   }
 
   private def appendNetwork(sb: StringBuilder) {
-    assert(sb != null, "appendNetwork() sb is null")
+    assert((sb != null), "appendNetwork() sb is null")
 
     try {
 
@@ -170,8 +170,8 @@ class InfoService extends IRemoteService with Logging {
   }
 
   private def appendInterface(sb: StringBuilder, intf: NetworkInterface) {
-    assert(sb != null, "appendInterface() sb is null")
-    assert(intf != null, "appendInterface() intf is null")
+    assert((sb != null), "appendInterface() sb is null")
+    assert((intf != null), "appendInterface() intf is null")
 
     sb.append('\"').append(intf.getName).append('\"')
 
@@ -209,14 +209,14 @@ class InfoService extends IRemoteService with Logging {
   }
 
   private def formatMac(mac: Array[Byte]): String = {
-    assert(mac != null, "formatMac() mac Array is null")
+    assert((mac != null), "formatMac() mac Array is null")
 
     mac.map("%02X".format(_)).mkString("<", ":", ">")
   }
 
   private def appendJMSMessageContext(sb: StringBuilder, jmsMessageContext: Map[String, Any]) {
-    assert(sb != null, "appendJMSMessageContext() sb is null")
-    assert(jmsMessageContext != null, "appendJMSMessageContext() jmsMessageContext Map is null")
+    assert((sb != null), "appendJMSMessageContext() sb is null")
+    assert((jmsMessageContext != null), "appendJMSMessageContext() jmsMessageContext Map is null")
 
     sb.append("Request JMS Message Properties :")
     sb.append(LINE_SEPARATOR)
@@ -254,7 +254,7 @@ class InfoService extends IRemoteService with Logging {
   }
 
   private def appendVersions(sb: StringBuilder) {
-    assert(sb != null, "appendVersions() sb is null")
+    assert((sb != null), "appendVersions() sb is null")
 
     sb.append("Proline Module Versions")
     sb.append(LINE_SEPARATOR)
@@ -276,8 +276,8 @@ class InfoService extends IRemoteService with Logging {
   }
 
   private def appendService(sb: StringBuilder, service: IRemoteService) {
-    assert(sb != null, "appendService() sb is null")
-    assert(service != null, "appendService() service is null")
+    assert((sb != null), "appendService() sb is null")
+    assert((service != null), "appendService() service is null")
 
     append(sb, service.serviceName)
     sb.append(" version ")
@@ -290,7 +290,7 @@ class InfoService extends IRemoteService with Logging {
   }
 
   private def append(sb: StringBuilder, obj: AnyRef) {
-    assert(sb != null, "append() sb is null")
+    assert((sb != null), "append() sb is null")
 
     if (obj == null) {
       sb.append("NULL")

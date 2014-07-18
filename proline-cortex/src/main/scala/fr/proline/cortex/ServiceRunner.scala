@@ -2,8 +2,6 @@ package fr.proline.cortex
 
 import java.lang.Thread
 
-import scala.annotation.elidable
-import scala.annotation.elidable.ASSERTION
 import scala.collection.mutable
 
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
@@ -52,8 +50,8 @@ object ServiceRunner extends Logging {
 
   }
 
-  def buildSelectorString2(handledServices: List[IRemoteService], parallelizableRunner: Boolean): String = {
-    require(handledServices != null, "HandledServices List is null")
+  def buildConcreteSelectorString(handledServices: List[IRemoteService], parallelizableRunner: Boolean): String = {
+    require((handledServices != null), "HandledServices List is null")
 
     val buff = new StringBuilder()
 
@@ -105,7 +103,7 @@ object ServiceRunner extends Logging {
   }
 
   def buildJMSMessageContext(message: Message): Map[String, Any] = {
-    require(message != null, "Message is null")
+    require((message != null), "Message is null")
 
     val mutableMap = mutable.Map.empty[String, Any]
 
@@ -164,8 +162,9 @@ class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with 
   import ServiceRunner._
 
   /* Constructor checks */
-  require(queue != null, "Queue is null")
-  require(connection != null, "Connection is null")
+  require((queue != null), "Queue is null")
+
+  require((connection != null), "Connection is null")
 
   /* Concrete Runnable.run() method */
   def run() {
@@ -244,7 +243,7 @@ class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with 
     val handledServices = ServiceRegistry.getParallelizableServices
 
     /* Parallelizable ServiceRunner */
-    buildSelectorString2(handledServices, true)
+    buildConcreteSelectorString(handledServices, true)
   }
 
   protected def getServiceInstance(serviceName: String, serviceVersion: String): Option[IRemoteService] = {
@@ -253,9 +252,9 @@ class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with 
 
   /* Private methods */
   private def handleMessage(session: Session, message: Message, replyProducer: MessageProducer) {
-    assert(session != null, "handleMessage() session is null")
-    assert(message != null, "handleMessage() message is null")
-    assert(replyProducer != null, "handleMessage() replyProducer is null")
+    assert((session != null), "handleMessage() session is null")
+    assert((message != null), "handleMessage() message is null")
+    assert((replyProducer != null), "handleMessage() replyProducer is null")
 
     val jmsMessageId = message.getJMSMessageID
 
@@ -357,8 +356,8 @@ class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with 
   }
 
   private def callService(jmsMessageContext: Map[String, Any], serviceInstance: IRemoteService, jsonRequest: JSONRPC2Request): JSONRPC2Response = {
-    assert(serviceInstance != null, "callService() serviceInstance is null")
-    assert(jsonRequest != null, "callService() jsonRequest is null")
+    assert((serviceInstance != null), "callService() serviceInstance is null")
+    assert((jsonRequest != null), "callService() jsonRequest is null")
 
     val serviceName = serviceInstance.getClass.getName
 
@@ -410,18 +409,17 @@ class SingleThreadedServiceRunner(queue: Queue, connection: Connection, serviceN
 
   val handledServices = retrieveHandledServices()
 
-  require((handledServices != null) && !handledServices.isEmpty, "No SingleThreadedServices for name [" + serviceName + ']')
+  require(((handledServices != null) && !handledServices.isEmpty), "No SingleThreadedServices for name [" + serviceName + ']')
 
   protected override def buildSelectorString(): String = {
     /* NON-Parallelizable ServiceRunner */
-    buildSelectorString2(handledServices, false)
+    buildConcreteSelectorString(handledServices, false)
   }
 
   /* Private methods */
   private def retrieveHandledServices(): List[IRemoteService] = {
     val singleThreadedServicesPerName = ServiceRegistry.getSingleThreadedServices
-    val optionalList = singleThreadedServicesPerName.get(serviceName)
-    optionalList.getOrElse(null)
+    singleThreadedServicesPerName.getOrElse(serviceName, null)
   }
 
 }

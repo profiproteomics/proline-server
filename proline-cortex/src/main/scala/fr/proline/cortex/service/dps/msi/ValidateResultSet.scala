@@ -63,7 +63,7 @@ class ValidateResultSet extends IRemoteService with Logging {
 
   /* Define the concrete process method */
   override def process(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
-    require(req != null, "Req is null")
+    require((req != null), "Req is null")
 
     val requestId = req.getID
     val methodName = req.getMethod
@@ -86,7 +86,7 @@ class ValidateResultSet extends IRemoteService with Logging {
   }
 
   private def doProcess(paramsRetriever: NamedParamsRetriever): Long = {
-    require(paramsRetriever != null, "ParamsRetriever is null")
+    require((paramsRetriever != null), "ParamsRetriever is null")
 
     val projectId = paramsRetriever.getLong("project_id")
     val resultSetId = paramsRetriever.getLong("result_set_id")

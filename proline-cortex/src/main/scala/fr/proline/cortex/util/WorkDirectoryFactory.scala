@@ -45,7 +45,7 @@ object WorkDirectoryFactory extends Logging {
   }
 
   private def addShutdownHook(tempDirectory: File) {
-    assert((tempDirectory != null) && tempDirectory.isDirectory, "addShutdownHook() invalid tempDirectory")
+    assert(((tempDirectory != null) && tempDirectory.isDirectory), "addShutdownHook() invalid tempDirectory")
 
     val target = new Runnable() {
 
@@ -94,7 +94,7 @@ class TempDirectoryPurgeTask(tempDirectory: File) extends TimerTask with Logging
   val PURGE_DELAY = TimeUnit.HOURS.toMillis(24)
 
   /* Constructor checks */
-  assert((tempDirectory != null) && tempDirectory.isDirectory, "TempDirectoryPurgeTask() invalid tempDirectory")
+  assert(((tempDirectory != null) && tempDirectory.isDirectory), "TempDirectoryPurgeTask() invalid tempDirectory")
 
   def run() {
     val currentThread = Thread.currentThread

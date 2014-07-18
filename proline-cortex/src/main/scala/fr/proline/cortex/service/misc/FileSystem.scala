@@ -31,7 +31,7 @@ class FileSystem extends IRemoteService with Logging {
 
   // Process the requests
   override def process(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
-    require(req != null, "Req is null")
+    require((req != null), "Req is null")
 
     val requestId = req.getID
     val methodName = req.getMethod

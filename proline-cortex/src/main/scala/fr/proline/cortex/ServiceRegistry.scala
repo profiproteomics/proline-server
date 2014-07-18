@@ -22,7 +22,7 @@ object ServiceRegistry {
   private val m_servicesPerName = mutable.Map.empty[String, ArrayBuffer[IRemoteService]]
 
   def addService(service: IRemoteService) {
-    require(service != null, "Service is null")
+    require((service != null), "Service is null")
     require(!StringUtils.isEmpty(service.serviceName), "Invalid Service name")
     require(!StringUtils.isEmpty(service.serviceVersion), "Invalid Service version")
 

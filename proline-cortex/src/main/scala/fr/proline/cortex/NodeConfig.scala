@@ -50,7 +50,7 @@ object NodeConfig extends Logging {
   require(!StringUtils.isEmpty(JMS_SERVER_HOST), "Invalid \"" + JMS_SERVER_HOST_KEY + "\" value")
 
   val JMS_SERVER_PORT = m_prolineConfig.getInt(JMS_SERVER_PORT_KEY)
-  require((0 < JMS_SERVER_PORT) && (JMS_SERVER_PORT <= MAX_PORT), "Invalid \"" + JMS_SERVER_PORT_KEY + "\" value")
+  require(((0 < JMS_SERVER_PORT) && (JMS_SERVER_PORT <= MAX_PORT)), "Invalid \"" + JMS_SERVER_PORT_KEY + "\" value")
 
   /* JMS Queue name */
   val PROLINE_SERVICE_REQUEST_QUEUE_NAME = retrieveQueueName(m_prolineConfig)
@@ -81,7 +81,7 @@ object NodeConfig extends Logging {
       nThreads = config.getInt(SERVICE_THREAD_POOL_SIZE_KEY)
     }
 
-    if ((nThreads < 1)) {
+    if (nThreads < 1) { // At least 1 thread
       nThreads = min(Runtime.getRuntime.availableProcessors / 2 + 1, AUTO_MAX_N_THREAD)
       logger.info("Invalid \"" + SERVICE_THREAD_POOL_SIZE_KEY + "\" using AUTO : " + nThreads)
     } else if (nThreads > ABSOLUTE_MAX_N_THREADS) {
