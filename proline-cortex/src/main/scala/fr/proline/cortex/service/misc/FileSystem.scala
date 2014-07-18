@@ -29,8 +29,8 @@ class FileSystem extends IRemoteService with Logging {
   val serviceVersion = "1.0"
   override val defaultVersion = true
 
-  // Process the requests
-  override def process(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
+  /* Define the concrete service method */
+  override def service(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
     require((req != null), "Req is null")
 
     val requestId = req.getID

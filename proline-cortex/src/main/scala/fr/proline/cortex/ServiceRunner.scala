@@ -373,7 +373,7 @@ class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with 
       try {
         logger.debug("Calling Service [" + serviceName + "] with JSON Request [" + jsonRequest + ']')
 
-        serviceInstance.process(jmsMessageContext, jsonRequest)
+        serviceInstance.service(jmsMessageContext, jsonRequest)
       } catch {
 
         case intEx: InterruptedException => {

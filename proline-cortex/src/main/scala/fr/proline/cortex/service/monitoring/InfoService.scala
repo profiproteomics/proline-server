@@ -31,7 +31,7 @@ class InfoService extends IRemoteService with Logging {
   /* Uniquely identify this instance */
   val instanceUniqueIdentifier = UUID.randomUUID().toString
 
-  override def process(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
+  override def service(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
     require((req != null), "Req is null")
 
     val requestId = req.getID

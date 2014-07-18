@@ -63,7 +63,7 @@ class ResourceService extends Logging {
         } else {
           val jmsMessageContext = ServiceRunner.buildJMSMessageContext(message)
 
-          val resourceResult = process(session, jmsMessageContext, jsonRequest)
+          val resourceResult = service(session, jmsMessageContext, jsonRequest)
 
           jmsResponseMessage = resourceResult.jmsResponseMessage
           jsonResponse = resourceResult.jsonResponse
@@ -116,8 +116,8 @@ class ResourceService extends Logging {
 
   }
 
-  private def process(session: Session, jmsMessageContext: Map[String, Any], req: JSONRPC2Request): ResourceResult = {
-    assert((req != null), "process() req is null")
+  private def service(session: Session, jmsMessageContext: Map[String, Any], req: JSONRPC2Request): ResourceResult = {
+    assert((req != null), "service() req is null")
 
     val jsonRequestId = req.getID
     val method = req.getMethod
