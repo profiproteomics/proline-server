@@ -4,18 +4,18 @@ import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
-
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.typesafe.scalalogging.slf4j.Logging
-
+import fr.proline.cortex.Constants.PROLINE_NODE_ID_KEY
 import fr.profi.util.StringUtils
 import fr.proline.cortex.ServiceRunner
 import javax.jms.Message
 import javax.jms.MessageProducer
 import javax.jms.Session
 import javax.jms.TextMessage
+import fr.proline.cortex.NodeConfig
 
 class ResourceService extends Logging {
 
@@ -61,14 +61,16 @@ class ResourceService extends Logging {
 
           jsonResponse.setError(ServiceRunner.buildJSONRPC2Error(ServiceRunner.SERVICE_ERROR_CODE, errorMessage))
         } else {
-          val resourceResult = process(session, jsonRequest)
+          val jmsMessageContext = ServiceRunner.buildJMSMessageContext(message)
+
+          val resourceResult = process(session, jmsMessageContext, jsonRequest)
 
           jmsResponseMessage = resourceResult.jmsResponseMessage
           jsonResponse = resourceResult.jsonResponse
         }
 
       } else {
-        val errorMessage = "Invalid JMS Message type"
+        val errorMessage = "Invalid ResourceService JMS Message type"
         logger.warn(errorMessage)
 
         jsonResponse.setError(ServiceRunner.buildJSONRPC2Error(ServiceRunner.MESSAGE_ERROR, errorMessage))
@@ -90,7 +92,7 @@ class ResourceService extends Logging {
       val replyDestination = message.getJMSReplyTo
 
       if (replyDestination == null) {
-        logger.warn("Message has no JMSReplyTo Destination : Cannot send JSON Response to Client")
+        logger.warn("ResourceService JMS Message has no JMSReplyTo Destination : Cannot send JMS Response to Client")
       } else {
 
         if (jmsResponseMessage == null) {
@@ -104,31 +106,35 @@ class ResourceService extends Logging {
           jmsResponseMessage.asInstanceOf[TextMessage].setText(jsonResponse.toJSONString)
         }
 
-        logger.debug("Sending JMS Response to Message [" + jmsMessageId + "] on Destination [" + replyDestination + ']')
+        logger.debug("Sending JMS Response to ResourceService JMS Message [" + jmsMessageId + "] on Destination [" + replyDestination + ']')
 
         replyProducer.send(replyDestination, jmsResponseMessage)
-
-        logger.info("ResourceService JMS Response to Message [" + jmsMessageId + "] sent")
+        logger.info("JMS Response to ResourceService JMS Message [" + jmsMessageId + "] sent")
       }
 
     }
 
   }
 
-  private def process(session: Session, req: JSONRPC2Request): ResourceResult = {
+  private def process(session: Session, jmsMessageContext: Map[String, Any], req: JSONRPC2Request): ResourceResult = {
+    assert(req != null, "process() req is null")
+
     val jsonRequestId = req.getID
     val method = req.getMethod
 
     /* Method dispatcher */
     method match {
-      case GET_RESOURCE_AS_STREAM_METHOD => getResourceAsStream(session, req)
+      case GET_RESOURCE_AS_STREAM_METHOD => getResourceAsStream(session, jmsMessageContext, req)
 
       case _                             => new ResourceResult(null, new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, jsonRequestId))
     }
 
   }
 
-  private def getResourceAsStream(session: Session, req: JSONRPC2Request): ResourceResult = {
+  private def getResourceAsStream(session: Session, jmsMessageContext: Map[String, Any], req: JSONRPC2Request): ResourceResult = {
+    assert(session != null, "getResourceAsStream() session is null")
+    assert(req != null, "getResourceAsStream() req is null")
+
     val jsonRequestId = req.getID
 
     var jmsResponseMessage: Message = null
@@ -174,7 +180,7 @@ class ResourceService extends Logging {
               try {
                 br.close()
               } catch {
-                case ioEx: IOException => logger.error("Error closing [" + absolutePathname + "] InputStream", ioEx)
+                case exClose: IOException => logger.error("Error closing [" + absolutePathname + "] InputStream", exClose)
               }
             }
 

@@ -2,11 +2,20 @@ package fr.proline.cortex
 
 import java.lang.Thread
 
+import scala.annotation.elidable
+import scala.annotation.elidable.ASSERTION
+import scala.collection.mutable
+
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.typesafe.scalalogging.slf4j.Logging
 
+import Constants.JMS_CORRELATION_ID_KEY
+import Constants.JMS_DESTINATION_KEY
+import Constants.JMS_MESSAGE_ID_KEY
+import Constants.JMS_REPLY_TO_KEY
+import Constants.JMS_TIMESTAMP_KEY
 import Constants.PROLINE_NODE_ID_KEY
 import Constants.PROLINE_SERVICE_NAME_KEY
 import Constants.PROLINE_SERVICE_VERSION_KEY
@@ -22,7 +31,7 @@ import javax.jms.Queue
 import javax.jms.Session
 import javax.jms.TextMessage
 
-object ServiceRunner {
+object ServiceRunner extends Logging {
 
   /* Constants */
 
@@ -44,6 +53,8 @@ object ServiceRunner {
   }
 
   def buildSelectorString2(handledServices: List[IRemoteService], parallelizableRunner: Boolean): String = {
+    require(handledServices != null, "HandledServices List is null")
+
     val buff = new StringBuilder()
 
     var first: Boolean = true
@@ -91,6 +102,56 @@ object ServiceRunner {
     } // End loop for each service
 
     buff.toString
+  }
+
+  def buildJMSMessageContext(message: Message): Map[String, Any] = {
+    require(message != null, "Message is null")
+
+    val mutableMap = mutable.Map.empty[String, Any]
+
+    /* Add some Standard JMS header proprties */
+    val jmsMessageId = message.getJMSMessageID
+    mutableMap.put(JMS_MESSAGE_ID_KEY, jmsMessageId) // Should not be null on message Reception
+
+    val jmsCorrelationId = message.getJMSCorrelationID
+    if (jmsCorrelationId != null) {
+      mutableMap.put(JMS_CORRELATION_ID_KEY, jmsCorrelationId)
+    }
+
+    val jmsTimestamp = message.getJMSTimestamp
+    mutableMap.put(JMS_TIMESTAMP_KEY, jmsTimestamp) // Long primitive
+
+    val jmsDestination = message.getJMSDestination
+    mutableMap.put(JMS_DESTINATION_KEY, jmsDestination) // Should not be null on message Reception
+
+    val jmsReplyTo = message.getJMSReplyTo
+    if (jmsReplyTo != null) {
+      mutableMap.put(JMS_REPLY_TO_KEY, jmsReplyTo)
+    }
+
+    /* Add all other JMS properties (Provider and Proline specific) */
+    val propertyNames = message.getPropertyNames
+
+    while (propertyNames.hasMoreElements) {
+      val elem = propertyNames.nextElement
+
+      if (elem.isInstanceOf[String]) {
+        val propertyName = elem.asInstanceOf[String]
+
+        val value = message.getObjectProperty(propertyName)
+
+        val oldValue = mutableMap.put(propertyName, value)
+        if (oldValue.isDefined) {
+          logger.warn("JMS Message Property [" + propertyName + "] overridden")
+        }
+
+      } else {
+        logger.warn("Invalid JMS Message Property name")
+      }
+
+    }
+
+    mutableMap.toMap
   }
 
 }
@@ -151,6 +212,7 @@ class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with 
             logger.info("Consumer Connection is closed : exiting receive loop")
           } else if (resourceService.serviceName.equals(message.getStringProperty(PROLINE_SERVICE_NAME_KEY)) &&
             nodeId.equals(message.getStringProperty(PROLINE_NODE_ID_KEY))) {
+            /* Special ResourceService handling */
             resourceService.handleMessage(session, message, replyProducer)
           } else {
             handleMessage(session, message, replyProducer)
@@ -197,7 +259,7 @@ class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with 
 
     val jmsMessageId = message.getJMSMessageID
 
-    logger.debug("Handling JMS Message [" + jmsMessageId + ']')
+    logger.debug("Handling Request JMS Message [" + jmsMessageId + ']')
 
     var jsonRequestId: java.lang.Object = null
     var jsonResponse: JSONRPC2Response = new JSONRPC2Response(JSONRPC2Error.INVALID_REQUEST, jsonRequestId)
@@ -227,7 +289,9 @@ class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with 
           val optionalServiceInstance = getServiceInstance(serviceName, serviceVersion)
 
           if (optionalServiceInstance.isDefined) {
-            jsonResponse = callService(optionalServiceInstance.get, jsonRequest)
+            val jmsMessageContext = buildJMSMessageContext(message)
+
+            jsonResponse = callService(jmsMessageContext, optionalServiceInstance.get, jsonRequest)
           } else {
             /* Cannot occur if 'selectorString' is a valid filter for JMS Messages */
             val errorMessageBuilder = new StringBuilder()
@@ -249,7 +313,7 @@ class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with 
         } // End if (serviceName property is valid)
 
       } else {
-        val errorMessage = "Invalid JMS Message type"
+        val errorMessage = "Invalid Request JMS Message type"
         logger.warn(errorMessage)
 
         jsonResponse.setError(buildJSONRPC2Error(MESSAGE_ERROR, errorMessage))
@@ -259,7 +323,7 @@ class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with 
 
       /* Catch all Throwables */
       case t: Throwable => {
-        val errorMessage = "Error handling JMS Message [" + jmsMessageId + ']'
+        val errorMessage = "Error handling Request JMS Message [" + jmsMessageId + ']'
         logger.error(errorMessage, t)
 
         jsonResponse = new JSONRPC2Response(buildJSONRPC2Error(MESSAGE_ERROR, errorMessage, t), jsonRequestId)
@@ -271,7 +335,7 @@ class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with 
       val replyDestination = message.getJMSReplyTo
 
       if (replyDestination == null) {
-        logger.warn("Message has no JMSReplyTo Destination : Cannot send JSON Response to Client")
+        logger.warn("Request JMS Message has no JMSReplyTo Destination : Cannot send JSON Response to Client")
       } else {
 
         if (jsonResponse == null) {
@@ -282,16 +346,17 @@ class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with 
         jmsResponseMessage.setJMSCorrelationID(jmsMessageId)
         jmsResponseMessage.setText(jsonResponse.toJSONString)
 
-        logger.debug("Sending JMS Response to Message [" + jmsMessageId + "] on Destination [" + replyDestination + ']')
+        logger.debug("Sending JMS Response to Request JMS Message [" + jmsMessageId + "] on Destination [" + replyDestination + ']')
 
         replyProducer.send(replyDestination, jmsResponseMessage)
+        logger.info("JMS Response to Request JMS Message [" + jmsMessageId + "] sent")
       }
 
     }
 
   }
 
-  private def callService(serviceInstance: IRemoteService, jsonRequest: JSONRPC2Request): JSONRPC2Response = {
+  private def callService(jmsMessageContext: Map[String, Any], serviceInstance: IRemoteService, jsonRequest: JSONRPC2Request): JSONRPC2Response = {
     assert(serviceInstance != null, "callService() serviceInstance is null")
     assert(jsonRequest != null, "callService() jsonRequest is null")
 
@@ -309,7 +374,7 @@ class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with 
       try {
         logger.debug("Calling Service [" + serviceName + "] with JSON Request [" + jsonRequest + ']')
 
-        serviceInstance.process(jsonRequest)
+        serviceInstance.process(jmsMessageContext, jsonRequest)
       } catch {
 
         case intEx: InterruptedException => {

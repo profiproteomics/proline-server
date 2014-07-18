@@ -62,7 +62,9 @@ class ValidateResultSet extends IRemoteService with Logging {
   override val defaultVersion = true
 
   /* Define the concrete process method */
-  override def process(req: JSONRPC2Request): JSONRPC2Response = {
+  override def process(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
+    require(req != null, "Req is null")
+
     val requestId = req.getID
     val methodName = req.getMethod
 

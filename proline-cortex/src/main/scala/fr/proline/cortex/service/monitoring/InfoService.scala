@@ -21,7 +21,7 @@ import fr.proline.util.version.VersionHelper
 class InfoService extends IRemoteService with Logging {
 
   /* Constants */
-  val SMALL_TAB = "  "
+  val SHORT_TAB = "  "
 
   /* JMS Service identification */
   val serviceName = "proline/monitoring/Info"
@@ -31,7 +31,7 @@ class InfoService extends IRemoteService with Logging {
   /* Uniquely identify this instance */
   val instanceUniqueIdentifier = UUID.randomUUID().toString
 
-  override def process(req: JSONRPC2Request): JSONRPC2Response = {
+  override def process(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
     require(req != null, "Req is null")
 
     val requestId = req.getID
@@ -43,7 +43,6 @@ class InfoService extends IRemoteService with Logging {
 
       case "version" => {
         val buff = new StringBuilder()
-
         appendVersions(buff)
 
         new JSONRPC2Response(buff.toString, requestId)
@@ -51,12 +50,12 @@ class InfoService extends IRemoteService with Logging {
 
       case "error" => throw new RuntimeException("Fake Exception thrown by " + getClass.getSimpleName)
 
-      case _       => new JSONRPC2Response(buildMessage(requestId, method), requestId)
+      case _       => new JSONRPC2Response(buildMessage(jmsMessageContext, requestId, method), requestId)
     }
 
   }
 
-  private def buildMessage(requestId: java.lang.Object, methodName: String): String = {
+  private def buildMessage(jmsMessageContext: Map[String, Any], requestId: java.lang.Object, methodName: String): String = {
     val buff = new StringBuilder()
 
     /* This Node and Network infos */
@@ -75,6 +74,10 @@ class InfoService extends IRemoteService with Logging {
     buff.append("Thread #").append(currentThread.getId).append("  [").append(currentThread.getName).append(']')
     buff.append(LINE_SEPARATOR)
 
+    buff.append(LINE_SEPARATOR)
+
+    /* JMS Message Context */
+    appendJMSMessageContext(buff, jmsMessageContext)
     buff.append(LINE_SEPARATOR)
 
     /* JSON Request infos */
@@ -96,7 +99,10 @@ class InfoService extends IRemoteService with Logging {
     /* List all handled services : SingleThreaded and Parallelizable */
 
     val handledSingleThreadedServices = ServiceRegistry.getSingleThreadedServices
-    if (!handledSingleThreadedServices.isEmpty) {
+    if ((handledSingleThreadedServices == null) || handledSingleThreadedServices.isEmpty) {
+      buff.append("NO SingleThreaded Services handled")
+      buff.append(LINE_SEPARATOR)
+    } else {
       buff.append("Handled SingleThreaded Services :")
       buff.append(LINE_SEPARATOR)
 
@@ -104,22 +110,11 @@ class InfoService extends IRemoteService with Logging {
         val servicesList = entry._2
 
         if ((servicesList != null) && !servicesList.isEmpty) {
-          buff.append(SMALL_TAB)
-
-          var first: Boolean = true
-
           for (service <- servicesList) {
-
-            if (first) {
-              first = false
-            } else {
-              buff.append(", ")
-            }
-
+            buff.append(SHORT_TAB)
             appendService(buff, service)
-          }
-
-          buff.append(LINE_SEPARATOR)
+            buff.append(LINE_SEPARATOR)
+          } // End inner loop
         }
 
       }
@@ -129,12 +124,15 @@ class InfoService extends IRemoteService with Logging {
     buff.append(LINE_SEPARATOR)
 
     val handledParallelizableServices = ServiceRegistry.getParallelizableServices
-    if (!handledParallelizableServices.isEmpty) {
+    if ((handledParallelizableServices == null) || handledParallelizableServices.isEmpty) {
+      buff.append("NO Parallelizable Services handled")
+      buff.append(LINE_SEPARATOR)
+    } else {
       buff.append("Handled Parallelizable Services :")
       buff.append(LINE_SEPARATOR)
 
       for (service <- handledParallelizableServices) {
-        buff.append(SMALL_TAB)
+        buff.append(SHORT_TAB)
         appendService(buff, service)
         buff.append(LINE_SEPARATOR)
       }
@@ -145,6 +143,7 @@ class InfoService extends IRemoteService with Logging {
   }
 
   private def appendNetwork(sb: StringBuilder) {
+    assert(sb != null, "appendNetwork() sb is null")
 
     try {
 
@@ -152,10 +151,10 @@ class InfoService extends IRemoteService with Logging {
       if (interfaces != null) {
 
         while (interfaces.hasMoreElements) {
-          val interface = interfaces.nextElement()
+          val interface = interfaces.nextElement
 
           if (interface.getInetAddresses.hasMoreElements) {
-            sb.append(SMALL_TAB)
+            sb.append(SHORT_TAB)
             appendInterface(sb, interface)
             sb.append(LINE_SEPARATOR)
           }
@@ -171,6 +170,9 @@ class InfoService extends IRemoteService with Logging {
   }
 
   private def appendInterface(sb: StringBuilder, intf: NetworkInterface) {
+    assert(sb != null, "appendInterface() sb is null")
+    assert(intf != null, "appendInterface() intf is null")
+
     sb.append('\"').append(intf.getName).append('\"')
 
     val mac = intf.getHardwareAddress
@@ -186,12 +188,12 @@ class InfoService extends IRemoteService with Logging {
 
       if (first) {
         first = false
-        sb.append(SMALL_TAB)
+        sb.append(SHORT_TAB)
       } else {
         sb.append(", ")
       }
 
-      val address = addresses.nextElement()
+      val address = addresses.nextElement
 
       val rawIpAddress = address.getHostAddress
       sb.append(rawIpAddress)
@@ -207,10 +209,53 @@ class InfoService extends IRemoteService with Logging {
   }
 
   private def formatMac(mac: Array[Byte]): String = {
+    assert(mac != null, "formatMac() mac Array is null")
+
     mac.map("%02X".format(_)).mkString("<", ":", ">")
   }
 
+  private def appendJMSMessageContext(sb: StringBuilder, jmsMessageContext: Map[String, Any]) {
+    assert(sb != null, "appendJMSMessageContext() sb is null")
+    assert(jmsMessageContext != null, "appendJMSMessageContext() jmsMessageContext Map is null")
+
+    sb.append("Request JMS Message Properties :")
+    sb.append(LINE_SEPARATOR)
+
+    for (entry <- jmsMessageContext) {
+      sb.append('\"').append(entry._1).append("\" : ")
+
+      val value = entry._2
+
+      if (value == null) {
+        sb.append("NULL")
+      } else {
+        val clazz = value.getClass
+
+        if (clazz != null) {
+          sb.append(clazz.getName).append(SHORT_TAB)
+        }
+
+        val isString = value.isInstanceOf[String]
+        if (isString) {
+          sb.append('[')
+        }
+
+        sb.append(value)
+
+        if (isString) {
+          sb.append(']')
+        }
+
+      }
+
+      sb.append(LINE_SEPARATOR)
+    }
+
+  }
+
   private def appendVersions(sb: StringBuilder) {
+    assert(sb != null, "appendVersions() sb is null")
+
     sb.append("Proline Module Versions")
     sb.append(LINE_SEPARATOR)
 
@@ -231,6 +276,9 @@ class InfoService extends IRemoteService with Logging {
   }
 
   private def appendService(sb: StringBuilder, service: IRemoteService) {
+    assert(sb != null, "appendService() sb is null")
+    assert(service != null, "appendService() service is null")
+
     append(sb, service.serviceName)
     sb.append(" version ")
     append(sb, service.serviceVersion)
@@ -242,6 +290,7 @@ class InfoService extends IRemoteService with Logging {
   }
 
   private def append(sb: StringBuilder, obj: AnyRef) {
+    assert(sb != null, "append() sb is null")
 
     if (obj == null) {
       sb.append("NULL")

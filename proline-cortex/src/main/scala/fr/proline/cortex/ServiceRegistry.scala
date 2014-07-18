@@ -16,7 +16,7 @@ import fr.proline.cortex.service.misc.ResourceService
  */
 object ServiceRegistry {
 
-  val resourceService = new ResourceService // Unique instance of ResourceService
+  val resourceService = new ResourceService() // Unique instance of ResourceService
 
   // MultiMap
   private val m_servicesPerName = mutable.Map.empty[String, ArrayBuffer[IRemoteService]]
