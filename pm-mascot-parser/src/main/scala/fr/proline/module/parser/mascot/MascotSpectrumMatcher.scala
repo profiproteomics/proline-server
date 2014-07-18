@@ -26,6 +26,7 @@ import matrix_science.msparser.ms_masses
 import matrix_science.msparser.ms_modification
 import fr.proline.core.om.model.msi.SearchSettings
 import scala.collection.mutable
+import matrix_science.msparser.ms_umod_configfile
 
 trait LoggingFake {
   object logger {
@@ -716,27 +717,70 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
       // create a list of fixed modifications
       val vecFixed = new ms_modvector()
       for (fixedPtms <- ptmHelper.fixedPtmIndexed) {
-        val mod = modsFile.getModificationByName(fixedPtms)
+        
+        var mod = modsFile.getModificationByName(fixedPtms)
+        var foundModif = false
+        
         if (mod != null) {
+          //Modification found in mascot modification file 
           logger.debug("+++ Fixed Modification " + mod.getTitle() + " added")
-          vecFixed.appendModification(mod)
+          foundModif = true
+          
         } else {
+          
+          // Modif doesn't existe in mascot modification file, get it from dat file.    
+          //TODO extract ms_umod_configfile to create once ! 
+          val umodFile = new ms_umod_configfile()
+          umodFile.setSchemaFileName("schema\\unimod_2.xsd")
+          val foundUnimod = mascotResFile.getUnimod(umodFile)
+		  if(foundUnimod){
+		    mod = new ms_modification()
+		    foundModif =  mod.getFromUnimod(fixedPtms, umodFile)
+		    if(foundModif)
+		    	logger.debug("+++ Fixed Modification " + mod.getTitle() + " added (from dat file)")
+    	  }
+        }//Modification not found in modFile
+          
+        if(!foundModif){
           logger.error("Fixed Modification " + fixedPtms + " cannot be created")
-        }
+        }  else { 
+    	  vecFixed.appendModification(mod)    	  
+        }  
       }
 
       // create a list of variable modifications :
       val vecVariable = new ms_modvector()
       for (varPtms <- ptmHelper.varPtmIndexed) {
 
-        val mod = modsFile.getModificationByName(varPtms)
+        var mod = modsFile.getModificationByName(varPtms)
+        var foundModif = false
+        
         if (mod != null) {
+          //Modification found in mascot modification file 
           logger.debug("+++ Var Modification " + mod.getTitle() + " added")
-          vecVariable.appendModification(mod)
+          foundModif = true 
+          
         } else {
-          logger.error("Variable Modification " + varPtms + " cannot be created")
-        }
-      }
+          
+          // Modif doesn't existe in mascot modification file, get it from dat file.
+          val umodFile = new ms_umod_configfile()
+          umodFile.setSchemaFileName("schema\\unimod_2.xsd")
+          val foundUnimod = mascotResFile.getUnimod(umodFile)
+		  if(foundUnimod){
+		    mod = new ms_modification()
+		    foundModif =  mod.getFromUnimod(varPtms, umodFile)		   
+		     if(foundModif)
+		    	logger.debug("+++ Var Modification " + mod.getTitle() + " added (from dat file)")    	
+    	  }
+        } //Modification not found in modFile
+        
+        if(!foundModif ) {
+    	  logger.error("Variable Modification " + varPtms + " cannot be created")
+ 		} else {
+		  vecVariable.appendModification(mod)	    		   		 
+     	}
+        
+      } //End Variable Modifs
 
       aahelper.setAvailableModifications(vecFixed, vecVariable)
 
