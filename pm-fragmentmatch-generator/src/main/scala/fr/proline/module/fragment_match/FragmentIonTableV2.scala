@@ -22,7 +22,13 @@ import fr.proline.core.om.model.msi.Fragmentation
 import fr.profi.util.MathUtils
 
 
-case class Fragment(moz: Double, position: Int, neutralLoss: Double = 0.0, fragmentType: Option[FragmentMatchType.Value] = None, series: Option[String] = None, charge: Int = 1)
+case class Fragment(moz: Double,
+				    position: Int,
+				    neutralLoss: Double = 0.0,
+				    fragmentType: Option[FragmentMatchType.Value] = None,
+				    series: Option[String] = None,
+				    charge: Int = 1,
+				    isAlternativeNL: Boolean = false)
 
 object FragmentIonTableV2 {
 
@@ -184,7 +190,7 @@ class FragmentIonTableV2(peptide: Peptide,
 
       position += 1 
       reversePosition -= 1
-    }
+    } // and AA iteration loop
 
     position += 1
     // initialize last forward ions fragments to 0.0
@@ -210,14 +216,15 @@ class FragmentIonTableV2(peptide: Peptide,
         for (ptmDef <- includedPtmsByDefinition.keys) {
           for (nl <- ptmDef.neutralLosses) {
             if ((includedPtmsByDefinition(ptmDef).size*nl.monoMass - fragment.neutralLoss).abs > MathUtils.EPSILON_FLOAT) {
-              // Add a new fragment 
+              // Add a new fragment. WARNING : this alternative fragments are added at the end of the serie
               addFragment(_table, seriesName, new Fragment( 
             		  moz = fragment.moz - (includedPtmsByDefinition(ptmDef).size*nl.monoMass - fragment.neutralLoss)/fragment.charge.toDouble , 
             		  position = fragment.position, 
             		  neutralLoss = includedPtmsByDefinition(ptmDef).size*nl.monoMass,
             		  fragmentType = fragment.fragmentType,
             		  series = fragment.series, 
-            		  charge = fragment.charge) )
+            		  charge = fragment.charge,
+            		  isAlternativeNL = true) )
             }
           }
         }
@@ -232,7 +239,7 @@ class FragmentIonTableV2(peptide: Peptide,
     val fragmentIonTable = new ArrayBuffer[TheoreticalFragmentSeries]
     try {
       for (item <- fragments) {
-        if (item._2.exists { _.moz > 0.0 }) fragmentIonTable += new TheoreticalFragmentSeries(item._1, item._2.map(_.moz).toArray)
+        if (item._2.exists { _.moz > 0.0 }) fragmentIonTable += new TheoreticalFragmentSeries(item._1, item._2.filter(!_.isAlternativeNL).map(_.moz).toArray)
       }
     } catch {
       case e: Exception => logger.warn("The fragment ion table could not be generated, default value is 'new ArrayBuffer[TheoreticalFragmentSeries]'")
