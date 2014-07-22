@@ -4,14 +4,18 @@ import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+
 import scala.collection.JavaConversions.mutableMapAsJavaMap
 import scala.collection.mutable
+
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.jms.HornetQJMSClient
 import org.hornetq.api.jms.JMSFactoryType
 import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory
 import org.hornetq.core.remoting.impl.netty.TransportConstants
+
 import com.typesafe.scalalogging.slf4j.Logging
+
 import Constants.MAX_PORT
 import NodeConfig.ENABLE_IMPORTS
 import NodeConfig.JMS_SERVER_HOST
@@ -22,6 +26,7 @@ import fr.profi.util.StringUtils
 import fr.profi.util.ThreadLogger
 import fr.proline.admin.service.db.SetupProline
 import fr.proline.core.orm.util.DataStoreConnectorFactory
+import fr.proline.cortex.service.dps.msi.ValidateResultSet
 import fr.proline.cortex.service.misc.FileSystem
 import fr.proline.cortex.service.monitoring.InfoService
 import fr.proline.cortex.service.monitoring.SingleThreadedInfoService
@@ -29,7 +34,6 @@ import fr.proline.cortex.util.MountPointRegistry
 import fr.proline.cortex.util.WorkDirectoryRegistry
 import javax.jms.Connection
 import javax.jms.ConnectionFactory
-import fr.proline.cortex.service.dps.msi.ValidateResultSet
 
 object ProcessingNode extends Logging {
 
@@ -92,9 +96,9 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
 
       try {
         // Step 1. Directly instantiate the JMS Queue object.
-        val queue = HornetQJMSClient.createQueue(PROLINE_SERVICE_REQUEST_QUEUE_NAME)
+        val serviceRequestQueue = HornetQJMSClient.createQueue(PROLINE_SERVICE_REQUEST_QUEUE_NAME)
 
-        logger.debug("JMS Queue : " + queue)
+        logger.debug("JMS Queue : " + serviceRequestQueue)
 
         // Step 2. Instantiate the TransportConfiguration object which contains the knowledge of what transport to use,
         // The server port etc.
@@ -123,11 +127,14 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
         /* Create Executor */
         m_executor = Executors.newCachedThreadPool()
 
+        val serviceMonitoringNotifier = new MonitoringTopicPublisherRunner(m_connection)
+        m_executor.submit(serviceMonitoringNotifier)
+
         /* Add SingleThreadedServiceRunner */
         val handledSingleThreadedServiceNames = ServiceRegistry.getSingleThreadedServices.keySet
 
         for (serviceName <- handledSingleThreadedServiceNames) {
-          val singleThreadedServiceRunner = new SingleThreadedServiceRunner(queue, m_connection, serviceName)
+          val singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier, serviceName)
           m_executor.submit(singleThreadedServiceRunner)
         }
 
@@ -135,7 +142,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
         logger.debug("Starting " + SERVICE_THREAD_POOL_SIZE + " Parallelizable ServiceRunners")
 
         for (i <- 1 to SERVICE_THREAD_POOL_SIZE) {
-          val parallelizableSeviceRunner = new ServiceRunner(queue, m_connection)
+          val parallelizableSeviceRunner = new ServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier)
           m_executor.submit(parallelizableSeviceRunner)
         }
 

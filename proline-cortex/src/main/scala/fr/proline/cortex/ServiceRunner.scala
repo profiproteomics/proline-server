@@ -157,7 +157,7 @@ object ServiceRunner extends Logging {
 /**
  * Builds JMS Consumer to run {{{IRemoteService}}} on given JMS {{{Queue}}}.
  */
-class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with Logging {
+class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotifier: IServiceMonitoringNotifier) extends Runnable with Logging {
 
   import ServiceRunner._
 
@@ -212,7 +212,7 @@ class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with 
           } else if (resourceService.serviceName.equals(message.getStringProperty(PROLINE_SERVICE_NAME_KEY)) &&
             nodeId.equals(message.getStringProperty(PROLINE_NODE_ID_KEY))) {
             /* Special ResourceService handling */
-            resourceService.handleMessage(session, message, replyProducer)
+            resourceService.handleMessage(session, message, replyProducer, serviceMonitoringNotifier)
           } else {
             handleMessage(session, message, replyProducer)
           }
@@ -262,6 +262,7 @@ class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with 
 
     var jsonRequestId: java.lang.Object = null
     var jsonResponse: JSONRPC2Response = new JSONRPC2Response(JSONRPC2Error.INVALID_REQUEST, jsonRequestId)
+    var serviceName: String = null
 
     try {
 
@@ -275,7 +276,7 @@ class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with 
 
         jsonResponse.setID(jsonRequestId)
 
-        val serviceName = message.getStringProperty(PROLINE_SERVICE_NAME_KEY)
+        serviceName = message.getStringProperty(PROLINE_SERVICE_NAME_KEY)
         val serviceVersion = message.getStringProperty(PROLINE_SERVICE_VERSION_KEY)
 
         if (StringUtils.isEmpty(serviceName)) {
@@ -341,9 +342,24 @@ class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with 
           jsonResponse = new JSONRPC2Response(JSONRPC2Error.INTERNAL_ERROR, jsonRequestId)
         }
 
+        /* Notify */
+        val serviceEvent = if (jsonResponse.getError == null) {
+
+          if (jsonResponse.getResult == null) {
+            new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_FAIL)
+          } else {
+            new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_SUCCESS)
+          }
+
+        } else {
+          new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_FAIL)
+        }
+
+        serviceMonitoringNotifier.sendNotification(serviceEvent.toJSONRPCNotification(), null)
+
         val jmsResponseMessage = session.createTextMessage()
         jmsResponseMessage.setJMSCorrelationID(jmsMessageId)
-        jmsResponseMessage.setText(jsonResponse.toJSONString)
+        jmsResponseMessage.setText(jsonResponse.toJSONString())
 
         logger.debug("Sending JMS Response to Request JMS Message [" + jmsMessageId + "] on Destination [" + replyDestination + ']')
 
@@ -373,6 +389,18 @@ class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with 
       try {
         logger.debug("Calling Service [" + serviceName + "] with JSON Request [" + jsonRequest + ']')
 
+        /* Notify */
+        var jmsMessageId: String = null
+
+        val value = jmsMessageContext.getOrElse(JMS_MESSAGE_ID_KEY, null)
+        if (value.isInstanceOf[String]) {
+          jmsMessageId = value.asInstanceOf[String]
+        }
+
+        val serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_START)
+
+        serviceMonitoringNotifier.sendNotification(serviceEvent.toJSONRPCNotification(), null)
+
         serviceInstance.service(jmsMessageContext, jsonRequest)
       } catch {
 
@@ -399,8 +427,8 @@ class ServiceRunner(queue: Queue, connection: Connection) extends Runnable with 
 
 }
 
-class SingleThreadedServiceRunner(queue: Queue, connection: Connection, serviceName: String)
-  extends ServiceRunner(queue, connection) {
+class SingleThreadedServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotifier: MonitoringTopicPublisherRunner, serviceName: String)
+  extends ServiceRunner(queue, connection, serviceMonitoringNotifier) {
 
   import ServiceRunner._
 

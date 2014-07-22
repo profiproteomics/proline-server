@@ -16,6 +16,8 @@ import javax.jms.MessageProducer
 import javax.jms.Session
 import javax.jms.TextMessage
 import fr.proline.cortex.NodeConfig
+import fr.proline.cortex.IServiceMonitoringNotifier
+import fr.proline.cortex.ServiceEvent
 
 class ResourceService extends Logging {
 
@@ -29,7 +31,7 @@ class ResourceService extends Logging {
 
   /* About the same code as ServiceRunner.handleMessage() but can return either a JMS BytesMessage with JMS_HQ_InputStream property 
      either a JMS TextMessage containing a standard JSON-RPC Response string (in case of service or file error) */
-  def handleMessage(session: Session, message: Message, replyProducer: MessageProducer) {
+  def handleMessage(session: Session, message: Message, replyProducer: MessageProducer, serviceMonitoringNotifier: IServiceMonitoringNotifier) {
     require((session != null), "Session is null")
     require((message != null), "Message is null")
     require((replyProducer != null), "ReplyProducer is null")
@@ -63,6 +65,10 @@ class ResourceService extends Logging {
         } else {
           val jmsMessageContext = ServiceRunner.buildJMSMessageContext(message)
 
+          val serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_START)
+
+          serviceMonitoringNotifier.sendNotification(serviceEvent.toJSONRPCNotification(), null)
+
           val resourceResult = service(session, jmsMessageContext, jsonRequest)
 
           jmsResponseMessage = resourceResult.jmsResponseMessage
@@ -94,8 +100,11 @@ class ResourceService extends Logging {
       if (replyDestination == null) {
         logger.warn("ResourceService JMS Message has no JMSReplyTo Destination : Cannot send JMS Response to Client")
       } else {
+        var serviceEvent: ServiceEvent = null
 
         if (jmsResponseMessage == null) {
+          serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_FAIL)
+
           jmsResponseMessage = session.createTextMessage()
           jmsResponseMessage.setJMSCorrelationID(jmsMessageId)
 
@@ -103,13 +112,19 @@ class ResourceService extends Logging {
             jsonResponse = new JSONRPC2Response(JSONRPC2Error.INTERNAL_ERROR, jsonRequestId)
           }
 
-          jmsResponseMessage.asInstanceOf[TextMessage].setText(jsonResponse.toJSONString)
+          jmsResponseMessage.asInstanceOf[TextMessage].setText(jsonResponse.toJSONString())
+        } else {
+          serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_SUCCESS)
         }
+
+        /* Notify */
+        serviceMonitoringNotifier.sendNotification(serviceEvent.toJSONRPCNotification(), null)
 
         logger.debug("Sending JMS Response to ResourceService JMS Message [" + jmsMessageId + "] on Destination [" + replyDestination + ']')
 
         replyProducer.send(replyDestination, jmsResponseMessage)
         logger.info("JMS Response to ResourceService JMS Message [" + jmsMessageId + "] sent")
+
       }
 
     }

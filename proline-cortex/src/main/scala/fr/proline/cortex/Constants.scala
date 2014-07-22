@@ -4,6 +4,9 @@ object Constants {
 
   val MAX_PORT = 65535
 
+  /* Monitoring Topic names */
+  val SERVICE_MONITORING_NOTIFICATION_TOPIC_NAME = "ProlineServiceMonitoringNotificationTopic"
+
   /* JMS Standard header Property keys (JMS_ ) */
   val JMS_MESSAGE_ID_KEY = "JMSMessageID"
   val JMS_CORRELATION_ID_KEY = "JMSCorrelationID"
