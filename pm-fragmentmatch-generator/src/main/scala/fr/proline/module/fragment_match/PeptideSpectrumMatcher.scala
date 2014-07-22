@@ -40,7 +40,7 @@ class PeptideSpectrumMatcher(val spectraByIds: Map[Long, Spectrum],
     var usedPeaks = mascotLikePeaksSelection(peptideMatch, allPeaks, usedPeaksCount)
     usedPeaks = usedPeaks.sortBy(_.moz)
 
-    //TODO : configure ion series used
+    
     val nlString = {
       if (peptideMatch.properties.isDefined && peptideMatch.properties.get.mascotProperties.isDefined) {
         peptideMatch.properties.get.mascotProperties.get.getNlString.getOrElse("");
@@ -66,6 +66,7 @@ class PeptideSpectrumMatcher(val spectraByIds: Map[Long, Spectrum],
     	}
     }
     val charge = scala.math.min(peptideMatch.msQuery.charge, 2)
+    //TODO : configure ion series used !!!! 
     val currentFragmentIonTypes = new FragmentIons(ionTypeB = true, ionTypeY = true, chargeForIonsB = charge, chargeForIonsY = charge)
     val theoreticalFragmentsTable = new FragmentIonTableV2(peptideMatch.peptide, currentFragmentIonTypes, Some(aaSequence), ptmNeutralLosses = if (ptmNeutralLosses.isEmpty) None else Some(ptmNeutralLosses.toMap))
 

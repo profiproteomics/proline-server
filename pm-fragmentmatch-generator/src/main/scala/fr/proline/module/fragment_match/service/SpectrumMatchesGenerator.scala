@@ -62,7 +62,7 @@ class SpectrumMatchesGenerator(
   executionContext: IExecutionContext,
   resultSetId: Long,
   resultSummaryId: Option[Long] = None,
-  spectrumIds: Option[Seq[Long]] = None) extends IService with Logging {
+  spectrumIds: Option[Array[Long]] = None) extends IService with Logging {
 
   def runService(): Boolean = {
     logger.info("Run service SpectrumMatchesGenerator on ResultSet.id=" + resultSetId)
@@ -159,7 +159,9 @@ class ResultSetWrapper(resultSet: ResultSet, psmMatcher: PeptideSpectrumMatcher)
 
   def eachSpectrumMatch(wantDecoy: Boolean, onEachSpectrumMatch: SpectrumMatch => Unit): Unit = {
     for (peptideMatch <- resultSet.peptideMatches) {
-      onEachSpectrumMatch(psmMatcher.getSpectrumMatch(peptideMatch))
+      if (psmMatcher.spectraByIds.contains(peptideMatch.getMs2Query.spectrumId)) {
+    	  onEachSpectrumMatch(psmMatcher.getSpectrumMatch(peptideMatch))
+      }
     }
   }
 
