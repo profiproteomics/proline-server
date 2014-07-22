@@ -14,7 +14,7 @@ class ProfiJSONRPC2ResponseTest extends Logging {
   def testProfiResponse() {
     val response = new ProfiJSONRPC2Response("toto", "1")
 
-    val str1 = response.toJSONString
+    val str1 = response.toJSONString()
     logger.debug(str1)
 
     assertTrue("First response contains \"1\"", str1.contains("\"1\""))
@@ -28,7 +28,7 @@ class ProfiJSONRPC2ResponseTest extends Logging {
 
     response.setResult(secondResult)
 
-    val str2 = response.toJSONString
+    val str2 = response.toJSONString()
     logger.debug(str2)
 
     assertFalse("Second response does NOT contain \"1\"", str2.contains("\"1\""))
