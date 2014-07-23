@@ -14,13 +14,13 @@ import javax.persistence.TypedQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import fr.profi.util.StringUtils;
 import fr.proline.core.orm.msi.SeqDatabase;
 import fr.proline.core.orm.util.DataStoreConnectorFactory;
 import fr.proline.module.seq.DatabaseAccess;
 import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
 import fr.proline.module.seq.dto.SEDbInstanceWrapper;
 import fr.proline.repository.IDatabaseConnector;
-import fr.profi.util.StringUtils;
 
 public class ProjectHandler {
 
@@ -59,13 +59,15 @@ public class ProjectHandler {
 
 	final DataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();
 
-	final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId);
-
-	final EntityManagerFactory emf = msiDbConnector.getEntityManagerFactory();
-
-	EntityManager msiEM = emf.createEntityManager();
+	EntityManager msiEM = null;
 
 	try {
+	    final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId);
+
+	    final EntityManagerFactory emf = msiDbConnector.getEntityManagerFactory();
+
+	    msiEM = emf.createEntityManager();
+
 	    final Map<Long, SEDbInstanceWrapper> seDbInstances = retrieveAllSeqDatabases(msiEM);
 
 	    if ((seDbInstances == null) || seDbInstances.isEmpty()) {
@@ -123,6 +125,8 @@ public class ProjectHandler {
 
 	    } // End if (seDbInstances is not empty)
 
+	} catch (Exception ex) {
+	    LOG.error("Error accessing MSI Db Project #" + projectId, ex);
 	} finally {
 
 	    if (msiEM != null) {
