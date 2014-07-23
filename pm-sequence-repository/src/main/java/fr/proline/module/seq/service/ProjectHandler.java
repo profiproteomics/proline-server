@@ -59,82 +59,88 @@ public class ProjectHandler {
 
 	final DataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();
 
-	EntityManager msiEM = null;
+	final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId);
 
-	try {
-	    final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId);
+	if (msiDbConnector == null) {
+	    LOG.warn("Project #{} has NO associated MSI Db", projectId);
+	} else {
+	    EntityManager msiEM = null;
 
-	    final EntityManagerFactory emf = msiDbConnector.getEntityManagerFactory();
+	    try {
+		final EntityManagerFactory emf = msiDbConnector.getEntityManagerFactory();
 
-	    msiEM = emf.createEntityManager();
+		msiEM = emf.createEntityManager();
 
-	    final Map<Long, SEDbInstanceWrapper> seDbInstances = retrieveAllSeqDatabases(msiEM);
+		final Map<Long, SEDbInstanceWrapper> seDbInstances = retrieveAllSeqDatabases(msiEM);
 
-	    if ((seDbInstances == null) || seDbInstances.isEmpty()) {
-		LOG.warn("There is NO SEDbInstance in MSI Project #{}", projectId);
-	    } else {
-		long nExpectedAccessions = -1L;
+		if ((seDbInstances == null) || seDbInstances.isEmpty()) {
+		    LOG.warn("There is NO SEDbInstance in MSI Project #{}", projectId);
+		} else {
+		    long nExpectedAccessions = -1L;
 
-		final Query countQuery = msiEM.createQuery(VALIDATED_PM_COUNT_QUERY);
+		    final Query countQuery = msiEM.createQuery(VALIDATED_PM_COUNT_QUERY);
 
-		final Object obj = countQuery.getSingleResult();
+		    final Object obj = countQuery.getSingleResult();
 
-		if (obj instanceof Number) {
-		    nExpectedAccessions = ((Number) obj).longValue();
-		}
-
-		if (LOG.isDebugEnabled()) {
-		    LOG.debug("MSI Project #{} found {} SEDbInstances and {} validated Accession", projectId,
-			    seDbInstances.size(), nExpectedAccessions);
-		}
-
-		if (nExpectedAccessions > 0L) {
-		    int nSEDbIdentifiers = 0;
-
-		    final Query pmSdmQuery = msiEM.createQuery(VALIDATED_PM_SDM_QUERY);
-
-		    final List<Object[]> pmSdmLines = pmSdmQuery.getResultList();
-
-		    if ((pmSdmLines != null) && !pmSdmLines.isEmpty()) {
-			nSEDbIdentifiers = fillSEDbIdentifiers(pmSdmLines, seDbInstances, seDbIdentifiers);
+		    if (obj instanceof Number) {
+			nExpectedAccessions = ((Number) obj).longValue();
 		    }
 
-		    if (nSEDbIdentifiers >= nExpectedAccessions) {
-			LOG.debug(
-				"{} distinct (validated Accession, Description, SeqDatabase) retrieved via ProteinMatchSeqDatabaseMap",
-				nSEDbIdentifiers);
-		    } else {
-			nSEDbIdentifiers = 0;
+		    if (LOG.isDebugEnabled()) {
+			LOG.debug("MSI Project #{} found {} SEDbInstances and {} validated Accession",
+				projectId, seDbInstances.size(), nExpectedAccessions);
+		    }
 
-			final Query pmQuery = msiEM.createQuery(VALIDATED_PM_QUERY);
+		    if (nExpectedAccessions > 0L) {
+			int nSEDbIdentifiers = 0;
 
-			final List<Object[]> pmLines = pmQuery.getResultList();
+			final Query pmSdmQuery = msiEM.createQuery(VALIDATED_PM_SDM_QUERY);
 
-			if ((pmLines != null) && !pmLines.isEmpty()) {
-			    nSEDbIdentifiers = fillSEDbIdentifiers(pmLines, seDbInstances, seDbIdentifiers);
+			final List<Object[]> pmSdmLines = pmSdmQuery.getResultList();
+
+			if ((pmSdmLines != null) && !pmSdmLines.isEmpty()) {
+			    nSEDbIdentifiers = fillSEDbIdentifiers(pmSdmLines, seDbInstances, seDbIdentifiers);
 			}
 
-			LOG.info(
-				"{} distinct (validated Accession, Description, SeqDatabase) WITHOUT ProteinMatchSeqDatabaseMap",
-				nSEDbIdentifiers);
+			if (nSEDbIdentifiers >= nExpectedAccessions) {
+			    LOG.debug(
+				    "{} distinct (validated Accession, Description, SeqDatabase) retrieved via ProteinMatchSeqDatabaseMap",
+				    nSEDbIdentifiers);
+			} else {
+			    nSEDbIdentifiers = 0;
+
+			    final Query pmQuery = msiEM.createQuery(VALIDATED_PM_QUERY);
+
+			    final List<Object[]> pmLines = pmQuery.getResultList();
+
+			    if ((pmLines != null) && !pmLines.isEmpty()) {
+				nSEDbIdentifiers = fillSEDbIdentifiers(pmLines, seDbInstances,
+					seDbIdentifiers);
+			    }
+
+			    LOG.info(
+				    "{} distinct (validated Accession, Description, SeqDatabase) WITHOUT ProteinMatchSeqDatabaseMap",
+				    nSEDbIdentifiers);
+			}
+
+		    } else {
+			LOG.warn("There is NO validated Accession in MSI Project #{}", projectId);
 		    }
 
-		} else {
-		    LOG.warn("There is NO validated Accession in MSI Project #{}", projectId);
+		} // End if (seDbInstances is not empty)
+
+	    } catch (Exception ex) {
+		LOG.error("Error accessing MSI Db Project #" + projectId, ex);
+	    } finally {
+
+		if (msiEM != null) {
+		    try {
+			msiEM.close();
+		    } catch (Exception exClose) {
+			LOG.error("Error closing MSI Db EntityManager", exClose);
+		    }
 		}
 
-	    } // End if (seDbInstances is not empty)
-
-	} catch (Exception ex) {
-	    LOG.error("Error accessing MSI Db Project #" + projectId, ex);
-	} finally {
-
-	    if (msiEM != null) {
-		try {
-		    msiEM.close();
-		} catch (Exception exClose) {
-		    LOG.error("Error closing MSI Db EntityManager", exClose);
-		}
 	    }
 
 	}
