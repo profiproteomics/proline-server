@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE dataset SYSTEM "uds-dataset.dtd">
 <dataset>
-	<USER_ACCOUNT ID="1" LOGIN="joe" CREATION_MODE="auto"/>
-	<USER_ACCOUNT ID="2" LOGIN="jack" CREATION_MODE="auto"/>
-	<USER_ACCOUNT ID="3" LOGIN="jim" CREATION_MODE="auto"/>
+	<USER_ACCOUNT ID="1" LOGIN="joe" CREATION_MODE="auto" PASSWORD_HASH="993bd037c1ae6b87ea5adb936e71fca01a3b5c0505855444afdfa2f86405db1d"/> <!-- proline_pswd -->
+	<USER_ACCOUNT ID="2" LOGIN="jack" CREATION_MODE="auto" PASSWORD_HASH="993bd037c1ae6b87ea5adb936e71fca01a3b5c0505855444afdfa2f86405db1d"/> <!-- proline_pswd -->
+	<USER_ACCOUNT ID="3" LOGIN="jim" CREATION_MODE="auto" PASSWORD_HASH="993bd037c1ae6b87ea5adb936e71fca01a3b5c0505855444afdfa2f86405db1d"/> <!-- proline_pswd -->
 	<PROJECT ID="1" NAME="joe's project" DESCRIPTION="joe's first project" CREATION_TIMESTAMP="2011-03-24 12:00:30" OWNER_ID="1" />
 	<PROJECT_USER_ACCOUNT_MAP PROJECT_ID="1" USER_ACCOUNT_ID="1" />
 	<PROJECT_USER_ACCOUNT_MAP PROJECT_ID="1" USER_ACCOUNT_ID="2" />
