@@ -1,32 +1,38 @@
 package fr.proline.module.parser.mascot
 
+import java.io.File
+
+import scala.Array.canBuildFrom
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.util.control.Breaks.break
 import scala.util.control.Breaks.breakable
+
 import org.apache.commons.lang3.StringUtils
+
 import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.core.om.model.msi.Fragmentation
+
 import fr.proline.core.om.model.msi.FragmentMatch
 import fr.proline.core.om.model.msi.FragmentMatchType
+import fr.proline.core.om.model.msi.Fragmentation
 import fr.proline.core.om.model.msi.SpectrumMatch
 import fr.proline.core.om.model.msi.TheoreticalFragmentSeries
-import fr.profi.util.ms.{ calcMozTolInDalton, MassTolUnit }
+import fr.profi.util.ms.MassTolUnit
+import fr.profi.util.ms.calcMozTolInDalton
 import matrix_science.msparser.ms_aahelper
 import matrix_science.msparser.ms_errs
 import matrix_science.msparser.ms_fragment
 import matrix_science.msparser.ms_fragmentationrules
 import matrix_science.msparser.ms_fragmentvector
 import matrix_science.msparser.ms_mascotresfile
-import matrix_science.msparser.ms_peptide
-import matrix_science.msparser.ms_quant_method
-import matrix_science.msparser.msparserConstants
-import matrix_science.msparser.vectori
-import matrix_science.msparser.ms_modvector
 import matrix_science.msparser.ms_masses
 import matrix_science.msparser.ms_modification
-import fr.proline.core.om.model.msi.SearchSettings
-import scala.collection.mutable
+import matrix_science.msparser.ms_modvector
+import matrix_science.msparser.ms_peptide
+import matrix_science.msparser.ms_quant_method
 import matrix_science.msparser.ms_umod_configfile
+import matrix_science.msparser.msparserConstants
+import matrix_science.msparser.vectori
 
 trait LoggingFake {
   object logger {
@@ -728,17 +734,22 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
           
         } else {
           
-          // Modif doesn't existe in mascot modification file, get it from dat file.    
-          //TODO extract ms_umod_configfile to create once ! 
-          val umodFile = new ms_umod_configfile()
-          umodFile.setSchemaFileName("schema\\unimod_2.xsd")
-          val foundUnimod = mascotResFile.getUnimod(umodFile)
-		  if(foundUnimod){
-		    mod = new ms_modification()
-		    foundModif =  mod.getFromUnimod(fixedPtms, umodFile)
-		    if(foundModif)
+          // Modif doesn't exist in mascot modification file, get it from dat file.    
+          //TODO extract ms_umod_configfile to create once !
+          val unimodFile = getMascotUnimodXSDFile() 
+          if(unimodFile != null){
+         
+            val umodFile = new ms_umod_configfile()
+            umodFile.setSchemaFileName(unimodFile.getAbsolutePath())
+            val foundUnimod = mascotResFile.getUnimod(umodFile)
+            if(foundUnimod){
+            	mod = new ms_modification()
+            	foundModif =  mod.getFromUnimod(fixedPtms, umodFile)
+            	if(foundModif)
 		    	logger.debug("+++ Fixed Modification " + mod.getTitle() + " added (from dat file)")
-    	  }
+            }
+          }
+          
         }//Modification not found in modFile
           
         if(!foundModif){
@@ -762,16 +773,21 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
           
         } else {
           
-          // Modif doesn't existe in mascot modification file, get it from dat file.
-          val umodFile = new ms_umod_configfile()
-          umodFile.setSchemaFileName("schema\\unimod_2.xsd")
-          val foundUnimod = mascotResFile.getUnimod(umodFile)
-		  if(foundUnimod){
-		    mod = new ms_modification()
-		    foundModif =  mod.getFromUnimod(varPtms, umodFile)		   
-		     if(foundModif)
-		    	logger.debug("+++ Var Modification " + mod.getTitle() + " added (from dat file)")    	
-    	  }
+          // Modif doesn't exist in mascot modification file, get it from dat file.
+          val unimodFile = getMascotUnimodXSDFile() 
+          if(unimodFile != null){
+
+            val umodFile = new ms_umod_configfile()
+            umodFile.setSchemaFileName(unimodFile.getAbsolutePath())
+            val foundUnimod = mascotResFile.getUnimod(umodFile)
+          
+            if(foundUnimod){
+            	mod = new ms_modification()
+            	foundModif =  mod.getFromUnimod(varPtms, umodFile)		   
+            	if(foundModif)
+            		logger.debug("+++ Var Modification " + mod.getTitle() + " added (from dat file)")    	
+            }
+          }
         } //Modification not found in modFile
         
         if(!foundModif ) {
@@ -807,6 +823,36 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
     aahelper
   }
 
+  private def getMascotUnimodXSDFile(): File = {
+    
+    val localUnimodSchemaPath = "mascot_config/unimod_2.xsd"
+
+    var unimodShemaFile: File = null
+
+    try {
+      val cl = Thread.currentThread.getContextClassLoader
+
+      val unimodSchemaURL = cl.getResource(localUnimodSchemaPath)
+
+      if (unimodSchemaURL == null) {
+        logger.warn("Unable to locate [" + localUnimodSchemaPath + "] resource from ClassLoader")
+      } else {
+        val f = new File(unimodSchemaURL.toURI())
+
+        if (f.isFile()) {
+          unimodShemaFile = f
+        }
+
+      }
+
+    } catch {
+      case ex: Exception => logger.error("Unable to locate [" + localUnimodSchemaPath + "] file", ex)
+    }
+
+    unimodShemaFile
+    
+  }
+  
   private def _getMascotQuantComponent(ms_pep: ms_peptide): Option[String] = {
 
     if (ms_pep.getComponentStr != null && !(ms_pep.getComponentStr.length == 0)) {
@@ -907,18 +953,3 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
 
 }
 
-
-
-/*
-// TODO: move to commons math utils
-
-def roundToDecimals( d: Double, c: Int): Double = {
-  val temp = (d * math.pow(10,c)).toInt
-  (temp.toDouble/math.pow(10,c))
-}
-  
-public static double roundToDecimals(double d, int c) {
-int temp=(int)((d*Math.pow(10,c)));
-return (((double)temp)/Math.pow(10,c));
-}
- */

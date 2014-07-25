@@ -45,6 +45,7 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
 
   def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): Seq[PtmDefinition] = {
 
+    logger.info("Search PTMs definition for" +fileLocation.getAbsolutePath())
     val ptmDefs = Array.newBuilder[PtmDefinition]
 
     //try { // oté en attendant de gérer tout les cas de figure non précédemment traités, ce role est renvoyé à la classe appelante.
@@ -148,6 +149,7 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
               unimodId = if (mod.getRecordId != null) mod.getRecordId.intValue else 0
             )
           }
+           logger.debug("Create PTM "+ptmNames)
 
         } // End loop for each mod
 
@@ -167,7 +169,7 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
     true
   }
 
-  def extractUnimodSection(f: File): String = {
+  def extractUnimodSection(f: File): String = { 
     require((f != null) && f.isFile, "Invalid file")
 
     val absolutePathname = f.getAbsolutePath
