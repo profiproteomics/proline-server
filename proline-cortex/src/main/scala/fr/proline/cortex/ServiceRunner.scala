@@ -1,14 +1,11 @@
 package fr.proline.cortex
 
 import java.lang.Thread
-
 import scala.collection.mutable
-
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.typesafe.scalalogging.slf4j.Logging
-
 import Constants.JMS_CORRELATION_ID_KEY
 import Constants.JMS_DESTINATION_KEY
 import Constants.JMS_MESSAGE_ID_KEY
@@ -28,6 +25,7 @@ import javax.jms.MessageProducer
 import javax.jms.Queue
 import javax.jms.Session
 import javax.jms.TextMessage
+import javax.jms.JMSException
 
 object ServiceRunner extends Logging {
 
@@ -190,7 +188,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
       val consumer = session.createConsumer(queue, selectorString)
 
-      /* ReplyProducer to send JMS Response Message to Client (Producer MUST be confined in current Thread) */
+      /* ReplyProducer to send Response JMS Message to Client (Producer MUST be confined in current Thread) */
       val replyProducer = session.createProducer(null)
 
       logger.debug("Entering Consumer receive loop [" + currentThread.getName + ']')
@@ -214,6 +212,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
             /* Special ResourceService handling */
             resourceService.handleMessage(session, message, replyProducer, serviceMonitoringNotifier)
           } else {
+            /* Normal Service Request handling */
             handleMessage(session, message, replyProducer)
           }
 
@@ -222,8 +221,9 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
           case t: Throwable => logger.error("Error running Consumer reception loop", t)
         }
 
-      }
+      } // End infinite loop on message receive
 
+      logger.info("Exiting ServiceRunner loop")
     } finally {
 
       if (session != null) {
@@ -231,7 +231,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
           session.close()
           logger.info("JMS Session closed")
         } catch {
-          case exClose: Exception => logger.error("Error closing JMS Session", exClose)
+          case exClose: JMSException => logger.error("Error closing JMS Session", exClose)
         }
       }
 
@@ -357,13 +357,13 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
         serviceMonitoringNotifier.sendNotification(serviceEvent.toJSONRPCNotification(), null)
 
-        val jmsResponseMessage = session.createTextMessage()
-        jmsResponseMessage.setJMSCorrelationID(jmsMessageId)
-        jmsResponseMessage.setText(jsonResponse.toJSONString())
+        val responseJMSMessage = session.createTextMessage()
+        responseJMSMessage.setJMSCorrelationID(jmsMessageId)
+        responseJMSMessage.setText(jsonResponse.toJSONString())
 
         logger.debug("Sending JMS Response to Request JMS Message [" + jmsMessageId + "] on Destination [" + replyDestination + ']')
 
-        replyProducer.send(replyDestination, jmsResponseMessage)
+        replyProducer.send(replyDestination, responseJMSMessage)
         logger.info("JMS Response to Request JMS Message [" + jmsMessageId + "] sent")
       }
 

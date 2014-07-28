@@ -18,12 +18,14 @@ import javax.jms.Session
 trait IServiceMonitoringNotifier {
 
   /**
-   * Only set {{{jmsCorrelationId}}} if it is a direct response to a Request JMS Message.
+   * {{{content}}} must not be empty.
+   * Only set {{{jmsCorrelationId}}} if it is a direct response to a Request JMS Message, not to notify sevice execution.
    */
   def sendNotification(content: String, jmsCorrelationId: String)
 
   /**
-   * Only set {{{jmsCorrelationId}}} if it is a direct response to a Request JMS Message.
+   * {{{jsonRPCContent}}} must not be {{{null}}}.
+   * Only set {{{jmsCorrelationId}}} if it is a direct response to a Request JMS Message, not to notify sevice execution.
    */
   def sendNotification(jsonRPCContent: JSONRPC2Message, jmsCorrelationId: String) {
     require((jsonRPCContent != null), "JsonRPCContent is null")
@@ -35,7 +37,7 @@ trait IServiceMonitoringNotifier {
 
 class MonitoringTopicPublisherRunner(connection: Connection) extends IServiceMonitoringNotifier with Runnable with Logging {
 
-  // No need to synchronize on BlockingQueue
+  // No need to synchronize on BlockingQueue (Memory consistency effects with all concurrent collections)
   private val m_pendingTopicMessages = new LinkedBlockingQueue[TopicMessage]()
 
   /* Constructor checks */
@@ -77,6 +79,7 @@ class MonitoringTopicPublisherRunner(connection: Connection) extends IServiceMon
             message.setJMSCorrelationID(topicMessage.jmsCorrelationId)
           }
 
+          /* Alway set nodeId Property on broadcast messages */
           message.setStringProperty(PROLINE_NODE_ID_KEY, nodeId)
 
           message.setText(topicMessage.content)
@@ -104,8 +107,9 @@ class MonitoringTopicPublisherRunner(connection: Connection) extends IServiceMon
 
         }
 
-      }
+      } // End infinite loop on topicMessage send
 
+      logger.info("Exiting MonitoringTopicPublisherRunner loop")
     } finally {
 
       if (session != null) {
@@ -113,7 +117,7 @@ class MonitoringTopicPublisherRunner(connection: Connection) extends IServiceMon
           session.close()
           logger.info("JMS Session closed")
         } catch {
-          case exClose: Exception => logger.error("Error closing JMS Session", exClose)
+          case exClose: JMSException => logger.error("Error closing JMS Session", exClose)
         }
       }
 
@@ -125,7 +129,7 @@ class MonitoringTopicPublisherRunner(connection: Connection) extends IServiceMon
    * Send is asynchrone.
    */
   def sendNotification(content: String, jmsCorrelationId: String) {
-    require(!StringUtils.isEmpty(content), "Content is null")
+    require(!StringUtils.isEmpty(content), "Invalid content")
 
     val topicMessage = new TopicMessage(content, jmsCorrelationId)
     m_pendingTopicMessages.put(topicMessage)
@@ -133,9 +137,10 @@ class MonitoringTopicPublisherRunner(connection: Connection) extends IServiceMon
 
 }
 
+/* Store Topic Message to send in BlockingQueue */
 case class TopicMessage(content: String, jmsCorrelationId: String) {
 
   /* Constructor checks */
-  require(!StringUtils.isEmpty(content), "Content is null")
+  require(!StringUtils.isEmpty(content), "Invalid content")
 
 }

@@ -1,7 +1,12 @@
 package fr.proline.cortex
 
 import java.util.Date
+
+import scala.collection.JavaConversions._
+import scala.collection.mutable
+
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Notification
+
 import fr.profi.util.StringUtils
 
 object ServiceEvent {
@@ -43,7 +48,7 @@ case class ServiceEvent(requestJMSMessageId: String, jsonRPCRequestId: java.lang
   }
 
   def toJSONRPCNotification(): JSONRPC2Notification = {
-    val namedParams = new java.util.HashMap[String, java.lang.Object]
+    val namedParams = mutable.Map.empty[String, java.lang.Object]
     namedParams.put(EVENT_TIMESTAMP_KEY, java.lang.Long.valueOf(getEventTimestamp.getTime))
     namedParams.put(REQUEST_JMS_MESSAGE_ID_KEY, requestJMSMessageId)
 

@@ -40,7 +40,7 @@ class ResourceService extends Logging {
 
     logger.debug("Handling ResourceService JMS Message [" + jmsMessageId + ']')
 
-    var jmsResponseMessage: Message = null
+    var responseJMSMessage: Message = null
 
     var jsonRequestId: java.lang.Object = null
     var jsonResponse: JSONRPC2Response = new JSONRPC2Response(JSONRPC2Error.INVALID_REQUEST, jsonRequestId)
@@ -71,7 +71,7 @@ class ResourceService extends Logging {
 
           val resourceResult = service(session, jmsMessageContext, jsonRequest)
 
-          jmsResponseMessage = resourceResult.jmsResponseMessage
+          responseJMSMessage = resourceResult.responseJMSMessage
           jsonResponse = resourceResult.jsonResponse
         }
 
@@ -102,17 +102,17 @@ class ResourceService extends Logging {
       } else {
         var serviceEvent: ServiceEvent = null
 
-        if (jmsResponseMessage == null) {
+        if (responseJMSMessage == null) {
           serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_FAIL)
 
-          jmsResponseMessage = session.createTextMessage()
-          jmsResponseMessage.setJMSCorrelationID(jmsMessageId)
+          responseJMSMessage = session.createTextMessage()
+          responseJMSMessage.setJMSCorrelationID(jmsMessageId)
 
           if (jsonResponse == null) {
             jsonResponse = new JSONRPC2Response(JSONRPC2Error.INTERNAL_ERROR, jsonRequestId)
           }
 
-          jmsResponseMessage.asInstanceOf[TextMessage].setText(jsonResponse.toJSONString())
+          responseJMSMessage.asInstanceOf[TextMessage].setText(jsonResponse.toJSONString())
         } else {
           serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_SUCCESS)
         }
@@ -122,9 +122,8 @@ class ResourceService extends Logging {
 
         logger.debug("Sending JMS Response to ResourceService JMS Message [" + jmsMessageId + "] on Destination [" + replyDestination + ']')
 
-        replyProducer.send(replyDestination, jmsResponseMessage)
+        replyProducer.send(replyDestination, responseJMSMessage)
         logger.info("JMS Response to ResourceService JMS Message [" + jmsMessageId + "] sent")
-
       }
 
     }
@@ -152,7 +151,7 @@ class ResourceService extends Logging {
 
     val jsonRequestId = req.getID
 
-    var jmsResponseMessage: Message = null
+    var responseJMSMessage: Message = null
 
     var jsonResponse: JSONRPC2Response = null
 
@@ -180,11 +179,11 @@ class ResourceService extends Logging {
         try {
           br = new BufferedInputStream(new FileInputStream(file))
 
-          jmsResponseMessage = session.createBytesMessage()
+          responseJMSMessage = session.createBytesMessage()
 
           logger.debug("Sending InputStream from File [" + absolutePathname + "] to JMS BytesMessage")
 
-          jmsResponseMessage.setObjectProperty(JMS_HORNET_Q_INPUT_STREAM_KEY, br)
+          responseJMSMessage.setObjectProperty(JMS_HORNET_Q_INPUT_STREAM_KEY, br)
         } catch {
 
           case ex: Exception => {
@@ -211,12 +210,12 @@ class ResourceService extends Logging {
 
     }
 
-    new ResourceResult(jmsResponseMessage, jsonResponse)
+    new ResourceResult(responseJMSMessage, jsonResponse)
   }
 
 }
 
-class ResourceResult(val jmsResponseMessage: Message, val jsonResponse: JSONRPC2Response) {
-  require(((jmsResponseMessage != null) || (jsonResponse != null)), "jmsResponseMessage and jsonResponse cannot be both null")
+class ResourceResult(val responseJMSMessage: Message, val jsonResponse: JSONRPC2Response) {
+  require(((responseJMSMessage != null) || (jsonResponse != null)), "ResponseJMSMessage and jsonResponse cannot be both null")
 
 }

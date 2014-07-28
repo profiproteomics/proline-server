@@ -4,18 +4,14 @@ import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-
-import scala.collection.JavaConversions.mutableMapAsJavaMap
+import scala.collection.JavaConversions._
 import scala.collection.mutable
-
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.jms.HornetQJMSClient
 import org.hornetq.api.jms.JMSFactoryType
 import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory
 import org.hornetq.core.remoting.impl.netty.TransportConstants
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import Constants.MAX_PORT
 import NodeConfig.ENABLE_IMPORTS
 import NodeConfig.JMS_SERVER_HOST
@@ -34,6 +30,7 @@ import fr.proline.cortex.util.MountPointRegistry
 import fr.proline.cortex.util.WorkDirectoryRegistry
 import javax.jms.Connection
 import javax.jms.ConnectionFactory
+import javax.jms.JMSException
 
 object ProcessingNode extends Logging {
 
@@ -230,7 +227,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
           m_connection.close()
           logger.info("JMS Connection closed")
         } catch {
-          case exClose: Exception => logger.error("Error closing JMS Connection", exClose)
+          case exClose: JMSException => logger.error("Error closing JMS Connection", exClose)
         }
 
       }
