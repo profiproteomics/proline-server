@@ -40,7 +40,7 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
 	val omssaPreloader = new OmssaFilePreloader(fileLocation)
 	// create a fake Enzyme with just its name and return it
     val enzyme = new Enzyme(id = -1,
-          name = enzymeIdToName.get(omssaPreloader.enzymeId).getOrElse("Unknown"),
+          name = _convertEnzymeName (enzymeIdToName.get(omssaPreloader.enzymeId).getOrElse("Unknown")),
           enzymeCleavages = Array.empty,
           cleavageRegexp = None,
           isIndependant = false,
@@ -49,6 +49,30 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
     Array(enzyme)
   }
 
+  // AW: correctif
+   private def _convertEnzymeName(omssaEnzyme:  String): String = {
+          omssaEnzyme match {
+          case "trypsin"       => "Trypsin"
+          case "trypsin-p"     => "Trypsin/P"
+          case "argc"          => "Arg-C"
+          case "aspn"          => "Asp-N"
+          case "chymotrypsin-p"=> "Chymotrypsin"
+          case "cnbr"          => "CNBr"
+          case "tryp-cnbr"     => "CNBr+Trypsin"
+          case "formicacid"    => "Formic_acid"
+          case "lysc"          => "Lys-C"
+          case "lysc-p"        => "Lys-C/P"
+          case "lysn"          => "Lys-N"
+          case "pepsin-a"      => "PepsinA"
+          case "semi-tryptic"  => "semiTrypsin"
+          case "tryp-chymo"    => "TrypChymo"
+          case "no-enzyme"     => "None"
+          case _               => omssaEnzyme // unknown so far : whole-protein, gluc, aspngluc, top-down, chymotrypsin, aspn-de, gluc-de, thermolysin-p
+        }
+    
+  }
+  
+  
   // get the usermods file from the import properties
   // if missing, take the default usermods file
   private def getUsermodFileLocation(importProperties: Map[String, Any]): java.net.URL = {
