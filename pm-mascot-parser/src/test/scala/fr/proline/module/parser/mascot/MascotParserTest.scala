@@ -100,7 +100,7 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
     msiSearchDate.setTime(msiSearch.date)
 
     val expectedDate = Calendar.getInstance()
-    expectedDate.set(2013, 01, 05)
+    expectedDate.set(2013, 1, 5)
     assertThat(msiSearchDate.get(Calendar.MONTH), CoreMatchers.equalTo(expectedDate.get(Calendar.MONTH)))
     assertThat(msiSearchDate.get(Calendar.DAY_OF_MONTH), CoreMatchers.equalTo(expectedDate.get(Calendar.DAY_OF_MONTH)))
     assertThat(msiSearchDate.get(Calendar.YEAR), CoreMatchers.equalTo(expectedDate.get(Calendar.YEAR)))
