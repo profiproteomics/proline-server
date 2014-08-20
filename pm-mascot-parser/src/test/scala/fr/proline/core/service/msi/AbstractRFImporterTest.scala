@@ -4,8 +4,9 @@ import java.sql.{ Connection, SQLException }
 import org.junit.Ignore
 import org.junit.Assert.assertTrue
 import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.context.{ BasicExecutionContext, IExecutionContext }
+import fr.proline.context.{ BasicExecutionContext, DatabaseConnectionContext, IExecutionContext }
 import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.ProlineEzDBC
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.{ IPTMProvider, IPeptideProvider }
 import fr.proline.core.om.provider.msi.impl.{ ORMResultSetProvider, SQLPTMProvider, SQLPeptideProvider, SQLResultSetProvider }
@@ -169,7 +170,7 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
     val con = psDb.getConnection
 
     if (con != null) {
-      peptideCount = countPsPeptideSQL(con)
+      peptideCount = countPsPeptideSQL(psDb)
     } else if (psDb.isJPA) {
       peptideCount = countPsPeptideJPA(psDb.getEntityManager)
     }
@@ -178,8 +179,12 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
 
     peptideCount
   }
+  
+  private def countPsPeptideSQL(dbCtx: DatabaseConnectionContext): Long = {
+    ProlineEzDBC( dbCtx ).selectLong("SELECT COUNT(*) from Peptide")
+  }
 
-  private def countPsPeptideSQL(con: Connection): Long = {
+  /*private def countPsPeptideSQL(con: Connection): Long = {
     var peptideCount: Long = -1L
 
     val stm = con.createStatement()
@@ -208,7 +213,7 @@ trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
     }
 
     peptideCount
-  }
+  }*/
 
   private def countPsPeptideJPA(em: EntityManager): Long = {
     var peptideCount: Long = -1L
