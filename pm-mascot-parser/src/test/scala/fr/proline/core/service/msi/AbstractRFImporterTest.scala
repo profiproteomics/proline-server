@@ -10,7 +10,7 @@ import fr.proline.core.dal.ProlineEzDBC
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.{ IPTMProvider, IPeptideProvider }
 import fr.proline.core.om.provider.msi.impl.{ ORMResultSetProvider, SQLPTMProvider, SQLPeptideProvider, SQLResultSetProvider }
-import fr.proline.core.om.util.AbstractMultipleDBTestCase
+import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.repository.DriverType
 import javax.persistence.EntityManager
 import java.io.File

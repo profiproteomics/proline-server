@@ -9,6 +9,7 @@ import org.junit.Assert.fail
 import org.junit.Test
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.BasicExecutionContext
+import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.model.msi.Ms2Query
 import fr.proline.core.om.model.msi.Spectrum
@@ -19,7 +20,6 @@ import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.core.om.util.AbstractMultipleDBTestCase
 import fr.proline.module.fragment_match.PeptideSpectrumMatcher
 import fr.proline.repository.DriverType
 import matrix_science.msparser.ms_fragmentationrules
