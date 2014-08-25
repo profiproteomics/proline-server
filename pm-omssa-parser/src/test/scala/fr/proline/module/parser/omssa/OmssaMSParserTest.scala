@@ -27,7 +27,7 @@ import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.om.provider.uds.impl.{ SQLPeaklistSoftwareProvider => UdsSQLPklSoftProvider }
-import fr.proline.core.om.util.AbstractMultipleDBTestCase
+import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.service.msi.ResultFileCertifier
 import fr.proline.module.fragment_match.FragmentTable
 import fr.proline.repository.DriverType
