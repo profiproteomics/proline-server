@@ -52,8 +52,8 @@ object PTMsManager extends Logging {
     try {
       if (ptmDefinition.location == PtmLocation.ANY_C_TERM.toString()) return PTM.MODCP
       else if (ptmDefinition.location == PtmLocation.ANY_N_TERM.toString()) return PTM.MODNP
-      else if (ptmDefinition.location == PtmLocation.C_TERM.toString()) return PTM.MODCPAA
-      else if (ptmDefinition.location == PtmLocation.N_TERM.toString()) return PTM.MODNPAA
+//      else if (ptmDefinition.location == PtmLocation.C_TERM.toString()) return PTM.MODCPAA
+//      else if (ptmDefinition.location == PtmLocation.N_TERM.toString()) return PTM.MODNPAA
       else if (ptmDefinition.location == PtmLocation.PROT_C_TERM.toString()) return PTM.MODC
       else if (ptmDefinition.location == PtmLocation.PROT_N_TERM.toString()) return PTM.MODN
       else return PTM.MODAA

@@ -11,7 +11,7 @@ import fr.proline.core.dal.ContextFactory
 import fr.proline.repository.DriverType
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.core.om.util.AbstractMultipleDBTestCase
+import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.context.BasicExecutionContext
