@@ -91,8 +91,9 @@ object MascotFragmentationRuleParser extends Logging {
       if (instrumentParts(1) == "ECD") activationType = "ECD"
       else if (instrumentParts.length == 3 && instrumentParts(2) == "PSD") activationType = "PSD"
 
-      if (instrumentType =~ "TOF-TOF") { analyzers = ("TOF", "TOF") }
-      else if (instrumentType =~ "QUAD-TOF") { analyzers = ("QUAD", "TOF") }
+      if (instrumentType endsWith "TOF-TOF") { analyzers = ("TOF", "TOF") }
+      else if (instrumentType endsWith "QUAD-TOF") { analyzers = ("QUAD", "TOF") }
+      else if (instrumentType endsWith "QUIT-TOF") { analyzers = ("QUIT", "TOF") }
       else if (instrumentType == "FTMS-ECD") { analyzers = ("FTMS", "FTMS") }
       else { analyzers = (instrumentParts(1), instrumentParts(1)) }
     }
