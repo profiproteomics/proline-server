@@ -20,7 +20,7 @@ import fr.proline.core.orm.ps.PtmSpecificity
 import fr.proline.core.util.ResidueUtils._
 
 @Test
-class RFCertifierH2CTDTest extends AbstractRFImporterTest_ {
+class RFCertifierH2CTDTest extends AbstractRFImporterTestCase {
 
   val driverType = DriverType.H2
 

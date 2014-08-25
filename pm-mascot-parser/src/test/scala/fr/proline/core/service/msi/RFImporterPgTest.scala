@@ -9,7 +9,7 @@ import fr.proline.repository.DriverType
 import javax.persistence.FlushModeType
 
 @Test /* Manual PostgreSQL Test */
-class RFImporterPgTest extends AbstractRFImporterTest_ {
+class RFImporterPgTest extends AbstractRFImporterTestCase {
 
   val driverType = DriverType.POSTGRESQL
 

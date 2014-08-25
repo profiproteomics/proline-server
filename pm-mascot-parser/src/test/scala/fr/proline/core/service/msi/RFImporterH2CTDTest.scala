@@ -12,7 +12,7 @@ import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.dal.ContextFactory
 
 @Test
-class RFImporterH2CTDTest extends AbstractRFImporterTest_ {
+class RFImporterH2CTDTest extends AbstractRFImporterTestCase {
   
   val driverType = DriverType.H2
     

@@ -10,7 +10,7 @@ import fr.proline.module.parser.mascot.MascotResultFileProvider
 import fr.proline.core.om.model.msi.IonTypes
 
 @Test
-class RFImporterNewPTMTest extends AbstractRFImporterTest_ {
+class RFImporterNewPTMTest extends AbstractRFImporterTestCase {
 
   val driverType = DriverType.H2
   val fileType = "mascot.dat"

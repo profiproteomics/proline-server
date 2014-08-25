@@ -14,7 +14,7 @@ import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
 import fr.proline.repository.DriverType
 import java.util.concurrent.TimeUnit
 
-class ResultSetsMergerTest extends AbstractRFImporterTest_ with Logging {
+class ResultSetsMergerTest extends AbstractRFImporterTestCase with Logging {
 
   val driverType = DriverType.H2
   // For manual postgres test !! If use, should comment all loadDataSet from setUp and AbstractRFImporterTest_.setUp

@@ -17,7 +17,7 @@ import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.om.model.msi.ResultSummary
 import java.util.concurrent.TimeUnit
 
-class ResultSummariesMergerTest extends AbstractRFImporterTest_ with Logging {
+class ResultSummariesMergerTest extends AbstractRFImporterTestCase with Logging {
 
   val driverType = DriverType.H2
   // For manual postgres test !! If use, should comment all loadDataSet from setUp and AbstractRFImporterTest_.setUp

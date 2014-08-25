@@ -15,9 +15,8 @@ import fr.proline.repository.DriverType
 import javax.persistence.EntityManager
 import java.io.File
 
-// Note: the name of the trait ends with an underscore to indicate it must not be tested directly
 @Ignore
-trait AbstractRFImporterTest_ extends AbstractMultipleDBTestCase with Logging {
+trait AbstractRFImporterTestCase extends AbstractMultipleDBTestCase with Logging {
 
   protected val driverType: DriverType
   protected var _datFileName: String = "/F047876.dat"

@@ -69,7 +69,7 @@ object RFImporterSQLiteTest extends Logging {
 }
 
 @Test
-class RFImporterSQLiteTest extends AbstractRFImporterTest_ {
+class RFImporterSQLiteTest extends AbstractRFImporterTestCase {
 
   val driverType = DriverType.SQLITE
 

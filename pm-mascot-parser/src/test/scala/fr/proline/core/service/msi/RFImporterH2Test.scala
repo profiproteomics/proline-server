@@ -9,7 +9,7 @@ import org.junit.Assert._
 import fr.proline.repository.DriverType
 
 @Test
-class RFImporterH2Test extends AbstractRFImporterTest_ {
+class RFImporterH2Test extends AbstractRFImporterTestCase {
 
   val driverType = DriverType.H2
 
