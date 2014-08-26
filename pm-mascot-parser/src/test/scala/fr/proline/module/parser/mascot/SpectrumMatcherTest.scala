@@ -107,6 +107,8 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
 
     // Free memory
     resultFile.close()
+    
+    parserContext.closeAll()
 
     assertEquals("SpectrumMatches Count", 2647, spectrumMatchesCount)
 
@@ -180,6 +182,8 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
     spectrumMatchesByQueryId2.foreach( kv => {
       compareFragments(kv._2, spectrumMatchesByQueryId(kv._1))
     })
+    
+    parserContext.closeAll()
   }
   
   def compareFragments(expected: SpectrumMatch, actual: SpectrumMatch) = {
@@ -234,6 +238,8 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
 
     //    assertEquals("SpectrumMatches Count", EXPECTED_SPECTRUM_MATCHES_COUNT, spectrumMatchesCount)
     //    assertEquals("Calculated FragMatches Count", EXPECTED_FRAG_MATCHES_COUNT, fragMatchesCount)
+    
+    parserContext.closeAll()
   }
 
   @Test
@@ -259,6 +265,8 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
     	  logger.info("series = "+ms_fragmentationrules.getSeriesName(series)+ ", "+series)
       }
     }
+    
+    parserContext.closeAll()
   }
   
   @Test
@@ -292,5 +300,7 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
 
     // Free memory
     resultFile.close()
+    
+    parserContext.closeAll()
   }
 }
