@@ -1,5 +1,6 @@
 package fr.proline.core.service.msi
 
+/*
 import java.io.File
 import scala.collection.mutable.ListBuffer
 import org.junit.{ After, Assert }
@@ -194,3 +195,5 @@ class ResultSetsMergerTest extends AbstractRFImporterTestCase with Logging {
   }
 
 }
+
+*/

@@ -1,5 +1,6 @@
 package fr.proline.core.service.msi
 
+/*
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.repository.DriverType
 import org.junit.Before
@@ -149,3 +150,5 @@ class ResultSummariesMergerTest extends AbstractRFImporterTestCase with Logging 
   }
 
 }
+
+*/
