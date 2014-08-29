@@ -152,7 +152,7 @@ class InfoXLSXTemplate(
     
     // size the columns
     for ((col, nbCharacters) <- colSizeMap) {
-      sheet.setColumnWidth(col, nbCharacters*256+256)  // the unit is 1/256 char 
+      sheet.setColumnWidth(col, (nbCharacters*256+256).min(255*256))  // the unit is 1/256 char, highest value is 255*256 
     }
     
     // Write result to the file
