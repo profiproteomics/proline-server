@@ -31,6 +31,7 @@ import fr.proline.cortex.util.WorkDirectoryRegistry
 import javax.jms.Connection
 import javax.jms.ConnectionFactory
 import javax.jms.JMSException
+import javax.jms.ExceptionListener
 
 object ProcessingNode extends Logging {
 
@@ -76,6 +77,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
 
   private val m_lock = new Object()
 
+  /* All mutable fields are @GuardedBy("m_lock") */
   private var m_connection: Connection = null
 
   private var m_executor: ExecutorService = null
@@ -88,7 +90,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
     m_lock.synchronized {
 
       if (m_connection != null) {
-        throw new IllegalArgumentException("JMS Consumers already started !")
+        throw new IllegalStateException("JMS Consumers already started !")
       }
 
       try {
@@ -112,6 +114,17 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
 
         // Step 4.Create a JMS Connection
         m_connection = cf.createConnection()
+
+        // Add an ExceptionListener to handle asynchronous Connection problems
+        val exceptionListener = new ExceptionListener() {
+
+          override def onException(exception: JMSException) = {
+            logger.error("Asynchronous JMS Connection problem", exception)
+          }
+
+        }
+
+        m_connection.setExceptionListener(exceptionListener)
 
         logger.info("This Node Id : " + NodeConfig.NODE_ID)
 

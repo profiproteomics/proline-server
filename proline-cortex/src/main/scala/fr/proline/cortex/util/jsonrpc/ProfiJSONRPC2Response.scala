@@ -11,12 +11,12 @@ import fr.profi.util.serialization.ProfiJson
  * For standard or error response use base JSONRPC2Response class.
  *
  * @param profiResult The Response result (must be serializable via ProfiJson).
- * @param jerksonId The JSON-RPC Request Id (must be serializable via ProfiJson).
+ * @param profiId The JSON-RPC Request Id (must be serializable via ProfiJson).
  */
 class ProfiJSONRPC2Response(private var profiResult: java.lang.Object,
                             profiId: java.lang.Object) extends JSONRPC2Response(profiResult, profiId) {
 
-  def this(jerksonId: java.lang.Object) = this(null, jerksonId)
+  def this(profiId: java.lang.Object) = this(null, profiId)
 
   override def setResult(pResult: java.lang.Object) = {
     profiResult = pResult
