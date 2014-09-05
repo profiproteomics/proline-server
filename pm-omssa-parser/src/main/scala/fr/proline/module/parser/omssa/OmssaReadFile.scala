@@ -369,6 +369,7 @@ class OmssaReadFile(val omxFile: File,
                                         if (myPtm.isDefined) {
                                           locatedPtmDefinition = myPtm
                                         } else {
+                                          logger.error("Unknown PTM with ptmId="+ptmId+" and peptide="+peptideSequence.substring(locatedPtmSite-1)+"["+peptideSequence.substring(locatedPtmSite-1, locatedPtmSite)+"]"+peptideSequence.substring(locatedPtmSite, peptideSequence.size))
                                           throw new UnknownPTMException()
                                         }
                                       case _ =>

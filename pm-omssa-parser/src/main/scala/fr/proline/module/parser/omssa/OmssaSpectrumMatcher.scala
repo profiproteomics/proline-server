@@ -1,24 +1,20 @@
 package fr.proline.module.parser.omssa
 
 import java.io.File
-
 import scala.collection.mutable.ArrayBuffer
-
 import org.codehaus.staxmate.SMInputFactory
 import org.codehaus.staxmate.in.SMHierarchicCursor
 import org.codehaus.staxmate.in.SMInputCursor
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.proline.core.om.model.msi.SearchSettings
 import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.om.model.msi.SpectrumMatch
-import fr.proline.module.fragment_match.FragmentIonTable
+import fr.proline.module.fragment_match.FragmentIonTableV2
 import fr.proline.module.fragment_match.FragmentIons
 import fr.proline.module.fragment_match.FragmentMatchManager
-import fr.proline.module.fragment_match.FragmentModificationMatch
-import fr.proline.module.fragment_match.NeutralLosses
 import javax.xml.stream.XMLInputFactory
+import fr.proline.core.om.model.msi.Peptide
+import fr.proline.core.om.model.msi.LocatedPtm
 
 /**
  * @author abu
@@ -35,10 +31,7 @@ class OmssaSpectrumMatcher(omxFile: File,
   _parseOmxFile()
 
   private def _parseOmxFile() {
-    // open an input factory
-//    val inf: SMInputFactory = new SMInputFactory(XMLInputFactory.newInstance())
-//    // get the root cursor and advance to the MSSearch_response element
-//    val MSSearch: SMHierarchicCursor = inf.rootElementCursor(omxFile)
+    // get the root cursor and advance to the MSSearch_response element
     val MSSearch: SMHierarchicCursor = OmssaReadFile.openOmxFile(new SMInputFactory(XMLInputFactory.newInstance()), omxFile)
     MSSearch.setElementTracking(SMInputCursor.Tracking.PARENTS)
     MSSearch.advance // MSSearch
@@ -63,19 +56,19 @@ class OmssaSpectrumMatcher(omxFile: File,
             MSHitSet.getPrefixedName() match {
               case "MSHitSet_number" => msQueryId = MSHitSet.collectDescendantText(false).toInt
               case "MSHitSet_hits" =>
+                var peptideMatchRank: Int = 0
                 val MSHits = MSHitSet.childElementCursor().advance()
                 // for each PeptideMatch (MSHits)
                 while (MSHits.getCurrEvent() != null) {
                   val currentFragmentIonTypes = new FragmentIons()
-                  var peptideMatchRank: Int = 0
                   MSHits.getPrefixedName() match {
                     case "MSHits" =>
                       peptideMatchRank += 1
                       var peptideSequence = ""
+                      var calculatedMass: Double = 0
                       val proteinAccessionNumbers = new ArrayBuffer[String]
                       val fragmentMatches = new FragmentMatchManager
-                      val modificationMatches = new ArrayBuffer[FragmentModificationMatch]
-                      val neutralLosses: NeutralLosses = new NeutralLosses
+                      val ptms = new ArrayBuffer[LocatedPtm]
                       val MSHit = MSHits.childElementCursor().advance()
                       while (MSHit.getCurrEvent() != null) {
                         MSHit.getPrefixedName() match {
@@ -105,7 +98,7 @@ class OmssaSpectrumMatcher(omxFile: File,
                                   case "MSMZHit_ion" => currentIonType = MSMZHit.childElementCursor().advance().collectDescendantText(false).toInt
                                   case "MSMZHit_charge" => currentCharge = MSMZHit.collectDescendantText(false).toInt
                                   case "MSMZHit_number" => currentPosition = MSMZHit.collectDescendantText(false).toInt + 1
-                                  case "MSMZHit_mz" => currentMz = MSMZHit.collectDescendantText(false).toInt / currentFileMzScale
+                                  case "MSMZHit_mz" => currentMz = MSMZHit.collectDescendantText(false).toDouble / currentFileMzScale.toDouble
 //                                  case "MSMZHit_moreion" => {
 //                                    // untested case, because no omssa file with this area could be generated
 //                                    val MSIon = MSMZHit.childElementCursor().advance()
@@ -183,11 +176,12 @@ class OmssaSpectrumMatcher(omxFile: File,
                                     MSModHit_items.advance()
                                   }
                                 // get the ptm from the list read in the mandatory files, check if the ptm is variable of fixed in the search settings
-//                                    logger.debug("ptmId:"+ptmId+", peptideSequence: "+peptideSequence+", modification site: "+modificationSite)
                                 val ptm = omssaLoader.getPtmDefinition(ptmId, peptideSequence.charAt(modificationSite))
                                 if (ptm != None) {
                                   val isVariable = searchSettings.variablePtmDefs.contains(ptm.get)
-                                  modificationMatches+= new FragmentModificationMatch(ptm.get.names.shortName, isVariable, modificationSite)
+                                  ptm.get.ptmEvidences.foreach(e => {
+                                    ptms += new LocatedPtm(definition = ptm.get, seqPosition = modificationSite, monoMass = e.monoMass, averageMass = e.averageMass, composition = e.composition)
+                                  })
                                 }
                                 case _ =>
                               }
@@ -195,22 +189,16 @@ class OmssaSpectrumMatcher(omxFile: File,
                             }
                           // get the peptide sequence
                           case "MSHits_pepstring" => peptideSequence = MSHit.collectDescendantText(false)
+                          case "MSHits_theomass" => calculatedMass = MSHit.collectDescendantText(false).toDouble / currentFileMzScale.toDouble
                           case _ =>
                         }
                         MSHit.advance()
                       }
                       try {
-//                        logger.debug("Creating fragment ion table")
-                        // filter with wantDecoy value (if true, first protein must be decoy ; if false, first protein must be target)
-                          val table = new FragmentIonTable(peptideSequence, 
-//                        		  						   proteinAccessionNumbers.toArray, 
-//                        		  						   omssaLoader.ptmDefinitions.values.toArray, 
-                        		  						   modificationMatches.toArray, 
-                        		  						   currentFragmentIonTypes,
-                        		  						   neutralLosses.get) // neutralLosses are not implemented yet in omssa
-//                        		  						   neutralLosses.getNeutralLossMap) // neutralLosses are not implemented yet in omssa
+                          // create the fragmentation table
+                          val tableV2 = new FragmentIonTableV2(new Peptide(-1, peptideSequence, "", ptms.toArray, calculatedMass), currentFragmentIonTypes).get
                           // call the onEachSpectrumMatch function with the spectrumMatch object in argument
-                          onEachSpectrumMatch(new SpectrumMatch(msQueryId, peptideMatchRank, table.get, fragmentMatches.get(table.get, currentSpectrum)))
+                          onEachSpectrumMatch(new SpectrumMatch(msQueryId, peptideMatchRank, tableV2, fragmentMatches.get(tableV2, currentSpectrum)))
                       } catch {
                         case ex: Exception => 
                           logger.error("Fragmentation table could not be generated for spectrum '" + currentSpectrum.title + "'", ex)
