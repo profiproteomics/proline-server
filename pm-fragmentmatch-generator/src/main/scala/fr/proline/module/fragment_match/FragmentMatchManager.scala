@@ -63,7 +63,7 @@ class FragmentMatchManager extends Logging {
 
   private def fragmentType(ion: String): String = {
     try {
-      if (ion == "ya" || ion == "yb" || ion == "interal") return FragmentMatchType.INTERNAL.toString // ya/yb : mascot names
+      if (ion == "ya" || ion == "yb" || ion == "internal") return FragmentMatchType.INTERNAL.toString // ya/yb : mascot names
       else if (ion == "immonium") return FragmentMatchType.IMMONIUM.toString // same for mascot and omssa
       else return null
     } catch {
@@ -75,12 +75,15 @@ class FragmentMatchManager extends Logging {
   private def calculatedMoz(fragmentIonTable: Array[TheoreticalFragmentSeries], label: String): Double = {
     try {
       var calcMz: Double = 0
-      // label shoulb be b(3)++ for a doubly charged "b" ion in 3rd position
+      // label should be b(3)++ for a doubly charged "b" ion in 3rd position
       val regex = """(\w+)\((\d+)\).*""".r
       val regex(ionType, positionStr) = label
       val position = positionStr.toInt
       for (serie <- fragmentIonTable) {
-        if (serie.ionSeries == ionType) calcMz = serie.masses(position - 1)
+        if (serie.ionSeries == ionType) {
+          val masses = if(fr.proline.core.om.model.msi.Fragmentation.isReverseSeries(label)) serie.masses.reverse else serie.masses
+          calcMz = masses(position - 1)
+        }
       }
       return calcMz
     } catch {

@@ -92,7 +92,8 @@ object PTMsManager extends Logging {
     for (i <- 0 until ptmFactory.getPTMs.size()) {
       val ptm = ptmFactory.getPTM(ptmFactory.getPTMs.get(i))
       var ptmResidues = ""
-      for (j <- 0 until ptm.getResidues().size()) ptmResidues += "\"" + ptm.getResidues().get(j) + "\" "
+//      for (j <- 0 until ptm.getResidues().size()) ptmResidues += "\"" + ptm.getResidues().get(j) + "\" "
+      for (j <- 0 until ptm.getPattern().getAminoAcidsAtTarget().size()) ptmResidues += "\"" + ptm.getPattern().getAminoAcidsAtTarget().get(j) + "\" "
       string += "- " + ptm.getName() + " (" + ptm.getShortName() + "): " + ptm.getMass() + "Da ; Residues=[ " + ptmResidues + "] ; Type=" + ptm.getType() + "\n"
     }
     return string
