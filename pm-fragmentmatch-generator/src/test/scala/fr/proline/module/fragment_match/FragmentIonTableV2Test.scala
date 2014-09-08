@@ -106,7 +106,7 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with Logging {
 
   @Test
   def fragmentationTest() = {
-    val peptide = readRS.peptideById(381)
+    val peptide = readRS.peptideById(931)
     val expected = readCSV("/"+peptide.sequence+".csv")
     logger.debug(peptide.sequence + " " + peptide.readablePtmString)
     val peptideMatch = readRS.peptideMatches.find { _.peptideId == peptide.id }.get
@@ -119,7 +119,7 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with Logging {
 
   @Test
   def fragmentationTestNL() = {
-    val peptide = readRS.peptideById(543)
+    val peptide = readRS.peptideById(363)
     val expected = readCSV("/"+peptide.sequence+".csv")
     logger.debug(peptide.sequence + " " + peptide.readablePtmString)
     val ptm = peptide.ptms(0)
@@ -134,7 +134,7 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with Logging {
 
   @Test
   def fragmentationTestNTerm() = {
-    val peptide = readRS.peptideById(879)
+    val peptide = readRS.peptideById(614)
     val expected = readCSV("/"+peptide.sequence+".csv")
     logger.debug(peptide.sequence + " " + peptide.readablePtmString)
     val ptm = peptide.ptms(0)
@@ -150,8 +150,7 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with Logging {
   def fragmentationTest2Ox() = {
         
     val decoyRS = rsProvider.getResultSet(1).get
-    val peptide = decoyRS.peptideById(72)
-    logger.debug(peptide.sequence + " " + peptide.readablePtmString)
+    val peptide = decoyRS.peptideById(70)
     val expected = readCSV("/"+peptide.sequence+".csv")
     val ptm0 = peptide.ptms(0)
     val ptm1 = peptide.ptms(1)
