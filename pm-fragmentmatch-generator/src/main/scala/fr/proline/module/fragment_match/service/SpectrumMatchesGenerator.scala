@@ -92,21 +92,24 @@ class SpectrumMatchesGenerator(
           executionContext.getMSIDbConnectionContext(),
           executionContext.getPSDbConnectionContext())
         val msiSearch = msiSearchProvider.getMSISearch(msiDbHelper.getResultSetsMsiSearchIds(Array(resultSetId))(0))
-        if (msiSearch.isDefined && msiSearch.get.searchSettings.msmsSearchSettings.isDefined) {
-          val msmsSearchSettings = msiSearch.get.searchSettings.msmsSearchSettings.get
-
-          val peptideMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, executionContext.getPSDbConnectionContext)
-          val peptideMatches = peptideMatchProvider.getPeptideMatches(peptideMatchIds.get)
-          val spectrumIds = peptideMatches.map(_.getMs2Query.spectrumId)
-          val spectra = spectrumProvider.getSpectra(spectrumIds)
-          val spectraById = Map() ++ spectra.map { sp => (sp.id -> sp) }
-          val psmMatcher = new PeptideSpectrumMatcher(spectraById, msmsSearchSettings.ms2ErrorTol, msmsSearchSettings.ms2ErrorTolUnit)
-          logger.info("Storing spectrum matches...")
-          for (peptideMatch <- peptideMatches) {
-            val spectrumMatch = psmMatcher.getSpectrumMatch(peptideMatch)
-            SQLRsWriter.insertSpectrumMatch(peptideMatch, spectrumMatch, msiDbCtx)
-          }
-        }
+//        if (msiSearch.isDefined && msiSearch.get.searchSettings.msmsSearchSettings.isDefined) {
+        if (msiSearch.isDefined && msiSearch.get.resultFileName.endsWith("dat")) {
+	        if (msiSearch.get.searchSettings.msmsSearchSettings.isDefined) {
+	          val msmsSearchSettings = msiSearch.get.searchSettings.msmsSearchSettings.get
+	
+	          val peptideMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, executionContext.getPSDbConnectionContext)
+	          val peptideMatches = peptideMatchProvider.getPeptideMatches(peptideMatchIds.get)
+	          val spectrumIds = peptideMatches.map(_.getMs2Query.spectrumId)
+	          val spectra = spectrumProvider.getSpectra(spectrumIds)
+	          val spectraById = Map() ++ spectra.map { sp => (sp.id -> sp) }
+	          val psmMatcher = new PeptideSpectrumMatcher(spectraById, msmsSearchSettings.ms2ErrorTol, msmsSearchSettings.ms2ErrorTolUnit)
+	          logger.info("Storing spectrum matches...")
+	          for (peptideMatch <- peptideMatches) {
+	            val spectrumMatch = psmMatcher.getSpectrumMatch(peptideMatch)
+	            SQLRsWriter.insertSpectrumMatch(peptideMatch, spectrumMatch, msiDbCtx)
+	          }
+	        }
+        } else { logger.debug("Peptide-Spectrum Matching is restricted to Mascot result files") }
       } else {
         storerContext = StorerContext(executionContext)
 
@@ -119,25 +122,28 @@ class SpectrumMatchesGenerator(
           }
         }
         //TODO : load resultSet Spectrum, build a map (spectrum.id -> spectrum) then creates a PeptideSpectrumMatcher
-        if (resultSet.msiSearch.isDefined && resultSet.msiSearch.get.searchSettings.msmsSearchSettings.isDefined) {
-          val msmsSearchSettings = resultSet.msiSearch.get.searchSettings.msmsSearchSettings.get
-
-          val spectra = {
-            if (resultSummaryId.isDefined) {
-              spectrumProvider.getSpectra(SpectrumMatchesGenerator._getSpectraIds(rsm.resultSet.get))
-            } else {
-              spectrumProvider.getSpectra(SpectrumMatchesGenerator._getSpectraIds(resultSet))
-            }
-          }
-
-          val spectraById = Map() ++ spectra.map { sp => (sp.id -> sp) }
-          val psmMatcher = new PeptideSpectrumMatcher(spectraById, msmsSearchSettings.ms2ErrorTol, msmsSearchSettings.ms2ErrorTolUnit)
-          logger.info("Storing spectrum matches...")
-          rsStorer.insertSpectrumMatches(resultSet, new ResultSetWrapper(resultSet, psmMatcher), storerContext)
-        } else {
-          logger.error("Peptide-Spectrum Matching cannot be done because searchSettings ms2 error tolerance is undefined")
-          throw new RuntimeException("ResultSet " + resultSet.id + " Peptide-Spectrum Matching cannot be done because searchSettings ms2 error tolerance is undefined")
-        }
+//        if (resultSet.msiSearch.isDefined && resultSet.msiSearch.get.searchSettings.msmsSearchSettings.isDefined) {
+        if (resultSet.msiSearch.isDefined && resultSet.msiSearch.get.resultFileName.endsWith("dat")) {
+	        if (resultSet.msiSearch.get.searchSettings.msmsSearchSettings.isDefined) {
+	          val msmsSearchSettings = resultSet.msiSearch.get.searchSettings.msmsSearchSettings.get
+	
+	          val spectra = {
+	            if (resultSummaryId.isDefined) {
+	              spectrumProvider.getSpectra(SpectrumMatchesGenerator._getSpectraIds(rsm.resultSet.get))
+	            } else {
+	              spectrumProvider.getSpectra(SpectrumMatchesGenerator._getSpectraIds(resultSet))
+	            }
+	          }
+	
+	          val spectraById = Map() ++ spectra.map { sp => (sp.id -> sp) }
+	          val psmMatcher = new PeptideSpectrumMatcher(spectraById, msmsSearchSettings.ms2ErrorTol, msmsSearchSettings.ms2ErrorTolUnit)
+	          logger.info("Storing spectrum matches...")
+	          rsStorer.insertSpectrumMatches(resultSet, new ResultSetWrapper(resultSet, psmMatcher), storerContext)
+	        } else {
+	          logger.error("Peptide-Spectrum Matching cannot be done because searchSettings ms2 error tolerance is undefined")
+	          throw new RuntimeException("ResultSet " + resultSet.id + " Peptide-Spectrum Matching cannot be done because searchSettings ms2 error tolerance is undefined")
+	        }
+        } else { logger.debug("Peptide-Spectrum Matching is restricted to Mascot result files") }
       }
       // Commit transaction if it was initiated locally
         if (localMSITransaction) {
