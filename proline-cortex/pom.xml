@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
@@ -14,7 +15,9 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <version.path>${project.basedir}/src/main/scala/fr/proline/cortex</version.path>
     <core.version>0.2.0-SNAPSHOT</core.version> <!-- Snapshot Trunk version -->
+    <sqlite4java.version>0.282</sqlite4java.version>
   </properties>
 
   <dependencies>
@@ -68,7 +71,6 @@
       <version>${core.version}</version>
     </dependency>
 
-
     <!-- Proline-Admin -->
     <dependency>
       <groupId>fr.proline</groupId>
@@ -101,23 +103,214 @@
     <sourceDirectory>src/main/scala</sourceDirectory>
     <testSourceDirectory>src/test/scala</testSourceDirectory>
 
+    <pluginManagement>
+      <plugins>
+        <!-- For Eclipse build -->
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>com.google.code.maven-replacer-plugin</groupId>
+                    <artifactId>replacer</artifactId>
+                    <versionRange>[1.5.2,)</versionRange>
+                    <goals>
+                      <goal>replace</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <execute />
+                  </action>
+                </pluginExecution>
+
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <versionRange>[2.8,)</versionRange>
+                    <goals>
+                      <goal>copy-dependencies</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <execute>
+                       <runOnIncremental>false</runOnIncremental>
+                     </execute>
+                  </action>
+                </pluginExecution>
+
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+
     <plugins>
+
+      <!-- Phase "validate" Copy resources -->
       <plugin>
-        <groupId>org.scala-tools</groupId>
-        <artifactId>maven-scala-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <!-- Version inherited from ProFI-Pom -->
+
+        <executions>
+
+          <execution>
+            <!-- Copy .bat and .sh scripts WITH filtering -->
+            <id>copy-scripts</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>scripts</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+
+          <execution>
+            <!-- Copy resources to config/ directory WITHOUT filtering -->
+            <id>copy-config</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/config</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/resources</directory>
+                  <excludes>
+                    <exclude>META-INF/**</exclude>
+                  </excludes>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+
+        </executions>
+      </plugin>
+
+      <!-- Phase "generate-sources" Handle this Proline module version -->
+      <plugin>
+        <groupId>com.google.code.maven-replacer-plugin</groupId>
+        <artifactId>replacer</artifactId>
+        <!-- Version inherited from ProFI-Pom -->
+
         <executions>
           <execution>
-            <goals>
-              <goal>compile</goal>
-              <goal>testCompile</goal>
-            </goals>
-          </execution>
-        </executions>
+            <phase>generate-sources</phase>
+              <goals>
+                <goal>replace</goal>
+              </goals>
+           </execution>
+         </executions>
+
+         <configuration>
+           <file>${version.path}/Version.scala.template</file>
+           <outputFile>${version.path}/Version.scala</outputFile>
+           <replacements>
+             <replacement>
+               <token>@moduleName@</token>
+               <value>${project.artifactId}</value>
+             </replacement>
+             <replacement>
+               <token>@version@</token>
+               <value>${project.version}_${maven.build.timestamp}_${user.name}</value>
+             </replacement>
+           </replacements>
+         </configuration>
+
+      </plugin>
+
+      <!-- Phase "compile" Scala compiler -->
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <!-- Version inherited from ProFI-Pom -->
         <configuration>
-          <scalaVersion>${scala.version}</scalaVersion>
+          <recompileMode>incremental</recompileMode>
+          <!-- <residentCompilerLimit>1</residentCompilerLimit> -->
           <args>
-            <arg>-target:jvm-1.5</arg>
+            <arg>-deprecation</arg>
+            <arg>-unchecked</arg>
+            <arg>-P:continuations:enable</arg>
           </args>
+          <javacArgs>
+            <javacArg>-Xlint:unchecked</javacArg>
+            <javacArg>-Xlint:deprecation</javacArg>
+          </javacArgs>
+          <charset>UTF-8</charset>
+          <compilerPlugins>
+            <compilerPlugin>
+              <groupId>org.scala-lang.plugins</groupId>
+              <artifactId>continuations</artifactId>
+              <version>${scala-library.version}</version>
+            </compilerPlugin>
+          </compilerPlugins>
+        </configuration>
+      </plugin>
+
+      <!-- Phase "package" Copy Jar and native dependencies to lib/ directory -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <!-- Version inherited from ProFI-Pom -->
+
+        <executions>
+
+          <execution>
+            <id>copy-dependencies</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <includeTypes>jar</includeTypes>
+              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+              <overWriteIfNewer>true</overWriteIfNewer>
+            </configuration>
+          </execution>
+
+          <!-- Copy sqlite4java native libraries (Linux so and Windows dll) -->
+          <execution>
+            <id>copy-dll</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <includeTypes>so,dll</includeTypes>
+              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+              <overWriteIfNewer>true</overWriteIfNewer>
+            </configuration>
+          </execution>
+
+        </executions>
+
+      </plugin>
+
+      <!-- Build Zip Assembly -->
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <!-- Version inherited from ProFI-Pom -->
+        <configuration>
+          <descriptors>
+            <descriptor>assembly/assembly.xml</descriptor>
+          </descriptors>
         </configuration>
       </plugin>
 

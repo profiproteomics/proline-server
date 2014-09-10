@@ -35,6 +35,9 @@ import javax.jms.ExceptionListener
 
 object ProcessingNode extends Logging {
 
+  /* Constants */
+  private val EXECUTOR_SHUTDOWN_TIMEOUT = 30 // 30 seconds
+
   def main(args: Array[String]) {
     Thread.currentThread.setUncaughtExceptionHandler(new ThreadLogger(logger.underlying.getName))
 
@@ -249,12 +252,18 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
         logger.debug("Stopping JMS Consumers Executor")
         m_executor.shutdown()
 
-        logger.debug("Waiting Executor termination")
+        logger.debug("Waiting " + EXECUTOR_SHUTDOWN_TIMEOUT + " seconds for Executor termination...")
 
         try {
-          if (m_executor.awaitTermination(Long.MaxValue, TimeUnit.SECONDS)) {
+
+          if (m_executor.awaitTermination(EXECUTOR_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
             logger.info("JMS Consumers Executor terminated")
+
+          } else {
+            val remainingRunnables = m_executor.shutdownNow()
+            logger.info("JMS Consumers Executor terminated remain " + remainingRunnables.size + " never commenced Runnable(s)")
           }
+
         } catch {
           case intEx: InterruptedException => logger.warn("ExecutorService.awaitTermination() interrupted", intEx)
         }
