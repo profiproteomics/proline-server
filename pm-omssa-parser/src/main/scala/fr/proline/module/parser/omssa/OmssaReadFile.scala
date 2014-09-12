@@ -241,6 +241,7 @@ class OmssaReadFile(val omxFile: File,
                           val peptideLocatedPtms = new ArrayBuffer[LocatedPtm]()
                           var peptideMatchExpectValue: Double = 0
                           var peptideMatchPValue: Float = 0 // this must be stored in the properties
+                          val peptideMatchIonSeries = new ArrayBuffer[String]()
                           // the MoZ value is : (calculated mass - theoretical mass) / charge
                           var peptideMatchDeltaMoz: Float = 0 // warning : this value has to be divided by mozScale afterwards (the value is not read at this point)
                           var peptideMatchIsDecoy: Boolean = false
@@ -342,13 +343,22 @@ class OmssaReadFile(val omxFile: File,
                                   }
                                 }
                               case "MSHits_mzhits" =>
-                                val MSMZHit = MSHits_firstChild.childElementCursor().advance()
-                                while (MSMZHit.getCurrEvent() != null) {
-                                  MSMZHit.getPrefixedName() match {
-                                    case "MSMZHit" => peptideMatchFragmentMatchesCount += 1
+                                val MSMZHits = MSHits_firstChild.childElementCursor().advance()
+                                while (MSMZHits.getCurrEvent() != null) {
+                                  MSMZHits.getPrefixedName() match {
+                                    case "MSMZHit" => 
+                                      val MSMZHit = MSMZHits.childElementCursor().advance()
+                                      peptideMatchFragmentMatchesCount += 1
+                                      while (MSMZHit.getCurrEvent() != null) {
+                                        MSMZHit.getPrefixedName() match {
+                                          case "MSMZHit_ion" => peptideMatchIonSeries += omssaLoader.ionTypes.get(MSMZHit.childElementCursor().advance().collectDescendantText(false).toInt).getOrElse("")
+                                          case _ =>
+                                        }
+                                        MSMZHit.advance()
+                                      }
                                     case _         =>
                                   }
-                                  MSMZHit.advance()
+                                  MSMZHits.advance()
                                 }
                               case "MSHits_pepstring" => peptideSequence = MSHits_firstChild.collectDescendantText(false) //.replace("U", "") // the selenocysteine (U) is not recognized by biojava 
                               case "MSHits_mass"      => peptideMatchDeltaMoz += MSHits_firstChild.collectDescendantText(false).toFloat
@@ -394,15 +404,13 @@ class OmssaReadFile(val omxFile: File,
                             MSHits_firstChild.advance()
                           }
                           MSHits.advance()
-                          //                          if(minusLogEValue(peptideMatchExpectValue) <= MINUS_LOG_EVALUE_MAX_SCORE) {
+                          // if(minusLogEValue(peptideMatchExpectValue) <= MINUS_LOG_EVALUE_MAX_SCORE) {
                           // create the Peptide object
                           val peptide = this.getOrCreatePeptide(peptideLocatedPtms, peptideSequence, pepProvider)
                           // add properties
-                          val peptideMatchOmssaProperties = new PeptideMatchOmssaProperties(pValue = peptideMatchPValue, correctedCharge = peptideCharge)
-//                          val peptideMatchOmssaProperties = new PeptideMatchOmssaProperties(
-//                              expectationValue = peptideMatchExpectValue,
-//                              pValue = peptideMatchPValue
-//                          )
+                          val ionSeries = peptideMatchIonSeries.filter(!_.isEmpty()).distinct.toArray
+                          val ionSeriesOpt = if(ionSeries.isEmpty) None else Some(ionSeries)
+                          val peptideMatchOmssaProperties = new PeptideMatchOmssaProperties(pValue = peptideMatchPValue, correctedCharge = peptideCharge, ionSeries = ionSeries)
                           val peptideMatchProperties = new PeptideMatchProperties(omssaProperties = Some(peptideMatchOmssaProperties))
                           // create the PeptideMatch object
                           if(!msQueries.isDefinedAt(hitSetNumber)) { logger.warn("No MSQuery for query "+hitSetNumber) }
@@ -503,51 +511,33 @@ class OmssaReadFile(val omxFile: File,
   private def parseMSISearch(nbSpectra: Int, seqDbProvider: ISeqDatabaseProvider) = {
     // prepare variables
     val msiSearchProvider = new SQLMsiSearchProvider(parserContext.getUDSDbConnectionContext(), parserContext.getMSIDbConnectionContext(), parserContext.getPSDbConnectionContext())
-    var inputFileType = ""
-    var inputFilePath = ""
-//    var usedEnzymes = new ArrayBuffer[fr.proline.core.om.model.msi.Enzyme]()
-    var maxMissedCleavages = -1
-    var msLevel = 1;
-    var msVarPtms = new ArrayBuffer[PtmDefinition]()
-    var msFixedPtms = new ArrayBuffer[PtmDefinition]()
-    var dbName = ""
+    val msLevel = 2
+    val msVarPtms = new ArrayBuffer[PtmDefinition]()
+    val msFixedPtms = new ArrayBuffer[PtmDefinition]()
     val version = ""
-    var taxonomies = new ArrayBuffer[String]()
-    var minMsChargeState = -1
-    var maxMsChargeState = -1
-    var ms1ErrorTol = -1.0
-    var ms1ErrorTolUnit = omssaLoader.toleranceUnit("")
+    val taxonomies = new ArrayBuffer[String]()
+    val ms1ErrorTol = extract(find("MSSearchSettings_peptol")).toDouble
+    val maxMissedCleavages = extract(find("MSSearchSettings_missedcleave")).toInt
+    val dbName = extract(find("MSSearchSettings_db"))
+    val minMsChargeState = extract(find("MSChargeHandle_mincharge")).toInt
+    val maxMsChargeState = extract(find("MSChargeHandle_maxcharge")).toInt
+    val ms1ErrorTolUnit = omssaLoader.toleranceUnit(extract(find("MSSearchSettings_pepppm/value")))
+    val inputFileType = omssaLoader.spectrumFileTypes(extract(find("MSSpectrumFileType")).toInt)
+    val inputFilePath = parseProperties.get(OmssaParseParams.PEAK_LIST_FILE_PATH).toString
+    
+    val msmstol = extract(find("MSSearchSettings_msmstol")).toDouble
+    val msmstolUnit = ms1ErrorTolUnit
+    val msmsChargeState = extract(find("MSChargeHandle_maxproductcharge")).toInt
+    val ionTypes = new ArrayBuffer[String]()
 
-    ms1ErrorTol = extract(find("MSSearchSettings_peptol")).toDouble
-    maxMissedCleavages = extract(find("MSSearchSettings_missedcleave")).toInt
-    dbName = extract(find("MSSearchSettings_db"))
-    minMsChargeState = extract(find("MSChargeHandle_mincharge")).toInt
-    maxMsChargeState = extract(find("MSChargeHandle_maxcharge")).toInt
-    ms1ErrorTolUnit = omssaLoader.toleranceUnit(extract(find("MSSearchSettings_pepppm/value")))
-    inputFileType = omssaLoader.spectrumFileTypes(extract(find("MSSpectrumFileType")).toInt)
-    inputFilePath = parseProperties.get(OmssaParseParams.PEAK_LIST_FILE_PATH).toString
-
-    searchSettingsReference.filter(element => element.contains("MSSearchSettings_fixed/MSMod/*>")).foreach(
-      element => {
-        omssaLoader.getPtmDefinitions(extract(element).toLong).foreach(ptm => msFixedPtms += ptm)
-      })
-    searchSettingsReference.filter(element => element.contains("MSSearchSettings_variable/MSMod/*>")).foreach(
-      element => {
-        omssaLoader.getPtmDefinitions(extract(element).toLong).foreach(ptm => msVarPtms += ptm)
-      })
-    searchSettingsReference.filter(element => element.contains("MSSearchSettings_taxids_E/*>")).foreach(
-      element => {
-        taxonomies += extract(element)
-      })
-    var usedEnzymes = msiSearchProvider.getEnzymesByName(searchSettingsReference.filter(element => element.contains("MSEnzymes/*>")).map(e => omssaLoader.enzymes.get(extract(e).toInt).getOrElse("")).toSeq)
-//    searchSettingsReference.filter(element => element.contains("MSEnzymes/*>")).foreach(
-//      element => {
-//        usedEnzymes += new fr.proline.core.om.model.msi.Enzyme(omssaLoader.enzymes.get(extract(element).toInt).getOrElse(""))
-//      })
+    searchSettingsReference.filter(e => e.contains("MSSearchSettings_fixed/MSMod/*>")).foreach(e => omssaLoader.getPtmDefinitions(extract(e).toLong).foreach(msFixedPtms += _))
+    searchSettingsReference.filter(e => e.contains("MSSearchSettings_variable/MSMod/*>")).foreach(e => omssaLoader.getPtmDefinitions(extract(e).toLong).foreach(msVarPtms += _))
+    searchSettingsReference.filter(e => e.contains("MSSearchSettings_taxids_E/*>")).foreach(taxonomies += extract(_))
+    searchSettingsReference.filter(e => e.contains("MSIonType/*")).foreach(e => omssaLoader.ionTypes(extract(e).toInt).foreach(ionTypes += _.toString))
+    val usedEnzymes = msiSearchProvider.getEnzymesByName(searchSettingsReference.filter(element => element.contains("MSEnzymes/*>")).map(e => omssaLoader.enzymes.get(extract(e).toInt).getOrElse("")).toSeq)
 
     val fastaFilePath = if(parseProperties.get(OmssaParseParams.FASTA_FILE_PATH).isDefined) parseProperties.get(OmssaParseParams.FASTA_FILE_PATH).get.toString + File.pathSeparator + dbName else ""
     val usedSeqSDb = seqDbProvider.getSeqDatabase(dbName, fastaFilePath)
-//    usedSeqSDb = None
 
     seqDatabase = null
     if (usedSeqSDb != None) seqDatabase = usedSeqSDb.get
@@ -567,7 +557,7 @@ class OmssaReadFile(val omxFile: File,
       )
     }
 
-    var allChargeStates = new ArrayBuffer[String]()
+    val allChargeStates = new ArrayBuffer[String]()
     for (i <- minMsChargeState until maxMsChargeState) allChargeStates += i.toString()
     var chargeStates = ""
     if (allChargeStates.size > 0) chargeStates = allChargeStates.reduceLeft(_ + ", " + _)
@@ -583,16 +573,22 @@ class OmssaReadFile(val omxFile: File,
       ms1ChargeStates = chargeStates,
       ms1ErrorTol = ms1ErrorTol,
       ms1ErrorTolUnit = ms1ErrorTolUnit,
-//      isDecoy = (!hasTargetResultSet && hasDecoyResultSet),
-//      isDecoy = parseProperties.getOrElse(OmssaParseParams.DECOY_SEARCH, false).toString.toBoolean,
       isDecoy = false,
-//      usedEnzymes = usedEnzymes.toArray,
       usedEnzymes = usedEnzymes,
       variablePtmDefs = msVarPtms.toArray,
       fixedPtmDefs = msFixedPtms.toArray,
       seqDatabases = Array(seqDatabase),
       instrumentConfig = null, // not instanciated at this moment
       quantitation = "")
+    
+    if (msLevel == 2) {
+      searchSettings.msmsSearchSettings = Some(
+        new MSMSSearchSettings(
+          ms2ChargeStates = msmsChargeState.toString,
+          ms2ErrorTol = msmstol,
+          ms2ErrorTolUnit = msmstolUnit)
+      )
+    }
 
     searchSettingsReference.filter(element => element.contains("/MSInFile_infile/")).foreach(element => { setPeaklist(extract(element)) })
     //Create MSISearch regrouping all these information

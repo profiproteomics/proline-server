@@ -196,7 +196,15 @@ class OmssaSpectrumMatcher(omxFile: File,
                       }
                       try {
                           // create the fragmentation table
-                          val tableV2 = new FragmentIonTableV2(new Peptide(-1, peptideSequence, "", ptms.toArray, calculatedMass), currentFragmentIonTypes).get
+                        var ptmsNL: Option[Map[LocatedPtm, Double]] = None
+                        if(ptms.exists(_.definition.neutralLosses.size > 1)) {
+                          ptmsNL = Some(ptms.filter(_.definition.neutralLosses.size > 1).map(ptm => ptm -> ptm.definition.neutralLosses(1).monoMass).toMap)
+                        }
+                          val tableV2 = new FragmentIonTableV2(
+                              new Peptide(-1, peptideSequence, "", ptms.toArray, calculatedMass), 
+                              currentFragmentIonTypes,
+                              ptmNeutralLosses = ptmsNL).get
+//                              ptmNeutralLosses = Some(ptms.filter(_.definition.neutralLosses.size > 1).map(ptm => ptm -> ptm.definition.neutralLosses(1).monoMass).toMap)).get
                           // call the onEachSpectrumMatch function with the spectrumMatch object in argument
                           onEachSpectrumMatch(new SpectrumMatch(msQueryId, peptideMatchRank, tableV2, fragmentMatches.get(tableV2, currentSpectrum)))
                       } catch {
