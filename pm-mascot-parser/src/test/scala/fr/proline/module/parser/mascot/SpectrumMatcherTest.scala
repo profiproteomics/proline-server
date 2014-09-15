@@ -1,13 +1,18 @@
 package fr.proline.module.parser.mascot
 
 import java.io.File
+
 import scala.collection.immutable.HashMap
+
 import org.junit.After
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
+import org.junit.Before
 import org.junit.Test
+
 import com.typesafe.scalalogging.slf4j.Logging
+
 import fr.proline.context.BasicExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.dal.ContextFactory
@@ -20,10 +25,9 @@ import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.module.fragment_match.PeptideSpectrumMatcher
+import fr.proline.module.fragment_match.PeptideSpectrumMatcherMascot
 import fr.proline.repository.DriverType
 import matrix_science.msparser.ms_fragmentationrules
-import org.junit.Before
 
 @Test
 class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
@@ -154,7 +158,7 @@ class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
     logger.debug("elapsed time = "+(System.currentTimeMillis - start) + "ms for collecting "+spectraById.size+" spectra")
     start = System.currentTimeMillis()
     val msmsSearchSettings = resultFile.msiSearch.searchSettings.msmsSearchSettings.get
-    val sMatcher = new PeptideSpectrumMatcher(spectraById, msmsSearchSettings.ms2ErrorTol, msmsSearchSettings.ms2ErrorTolUnit)
+    val sMatcher = new PeptideSpectrumMatcherMascot(spectraById, msmsSearchSettings.ms2ErrorTol, msmsSearchSettings.ms2ErrorTolUnit)
     var spectrumMatchesByQueryId = new HashMap[Pair[Int,Int], SpectrumMatch]();
 
     for (peptideMatch <- resultFile.getResultSet(false).peptideMatches) {
