@@ -1,0 +1,4 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dataset>
+  <MSMS_SEARCH  ID="1" FRAGMENT_CHARGE_STATES="2+ and 3+" FRAGMENT_MASS_ERROR_TOLERANCE="0.8" FRAGMENT_MASS_ERROR_TOLERANCE_UNIT="Da"/>
+</dataset>
