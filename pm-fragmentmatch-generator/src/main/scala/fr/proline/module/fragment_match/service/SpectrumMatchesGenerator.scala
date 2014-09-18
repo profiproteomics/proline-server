@@ -182,7 +182,7 @@ class SpectrumMatchesGenerator(
 			val ms2ErrorTolUnit = msiSearch.get.searchSettings.msmsSearchSettings.get.ms2ErrorTolUnit
 			val peptideMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, executionContext.getPSDbConnectionContext)
         	
-			val pepMatchIDsIterator = pepMatchIdsBuilder.result.sliding(1000)
+			val pepMatchIDsIterator = pepMatchIdsBuilder.result.sliding(1000,1000)
 			while(pepMatchIDsIterator.hasNext){
 			   val pepMatchIds = pepMatchIDsIterator.next
 			   
