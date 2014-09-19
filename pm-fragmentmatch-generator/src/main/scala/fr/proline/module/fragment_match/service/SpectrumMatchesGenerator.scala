@@ -27,6 +27,9 @@ import fr.proline.module.fragment_match.PeptideSpectrumMatcherMascot
 import fr.proline.core.dal.DoJDBCReturningWork
 import java.sql.Connection
 import fr.proline.repository.util.JDBCWork
+import scala._
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.om.model.msi.MSISearch
 
 object SpectrumMatchesGenerator {
 
@@ -69,7 +72,7 @@ class SpectrumMatchesGenerator(
   resultSetId: Long,
   resultSummaryId: Option[Long] = None,
   peptideMatchIds: Option[Array[Long]] = None,
-  memorySave : Boolean = false ) extends IService with Logging {
+  forceInsert : Boolean = false ) extends IService with Logging {
 
   def runService(): Boolean = {
     logger.info("Run service SpectrumMatchesGenerator on ResultSet.id=" + resultSetId)
@@ -92,46 +95,20 @@ class SpectrumMatchesGenerator(
       val spectrumProvider = new SQLSpectrumProvider(msiDbCtx)
 
       if (peptideMatchIds.isDefined) {
+    	val msiSearch = getAndTestMSISearch(resultSetId, msiDbCtx )
+    	
+		val peptideMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, executionContext.getPSDbConnectionContext)    	
+    	val ms2ErrorTol = msiSearch.searchSettings.msmsSearchSettings.get.ms2ErrorTol
+    	val ms2ErrorTolUnit = msiSearch.searchSettings.msmsSearchSettings.get.ms2ErrorTolUnit
+    	generateSpectrumMatchesFor(peptideMatchIds.get, forceInsert , ms2ErrorTol, ms2ErrorTolUnit, msiSearch.searchSettings.softwareName, peptideMatchProvider,spectrumProvider,  msiDbCtx )
+    	
 
-        val msiDbHelper = new MsiDbHelper(msiDbCtx)
-        val msiSearchProvider = new SQLMsiSearchProvider(executionContext.getUDSDbConnectionContext(),
-          executionContext.getMSIDbConnectionContext(),
-          executionContext.getPSDbConnectionContext())
-        val msiSearch = msiSearchProvider.getMSISearch(msiDbHelper.getResultSetsMsiSearchIds(Array(resultSetId))(0))
-        if (msiSearch.isDefined && msiSearch.get.searchSettings.msmsSearchSettings.isDefined) {
-	      val ms2ErrorTol = msiSearch.get.searchSettings.msmsSearchSettings.get.ms2ErrorTol
-	      val ms2ErrorTolUnit = msiSearch.get.searchSettings.msmsSearchSettings.get.ms2ErrorTolUnit
-	      val peptideMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, executionContext.getPSDbConnectionContext)
-          val peptideMatches = peptideMatchProvider.getPeptideMatches(peptideMatchIds.get)
-          val spectrumIds = peptideMatches.map(_.getMs2Query.spectrumId)
-          val spectra = spectrumProvider.getSpectra(spectrumIds)
-          val spectraById = Map() ++ spectra.map { sp => (sp.id -> sp) }
-	      val psmMatcher = {
-	        msiSearch.get.searchSettings.softwareName.toLowerCase() match {
-	          case "mascot" => new PeptideSpectrumMatcherMascot(spectraById, ms2ErrorTol, ms2ErrorTolUnit)
-	          case "omssa" => new PeptideSpectrumMatcherOmssa(spectraById, ms2ErrorTol, ms2ErrorTolUnit)
-	          case _ => 
-	            logger.error("Spectrum matches cannot be generated for this search engine")
-	            throw new RuntimeException("Spectrum matches cannot be generated for this search engine")
-	        }
-	      }
-	      logger.info("Storing spectrum matches...")
-          for (peptideMatch <- peptideMatches) {
-            val spectrumMatch = psmMatcher.getSpectrumMatch(peptideMatch)
-            SQLRsWriter.insertSpectrumMatch(peptideMatch, spectrumMatch, msiDbCtx)
-          }
-        } else {
-          logger.error("Peptide-Spectrum Matching cannot be done because searchSettings ms2 error tolerance is undefined")
-	      throw new RuntimeException("PeptideMatch Peptide-Spectrum Matching cannot be done because searchSettings ms2 error tolerance is undefined")
-        }
       } else {
-        storerContext = StorerContext(executionContext)
-
-        if(memorySave){
-        	
-        	val pepMatchIdsBuilder = Array.newBuilder[Long]
         
-        	if (!resultSummaryId.isDefined) {
+        storerContext = StorerContext(executionContext)
+		val allPepMatchIds = Seq.newBuilder[Long]
+        
+    	if (!resultSummaryId.isDefined) {
 		          val jdbcWork = new JDBCWork() {
 		            override def execute(con: Connection) {
 		
@@ -139,7 +116,7 @@ class SpectrumMatchesGenerator(
 		              pStmt.setLong(1, resultSetId)
 		              val sqlResultSet = pStmt.executeQuery()
 		              while(sqlResultSet.next){
-		                pepMatchIdsBuilder += sqlResultSet.getLong("id")
+		                allPepMatchIds += sqlResultSet.getLong("id")
 		              }		                
 		              pStmt.close()
 		            }
@@ -147,7 +124,7 @@ class SpectrumMatchesGenerator(
 		          } // End of jdbcWork anonymous inner class    	 
 		
 		          executionContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
-        	} else {
+    	} else {
 		          val jdbcWork = new JDBCWork() {
 		            override def execute(con: Connection) {
 		
@@ -156,7 +133,7 @@ class SpectrumMatchesGenerator(
 		              pStmt.setLong(1, resultSummaryId.get)
 		              val sqlResultSet = pStmt.executeQuery()
 		              while(sqlResultSet.next){
-		                pepMatchIdsBuilder += sqlResultSet.getLong("id")
+		                allPepMatchIds += sqlResultSet.getLong("id")
 		              }		                
 		              pStmt.close()
 		            }
@@ -164,88 +141,25 @@ class SpectrumMatchesGenerator(
 		          } // End of jdbcWork anonymous inner class    	 
 		
 		          executionContext.getMSIDbConnectionContext().doWork(jdbcWork, false)        	  
-        	}
+    	}
         	        
-        	val msiDbHelper = new MsiDbHelper(msiDbCtx)
-        	val msiSearchProvider = new SQLMsiSearchProvider(executionContext.getUDSDbConnectionContext(),
-			executionContext.getMSIDbConnectionContext(),
-			executionContext.getPSDbConnectionContext())
+        
+        val msiSearch = getAndTestMSISearch(resultSetId, msiDbCtx )
+    	        	
+    	val ms2ErrorTol = msiSearch.searchSettings.msmsSearchSettings.get.ms2ErrorTol
+		val ms2ErrorTolUnit = msiSearch.searchSettings.msmsSearchSettings.get.ms2ErrorTolUnit
+		val msiSoftware = msiSearch.searchSettings.softwareName
+		val peptideMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, executionContext.getPSDbConnectionContext)
         	
-        	//TODO Get ResultSetId for case only RSM specified !
-        	val msiSearch = msiSearchProvider.getMSISearch(msiDbHelper.getResultSetsMsiSearchIds(Array(resultSetId))(0))
-        	if (!msiSearch.isDefined || !msiSearch.get.searchSettings.msmsSearchSettings.isDefined) {
-        		logger.error("Peptide-Spectrum Matching cannot be done because searchSettings ms2 error tolerance is undefined")
-        		throw new RuntimeException("PeptideMatch Peptide-Spectrum Matching cannot be done because searchSettings ms2 error tolerance is undefined")
-        	}
-        	
-        	val ms2ErrorTol = msiSearch.get.searchSettings.msmsSearchSettings.get.ms2ErrorTol
-			val ms2ErrorTolUnit = msiSearch.get.searchSettings.msmsSearchSettings.get.ms2ErrorTolUnit
-			val peptideMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, executionContext.getPSDbConnectionContext)
-        	
-			val pepMatchIDsIterator = pepMatchIdsBuilder.result.sliding(1000,1000)
-			while(pepMatchIDsIterator.hasNext){
-			   val pepMatchIds = pepMatchIDsIterator.next
+		val pepMatchIDsIterator = allPepMatchIds.result.sliding(1000,1000)
+		while(pepMatchIDsIterator.hasNext){
+		   var pepMatchIds = pepMatchIDsIterator.next
 			   
-			   val peptideMatches = peptideMatchProvider.getPeptideMatches(pepMatchIds)
-			   val spectrumIds = peptideMatches.map(_.getMs2Query.spectrumId)
-			   val spectra = spectrumProvider.getSpectra(spectrumIds)
-			   val spectraById = Map() ++ spectra.map { sp => (sp.id -> sp) }
-			   val psmMatcher = {
-		        msiSearch.get.searchSettings.softwareName.toLowerCase() match {
-		          case "mascot" => new PeptideSpectrumMatcherMascot(spectraById, ms2ErrorTol, ms2ErrorTolUnit)
-		          case "omssa" => new PeptideSpectrumMatcherOmssa(spectraById, ms2ErrorTol, ms2ErrorTolUnit)
-		          case _ => 
-		            logger.error("Spectrum matches cannot be generated for this search engine")
-		            throw new RuntimeException("Spectrum matches cannot be generated for this search engine")
-		        }
-			   }
-			   logger.info("Storing spectrum matches...")
-		          for (peptideMatch <- peptideMatches) {
-		            val spectrumMatch = psmMatcher.getSpectrumMatch(peptideMatch)
-		            SQLRsWriter.insertSpectrumMatch(peptideMatch, spectrumMatch, msiDbCtx)
-		          }
-			} //End go through slinding windows
+		   generateSpectrumMatchesFor(pepMatchIds, forceInsert , ms2ErrorTol, ms2ErrorTolUnit, msiSoftware, peptideMatchProvider,spectrumProvider , msiDbCtx )
+		   
+		} //End go through slinding windows
             
-        } else { // End if memory Save
-	        
-	        val (resultSet, rsm) = {
-	          if (!resultSummaryId.isDefined) {
-	            (SpectrumMatchesGenerator._loadResultSet(resultSetId, executionContext), null)
-	          } else {
-	            val rsm = SpectrumMatchesGenerator._loadResultSummary(resultSummaryId.get, executionContext)
-	            (rsm.resultSet.get, rsm)
-	          }
-	        }
-	        
-	        val msiSearch = resultSet.msiSearch
-	        if (msiSearch.isDefined && msiSearch.get.searchSettings.msmsSearchSettings.isDefined) {
-		      val ms2ErrorTol = msiSearch.get.searchSettings.msmsSearchSettings.get.ms2ErrorTol
-		      val ms2ErrorTolUnit = msiSearch.get.searchSettings.msmsSearchSettings.get.ms2ErrorTolUnit
-		      val spectra = {
-	            if (resultSummaryId.isDefined) {
-	              spectrumProvider.getSpectra(SpectrumMatchesGenerator._getSpectraIds(rsm.resultSet.get))
-	            } else {
-	              spectrumProvider.getSpectra(SpectrumMatchesGenerator._getSpectraIds(resultSet))
-	            }
-	          }
-	
-	          val spectraById = Map() ++ spectra.map { sp => (sp.id -> sp) }
-	          val psmMatcher = {
-		        msiSearch.get.searchSettings.softwareName.toLowerCase() match {
-		          case "mascot" => new PeptideSpectrumMatcherMascot(spectraById, ms2ErrorTol, ms2ErrorTolUnit)
-		          case "omssa" => new PeptideSpectrumMatcherOmssa(spectraById, ms2ErrorTol, ms2ErrorTolUnit)
-		          case _ => 
-		            logger.error("Spectrum matches cannot be generated for this search engine")
-		            throw new RuntimeException("Spectrum matches cannot be generated for this search engine")
-		        }
-		      }
-	          logger.info("Storing spectrum matches...")
-	          rsStorer.insertSpectrumMatches(resultSet, new ResultSetWrapper(resultSet, psmMatcher), storerContext)
-	        } else {
-	          logger.error("Peptide-Spectrum Matching cannot be done because searchSettings ms2 error tolerance is undefined")
-		      throw new RuntimeException("ResultSet " + resultSet.id + " Peptide-Spectrum Matching cannot be done because searchSettings ms2 error tolerance is undefined")
-	        }
-        }      
+   
       } // End peptideMatchIds Not Defined
       
       // Commit transaction if it was initiated locally
@@ -282,7 +196,100 @@ class SpectrumMatchesGenerator(
     msiTransacOk
   }
 
+  private def getAndTestMSISearch(resultSetId : Long, msiDbCtx : DatabaseConnectionContext) : MSISearch = {
+	  val msiDbHelper = new MsiDbHelper(msiDbCtx)
+	  val msiSearchProvider = new SQLMsiSearchProvider(executionContext.getUDSDbConnectionContext(),
+			  executionContext.getMSIDbConnectionContext(),
+			  executionContext.getPSDbConnectionContext())
+    	
+	  //TODO Get ResultSetId for case only RSM specified !
+	  val msiSearch = msiSearchProvider.getMSISearch(msiDbHelper.getResultSetsMsiSearchIds(Array(resultSetId))(0))
+	  if (!msiSearch.isDefined || !msiSearch.get.searchSettings.msmsSearchSettings.isDefined) {
+    		logger.error("Peptide-Spectrum Matching cannot be done because searchSettings ms2 error tolerance is undefined")
+    		throw new RuntimeException("PeptideMatch Peptide-Spectrum Matching cannot be done because searchSettings ms2 error tolerance is undefined")
+	  }
+	  msiSearch.get
+  }
+ 
+  
+  private def generateSpectrumMatchesFor(pepMatchIds : Seq[Long], forceInsert : Boolean,  ms2ErrorTol: Double,  
+		  		ms2ErrorTolUnitStr: String,  softwareName:String, peptideMatchProvider :SQLPeptideMatchProvider,spectrumProvider : SQLSpectrumProvider, 
+		  		msiDbCtx : DatabaseConnectionContext ) {
+  
+
+    //Get list of PeptideMatches having spectrum matches registered for.
+    val existingMatchPepMatchIdsBuilder = Array.newBuilder[Long]
+    val associatedObjectTreeBuilder = Array.newBuilder[Long]
+    var generatePepMatchesId = pepMatchIds
+    val getExistingMatchesWork = new JDBCWork() {
+      override def execute(con: Connection) {
+
+        val query = "SELECT peptide_match_object_tree_map.peptide_match_id, peptide_match_object_tree_map.object_tree_id FROM peptide_match_object_tree_map " +
+          " WHERE peptide_match_object_tree_map.peptide_match_id IN (" + pepMatchIds.mkString(",") + ") AND peptide_match_object_tree_map.schema_name = 'peptide_match.spectrum_match'; "
+        val stmt = con.createStatement()
+        val sqlResultSet = stmt.executeQuery(query)
+        while (sqlResultSet.next) {
+          existingMatchPepMatchIdsBuilder += sqlResultSet.getLong(1)
+          associatedObjectTreeBuilder += sqlResultSet.getLong(2)
+        }
+        stmt.close()
+      }
+    } // End of jdbcWork anonymous inner class    	 	
+    executionContext.getMSIDbConnectionContext().doWork(getExistingMatchesWork, false)
+
+    val existingMatchPepMatchIds = existingMatchPepMatchIdsBuilder.result
+    if (existingMatchPepMatchIds.length > 0)
+      logger.warn("There is " + existingMatchPepMatchIds.length + " peptide matches with existing spectrum match.")
+
+    //If forceInsert set to true, remove existing spectrum matches Otherwise, remove these Ids from peptideMatches to considere.
+    if (forceInsert) {
+      // Remove existing spectrum matches
+
+      val removeExistingMatchesWork = new JDBCWork() {
+        override def execute(con: Connection) {
+
+          var query = "DELETE FROM peptide_match_object_tree_map WHERE peptide_match_id IN (" + existingMatchPepMatchIds.mkString(",") + ") AND schema_name = 'peptide_match.spectrum_match'; "
+          val stmt = con.createStatement()
+          stmt.execute(query)
+
+          query = "DELETE FROM object_tree WHERE id IN (" + associatedObjectTreeBuilder.result.mkString(",") + ");"
+          stmt.execute(query)
+
+          stmt.close()
+        }
+
+      } // End of jdbcWork anonymous inner class    	 	
+      executionContext.getMSIDbConnectionContext().doWork(removeExistingMatchesWork, false)
+
+    } else {
+      // just Ignore existing spectrum matches
+      generatePepMatchesId = pepMatchIds.diff(existingMatchPepMatchIds)
+    }
+
+    //Generate and save Spectrum Matches 
+    val peptideMatches = peptideMatchProvider.getPeptideMatches(generatePepMatchesId)
+    val spectrumIds = peptideMatches.map(_.getMs2Query.spectrumId)
+    val spectra = spectrumProvider.getSpectra(spectrumIds)
+    val spectraById = Map() ++ spectra.map { sp => (sp.id -> sp) }
+    val psmMatcher = {
+      softwareName.toLowerCase() match {
+        case "mascot" => new PeptideSpectrumMatcherMascot(spectraById, ms2ErrorTol, ms2ErrorTolUnitStr)
+        case "omssa"  => new PeptideSpectrumMatcherOmssa(spectraById, ms2ErrorTol, ms2ErrorTolUnitStr)
+        case _ =>
+          logger.error("Spectrum matches cannot be generated for this search engine")
+          throw new RuntimeException("Spectrum matches cannot be generated for this search engine")
+      }
+    }
+    logger.info("Storing spectrum matches...")
+    for (peptideMatch <- peptideMatches) {
+      val spectrumMatch = psmMatcher.getSpectrumMatch(peptideMatch)
+      SQLRsWriter.insertSpectrumMatch(peptideMatch, spectrumMatch, msiDbCtx)
+    }
+  }
+  
+  
 }
+
 
 class ResultSetWrapper(resultSet: ResultSet, psmMatcher: PeptideSpectrumMatcher) extends IRsContainer {
 

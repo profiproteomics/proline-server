@@ -5,9 +5,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
@@ -20,6 +18,7 @@ import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.repository.DriverType
+import scala.collection.mutable.ArrayBuffer
 
 class SpectrumMatchesGeneratorTest extends AbstractMultipleDBTestCase with Logging {
 
@@ -31,7 +30,7 @@ class SpectrumMatchesGeneratorTest extends AbstractMultipleDBTestCase with Loggi
 
   var executionContext: IExecutionContext = null
   var rsProvider: IResultSetProvider = null
-//  protected var readRS: ResultSet = null
+
   protected var generatorService : SpectrumMatchesGenerator = null
 
   @Before
@@ -53,8 +52,6 @@ class SpectrumMatchesGeneratorTest extends AbstractMultipleDBTestCase with Loggi
     val (execContext, rsProv) = buildSQLContext()
     executionContext = execContext
     generatorService = new SpectrumMatchesGenerator(executionContext, targetRSId, None, None, true)
-//    rsProvider = rsProv
-//    readRS = this._loadRS()
   }
 
   @After
@@ -62,13 +59,6 @@ class SpectrumMatchesGeneratorTest extends AbstractMultipleDBTestCase with Loggi
     if (executionContext != null) executionContext.closeAll()
     super.tearDown()
   }
-
-//  private def _loadRS(): ResultSet = {
-//    val rs = rsProvider.getResultSet(targetRSId).get
-//    // SMALL HACK because of DBUNIT BUG (see bioproj defect #7548)
-//    if (decoyRSId.isDefined) rs.decoyResultSet = rsProvider.getResultSet(decoyRSId.get)
-//    rs
-//  }
 
   def buildSQLContext() = {
     val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
@@ -88,10 +78,62 @@ class SpectrumMatchesGeneratorTest extends AbstractMultipleDBTestCase with Loggi
 
   @Test
   def testGenerateSpectrumMatch() = {
-
     try {
+      generatorService = new SpectrumMatchesGenerator(executionContext, targetRSId, None, None, false)
       val result = generatorService.runService
       assertTrue(result)
+
+    } catch {
+
+      case ex: Exception => {
+
+        val msg = if (ex.getCause() != null) { "Error running Spectrum Matches Generator " + ex.getCause().getMessage() } else { "Error running Spectrum Matches Generator " + ex.getMessage() }
+        fail(msg)
+
+      }
+    }
+  }
+  
+    @Test
+  def testGenerateExistingSpectrumMatch() = {
+    try {
+      
+      val pepMIds = new ArrayBuffer[Long]()
+      pepMIds += 348L
+      
+      generatorService = new SpectrumMatchesGenerator(executionContext, targetRSId, None, Some(pepMIds.toArray), false)
+      val result = generatorService.runService
+      assertTrue(result)
+      
+      generatorService = new SpectrumMatchesGenerator(executionContext, targetRSId, None, None, false)
+      val result2 = generatorService.runService
+      assertTrue(result2)
+
+    } catch {
+
+      case ex: Exception => {
+
+        val msg = if (ex.getCause() != null) { "Error running Spectrum Matches Generator " + ex.getCause().getMessage() } else { "Error running Spectrum Matches Generator " + ex.getMessage() }
+        fail(msg)
+
+      }
+    }
+    }
+
+    @Test
+  def testForceGenerateSpectrumMatch() = {
+    try {
+      
+      val pepMIds = new ArrayBuffer[Long]()
+      pepMIds += 348L
+      
+      generatorService = new SpectrumMatchesGenerator(executionContext, targetRSId, None, Some(pepMIds.toArray), false)
+      val result = generatorService.runService
+      assertTrue(result)
+      
+      generatorService = new SpectrumMatchesGenerator(executionContext, targetRSId, None, None, true)
+      val result2 = generatorService.runService
+      assertTrue(result2)
 
     } catch {
 
