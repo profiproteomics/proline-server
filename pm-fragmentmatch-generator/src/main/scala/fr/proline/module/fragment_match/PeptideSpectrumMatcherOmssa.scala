@@ -1,23 +1,12 @@
 package fr.proline.module.fragment_match
 
 import scala.Array.canBuildFrom
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.StringBuilder
-import scala.util.control.Breaks.break
-import scala.util.control.Breaks.breakable
-import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.core.om.model.msi.FragmentMatch
-import fr.proline.core.om.model.msi.FragmentMatchType
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.Spectrum
-import fr.proline.core.om.model.msi.SpectrumMatch
-import fr.profi.util.ms.MassTolUnit
-import fr.profi.util.ms.calcMozTolInDalton
-import fr.profi.util.MathUtils
 
-class PeptideSpectrumMatcherOmssa(val spectraByIds: Map[Long, Spectrum],
+class PeptideSpectrumMatcherOmssa(
+  val spectraByIds: Map[Long, Spectrum],
   val ms2ErrorTol: Double,
   val ms2ErrorTolUnitStr: String) extends PeptideSpectrumMatcher {
   

@@ -3,19 +3,10 @@ package fr.proline.module.fragment_match
 import scala.Array.canBuildFrom
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import scala.collection.mutable.StringBuilder
-import scala.util.control.Breaks.break
-import scala.util.control.Breaks.breakable
-import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.core.om.model.msi.FragmentMatch
-import fr.proline.core.om.model.msi.FragmentMatchType
+import fr.profi.util.MathUtils
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.Spectrum
-import fr.proline.core.om.model.msi.SpectrumMatch
-import fr.profi.util.ms.MassTolUnit
-import fr.profi.util.ms.calcMozTolInDalton
-import fr.profi.util.MathUtils
 
 class PeptideSpectrumMatcherMascot(
   val spectraByIds: Map[Long, Spectrum],
@@ -62,7 +53,7 @@ class PeptideSpectrumMatcherMascot(
     } 
     seq
   }
-  
+
   def getFragmentIonTypes(peptideMatch: PeptideMatch, charge: Int): FragmentIons = {
     //TODO : configure ion series used !!!!
     new FragmentIons(ionTypeB = true, ionTypeY = true, chargeForIonsB = charge, chargeForIonsY = charge)

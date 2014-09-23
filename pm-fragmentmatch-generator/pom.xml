@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>PM-FragmentMatchGenerator</artifactId>
-  <version>0.0.5-SNAPSHOT</version>
+  <version>0.0.6-SNAPSHOT</version>
   <name>${project.artifactId}</name>
   <description>Proline Module made to generate the fragment matches from a spectrum</description>
 
@@ -32,89 +32,6 @@
       <groupId>com.typesafe</groupId>
       <artifactId>scalalogging-slf4j_2.10</artifactId>
       <!-- Version inherited from ProFI-Pom -->
-    </dependency>
-
-    <!-- Compomics tools -->
-    <dependency>
-      <groupId>com.compomics</groupId>
-      <artifactId>utilities</artifactId>
-      <version>3.10.39</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>junit</artifactId>
-          <groupId>junit</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>servlet-api</artifactId>
-          <groupId>javax.servlet</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>log4j</artifactId>
-          <groupId>log4j</groupId>
-        </exclusion>
-        <!-- <exclusion> <artifactId>xpp3</artifactId> <groupId>xpp3</groupId>
-          </exclusion> -->
-        <exclusion>
-          <artifactId>commons-math</artifactId>
-          <groupId>commons-math</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>looks</artifactId>
-          <groupId>com.jgoodies</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>swing-layout</artifactId>
-          <groupId>org.swinglabs</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>swingx</artifactId>
-          <groupId>org.swinglabs</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>batik-all</artifactId>
-          <groupId>batik</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>pdf-transcoder</artifactId>
-          <groupId>batik</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>xercesImpl</artifactId>
-          <groupId>xerces</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>jmzml</artifactId>
-          <groupId>uk.ac.ebi.jmzml</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>jfreechart</artifactId>
-          <groupId>jfree</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>jsparklines</artifactId>
-          <groupId>no.uib</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>ols-dialog</artifactId>
-          <groupId>no.uib</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>commons-compress</artifactId>
-          <groupId>org.apache.commons</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>derby</artifactId>
-          <groupId>org.apache.derby</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>braf</artifactId>
-          <groupId>uk.ac.ebi.pride.tools</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>ssj</artifactId>
-          <groupId>umontreal.iro.lecuyer.gof</groupId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <!-- Override jmzidentml / xxindex dependency without com.springsource prefix -->

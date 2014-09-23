@@ -1,10 +1,12 @@
 package fr.proline.module.fragment_match.service
 
+import java.sql.Connection
+import scala.Array.canBuildFrom
+import scala.Array.fallbackCanBuildFrom
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.om.model.msi.IRsContainer
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
@@ -12,20 +14,17 @@ import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.om.model.msi.SpectrumMatch
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
-import fr.proline.core.om.provider.msi.impl.SQLMsQueryProvider
 import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideMatchProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.provider.msi.impl.SQLSpectrumProvider
 import fr.proline.core.om.storer.msi.RsStorer
+import fr.proline.core.om.storer.msi.impl.SQLRsWriter
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.module.fragment_match.PeptideSpectrumMatcher
-import fr.proline.core.om.storer.msi.impl.SQLRsWriter
-import fr.proline.module.fragment_match.PeptideSpectrumMatcherOmssa
 import fr.proline.module.fragment_match.PeptideSpectrumMatcherMascot
-import fr.proline.core.dal.DoJDBCReturningWork
-import java.sql.Connection
+import fr.proline.module.fragment_match.PeptideSpectrumMatcherOmssa
 import fr.proline.repository.util.JDBCWork
 
 object SpectrumMatchesGenerator {

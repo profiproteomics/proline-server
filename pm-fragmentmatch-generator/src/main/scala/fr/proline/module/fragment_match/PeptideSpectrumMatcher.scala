@@ -1,21 +1,18 @@
 package fr.proline.module.fragment_match
 
-import scala.Array.canBuildFrom
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
 import scala.collection.mutable.StringBuilder
 import scala.util.control.Breaks.break
 import scala.util.control.Breaks.breakable
 import com.typesafe.scalalogging.slf4j.Logging
+import fr.profi.util.ms.MassTolUnit
+import fr.profi.util.ms.calcMozTolInDalton
 import fr.proline.core.om.model.msi.FragmentMatch
 import fr.proline.core.om.model.msi.FragmentMatchType
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.om.model.msi.SpectrumMatch
-import fr.profi.util.ms.MassTolUnit
-import fr.profi.util.ms.calcMozTolInDalton
-import fr.profi.util.MathUtils
 
 case class Peak(moz: Double, intensity: Float)
 
@@ -41,9 +38,9 @@ trait PeptideSpectrumMatcher extends Logging {
     val aaSequence = getSequence(peptideMatch)
     
     val charge = scala.math.min(peptideMatch.msQuery.charge, 2)
-    val currentFragmentIonTypes = getFragmentIonTypes(peptideMatch, charge)
+    val currentFragmentIonTypes = this.getFragmentIonTypes(peptideMatch, charge)
     
-    val theoreticalFragmentsTable = new FragmentIonTableV2(peptideMatch.peptide, currentFragmentIonTypes, Some(aaSequence), ptmNeutralLosses = if (ptmNeutralLosses.isEmpty) None else Some(ptmNeutralLosses.toMap))
+    val theoreticalFragmentsTable = new FragmentIonTable(peptideMatch.peptide, currentFragmentIonTypes, Some(aaSequence), ptmNeutralLosses = if (ptmNeutralLosses.isEmpty) None else Some(ptmNeutralLosses.toMap))
 
     val theoFragments = theoreticalFragmentsTable.fragments.map(_._2).flatten
     val fragMatches = new ArrayBuffer[FragmentMatch]()

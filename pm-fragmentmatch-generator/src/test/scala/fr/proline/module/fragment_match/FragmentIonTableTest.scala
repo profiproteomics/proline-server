@@ -1,29 +1,29 @@
 package fr.proline.module.fragment_match
 
-import org.scalatest.junit.JUnitSuite
-import com.typesafe.scalalogging.slf4j.Logging
+import scala.Array.canBuildFrom
+import scala.collection.mutable.ArrayBuffer
+import scala.io.Source
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
-import org.junit.Assert._
-import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.ContextFactory
-import fr.proline.repository.DriverType
-import fr.proline.core.om.model.msi.Peptide
-import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.BasicExecutionContext
+import fr.proline.context.IExecutionContext
+import fr.proline.core.dal.AbstractMultipleDBTestCase
+import fr.proline.core.dal.ContextFactory
+import fr.proline.core.om.model.msi.Peptide
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.model.msi.TheoreticalFragmentSeries
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.core.om.model.msi.TheoreticalFragmentSeries
-import scala.io.Source
-import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.om.model.msi.TheoreticalFragmentSeries
+import fr.proline.core.om.provider.msi.IResultSetProvider
+import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
+import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
+import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import fr.proline.repository.DriverType
 
 class FragmentIonTableTest extends AbstractMultipleDBTestCase with Logging {
 
@@ -99,7 +99,7 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with Logging {
 
     val currentFragmentIonTypes = new FragmentIons(ionTypeB = true, ionTypeY = true, chargeForIonsB = 2, chargeForIonsY = 2)
 
-    val table = new FragmentIonTableV2(peptide, currentFragmentIonTypes)
+    val table = new FragmentIonTable(peptide, currentFragmentIonTypes)
 
     logger.debug(table.toString)
   }
@@ -112,7 +112,7 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with Logging {
     val peptideMatch = readRS.peptideMatches.find { _.peptideId == peptide.id }.get
     logger.debug("Query = " + peptideMatch.msQuery.initialId)
     val currentFragmentIonTypes = new FragmentIons(ionTypeB = true, ionTypeY = true, chargeForIonsB = 2, chargeForIonsY = 2)
-    val table = new FragmentIonTableV2(peptide, currentFragmentIonTypes)
+    val table = new FragmentIonTable(peptide, currentFragmentIonTypes)
     logger.debug(table.toString)
     compareTheoreticalFragments(expected, table.get)
   }
@@ -127,7 +127,7 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with Logging {
     val peptideMatch = readRS.peptideMatches.find { _.peptideId == peptide.id }.get
     logger.debug("Query = " + peptideMatch.msQuery.initialId)
     val currentFragmentIonTypes = new FragmentIons(ionTypeB = true, ionTypeY = true, chargeForIonsB = 2, chargeForIonsY = 2)
-    val table = new FragmentIonTableV2(peptide, currentFragmentIonTypes, ptmNeutralLosses = Some(Map((ptm, ptm.definition.neutralLosses(1).monoMass))))
+    val table = new FragmentIonTable(peptide, currentFragmentIonTypes, ptmNeutralLosses = Some(Map((ptm, ptm.definition.neutralLosses(1).monoMass))))
     logger.debug(table.toString)
     compareTheoreticalFragments(expected, table.get)
   }
@@ -141,7 +141,7 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with Logging {
     val peptideMatch = readRS.peptideMatches.find { _.peptideId == peptide.id }.get
     logger.debug("Query = " + peptideMatch.msQuery.initialId)
     val currentFragmentIonTypes = new FragmentIons(ionTypeB = true, ionTypeY = true, chargeForIonsB = 2, chargeForIonsY = 2)
-    val table = new FragmentIonTableV2(peptide, currentFragmentIonTypes)
+    val table = new FragmentIonTable(peptide, currentFragmentIonTypes)
     logger.debug(table.toString)
 	compareTheoreticalFragments(expected, table.get)
   }
@@ -157,7 +157,7 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with Logging {
     val peptideMatch = decoyRS.peptideMatches.find { _.peptideId == peptide.id }.get
     logger.debug("Query = " + peptideMatch.msQuery.initialId)
     val currentFragmentIonTypes = new FragmentIons(ionTypeB = true, ionTypeY = true, chargeForIonsB = 2, chargeForIonsY = 2)
-    val table = new FragmentIonTableV2(peptide, currentFragmentIonTypes,
+    val table = new FragmentIonTable(peptide, currentFragmentIonTypes,
       ptmNeutralLosses = Some(Map((ptm0, ptm0.definition.neutralLosses(1).monoMass),
         (ptm1, ptm1.definition.neutralLosses(1).monoMass))))
     logger.debug(table.toString)
@@ -185,7 +185,7 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with Logging {
     val start = System.currentTimeMillis()
     for (peptide <- readRS.peptides) {
       val currentFragmentIonTypes = new FragmentIons(ionTypeB = true, ionTypeY = true, chargeForIonsB = 2, chargeForIonsY = 2)
-      val table = new FragmentIonTableV2(peptide, currentFragmentIonTypes)
+      val table = new FragmentIonTable(peptide, currentFragmentIonTypes)
     }
     logger.debug("Done in " + (System.currentTimeMillis() - start) + "ms for " + readRS.peptides.length + " peptides")
   }
