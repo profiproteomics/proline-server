@@ -381,26 +381,27 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
     )
   }
 
-  private var spectrumList: ArrayBuffer[Spectrum] = null
-  private def storeSpectrum(spectrum: Spectrum) = { spectrumList += spectrum }
-  def eachSpectrumMatch(wantDecoy: Boolean, onEachSpectrumMatch: SpectrumMatch => Unit): Unit = {
-    logger.info("eachSpectrumMatch(" + wantDecoy + ")")
-    try {
-      // first reset the list of spectra
-      // spectra a deleted from this list after being used, because of the important amount of memory that may be needed
-      // this list should already be empty at this point, but reset is forced anyway
-      spectrumList = new ArrayBuffer[Spectrum]
-      // list all the spectra and fill the array
-      eachSpectrum(storeSpectrum)
-      // then read the file (again) to get the detailed PeptideMatches
-      new OmssaSpectrumMatcher(omxFile, wantDecoy, spectrumList, omssaLoader, getMSISearch.searchSettings, fileReader.mzScale, onEachSpectrumMatch)
-    } catch {
-      case e: Exception =>
-        logger.error("eachSpectrumMatch in error", e)
-        throw e
-    }
-    ()
-  }
+//  private var spectrumList: ArrayBuffer[Spectrum] = null
+//  private def storeSpectrum(spectrum: Spectrum) = { spectrumList += spectrum }
+//  def eachSpectrumMatch(wantDecoy: Boolean, onEachSpectrumMatch: SpectrumMatch => Unit): Unit = {
+//    logger.info("eachSpectrumMatch(" + wantDecoy + ")")
+//    try {
+//      // first reset the list of spectra
+//      // spectra a deleted from this list after being used, because of the important amount of memory that may be needed
+//      // this list should already be empty at this point, but reset is forced anyway
+//      spectrumList = new ArrayBuffer[Spectrum]
+//      // list all the spectra and fill the array
+//      eachSpectrum(storeSpectrum)
+//      // then read the file (again) to get the detailed PeptideMatches
+//      new OmssaSpectrumMatcher(omxFile, wantDecoy, spectrumList, omssaLoader, getMSISearch.searchSettings, fileReader.mzScale, onEachSpectrumMatch)
+//    } catch {
+//      case e: Exception =>
+//        logger.error("eachSpectrumMatch in error", e)
+//        throw e
+//    }
+//    ()
+//  }
+  def eachSpectrumMatch(wantDecoy: Boolean, onEachSpectrumMatch: SpectrumMatch => Unit): Unit = {}
 
   /**
    * Clean loaded stuff is any

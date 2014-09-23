@@ -9,9 +9,9 @@ import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi.SearchSettings
 import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.om.model.msi.SpectrumMatch
-import fr.proline.module.fragment_match.FragmentIonTableV2
+import fr.proline.module.fragment_match.FragmentIonTable
 import fr.proline.module.fragment_match.FragmentIons
-import fr.proline.module.fragment_match.FragmentMatchManager
+//import fr.proline.module.fragment_match.FragmentMatchManager
 import javax.xml.stream.XMLInputFactory
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.LocatedPtm
@@ -67,7 +67,7 @@ class OmssaSpectrumMatcher(omxFile: File,
                       var peptideSequence = ""
                       var calculatedMass: Double = 0
                       val proteinAccessionNumbers = new ArrayBuffer[String]
-                      val fragmentMatches = new FragmentMatchManager
+//                      val fragmentMatches = new FragmentMatchManager
                       val ptms = new ArrayBuffer[LocatedPtm]
                       val MSHit = MSHits.childElementCursor().advance()
                       while (MSHit.getCurrEvent() != null) {
@@ -154,7 +154,7 @@ class OmssaSpectrumMatcher(omxFile: File,
                               else if (currentPosition == -1) { logger.warn("FragmentMatch error on spectrum '" + currentSpectrum.title + "' (position unknown)") }
                               else {
                                 currentFragmentIonTypes.setIonTypeAndCharge(omssaLoader.ionTypes.get(currentIonType).get, currentCharge)
-                                fragmentMatches.add(omssaLoader.ionTypes.get(currentIonType).get, currentCharge, currentPosition, currentMz)
+//                                fragmentMatches.add(omssaLoader.ionTypes.get(currentIonType).get, currentCharge, currentPosition, currentMz)
                               }
                               MSMZHits.advance()
                             }
@@ -200,13 +200,13 @@ class OmssaSpectrumMatcher(omxFile: File,
                         if(ptms.exists(_.definition.neutralLosses.size > 1)) {
                           ptmsNL = Some(ptms.filter(_.definition.neutralLosses.size > 1).map(ptm => ptm -> ptm.definition.neutralLosses(1).monoMass).toMap)
                         }
-                          val tableV2 = new FragmentIonTableV2(
+                          val table = new FragmentIonTable(
                               new Peptide(-1, peptideSequence, "", ptms.toArray, calculatedMass), 
                               currentFragmentIonTypes,
                               ptmNeutralLosses = ptmsNL).get
 //                              ptmNeutralLosses = Some(ptms.filter(_.definition.neutralLosses.size > 1).map(ptm => ptm -> ptm.definition.neutralLosses(1).monoMass).toMap)).get
                           // call the onEachSpectrumMatch function with the spectrumMatch object in argument
-                          onEachSpectrumMatch(new SpectrumMatch(msQueryId, peptideMatchRank, tableV2, fragmentMatches.get(tableV2, currentSpectrum)))
+//                          onEachSpectrumMatch(new SpectrumMatch(msQueryId, peptideMatchRank, table, fragmentMatches.get(table, currentSpectrum)))
                       } catch {
                         case ex: Exception => 
                           logger.error("Fragmentation table could not be generated for spectrum '" + currentSpectrum.title + "'", ex)
