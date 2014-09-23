@@ -628,84 +628,85 @@ class MascotResultFile(
     ()
   }
 
-  /**
-   * Creates for each MsQuery the corresponding Spectrum and
-   * execute the specified onEachSpectrum fonction on it.
-   *
-   */
-
-  def eachSpectrumMatch(wantDecoy: Boolean,
-                        onEachSpectrumMatch: SpectrumMatch => Unit): Unit = {
-
-    val mascotVersion = importProperties.getOrElse(
-      MascotParseParams.MASCOT_VERSION.toString,
-      msiSearch.searchSettings.softwareVersion
-    //throw new Exception("mascot version must be provided in the import properties")
-    ).toString
-
-    val mascotServerURLAsStr = importProperties.getOrElse(
-      MascotParseParams.MASCOT_SERVER_URL.toString,
-      "http://www.matrixscience.com/cgi/"
-    //throw new Exception("mascot server url must be provided in the import properties")
-    ).toString
-
-    val mascotServerCGIURLAsStr = if (mascotServerURLAsStr.endsWith("/cgi/")) { mascotServerURLAsStr } else {
-      if (mascotServerURLAsStr.endsWith("/cgi"))
-        mascotServerURLAsStr ++ "/"
-      else
-        mascotServerURLAsStr ++ "/cgi/"
-    }
-
-    logger.debug("Iterating over spectrum matches of result file '%s' (mascot version=%s ; server URL =%s)".format(
-      fileLocation.getName, mascotVersion, mascotServerCGIURLAsStr
-    ))
-
-    val mascotConfig = new MascotRemoteConfig(mascotVersion.asInstanceOf[String], mascotServerCGIURLAsStr.asInstanceOf[String])
-    val spectrumMatcher = new MascotSpectrumMatcher(mascotResFile, mascotConfig, ptmHelper)
-
-    try {
-
-      // Retrieve peptide summary corresponding to the wanted dataset
-      val pepSummary = _getPepSummary(wantDecoy)
-      val nbrQueries = mascotResFile.getNumQueries()
-
-      val maxRankPerQuery = pepSummary.getMaxRankValue()
-
-      for (q <- 1 to nbrQueries; k <- 1 to maxRankPerQuery) { // Go through each Query        
-        var currentMSPep = pepSummary.getPeptide(q, k)
-
-        try {
-
-          // Check that the peptide is not empty
-          if (currentMSPep.getAnyMatch) {
-            onEachSpectrumMatch(spectrumMatcher.getSpectrumMatch(currentMSPep))
-          }
-
-        } finally {
-          /* Free memory in finally block */
-
-          if (currentMSPep != null) {
-            try {
-              currentMSPep.delete()
-            } catch {
-              case t: Throwable => logger.error("Error deleting currentMSPep", t)
-            }
-          }
-
-        } // End of try - finally block
-
-      }
-
-    } finally {
-
-      try {
-        spectrumMatcher.clear()
-      } catch {
-        case t: Throwable => logger.error("Error clearing spectrumMatcher", t)
-      }
-
-    }
-
-  }
+  def eachSpectrumMatch(wantDecoy: Boolean, onEachSpectrumMatch: SpectrumMatch => Unit): Unit = {}
+//  /**
+//   * Creates for each MsQuery the corresponding Spectrum and
+//   * execute the specified onEachSpectrum fonction on it.
+//   *
+//   */
+//
+//  def eachSpectrumMatch(wantDecoy: Boolean,
+//                        onEachSpectrumMatch: SpectrumMatch => Unit): Unit = {
+//
+//    val mascotVersion = importProperties.getOrElse(
+//      MascotParseParams.MASCOT_VERSION.toString,
+//      msiSearch.searchSettings.softwareVersion
+//    //throw new Exception("mascot version must be provided in the import properties")
+//    ).toString
+//
+//    val mascotServerURLAsStr = importProperties.getOrElse(
+//      MascotParseParams.MASCOT_SERVER_URL.toString,
+//      "http://www.matrixscience.com/cgi/"
+//    //throw new Exception("mascot server url must be provided in the import properties")
+//    ).toString
+//
+//    val mascotServerCGIURLAsStr = if (mascotServerURLAsStr.endsWith("/cgi/")) { mascotServerURLAsStr } else {
+//      if (mascotServerURLAsStr.endsWith("/cgi"))
+//        mascotServerURLAsStr ++ "/"
+//      else
+//        mascotServerURLAsStr ++ "/cgi/"
+//    }
+//
+//    logger.debug("Iterating over spectrum matches of result file '%s' (mascot version=%s ; server URL =%s)".format(
+//      fileLocation.getName, mascotVersion, mascotServerCGIURLAsStr
+//    ))
+//
+//    val mascotConfig = new MascotRemoteConfig(mascotVersion.asInstanceOf[String], mascotServerCGIURLAsStr.asInstanceOf[String])
+//    val spectrumMatcher = new MascotSpectrumMatcher(mascotResFile, mascotConfig, ptmHelper)
+//
+//    try {
+//
+//      // Retrieve peptide summary corresponding to the wanted dataset
+//      val pepSummary = _getPepSummary(wantDecoy)
+//      val nbrQueries = mascotResFile.getNumQueries()
+//
+//      val maxRankPerQuery = pepSummary.getMaxRankValue()
+//
+//      for (q <- 1 to nbrQueries; k <- 1 to maxRankPerQuery) { // Go through each Query        
+//        var currentMSPep = pepSummary.getPeptide(q, k)
+//
+//        try {
+//
+//          // Check that the peptide is not empty
+//          if (currentMSPep.getAnyMatch) {
+//            onEachSpectrumMatch(spectrumMatcher.getSpectrumMatch(currentMSPep))
+//          }
+//
+//        } finally {
+//          /* Free memory in finally block */
+//
+//          if (currentMSPep != null) {
+//            try {
+//              currentMSPep.delete()
+//            } catch {
+//              case t: Throwable => logger.error("Error deleting currentMSPep", t)
+//            }
+//          }
+//
+//        } // End of try - finally block
+//
+//      }
+//
+//    } finally {
+//
+//      try {
+//        spectrumMatcher.clear()
+//      } catch {
+//        case t: Throwable => logger.error("Error clearing spectrumMatcher", t)
+//      }
+//
+//    }
+//
+//  }
 
 }
