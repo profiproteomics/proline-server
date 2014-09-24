@@ -107,7 +107,7 @@ class SpectrumMatchesGenerator(
           val spectraById = Map() ++ spectra.map { sp => (sp.id -> sp) }
 	      val psmMatcher = {
 	        msiSearch.get.searchSettings.softwareName.toLowerCase() match {
-	          case "mascot" => new PeptideSpectrumMatcherMascot(spectraById, ms2ErrorTol, ms2ErrorTolUnit)
+	          case "mascot" => new PeptideSpectrumMatcherMascot(spectraById, ms2ErrorTol, ms2ErrorTolUnit, msiSearch.get.searchSettings.instrumentConfig)
 	          case "omssa" => new PeptideSpectrumMatcherOmssa(spectraById, ms2ErrorTol, ms2ErrorTolUnit)
 	          case _ => 
 	            logger.error("Spectrum matches cannot be generated for this search engine")
@@ -191,7 +191,7 @@ class SpectrumMatchesGenerator(
 			   val spectraById = Map() ++ spectra.map { sp => (sp.id -> sp) }
 			   val psmMatcher = {
 		        msiSearch.get.searchSettings.softwareName.toLowerCase() match {
-		          case "mascot" => new PeptideSpectrumMatcherMascot(spectraById, ms2ErrorTol, ms2ErrorTolUnit)
+		          case "mascot" => new PeptideSpectrumMatcherMascot(spectraById, ms2ErrorTol, ms2ErrorTolUnit, msiSearch.get.searchSettings.instrumentConfig)
 		          case "omssa" => new PeptideSpectrumMatcherOmssa(spectraById, ms2ErrorTol, ms2ErrorTolUnit)
 		          case _ => 
 		            logger.error("Spectrum matches cannot be generated for this search engine")
@@ -231,7 +231,7 @@ class SpectrumMatchesGenerator(
 	          val spectraById = Map() ++ spectra.map { sp => (sp.id -> sp) }
 	          val psmMatcher = {
 		        msiSearch.get.searchSettings.softwareName.toLowerCase() match {
-		          case "mascot" => new PeptideSpectrumMatcherMascot(spectraById, ms2ErrorTol, ms2ErrorTolUnit)
+		          case "mascot" => new PeptideSpectrumMatcherMascot(spectraById, ms2ErrorTol, ms2ErrorTolUnit, msiSearch.get.searchSettings.instrumentConfig)
 		          case "omssa" => new PeptideSpectrumMatcherOmssa(spectraById, ms2ErrorTol, ms2ErrorTolUnit)
 		          case _ => 
 		            logger.error("Spectrum matches cannot be generated for this search engine")

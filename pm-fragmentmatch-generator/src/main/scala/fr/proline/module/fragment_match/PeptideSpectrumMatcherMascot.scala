@@ -7,11 +7,13 @@ import fr.profi.util.MathUtils
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.Spectrum
+import fr.proline.core.om.model.msi.InstrumentConfig
 
 class PeptideSpectrumMatcherMascot(
   val spectraByIds: Map[Long, Spectrum],
   val ms2ErrorTol: Double,
-  val ms2ErrorTolUnitStr: String) extends PeptideSpectrumMatcher {
+  val ms2ErrorTolUnitStr: String,
+  val instrumentConfig: InstrumentConfig) extends PeptideSpectrumMatcher {
 
   logger.debug("Generation of spectrum match(es) for Mascot data")
   
@@ -55,8 +57,24 @@ class PeptideSpectrumMatcherMascot(
   }
 
   def getFragmentIonTypes(peptideMatch: PeptideMatch, charge: Int): FragmentIons = {
-    //TODO : configure ion series used !!!!
-    new FragmentIons(ionTypeB = true, ionTypeY = true, chargeForIonsB = charge, chargeForIonsY = charge)
+    val currentFragmentIonTypes = new FragmentIons()
+    instrumentConfig.fragmentationRules.get.foreach(fr => currentFragmentIonTypes.setIonTypeAndCharge(mascotFragmentationSeries(fr.description), charge))
+    currentFragmentIonTypes
+  }
+  
+  private def mascotFragmentationSeries(serie: String): String = {
+    // all possible series : a ; a-NH3 ; a-H2O ; b ; b-NH3 ; b-H2O ; c ; d ; v ; w ; x ; y ; y-NH3 ; y-H2O ; z ; z+1 ; z+2 ; ya ; yb ; immonium
+    // series not considered so far : d ; v ; w ; ya ; yb ; immonium
+    if(Array("a", "a-NH3", "a-H2O").contains(serie)) return "a"
+    else if(Array("b", "b-NH3", "b-H2O").contains(serie)) return "b"
+    else if(Array("y", "y-NH3", "y-H2O").contains(serie)) return "y"
+    else if(Array("c").contains(serie)) return "c"
+    else if(Array("x").contains(serie)) return "x"
+    else if(Array("z", "z+1", "z+2").contains(serie)) return "z"
+    else {
+      logger.info("Ion serie ["+serie+"] not considered")
+      return ""
+    }
   }
   
   private def mascotLikePeaksSelection(peptideMatch: PeptideMatch, allPeaks: Array[Peak], usedPeaksCount: Int): Array[Peak] = {
