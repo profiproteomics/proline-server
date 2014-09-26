@@ -16,6 +16,9 @@ class PeptideSpectrumMatcherMascot(
   val instrumentConfig: InstrumentConfig) extends PeptideSpectrumMatcher {
 
   logger.debug("Generation of spectrum match(es) for Mascot data")
+  if(!instrumentConfig.fragmentationRules.isDefined) {
+    logger.warn("No fragmentation rules found for instrument '"+instrumentConfig.name+"', only 'b' and 'y' ion series will be considered")
+  }
   
   def getUsedPeaks(peptideMatch: PeptideMatch): Array[Peak] = {
     val spectrum = spectraByIds(peptideMatch.getMs2Query.spectrumId)
@@ -57,9 +60,15 @@ class PeptideSpectrumMatcherMascot(
   }
 
   def getFragmentIonTypes(peptideMatch: PeptideMatch, charge: Int): FragmentIons = {
-    val currentFragmentIonTypes = new FragmentIons()
-    instrumentConfig.fragmentationRules.get.foreach(fr => currentFragmentIonTypes.setIonTypeAndCharge(mascotFragmentationSeries(fr.description), charge))
-    currentFragmentIonTypes
+    if(instrumentConfig.fragmentationRules.isDefined) {
+      val currentFragmentIonTypes = new FragmentIons()
+	  instrumentConfig.fragmentationRules.get.foreach(fr => currentFragmentIonTypes.setIonTypeAndCharge(mascotFragmentationSeries(fr.description), charge))
+	  currentFragmentIonTypes
+    } else {
+      // is it possible outside of a test ?
+      // if so, use default series b and y with given charge
+      new FragmentIons(ionTypeB = true, ionTypeY = true, chargeForIonsB = charge, chargeForIonsY = charge)
+    }
   }
   
   private def mascotFragmentationSeries(serie: String): String = {
