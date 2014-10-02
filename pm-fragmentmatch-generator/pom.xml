@@ -5,17 +5,17 @@
   <parent>
     <artifactId>ProFI-Pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.0.5-b2rc1-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    <version>0.0.5</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>PM-FragmentMatchGenerator</artifactId>
-  <version>0.0.5-b2rc1-SNAPSHOT</version>
+  <version>0.0.5</version>
   <name>${project.artifactId}</name>
   <description>Proline Module made to generate the fragment matches from a spectrum</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>0.2.0-b2rc1-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
+    <core.version>0.2.0</core.version>  <!-- Snapshot Trunk version -->
   </properties>
 
   <dependencies>
@@ -152,7 +152,7 @@
 	<dependency>
       <groupId>fr.profi</groupId>
       <artifactId>mzdb-processing</artifactId>
-      <version>0.0.3-b2rc1-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+      <version>0.0.3</version> <!-- Snapshot Trunk version -->
     </dependency>
 
     <!-- Tests -->
