@@ -4,11 +4,11 @@
   <parent>
     <artifactId>ProFI-Pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.0.5-b2rc1-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    <version>0.0.5</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>PM-MascotParser</artifactId>
-  <version>0.0.12-b2rc1-SNAPSHOT</version>
+  <version>0.0.12</version>
 
   <name>${project.artifactId}</name>
   <description>Proline Module which parse a Mascot result file and store its result in databases</description>
@@ -16,7 +16,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>0.2.0-b2rc1-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
+    <core.version>0.2.0</core.version>  <!-- Snapshot Trunk version -->
     <version.path>${basedir}/src/main/scala/fr/proline/module/parser/mascot</version.path>
   </properties>
 
@@ -40,7 +40,7 @@
     <dependency>
       <groupId>fr.proline.unimod</groupId>
       <artifactId>UnimodUnmarshaller</artifactId>
-      <version>0.0.5-SNAPSHOT</version>
+      <version>0.0.5</version>
     </dependency>
 
     <!-- Mascot Parser native libraries (for all OSes, loaded at runtime)
@@ -48,7 +48,7 @@
     <dependency>
       <groupId>matrixscience</groupId>
       <artifactId>MSParser-native-libraries-2.4.00</artifactId>
-      <version>0.0.5-SNAPSHOT</version>
+      <version>0.0.5</version>
     </dependency>
 
     <!-- BioJava -->
@@ -77,7 +77,7 @@
 	<dependency>
       <groupId>fr.proline</groupId>
       <artifactId>PM-FragmentMatchGenerator</artifactId>
-      <version>0.0.5-b2rc1-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+      <version>0.0.5</version>  <!-- Snapshot Trunk version -->
     </dependency>
     <!-- Tests -->
     <dependency>
