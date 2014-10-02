@@ -13,7 +13,7 @@
 
   <groupId>fr.proline</groupId>
   <artifactId>PM-SequenceRepository</artifactId>
-  <version>0.0.2</version>
+  <version>0.0.3-SNAPSHOT</version>
 
   <name>PM-SequenceRepository</name>
 
