@@ -41,7 +41,7 @@ object BuildResultSummaryViewSet {
   ): ResultSummaryViewSet = {
 
     val udsSQLCtx = executionContext.getUDSDbConnectionContext()
-    val psSQLCtx = executionContext.getUDSDbConnectionContext()
+    val psSQLCtx = executionContext.getPSDbConnectionContext()
     val msiSQLCtx = executionContext.getMSIDbConnectionContext()
     
     // Retrieve the project name
