@@ -11,8 +11,6 @@ object ProtSetToProtMatchViewFields extends IViewFieldEnumeration {
   val IS_TYPICAL_PROTEIN = Field("is_typical_protein")
   val IS_SAMESET = Field("is_sameset")
   val PROTEIN_MATCH_SCORE = Field("protein_match_score")
-  //val GENE_NAME = Field("gene_name")
-  //val TAXON_ID = Field("taxon_id")
   val COVERAGE = Field("coverage")
   val MW = Field("MW")
   val SEQUENCES_COUNT = Field("#sequences")
@@ -42,16 +40,13 @@ class ProtSetToProtMatchView( val identDS: IdentDataSet ) extends IFixedDatasetV
       fields.IS_TYPICAL_PROTEIN -> (protSet.getTypicalProteinMatchId == protMatch.id),
       fields.IS_SAMESET -> !peptideSet.isSubset,
       fields.PROTEIN_MATCH_SCORE -> "%.1f".format(protMatch.score).toDouble,
-      //fields.GENE_NAME -> protMatch.geneName,
-      //fields.TAXON_ID -> protMatch.taxonId,
       fields.COVERAGE -> "%.1f".format(protMatch.coverage).toDouble,
       fields.MW -> Option(protMatch.protein).flatMap( _.map( _.mass ) ).getOrElse(0.0),
-      fields.PEPTIDE_MATCHES_COUNT -> peptideSet.peptideMatchesCount,
-      fields.SEQUENCES_COUNT -> protMatch.sequenceMatches.length,
+      fields.SEQUENCES_COUNT -> buildingCtx.allSeqs.distinct.length,
       fields.SPECIFIC_SEQUENCES_COUNT -> buildingCtx.specificSeqs.distinct.length,
       fields.PEPTIDES_COUNT -> buildingCtx.peptideCount,
       fields.SPECIFIC_PEPTIDES_COUNT -> buildingCtx.specificPeps.length,
-      fields.PEPTIDE_MATCHES_COUNT -> protMatch.peptideMatchesCount,
+      fields.PEPTIDE_MATCHES_COUNT -> peptideSet.peptideMatchesCount,
       fields.SPECIFIC_PEPTIDE_MATCHES_COUNT -> buildingCtx.specificPepMatchIds.length
     ).map( r => r._1.toString -> r._2)
   }
