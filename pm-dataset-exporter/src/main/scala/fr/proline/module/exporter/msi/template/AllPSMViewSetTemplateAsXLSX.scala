@@ -14,7 +14,11 @@ object AllPSMViewSetTemplateAsXLSX extends IViewSetTemplate {
   private val xlsxTemplate = new BasicXLSXTemplate()
   
   val templatedViewTypes: Seq[ViewTypeWithTemplate] = Seq(
-    ViewTypeWithTemplate( ResultSummaryViewTypes.ALL_PEPTIDE_MATCHES, xlsxTemplate, viewName = Some("peptide_matches") )
+    ViewTypeWithTemplate(
+      ResultSummaryViewTypes.TYPICAL_PROT_MATCH_TO_ALL_PEP_MATCHES,
+      xlsxTemplate,
+      viewName = Some("peptide_matches")
+    )
   )
   
 }
