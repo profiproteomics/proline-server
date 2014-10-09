@@ -1,7 +1,6 @@
 package fr.proline.module.exporter.msi.view
 
 import scala.collection.mutable.ArrayBuffer
-
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.model.msi.ResultSummary
@@ -9,6 +8,9 @@ import fr.proline.core.om.provider.msi.impl._
 import fr.proline.module.exporter.api.template._
 import fr.proline.module.exporter.api.template.ViewWithTemplate
 import fr.proline.module.exporter.api.view.IDatasetView
+import fr.proline.core.dal.DoJDBCReturningWork
+import java.sql.Connection
+import fr.proline.repository.util.JDBCWork
 
 object BuildResultSummaryViewSet {
 
@@ -43,7 +45,23 @@ object BuildResultSummaryViewSet {
     msiSQLCtx = executionContext.getMSIDbConnectionContext()
     
     // FIXME: load the project name
-    val projectName = ""
+    var projectName = ""
+     
+     val jdbcWork = new JDBCWork() {
+      override def execute(con: Connection) {
+
+        val getProjectNameQuery = "Select name FROM project where id =? 	"
+        val pStmt = con.prepareStatement(getProjectNameQuery)
+        pStmt.setLong(1, projectId)
+        val sqlResultSet = pStmt.executeQuery()
+        if (sqlResultSet.next)
+          projectName = sqlResultSet.getString(1)
+        pStmt.close()
+      }
+
+    } // End of jdbcWork anonymous inner class    	 
+
+    udsSQLCtx.doWork(jdbcWork, false)
 
     val rsmProvider = new SQLResultSummaryProvider(msiSQLCtx, psSQLCtx, udsSQLCtx)
     
