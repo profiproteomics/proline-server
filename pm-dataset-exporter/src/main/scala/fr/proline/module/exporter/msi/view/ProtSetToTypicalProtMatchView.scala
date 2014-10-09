@@ -10,8 +10,6 @@ trait IProtSetToToTypicalProtMatchViewFields extends IViewFieldEnumeration {
   val PROTEIN_SET_ID = Field("protein_set_id")
   val ACCESSION = Field("accession")
   val DESCRIPTION = Field("description")
-  //val GENE_NAME = Field("gene_name")
-  //val TAXON_ID = Field("taxon_id")
   val PROTEIN_SET_SCORE = Field("protein_set_score")
   val IS_PROTEIN_SET_VALIDATED = Field("is_protein_set_validated")
   val SAMESET_PROTEIN_MATCHES_COUNT = Field("#sameset_protein_matches")
@@ -38,28 +36,23 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView {
     val buildingCtx = buildingContext.asInstanceOf[ProtMatchBuildingContext]
     val protSet = buildingCtx.protSet
     val protMatch = buildingCtx.protMatch // here it is the typical protein match
-    //val pepSetById = myBuildingCtx.pepSetById
     
-    //val subsetPepSets = Option( protSet.peptideSet.strictSubsetIds ).map( _.map( pepSetById(_) ) ).getOrElse(Array.empty[PeptideSet])
-    //val subsetProtMatchesCount = subsetPepSets.flatMap( _.proteinMatchIds ).length
     
     Map(
       protSetFields.PROTEIN_SET_ID -> protSet.id,
       protSetFields.ACCESSION -> protMatch.accession,
       protSetFields.DESCRIPTION -> protMatch.description,
-      //protSetFields.GENE_NAME -> protMatch.geneName,
-      //protSetFields.TAXON_ID -> protMatch.taxonId,
       protSetFields.PROTEIN_SET_SCORE -> "%.1f".format(protSet.peptideSet.score).toDouble,
       protSetFields.IS_PROTEIN_SET_VALIDATED -> protSet.isValidated.toString,
       protSetFields.SAMESET_PROTEIN_MATCHES_COUNT -> protSet.getSameSetProteinMatchIds.length,
       protSetFields.SUBSET_PROTEIN_MATCHES_COUNT -> protSet.getSubSetProteinMatchIds.length,
       protSetFields.COVERAGE -> "%.1f".format(protMatch.coverage).toDouble,
       protSetFields.MW -> Option(protMatch.protein).flatMap( _.map( _.mass ) ).getOrElse(0.0),
-      protSetFields.SEQUENCES_COUNT -> protMatch.sequenceMatches.length,
+      protSetFields.SEQUENCES_COUNT -> buildingCtx.allSeqs.distinct.length,
       protSetFields.SPECIFIC_SEQUENCES_COUNT -> buildingCtx.specificSeqs.distinct.length,
       protSetFields.PEPTIDES_COUNT -> buildingCtx.peptideCount,
       protSetFields.SPECIFIC_PEPTIDES_COUNT -> buildingCtx.specificPeps.length,
-      protSetFields.PEPTIDE_MATCHES_COUNT -> protMatch.peptideMatchesCount,
+      protSetFields.PEPTIDE_MATCHES_COUNT -> protSet.peptideSet.peptideMatchesCount,
       protSetFields.SPECIFIC_PEPTIDE_MATCHES_COUNT -> buildingCtx.specificPepMatchIds.length
     ).map( r => r._1.toString -> r._2 )
   }
