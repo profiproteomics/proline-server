@@ -57,8 +57,8 @@ object BuildResultSummaryView {
     ResultSummaryViewTypes.PROT_SET_TO_PROT_MATCH -> { ds: IdentDataSet => new ProtSetToProtMatchView(ds) },
     ResultSummaryViewTypes.PROT_SET_TO_TYPICAL_PROT_MATCH -> { ds: IdentDataSet => new ProtSetToTypicalProtMatchView(ds) },
     ResultSummaryViewTypes.PROT_SET_TO_BEST_PEPTIDE_MATCH -> { ds: IdentDataSet => new ProtSetToBestPepMatchView(ds) },
-    ResultSummaryViewTypes.ALL_PEPTIDE_MATCHES -> { ds: IdentDataSet => new AllPeptideMatchesView(ds) },
-    ResultSummaryViewTypes.ALL_PROT_SET_PEPTIDE_MATCHES -> { ds: IdentDataSet => new AllProtSetPSMView(ds) }
+    ResultSummaryViewTypes.PROT_SET_TO_ALL_PEPTIDE_MATCHES -> { ds: IdentDataSet => new ProtSetToAllPepMatchesView(ds) },
+    ResultSummaryViewTypes.TYPICAL_PROT_MATCH_TO_ALL_PEP_MATCHES -> { ds: IdentDataSet => new TypicalProtMatchToAllPepMatchesView(ds) }    
   )
 
   def apply( identDS: IdentDataSet, viewType: IViewTypeEnumeration#Value ): IDataView = {

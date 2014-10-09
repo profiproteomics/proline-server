@@ -1,10 +1,14 @@
 package fr.proline.module.exporter.msi.view
 
 import scala.collection.mutable.ArrayBuffer
+import fr.profi.jdbc.easy._
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.provider.msi.impl._
+import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.dal.tables.uds.UdsDbProjectTable
 import fr.proline.module.exporter.api.template._
 import fr.proline.module.exporter.api.template.ViewWithTemplate
 import fr.proline.module.exporter.api.view.IDatasetView
@@ -14,18 +18,18 @@ import fr.proline.repository.util.JDBCWork
 
 object BuildResultSummaryViewSet {
 
-  def apply(ds: IdentDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate ): ResultSummaryViewSet = {
-    
+  def apply(ds: IdentDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate): ResultSummaryViewSet = {
+
     val templatedViews = viewSetTemplate.templatedViewTypes.map { templatedViewType =>
-      val viewWithTpl = ViewWithTemplate( BuildResultSummaryView(ds,templatedViewType.viewType), templatedViewType.template )
-      if( templatedViewType.viewName.isDefined ) viewWithTpl.dataView.viewName = templatedViewType.viewName.get
-      
+      val viewWithTpl = ViewWithTemplate(BuildResultSummaryView(ds, templatedViewType.viewType), templatedViewType.template)
+      if (templatedViewType.viewName.isDefined) viewWithTpl.dataView.viewName = templatedViewType.viewName.get
+
       viewWithTpl
     }
-    
-    new ResultSummaryViewSet(viewSetName,templatedViews)
+
+    new ResultSummaryViewSet(viewSetName, templatedViews)
   }
-  
+
   def apply(
     executionContext: IExecutionContext,
     projectId: Long,
@@ -35,44 +39,32 @@ object BuildResultSummaryViewSet {
     viewSetName: String,
     viewSetTemplate: IViewSetTemplate
   ): ResultSummaryViewSet = {
-    
-    var udsSQLCtx: DatabaseConnectionContext = null
-    var psSQLCtx: DatabaseConnectionContext = null
-    var msiSQLCtx: DatabaseConnectionContext = null
 
-    udsSQLCtx = executionContext.getUDSDbConnectionContext()
-    psSQLCtx = executionContext.getPSDbConnectionContext()
-    msiSQLCtx = executionContext.getMSIDbConnectionContext()
+    val udsSQLCtx = executionContext.getUDSDbConnectionContext()
+    val psSQLCtx = executionContext.getUDSDbConnectionContext()
+    val msiSQLCtx = executionContext.getMSIDbConnectionContext()
     
-    // FIXME: load the project name
-    var projectName = ""
-     
-     val jdbcWork = new JDBCWork() {
-      override def execute(con: Connection) {
-
-        val getProjectNameQuery = "Select name FROM project where id =? 	"
-        val pStmt = con.prepareStatement(getProjectNameQuery)
-        pStmt.setLong(1, projectId)
-        val sqlResultSet = pStmt.executeQuery()
-        if (sqlResultSet.next)
-          projectName = sqlResultSet.getString(1)
-        pStmt.close()
+    // Retrieve the project name
+    val projectName = DoJDBCReturningWork.withEzDBC(udsSQLCtx, { udsEzDBC =>
+      
+      val sqlQuery = new SelectQueryBuilder1( UdsDbProjectTable ).mkSelectQuery { (t,c) =>
+        List(t.NAME) -> "WHERE id = ?"
       }
+      
+      udsEzDBC.selectString(sqlQuery, projectId)
+    })
 
-    } // End of jdbcWork anonymous inner class    	 
-
-    udsSQLCtx.doWork(jdbcWork, false)
-
+    // Load th RSM
     val rsmProvider = new SQLResultSummaryProvider(msiSQLCtx, psSQLCtx, udsSQLCtx)
-    
-    val rsm = if( loadFullResultSet == false ) rsmProvider.getResultSummary(rsmId, true).get
+
+    val rsm = if (loadFullResultSet == false) rsmProvider.getResultSummary(rsmId, true).get
     else {
       val tmpRsm = rsmProvider.getResultSummary(rsmId, false).get
       val rsProvider = new SQLResultSetProvider(msiSQLCtx, psSQLCtx, udsSQLCtx)
       tmpRsm.resultSet = rsProvider.getResultSet(tmpRsm.getResultSetId)
       tmpRsm
     }
-    
+
     //
     // Load all Subsets of Protein Sets
     //
@@ -103,12 +95,9 @@ object BuildResultSummaryViewSet {
         }
       }
     }
-    
-    return apply( IdentDataSet( projectName, rsm), viewSetName, viewSetTemplate)
+
+    return apply(IdentDataSet(projectName, rsm), viewSetName, viewSetTemplate)
 
   }
-  
- 
-  
-  
+
 }

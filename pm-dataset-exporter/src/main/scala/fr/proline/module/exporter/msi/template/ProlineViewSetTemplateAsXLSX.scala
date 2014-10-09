@@ -105,7 +105,7 @@ object ProlineViewSetTemplateAsXLSX extends IViewSetTemplate {
     ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_TYPICAL_PROT_MATCH, basicXlsxTemplate, viewName = Some("protein sets") ),
     ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_PROT_MATCH, basicXlsxTemplate, viewName = Some("protein matches") ),
     ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_BEST_PEPTIDE_MATCH, bestPepMatchesXlsxTemplate, viewName = Some("peptides") ),
-    ViewTypeWithTemplate( ResultSummaryViewTypes.ALL_PROT_SET_PEPTIDE_MATCHES, basicXlsxTemplate, viewName = Some("psm") )
+    ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_ALL_PEPTIDE_MATCHES, basicXlsxTemplate, viewName = Some("psm") )
   )
   
 }

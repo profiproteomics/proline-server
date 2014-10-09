@@ -10,20 +10,17 @@ import fr.proline.core.om.model.msi._
 import fr.proline.module.exporter.api.template.IViewTemplate
 import fr.proline.module.exporter.api.view._
 
-
-object ProtSetToPepMatchViewFields extends IProtSetToToTypicalProtMatchViewFields with IPeptideViewFields 
-
-  
+object TypicalProtMatchToAllPepMatchesViewFields extends IProtSetToToTypicalProtMatchViewFields with IPeptideMatchViewFields 
 
 // TODO: try to merge this view with ProtSetToBestPepMatchView
 // Maybe ProtSetToBestPepMatchView could inherit from an AbstractAllPepMatchesView ???
-class AllPeptideMatchesView( override val identDS: IdentDataSet ) extends AbstractProtSetToTypicalProtMatchView {
+class TypicalProtMatchToAllPepMatchesView( override val identDS: IdentDataSet ) extends AbstractProtSetToTypicalProtMatchView {
    
-  override val fields = ProtSetToPepMatchViewFields
+  override val fields = TypicalProtMatchToAllPepMatchesViewFields
   
   override var viewName = "all_peptide_matches"
 
-      protected def buildPepMatchRecord(
+  protected def buildPepMatchRecord(
     protMatchRecord: Map[String,Any],
     pepMatch: PeptideMatch,
     seqMatch: SequenceMatch
