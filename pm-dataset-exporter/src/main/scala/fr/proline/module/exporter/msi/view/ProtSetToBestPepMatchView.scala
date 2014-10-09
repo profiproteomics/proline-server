@@ -10,39 +10,39 @@ import fr.proline.module.exporter.api.view.IDatasetView
 import fr.proline.module.exporter.api.view.IViewFieldEnumeration
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
 
+
+
 class ProtSetToBestPepMatchView( val identDS: IdentDataSet ) extends AbstractPeptideMatchView {
   
   var viewName = "prot_set_to_best_pep_match"
-  override val fields = ProtSetToPepMatchViewFields
   
-  // TODO: override buildRecord instead ???
-  override def formatRecord(
+  
+  // def onEachRecord is inherited from AbstractProtSetToTypicalProtMatchView
+    
+  // buildRecord  is inherited from AbstractPeptideMatchView
+    
+ override def formatRecord(
     buildingContext: IRecordBuildingContext,
     recordFormatter: Map[String,Any] => Unit
   ): Unit = {
     
     val myBuildingCtx = buildingContext.asInstanceOf[ProtMatchBuildingContext]
     val pepMatchById = identDS.pepMatchById
-    val protSetIdSetByPepMatchId = identDS.protSetIdSetByPepMatchId
-    val protMatchIdSetByPepMatchId = identDS.protMatchIdSetByPepMatchId
+    val validPepMatchId = myBuildingCtx.protSet.peptideSet.getPeptideInstances.map{_.getPeptideMatchIds}.flatten.toSeq
     
     myBuildingCtx.protMatch.sequenceMatches.foreach { seqMatch =>
           
       val pepMatchOpt = pepMatchById.get( seqMatch.bestPeptideMatchId )
       
-      for( pepMatch <- pepMatchOpt ) {
+	  if(pepMatchOpt.isDefined && validPepMatchId.contains(pepMatchOpt.get.id) ) {
         
-        // Build the protein match record
-        val protMatchRecord = this.buildRecord(myBuildingCtx)
-        
-        // Build the peptide match record
-        val pepMatchRecord = this.buildPepMatchRecord(protMatchRecord, pepMatch, seqMatch)        
+	    val pepMatchBCtxt = new PepMatchBuildingContext( pepMatch =pepMatchOpt.get, protMatch=myBuildingCtx.protMatch,  seqMatch=seqMatch,  protMatchBuildingCtx = Some(myBuildingCtx))
+        // Build the protein & peptide match record
+        val pepMatchRecord = this.buildRecord(pepMatchBCtxt)
         
         recordFormatter( pepMatchRecord )
       }
     }
   }
-
-  // def onEachRecord is inherited from AbstractProtSetToTypicalProtMatchView
 
 }
