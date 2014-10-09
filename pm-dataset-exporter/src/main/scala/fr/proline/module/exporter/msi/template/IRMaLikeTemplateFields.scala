@@ -1,6 +1,6 @@
 package fr.proline.module.exporter.msi.template
 
-import fr.proline.module.exporter.msi.view.{ ProtSetToPepMatchViewFields => PeptideViewFields }
+import fr.proline.module.exporter.msi.view.PeptideViewFields
 
 object IRMaLikeTemplateFields {
 

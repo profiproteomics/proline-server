@@ -16,17 +16,13 @@ object IRMaLikeViewSetTemplateAsXLSX extends IViewSetTemplate {
   // Create an XLSX template specific to the infos view
   private val infoXlsxTemplate = new InfoXLSXTemplate()
   
-  // Create an XLSX template specific to the peptides view
-  private val irmaPeptidesXlsxTemplate = new BasicXLSXTemplate(
-    selectedFields = Some( IRMaLikeTemplateFields.peptidesFields.map(_.toString) )
-  )
   
   val templatedViewTypes: Seq[ViewTypeWithTemplate] = Seq(
-    ViewTypeWithTemplate( ResultSummaryViewTypes.MSI_SEARCH_EXTENDED, infoXlsxTemplate, viewName = Some("infos") ),
-    ViewTypeWithTemplate( ResultSummaryViewTypes.IMPORT_AND_VALIDATION_PROPS, infoXlsxTemplate, viewName = Some("filters") ),
+	ViewTypeWithTemplate( ResultSummaryViewTypes.MSI_SEARCH_EXTENDED, infoXlsxTemplate, viewName = Some("search settings and infos") ),
+    ViewTypeWithTemplate( ResultSummaryViewTypes.IMPORT_AND_VALIDATION_PROPS, infoXlsxTemplate, viewName = Some("import and filters") ),
     ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_TYPICAL_PROT_MATCH, xlsxTemplate, viewName = Some("protein sets") ),
-    ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_BEST_PEPTIDE_MATCH, irmaPeptidesXlsxTemplate, viewName = Some("peptides") ),
-    ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_PROT_MATCH, xlsxTemplate, viewName = Some("protein matches") )
+    ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_BEST_PEPTIDE_MATCH, xlsxTemplate, viewName = Some("peptides from protein sets") ),
+    ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_PROT_MATCH, xlsxTemplate, viewName = Some("protein matches") ),   
+    ViewTypeWithTemplate( ResultSummaryViewTypes.STATISTICS, infoXlsxTemplate, viewName = Some("statistics") )
   )
-  
 }

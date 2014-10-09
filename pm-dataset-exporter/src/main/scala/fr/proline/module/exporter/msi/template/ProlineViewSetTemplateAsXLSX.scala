@@ -4,8 +4,9 @@ import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.module.exporter.api.template._
 import fr.proline.module.exporter.commons.template.BasicXLSXTemplate
 import fr.proline.module.exporter.commons.template.InfoXLSXTemplate
-import fr.proline.module.exporter.msi.view._
-import fr.proline.module.exporter.msi.view.{ ProtSetToPepMatchViewFields => PeptideViewFields }
+import fr.proline.module.exporter.msi.view.ProtSetToPepMatchViewFields
+import fr.proline.module.exporter.msi.view.MsiSearchExtendedViewFields
+import fr.proline.module.exporter.msi.view.ResultSummaryViewTypes
 
 object ProlineViewSetTemplateAsXLSX extends IViewSetTemplate {
 
@@ -65,31 +66,31 @@ object ProlineViewSetTemplateAsXLSX extends IViewSetTemplate {
   private val bestPepMatchesXlsxTemplate = new BasicXLSXTemplate(
     selectedFields = Some(
       Seq(
-        PeptideViewFields.PEPTIDE_ID,
-        PeptideViewFields.SEQUENCE,        
-        PeptideViewFields.MODIFICATIONS,
-        PeptideViewFields.MISSED_CLEAVAGES,
-        PeptideViewFields.RANK,
-        PeptideViewFields.CD_PRETTY_RANK,
-        PeptideViewFields.PEPMATCH_SCORE,
-        PeptideViewFields.CALCULATED_MASS,
-        PeptideViewFields.CHARGE,
-        PeptideViewFields.EXPERIMENTAL_MOZ,
-        PeptideViewFields.DELTA_MOZ,
-        //PeptideViewFields.RT, not yet available
-        PeptideViewFields.PEPTIDE_LENGTH,
-        PeptideViewFields.INITIAL_QUERY_ID,
-        PeptideViewFields.FRAGMENT_MATCHES_COUNT,
-        PeptideViewFields.SPECTRUM_TITLE,
-        PeptideViewFields.PROTEIN_SETS_COUNT,
-        PeptideViewFields.PROTEIN_MATCHES_COUNT,
-        PeptideViewFields.PROTEIN_SET_ID,
-        PeptideViewFields.ACCESSION,
-        PeptideViewFields.IS_PROTEIN_SET_VALIDATED,
-        PeptideViewFields.START,
-        PeptideViewFields.END,
-        PeptideViewFields.RESIDUE_BEFORE,
-        PeptideViewFields.RESIDUE_AFTER
+        ProtSetToPepMatchViewFields.PEPTIDE_ID,
+        ProtSetToPepMatchViewFields.SEQUENCE,        
+        ProtSetToPepMatchViewFields.MODIFICATIONS,
+        ProtSetToPepMatchViewFields.MISSED_CLEAVAGES,
+        ProtSetToPepMatchViewFields.RANK,
+        ProtSetToPepMatchViewFields.CD_PRETTY_RANK,
+        ProtSetToPepMatchViewFields.PEPMATCH_SCORE,
+        ProtSetToPepMatchViewFields.CALCULATED_MASS,
+        ProtSetToPepMatchViewFields.CHARGE,
+        ProtSetToPepMatchViewFields.EXPERIMENTAL_MOZ,
+        ProtSetToPepMatchViewFields.DELTA_MOZ,
+        //ProtSetToPepMatchViewFields.RT, not yet available
+        ProtSetToPepMatchViewFields.PEPTIDE_LENGTH,
+        ProtSetToPepMatchViewFields.INITIAL_QUERY_ID,
+        ProtSetToPepMatchViewFields.FRAGMENT_MATCHES_COUNT,
+        ProtSetToPepMatchViewFields.SPECTRUM_TITLE,
+        ProtSetToPepMatchViewFields.PROTEIN_SETS_COUNT,
+        ProtSetToPepMatchViewFields.PROTEIN_MATCHES_COUNT,
+        ProtSetToPepMatchViewFields.PROTEIN_SET_ID,
+        ProtSetToPepMatchViewFields.ACCESSION,
+        ProtSetToPepMatchViewFields.IS_PROTEIN_SET_VALIDATED,
+        ProtSetToPepMatchViewFields.START,
+        ProtSetToPepMatchViewFields.END,
+        ProtSetToPepMatchViewFields.RESIDUE_BEFORE,
+        ProtSetToPepMatchViewFields.RESIDUE_AFTER
       ).map(_.toString)
     )
   )
@@ -104,7 +105,7 @@ object ProlineViewSetTemplateAsXLSX extends IViewSetTemplate {
     ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_TYPICAL_PROT_MATCH, basicXlsxTemplate, viewName = Some("protein sets") ),
     ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_PROT_MATCH, basicXlsxTemplate, viewName = Some("protein matches") ),
     ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_BEST_PEPTIDE_MATCH, bestPepMatchesXlsxTemplate, viewName = Some("peptides") ),
-    ViewTypeWithTemplate( ResultSummaryViewTypes.ALL_PEPTIDE_MATCHES, basicXlsxTemplate, viewName = Some("psm") )
+    ViewTypeWithTemplate( ResultSummaryViewTypes.ALL_PROT_SET_PEPTIDE_MATCHES, basicXlsxTemplate, viewName = Some("psm") )
   )
   
 }
