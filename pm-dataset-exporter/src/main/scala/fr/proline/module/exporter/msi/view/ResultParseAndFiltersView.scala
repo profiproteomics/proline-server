@@ -3,6 +3,7 @@ package fr.proline.module.exporter.msi.view
 import fr.proline.module.exporter.api.view._
 import fr.proline.core.om.model.msi._
 import scala.collection.mutable.HashMap
+import scala.collection.mutable.ArrayBuffer
 
 // TODO: rename into ImportAndValidationPropsFields
 object ResultParseAndFiltersFields extends IViewFieldEnumeration {
@@ -19,8 +20,9 @@ class ResultParseAndFiltersView(val rsm: ResultSummary) extends IFormLikeView {
   private val fields = ResultParseAndFiltersFields
   
   def getFieldValueMap() = _fieldValueMap
-  def getFieldsNames() = _fieldValueMap.keys.toArray
-
+  def getFieldsNames() = allFieldsNames.toArray
+  private val allFieldsNames = new ArrayBuffer[String]() 
+  
   private val _fieldValueMap = {
     
     val resultMapBuilder = Map.newBuilder[String, Any]
@@ -59,7 +61,8 @@ class ResultParseAndFiltersView(val rsm: ResultSummary) extends IFormLikeView {
     } //End get Parser parameters
   
     resultMapBuilder += (fields.IMPORT_PARAMS.toString -> importParamsBuilder.result) // Save Parser Params
-  
+    allFieldsNames += fields.IMPORT_PARAMS.toString
+    
     // *** Get Filters Parameters 
     if (rsm.properties.isDefined) {
       if (rsm.properties.get.getValidationProperties.isDefined) {
@@ -67,7 +70,8 @@ class ResultParseAndFiltersView(val rsm: ResultSummary) extends IFormLikeView {
   
         //Add Peptide Expected FDR
         resultMapBuilder += (fields.PSM_FILTER_EXPECTED_FDR.toString -> { if (rsmValProp.getParams.getPeptideExpectedFdr.isDefined) rsmValProp.getParams.getPeptideExpectedFdr.get else "-" })
-  
+        allFieldsNames += fields.PSM_FILTER_EXPECTED_FDR.toString 
+        
         //Add PSM Filters
         if (rsmValProp.getParams.getPeptideFilters.isDefined) {
           
@@ -89,6 +93,7 @@ class ResultParseAndFiltersView(val rsm: ResultSummary) extends IFormLikeView {
             }
   
             resultMapBuilder += ( "psm_filter_"+fNumber -> fBuilder.result) //Save current PSM Filter
+            allFieldsNames += "psm_filter_"+fNumber
             fNumber += 1
           })
   
@@ -96,7 +101,8 @@ class ResultParseAndFiltersView(val rsm: ResultSummary) extends IFormLikeView {
   
         //Add Protein Expected FDR
         resultMapBuilder += (fields.PROT_FILTER_EXPECTED_FDR.toString -> { if (rsmValProp.getParams.getProteinExpectedFdr.isDefined) rsmValProp.getParams.getProteinExpectedFdr.get else "-" })
-  
+		allFieldsNames +=  fields.PROT_FILTER_EXPECTED_FDR.toString
+		
         //Add Protein Filters
         if (rsmValProp.getParams.getProteinFilters.isDefined) {
           
@@ -117,7 +123,7 @@ class ResultParseAndFiltersView(val rsm: ResultSummary) extends IFormLikeView {
             }
   
             resultMapBuilder += ( "prot_filter_"+ fNumber -> fBuilder.result) //Save current prot filter
-            
+            allFieldsNames += "prot_filter_"+ fNumber
             fNumber += 1
           })
   
@@ -128,8 +134,9 @@ class ResultParseAndFiltersView(val rsm: ResultSummary) extends IFormLikeView {
       resultMapBuilder.result
   
     } else { // No rsm.properties
+      allFieldsNames += fields.IMPORT_PARAMS.toString
       Map(
-        fields.IMPORT_PARAMS -> importParamsBuilder.result
+        fields.IMPORT_PARAMS -> importParamsBuilder.result        
       ).map(r => r._1.toString -> r._2)
     }
     
