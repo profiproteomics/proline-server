@@ -10,39 +10,20 @@ import fr.proline.core.om.model.msi._
 import fr.proline.module.exporter.api.template.IViewTemplate
 import fr.proline.module.exporter.api.view._
 
-object ProtSetToPepMatchViewFields extends IProtSetToToTypicalProtMatchViewFields {
-  val PEPTIDE_ID = Field("peptide_id")
-  val SEQUENCE = Field("sequence")  
-  val MODIFICATIONS = Field("modifications")
-  val MISSED_CLEAVAGES = Field("missed_cleavages")
-  val RANK = Field("rank")
-  val CD_PRETTY_RANK = Field("cd_pretty_rank")
-  val PEPMATCH_SCORE = Field("score")
-  //val IS_PSM_VALIDATED = Field("is_psm_validated")
-  val CALCULATED_MASS = Field("calculated_mass")
-  val CHARGE = Field("charge")
-  val EXPERIMENTAL_MOZ = Field("experimental_moz")
-  val DELTA_MOZ = Field("delta_moz")  
-  val RT = Field("rt")
-  val PEPTIDE_LENGTH = Field("peptide_length")
-  val INITIAL_QUERY_ID = Field("initial_query_id")
-  //val NOM_DU_MS_QUERY_DATASET = Field("NOM_DU_MS_QUERY_DATASET") => result file ???
-  val FRAGMENT_MATCHES_COUNT = Field("fragment_matches_count")
-  val SPECTRUM_TITLE = Field("spectrum_title")
-  val PROTEIN_SETS_COUNT = Field("#protein_sets")
-  val PROTEIN_MATCHES_COUNT = Field("#protein_matches")
-  val START = Field("start")
-  val END = Field("end")
-  val RESIDUE_BEFORE = Field("residue_before")
-  val RESIDUE_AFTER = Field("residue_after")
-}
 
-abstract class AbstractPeptideMatchView extends AbstractProtSetToTypicalProtMatchView {
+object ProtSetToPepMatchViewFields extends IProtSetToToTypicalProtMatchViewFields with IPeptideViewFields 
+
   
-  val identDS: IdentDataSet
+
+// TODO: try to merge this view with ProtSetToBestPepMatchView
+// Maybe ProtSetToBestPepMatchView could inherit from an AbstractAllPepMatchesView ???
+class AllPeptideMatchesView( override val identDS: IdentDataSet ) extends AbstractProtSetToTypicalProtMatchView {
+   
   override val fields = ProtSetToPepMatchViewFields
   
-  protected def buildPepMatchRecord(
+  override var viewName = "all_peptide_matches"
+
+      protected def buildPepMatchRecord(
     protMatchRecord: Map[String,Any],
     pepMatch: PeptideMatch,
     seqMatch: SequenceMatch
@@ -83,15 +64,7 @@ abstract class AbstractPeptideMatchView extends AbstractProtSetToTypicalProtMatc
     
   }
   
-}
 
-
-// TODO: try to merge this view with ProtSetToBestPepMatchView
-// Maybe ProtSetToBestPepMatchView could inherit from an AbstractAllPepMatchesView ???
-class AllPeptideMatchesView( override val identDS: IdentDataSet ) extends AbstractPeptideMatchView {
-  
-  override var viewName = "all_peptide_matches"
-  
     // TODO: override buildRecord instead ???
   override def formatRecord(
     buildingContext: IRecordBuildingContext,
