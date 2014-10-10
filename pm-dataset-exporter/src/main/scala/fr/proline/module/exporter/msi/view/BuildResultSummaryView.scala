@@ -7,39 +7,44 @@ import fr.proline.module.exporter.api.view.IDataView
 import fr.proline.module.exporter.api.view.IViewTypeEnumeration
 import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.model.msi.ProteinMatch
+import com.typesafe.scalalogging.slf4j.Logging
 
-case class IdentDataSet(
+case class IdentDataSet (
   projectName: String,
   resultSummary: ResultSummary
   // TODO: represent the result set hierarchy here (merge) ???
-) {
+) extends Logging {
 
   // Count the number of protein sets and proteins matches related to a given peptide match
-  val protSetIdSetByPepMatchId = new HashMap[Long,HashSet[Long]]()
-  val protMatchIdSetByPepMatchId = new HashMap[Long,HashSet[Long]]()
-  
-  for(
-    protSet <- resultSummary.proteinSets;
-    protMatchId <- protSet.getProteinMatchIds;
-    pepInst <- protSet.peptideSet.getPeptideInstances;
-    pepMatchId <- pepInst.getPeptideMatchIds
-  ) {
-    protSetIdSetByPepMatchId.getOrElseUpdate(pepMatchId, new HashSet[Long] ) += protSet.id
-    protMatchIdSetByPepMatchId.getOrElseUpdate(pepMatchId, new HashSet[Long] ) += protMatchId      
+  val validProtSetIdSetByPepMatchId = new HashMap[Long,HashSet[Long]]()
+  val validProtMatchIdSetByPepMatchId = new HashMap[Long,HashSet[Long]]()
     
-  }
-  
+  // Init Maps 
+  resultSummary.proteinSets.filter(_.isValidated).foreach( protSet =>{
+	  
+	  protSet.peptideSet.getPeptideMatchIds.foreach(validProtSetIdSetByPepMatchId.getOrElseUpdate(_, new HashSet[Long] ) += protSet.id )
+    
+	  val protMatchIdByPepSet =  protSet.getAllProteinMatchesIdByPeptideSet
+	  protMatchIdByPepSet.foreach( entry =>{
+		  val pepSet = entry._1
+		  for(prMId <- entry._2; 
+			  pepMatchId<-pepSet.getPeptideMatchIds) {
+			  	validProtMatchIdSetByPepMatchId.getOrElseUpdate(pepMatchId, new HashSet[Long] ) += prMId
+  			}
+	  })
+  })
+
+    
   lazy val pepMatchById = resultSummary.resultSet.get.peptideMatchById
   
   //   Create list of all ProtMatches for pepMatches (validated or not) 
   lazy val allProtMatchSetByPepId =  { 
     val resultBuilder = new HashMap[Long, HashSet[ProteinMatch]]
-    for( protMatch <- resultSummary.resultSet.get.proteinMatches ) {
-      val protMatchPeptMatches = new ArrayBuffer[Long]()
+    for( protMatch <- resultSummary.resultSet.get.proteinMatches ) {    
       if (protMatch.sequenceMatches != null) {
         protMatch.sequenceMatches.foreach(seqMatch => {
           val pepId = seqMatch.getPeptideId
-          resultBuilder.getOrElse(seqMatch.getPeptideId, new HashSet[ProteinMatch]) +=protMatch          
+          resultBuilder.getOrElseUpdate(seqMatch.getPeptideId, new HashSet[ProteinMatch]) +=protMatch          
         }) //end go throudh protMatch sequenceMatches 
       }      
     } //End go through ProtMarches
