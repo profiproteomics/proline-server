@@ -111,7 +111,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
 
   // read omssa file
   val fileReader = new OmssaReadFile(omxFile, parseProperties, omssaLoader, /*peaklist,*/ parserContext)
-  val hasDecoyResultSet = fileReader.containsDecoyProteinMatches
+  val hasDecoyResultSet = false
   val omssaSettingsInHashTable = fileReader.omssaSettingsInHashTable
 
   def getMsQueries = fileReader.getMsQueries.values.toArray[Ms2Query]

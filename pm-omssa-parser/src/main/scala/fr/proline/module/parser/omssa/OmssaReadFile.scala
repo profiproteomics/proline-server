@@ -85,10 +85,6 @@ class OmssaReadFile(val omxFile: File,
 //  private val nbSequencesInFastaFile = omssaPreloader.getNbSequencesInFastaFile
   //  private val MINUS_LOG_EVALUE_MIN_SCORE = -1
   //  private val MINUS_LOG_EVALUE_MAX_SCORE = 300
-  private var _containsTargetProteinMatches: Boolean = false
-  def containsTargetProteinMatches = _containsTargetProteinMatches
-  private var _containsDecoyProteinMatches: Boolean = false
-  def containsDecoyProteinMatches = _containsDecoyProteinMatches
   private var peaklist: Peaklist = null
   def getPeaklist: Peaklist = {
     if(peaklist == null) setPeaklist("")
@@ -322,7 +318,7 @@ class OmssaReadFile(val omxFile: File,
                                       description = proteinMatchDescription,
                                       peptideMatchesCount = 0,
                                       scoreType = omssaScoreType,
-                                      isDecoy = proteinMatchDescriptionContainsDecoyTag(proteinMatchDescription),
+                                      isDecoy = false,
                                       protein = (if (protein == None) null else protein), //If protein is None => No protein is defined not protein not retrieve !
                                       seqDatabaseIds = Array(seqDatabase.id)
                                     )
@@ -474,6 +470,11 @@ class OmssaReadFile(val omxFile: File,
    * @return -log(e-value)
    */
   private def minusLogEValue(evalue: Double): Float = (-1 * scala.math.log10(evalue.toFloat)).toFloat
+//  private def minusLogEValue(evalue: Double): Float = {
+//    var score = (-1 * scala.math.log10(evalue.toFloat)).toFloat
+//    if(score > 20) score = 20
+//    score
+//  }
 
   /**
    * Search for OM Peptide corresponding to specified ms_peptide. Search / Creation is done as follow
@@ -725,27 +726,4 @@ class OmssaReadFile(val omxFile: File,
     true
   }
 
-  //  /**
-  //   * this method tells if a proteinMatch object is target or decoy
-  //   * this method is temporary and should be replaced by a global ProlineCore method
-  //   * @param proteinMatch the proteinMatch to analyse
-  //   * @return true if the proteinMatch object is tagged as decoy
-  //   */
-  //  private def proteinMatchIsDecoy(proteinMatch: ProteinMatch): Boolean = {
-  //    // look at the global parameters
-  //    if (hasTargetResultSet && !hasDecoyResultSet) return false // if the file contains only target entries
-  //    else if (!hasTargetResultSet && hasDecoyResultSet) return true // if the file contains only decoy entries
-  //    // otherwise use a regex on the accession number or the description to find to know if the protein is a decoy
-  //    else if (proteinMatchDescriptionContainsDecoyTag(proteinMatch.description)) return true
-  //    return false
-  //  }
-  private def proteinMatchDescriptionContainsDecoyTag(description: String): Boolean = {
-    if (description.matches("^Reverse sequence, was .*")) {
-      _containsDecoyProteinMatches = true
-      true
-    } else {
-      _containsTargetProteinMatches = true
-      false
-    }
-  }
 }

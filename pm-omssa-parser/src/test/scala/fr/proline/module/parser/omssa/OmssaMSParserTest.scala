@@ -380,7 +380,7 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")
     val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_ncbiDatabase.omx")
-    val rs = omssaOmxFile.getResultSet(wantDecoy = true)
+    val rs = omssaOmxFile.getResultSet(wantDecoy = false)
     for (pm <- rs.proteinMatches) {
       pm.accession match {
         case "49614" => assert(pm.description == "Reverse sequence, was rCG48939 [Rattus norvegicus] (originalGI:149067022)")
