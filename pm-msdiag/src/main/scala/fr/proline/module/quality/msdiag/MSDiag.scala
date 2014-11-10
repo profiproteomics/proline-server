@@ -4,8 +4,8 @@ import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.module.quality.msdiag.msi._
-import fr.proline.core.om.model.msi.SpectrumTitleParsingRule
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+//import fr.proline.core.om.model.msi.SpectrumTitleParsingRule
+import fr.proline.context.IExecutionContext
 import scala.collection.mutable.ArrayBuffer
 
 /**
@@ -30,16 +30,13 @@ import scala.collection.mutable.ArrayBuffer
  *
  * Add a comparison function between 2 or more msdiags ?
  * 
- * 2014/03/12
- * This module must have a ProviderDecoratedExecutionContext so it can get data from the MSIdb
+ * 2014/11/10
+ * This module must have a IExecutionContext so it can get data from the MSIdb
  * The input should be either a RSid or a RSMid
- * ResultSets target/decoy or ResultSummaries should be extracted from the databases
- * Unassigned queries should be extracted from the databases
- * 
  *
  */
 
-class MSDiag(val rsId: Long, val parserContext: ProviderDecoratedExecutionContext) extends Logging {
+class MSDiag(val rsId: Long, val parserContext: IExecutionContext) extends Logging {
   
   // this variable is the only access to the data stored in the databases
   private val rs = new MSDiagResultSetManager(parserContext, rsId)
@@ -49,18 +46,13 @@ class MSDiag(val rsId: Long, val parserContext: ProviderDecoratedExecutionContex
   // the unassigned spectra should be systematically added as first item of the score window
   private var scoreWindow: Array[Float] = Array(20, 40, 60)
   def setScoreWindow(_scoreWindow: Array[Float]) { scoreWindow = _scoreWindow }
-//  def getScoreWindow = scoreWindow
   
   // Original MSDiag only considers matches with rank=1
   // It might be interesting to be able to see further
   private var maxRank: Integer = 1
   def setMaxRank(_maxRank: Integer) { maxRank = _maxRank }
   def unsetMaxRank(_maxRank: Integer) { maxRank = 0 }
-  
-  // this is needed to extract retention times
-  private var parsingRules: Option[SpectrumTitleParsingRule] = None
-  def setParsingRules(pr: Option[SpectrumTitleParsingRule]) { parsingRules = pr }
-  
+
   private var nbScansPerGroup: Integer = 100
   def setNbScansPerGroup(nb: Integer) { nbScansPerGroup = nb }
   
@@ -103,7 +95,7 @@ class MSDiag(val rsId: Long, val parserContext: ProviderDecoratedExecutionContex
   
   def getMSDiagMatchesPerChargeAndScore: MSDiagOutput = MatchesPerChargeAndScore.get(rs, scoreWindow, maxRank)
   
-  def getMSDiagMatchesPerMinuteAndScore: MSDiagOutput = MatchesPerMinuteAndScore.get(rs, scoreWindow, maxRank, parsingRules)
+  def getMSDiagMatchesPerMinuteAndScore: MSDiagOutput = MatchesPerMinuteAndScore.get(rs, scoreWindow, maxRank)
   
   def getMSDiagMatchesPerScanAndScore: MSDiagOutput = MatchesPerScanAndScore.get(rs, scoreWindow, maxRank, nbScansPerGroup)
   
