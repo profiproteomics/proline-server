@@ -49,7 +49,16 @@ class MSDiagResultSetManager(val parserContext: IExecutionContext, val rsId: Lon
   }
   
   lazy val getSpectraPerPeptideMatches: Map[PeptideMatch, Spectrum] = {
-    // TODO: this method is not optimized, there is one request per peptidematch, there should not be more than one request !
-    getAllPeptideMatches.map(pm => pm -> spectrumProvider.getSpectra(Seq(pm.msQueryId)).head).toMap
+    // first create a hash to get the link between a peptide match and its spectrum
+    val spectrumToPeptideMatch = getAllPeptideMatches.map(pm => pm.msQuery.asInstanceOf[Ms2Query].spectrumId -> pm).toMap
+    // get the list of spectrum ids
+    val spectrumIds = spectrumToPeptideMatch.keys.toArray
+    // search all of them
+    val spectra = spectrumProvider.getSpectra(spectrumIds)
+    // remove potentially empty results
+    val matches = spectra.filter(spectrum => spectrumToPeptideMatch.isDefinedAt(spectrum.id))
+    if(spectra.length != matches.length) logger.warn("Some spectra are not linked to any peptide match")
+    // return the map
+    matches.map(spectrum => spectrumToPeptideMatch.get(spectrum.id).get -> spectrum).toMap
   }
 }

@@ -33,6 +33,7 @@ object MatchesPerMinuteAndScore extends Logging {
 
     // get the boundaries
     if (scoreWindow.length == 0) throw new Exception("Score window is empty")
+    if (peptideMatches.isEmpty) throw new Exception("No retention times found")
     try {
 	    val rts: Array[Int] = rs.getAllSpectra.groupBy(extractRT(_)).keys.filter(_ > 0).toArray.sorted
 	    if (rts.length == 0) throw new Exception("No retention time found")
