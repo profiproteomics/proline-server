@@ -28,7 +28,6 @@ trait PeptideSpectrumMatcher extends Logging {
   def getFragmentIonTypes(peptideMatch: PeptideMatch, charge: Int): FragmentIons
   
   def getSpectrumMatch(peptideMatch: PeptideMatch): SpectrumMatch = {
-    val ms2ErrorTolUnit = MassTolUnit.withName(ms2ErrorTolUnitStr)
     val LabelRegex = """([^\+]+)([\w\+]*)""".r      
     
     var start = System.currentTimeMillis()
@@ -48,7 +47,7 @@ trait PeptideSpectrumMatcher extends Logging {
     for (fragment <- theoFragments) {
 
       val theoFragMoz = fragment.moz
-      val mozTolInDa = calcMozTolInDalton(theoFragMoz, ms2ErrorTol, ms2ErrorTolUnit)
+      val mozTolInDa = calcMozTolInDalton(theoFragMoz, ms2ErrorTol, ms2ErrorTolUnitStr)
       var bestMatch: FragmentMatch = null
 
       breakable {
