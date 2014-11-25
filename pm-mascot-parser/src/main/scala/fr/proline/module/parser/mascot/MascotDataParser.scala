@@ -437,7 +437,13 @@ class MascotDataParser(
           location = -1
 
         // store new locatedPTM for peptide
-        pepVarPtms += PtmDefinitionBuilder.buildLocatedPtm(ptmDef = msVarPtms(0), seqPos = location)
+        try {
+          // find the ptmDefinition corresponding to the residue in the peptide sequence
+          pepVarPtms += PtmDefinitionBuilder.buildLocatedPtm(ptmDef = msVarPtms.filter(_.residue.equals(mascotPeptide.getPeptideStr().charAt(location-1))).head, seqPos = location)
+        } catch {
+          // default value is the first ptmDefinition
+          case e: Exception => pepVarPtms += PtmDefinitionBuilder.buildLocatedPtm(ptmDef = msVarPtms(0), seqPos = location)
+        }
       } // END A PTM exist on current residue
 
     } // END Go through each sequence residue
