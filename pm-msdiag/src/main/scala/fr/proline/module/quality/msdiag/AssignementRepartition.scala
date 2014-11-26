@@ -25,7 +25,7 @@ object AssignementRepartition extends Logging {
     new MSDiagOutput(
       matrix = data,
       outputType = MSDiagOutputTypes.Pie,
-      description = "Repartition of assigned and unassigned spectra",
+      description = "Assigned and unassigned spectra",
       columnNames = columnNames.toSeq)
   }
 }

@@ -26,7 +26,8 @@ object MatchesPerScanAndScore extends Logging {
 
   def get(rs: MSDiagResultSetManager, scoreWindow: Array[Float], maxRank: Integer, nbScansPerGroup: Int): MSDiagOutput = {
 
-    val peptideMatches = rs.getAllPeptideMatches.filter(_.rank == maxRank)
+//    val peptideMatches = rs.getAllPeptideMatches.filter(_.rank == maxRank)
+    val peptideMatches = if(rs.isTargetOnly) rs.getAllPeptideMatches.filter(_.sdPrettyRank <= maxRank) else rs.getAllPeptideMatches.filter(_.cdPrettyRank <= maxRank)
     
     // get the boundaries
     if (scoreWindow.length == 0) throw new Exception("Score window is empty")
@@ -60,7 +61,7 @@ object MatchesPerScanAndScore extends Logging {
     new MSDiagOutput(
       matrix = data,
       outputType = MSDiagOutputTypes.Chromatogram,
-      description = "Number of matches per group of scan and score",
+      description = "Number of matches per group of scans and score",
       columnNames = columnNames.toSeq,
       xAxisDescription = "Scan numbers",
       yAxisDescription = "Matches")

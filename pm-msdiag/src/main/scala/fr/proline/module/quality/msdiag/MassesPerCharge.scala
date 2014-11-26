@@ -19,7 +19,8 @@ object MassesPerCharge extends Logging {
 
   def get(rs: MSDiagResultSetManager, maxRank: Integer): MSDiagOutput = {
     
-    val peptideMatches = rs.getAllPeptideMatches.filter(_.rank == maxRank)
+//    val peptideMatches = rs.getAllPeptideMatches.filter(_.rank == maxRank)
+    val peptideMatches = if(rs.isTargetOnly) rs.getAllPeptideMatches.filter(_.sdPrettyRank <= maxRank) else rs.getAllPeptideMatches.filter(_.cdPrettyRank <= maxRank)
 
     val columnNames = Array[String]("Charge", "Lowest Mass", "Highest Mass", "Average Mass", "Median Mass")
     val charges: Array[Int] = MSDiagUtils.getCharges(rs)
@@ -27,12 +28,15 @@ object MassesPerCharge extends Logging {
 
     for (c <- 0 until charges.length) {
       val peptideMatchesPerCharge = peptideMatches.filter(_.getMs2Query.charge == charges(c))
-//      val pm = peptideMatchesPerCharge.sortBy(_.peptide.calculatedMass).splitAt(peptideMatchesPerCharge.size / 2)
-      data(c)(0) = charges(c)
-      data(c)(1) = peptideMatchesPerCharge.minBy(_.peptide.calculatedMass).peptide.calculatedMass
-      data(c)(2) = peptideMatchesPerCharge.maxBy(_.peptide.calculatedMass).peptide.calculatedMass
-      data(c)(3) = (peptideMatchesPerCharge.map(_.peptide.calculatedMass).sum / peptideMatchesPerCharge.size).toDouble
-      data(c)(4) = getMedianMass(peptideMatchesPerCharge)
+      data(c) = if(peptideMatchesPerCharge.size > 0) {
+        Array(charges(c),
+              peptideMatchesPerCharge.minBy(_.peptide.calculatedMass).peptide.calculatedMass,
+              peptideMatchesPerCharge.maxBy(_.peptide.calculatedMass).peptide.calculatedMass,
+              (peptideMatchesPerCharge.map(_.peptide.calculatedMass).sum / peptideMatchesPerCharge.size).toDouble,
+              getMedianMass(peptideMatchesPerCharge))
+      } else {
+        Array(charges(c), 0, 0, 0, 0)
+      }
     }
 
     // return output

@@ -86,6 +86,14 @@ class MSDiagTest extends AbstractMultipleDBTestCase with Logging {
   }
   
   @Test
+  def testAvailableReports {
+    val msdiag = new MSDiag(targetRSId, executionContext)
+    msdiag.getAvailableReports.foreach(msd => {
+      logger.debug("MSDiag: "+msd.toString)
+    })
+  }
+  
+  @Test
   def testUnexpectedMethod {
     // trying to execute a method that should not be accessible
     val msdiag = new MSDiag(targetRSId, executionContext)

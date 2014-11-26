@@ -4,7 +4,6 @@ import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.module.quality.msdiag.msi._
-//import fr.proline.core.om.model.msi.SpectrumTitleParsingRule
 import fr.proline.context.IExecutionContext
 import scala.collection.mutable.ArrayBuffer
 
@@ -93,18 +92,31 @@ class MSDiag(val rsId: Long, val parserContext: IExecutionContext) extends Loggi
     }
   }
   
+  def getAvailableReports: Array[MSDiagOutput] = {
+    val msdiags = new ArrayBuffer[MSDiagOutput]
+    this.getMethods.foreach(m => {
+      this.executeMethod(m) match {
+        case msd: MSDiagOutput => msdiags += msd
+        case _ => logger.debug("Method "+m+" returned an unexpected MSDiag output type")
+      }
+    })
+    msdiags.toArray
+  }
+  
   def getMSDiagMatchesPerChargeAndScore: MSDiagOutput = MatchesPerChargeAndScore.get(rs, scoreWindow, maxRank)
   
   def getMSDiagMatchesPerMinuteAndScore: MSDiagOutput = MatchesPerMinuteAndScore.get(rs, scoreWindow, maxRank)
   
-  def getMSDiagMatchesPerScanAndScore: MSDiagOutput = MatchesPerScanAndScore.get(rs, scoreWindow, maxRank, nbScansPerGroup)
+//  def getMSDiagMatchesPerScanAndScore: MSDiagOutput = MatchesPerScanAndScore.get(rs, scoreWindow, maxRank, nbScansPerGroup)
   
   def getMSDiagMatchesPerResultSetAndScore: MSDiagOutput = MatchesPerResultSetAndScore.get(rs, scoreWindow, maxRank)
   
-  def getMSDiagMassesPerCharge: MSDiagOutput = MassesPerCharge.get(rs, maxRank)
+//  def getMSDiagMassesPerCharge: MSDiagOutput = MassesPerCharge.get(rs, maxRank)
+  
+  def getMSDiagMassesPerChargeAndScore: MSDiagOutput = MassesPerChargeAndScore.get(rs, scoreWindow, maxRank)
   
   def getMSDiagAssignementRepartition: MSDiagOutput = AssignementRepartition.get(rs)
   
-  def getMSDiagMassesPerScore: MSDiagOutput = null
+//  def getMSDiagMassesPerScore: MSDiagOutput = null
 
 }

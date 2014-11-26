@@ -24,13 +24,24 @@ class MSDiagResultSetManager(val parserContext: IExecutionContext, val rsId: Lon
     throw new Exception("ResultSet with id "+rsId+" does not exist")
   }
   private val rsTarget: ResultSet = rsTargetOpt.get
-  private val rsDecoyOpt: Option[ResultSet] = rsTarget.decoyResultSet
+  private val rsDecoyOpt: Option[ResultSet] = {
+    if(rsTarget.decoyResultSet.isDefined) {
+      rsTarget.decoyResultSet
+    } else {
+      resultSetProvider.getResultSet(rsTarget.getDecoyResultSetId)
+    }
+  }
+  if(!rsDecoyOpt.isDefined) {
+    logger.info("Decoy ResultSet is not available")
+  }
 
   lazy val isTargetOnly: Boolean = !rsDecoyOpt.isDefined
 
-  lazy val getUnassignedQueries: Array[MsQuery] = msQueryProvider.getUnassignedMsQueries(if(isTargetOnly) Seq(rsTarget.id) else Seq(rsTarget.id, rsDecoyOpt.get.id), Seq(rsTarget.getMSISearchId))
-  
-  lazy val getAllMsQueries: Array[MsQuery] = msQueryProvider.getMsiSearchesMsQueries(Seq(rsTarget.getMSISearchId))
+  lazy val getUnassignedQueries: Array[MsQuery] = msQueryProvider.getUnassignedMsQueries(Seq(rsTarget.getMSISearchId))
+//  lazy val getAssignedQueries: Array[MsQuery] = if(rsDecoyOpt.isDefined) rsTarget.peptideMatches.map(_.getMs2Query) ++ rsDecoyOpt.get.peptideMatches.map(_.getMs2Query) else rsTarget.peptideMatches.map(_.getMs2Query)
+
+//  lazy val getAllMsQueries: Array[MsQuery] = msQueryProvider.getMsiSearchesMsQueries(Seq(rsTarget.getMSISearchId))  
+  lazy val getAllMsQueries: Array[MsQuery] = msQueryProvider.getMsiSearchesMsQueries(if(isTargetOnly) Seq(rsTarget.getMSISearchId) else Seq(rsTarget.getMSISearchId, rsDecoyOpt.get.getMSISearchId))
 
   lazy val getTargetPeptideMatches: Array[PeptideMatch] = rsTarget.peptideMatches
   

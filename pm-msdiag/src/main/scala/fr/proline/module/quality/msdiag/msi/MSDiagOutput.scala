@@ -28,6 +28,7 @@ object MSDiagOutput {
   
 }
 
+// TODO: replace cellType by columnTypes = Seq[_] with the same number of items as columnNames (add a require)
 case class MSDiagOutput(
   val matrix: Array[Array[Any]], // the output table containing all data
   val outputType: MSDiagOutputTypes.MSDiagOutputType, // the type of information that is represented by the table (chart, table, histogram, etc)

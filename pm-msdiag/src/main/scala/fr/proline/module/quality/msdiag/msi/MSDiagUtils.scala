@@ -25,10 +25,18 @@ object MSDiagUtils {
   
   def countMatchesPerScore(peptideMatches: Array[PeptideMatch], minScore: Float, maxScore: Float): Int = {
     if (peptideMatches == null || peptideMatches.size == 0) 0
-    else if (minScore == Float.NaN && maxScore != Float.NaN) peptideMatches.count(pm => pm.score <= maxScore)
-    else if (minScore != Float.NaN && maxScore != Float.NaN) peptideMatches.count(pm => minScore < pm.score && pm.score <= maxScore)
-    else if (minScore != Float.NaN && maxScore == Float.NaN) peptideMatches.count(pm => pm.score > minScore)
+    else if (minScore.isNaN && !maxScore.isNaN) peptideMatches.count(pm => pm.score <= maxScore)
+    else if (!minScore.isNaN && !maxScore.isNaN) peptideMatches.count(pm => minScore < pm.score && pm.score <= maxScore)
+    else if (!minScore.isNaN && maxScore.isNaN) peptideMatches.count(pm => pm.score > minScore)
     else peptideMatches.size // should not happen (means that both scores are NaN)
+  }
+  
+  def filterMatchesPerScore(peptideMatches: Array[PeptideMatch], minScore: Float, maxScore: Float): Array[PeptideMatch] = {
+    if (peptideMatches == null || peptideMatches.size == 0) Array.empty
+    else if (minScore.isNaN && !maxScore.isNaN) peptideMatches.filter(pm => pm.score <= maxScore)
+    else if (!minScore.isNaN && !maxScore.isNaN) peptideMatches.filter(pm => minScore < pm.score && pm.score <= maxScore)
+    else if (!minScore.isNaN && maxScore.isNaN) peptideMatches.filter(pm => pm.score > minScore)
+    else peptideMatches // should not happen (means that both scores are NaN)
   }
   
 }

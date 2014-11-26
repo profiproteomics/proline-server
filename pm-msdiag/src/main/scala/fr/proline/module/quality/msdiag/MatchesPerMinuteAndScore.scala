@@ -28,12 +28,13 @@ object MatchesPerMinuteAndScore extends Logging {
   def get(_rs: MSDiagResultSetManager, scoreWindow: Array[Float], maxRank: Integer): MSDiagOutput = {
 
     rs = _rs
-    val peptideMatches = rs.getSpectraPerPeptideMatches.filter(_._1.rank == maxRank)
+//    val peptideMatches = rs.getSpectraPerPeptideMatches.filter(_._1.rank == maxRank)
     val unassignedSpectra = rs.getUnassignedSpectra
+    val peptideMatches = if(rs.isTargetOnly) rs.getSpectraPerPeptideMatches.filter(_._1.sdPrettyRank <= maxRank) else rs.getSpectraPerPeptideMatches.filter(_._1.cdPrettyRank <= maxRank)
 
     // get the boundaries
     if (scoreWindow.length == 0) throw new Exception("Score window is empty")
-    if (peptideMatches.isEmpty) throw new Exception("No retention times found")
+    if (peptideMatches.isEmpty) throw new Exception("No peptide matches")
     try {
 	    val rts: Array[Int] = rs.getAllSpectra.groupBy(extractRT(_)).keys.filter(_ > 0).toArray.sorted
 	    if (rts.length == 0) throw new Exception("No retention time found")

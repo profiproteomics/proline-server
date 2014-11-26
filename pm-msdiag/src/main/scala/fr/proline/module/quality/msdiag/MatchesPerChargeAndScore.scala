@@ -26,7 +26,8 @@ object MatchesPerChargeAndScore extends Logging {
   def get(_rs: MSDiagResultSetManager, scoreWindow: Array[Float], maxRank: Integer): MSDiagOutput = {
     
     rs = _rs
-    val peptideMatches = rs.getAllPeptideMatches.filter(_.rank == maxRank)
+//    val peptideMatches = rs.getAllPeptideMatches.filter(_.rank == maxRank)
+    val peptideMatches = if(rs.isTargetOnly) rs.getAllPeptideMatches.filter(_.sdPrettyRank <= maxRank) else rs.getAllPeptideMatches.filter(_.cdPrettyRank <= maxRank)
     
     // get the boundaries
     if (scoreWindow.length == 0) throw new Exception("Score window is empty")
@@ -55,7 +56,7 @@ object MatchesPerChargeAndScore extends Logging {
     new MSDiagOutput(
       matrix = data,
       outputType = MSDiagOutputTypes.Table,
-      description = "Number of matches per charge and score",
+      description = "PSM per charge and score",
       columnNames = columnNames.toSeq,
       xAxisDescription = "Scores",
       yAxisDescription = "Charges")

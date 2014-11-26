@@ -19,8 +19,10 @@ object MatchesPerResultSetAndScore extends Logging {
 
   def get(rs: MSDiagResultSetManager, scoreWindow: Array[Float], maxRank: Integer): MSDiagOutput = {
     
-    val targetPeptideMatches = rs.getTargetPeptideMatches.filter(_.rank == maxRank)
-    val decoyPeptideMatches = rs.getDecoyPeptideMatches.filter(_.rank == maxRank)
+//    val targetPeptideMatches = rs.getTargetPeptideMatches.filter(_.rank == maxRank)
+//    val decoyPeptideMatches = rs.getDecoyPeptideMatches.filter(_.rank == maxRank)
+    val targetPeptideMatches = if(rs.isTargetOnly) rs.getTargetPeptideMatches.filter(_.sdPrettyRank <= maxRank) else rs.getTargetPeptideMatches.filter(_.cdPrettyRank <= maxRank)
+    val decoyPeptideMatches = if(rs.isTargetOnly) rs.getDecoyPeptideMatches.filter(_.sdPrettyRank <= maxRank) else rs.getDecoyPeptideMatches.filter(_.cdPrettyRank <= maxRank)
     
    // get the boundaries
     if (scoreWindow.length == 0) throw new Exception("Score window is empty")
@@ -29,14 +31,15 @@ object MatchesPerResultSetAndScore extends Logging {
     // set up main array
     val columnNames = new ArrayBuffer[String]()
     columnNames += "Resultset"
-    data(0)(0) = "Target matches"
-    data(1)(0) = "Decoy matches"
+    data(0)(0) = "Target PSM"
+    data(1)(0) = "Decoy PSM"
     for (s <- 0 to scoreWindow.length) {
 		val minScore = if (s == 0) Float.NaN else scoreWindow(s - 1)
 		val maxScore = if (s == scoreWindow.length) Float.NaN else scoreWindow(s)
 		// add array content
 		data(0)(s+1) = MSDiagUtils.countMatchesPerScore(targetPeptideMatches, minScore, maxScore)
 		data(1)(s+1) = MSDiagUtils.countMatchesPerScore(decoyPeptideMatches, minScore, maxScore)
+//		System.out.println("ABU "+minScore+" "+maxScore+" "+data(0)(s+1)+" "+data(1)(s+1)+" "+targetPeptideMatches.size+" "+decoyPeptideMatches.size)
 		// add column headers
 		columnNames += MSDiagUtils.getScoreLabel(minScore, maxScore)
 	}
@@ -45,7 +48,7 @@ object MatchesPerResultSetAndScore extends Logging {
     new MSDiagOutput(
       matrix = data,
       outputType = MSDiagOutputTypes.Table,
-      description = "Number of matches per resultset and score",
+      description = "Score repartition for Target/Decoy data",
       columnNames = columnNames.toSeq,
       xAxisDescription = "Scores",
       yAxisDescription = "Resultsets")
