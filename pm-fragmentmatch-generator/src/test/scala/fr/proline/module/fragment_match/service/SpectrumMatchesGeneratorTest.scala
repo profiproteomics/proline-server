@@ -19,6 +19,11 @@ import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.repository.DriverType
 import scala.collection.mutable.ArrayBuffer
+import fr.proline.repository.util.JDBCWork
+import java.sql.Connection
+import fr.profi.util.serialization.ProfiJSMSerialization
+import fr.profi.util.serialization.CustomDoubleJacksonSerializer
+import fr.proline.core.om.model.msi.SpectrumMatch
 
 class SpectrumMatchesGeneratorTest extends AbstractMultipleDBTestCase with Logging {
 
@@ -82,6 +87,45 @@ class SpectrumMatchesGeneratorTest extends AbstractMultipleDBTestCase with Loggi
       val result = generatorService.runService
       assertTrue(result)
 
+      //Read Back Spectrum info
+      val pepMReadBackId = 348L
+      
+      var spectrumAsString  =""
+        
+      object CustomSerializer extends ProfiJSMSerialization with CustomDoubleJacksonSerializer
+      
+      val getExistingMatchesWork = new JDBCWork() {
+	      override def execute(con: Connection) {
+	    	var associatedObjectTreeId : Long = 0L
+	    	
+	        val query = "SELECT  peptide_match_object_tree_map.object_tree_id FROM peptide_match_object_tree_map " +
+	          " WHERE peptide_match_object_tree_map.peptide_match_id =  " + pepMReadBackId+ " AND peptide_match_object_tree_map.schema_name = 'peptide_match.spectrum_match'; "
+	        val stmt = con.createStatement()
+	        val sqlResultSet = stmt.executeQuery(query)
+	        if (sqlResultSet.next) {
+	          associatedObjectTreeId = sqlResultSet.getLong(1)
+	        } else {
+	          fail ("No Spectrum matches saved for PepMatch "+pepMReadBackId)
+	        }
+	        
+	        
+	      	var query2 = "SELECT clob_data FROM object_tree WHERE id = " + associatedObjectTreeId + " ; "
+			val stmt2 = con.createStatement()
+			val sqlResultSet2 = stmt2.executeQuery(query2)
+			if (sqlResultSet2.next) {
+	          spectrumAsString =  sqlResultSet2.getString(1)	         
+	        } else {
+	          fail ("No Spectrum matches found for PepMatch "+pepMReadBackId)
+	        }
+	        stmt.close()
+	      }
+      } // End of jdbcWork anonymous inner class
+      
+      executionContext.getMSIDbConnectionContext().doWork(getExistingMatchesWork, false)
+      this.logger.debug(" ------ RESULt BEFORE Serialisation  => "+spectrumAsString)
+      val resultSpMa =CustomSerializer.deserialize[SpectrumMatch](spectrumAsString)    		  
+      this.logger.info(" ---------  RESULt AFTER Serialisation  => "+resultSpMa.fragMatches)
+   
     } catch {
 
       case ex: Exception => {
