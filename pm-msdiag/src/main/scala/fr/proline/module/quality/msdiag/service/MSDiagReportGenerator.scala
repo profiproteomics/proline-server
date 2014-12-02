@@ -13,9 +13,9 @@ import fr.proline.module.quality.msdiag.MSDiag
 class MSDiagReportGenerator(
   executionContext: IExecutionContext,
   resultSetId: Long,
-  resultSummaryId: Option[Long] = None,
-  peptideMatchIds: Option[Array[Long]] = None/*,
-  memorySave : Boolean = false */) extends IService with Logging {
+  //settings: Option[java.util.Map[String,Object]]
+  settings: Option[Map[String,Any]] // msdiag settings 
+  ) extends IService with Logging {
 
    var resultHashMapJson : String = ""
   
@@ -31,6 +31,15 @@ class MSDiagReportGenerator(
     val parserContext = ProviderDecoratedExecutionContext(executionContext)
     val id = resultSetId
     val msdiag = new MSDiag(id, parserContext)
+    // apply settings to MSDiag object
+    if(settings.isDefined) {
+      logger.info("MSDiag received settings " + settings.get.toString())
+      msdiag.setSettings(settings.get);
+    } 
+    else
+    {       
+      logger.info("MSDiag received settings EMPTY")
+    }
     
     // here serialize (and json) the resulting object to be sent to prolinestudio...
     val reports = msdiag.getAvailableReports
