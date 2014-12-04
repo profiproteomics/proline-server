@@ -128,7 +128,6 @@ class PeptideSpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging
       matcherService = new PeptideSpectrumMatcherMascot(spectraById, msiSearch.searchSettings.msmsSearchSettings.get.ms2ErrorTol, msiSearch.searchSettings.msmsSearchSettings.get.ms2ErrorTolUnit, msiSearch.searchSettings.instrumentConfig)
       
       val spectrumMatch = matcherService.getSpectrumMatch(peptideMatches(0))
-      logger.debug("***** ----- > spectrumMatch " +CustomSerializer.serialize(spectrumMatch))
       Assert.assertNotNull(spectrumMatch.fragMatches)
       assertTrue(!spectrumMatch.fragMatches.isEmpty)
       
@@ -170,8 +169,7 @@ class PeptideSpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging
       
       matcherService = new PeptideSpectrumMatcherMascot(spectraById, 0.8, "Da", instrConfig)
       
-      val spectrumMatch = matcherService.getSpectrumMatch(peptideMatches(0))
-      logger.debug("***** ----- > spectrumMatch " +CustomSerializer.serialize(spectrumMatch))
+      val spectrumMatch = matcherService.getSpectrumMatch(peptideMatches(0))    
       Assert.assertNotNull(spectrumMatch.fragMatches)
       assertTrue(!spectrumMatch.fragMatches.isEmpty)
       
