@@ -123,6 +123,7 @@ class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val ptmComposition
           case "trypsin-p"     => "Trypsin/P"
           case "argc"          => "Arg-C"
           case "aspn"          => "Asp-N"
+          case "chymotrypsin"  => "Chymotrypsin"
           case "chymotrypsin-p"=> "Chymotrypsin"
           case "cnbr"          => "CNBr"
           case "tryp-cnbr"     => "CNBr+Trypsin"

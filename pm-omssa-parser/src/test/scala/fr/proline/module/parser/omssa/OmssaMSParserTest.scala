@@ -700,6 +700,17 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
     logger.debug("TEST [" + method + "] OK: parsing is successful")
   }
   @Test
+  def testChymotrypsin {
+    val method = getMethod()
+    logger.debug("TEST [" + method + "] STARTS")
+    val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_chymotrypsin.omx")
+    // parsing should succeed
+    val rs = omssaOmxFile.getResultSet(false)
+    val enzymeName = rs.msiSearch.get.searchSettings.usedEnzymes.head.name
+    logger.debug("Enzyme="+enzymeName)
+    logger.debug("TEST [" + method + "] OK: parsing is successful")
+  }
+  @Test
   def testShortFormat {
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")

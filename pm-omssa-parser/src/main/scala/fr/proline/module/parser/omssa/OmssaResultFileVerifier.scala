@@ -30,7 +30,7 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
     // parser should try to store the enzyme if it is not in the database
     return true
   }
-  // TODO ABU
+
   def getEnzyme(fileLocation: File, importProperties: Map[String, Any]): Array[Enzyme] = {
     // put enzyme omssa ids into a map
     val enzymeIdToName = Map[Int, String](0 -> "trypsin", 1 -> "argc", 2 -> "cnbr", 3 -> "chymotrypsin", 4 -> "formicacid", 5 -> "lysc", 6 -> "lysc-p", 7 -> "pepsin-a", 8 -> "tryp-cnbr",
@@ -56,6 +56,7 @@ class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
           case "trypsin-p"     => "Trypsin/P"
           case "argc"          => "Arg-C"
           case "aspn"          => "Asp-N"
+          case "chymotrypsin"  => "Chymotrypsin"
           case "chymotrypsin-p"=> "Chymotrypsin"
           case "cnbr"          => "CNBr"
           case "tryp-cnbr"     => "CNBr+Trypsin"
