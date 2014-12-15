@@ -10,10 +10,11 @@ import fr.proline.module.exporter.api.view.IViewFieldEnumeration
 import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.ss.usermodel.CellStyle
+import com.typesafe.scalalogging.slf4j.Logging
 
 class BasicXLSXTemplate(
   val selectedFields: Option[Seq[String]] = None
-) extends IWorksheetTemplate {
+) extends IWorksheetTemplate with Logging {
 
   val fileExtension: String = "xlsx"
 
@@ -76,9 +77,11 @@ class BasicXLSXTemplate(
 
     // Iterate over records to append them to the worksheet
     var rowIdx = 1
+    logger.info("Iterates over records ")
     view.onEachRecord(record => {
 
       var row = sheet.createRow(rowIdx)
+      logger.info("createRow: "+rowIdx)
 
       var colIdx = 0
       for (field <- selectedFieldsOrFields) {
@@ -92,7 +95,9 @@ class BasicXLSXTemplate(
           case d: Double   => cell.setCellValue(d)
           case num: Number => cell.setCellValue(num.doubleValue)
           case s: String => {
-            cell.setCellValue(s)
+            if (!s.isEmpty()){ // blank cell if isEmpty
+            	cell.setCellValue(s)
+            }
             l = s.length()
           }
           case a: Any => {
@@ -110,6 +115,7 @@ class BasicXLSXTemplate(
       rowIdx += 1
     })
 
+    logger.info("end of iteration ")
     // size columns (they can not exceed MAX_COLUMN_WIDTH_IN_CHARS characters)
     val MAX_COLUMN_WIDTH_IN_CHARS = 30
     for (j <- 0 to colIdx - 1) {
