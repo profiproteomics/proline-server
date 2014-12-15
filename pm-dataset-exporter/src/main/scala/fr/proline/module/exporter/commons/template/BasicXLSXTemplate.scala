@@ -77,11 +77,9 @@ class BasicXLSXTemplate(
 
     // Iterate over records to append them to the worksheet
     var rowIdx = 1
-    logger.info("Iterates over records ")
     view.onEachRecord(record => {
 
       var row = sheet.createRow(rowIdx)
-      logger.info("createRow: "+rowIdx)
 
       var colIdx = 0
       for (field <- selectedFieldsOrFields) {
@@ -115,7 +113,6 @@ class BasicXLSXTemplate(
       rowIdx += 1
     })
 
-    logger.info("end of iteration ")
     // size columns (they can not exceed MAX_COLUMN_WIDTH_IN_CHARS characters)
     val MAX_COLUMN_WIDTH_IN_CHARS = 30
     for (j <- 0 to colIdx - 1) {
