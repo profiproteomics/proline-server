@@ -66,7 +66,7 @@ class BasicMasterQuantProteinSetsView (val quantiDS: QuantiDataSet ) extends IFi
     qcIds.foreach( qcId => {
     	  var abundanceFieldHeader =  "abundance_"+qcId
           var qcAbun = if(mqProtSet.quantProteinSetMap.contains(qcId)) {
-            mqProtSet.quantProteinSetMap(qcId).abundance
+            if (mqProtSet.quantProteinSetMap(qcId).abundance.isNaN()) "" else mqProtSet.quantProteinSetMap(qcId).abundance
           } else {
             ""
           }
