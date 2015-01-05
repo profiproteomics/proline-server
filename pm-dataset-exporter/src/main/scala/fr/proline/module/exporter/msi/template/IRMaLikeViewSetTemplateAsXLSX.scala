@@ -21,8 +21,8 @@ object IRMaLikeViewSetTemplateAsXLSX extends IViewSetTemplate {
 	ViewTypeWithTemplate( ResultSummaryViewTypes.MSI_SEARCH_EXTENDED, infoXlsxTemplate, viewName = Some("search settings and infos") ),
     ViewTypeWithTemplate( ResultSummaryViewTypes.IMPORT_AND_VALIDATION_PROPS, infoXlsxTemplate, viewName = Some("import and filters") ),
     ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_TYPICAL_PROT_MATCH, xlsxTemplate, viewName = Some("protein sets") ),
-    ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_BEST_PEPTIDE_MATCH, xlsxTemplate, viewName = Some("peptides from protein sets") ),
-    ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_PROT_MATCH, xlsxTemplate, viewName = Some("protein matches") ),   
+    ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_BEST_PEPTIDE_MATCH, xlsxTemplate, viewName = Some("best PSM from protein sets") ),
+    ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_PROT_MATCH, xlsxTemplate, viewName = Some("protein matches in protein set ") ),   
     ViewTypeWithTemplate( ResultSummaryViewTypes.STATISTICS, infoXlsxTemplate, viewName = Some("statistics") )
   )
 }
