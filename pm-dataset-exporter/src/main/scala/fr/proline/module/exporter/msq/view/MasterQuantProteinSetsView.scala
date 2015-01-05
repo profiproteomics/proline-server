@@ -16,6 +16,7 @@ class MasterQuantProteinSetsViewFields(qcIds: Array[Long], ratioDefs: Array[Rati
   val AC = Field("AC")
   val DESCRIPTION = Field("Description")
   val SELECTION_LEVEL = Field("selection_level")
+  val PROT_SET_ID = Field("protein_set_id")
   
   // MQ PROT SET PROFILE HEADER 
   val PEPTIDE_COUNT = Field("peptides_count")
@@ -24,13 +25,16 @@ class MasterQuantProteinSetsViewFields(qcIds: Array[Long], ratioDefs: Array[Rati
   qcIds.foreach( qcId => {
     Field("abundance_"+nameByQchId(qcId))
   })
+
   qcIds.foreach( qcId => {
     Field("psm_count_"+nameByQchId(qcId))
   })
+  
   def addAbundanceField(qcId: Long):  Field= {
     return Field("abundance_"+nameByQchId(qcId))
   }
   
+
   def addPsmCountField(qcId: Long):  Field= {
     return Field("psm_count_"+nameByQchId(qcId))
   }
@@ -60,8 +64,9 @@ class MasterQuantProteinSetsView (val quantiDS: QuantiDataSet ) extends IFixedDa
   val fields  = new MasterQuantProteinSetsViewFields(quantiDS.qcIds, quantiDS.ratioDefs, quantiDS.nameByQchId)
   var viewName = "exportQuantProteinSetsProfile"
   
-  case class MyBuildingContext( mqProtSet: MasterQuantProteinSet, protSetCellsById: HashMap[Long,ArrayBuffer[Any]], qcIds: Array[Long], profile: MasterQuantProteinSetProfile, 
+  case class MyBuildingContext( mqProtSet: MasterQuantProteinSet, protSetCellsById: HashMap[Long,ProtSetCells], qcIds: Array[Long], profile: MasterQuantProteinSetProfile, 
       mqPepById: Map[Long, MasterQuantPeptide], ratioDefs: Array[RatioDefinition]) extends IRecordBuildingContext
+      
   def buildRecord( buildingContext: IRecordBuildingContext ): Map[String,Any] = {
     val myBuildingContext = buildingContext.asInstanceOf[MyBuildingContext]
     // Cast the building context
@@ -80,9 +85,10 @@ class MasterQuantProteinSetsView (val quantiDS: QuantiDataSet ) extends IFixedDa
     if (Some(mqProtSet.proteinSet).isDefined) {
       val protSetCell = protSetCellsById(Some(mqProtSet.proteinSet).get.id)
       exportMap += (
-    		fields.AC -> protSetCell(0),
-    		fields.DESCRIPTION -> protSetCell(1),
-    		fields.SELECTION_LEVEL -> protSetCell(2),
+    		fields.AC -> protSetCell.accession,
+    		fields.DESCRIPTION -> protSetCell.description,
+    		fields.SELECTION_LEVEL -> protSetCell.selectionLevel,
+    		fields.PROT_SET_ID-> protSetCell.proteinSetId,
     		fields.PEPTIDE_COUNT -> profile.mqPeptideIds.length
       )
     }
@@ -98,8 +104,7 @@ class MasterQuantProteinSetsView (val quantiDS: QuantiDataSet ) extends IFixedDa
           exportMap += ( fields.addAbundanceField(qcId) -> qcAbun)
           k = k+1
         })
-        
-        
+           
         
      // Sum the PSM count for each quant channel of this quantitative profile
      val pepMatchCountByQcId = new HashMap[Long,Int]
@@ -139,6 +144,7 @@ class MasterQuantProteinSetsView (val quantiDS: QuantiDataSet ) extends IFixedDa
   }
   
   private def _getRatioStats(r: ComputedRatio) = Array(r.getState, r.getTTestPValue.getOrElse(""), r.getZTestPValue.getOrElse(""))
+  
   protected def stringifyRatiosStats(ratios: List[Option[ComputedRatio]]): List[String] = {
     ratios.flatMap(_.map( this._getRatioStats(_).map(_.toString) ).getOrElse(Array.fill(3)("")) )
   }
