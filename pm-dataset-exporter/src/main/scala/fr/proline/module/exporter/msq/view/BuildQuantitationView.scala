@@ -10,12 +10,13 @@ import fr.proline.core.om.model.msq.RatioDefinition
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
-
+case class ProtSetCells(accession: String, description : String, selectionLevel: Int, proteinSetId : Long)   
+      
 case class QuantiDataSet (
 	masterQuantChannelId: Long,
 	quantRSM: QuantResultSummary,
 	protMatchById: Map[Long, ProteinMatch],
-	protSetCellsById: HashMap[Long,ArrayBuffer[Any]],
+	protSetCellsById: HashMap[Long,ProtSetCells],
 	qcIds: Array[Long],
 	expDesign: ExperimentalDesign, 
 	ratioDefs: Array[RatioDefinition], 
