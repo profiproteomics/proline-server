@@ -10,7 +10,7 @@ object ProtSetToProtMatchViewFields extends IViewFieldEnumeration {
   val DESCRIPTION = Field("description")
   val IS_TYPICAL_PROTEIN = Field("is_typical_protein")
   val IS_SAMESET = Field("is_sameset")
-  val PROTEIN_MATCH_SCORE = Field("protein_match_score")
+  val PEPTIDE_SET_SCORE = Field("peptide_set_score")
   val COVERAGE = Field("coverage")
   val MW = Field("MW")
   val SEQUENCES_COUNT = Field("#sequences")
@@ -39,7 +39,7 @@ class ProtSetToProtMatchView( val identDS: IdentDataSet ) extends IFixedDatasetV
       fields.DESCRIPTION -> protMatch.description,
       fields.IS_TYPICAL_PROTEIN -> (protSet.getTypicalProteinMatchId == protMatch.id),
       fields.IS_SAMESET -> !peptideSet.isSubset,
-      fields.PROTEIN_MATCH_SCORE -> "%.1f".format(protMatch.score).toDouble,
+      fields.PEPTIDE_SET_SCORE -> "%.1f".format(peptideSet.score).toDouble,
       fields.COVERAGE -> "%.1f".format(protMatch.coverage).toDouble,
       fields.MW -> Option(protMatch.protein).flatMap( _.map( _.mass ) ).getOrElse(0.0),
       fields.SEQUENCES_COUNT -> buildingCtx.allSeqs.distinct.length,
@@ -66,6 +66,18 @@ class ProtSetToProtMatchView( val identDS: IdentDataSet ) extends IFixedDatasetV
       val typicalProtMatch = protMatchById.get(typicalProteinMatchId).get
       this.formatRecord(ProtMatchBuildingContext(protSet, protSet.peptideSet, typicalProtMatch ), recordFormatter)
 
+            
+      for (       
+        // Go through all peptide matches of the sameset peptide set
+        protMatchId <- protSet.peptideSet.proteinMatchIds;
+        // Retrieve the protein match
+        protMatch <- protMatchById.get(protMatchId)
+      ) {
+    	  if(protMatchId !=typicalProteinMatchId )
+        	this.formatRecord(ProtMatchBuildingContext(protSet, protSet.peptideSet, protMatch ), recordFormatter)
+      }
+
+      
       // Sort strict subsets by descending score
       val strictSubsetsSortedByDescScore = protSet.peptideSet.strictSubsets.get.sortWith(_.score > _.score)
      
