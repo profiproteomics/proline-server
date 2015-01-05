@@ -15,8 +15,11 @@ class MasterQuantPeptideIonsViewFields (qcIds: Array[Long], ratioDefs: Array[Rat
   val AC = Field("AC")
   val DESCRIPTION = Field("Description")
   val SELECTION_LEVEL = Field("selection_level")
+  val PROT_SET_ID = Field("protein_set_id")
+  val ALL_AC = Field("ACs")
   
   // PEP HEADER
+  val PEPTIDE_ID = Field("peptide_id")
   val SEQUENCE = Field("sequence")
   val PTMS = Field("ptms")
   val PROT_SET_COUNT = Field("prot_set_count")
@@ -127,7 +130,7 @@ class MasterQuantPeptideIonsView( val quantiDS: QuantiDataSet ) extends IFixedDa
   var viewName = "exportQuantPeptideIons"
   
   case class MyBuildingContext(mqPepIon: MasterQuantPeptideIon,  mqPep: MasterQuantPeptide, pepMatchById: Map[Long, PeptideMatch],
-      protSetOpt: Option[ProteinSet], protSetCellsById: HashMap[Long,ArrayBuffer[Any]], 
+      protSetsOpt: Option[ArrayBuffer[ProteinSet]], protSetCellsById: HashMap[Long,ProtSetCells], 
       pepInstOpt: Option[PeptideInstance], qcIds: Array[Long], ratioDefs: Array[RatioDefinition]) extends IRecordBuildingContext
       
   def buildRecord( buildingContext: IRecordBuildingContext ): Map[String,Any] = {
@@ -135,7 +138,7 @@ class MasterQuantPeptideIonsView( val quantiDS: QuantiDataSet ) extends IFixedDa
     // Cast the building context
     val mqPepIon = myBuildingContext.mqPepIon
     val mqPep = myBuildingContext.mqPep
-    val protSetOpt = myBuildingContext.protSetOpt
+    val allProtSetOpt = myBuildingContext.protSetsOpt
     val protSetCellsById = myBuildingContext.protSetCellsById
     val pepInstOpt = myBuildingContext.pepInstOpt
     val qcIds = myBuildingContext.qcIds
@@ -152,13 +155,22 @@ class MasterQuantPeptideIonsView( val quantiDS: QuantiDataSet ) extends IFixedDa
     var exportMap:Map[Any,Any] = Map()
     
     // protein set data
-    if (protSetOpt.isDefined ) {
-      val protSetCell = protSetCellsById(protSetOpt.get.id)
+    if (allProtSetOpt.isDefined && allProtSetOpt.size>0) {
+      val firstId = allProtSetOpt.get.apply(0).id   
+      val protSetCell = protSetCellsById(firstId)
       exportMap += (
-    		fields.AC -> protSetCell(0),
-    		fields.DESCRIPTION -> protSetCell(1),
-    		fields.SELECTION_LEVEL -> protSetCell(2)
+		  fields.AC -> protSetCell.accession,
+		  fields.DESCRIPTION -> protSetCell.description,
+		  fields.SELECTION_LEVEL -> protSetCell.selectionLevel,
+		  fields.PROT_SET_ID -> protSetCell.proteinSetId
       )
+      
+      val accsBuilder = new StringBuilder(protSetCell.accession)
+      for( i <- 1  to (allProtSetOpt.get.size-1)){       
+        accsBuilder.append(", ").append(protSetCellsById(allProtSetOpt.get.apply(i).id ).accession)       
+      }
+      exportMap += ( fields.ALL_AC -> accsBuilder.toString())
+      
     }
     
     
@@ -167,6 +179,7 @@ class MasterQuantPeptideIonsView( val quantiDS: QuantiDataSet ) extends IFixedDa
     	  //Ajouter le m/z du pepUnst
     	  val pepInst = pepInstOpt.get
     	  val peptide = pepInst.peptide
+    	  exportMap += ( fields.PEPTIDE_ID -> peptide.id)
     	  exportMap += ( fields.SEQUENCE -> peptide.sequence)
     	  exportMap += ( fields.PTMS -> peptide.readablePtmString)
     	  exportMap += ( fields.PROT_SET_COUNT -> pepInst.proteinSetsCount)
@@ -305,6 +318,7 @@ class MasterQuantPeptideIonsView( val quantiDS: QuantiDataSet ) extends IFixedDa
   
   
   private def _getRatioStats(r: ComputedRatio) = Array(r.getState, r.getTTestPValue.getOrElse(""), r.getZTestPValue.getOrElse(""))
+  
   protected def stringifyRatiosStats(ratios: List[Option[ComputedRatio]]): List[String] = {
     ratios.flatMap(_.map( this._getRatioStats(_).map(_.toString) ).getOrElse(Array.fill(3)("")) )
   }
@@ -321,14 +335,23 @@ class MasterQuantPeptideIonsView( val quantiDS: QuantiDataSet ) extends IFixedDa
     // Create some mappings
     val mqPepById = Map() ++ quantRsm.masterQuantPeptides.map( mqPep => mqPep.id -> mqPep ) 
   
-    val protSetByPepInst = Map()++ quantRsm.resultSummary.proteinSets.flatMap( protSet => protSet.peptideSet.getPeptideInstances.map( pi => pi.id -> protSet ) )
+//    val protSetByPepInst = Map()++ quantRsm.resultSummary.proteinSets.flatMap( protSet => protSet.peptideSet.getPeptideInstances.map( pi => pi.id -> protSet ) )
+    
+    val protSetsByPepInstID = new HashMap[Long, ArrayBuffer[ProteinSet]]
+    quantRsm.resultSummary.proteinSets.foreach(protSet => {
+      protSet.peptideSet.getPeptideInstances.foreach(pepInst => {
+        val protSetList = protSetsByPepInstID.getOrElseUpdate(pepInst.id, new ArrayBuffer[ProteinSet]())
+        protSetList += protSet        
+      })            
+    })
+    
     // Iterate over master quant peptides to export them
     quantRsm.masterQuantPeptideIons.foreach { mqPepIon =>
       val mqPep = mqPepById(mqPepIon.masterQuantPeptideId)
       // Append protein set and peptide data if they are defined
       if( mqPep.peptideInstance.isDefined) {
         val pepInstId = mqPep.peptideInstance.get.id
-         this.formatRecord(MyBuildingContext( mqPepIon, mqPep, pepMatchById, protSetByPepInst.get(pepInstId), 
+         this.formatRecord(MyBuildingContext( mqPepIon, mqPep, pepMatchById, protSetsByPepInstID.get(pepInstId), 
             protSetCellsById, mqPep.peptideInstance,  qcIds, ratioDefs), recordFormatter)
       } else {
          this.formatRecord(MyBuildingContext( mqPepIon, mqPep, pepMatchById, None, protSetCellsById,None, qcIds, ratioDefs), recordFormatter)
