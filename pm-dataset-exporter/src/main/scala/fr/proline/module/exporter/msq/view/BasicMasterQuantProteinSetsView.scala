@@ -12,8 +12,12 @@ class BasicMasterQuantProteinSetsViewFields (qcIds: Array[Long], nameByQchId:  M
   val AC = Field("AC")
   val DESCRIPTION = Field("Description")
   val SELECTION_LEVEL = Field("selection_level")
+  val PROT_SET_ID = Field("protein_set_id")
   
   // fields completed with dat name
+  qcIds.foreach( qcId => {
+    Field("rawAbundance_"+nameByQchId(qcId))
+  })
   qcIds.foreach( qcId => {
     Field("abundance_"+nameByQchId(qcId))
   })
@@ -24,7 +28,10 @@ class BasicMasterQuantProteinSetsViewFields (qcIds: Array[Long], nameByQchId:  M
   def addAbundanceField(qcId: Long):  Field= {
     return Field("abundance_"+nameByQchId(qcId))
   }
-  
+
+  def addRawAbundanceField(qcId: Long):  Field= {
+    return Field("rawAbundance_"+nameByQchId(qcId))
+  }
   def addPsmCountField(qcId: Long):  Field= {
     return Field("psm_count_"+nameByQchId(qcId))
   }
@@ -37,7 +44,7 @@ class BasicMasterQuantProteinSetsView (val quantiDS: QuantiDataSet ) extends IFi
   var viewName = "exportQuantProteinSets"
   val fields  = new BasicMasterQuantProteinSetsViewFields(quantiDS.qcIds, quantiDS.nameByQchId)
   
-  case class MyBuildingContext( mqProtSet: MasterQuantProteinSet, protSetCellsById: HashMap[Long,ArrayBuffer[Any]], qcIds: Array[Long]) extends IRecordBuildingContext
+  case class MyBuildingContext( mqProtSet: MasterQuantProteinSet, protSetCellsById: HashMap[Long, ProtSetCells], qcIds: Array[Long]) extends IRecordBuildingContext
 
   def buildRecord( buildingContext: IRecordBuildingContext ): Map[String,Any] = {
     val myBuildingContext = buildingContext.asInstanceOf[MyBuildingContext]
@@ -54,9 +61,10 @@ class BasicMasterQuantProteinSetsView (val quantiDS: QuantiDataSet ) extends IFi
     if (Some(mqProtSet.proteinSet).isDefined) {
       val protSetCell = protSetCellsById(Some(mqProtSet.proteinSet).get.id)
        exportMap += (
-    		fields.AC -> protSetCell(0),
-    		fields.DESCRIPTION -> protSetCell(1),
-    		fields.SELECTION_LEVEL -> protSetCell(2)
+    		fields.AC -> protSetCell.accession,
+    		fields.DESCRIPTION -> protSetCell.description,
+    		fields.SELECTION_LEVEL -> protSetCell.selectionLevel,
+    		fields.PROT_SET_ID -> protSetCell.proteinSetId
       )
     }
     
@@ -64,7 +72,6 @@ class BasicMasterQuantProteinSetsView (val quantiDS: QuantiDataSet ) extends IFi
       
     // abundance
     qcIds.foreach( qcId => {
-    	  var abundanceFieldHeader =  "abundance_"+qcId
           var qcAbun = if(mqProtSet.quantProteinSetMap.contains(qcId)) {
             if (mqProtSet.quantProteinSetMap(qcId).abundance.isNaN()) "" else mqProtSet.quantProteinSetMap(qcId).abundance
           } else {
@@ -73,6 +80,16 @@ class BasicMasterQuantProteinSetsView (val quantiDS: QuantiDataSet ) extends IFi
           exportMap += ( fields.addAbundanceField(qcId) -> qcAbun)
         })
        
+    // rawAbundance
+    qcIds.foreach( qcId => {
+          var qcRawAbun = if(mqProtSet.quantProteinSetMap.contains(qcId)) {
+            mqProtSet.quantProteinSetMap(qcId).rawAbundance
+          } else {
+            ""
+          }
+          exportMap += ( fields.addRawAbundanceField(qcId) -> qcRawAbun)
+        })
+        
     // Add PSM_Count
     qcIds.foreach( qcId => {
       var qcPSMCount = if(mqProtSet.quantProteinSetMap.contains(qcId)) {
