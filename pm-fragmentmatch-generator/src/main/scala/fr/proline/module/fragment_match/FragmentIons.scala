@@ -44,6 +44,9 @@ case class FragmentIons(
         ionTypeZ = true
         chargeForIonsZ = charge
       }
+      case _  => {
+        
+      }
     }
   }
 
