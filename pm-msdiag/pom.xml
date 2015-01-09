@@ -21,7 +21,7 @@
 		<version.path>${basedir}/src/main/scala/fr/proline/module/quality/msdiag</version.path>
 	</properties>
 	<scm>
-	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/mzDB/mzDB-access/trunk</connection>
+	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MSDiag/trunk</connection>
 	</scm>
 
 
