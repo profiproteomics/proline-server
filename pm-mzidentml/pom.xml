@@ -19,7 +19,7 @@
     <core.version>0.2.1-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
   </properties>
 	<scm>
-	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MzIdentML/trunk</connection>
+	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MzIdentML/branches/0.0.8_RP1</connection>
 	</scm>
 
 
