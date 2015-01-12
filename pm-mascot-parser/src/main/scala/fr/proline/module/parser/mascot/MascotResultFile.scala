@@ -52,10 +52,7 @@ class MascotResultFile(
   // ---- For Java developers ;) : --- Constructor Code 
 
   // Requirements
-  require(fileLocation != null, "FileLocation is null")
-
   val fileAbsolutePath = fileLocation.getAbsolutePath
-
   require(fileLocation.isFile, "Invalid fileLocation : " + fileAbsolutePath)
 
   logger.info("Opening Mascot result file : " + fileAbsolutePath)
@@ -270,8 +267,8 @@ class MascotResultFile(
       ms1ErrorTolUnit = searchParams.getTOLU(),
       isDecoy = false,
       usedEnzymes = enzymes,
-      variablePtmDefs = ptmHelper.varPtmDefsByModName.values.flatMap { p => p } toArray,
-      fixedPtmDefs = ptmHelper.fixedPtmDefsByModName.values.flatMap { p => p } toArray,
+      variablePtmDefs = ptmHelper.varPtmDefsByModName.values.toArray.flatten,
+      fixedPtmDefs = ptmHelper.fixedPtmDefsByModName.values.toArray.flatten,
       seqDatabases = seqDbs,
       instrumentConfig = instrumentConfig.getOrElse(null),
       quantitation = ""
