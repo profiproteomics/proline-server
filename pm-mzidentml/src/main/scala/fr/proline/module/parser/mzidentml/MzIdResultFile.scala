@@ -11,6 +11,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 import fr.profi.cv._
 import fr.profi.obo.PsiMs
 import fr.profi.util.ms.MassTolUnit
+import fr.profi.util.primitives._
 import fr.proline.core.om.builder.PtmDefinitionBuilder
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msi.IResultFile
@@ -28,28 +29,6 @@ class MzIdResultFile(
   val parserContext: ProviderDecoratedExecutionContext
 ) extends IResultFile with Logging {
   
-  /** IResultFile values **/
-  val importProperties: Map[String, Any] = Map()
-  val msLevel: Int = 2
-  
-  lazy val msiSearch: MSISearch = _parseMSISearch()
-  private var msQueryByRef = new HashMap[String,MsQuery]()
-  // FIXME: this may cause some issues if msQueryByInitialId is accessed while msQueryByRef has not been initiated
-  // TODO: workaround => replace the val interfaces of IResultFile by def interfaces
-  // then set msQueryByInitialId as a def instead of a lazy val here
-  lazy val msQueryByInitialId: Map[Int,MsQuery] = msQueryByRef.values.toArray.map(msq => msq.initialId -> msq).toMap
-  val hasDecoyResultSet: Boolean = false // FIXME: is it possible ot infer this value ???
-  val hasMs2Peaklist: Boolean = true
-  
-  //var instrumentConfig: Option[InstrumentConfig] = None
-  //var peaklistSoftware: Option[PeaklistSoftware] = None
-  
-  /** Parsing file **/
-    
-  def close() { // IResultFile method called to release resources
-    // TODO: close unmarshaller ???
-  }
-  
   private val ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
   
   private lazy val mzIdUnmarshaller = new MzIdentMLUnmarshaller(fileLocation)
@@ -64,6 +43,100 @@ class MzIdResultFile(
   private lazy val mzIdAnlData = mzIdDataCollection.getAnalysisData
   private lazy val mzIdSpecIdentList = mzIdAnlData.getSpectrumIdentificationList.get(0)
   private lazy val mzIdInputs = mzIdDataCollection.getInputs()
+  
+  /** IResultFile values **/
+  val importProperties: Map[String, Any] = Map()
+  val msLevel: Int = 2
+  
+  lazy val msiSearch: MSISearch = _parseMSISearch()
+  private var msQueryByRef = new HashMap[String,MsQuery]()
+  // FIXME: this may cause some issues if msQueryByInitialId is accessed while msQueryByRef has not been initiated
+  // TODO: workaround => replace the val interfaces of IResultFile by def interfaces
+  // then set msQueryByInitialId as a def instead of a lazy val here
+  lazy val msQueryByInitialId: Map[Int,MsQuery] = {
+    
+    var msQueryCount = 0
+    for ( sIdentList <- mzIdAnlData.getSpectrumIdentificationList ) {
+      for ( sIdentResult <- sIdentList.getSpectrumIdentificationResult ) {
+        
+        val spectrumID = sIdentResult.getSpectrumID()
+        
+        for ( sIdentItem <- sIdentResult.getSpectrumIdentificationItem() ) {
+          
+          // Retrieve or create the MS Query only once
+          val msQuery = if( msQueryByRef.contains(spectrumID) ) msQueryByRef(spectrumID)
+          else {
+            msQueryCount += 1
+            
+            // Try to parse the query initial id
+            val initialId = if( spectrumID matches """query=\d+"""" ) {              
+              msQueryCount = -1
+              spectrumID.split("=").last.toInt
+            }
+            
+            // Else fallback to the msQueryCount
+            else if( msQueryCount != -1 ) msQueryCount
+            else throw new Exception("inconsistent spectrum IDs in the mzIdentML file")
+            
+            // Convert CV params into MS query properties
+            val sIRCvParams = sIdentResult.getCvParam()
+            val specTitle = findCvParamValue(sIRCvParams, PsiMs.SpectrumTitle).getOrElse(spectrumID)
+            
+            val msQueryPropsTermIds = Set(
+              PsiMs.NumberOfPeptideSeqsComparedToEachSpectrum,
+              PsiMs.MascotIdentityThreshold,
+              PsiMs.MascotHomologyThreshold
+            )
+            
+            val msQueryPropsOpt = if( filterCvParams(sIRCvParams,msQueryPropsTermIds).length == 0 ) None
+            else {
+              // TODO: parse other properties for other kind of search engines
+              val msQueryDbSearchProps = Some( MsQueryDbSearchProperties(
+                candidatePeptidesCount = findCvParamValue(sIRCvParams, PsiMs.NumberOfPeptideSeqsComparedToEachSpectrum).map(_.toInt).getOrElse(0),              
+                mascotIdentityThreshold = findCvParamValue(sIRCvParams, PsiMs.MascotIdentityThreshold).map(_.toFloat),
+                mascotHomologyThreshold = findCvParamValue(sIRCvParams, PsiMs.MascotHomologyThreshold).map(_.toFloat)
+              ) )
+              
+              // FIXME: retrieve specific values for target and decoy searches (if separate searches)
+              Some( MsQueryProperties(
+                targetDbSearch = msQueryDbSearchProps,
+                decoyDbSearch = msQueryDbSearchProps
+              ) )
+            }
+            
+            val tmpMsQuery = new Ms2Query(
+              id = Ms2Query.generateNewId,
+              initialId = initialId,
+              moz = sIdentItem.getExperimentalMassToCharge(),
+              charge = sIdentItem.getChargeState(),
+              spectrumTitle = specTitle,
+              properties = msQueryPropsOpt
+            )
+            
+            msQueryByRef.synchronized {
+              msQueryByRef(spectrumID) = tmpMsQuery
+            }
+            
+            tmpMsQuery
+          }
+        }
+      }
+    }
+    
+    msQueryByRef.values.toArray.map(msq => msq.initialId -> msq).toMap
+  }
+  
+  val hasDecoyResultSet: Boolean = false // FIXME: is it possible ot infer this value ???
+  val hasMs2Peaklist: Boolean = true
+  
+  //var instrumentConfig: Option[InstrumentConfig] = None
+  //var peaklistSoftware: Option[PeaklistSoftware] = None
+  
+  /** Parsing file **/
+    
+  def close() { // IResultFile method called to release resources
+    // TODO: close unmarshaller ???
+  }
   
   private lazy val seqDbByRef: Map[String,SeqDatabase] = {
     
@@ -400,7 +473,7 @@ class MzIdResultFile(
       println(seqPos)
       println(ptmDef)*/
       
-      locatedPtms += PtmDefinitionBuilder.buildLocatedPtm(
+      locatedPtms += LocatedPtm(
         ptmDef = ptmDef,
         seqPos = seqPos
       )
@@ -427,7 +500,6 @@ class MzIdResultFile(
     
     case class MzIdSequenceMatch( id: String, dbSeqRef: String, sequenceMatch: SequenceMatch )
     
-    val mzIdAD = mzIdDataCollection.getAnalysisData()
     val newRsId = ResultSet.generateNewId()
     
     val mzIdSeqMatchById = new HashMap[String,MzIdSequenceMatch]()
@@ -476,70 +548,16 @@ class MzIdResultFile(
 
     // Get the list of SpectrumIdentification elements
     // TODO: how to handle multiple SpectrumIdentifications
-    var msQueryCount = 0
-    for ( sIdentList <- mzIdAD.getSpectrumIdentificationList ) {
+    val msQueryByInitialId = this.msQueryByInitialId // initialize the lazy field
+    for ( sIdentList <- mzIdAnlData.getSpectrumIdentificationList ) {
       for ( sIdentResult <- sIdentList.getSpectrumIdentificationResult ) {
         
         val spectrumID = sIdentResult.getSpectrumID()
         
         for ( sIdentItem <- sIdentResult.getSpectrumIdentificationItem() ) {
           
-          // Retrieve or create the MS Query only once
-          val msQuery = if( msQueryByRef.contains(spectrumID) ) msQueryByRef(spectrumID)
-          else {
-            msQueryCount += 1
-            
-            // Try to parse the query initial id
-            val initialId = if( spectrumID matches """query=\d+"""" ) {              
-              msQueryCount = -1
-              spectrumID.split("=").last.toInt
-            }
-            // Else fallback to the msQueryCount
-            else if( msQueryCount != -1 ) msQueryCount
-            else throw new Exception("inconsistent spectrum IDs in the mzIdentML file")
-            
-            // Convert CV params into MS query properties
-            val sIRCvParams = sIdentResult.getCvParam()
-            val specTitle = findCvParamValue(sIRCvParams, PsiMs.SpectrumTitle).getOrElse(spectrumID)
-            
-            val msQueryPropsTermIds = Set(
-              PsiMs.NumberOfPeptideSeqsComparedToEachSpectrum,
-              PsiMs.MascotIdentityThreshold,
-              PsiMs.MascotHomologyThreshold
-            )
-            
-            val msQueryPropsOpt = if( filterCvParams(sIRCvParams,msQueryPropsTermIds).length == 0 ) None
-            else {
-              // TODO: parse other properties for other kind of search engines
-              val msQueryDbSearchProps = Some( MsQueryDbSearchProperties(
-                candidatePeptidesCount = findCvParamValue(sIRCvParams, PsiMs.NumberOfPeptideSeqsComparedToEachSpectrum).map(_.toInt).getOrElse(0),              
-                mascotIdentityThreshold = findCvParamValue(sIRCvParams, PsiMs.MascotIdentityThreshold).map(_.toFloat),
-                mascotHomologyThreshold = findCvParamValue(sIRCvParams, PsiMs.MascotHomologyThreshold).map(_.toFloat)
-              ) )
-              
-              // FIXME: retrieve specific values for target and decoy searches (if separate searches)
-              Some( MsQueryProperties(
-                targetDbSearch = msQueryDbSearchProps,
-                decoyDbSearch = msQueryDbSearchProps
-              ) )
-            }
-            
-            val tmpMsQuery = new Ms2Query(
-              id = Ms2Query.generateNewId,
-              initialId = initialId,
-              moz = sIdentItem.getExperimentalMassToCharge(),
-              charge = sIdentItem.getChargeState(),
-              spectrumTitle = specTitle,
-              properties = msQueryPropsOpt
-            )
-            
-            msQueryByRef.synchronized {
-              msQueryByRef(spectrumID) = tmpMsQuery
-            }
-            
-            tmpMsQuery
-          }
-    
+          val msQuery = msQueryByRef(spectrumID)
+          
           // Retrieve the corresponding sequence matches
           val pepMatchMzIdSeqMatches = sIdentItem.getPeptideEvidenceRef().map( ref => mzIdSeqMatchById(ref.getPeptideEvidenceRef) )
           
@@ -724,6 +742,52 @@ class MzIdResultFile(
   }
   
   def eachSpectrum( onEachSpectrum: Spectrum => Unit ): Unit = {
+    
+    for (initialId <- msQueryByInitialId.keys.toArray.sorted) {
+      
+      val msQuery = msQueryByInitialId(initialId)
+      msQuery match {
+        case ms1Query: Ms1Query => {}
+        case ms2Query: Ms2Query => {
+          
+          // Retrieve spectrum title and instrument config id
+          val spectrumTitle = ms2Query.spectrumTitle
+          val instConfigId = if (instrumentConfig.isDefined) instrumentConfig.get.id else 0
+      
+          val specTitleFieldMapOpt = if (peaklistSoftware.isEmpty) None
+          else peaklistSoftware.get.specTitleParsingRule.map(_.parseTitle(spectrumTitle))
+          
+          val specTitleFieldMap = specTitleFieldMapOpt.getOrElse(Map.empty[SpectrumTitleFields.Value, String])
+      
+          // TODO: put in primitives utils
+          def toIntOrZero(v: Any): Int = try { toInt(v) } catch { case e: Throwable => 0 }
+          def toFloatOrZero(v: Any): Float = try { toFloat(v) } catch { case e: Throwable => 0f }
+      
+          val titleFields = SpectrumTitleFields
+      
+          val spec = new Spectrum(
+            id = Spectrum.generateNewId,
+            title = spectrumTitle,
+            precursorMoz = ms2Query.moz,
+            precursorCharge = ms2Query.charge,
+            firstCycle = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_CYCLE, 0)),
+            lastCycle = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_CYCLE, 0)),
+            firstScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_SCAN, 0)),
+            lastScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_SCAN, 0)),
+            firstTime = toFloatOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_TIME, 0f)),
+            lastTime = toFloatOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_TIME, 0f)),
+            // TODO: add peaks if available or infer them from fragment matches
+            mozList = None,
+            intensityList = None,
+            peaksCount = 0,
+            instrumentConfigId = instConfigId,
+            peaklistId = msiSearch.peakList.id
+          )
+          
+          onEachSpectrum(spec)
+        }
+      }      
+    }
     
   }
   
