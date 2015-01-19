@@ -1,16 +1,12 @@
 package fr.proline.core.service.msi
 
 import java.io.File
-
 import scala.Array.canBuildFrom
-
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.proline.context.BasicExecutionContext
 import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter
 import fr.proline.core.om.model.msi.PeptideMatch
@@ -20,10 +16,10 @@ import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.core.om.provider.msi.IProteinProvider
 import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
-import fr.proline.module.parser.provider.fake.PTMFakeProvider
-import fr.proline.module.parser.provider.fake.PeptideFakeProvider
-import fr.proline.module.parser.provider.fake.ProteinFakeProvider
-import fr.proline.module.parser.provider.fake.SeqDbFakeProvider
+import fr.proline.core.om.provider.msi.SeqDbFakeProvider
+import fr.proline.core.om.provider.msi.PTMFakeProvider
+import fr.proline.core.om.provider.msi.ProteinFakeProvider
+import fr.proline.core.om.provider.msi.PeptideFakeProvider
 
 @Test
 class TargetDecoySplitterTest extends JUnitSuite with Logging { 

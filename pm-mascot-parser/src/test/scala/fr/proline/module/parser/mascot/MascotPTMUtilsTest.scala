@@ -1,19 +1,16 @@
 package fr.proline.module.parser.mascot
 
-import java.net.URL
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashMap
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi.PtmDefinition
-import fr.proline.module.parser.provider.fake.EmptyPTMProvider
-import fr.proline.module.parser.provider.fake.PeptideFakeProvider
-import fr.proline.module.parser.provider.fake.PTMFakeProvider
 import fr.proline.core.om.model.msi.PtmLocation
-import scala.collection.mutable.HashMap
-import org.junit.After
+import fr.proline.core.om.provider.msi.EmptyPTMProvider
+import fr.proline.core.om.provider.msi.PTMFakeProvider
 
 @Test
 class MascotPTMUtilsTest extends Logging {

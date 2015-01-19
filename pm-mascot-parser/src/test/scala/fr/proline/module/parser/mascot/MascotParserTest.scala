@@ -19,11 +19,11 @@ import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IProteinProvider
 import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
-import fr.proline.module.parser.provider.fake.ProteinFakeProvider
-import fr.proline.module.parser.provider.fake.SeqDbFakeProvider
 import fr.proline.repository.ProlineDatabaseType
 import fr.proline.repository.util.DatabaseTestCase
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
+import fr.proline.core.om.provider.msi.ProteinFakeProvider
+import fr.proline.core.om.provider.msi.SeqDbFakeProvider
 
 @Test
 class MascotParserTest extends Logging { // }extends DatabaseTestCase {
