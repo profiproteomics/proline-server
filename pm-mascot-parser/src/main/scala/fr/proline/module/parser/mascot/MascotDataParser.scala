@@ -5,8 +5,16 @@ import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.builder.PtmDefinitionBuilder
 import fr.proline.core.om.model.msi._
-import fr.proline.core.om.provider.msi.{ IPTMProvider, IPeptideProvider, IProteinProvider }
-import matrix_science.msparser.{ ms_mascotresfile, ms_peptide, ms_peptidesummary, vectori, VectorString }
+import fr.proline.core.om.provider.msi.IPTMProvider
+import fr.proline.core.om.provider.msi.IPeptideProvider
+import fr.proline.core.om.provider.msi.IProteinProvider
+import fr.proline.core.om.provider.msi.ProteinEmptyFakeProvider
+import fr.proline.core.om.provider.msi.ProteinFakeProvider
+import matrix_science.msparser.ms_mascotresfile
+import matrix_science.msparser.ms_peptide
+import matrix_science.msparser.ms_peptidesummary
+import matrix_science.msparser.vectori
+import matrix_science.msparser.VectorString
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import scala.collection.mutable.ArrayBuilder
 
@@ -62,8 +70,13 @@ class MascotDataParser(
     //Get Necessary providers : for peptide, protein and ptms
     val pepProvider = parserContext.getProvider(classOf[IPeptideProvider])
     val ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
-    val protProvider = parserContext.getProvider(classOf[IProteinProvider])
-
+    val protProvider = if(parserContext.getProvider(classOf[IProteinProvider]) == null || 
+      parserContext.getProvider(classOf[IProteinProvider]).isInstanceOf[ProteinEmptyFakeProvider]  ) {
+    	   ProteinFakeProvider //Fake provider should at least create Fake Proteins, not None
+    } else {
+		   parserContext.getProvider(classOf[IProteinProvider])
+    }
+    
     // parsed data
     val bestPepMatchByPepKey = new HashMap[String, PeptideMatch]()
     pepByUniqueKey = new HashMap[String, Peptide]()
