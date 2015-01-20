@@ -4,7 +4,6 @@ import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.{ IProteinProvider, ISeqDatabaseProvider, IPeptideProvider }
 import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-//import fr.proline.core.om.builder.PtmDefinitionBuilder
 import scala.collection.mutable.{ ArrayBuffer, HashMap }
 import java.io.File
 import javax.xml.stream.XMLInputFactory
@@ -32,10 +31,8 @@ object OmssaReadFile {
     val fis: FileInputStream = new FileInputStream(omxFile)
     val bis: BufferedInputStream = new BufferedInputStream(fis)
     new CompressorStreamFactory().createCompressorInputStream(bis)
-//    new CompressorStreamFactory().createCompressorInputStream(new BufferedInputStream(new FileInputStream(omxFile)))
   }
   def openOmxFile(inf: SMInputFactory, omxFile: File) : SMHierarchicCursor = {
-//    val inf: SMInputFactory = new SMInputFactory(XMLInputFactory.newInstance())
     if(omxFile.getName().endsWith(".omx.bz2"))
       inf.rootElementCursor(this.getBz2FileAsStream(omxFile))
     else
@@ -45,13 +42,12 @@ object OmssaReadFile {
 
 class OmssaReadFile(val omxFile: File,
                     val parseProperties: Map[OmssaParseParams.OmssaParseParam, Any],
-                    val omssaLoader: OmssaMandatoryFilesLoader,
-//                    val peaklist: Peaklist,
-                    //                    val instrumentConfig: Option[InstrumentConfig],
-                    //  val omssaDefaultVersion: String, 
-                    val parserContext: ProviderDecoratedExecutionContext //  entityProviders: EntityProviders
+                    val omssaLoader: OmssaMandatoryFilesLoader, 
+                    val parserContext: ProviderDecoratedExecutionContext
                     ) extends Logging {
 
+  private val OMSSA_HIGHEST_SCORE = 20
+  
   private val omssaScoreType = "omssa:expect value"
   private var pepByUniqueKey: HashMap[String, Peptide] = null
   def getPeptideByUniqueKey: HashMap[String, Peptide] = pepByUniqueKey
@@ -66,31 +62,19 @@ class OmssaReadFile(val omxFile: File,
   def getPeptideMatchProteinMatchToSequenceMatch: TwoDimensionsMap[Long, Long, SequenceMatch] = peptideMatchProteinMatchToSequenceMatch
   private var proteinAccessionNumbersToProteinMatches: HashMap[String, ProteinMatch] = null
   def mzScale: Int = currentFileMzScale
-//  private var nbSequencesInFastaFile: Int = 0
   private var searchSettingsReference: ArrayBuffer[String] = null
   private var searchSettingsCandidate: ArrayBuffer[String] = null
   private var seqDatabase: SeqDatabase = null
   private var msiSearch: MSISearch = null
   def getMsiSearch: MSISearch = msiSearch
-//  private val hasTargetResultSet: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_TARGET, true).toString.toBoolean
-//  private val hasDecoyResultSet: Boolean = parseProperties.getOrElse(OmssaParseParams.FASTA_CONTAINS_DECOY, true).toString.toBoolean
-  // the Mz in the omssa files are Integers, they must be divided by this number to get the real value
-  // a special class is used to get the value from the file before reading it
-//  private val mozScaleExtractor = new OmssaMozScaleExtractor(omxFile)
-//  private var currentFileMzScale = mozScaleExtractor.mozScaleValue()
   val omssaPreloader = new OmssaFilePreloader(omxFile)
   private val currentFileMzScale = omssaPreloader.mozScaleValue
   private val nbSequencesInFastaFile = omssaPreloader.nbSequencesInFastaFile
-//  private val currentFileMzScale = omssaPreloader.getMozScaleValue
-//  private val nbSequencesInFastaFile = omssaPreloader.getNbSequencesInFastaFile
-  //  private val MINUS_LOG_EVALUE_MIN_SCORE = -1
-  //  private val MINUS_LOG_EVALUE_MAX_SCORE = 300
   private var peaklist: Peaklist = null
   def getPeaklist: Peaklist = {
     if(peaklist == null) setPeaklist("")
     peaklist
   }
-//  private val proteinSequencesByInternalIds = omssaPreloader.getProteinSequencesByInternalIds
   private val proteinSequencesByInternalIds = omssaPreloader.proteinInternalIdToSequence
 
   _parseOmxFile()
@@ -98,7 +82,6 @@ class OmssaReadFile(val omxFile: File,
   private def _parseOmxFile() {
     pepByUniqueKey = new HashMap[String, Peptide]()
     var pepProvider = parserContext.getProvider(classOf[IPeptideProvider])
-//    val ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
     var protProvider = parserContext.getProvider(classOf[IProteinProvider])
     val seqDbProvider = parserContext.getProvider(classOf[ISeqDatabaseProvider])
     msQueries = new HashMap[Int, Ms2Query]()
@@ -110,10 +93,7 @@ class OmssaReadFile(val omxFile: File,
 
     logger.info("readOmxFile(" + omxFile.getAbsolutePath() + ")")
     var nbSpectra: Int = 0
-    // open an input factory
-//    val inf: SMInputFactory = new SMInputFactory(XMLInputFactory.newInstance())
 //    // get the root cursor
-//    val MSSearch: SMHierarchicCursor = inf.rootElementCursor(omxFile)
     val MSSearch: SMHierarchicCursor = OmssaReadFile.openOmxFile(new SMInputFactory(XMLInputFactory.newInstance()), omxFile)
     MSSearch.setElementTracking(SMInputCursor.Tracking.PARENTS)
     MSSearch.advance
@@ -250,16 +230,8 @@ class OmssaReadFile(val omxFile: File,
                           val MSHits_firstChild = MSHits.childElementCursor().advance()
                           while (MSHits_firstChild.getCurrEvent() != null) {
                             MSHits_firstChild.getPrefixedName() match {
-                              //                              case "MSHits_evalue" => peptideMatchExpectValue = MSHits_firstChild.collectDescendantText(false).toFloat
                               case "MSHits_evalue" =>
                                 peptideMatchExpectValue = MSHits_firstChild.collectDescendantText(false).toDouble
-                              // exclude this match for e-values too small
-                              //                                if(minusLogEValue(peptideMatchExpectValue) > MINUS_LOG_EVALUE_MAX_SCORE) {
-                              //                                  logger.info("Hit "+peptideMatchRank+" for spectrum "+hitSetNumber+" is ignored due to an excessively low e-value ("+peptideMatchExpectValue+")")
-                              //                                  while (MSHits_firstChild.getCurrEvent() != null) {
-                              //                                	  MSHits_firstChild.advance()
-                              //                                  }
-                              //                                }
                               case "MSHits_pvalue" => peptideMatchPValue = MSHits_firstChild.collectDescendantText(false).toFloat
                               case "MSHits_charge" => peptideCharge = MSHits_firstChild.collectDescendantText(false).toInt
                               case "MSHits_pephits" => // one MSPepHit per ProteinMatch/SequenceMatch
@@ -305,7 +277,6 @@ class OmssaReadFile(val omxFile: File,
                                     } else { // Try to get Protein from repository  
                                       protein = protProvider.getProtein(proteinMatchAccessionNumber, seqDatabase)
                                       if(protein == None && proteinSequence != "") {
-//                                        logger.debug("Adding sequence to protein "+proteinMatchAccessionNumber+" ("+proteinSequence+")")
                                         logger.debug("Adding sequence to protein "+proteinMatchAccessionNumber)
                                         protein = Some(new Protein(id = Protein.generateNewId, sequence = proteinSequence))
                                       }
@@ -387,9 +358,6 @@ class OmssaReadFile(val omxFile: File,
                                     if (locatedPtmDefinition.get.location.matches(".+N-term$")) locatedPtmSite = 0
                                     else if (locatedPtmDefinition.get.location.matches(".+C-term$")) locatedPtmSite = -1
                                     peptideLocatedPtms += LocatedPtm(ptmDef = locatedPtmDefinition.get, seqPos = locatedPtmSite)
-//                                    peptideLocatedPtms += PtmDefinitionBuilder.buildLocatedPtm(
-//                                      ptmDef = locatedPtmDefinition.get,
-//                                      seqPos = locatedPtmSite)
                                   }
                                   MSModHit.advance()
                                 }
@@ -401,7 +369,6 @@ class OmssaReadFile(val omxFile: File,
                             MSHits_firstChild.advance()
                           }
                           MSHits.advance()
-                          // if(minusLogEValue(peptideMatchExpectValue) <= MINUS_LOG_EVALUE_MAX_SCORE) {
                           // create the Peptide object
                           val peptide = this.getOrCreatePeptide(peptideLocatedPtms, peptideSequence, pepProvider)
                           // add properties
@@ -423,7 +390,6 @@ class OmssaReadFile(val omxFile: File,
                             fragmentMatchesCount = peptideMatchFragmentMatchesCount,
                             properties = Some(peptideMatchProperties),
                             msQuery = msQueries.get(hitSetNumber).getOrElse(null))
-//                            charge = Some(peptideCharge))
                           // add the protein matches to the currently best peptide match
                           peptideMatchToProteinMatches.put(peptideMatch.id, proteinMatches)
                           for ((proteinMatchId, sequenceMatch) <- proteinMatchIdToSequenceMatches) {
@@ -436,7 +402,6 @@ class OmssaReadFile(val omxFile: File,
                             )
                           }
                           peptideToPeptideMatches.getOrElseUpdate(peptide, new ArrayBuffer[PeptideMatch]) += peptideMatch
-                          //                          }
                         }
                       case _ => // contains useless information
                     }
@@ -444,12 +409,6 @@ class OmssaReadFile(val omxFile: File,
                   }
                   MSHitSet.advance()
                 }
-
-//              case "MSResponse_scale"     => currentFileMzScale = MSResponse_firstChild.collectDescendantText(false).toInt
-//              case "MSResponse_dbversion" => {
-//                nbSequencesInFastaFile = MSResponse_firstChild.collectDescendantText(false).toInt
-//                logger.debug("achtung !!! "+nbSequencesInFastaFile)
-//              }
               case _                      => // the bioseq part is not read
             }
             MSResponse_firstChild.advance()
@@ -467,15 +426,15 @@ class OmssaReadFile(val omxFile: File,
   }
 
   /**
+   * 20 should be the maximal score value (very low or null evalues would give infinite score)
    * @param evalue the e-value read in the omssa file
    * @return -log(e-value)
    */
-  private def minusLogEValue(evalue: Double): Float = (-1 * scala.math.log10(evalue.toFloat)).toFloat
-//  private def minusLogEValue(evalue: Double): Float = {
-//    var score = (-1 * scala.math.log10(evalue.toFloat)).toFloat
-//    if(score > 20) score = 20
-//    score
-//  }
+  private def minusLogEValue(evalue: Double): Float = {
+    var score = (-1 * scala.math.log10(evalue.toFloat)).toFloat
+    if(score > OMSSA_HIGHEST_SCORE) score = OMSSA_HIGHEST_SCORE
+    score
+  }
 
   /**
    * Search for OM Peptide corresponding to specified ms_peptide. Search / Creation is done as follow
@@ -552,7 +511,6 @@ class OmssaReadFile(val omxFile: File,
         sequencesCount = nbSequencesInFastaFile,
         searchedSequencesCount = nbSequencesInFastaFile,
         version = version,
-//        releaseDate = null,
         releaseDate = new java.util.Date,
         properties = None,
         searchProperties = None
@@ -602,7 +560,6 @@ class OmssaReadFile(val omxFile: File,
       peakList = peaklist,
       date = new java.util.Date(omxFile.lastModified()), // the lastModified date of the file will not always correspond to the search date
       title = omxFile.getName(),
-//      resultFileDirectory = omxFile.getPath(),
       resultFileDirectory = omxFile.getParentFile().getAbsolutePath(),
       jobNumber = 0,
       userName = "",
@@ -614,7 +571,6 @@ class OmssaReadFile(val omxFile: File,
 
   private def setPeaklist(peaklistPath: String) = {
     var peaklistType = "mgf"; // mgf is the default value
-//    logger.debug("Generating peaklist object with peaklistPath="+peaklistPath)
     omssaLoader.spectrumFileTypes.foreach { fileType => if (peaklistPath.matches("." + fileType._2 + "$")) peaklistType = fileType._2 } // look at the file extension
     peaklist = new Peaklist(
       id = Peaklist.generateNewId,
@@ -687,9 +643,6 @@ class OmssaReadFile(val omxFile: File,
       if (path.matches(".*MSSearchSettings_settingid$") || path.matches(".*MSOutFile_outfile$")) {
         return goThrough(node.advance)
       }
-//      if (path.matches(".*MSSearchSettings_settingid$") || path.matches(".*MSInFile_infile$") || path.matches(".*MSOutFile_outfile$")) {
-//        return goThrough(node.advance)
-//      }
       var nbAttr = node.getAttrCount()
       if (nbAttr > 0) {
         for (i <- 0.until(nbAttr)) {
@@ -715,7 +668,7 @@ class OmssaReadFile(val omxFile: File,
     val mainErrorMessage = "Multiple sets of settings with heterogeneous search settings (this OMSSA file is the merge of different OMSSA searches)"
     searchSettingsReference.foreach(
       (element: String) => if (searchSettingsCandidate.indexOf(element) == -1) {
-        if(!element.matches(".*MSInFile_infile.*")) { //logger.debug("AAABBBUUU ::: "+element) }
+        if(!element.matches(".*MSInFile_infile.*")) {
 	        throw new NotMatchingSearchSettingsException(mainErrorMessage + " : The setting '" + element + "' has at least one different setting")
 	        return false
         }
