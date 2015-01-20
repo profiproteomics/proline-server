@@ -4,7 +4,7 @@ import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.{ IProteinProvider, ISeqDatabaseProvider, IPeptideProvider }
 import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.builder.PtmDefinitionBuilder
+//import fr.proline.core.om.builder.PtmDefinitionBuilder
 import scala.collection.mutable.{ ArrayBuffer, HashMap }
 import java.io.File
 import javax.xml.stream.XMLInputFactory
@@ -386,9 +386,10 @@ class OmssaReadFile(val omxFile: File,
                                     // the site may be equal to 0 for a ptm location equal to "anywhere"
                                     if (locatedPtmDefinition.get.location.matches(".+N-term$")) locatedPtmSite = 0
                                     else if (locatedPtmDefinition.get.location.matches(".+C-term$")) locatedPtmSite = -1
-                                    peptideLocatedPtms += PtmDefinitionBuilder.buildLocatedPtm(
-                                      ptmDef = locatedPtmDefinition.get,
-                                      seqPos = locatedPtmSite)
+                                    peptideLocatedPtms += LocatedPtm(ptmDef = locatedPtmDefinition.get, seqPos = locatedPtmSite)
+//                                    peptideLocatedPtms += PtmDefinitionBuilder.buildLocatedPtm(
+//                                      ptmDef = locatedPtmDefinition.get,
+//                                      seqPos = locatedPtmSite)
                                   }
                                   MSModHit.advance()
                                 }
@@ -527,7 +528,7 @@ class OmssaReadFile(val omxFile: File,
     val inputFilePath = parseProperties.get(OmssaParseParams.PEAK_LIST_FILE_PATH).toString
     
     val msmstol = extract(find("MSSearchSettings_msmstol")).toDouble
-    val msmstolUnit = ms1ErrorTolUnit
+    val msmstolUnit = omssaLoader.toleranceUnit(extract(find("MSSearchSettings_msmsppm/value")))
     val msmsChargeState = extract(find("MSChargeHandle_maxproductcharge")).toInt
     val ionTypes = new ArrayBuffer[String]()
 

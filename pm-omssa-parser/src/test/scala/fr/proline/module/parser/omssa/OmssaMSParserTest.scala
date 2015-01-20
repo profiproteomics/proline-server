@@ -501,6 +501,11 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
     // second file with product ion M/z tolerance at 0.25ppm 
     val omssaOmxFilePpm = parseOmxFile("STG_NCSpiste1_OTD_precursorDaltonFragmentsPpm.omx")
     val rsPpm = omssaOmxFilePpm.getResultSet(false)
+    // check error tolerance units
+    assert(rsDalton.msiSearch.get.searchSettings.ms1ErrorTolUnit.equals("Da"))
+    assert(rsDalton.msiSearch.get.searchSettings.msmsSearchSettings.get.ms2ErrorTolUnit.equals("Da"))
+    assert(rsPpm.msiSearch.get.searchSettings.ms1ErrorTolUnit.equals("Da"))
+    assert(rsPpm.msiSearch.get.searchSettings.msmsSearchSettings.get.ms2ErrorTolUnit.equals("Ppm"))
     // both should return the same number of peptides and the same peptides in the same order
     assert(rsDalton.peptideMatches.length == rsPpm.peptideMatches.length)
     var nbCommonPeptideMatches: Int = 0
