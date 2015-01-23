@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -19,9 +20,9 @@
     <core.version>0.3.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
     <version.path>${basedir}/src/main/scala/fr/proline/module/parser/mascot</version.path>
   </properties>
-	<scm>
-	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MascotParser/trunk</connection>
-	</scm>
+  <scm>
+    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MascotParser/trunk</connection>
+  </scm>
 
 
   <dependencies>
@@ -47,19 +48,12 @@
       <version>0.0.6-SNAPSHOT</version>
     </dependency>
 
-    <!-- Mascot Parser native libraries (for all OSes, loaded at runtime)
-         msparser.jar dependency is defined via Maven profiles -->
+    <!-- Mascot Parser native libraries (for all OSes, loaded at runtime) 
+      msparser.jar dependency is defined via Maven profiles -->
     <dependency>
       <groupId>matrixscience</groupId>
       <artifactId>MSParser-native-libraries-2.4.00</artifactId>
       <version>0.0.5</version>
-    </dependency>
-
-    <!-- BioJava -->
-    <dependency>
-      <groupId>biojava</groupId>
-      <artifactId>biojava</artifactId>
-      <version>1.7</version>
     </dependency>
 
     <!-- Proline -->
@@ -78,7 +72,7 @@
       <artifactId>Proline-OMP</artifactId>
       <version>${core.version}</version>
     </dependency>
-	<dependency>
+    <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>PM-FragmentMatchGenerator</artifactId>
       <version>0.1.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
@@ -131,7 +125,7 @@
   </dependencies>
 
   <build>
-  
+
     <pluginManagement>
       <plugins>
         <!-- For Eclipse build -->
@@ -154,8 +148,8 @@
                   </pluginExecutionFilter>
                   <action>
                     <execute>
-                       <runOnIncremental>false</runOnIncremental>
-                     </execute>
+                      <runOnIncremental>false</runOnIncremental>
+                    </execute>
                   </action>
                 </pluginExecution>
 
@@ -165,7 +159,7 @@
         </plugin>
       </plugins>
     </pluginManagement>
-    
+
     <plugins>
 
       <plugin>
@@ -180,39 +174,39 @@
       <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
-        <version>3.1.6</version>
+        <!-- Version inherited from ProFI-Pom -->
       </plugin>
-      
-       <plugin>
+
+      <plugin>
         <groupId>com.google.code.maven-replacer-plugin</groupId>
         <artifactId>replacer</artifactId>
 
         <executions>
           <execution>
             <phase>generate-sources</phase>
-              <goals>
-                <goal>replace</goal>
-              </goals>
-           </execution>
-         </executions>
+            <goals>
+              <goal>replace</goal>
+            </goals>
+          </execution>
+        </executions>
 
-         <configuration>
-           <file>${version.path}/Version.scala.template</file>
-           <outputFile>${version.path}/Version.scala</outputFile>
-           <replacements>
-             <replacement>
-               <token>@moduleName@</token>
-               <value>${project.artifactId}</value>
-             </replacement>
-             <replacement>
-               <token>@version@</token>
-               <value>${project.version}_${maven.build.timestamp}_${user.name}</value>
-             </replacement>
-           </replacements>
-         </configuration>
+        <configuration>
+          <file>${version.path}/Version.scala.template</file>
+          <outputFile>${version.path}/Version.scala</outputFile>
+          <replacements>
+            <replacement>
+              <token>@moduleName@</token>
+              <value>${project.artifactId}</value>
+            </replacement>
+            <replacement>
+              <token>@version@</token>
+              <value>${project.version}_${maven.build.timestamp}_${user.name}</value>
+            </replacement>
+          </replacements>
+        </configuration>
 
       </plugin>
-            	
+
     </plugins>
 
   </build>
