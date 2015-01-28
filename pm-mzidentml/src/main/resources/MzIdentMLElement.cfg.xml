@@ -23,7 +23,7 @@ Configurations for various properties of model classes.
         <autoRefResolving>false</autoRefResolving>
         <cached>false</cached>
         <idMapped>false</idMapped>
-        <indexed>false</indexed>
+        <indexed>true</indexed>
     </configurations>
     <configurations>
         <autoRefResolving>false</autoRefResolving>
