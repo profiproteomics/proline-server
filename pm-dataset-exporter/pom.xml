@@ -46,6 +46,13 @@
       <artifactId>antlr</artifactId>
       <version>2.7.7</version>
     </dependency>
+    
+    <!-- Commons IO used for resursive delete -->
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>1.4</version>
+    </dependency>
 
     <!-- for debugging purpose TODO: remove me -->
     <dependency>
