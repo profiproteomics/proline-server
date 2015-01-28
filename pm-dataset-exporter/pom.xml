@@ -47,24 +47,6 @@
       <version>2.7.7</version>
     </dependency>
 
-    <!-- Serialization and IO (for debugging purpose) TODO: remove me -->
-    <dependency>
-      <groupId>com.lambdaworks</groupId>
-      <artifactId>jacks_${scala.version}</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.module</groupId>
-      <artifactId>jackson-module-scala_${scala.version}</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
-    </dependency>
-
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>1.4</version>
-    </dependency>
-
     <!-- for debugging purpose TODO: remove me -->
     <dependency>
       <groupId>com.carrotsearch</groupId>
@@ -163,7 +145,7 @@
       <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
-        <version>3.1.6</version>
+        <!-- Version inherited from ProFI-Pom -->
       </plugin>
       	  
     </plugins>
