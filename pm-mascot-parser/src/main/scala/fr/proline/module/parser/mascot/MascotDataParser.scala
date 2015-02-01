@@ -140,6 +140,8 @@ class MascotDataParser(
             rank = k,
             score = pepMatchScore,
             scoreType = "mascot:ions score",
+            charge = currentMSPep.getCharge,
+            experimentalMz = query.moz.toFloat,
             deltaMoz = (currentMSPep.getDelta() / query.charge).toFloat, // getDelta returns expMass - calcMass
             isDecoy = isDecoy,
             peptide = parsedPep,
