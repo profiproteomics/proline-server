@@ -114,7 +114,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   val hasDecoyResultSet = false
   val omssaSettingsInHashTable = fileReader.omssaSettingsInHashTable
 
-  def getMsQueries = fileReader.getMsQueries.values.toArray[Ms2Query]
+  def msQueries = fileReader.getMsQueries.values.toArray
 
   val peaklist: Peaklist = fileReader.getPeaklist
 //  lazy val peaklist: Peaklist = {
@@ -133,13 +133,13 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
 //  }
 
   // Load the MS queries here when requested
-  lazy val msQueryByInitialId: Map[Int, MsQuery] = {
+  /*lazy val msQueryByInitialId: Map[Int, MsQuery] = {
     val msQueryMapBuilder = scala.collection.immutable.Map.newBuilder[Int, MsQuery]
     for (query <- fileReader.getMsQueries) {
       msQueryMapBuilder += (query._1 -> query._2)
     }
     msQueryMapBuilder.result()
-  }
+  }*/
 
   /**
    * Create from the omx file a MSISearch with all associated information :
