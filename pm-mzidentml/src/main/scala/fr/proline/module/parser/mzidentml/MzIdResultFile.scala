@@ -50,10 +50,10 @@ class MzIdResultFile(
   
   lazy val msiSearch: MSISearch = _parseMSISearch()
   private var msQueryByRef = new HashMap[String,MsQuery]()
+
   // FIXME: this may cause some issues if msQueryByInitialId is accessed while msQueryByRef has not been initiated
-  // TODO: workaround => replace the val interfaces of IResultFile by def interfaces
-  // then set msQueryByInitialId as a def instead of a lazy val here
-  lazy val msQueryByInitialId: Map[Int,MsQuery] = {
+  // TODO: load msQueryByRef even if a ResultSet has not been loaded yet
+  def msQueries: Array[MsQuery] = {
     
     var msQueryCount = 0
     for ( sIdentList <- mzIdAnlData.getSpectrumIdentificationList ) {
@@ -123,7 +123,7 @@ class MzIdResultFile(
       }
     }
     
-    msQueryByRef.values.toArray.map(msq => msq.initialId -> msq).toMap
+    msQueryByRef.values.toArray
   }
   
   val hasDecoyResultSet: Boolean = false // FIXME: is it possible ot infer this value ???
@@ -548,7 +548,6 @@ class MzIdResultFile(
 
     // Get the list of SpectrumIdentification elements
     // TODO: how to handle multiple SpectrumIdentifications
-    val msQueryByInitialId = this.msQueryByInitialId // initialize the lazy field
     for ( sIdentList <- mzIdAnlData.getSpectrumIdentificationList ) {
       for ( sIdentResult <- sIdentList.getSpectrumIdentificationResult ) {
         
@@ -743,9 +742,8 @@ class MzIdResultFile(
   
   def eachSpectrum( onEachSpectrum: Spectrum => Unit ): Unit = {
     
-    for (initialId <- msQueryByInitialId.keys.toArray.sorted) {
+    for ( msQuery <- msQueries.sortBy(_.initialId) ) {
       
-      val msQuery = msQueryByInitialId(initialId)
       msQuery match {
         case ms1Query: Ms1Query => {}
         case ms2Query: Ms2Query => {
@@ -786,7 +784,7 @@ class MzIdResultFile(
           
           onEachSpectrum(spec)
         }
-      }      
+      }
     }
     
   }
