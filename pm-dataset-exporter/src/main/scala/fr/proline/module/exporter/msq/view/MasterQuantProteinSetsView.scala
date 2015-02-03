@@ -175,7 +175,7 @@ class MasterQuantProteinSetsView (val quantiDS: QuantiDataSet ) extends IFixedDa
           // Iterate over all profiles to export them
           for( props <- mqProtSet.properties;
                profileByGSNum <- props.getMqProtSetProfilesByGroupSetupNumber;
-               profiles <- profileByGSNum.get(groupSetupNumber.toString);
+               profiles <- profileByGSNum.get(groupSetupNumber);
                profile <- profiles
              ) {
              this.formatRecord(MyBuildingContext(mqProtSet, protSetCellsById, qcIds,  profile, mqPepById, ratioDefs), recordFormatter) 
