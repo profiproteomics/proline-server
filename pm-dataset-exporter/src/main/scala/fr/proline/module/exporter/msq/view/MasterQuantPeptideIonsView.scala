@@ -248,7 +248,7 @@ class MasterQuantPeptideIonsView( val quantiDS: QuantiDataSet ) extends IFixedDa
         
      // Add some statistics
      if( mqPep.properties.isDefined && mqPep.properties.get.getMqPepProfileByGroupSetupNumber.isDefined ) {
-        val mqPepProfile = mqPep.properties.get.getMqPepProfileByGroupSetupNumber.get(groupSetupNumber.toString)
+        val mqPepProfile = mqPep.properties.get.getMqPepProfileByGroupSetupNumber.get(groupSetupNumber)
         val stats = this.stringifyRatiosStats(mqPepProfile.getRatios)    
         val nbS = stats.size
         var i=0;
