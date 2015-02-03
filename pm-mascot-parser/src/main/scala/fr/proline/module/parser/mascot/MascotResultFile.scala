@@ -45,7 +45,8 @@ object MascotParseParams extends Enumeration {
 class MascotResultFile(
   val fileLocation: File,
   val importProperties: Map[String, Any], // TODO: use the MascotImportProperties class instead ???
-  val parserContext: ProviderDecoratedExecutionContext) extends IResultFile with Logging {
+  val parserContext: ProviderDecoratedExecutionContext
+) extends IResultFile with Logging {
 
   val LOG_SPECTRA_COUNT = 4000 // Print a log for each created spectrum
 
@@ -127,6 +128,10 @@ class MascotResultFile(
     _buildPepSummary(true)
   }
 
+  def msQueries: Array[MsQuery] = {
+    msQueryByInitialId.values.toArray
+  }
+  
   /**
    *  Map Query Id -> MsQuery for all queries of Mascot result file
    *  Load the MS queries here when requested
@@ -194,7 +199,6 @@ class MascotResultFile(
     }
 
     msQueryMapBuilder.result()
-
   }
 
   lazy val peaklist: Peaklist = {
