@@ -167,10 +167,17 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
 
   class PSDatabaseTestCase extends DatabaseTestCase {
     override def getProlineDatabaseType() = ProlineDatabaseType.PS
+    override def getPropertiesFileName() : String = { 
+      "db_settings/h2/db_ps.properties"
+     }
+    
   }
 
   class PDIDatabaseTestCase extends DatabaseTestCase {
     override def getProlineDatabaseType() = ProlineDatabaseType.PDI
+     override def getPropertiesFileName() : String = { 
+      "db_settings/h2/db_pdi.properties"
+     }
   }
 
 }
