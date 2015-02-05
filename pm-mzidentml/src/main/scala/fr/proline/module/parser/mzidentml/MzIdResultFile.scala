@@ -655,6 +655,8 @@ class MzIdResultFile(
               rank = sIdentItem.getRank(),
               score = pepMatchScore.toFloat,            
               scoreType = scoreType,
+              charge = msQuery.charge,
+              experimentalMz = msQuery.moz.toFloat,
               deltaMoz = deltaMoz.toFloat, // exp - calc
               isDecoy = wantDecoy,
               isValidated = sIdentItem.isPassThreshold(),
