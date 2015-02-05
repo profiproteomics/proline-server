@@ -252,6 +252,8 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
               rank = f.rank,
               score = f.score,
               scoreType = f.scoreType,
+              charge = f.msQuery.charge,
+              experimentalMz = f.msQuery.moz.toFloat,
               deltaMoz = f.deltaMoz,
               isDecoy = f.isDecoy,
               peptide = fPep.get,

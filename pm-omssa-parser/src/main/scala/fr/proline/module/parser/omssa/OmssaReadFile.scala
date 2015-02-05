@@ -378,18 +378,23 @@ class OmssaReadFile(val omxFile: File,
                           val peptideMatchProperties = new PeptideMatchProperties(omssaProperties = Some(peptideMatchOmssaProperties))
                           // create the PeptideMatch object
                           if(!msQueries.isDefinedAt(hitSetNumber)) { logger.warn("No MSQuery for query "+hitSetNumber) }
+                          val query =  msQueries.get(hitSetNumber).getOrElse(null)
+                          val qcharge = if(query != null) {query.charge } else 0
+                          val qexperimentalMz = if(query != null) {query.moz.toFloat} else -1f
                           val peptideMatch = new PeptideMatch(
                             id = PeptideMatch.generateNewId,
                             rank = peptideMatchRank,
                             score = minusLogEValue(peptideMatchExpectValue), // -log(evalue) is stored
                             scoreType = omssaScoreType,
+                            charge = qcharge, 
+                            experimentalMz = qexperimentalMz,
                             deltaMoz = (peptideMatchDeltaMoz / peptideCharge) / currentFileMzScale,
                             isDecoy = (proteinMatches.length > 0 && proteinMatches(0).isDecoy), // if the first protein match is tagged as decoy, the peptide match is decoy too
                             peptide = peptide,
                             missedCleavage = PeptideMatch.countMissedCleavages(peptideSequence, sequenceMatchResidueBefore, sequenceMatchResidueAfter, msiSearch.searchSettings.usedEnzymes), 
                             fragmentMatchesCount = peptideMatchFragmentMatchesCount,
                             properties = Some(peptideMatchProperties),
-                            msQuery = msQueries.get(hitSetNumber).getOrElse(null))
+                            msQuery = query)
                           // add the protein matches to the currently best peptide match
                           peptideMatchToProteinMatches.put(peptideMatch.id, proteinMatches)
                           for ((proteinMatchId, sequenceMatch) <- proteinMatchIdToSequenceMatches) {
