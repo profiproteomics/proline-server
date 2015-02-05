@@ -2,20 +2,16 @@ package fr.proline.module.parser.omssa
 
 import java.io.File
 import java.io.FileNotFoundException
-
 import scala.annotation.elidable
 import scala.annotation.elidable.ASSERTION
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-
 import org.junit.After
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.proline.context.BasicExecutionContext
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.model.msi.Spectrum
@@ -29,9 +25,9 @@ import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.om.provider.uds.impl.{ SQLPeaklistSoftwareProvider => UdsSQLPklSoftProvider }
 import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.service.msi.ResultFileCertifier
-//import fr.proline.module.fragment_match.FragmentTable
 import fr.proline.repository.DriverType
 import fr.profi.util.MathUtils
+import fr.proline.core.om.model.msi.Ms2Query
 
 @Test
 class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
@@ -342,10 +338,7 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
     assert(omssaLoader.enzymes.size == 25)
     // test msQueryByInitialId
     logger.debug("TEST [" + method + "] calling msQueryByInitialId")
-    assert(omssaOmxFile.msQueryByInitialId.get(0).get.moz == 825.339)
-    //    for(msQuery <- omssaOmxFile.msQueryByInitialId) {
-    //      logger.debug("id="+msQuery._1+" / moz=" + msQuery._2.moz)
-    //    }
+    assert(omssaOmxFile.msQueries.filter(_.initialId == 0).head.moz == 825.339)
     // test an null file
     try {
       logger.debug("TEST [" + method + "] parse an null file")
@@ -480,7 +473,8 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
     val rs = omssaOmxFile.getResultSet(false)
     assertEquals(15,omssaOmxFile.msQueries.length)
     //assertEquals(" Cmpd 5, +MSn(639.824), ? min",omssaOmxFile.getMsQueries(0).spectrumTitle )
-    assertEquals(" Cmpd 8, +MSn(616.806), ? min",omssaOmxFile.msQueries(0).spectrumTitle )    
+//    assertEquals(" Cmpd 8, +MSn(616.806), ? min",omssaOmxFile.msQueries(0).spectrumTitle )
+    assertEquals(" Cmpd 8, +MSn(616.806), ? min",omssaOmxFile.msQueries(0).asInstanceOf[Ms2Query].spectrumTitle )
     assertEquals(10,rs.peptideMatches.length)
     assertEquals(29,rs.proteinMatches.length)
     logger.debug("TEST [" + method + "] OK: parsing is successful")
