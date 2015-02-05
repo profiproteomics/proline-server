@@ -162,7 +162,7 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
     val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_bz2.omx.bz2")
     val rs = omssaOmxFile.getResultSet(wantDecoy = false)
     assertEquals(2, rs.proteinMatches.length)
-    assertEquals(18, omssaOmxFile.getMsQueries.size)
+    assertEquals(18, omssaOmxFile.msQueries.size)
     logger.debug("TEST [" + method + "] OK: parsing is successful")
   }
 //  @Test
@@ -464,7 +464,7 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
     val omssaOmxFile = parseOmxFile("STG_LTQFT10APR1025_OTD_dtaInputFile.omx")
     // parsing should succeed
     val rs = omssaOmxFile.getResultSet(false)
-    assert(omssaOmxFile.getMsQueries.length == 1)
+    assert(omssaOmxFile.msQueries.length == 1)
     assert(rs.peptideMatches(0).getMs2Query.spectrumTitle == " Cmpd 1, +MSn(678.859), ? min")
     def onEachSpectrum(spectrum: Spectrum) = assert(spectrum.title == " Cmpd 1, +MSn(678.859), ? min")
     omssaOmxFile.eachSpectrum(onEachSpectrum)
@@ -478,9 +478,9 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
     val omssaOmxFile = parseOmxFile("STG_W18776LSA_OTD_pklInputFile.omx")
     // parsing should succeed
     val rs = omssaOmxFile.getResultSet(false)
-    assertEquals(15,omssaOmxFile.getMsQueries.length)
+    assertEquals(15,omssaOmxFile.msQueries.length)
     //assertEquals(" Cmpd 5, +MSn(639.824), ? min",omssaOmxFile.getMsQueries(0).spectrumTitle )
-    assertEquals(" Cmpd 8, +MSn(616.806), ? min",omssaOmxFile.getMsQueries(0).spectrumTitle )    
+    assertEquals(" Cmpd 8, +MSn(616.806), ? min",omssaOmxFile.msQueries(0).spectrumTitle )    
     assertEquals(10,rs.peptideMatches.length)
     assertEquals(29,rs.proteinMatches.length)
     logger.debug("TEST [" + method + "] OK: parsing is successful")
@@ -725,7 +725,7 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
     val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_shortFormat.omx")
     // parsing should succeed
     val rs = omssaOmxFile.getResultSet(false)
-    assert(omssaOmxFile.getMsQueries.length == 18)
+    assert(omssaOmxFile.msQueries.length == 18)
     assert(rs.peptideMatches.length == 2)
     assert(rs.proteinMatches.length == 2)
     logger.debug("TEST [" + method + "] OK: parsing is successful")
