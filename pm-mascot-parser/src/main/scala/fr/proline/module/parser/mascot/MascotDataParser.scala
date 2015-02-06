@@ -1,22 +1,24 @@
 package fr.proline.module.parser.mascot
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.ArrayBuilder
 import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.slf4j.Logging
+
 import fr.proline.core.om.builder.PtmDefinitionBuilder
 import fr.proline.core.om.model.msi._
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.core.om.provider.msi.IProteinProvider
 import fr.proline.core.om.provider.msi.ProteinEmptyFakeProvider
 import fr.proline.core.om.provider.msi.ProteinFakeProvider
+
 import matrix_science.msparser.ms_mascotresfile
 import matrix_science.msparser.ms_peptide
 import matrix_science.msparser.ms_peptidesummary
 import matrix_science.msparser.vectori
 import matrix_science.msparser.VectorString
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import scala.collection.mutable.ArrayBuilder
 
 object MascotDataParser {
 
@@ -139,9 +141,8 @@ class MascotDataParser(
             id = PeptideMatch.generateNewId,
             rank = k,
             score = pepMatchScore,
-            scoreType = "mascot:ions score",
+            scoreType = PeptideMatchScoreType.MASCOT_IONS_SCORE,
             charge = currentMSPep.getCharge,
-            experimentalMz = query.moz.toFloat,
             deltaMoz = (currentMSPep.getDelta() / query.charge).toFloat, // getDelta returns expMass - calcMass
             isDecoy = isDecoy,
             peptide = parsedPep,
