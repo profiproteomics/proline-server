@@ -654,9 +654,8 @@ class MzIdResultFile(
               id = PeptideMatch.generateNewId,
               rank = sIdentItem.getRank(),
               score = pepMatchScore.toFloat,            
-              scoreType = scoreType,
+              scoreType = PeptideMatchScoreType.withName(scoreType),
               charge = msQuery.charge,
-              experimentalMz = msQuery.moz.toFloat,
               deltaMoz = deltaMoz.toFloat, // exp - calc
               isDecoy = wantDecoy,
               isValidated = sIdentItem.isPassThreshold(),
