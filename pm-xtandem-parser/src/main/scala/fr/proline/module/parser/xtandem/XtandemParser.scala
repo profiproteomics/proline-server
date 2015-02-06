@@ -71,7 +71,7 @@ class XtandemParser(  val xtandemFilePath : String,
   private var searchSettingIsDecoy: Boolean = false
   private var ms2Query: Ms2Query = null
   private var msiSearchForResultSet : MSISearch = null
-  private var msQueries: HashMap[Int, Ms2Query] = HashMap()
+  var msQueries: Array[MsQuery] = Array()
   private var spectrumList : ArrayBuffer[Spectrum] = new ArrayBuffer[Spectrum]
   var resultBioml: XTBioml = new XTBioml()
   
@@ -125,7 +125,6 @@ class XtandemParser(  val xtandemFilePath : String,
       averageMass = 0.0)
 
     // Get Group Parameters variables
-    var seqDatabaseSequencesCount: Int = -1
     var searchSettingSoftwareVersion: String = "Unknown software version"
     var searchSettingTaxonomy: String = "Unknown taxon"
     var searchSettingMaxMissedCleavages: Int = -1
@@ -140,7 +139,7 @@ class XtandemParser(  val xtandemFilePath : String,
     
     var usedEnzymes : ArrayBuffer[Enzyme] = new ArrayBuffer[Enzyme]
     var isSemiSpecific : Boolean = false  // Yes if semi specific input parameters are yes : "protein, cleavage semi" or "refine, cleavage semi"
-    var inputParametersEnzymeCount : Int = 0;
+    var inputParametersEnzymeCount : Int = 0
 
     var peaklistFilePathNameExt: Filename = null
     var dbProteinFileMarkupURLList: ArrayBuffer[String] = new ArrayBuffer()
@@ -152,13 +151,10 @@ class XtandemParser(  val xtandemFilePath : String,
       for (note <- gp.noteList) {
         val dbGroupParametersNoteLabel: String = note.label
         val dbGroupParametersNoteInfo: String = note.info
-
+        // ERROR : (unavailable parameters) We first manage case where we can't continue parsing of XML file
         if (dbGroupParametersNoteLabel.equals("output, sort results by")) {
           if(dbGroupParametersNoteInfo.equals("protein") || dbGroupParametersNoteInfo.isEmpty) logger.error("Xtandem Parser does not manage protein sorted Xtandem File")
           else if(!dbGroupParametersNoteInfo.equals("spectrum")) logger.error("Parameter \'sort results by\' should be \'spectrum\' to be manage by Xtandemm Parser")  //This case shouldn't be appear
-
-        } else if (dbGroupParametersNoteLabel.equals("modelling, total proteins used") && !dbGroupParametersNoteInfo.isEmpty) {
-          seqDatabaseSequencesCount = augmentString(dbGroupParametersNoteInfo).toInt
 
         } else if (dbGroupParametersNoteLabel.equals("spectrum, path") && !dbGroupParametersNoteInfo.isEmpty) {
           val FPATH: String = dbGroupParametersNoteInfo
@@ -367,7 +363,8 @@ class XtandemParser(  val xtandemFilePath : String,
           spectrumTitle = spectrumTitle
           )
         
-        msQueries.put(dbGroupModelId,ms2Query)
+//        msQueries.put(dbGroupModelId,ms2Query)
+        msQueries :+ ms2Query
 
         //GAMLTrace variables
         for (gamlTrace <- gs.gamlTraceList) {
@@ -530,6 +527,8 @@ class XtandemParser(  val xtandemFilePath : String,
               id = PeptideMatch.generateNewId(),
               rank = dbDomainIdPartsInt(1), /*3 dans DomainId<domain id=987.3.1 ...> */
               score = dbDomainHyperScore.toFloat,
+              charge = dbGroupModelZ, 
+              experimentalMz = (dGroupModelMh / dbGroupModelZ).toFloat,
               scoreType = "xtandem:hyperscore",
               deltaMoz = dbDomainDelta.toFloat,
               isDecoy = peptideMatchIsDecoy,
@@ -581,46 +580,17 @@ class XtandemParser(  val xtandemFilePath : String,
       )
     resultSet
   }
-  
+
   val hasDecoyResultSet: Boolean = searchSettingIsDecoy 
   val hasMs2Peaklist: Boolean = true
-  val msQueryByInitialId: Map[Int, MsQuery] =
-  {
-    val msQueryMapBuilder = scala.collection.immutable.Map.newBuilder[Int, MsQuery]
-    for (query <- msQueries) {
-      msQueryMapBuilder += (query._1 -> query._2)
-    }
-    msQueryMapBuilder.result()
+
+  def eachSpectrum(onEachSpectrum: Spectrum => Unit): Unit = {
+    spectrumList.foreach(spectra => {
+       onEachSpectrum(spectra) 
+    })
   }
-  
-    def eachSpectrum(onEachSpectrum: Spectrum => Unit): Unit = {
-      spectrumList.foreach(spectra => {
-         onEachSpectrum(spectra) 
-      })
-  }
-  
+
   val msiSearch: MSISearch = msiSearchForResultSet
   def eachSpectrumMatch(wantDecoy: Boolean, onEachSpectrumMatch: SpectrumMatch => Unit): Unit = {}
   def close() {}
 }
-
-/*
-for GroupParameters
-new Peaklist
-for groupModel
----| for groupSupport
-------| new Ms2query
-------| for gamlTrace
----------| new Spectrum
-------| for proteinList
----------| new SeqDataBase
----------| new ProteinMatch
----------| for dbPeptideDomain
-------------| for aaMarkupList
----------------| new LocatedPtm
-------------| new Peptide
-------------| new PeptideMatch
-new SearchSettings
-new MSISearch
-new ResultSet
-//*/
