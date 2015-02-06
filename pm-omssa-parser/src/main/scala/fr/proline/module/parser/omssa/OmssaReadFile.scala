@@ -48,7 +48,8 @@ class OmssaReadFile(val omxFile: File,
 
   private val OMSSA_HIGHEST_SCORE = 20
   
-  private val omssaScoreType = "omssa:expect value"
+  private val omssaScoreType = PeptideMatchScoreType.OMSSA_EVALUE
+  private val omssaScoreTypeAsStr = "omssa:expect value"
   private var pepByUniqueKey: HashMap[String, Peptide] = null
   def getPeptideByUniqueKey: HashMap[String, Peptide] = pepByUniqueKey
   private var msQueries: HashMap[Int, Ms2Query] = null
@@ -288,7 +289,7 @@ class OmssaReadFile(val omxFile: File,
                                       accession = proteinMatchAccessionNumber,
                                       description = proteinMatchDescription,
                                       peptideMatchesCount = 0,
-                                      scoreType = omssaScoreType,
+                                      scoreType = omssaScoreTypeAsStr,
                                       isDecoy = false,
                                       protein = (if (protein == None) null else protein), //If protein is None => No protein is defined not protein not retrieve !
                                       seqDatabaseIds = Array(seqDatabase.id)
@@ -386,8 +387,7 @@ class OmssaReadFile(val omxFile: File,
                             rank = peptideMatchRank,
                             score = minusLogEValue(peptideMatchExpectValue), // -log(evalue) is stored
                             scoreType = omssaScoreType,
-                            charge = qcharge, 
-                            experimentalMz = qexperimentalMz,
+                            charge = qcharge,
                             deltaMoz = (peptideMatchDeltaMoz / peptideCharge) / currentFileMzScale,
                             isDecoy = (proteinMatches.length > 0 && proteinMatches(0).isDecoy), // if the first protein match is tagged as decoy, the peptide match is decoy too
                             peptide = peptide,
