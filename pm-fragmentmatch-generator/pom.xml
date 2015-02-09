@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>PM-FragmentMatchGenerator</artifactId>
-  <version>0.0.6-SNAPSHOT</version>
+  <version>0.0.6</version>
   <name>${project.artifactId}</name>
   <description>Proline Module made to generate the fragment matches from a spectrum</description>
 
@@ -18,7 +18,7 @@
     <core.version>0.2.1-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
   </properties>
 	<scm>
-	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-FragmentMatchGenerator/branches/0.0.6_RP1</connection>
+	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-FragmentMatchGenerator/tags/0.0.6</connection>
 	</scm>
   <dependencies>
 
