@@ -81,7 +81,7 @@
 	<dependency>
       <groupId>fr.proline</groupId>
       <artifactId>PM-FragmentMatchGenerator</artifactId>
-      <version>0.0.6-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+      <version>0.0.6</version>  <!-- Snapshot Trunk version -->
     </dependency>
     <!-- Tests -->
     <dependency>
