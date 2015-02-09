@@ -11,16 +11,16 @@
 
   <groupId>fr.proline</groupId>
   <artifactId>PM-SequenceRepository</artifactId>
-  <version>0.0.3-SNAPSHOT</version>
+  <version>0.0.3</version>
 
   <name>PM-SequenceRepository</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>0.2.1-SNAPSHOT</core.version>
+    <core.version>0.2.1</core.version>
   </properties>
 	<scm>
-	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-SequenceRepository/branches/0.0.3_RP1</connection>
+	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-SequenceRepository/tags/0.0.3</connection>
 	</scm>
 
 
