@@ -28931,7 +28931,6 @@
 	<note label="timing, initial modelling/spectrum (sec)">0.0015</note>
 	<note label="timing, load sequence models (sec)">0.02</note>
 	<note label="timing, refinement/spectrum (sec)">0.0013</note>
-  <note type="input" label ="protein, cleavage semi">yes</note>
 </group>
 </bioml>
   

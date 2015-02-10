@@ -16,20 +16,17 @@ import _root_.fr.proline.core.om.provider.msi.IPTMProvider
 import _root_.fr.proline.repository.DriverType
 import _root_.fr.proline.core.dal.ContextFactory
 import _root_.fr.proline.context.BasicExecutionContext
-import _root_.fr.proline.core.om.provider.msi.impl.{ ORMResultSetProvider, SQLPTMProvider, SQLResultSetProvider }  // getPTMDefinition
-import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider  //getEnzyme
-
-//Parser
+import _root_.fr.proline.core.om.provider.msi.impl.{ ORMResultSetProvider, SQLPTMProvider, SQLResultSetProvider }
+import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider
 import org.xml.sax._
 import org.xml.sax.helpers._
 import javax.xml.parsers._
-
-//Scala, Java
 import scala.collection.mutable.{ArrayBuffer, HashMap}
 import java.io._
 import java.util.Date
 import java.io.ByteArrayOutputStream
 import com.typesafe.scalalogging.slf4j.Logging
+import fr.proline.core.om.model.msi.PeptideMatchScoreType
 
 //This class allows to separate file path, name and extension
 class Filename(str: String, sep: Char, ext: Char) {
@@ -130,8 +127,8 @@ class XtandemParser(  val xtandemFilePath : String,
     var searchSettingMaxMissedCleavages: Int = -1
     var searchSettingMs1ChargeStates: String = "Unknown MS1 charge states"
     var searchSettingMs1ErrorTol: Double = 0.0
-    var searchSettingMs1ErrorTolUnit: String = " Unknown MS1 error unit"
-    var MSISearchResultFileName: String = "Unkown result file name"
+    var searchSettingMs1ErrorTolUnit: String = "Daltons"
+    var msiSearchResultFileName: String = "output.xml"
 
     // Define (mass, residu, position) tuple for a fixed and variable PTMs. 
     //Possible positions are : PtmLocation.ANYWHERE, PROT_N_TERM, PROT_C_TERM, ANY_N_TERM, ANY_C_TERM
@@ -176,7 +173,7 @@ class XtandemParser(  val xtandemFilePath : String,
           searchSettingMs1ErrorTolUnit = dbGroupParametersNoteInfo
 
         } else if (dbGroupParametersNoteLabel.equals("output, path") && !dbGroupParametersNoteInfo.isEmpty) {
-          MSISearchResultFileName = dbGroupParametersNoteInfo
+          msiSearchResultFileName = dbGroupParametersNoteInfo
 
         } else if (dbGroupParametersNoteLabel.equals("spectrum, maximum parent charge") && dbGroupParametersNoteInfo.isEmpty) {
           searchSettingMs1ChargeStates = dbGroupParametersNoteInfo
@@ -256,65 +253,54 @@ class XtandemParser(  val xtandemFilePath : String,
             val residue = if (atSignParts(1).charAt(0) == '[') '\0' else atSignParts(1).charAt(0)
             variablePtms.append(Tuple3(augmentString(atSignParts(0)).toDouble, residue, PtmLocation.PROT_N_TERM))
           }
-        } else if ((dbGroupParametersNoteLabel.equals("protein, cleavage semi") || dbGroupParametersNoteLabel.equals("refine, cleavage semi")) 
-                    && dbGroupParametersNoteInfo.equals("yes")) { // Refine modifications
+        } else if ((dbGroupParametersNoteLabel.equals("protein, cleavage semi") || dbGroupParametersNoteLabel.equals("refine, cleavage semi")) // TODO ? In Xtandem's xml results file, we can't distingue if semi cleavage is after standard research or refine research 
+                    && dbGroupParametersNoteInfo.equals("yes")) { 
           isSemiSpecific = true
 
         } else if (dbGroupParametersNoteLabel.equals("protein, cleavage site") && !dbGroupParametersNoteInfo.isEmpty) {  // Format [RK]|{P}, [[X]|[D], ..]
           val msiSearchProvider = new SQLMsiSearchProvider(parserContext.getUDSDbConnectionContext(), parserContext.getMSIDbConnectionContext(), parserContext.getPSDbConnectionContext())
           val commaParts: Array[String] = dbGroupParametersNoteInfo.split(",")
           inputParametersEnzymeCount = commaParts.length
-          var residues : String = ""
-          var restrictiveResidues : String = ""
-          var site : String = "C-term"
+          var residue : String = ""
+          var restrictiveResidue : String = ""
+          var site : String = ""
+          val allEnzymesArray = msiSearchProvider.getAllEnzymes()
+          
           for (i <- 0 until commaParts.length) {
+            residue = ""
+            restrictiveResidue = ""
+            site = ""
+            val pipeParts: Array[String] = commaParts(i).split("\\|")
             
-            val pipeParts: Array[String] = commaParts(i).split("\\|") // "[A]|[B]" become pipeParts[0] = "[A]", pipeParts[1] = "[B]"
-
-            // Tests to affect residues, restrictiveResidues, site variables
-            for(j <- 0 until pipeParts.length){
-              if( pipeParts(j).length >2
-                  && pipeParts(j).substring(0,1).equals("{") 
-                  && pipeParts(j).substring(pipeParts(j).length-1,pipeParts(j).length).equals("}")){
-                if (!restrictiveResidues.equals("X")) {
-                  restrictiveResidues = pipeParts(j).substring(1, pipeParts(j).length()-1)
-                }
+            if(pipeParts.length ==2) {
+              val leftResidue : String = pipeParts(0).substring(1,pipeParts(0).length-1)
+              val rightResidue : String =  pipeParts(1).substring(1,pipeParts(1).length-1)
+              
+              if( (pipeParts(0).length==3 && pipeParts(0).substring(0,1).equals("{") && pipeParts(0).substring(pipeParts(0).length-1,pipeParts(0).length).equals("}")) 
+                  || pipeParts(0).equals("[X]"))
+              {
+                site = "N-term"
+                residue = rightResidue
+                if(!leftResidue.equals("X")) restrictiveResidue = leftResidue
                 
-              } else if (pipeParts(j).length >2 
-                        &&pipeParts(j).substring(0,1).equals("[") 
-                        && pipeParts(j).substring(pipeParts(j).length-1,pipeParts(j).length).equals("]")) {
-                if (residues.equals("")) {
-                  residues = pipeParts(j).substring(1, pipeParts(j).length()-1)
-                } else if (j==1) {
-                  site = "N-term"
-                }
+              } else if( (pipeParts(1).length==3 && pipeParts(1).substring(0,1).equals("{") && pipeParts(1).substring(pipeParts(1).length-1,pipeParts(1).length).equals("}")) 
+                  || pipeParts(1).equals("[X]"))
+              {
+                site = "C-term"
+                residue = leftResidue
+                if(!rightResidue.equals("X")) restrictiveResidue = rightResidue
                 
               } else {
-                logger.error("Parsing error in Xtandem xml output file : parameter \"protein, cleavage site\"")
+                logger.error("Enzyme : can't etablish site of enzyme")  
               }
+            } else {
+              logger.error("More then 2 residues are found. Format should be for exemple [KR]|{P} for trypsin")
             }
             
-            val allEnzymesArray = msiSearchProvider.getAllEnzymes()
-            
-            allEnzymesArray.foreach( enz => {
-              if( usedEnzymes.length == 0   // Get first found enzyme 
-                 && enz.enzymeCleavages.length == 1
-                 && residues.length() == enz.enzymeCleavages.head.residues.length()
-                 && restrictiveResidues.length() == enz.enzymeCleavages.head.restrictiveResidues.get.length()
-                 && residues.toUpperCase.sorted.equals(enz.enzymeCleavages.head.residues.toUpperCase.sorted)
-                 && restrictiveResidues.toUpperCase.sorted.equals(enz.enzymeCleavages.head.restrictiveResidues.get.toUpperCase.sorted)
-                 && site.toUpperCase().equals(enz.enzymeCleavages.head.site.toUpperCase())
-                 && isSemiSpecific == enz.isSemiSpecific
-                 ) {
-                
-//                logger.info("Match found ! Enzyme is  = "+ enz.name + 
-//                        ", residues = " + enz.enzymeCleavages.head.residues +
-//                        ", restrictiveResidues = " + enz.enzymeCleavages.head.restrictiveResidues +
-//                        ", site = " + enz.enzymeCleavages.head.site +
-//                        ", isSemiSpecific = " + enz.isSemiSpecific )
-                usedEnzymes += enz
-              }
-            })
+            val enzyme = findEnzyme(allEnzymesArray, residue, restrictiveResidue, site, isSemiSpecific)
+            if(!enzyme.isEmpty) {
+              usedEnzymes += enzyme.get
+            }
           }
         }
       }
@@ -527,9 +513,8 @@ class XtandemParser(  val xtandemFilePath : String,
               id = PeptideMatch.generateNewId(),
               rank = dbDomainIdPartsInt(1), /*3 dans DomainId<domain id=987.3.1 ...> */
               score = dbDomainHyperScore.toFloat,
-              charge = dbGroupModelZ, 
-              experimentalMz = (dGroupModelMh / dbGroupModelZ).toFloat,
-              scoreType = "xtandem:hyperscore",
+              charge = dbGroupModelZ,
+              scoreType = PeptideMatchScoreType.XTANDEM_HYPERSCORE,
               deltaMoz = dbDomainDelta.toFloat,
               isDecoy = peptideMatchIsDecoy,
               peptide = peptide,
@@ -559,12 +544,12 @@ class XtandemParser(  val xtandemFilePath : String,
 
     msiSearchForResultSet = new MSISearch(
       id = MSISearch.generateNewId(),
-      resultFileName = MSISearchResultFileName,
+      resultFileName = msiSearchResultFileName,
       submittedQueriesCount = resultBioml.groupModelList.length,
       searchSettings = searchSettings,
       peakList = peaklist,
       date = new java.util.Date(),
-      title = MSISearchResultFileName,
+      title = msiSearchResultFileName,
       queriesCount = resultBioml.groupModelList.length)
 
     logger.info("resultBioml.groupModelList.length = " + resultBioml.groupModelList.length)
@@ -573,10 +558,13 @@ class XtandemParser(  val xtandemFilePath : String,
       peptideMatches = peptideMatches.toArray,
       proteinMatches = proteinMatches.toArray,
       isDecoy = false,
-      isNative = true,
+//      isNative = true,
       id = ResultSet.generateNewId(),
       name = msiSearchForResultSet.title,
-      msiSearch = Some(msiSearchForResultSet)
+      msiSearch = Some(msiSearchForResultSet),
+      properties = Some(new ResultSetProperties()),
+      isSearchResult = true, 
+      isValidatedContent = false
       )
     resultSet
   }
@@ -593,4 +581,28 @@ class XtandemParser(  val xtandemFilePath : String,
   val msiSearch: MSISearch = msiSearchForResultSet
   def eachSpectrumMatch(wantDecoy: Boolean, onEachSpectrumMatch: SpectrumMatch => Unit): Unit = {}
   def close() {}
+  
+  	// Find and return first found enzyme in a enzyme array 
+	def findEnzyme(allEnzymesArray : Array[Enzyme], residue : String, restrictiveResidue : String, site : String, semiSpecific : Boolean) : Option[Enzyme] = {
+	  
+	  allEnzymesArray.foreach( enz => {
+      if(enz.enzymeCleavages.length == 1
+         && residue.length() == enz.enzymeCleavages.head.residues.length()
+         && restrictiveResidue.length() == enz.enzymeCleavages.head.restrictiveResidues.get.length()
+         && residue.toUpperCase.sorted.equals(enz.enzymeCleavages.head.residues.toUpperCase.sorted)
+         && restrictiveResidue.toUpperCase.sorted.equals(enz.enzymeCleavages.head.restrictiveResidues.get.toUpperCase.sorted)
+         && site.toUpperCase().equals(enz.enzymeCleavages.head.site.toUpperCase())
+         && semiSpecific == enz.isSemiSpecific
+         ) {
+//        logger.debug("Match found ! Enzyme is  = "+ enz.name + 
+//                ", residues = " + enz.enzymeCleavages.head.residues +
+//                ", restrictiveResidues = " + enz.enzymeCleavages.head.restrictiveResidues +
+//                ", site = " + enz.enzymeCleavages.head.site +
+//                ", isSemiSpecific = " + enz.isSemiSpecific )
+       
+        return Some(enz)
+      }
+    })
+    None
+	}
 }

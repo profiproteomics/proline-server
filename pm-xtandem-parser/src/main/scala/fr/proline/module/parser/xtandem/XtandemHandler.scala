@@ -21,7 +21,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 class XtandemHandler extends DefaultHandler with Logging {
 	// Management of the parser
 	var displayTree = false	// Display tree structure of xml file in console
-	// Mark up
+	// markup
 	var bioml : XTBioml = new XTBioml()
 	var groupModel : XTGroupModel = new XTGroupModel()
 	var groupParameters : XTGroupParameters = new XTGroupParameters()
@@ -240,11 +240,11 @@ class XtandemHandler extends DefaultHandler with Logging {
 	
 	//Start of file parsing
 	override def startDocument() : Unit = {
-		logger.info("Start of parsing for XTandemHandler")
+		logger.info("Start of Handler for XTandemHandler")
 	}
 	
 	//End of file parsing
 	override def endDocument() : Unit = {
-		logger.info("End of parsing for XTandemHandler")
+		logger.info("End of Handler for XTandemHandler")
 	}
 }

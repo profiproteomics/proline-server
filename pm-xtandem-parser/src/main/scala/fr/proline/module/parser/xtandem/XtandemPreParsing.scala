@@ -24,14 +24,11 @@ import java.io._
 import scala.collection.mutable.ArrayBuffer
 import com.typesafe.scalalogging.slf4j.Logging
 
-class XtandemPreParsing(  val xtandemFilePath : String, 
-                          val parserContext: ProviderDecoratedExecutionContext
+class XtandemPreParsing(  val xtandemFilePath : String 
                           ) extends DefaultHandler with Logging {
 
-  var isPTMsDefinedInDB : Boolean = true
-  var isEnzymesDefinedInDB : Boolean = true
   var isMarkUpTestOK : Boolean = false
-  var isFileTestOK : Boolean = false
+  var areNeededMarkupPresent : Boolean = false
   
   def xtandemFileTest {
     try {
@@ -40,7 +37,6 @@ class XtandemPreParsing(  val xtandemFilePath : String,
       case e: IOException => logger.error("File test IOException : " + e.getMessage())
       case e: Throwable => logger.error("File test Throwable : " + e.getMessage())
     }
-    isFileTestOK = true
   }
 
 	// Management of the parser
@@ -51,104 +47,112 @@ class XtandemPreParsing(  val xtandemFilePath : String,
 	private var inPeptide = false; private var inDomain = false; private var inAAMarkup = false; private var inGroupSupport = false; private var inGroupParameters = false;
 	private var inGAMLTrace = false; private var inGAMLAttribute = false; private var inGAMLXdata = false; private var inGAMLYdata = false; private var inGAMLValues = false ;
 	
-  // Mark up
-	private var note : String = ""
+  // To store info/data between opening and closing markup
+	private var info : String = ""
 	
 	// buffer allow to collect "info" datas
 	private var buffer : StringBuffer = new StringBuffer()
 	private var canReadBuffer : Boolean = false
 	private var parametersLabel : String = ""
 	
-	private val ptmProvider: IPTMProvider = parserContext.getProvider(classOf[IPTMProvider])
-  private val ptmMonoMassMargin = 0.03
-	private var fixedPtms: ArrayBuffer[Tuple3[Double, Char, PtmLocation.Value]] = new ArrayBuffer[Tuple3[Double, Char, PtmLocation.Value]]
-  private var variablePtms: ArrayBuffer[Tuple3[Double, Char, PtmLocation.Value]] = new ArrayBuffer[Tuple3[Double, Char, PtmLocation.Value]]
-	var fixedPtmDefs: ArrayBuffer[PtmDefinition] = new ArrayBuffer[PtmDefinition]
-  var variablePtmDefs: ArrayBuffer[PtmDefinition] = new ArrayBuffer[PtmDefinition]
-	variablePtmDefs.append(ptmProvider.getPtmDefinition(-17.02655, ptmMonoMassMargin, 'Q', PtmLocation.ANY_N_TERM).get)
-  variablePtmDefs.append(ptmProvider.getPtmDefinition(-17.02655, ptmMonoMassMargin, 'C', PtmLocation.ANY_N_TERM).get)
-  variablePtmDefs.append(ptmProvider.getPtmDefinition(-18.01056, ptmMonoMassMargin, 'E', PtmLocation.ANY_N_TERM).get)
-  
-  private var residueModificationMassCount = 1     // Increment number of label : "residue, modification mass 1", "residue, modification mass 2", ...
-	private var refineParamIsYes: Boolean = false    // considering or not input parameters with "refine" label  
-  private var isSemiSpecific : Boolean = false     // Yes if semi specific input parameters are yes : "protein, cleavage semi" or "refine, cleavage semi"
-  private var inputParametersEnzymeCount : Int = 0
-  
-  var usedEnzymes : ArrayBuffer[Enzyme] = new ArrayBuffer[Enzyme]
-  
+	private var residueModificationMassCount : Int = 0
+	private var refineParamIsYes: Boolean = false    // considering or not input parameters with "refine" label
+	
+	
+//	private var parameterCount : Int = 0
+	// Existence of useful parameters in Xtandem file
+	private var outputPath = false
+	private var outputSortResultsBy = false
+	private var proteinCterminalResidueModificationMass = false
+	private var proteinNterminalResidueModificationMass = false
+	private var proteinCleavageSemi = false
+	private var proteinCleavageSite = false
+	private var proteinTaxon = false
+	private var refine = false
+	private var refineCleavageSemi = false
+	private var refineModificationMass = false
+	private var refinePotentialCterminusModifications = false
+	private var refinePotentialNterminusModifications = false
+	private var refinePotentialModificationMass = false
+	private var residueModificationMass = false
+	private var residuePotentialModificationMass = false
+	private var scoringIncludeReverse = false
+	private var scoringMaximumMissedCleavageSites = false
+	private var spectrumFragmentMonoisotopicMassError = false
+	private var spectrumFragmentMonoisotopicMassErrorUnits = false
+	private var spectrumMaximuParentCharge = false
+	private var spectrumPath = false
+	private var processVersion = false
+	
 	// detection of opening of markup
-	override def startElement(uri : String , localName : String ,
+	override def startElement(uri : String, localName : String,
 			qName : String, attributes : Attributes) : Unit = {
 		if(qName.equals("bioml")) {
-
-			inBioml = true
+			if(displayTree) println("bioml")
+				inBioml = true
+				
 		} else if(qName.equals("group") && inBioml) {
 			val typeMU = attributes.getValue("type")
 			if(typeMU.equals("model")) {
+			if(displayTree) println(" - groupModel")
+//			  println("attributes.getValue(id) = " + attributes.getValue("id"))
 				inGroupModel = true
 
 			} else if(typeMU.equals("support") && inGroupModel) {
+				if(displayTree) println(" -  - groupSupport")
 				inGroupSupport = true
 				
 			} else if(typeMU.equals("parameters")){
-
+				if(displayTree) println(" - groupParameters")
 				inGroupParameters = true
 			}
 
 		} else if(qName.equals("protein") && inGroupModel) {
+			if(displayTree) println(" -  - protein")
 			inProtein = true
 			
 		} else if(qName.equals("note") && (inProtein  || inGroupSupport || inGroupParameters )) {
-		  
-			if(inGroupParameters ) {
-			  if(//PTMs
-          attributes.getValue("label").contains("residue, modification mass") 
-          || attributes.getValue("label").equals("residue, potential modification mass")
-          || attributes.getValue("label").equals("protein, C-terminal residue modification mass")
-          || attributes.getValue("label").equals("protein, N-terminal residue modification mass")
-          || attributes.getValue("label").equals("refine")    // refine should be yes
-          || attributes.getValue("label").equals("refine, modification mass")
-          || attributes.getValue("label").equals("refine, potential modification mass")
-          || attributes.getValue("label").equals("refine, potential C-terminus modifications")
-          || attributes.getValue("label").equals("refine, potential N-terminus modifications")
-          //Enzymes
-          || (attributes.getValue("label").equals("protein, cleavage semi") || attributes.getValue("label").equals("refine, cleavage semi"))
-          || attributes.getValue("label").equals("protein, cleavage site")
-			    ){
-			    parametersLabel = attributes.getValue("label")
-			    canReadBuffer = true
-			  } else {
-			    canReadBuffer = false
-			  }
-			}
+			if(inGroupSupport & displayTree) println(" -  -  -  - note")
+			else if(inProtein & displayTree) println(" -  -  - note")
+			else if(inGroupParameters & displayTree) println(" -  - note")
 			
+			parametersLabel = attributes.getValue("label")
 			inNote = true
 			
 		} else if(qName.equals("file") && inProtein) {
+			if(displayTree) println(" -  -  - file")
 			inFileMarkup = true
 			
 		} else if(qName.equals("peptide") && inProtein) {
+			if(displayTree) println(" -  -  - peptide")
 			inPeptide = true
 			
 		} else if(qName.equals("domain") && inPeptide) {
+			if(displayTree) println(" -  -  -  - domain")
 			inDomain = true
 			
 		} else if(qName.equals("aa") && inDomain) {
+			if(displayTree) println(" -  -  -  -  - aa")
 			inAAMarkup = true
 			
 		} else if(qName.equals("GAML:trace") && inGroupSupport) {
+			if(displayTree) println(" -  -  -  - GAML:trace")
 			inGAMLTrace = true
 			
 		} else if(qName.equals("GAML:attribute") && inGAMLTrace) {
+			if(displayTree) println(" -  -  -  -  - GAML:attribute")
 			inGAMLAttribute = true
 			
 		} else if(qName.equals("GAML:Xdata") && inGAMLTrace) {
+			if(displayTree) println(" -  -  -  -  -  - GAML:Xdata")
 			inGAMLXdata = true
 			
 		} else if(qName.equals("GAML:Ydata") && inGAMLTrace) {
+			if(displayTree) println(" -  -  -  -  -  - GAML:Ydata")
 			inGAMLYdata = true
 
 		} else if(qName.equals("GAML:values") && (inGAMLXdata || inGAMLYdata)) {
+			if(displayTree) println(" -  -  -  -  -  -  - GAML:values")
 				inGAMLValues = true
 				
 		} else {	// if any markup is not managed
@@ -175,158 +179,66 @@ class XtandemPreParsing(  val xtandemFilePath : String,
 			inProtein = false
 			
 		} else if(qName.equals("note") && (inProtein || inGroupSupport || inGroupParameters)) {
-		  note = buffer.toString().replace("\n", "").trim
-		  if(inGroupParameters && canReadBuffer && !note.isEmpty) {
-        if (parametersLabel.equals("output, sort results by")) {
-          if(note.equals("protein") || note.isEmpty) logger.error("Xtandem Parser does not manage protein sorted Xtandem File")
-          else if(!note.equals("spectrum")) logger.error("Parameter \'sort results by\' should be \'spectrum\' to be manage by Xtandemm Parser")  //This case shouldn't be appear
+		  info = buffer.toString().replace("\n", "").trim
 
-        } else if (parametersLabel.contains("residue, modification mass")) {
-        // Protein fixed anywhere ptms
-        if (parametersLabel.equals("residue, modification mass")) {
-        	val commaParts: Array[String] = note.split(",") // Format : M1@X1,M2@X2,.... for, ex 57.022@C,42,010565@C
-          for (i <- 0 until commaParts.length) {
-            val atSignParts: Array[String] = commaParts(i).split("@")
-            fixedPtms.append(Tuple3(augmentString(atSignParts(0)).toDouble, atSignParts(1).charAt(0), PtmLocation.ANYWHERE))
-          }
-  
-        } else if (parametersLabel.equals("residue, modification mass ".concat(residueModificationMassCount.toString()))) {
-          // If it contains several fixed PTMs in several lines
-          val commaParts: Array[String] = note.split(",") // Format : M1@X1,M2@X2,.... for, ex 57.022@C,42,010565@C
-          for (i <- 0 until commaParts.length) {
-            val atSignParts: Array[String] = commaParts(i).split("@")
-            fixedPtms.append(Tuple3(augmentString(atSignParts(0)).toDouble, atSignParts(1).charAt(0), PtmLocation.ANYWHERE))
-          }
-          residueModificationMassCount += 1
-        }
-  
-      } else if (parametersLabel.equals("residue, potential modification mass")) {
-        // Protein variable anywhere PTMs
-        val commaParts: Array[String] = note.split(",") // Format : M1@X1,M2@X2,.... for, ex 57.022@C,42,010565@C
-        for (i <- 0 until commaParts.length) {
-          val atSignParts: Array[String] = commaParts(i).split("@")
-          variablePtms.append(Tuple3(augmentString(atSignParts(0)).toDouble, atSignParts(1).charAt(0), PtmLocation.ANYWHERE))
-        }
-  
-      } else if (parametersLabel.equals("protein, C-terminal residue modification mass") && augmentString(note).toDouble != 0.0) { // 0.0 is the default value for this paramater in XTandem
-        // Protein fixed C-term PTMs
-        fixedPtms.append(Tuple3(augmentString(note).toDouble, '\0', PtmLocation.PROT_C_TERM))
-  
-      } else if (parametersLabel.equals("protein, N-terminal residue modification mass") && augmentString(note).toDouble != 0.0) { // fixed ptms
-        // Protein fixed N-term PTM
-        fixedPtms.append(Tuple3(augmentString(note).toDouble, '\0', PtmLocation.PROT_N_TERM))
-  
-      } else if (parametersLabel.equals("refine") && note.equals("yes")) { // Refine modifications
-        refineParamIsYes = true
-  
-      } else if ((parametersLabel.equals("protein, cleavage semi") || parametersLabel.equals("refine, cleavage semi")) 
-                  && note.equals("yes")) { // Refine modifications
-        isSemiSpecific = true
-  
-      } else if (refineParamIsYes && parametersLabel.equals("refine, modification mass") && !note.isEmpty) { // variable ptms
-        // Protein fixed anywhere PTM
-        val commaParts: Array[String] = note.split(",") // Format : M1@X1,M2@X2,.... for, ex 57.022@C,42,010565@C
-        for (i <- 0 until commaParts.length) {
-          val atSignParts: Array[String] = commaParts(i).split("@")
-          fixedPtms.append(Tuple3(augmentString(atSignParts(0)).toDouble, atSignParts(1).charAt(0), PtmLocation.ANYWHERE))
-        }
-  
-      } else if (refineParamIsYes && parametersLabel.equals("refine, potential modification mass") && !note.isEmpty) { // variable ptms
-        // Protein variable anywhere PTM
-        val commaParts: Array[String] = note.split(",") // Format : M1@X1,M2@X2,.... for, ex 57.022@C,42,010565@C
-        for (i <- 0 until commaParts.length) {
-          val atSignParts: Array[String] = commaParts(i).split("@")
-          variablePtms.append(Tuple3(augmentString(atSignParts(0)).toDouble, atSignParts(1).charAt(0), PtmLocation.ANYWHERE))
-        }
-  
-      } else if (refineParamIsYes && parametersLabel.equals("refine, potential C-terminus modifications") && !note.isEmpty) { // variable ptms
-        // Protein variable C-term PTM
-        val commaParts: Array[String] = note.split(",") // Format : M1@X1,M2@X2,.... for, ex 57.022@C,42,010565@C
-        for (i <- 0 until commaParts.length) {
-          val atSignParts: Array[String] = commaParts(i).split("@")
-          val residue = if (atSignParts(1).charAt(0) == '[') '\0' else atSignParts(1).charAt(0)
-          variablePtms.append(Tuple3(augmentString(atSignParts(0)).toDouble, residue, PtmLocation.PROT_C_TERM))
-        }
-  
-      } else if (refineParamIsYes && parametersLabel.equals("refine, potential N-terminus modifications") && !note.isEmpty) { // variable ptms
-        // Protein variable N-term PTM
-        val commaParts: Array[String] = note.split(",") // Format : M1@X1,M2@X2,.... for, ex 57.022@C,42,010565@C
-        for (i <- 0 until commaParts.length) {
-          val atSignParts: Array[String] = commaParts(i).split("@")
-          val residue = if (atSignParts(1).charAt(0) == '[') '\0' else atSignParts(1).charAt(0)
-          variablePtms.append(Tuple3(augmentString(atSignParts(0)).toDouble, residue, PtmLocation.PROT_N_TERM))
-        }
-      } else if (parametersLabel.equals("protein, cleavage site") && !note.isEmpty) {  // Format [RK]|{P}, [[X]|[D], ..]
-        val msiSearchProvider = new SQLMsiSearchProvider(parserContext.getUDSDbConnectionContext(), parserContext.getMSIDbConnectionContext(), parserContext.getPSDbConnectionContext())
-        val commaParts: Array[String] = note.split(",")
-        inputParametersEnzymeCount = commaParts.length
-        if(inputParametersEnzymeCount == 0) {
-          logger.error("There is no cleavage enzyme(s) or the format is not correct")
-          } else {
-          var residues : String = ""
-          var restrictiveResidues : String = ""
-          var site : String = "C-term"
-          for (i <- 0 until commaParts.length) {
-            
-            val pipeParts: Array[String] = commaParts(i).split("\\|")
-    
-            for(j <- 0 until pipeParts.length){
-              if( pipeParts(j).length >2
-                  && pipeParts(j).substring(0,1).equals("{") 
-                  && pipeParts(j).substring(pipeParts(j).length-1,pipeParts(j).length).equals("}")){
-                if (!restrictiveResidues.equals("X")) {
-                  restrictiveResidues = pipeParts(j).substring(1, pipeParts(j).length()-1)
-                }
-                
-              } else if (pipeParts(j).length > 2 
-                         && pipeParts(j).substring(0,1).equals("[") 
-                         && pipeParts(j).substring(pipeParts(j).length-1,pipeParts(j).length).equals("]")
-                         ) {
-                if (residues.equals("")) {
-                  residues = pipeParts(j).substring(1, pipeParts(j).length()-1)
-                } else if (j==1 && !pipeParts(j).substring(1,2).equals("X")) {
-                  site = "N-term"
-                }
-                
-              } else {
-                logger.error(" Parsing error in Xtandem xml output file : parameter \"protein, cleavage site\"")
-              }
-            }
-                
-            val allEnzymesArray = msiSearchProvider.getAllEnzymes()
-                
-            allEnzymesArray.foreach( enz => {
-              if( usedEnzymes.length == 0   // Get first found enzyme 
-                   && enz.enzymeCleavages.length == 1 
-                 && residues.length() == enz.enzymeCleavages.head.residues.length()
-                 && restrictiveResidues.length() == enz.enzymeCleavages.head.restrictiveResidues.get.length()
-                 && residues.toUpperCase.sorted.equals(enz.enzymeCleavages.head.residues.toUpperCase.sorted)
-                 && restrictiveResidues.toUpperCase.sorted.equals(enz.enzymeCleavages.head.restrictiveResidues.get.toUpperCase.sorted)
-                 && site.toUpperCase().equals(enz.enzymeCleavages.head.site.toUpperCase())
-                 && isSemiSpecific == enz.isSemiSpecific
-                 ) {
-                  
-                logger.info("Match found ! Enzyme is  = "+ enz.name + 
-                        ", residues = " + enz.enzymeCleavages.head.residues +
-                        ", restrictiveResidues = " + enz.enzymeCleavages.head.restrictiveResidues +
-                        ", site = " + enz.enzymeCleavages.head.site +
-                        ", isSemiSpecific = " + enz.isSemiSpecific )
-                usedEnzymes += enz
-              }
-            })
-            }
-            logger.debug("usedEnzymes.length = " + usedEnzymes.length)
-  //          logger.debug("inputParametersEnzymeCount = " + inputParametersEnzymeCount)
-            if(usedEnzymes.length == 0 ){
-              logger.error("Can't find cleavage enzyme in database")
-              isEnzymesDefinedInDB = false 
-            }
-          }
-      }
-	  }
+		  if(inGroupParameters) {
+        
+		    if (parametersLabel.equals("output, path")) outputPath = true
+		    
+		    else if (parametersLabel.equals("output, sort results by")) {
+		      if(!info.equals("spectrum") && !info.equals("protein")) /*throw new Exception*/ logger.error("Parameter \'output, path\' should be \'spectrum\' or \'protein\'")
+		      else outputSortResultsBy = true
+		      
+		    } else if(parametersLabel.equals("protein, C-terminal residue modification mass")) {
+		      if(!checkDouble(info).isDefined) logger.error("Parameter \'protein, C-terminal residue modification mass\' should be a real number")
+		      else proteinCterminalResidueModificationMass = true
+		      
+		    } else if(parametersLabel.equals("protein, N-terminal residue modification mass")) {
+		      if(!checkDouble(info).isDefined) logger.error("Parameter \'protein, N-terminal residue modification mass\' should be a real number")
+		      else proteinNterminalResidueModificationMass = true
+		      
+		    } else if(parametersLabel.equals("protein, cleavage semi")){
+		      if(!info.equals("yes") || !info.equals("no") ) logger.error("Parameter \'protein, cleavage semi\' should be equals to \'yes\' or \'no\'")
+		      else proteinCleavageSemi = true
+		      
+		    } else if(parametersLabel.equals("protein, cleavage site")) {
+		      if(!isCleavageSiteFormatOK(info)){logger.error("Parameter \'protein, cleavage site\' should respect following format : \nThis parameter is a formatted text string with three fields. The first and third fields are square - [] - or french - {} - brace pairs, containing single amino acid residue symbols. These two fields are separated by a vertical line, e.g., [KR]|{P}.")}
+		      else proteinCleavageSite = true
+		      
+		    }
+		    
+		    
+//		    None.isDefined
+//		    Some(1).isDefined
+		    
+		    
+		    
+
+		    
+		    else if(parametersLabel.equals("protein, taxon")) proteinTaxon = true
+		    else if(parametersLabel.equals("refine")) {
+		      refine = true
+  		    if(parametersLabel.equals("refine, cleavage semi")) refineCleavageSemi = true
+  		    else if(parametersLabel.equals("refine, modification mass")) refineModificationMass = true
+  		    else if(parametersLabel.equals("refine, potential C-terminus modifications")) refinePotentialCterminusModifications = true
+  		    else if(parametersLabel.equals("refine, potential N-terminus modifications")) refinePotentialNterminusModifications = true
+  		    else if(parametersLabel.equals("refine, potential modification mass")) refinePotentialModificationMass = true
+		    }
+		    else if(parametersLabel.contains("residue, modification mass")) residueModificationMass = true
+		    else if(parametersLabel.equals("residue, potential modification mass")) residuePotentialModificationMass = true
+		    else if(parametersLabel.equals("scoring, include reverse")) scoringIncludeReverse = true
+		    else if(parametersLabel.equals("scoring, maximum missed cleavage sites")) scoringMaximumMissedCleavageSites = true
+		    else if(parametersLabel.equals("spectrum, fragment monoisotopic mass error")) spectrumFragmentMonoisotopicMassError = true
+		    else if(parametersLabel.equals("spectrum, fragment monoisotopic mass error units")) spectrumFragmentMonoisotopicMassErrorUnits = true
+		    else if(parametersLabel.equals("spectrum, maximum parent charge")) spectrumMaximuParentCharge = true
+		    else if(parametersLabel.equals("spectrum, path")) spectrumPath = true
+		    else if(parametersLabel.equals("process, version")) processVersion = true
+//		    println("parameterCount = " + parameterCount)
+
+		  }
 			buffer.delete(0, buffer.length())
 			inNote = false
-			
+//			
 		} else if(qName.equals("file") && inProtein) {
 			inFileMarkup = false
 			
@@ -363,41 +275,75 @@ class XtandemPreParsing(  val xtandemFilePath : String,
 	override def characters(ch : Array[Char],start : Int, length : Int) : Unit = {
 		var lecture = new String(ch,start,length)
 		if(buffer != null) buffer.append(lecture)
+//		println("buffer = " + buffer)
 	}
 	
 	//Start of file parsing
 	override def startDocument() : Unit = {
-	  xtandemFileTest
-		logger.info("Start of parsing for XTandemPreParsing")
+//	  xtandemFileTest
+		logger.info("Start of Handler for XTandemPreParsing")
 	}
 	
 	//End of file parsing
 	override def endDocument() : Unit = {
-	  logger.info("End of parsing for XTandemPreParsing")
-		isMarkUpTestOK = true
-		
-		fixedPtms.foreach(ptms => {
-      val _ptm = ptmProvider.getPtmDefinition(ptms._1, ptmMonoMassMargin, ptms._2, ptms._3)
-      if (_ptm.get != null) { fixedPtmDefs.append(_ptm.get); /*logger.debug("fixedPtms _ptm = " + _ptm.get + ", monoMass = " + _ptm.get.ptmEvidences(0).monoMass)*/ }
-      else { /*_ptm = Some(null) */ logger.error("Ptm don't exists in database : mono mass = " + ptms._1 + ", residue = " + ptms._2 + ", location = " + ptms._3); isPTMsDefinedInDB = false }
-    })
-    variablePtms.foreach(ptms => {
-      val _ptm = ptmProvider.getPtmDefinition(ptms._1, ptmMonoMassMargin, ptms._2, ptms._3)
-      if (_ptm.get != null) { variablePtmDefs.append(_ptm.get); /*logger.debug("variablePtms_ptm = " + _ptm.get + "_ptm.get.ptmEvidences.monoMass = " + _ptm.get.ptmEvidences(0).monoMass)*/ }
-      else { /*_ptm = Some(null) */ logger.error("Ptm don't exists in database : mono mass = " + ptms._1 + ", residue = " + ptms._2 + ", location = " + ptms._3); isPTMsDefinedInDB = false }
-    })
-
-//  	logger.debug("fixedPtmDefs number is OK = " + (fixedPtmDefs.length == fixedPtms.length))
-//    logger.debug("variablePtmDefs number is OK = " + (variablePtmDefs.length == variablePtms.length+3))
+	  logger.info("End of Handler for XTandemPreParsing")
+//		isMarkUpTestOK = true
+		// generate throw error if structure is wrong or needed markups and labels are missing
+	}
+	
+	// Check Type and return converted value, return None else
+	def checkDouble(s: String) = try { Some(augmentString(s).toDouble) } catch { case _: Throwable => None }
+	def checkInt(s: String) = try { Some(augmentString(s).toInt) } catch { case _: Throwable => None }
+	def checkChar(s: String) = {if(s.length() == 1) Some(s.charAt(0)) else None}
+//	checkChar("1")
+	
+	def isCleavageSiteFormatOK(info : String) : Boolean = {
+	  // Format [RK]|{P}, [[X]|[D], ..]
+    val commaParts: Array[String] = info.split(",")
+    var residue : String = ""
+    var restrictiveResidue : String = ""
     
-    if(fixedPtmDefs.length != fixedPtms.length || variablePtmDefs.length != variablePtms.length+3) {
-      logger.error("Given PTMs count don't match with PTMs found in database")
-      isPTMsDefinedInDB = false
+    for (i <- 0 until commaParts.length) {
+      residue = ""
+      restrictiveResidue = ""
+      val pipeParts: Array[String] = commaParts(i).split("\\|")
+      
+      if(pipeParts.length ==2) {
+        val leftResidue : String = pipeParts(0).substring(1,pipeParts(0).length-1)
+        val rightResidue : String =  pipeParts(1).substring(1,pipeParts(1).length-1)
+        
+        if( (pipeParts(0).length==3 && pipeParts(0).substring(0,1).equals("{") && pipeParts(0).substring(pipeParts(0).length-1,pipeParts(0).length).equals("}")) 
+            || leftResidue.equals("X"))
+        {
+          residue = rightResidue
+          restrictiveResidue = leftResidue
+          
+        } else if( (pipeParts(1).length==3 && pipeParts(1).substring(0,1).equals("{") && pipeParts(1).substring(pipeParts(1).length-1,pipeParts(1).length).equals("}")) 
+            || rightResidue.equals("X"))
+        {
+          residue = leftResidue
+          restrictiveResidue = rightResidue
+          
+        } else {
+          logger.error("Enzyme : can't etablish site of enzyme. For exemple, format should be [KR]|{P} for trypsin")
+        }
+      } else {
+        logger.error("More then 2 cleavages site are found. For exemple, format should be [KR]|{P} for trypsin")
+      }
+     
+      residue.foreach( char => {
+        val charToInt = char.toInt
+        println("residue char = " + char + ", char.toInt = " + char.toInt)
+        if(!(charToInt >=65 && charToInt <=90) && !(charToInt >=97 && charToInt >=122)) return false
+      })
+      
+      restrictiveResidue.foreach( char => {
+        val charToInt = char.toInt
+        println("restrictiveResidue char = " + char + ", char.toInt = " + char.toInt)
+        if(!(charToInt >=65 && charToInt <=90) && !(charToInt >=97 && charToInt >=122)) return false
+      })
     }
-    logger.debug("fixedPtmDefs.length = " + fixedPtmDefs.length)
-    logger.debug("variablePtmDefs.length = " + variablePtmDefs.length)
-    fixedPtmDefs.foreach(ptm => logger.debug("fixedPtmDefs ptm = " + ptm))
-    variablePtmDefs.foreach(ptm => logger.debug("variablePtmDefs ptm = " + ptm))
-    usedEnzymes.foreach(enz => logger.debug("usedEnzymes enz = " + enz))
+
+    true
 	}
 }
