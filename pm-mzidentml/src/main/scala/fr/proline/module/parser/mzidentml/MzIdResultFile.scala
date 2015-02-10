@@ -735,7 +735,8 @@ class MzIdResultFile(
       peptideMatches = pepMatches.toArray,
       proteinMatches = protMatches,
       isDecoy = wantDecoy,
-      isNative = true,
+      isSearchResult = true,
+      isValidatedContent = false, // FIXME: it may not be always the case ?
       msiSearch = Some(msiSearch),
       properties = None
     )
