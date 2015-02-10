@@ -519,7 +519,8 @@ class MascotResultFile(
       peptideMatches = allPepMatches,
       proteinMatches = protMatches,
       isDecoy = wantDecoy,
-      isNative = true,
+      isSearchResult = true,
+      isValidatedContent = false,
       msiSearch = Some(msiSearch),
       properties = Some(rsProps)
     )
