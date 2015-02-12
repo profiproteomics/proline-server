@@ -192,15 +192,18 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
     logger.info("Create ResultSet for " + (if (wantDecoy) "decoy" else "target") + " entries with " + allPepMatches.length + " peptide matches identifying " + protMatches.size + " proteins")
 
     logger.info("ResultSet created with fasta db: "+msiSearch.searchSettings.seqDatabases(0).toString)
-    new ResultSet(id = rsId,
+    new ResultSet(
+      id = rsId,
       name = this.msiSearch.title,
       peptides = pepMatchesByPep.keySet.toArray,
       peptideMatches = allPepMatches,
       proteinMatches = protMatches,
       isDecoy = wantDecoy,
-      isNative = true,
+      isSearchResult = true,
+      isValidatedContent = false,
       msiSearch = Some(msiSearch),
-      properties = Some(rsProps))
+      properties = Some(rsProps)
+    )
   }
 
   private var pepToPeptideMatches: HashMap[Peptide, ArrayBuffer[PeptideMatch]] = null
