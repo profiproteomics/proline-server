@@ -123,11 +123,11 @@ class XtandemParser(  val xtandemFilePath : String,
 
     // Get Group Parameters variables
     var searchSettingSoftwareVersion: String = "Unknown software version"
-    var searchSettingTaxonomy: String = "Unknown taxon"
+    var searchSettingTaxonomy: String = "Unknown taxon"  // possible values of taxon for Xtandem file are listed in input.xml or taxonomy.xml files which are given for X!Tandem search
     var searchSettingMaxMissedCleavages: Int = -1
-    var searchSettingMs1ChargeStates: String = "Unknown MS1 charge states"
-    var searchSettingMs1ErrorTol: Double = 0.0
-    var searchSettingMs1ErrorTolUnit: String = "Daltons"
+    var searchSettingMs1ChargeStates: String = "4"   // default value in Xtandem = 4
+    var searchSettingMs1ErrorTol: Double = 0.0  // (what value) X!Tandem inserts a default value for this parameter if it doesn't exist or is set to 0.0
+    var searchSettingMs1ErrorTolUnit: String = "Xtandem default unit"
     var msiSearchResultFileName: String = "output.xml"
 
     // Define (mass, residu, position) tuple for a fixed and variable PTMs. 

@@ -59,8 +59,10 @@ class XtandemPreParsing(  val xtandemFilePath : String
 	private var refineParamIsYes: Boolean = false    // considering or not input parameters with "refine" label
 	
 	
-//	private var parameterCount : Int = 0
 	// Existence of useful parameters in Xtandem file
+	private var outputHistograms = false
+	private var outputParameters = false
+	private var outputProteins = false
 	private var outputPath = false
 	private var outputSortResultsBy = false
 	private var proteinCterminalResidueModificationMass = false
@@ -183,58 +185,112 @@ class XtandemPreParsing(  val xtandemFilePath : String
 
 		  if(inGroupParameters) {
         
-		    if (parametersLabel.equals("output, path")) outputPath = true
-		    
-		    else if (parametersLabel.equals("output, sort results by")) {
-		      if(!info.equals("spectrum") && !info.equals("protein")) /*throw new Exception*/ logger.error("Parameter \'output, path\' should be \'spectrum\' or \'protein\'")
+		    // Here we test input parameters in terms of compulsory( or not ) values. Some values are OK even there is note available or empty 
+		    if (parametersLabel.equals("output, histograms")) {
+		      if(!info.equals("yes"))  logger.error("Parameter \'output, histograms\' should be \'yes\' to be parsed by Proline Xtandem parser")
+		      else outputHistograms = true
+		     
+		    } else if (parametersLabel.equals("output, parameters")) {
+		    	if(!info.equals("yes"))  logger.error("Parameter \'output, parameters\' should be \'yes\' to be parsed by Proline Xtandem parser")
+		      else outputParameters = true
+		     
+		    }  else if (parametersLabel.equals("output, proteins")) {
+		    	if(!info.equals("yes"))  logger.error("Parameter \'output, proteins\' should be \'yes\' to be parsed by Proline Xtandem parser")
+		      else outputProteins = true
+		     
+		    }else if (parametersLabel.equals("output, path")) {
+		    	outputPath = true
+		      if(!info.isEmpty() && !isXmlFileFormat(info))  logger.warn("Parameter \'output, path\' should be an xml file")
+		     
+		    } else if (parametersLabel.equals("output, sort results by")) {/*compulsory*/
+		      if(info.isEmpty() || (!info.equals("spectrum") && !info.equals("protein"))) /*throw new Exception*/ logger.error("Parameter \'output, sort results by\' should be \'spectrum\' or \'protein\'")
 		      else outputSortResultsBy = true
 		      
 		    } else if(parametersLabel.equals("protein, C-terminal residue modification mass")) {
-		      if(!checkDouble(info).isDefined) logger.error("Parameter \'protein, C-terminal residue modification mass\' should be a real number")
-		      else proteinCterminalResidueModificationMass = true
+		    	proteinCterminalResidueModificationMass = true
+		      if(!info.isEmpty() && !checkDouble(info).isDefined) logger.error("Parameter \'protein, C-terminal residue modification mass\' should be a real number")
 		      
 		    } else if(parametersLabel.equals("protein, N-terminal residue modification mass")) {
-		      if(!checkDouble(info).isDefined) logger.error("Parameter \'protein, N-terminal residue modification mass\' should be a real number")
-		      else proteinNterminalResidueModificationMass = true
+		    	proteinNterminalResidueModificationMass = true
+		      if(!info.isEmpty() && !checkDouble(info).isDefined) logger.error("Parameter \'protein, N-terminal residue modification mass\' should be a real number")
 		      
 		    } else if(parametersLabel.equals("protein, cleavage semi")){
-		      if(!info.equals("yes") || !info.equals("no") ) logger.error("Parameter \'protein, cleavage semi\' should be equals to \'yes\' or \'no\'")
-		      else proteinCleavageSemi = true
+		      proteinCleavageSemi = true
+		      if(!info.isEmpty() && !isYesOrNo(info)) logger.warn("Parameter \'protein, cleavage semi\' should be equals to \'yes\' or \'no\'")
 		      
-		    } else if(parametersLabel.equals("protein, cleavage site")) {
-		      if(!isCleavageSiteFormatOK(info)){logger.error("Parameter \'protein, cleavage site\' should respect following format : \nThis parameter is a formatted text string with three fields. The first and third fields are square - [] - or french - {} - brace pairs, containing single amino acid residue symbols. These two fields are separated by a vertical line, e.g., [KR]|{P}.")}
+		    } else if(parametersLabel.equals("protein, cleavage site")) {/*compulsory*/
+		      if(info.isEmpty() || !isCleavageSiteFormat(info)) logger.error("Parameter \'protein, cleavage site\' should respect following format : \nThis parameter is a formatted text string with three fields. The first and third fields are square - [] - or french - {} - brace pairs, containing single amino acid residue symbols. These two fields are separated by a vertical line, e.g., [KR]|{P}.")
 		      else proteinCleavageSite = true
 		      
-		    }
-		    
-		    
-//		    None.isDefined
-//		    Some(1).isDefined
-		    
-		    
-		    
-
-		    
-		    else if(parametersLabel.equals("protein, taxon")) proteinTaxon = true
-		    else if(parametersLabel.equals("refine")) {
+		    } else if(parametersLabel.equals("protein, taxon")){
+		      proteinTaxon = true
+		      
+		    } else if(parametersLabel.equals("refine")) {
 		      refine = true
-  		    if(parametersLabel.equals("refine, cleavage semi")) refineCleavageSemi = true
-  		    else if(parametersLabel.equals("refine, modification mass")) refineModificationMass = true
-  		    else if(parametersLabel.equals("refine, potential C-terminus modifications")) refinePotentialCterminusModifications = true
-  		    else if(parametersLabel.equals("refine, potential N-terminus modifications")) refinePotentialNterminusModifications = true
-  		    else if(parametersLabel.equals("refine, potential modification mass")) refinePotentialModificationMass = true
-		    }
-		    else if(parametersLabel.contains("residue, modification mass")) residueModificationMass = true
-		    else if(parametersLabel.equals("residue, potential modification mass")) residuePotentialModificationMass = true
-		    else if(parametersLabel.equals("scoring, include reverse")) scoringIncludeReverse = true
-		    else if(parametersLabel.equals("scoring, maximum missed cleavage sites")) scoringMaximumMissedCleavageSites = true
-		    else if(parametersLabel.equals("spectrum, fragment monoisotopic mass error")) spectrumFragmentMonoisotopicMassError = true
-		    else if(parametersLabel.equals("spectrum, fragment monoisotopic mass error units")) spectrumFragmentMonoisotopicMassErrorUnits = true
-		    else if(parametersLabel.equals("spectrum, maximum parent charge")) spectrumMaximuParentCharge = true
-		    else if(parametersLabel.equals("spectrum, path")) spectrumPath = true
-		    else if(parametersLabel.equals("process, version")) processVersion = true
-//		    println("parameterCount = " + parameterCount)
-
+		      if(!info.isEmpty() && !isYesOrNo(info)) logger.warn("Parameter \'refine\' should be equals to \'yes\' or \'no\'")
+		    
+		    //refine is true
+		    } else if(refine && parametersLabel.equals("refine, cleavage semi")) {
+		      refineCleavageSemi = true
+          if(!info.isEmpty() && !isYesOrNo(info)) logger.warn("Parameter \'refine, cleavage semi\' should be equals to \'yes\' or \'no\'")
+          
+		    } else if(refine && parametersLabel.equals("refine, modification mass")) {
+		    	refineModificationMass = true
+          if(!info.isEmpty() && !isPtmWithResidueFormat(info)) logger.error("Parameter \'refine, modification mass\' should respect following format : Mass1@Residu1,Mass2@Residu2,..., MassN@ResiduN")
+          
+        } else if(refine && parametersLabel.equals("refine, potential C-terminus modifications")) {
+        	refinePotentialCterminusModifications = true
+          if(!info.isEmpty() && !isPtmCtermSquareBracketsFormat(info))  logger.error("Parameter \'refine, modification mass\' should respect following format : Mass1@],Mass2@],..., MassN@]")
+          
+        } else if(refine && parametersLabel.equals("refine, potential N-terminus modifications")) {
+        	refinePotentialNterminusModifications = true
+          if(!info.isEmpty() && !isPtmNtermSquareBracketsFormat(info))  logger.error("Parameter \'refine, modification mass\' should respect following format : Mass1@[,Mass2@[,..., MassN@[")
+          
+        } else if(refine && parametersLabel.equals("refine, potential modification mass")) {
+        	refinePotentialModificationMass = true
+          if(!info.isEmpty() && !isPtmWithResidueFormat(info)) logger.error("Parameter \'refine, potential modification mass\' should respect following format : Mass1@Residu1,Mass2@Residu2,..., MassN@ResiduN")
+          // end refine is true 
+          
+        } else if(parametersLabel.contains("residue, modification mass")) {
+        	residueModificationMass = true
+          if(!info.isEmpty() && !isPtmWithResidueFormat(info)) logger.error("Parameter \'residue, modification mass\' should respect following format : Mass1@Residu1,Mass2@Residu2,..., MassN@ResiduN")
+          
+        } else if(parametersLabel.equals("residue, potential modification mass")) {
+        	residuePotentialModificationMass = true
+          if(!info.isEmpty() && !isPtmWithResidueFormat(info)) logger.error("Parameter \'residue, potential modification mass\' should respect following format : Mass1@Residu1,Mass2@Residu2,..., MassN@ResiduN")
+          
+        } else if(parametersLabel.equals("scoring, include reverse")) {
+          scoringIncludeReverse = true 
+          if(!info.isEmpty() && !isYesOrNo(info)) logger.warn("Parameter \'scoring, include reverse\' should be equals to \'yes\' or \'no\'")
+          
+        } else if(parametersLabel.equals("scoring, maximum missed cleavage sites")) {/*compulsory*/
+          if(info.isEmpty() || !checkInt(info).isDefined || info.toInt < 0) logger.error("Parameter \'scoring, maximum missed cleavage sites\' should be a pozitive natural number")
+          else scoringMaximumMissedCleavageSites = true
+          
+        } else if(parametersLabel.equals("spectrum, fragment monoisotopic mass error")) {/*compulsory*/
+          if(info.isEmpty() || !checkDouble(info).isDefined || info.toDouble < 0) logger.error("Parameter \'spectrum, fragment monoisotopic mass error\' should be a pozitive real number")
+          else spectrumFragmentMonoisotopicMassError = true
+          
+        } else if(parametersLabel.equals("spectrum, fragment monoisotopic mass error units")) {/*compulsory*/
+          if(info.isEmpty() || (!info.equals("Daltons") && !info.equals("ppm"))) logger.error("Parameter \'spectrum, fragment monoisotopic mass error units\' should be \'Daltons\' or \'ppm\'")
+          spectrumFragmentMonoisotopicMassErrorUnits = true
+          
+        } else if(parametersLabel.equals("spectrum, maximum parent charge")) {
+          if(info.isEmpty() || !checkInt(info).isDefined || info.toInt < 0) logger.error("Parameter \'spectrum, maximum parent charge\' should be a pozitive natural number")
+          else spectrumMaximuParentCharge = true
+          
+        } else if(parametersLabel.equals("spectrum, path")) {
+//          if(info.isEmpty() || !isSpectraFileFormat(info)) logger.error("Parameter \'spectrum, path\' should be .gaml, .dta, .pkl, .mgf, .mzdata or .mzXML file")
+          spectrumPath = true
+          
+        } else if(parametersLabel.equals("process, version")) {
+          processVersion = true
+          
+        } else if(parametersLabel.equals("process, version")) {
+          processVersion = true
+          
+        }
+        
 		  }
 			buffer.delete(0, buffer.length())
 			inNote = false
@@ -287,17 +343,48 @@ class XtandemPreParsing(  val xtandemFilePath : String
 	//End of file parsing
 	override def endDocument() : Unit = {
 	  logger.info("End of Handler for XTandemPreParsing")
-//		isMarkUpTestOK = true
 		// generate throw error if structure is wrong or needed markups and labels are missing
+	  if(!outputHistograms) println("outputHistograms is false")
+	  if(!outputParameters) println("outputParameters is false")
+	  if(!outputProteins) println("outputProteins is false")
+	  if(!outputPath) println("outputPath is false")
+	  if(!outputSortResultsBy) println("outputSortResultsBy is false")
+	  if(!proteinCterminalResidueModificationMass) println("proteinCterminalResidueModificationMass is false")
+	  if(!proteinNterminalResidueModificationMass) println("proteinNterminalResidueModificationMass is false")
+	  if(!proteinCleavageSemi) println("proteinCleavageSemi is false")
+	  if(!proteinCleavageSite) println("proteinCleavageSite is false")
+	  if(!proteinTaxon) println("proteinTaxon is false")
+	  if(!refine) println("refine is false")
+	  if(!refineCleavageSemi) println("refineCleavageSemi is false")
+	  if(!refineModificationMass) println("refineModificationMass is false")
+	  if(!refinePotentialCterminusModifications) println("refinePotentialCterminusModifications is false")
+	  if(!refinePotentialNterminusModifications) println("refinePotentialNterminusModifications is false")
+	  if(!refinePotentialModificationMass) println("refinePotentialModificationMass is false")
+	  if(!residueModificationMass) println("residueModificationMass is false")
+	  if(!residuePotentialModificationMass) println("residuePotentialModificationMass is false")
+	  if(!scoringIncludeReverse) println("scoringIncludeReverse is false")
+	  if(!scoringMaximumMissedCleavageSites) println("scoringMaximumMissedCleavageSites is false")
+	  if(!spectrumFragmentMonoisotopicMassError) println("spectrumFragmentMonoisotopicMassError is false")
+	  if(!spectrumFragmentMonoisotopicMassErrorUnits) println("spectrumFragmentMonoisotopicMassErrorUnits is false")
+	  if(!spectrumMaximuParentCharge) println("spectrumMaximuParentCharge is false")
+	  if(!spectrumPath) println("spectrumPath is false")
+	  if(!processVersion) println("processVersion is false")
+	  if(!outputPath) println("outputPath is false")
 	}
 	
 	// Check Type and return converted value, return None else
-	def checkDouble(s: String) = try { Some(augmentString(s).toDouble) } catch { case _: Throwable => None }
-	def checkInt(s: String) = try { Some(augmentString(s).toInt) } catch { case _: Throwable => None }
-	def checkChar(s: String) = {if(s.length() == 1) Some(s.charAt(0)) else None}
-//	checkChar("1")
+	private def checkDouble(s: String) = try { Some(augmentString(s).toDouble) } catch { case _: Throwable => None }
+	private def checkInt(s: String) = try { Some(augmentString(s).toInt) } catch { case _: Throwable => None }
+	private def checkChar(s: String) = {if(s.length() == 1) Some(s.charAt(0)) else None}
 	
-	def isCleavageSiteFormatOK(info : String) : Boolean = {
+	private def isAlphabeticChar(c : Char ) : Boolean = {
+	  var result = false
+	  val charToInt = c.toInt
+    if((charToInt >=65 && charToInt <=90) || (charToInt >=97 && charToInt >=122)) result = true
+    result
+	}
+	
+	private def isCleavageSiteFormat(info : String) : Boolean = {
 	  // Format [RK]|{P}, [[X]|[D], ..]
     val commaParts: Array[String] = info.split(",")
     var residue : String = ""
@@ -332,18 +419,83 @@ class XtandemPreParsing(  val xtandemFilePath : String
       }
      
       residue.foreach( char => {
-        val charToInt = char.toInt
-        println("residue char = " + char + ", char.toInt = " + char.toInt)
-        if(!(charToInt >=65 && charToInt <=90) && !(charToInt >=97 && charToInt >=122)) return false
+        if(!isAlphabeticChar(char)) return false
       })
       
       restrictiveResidue.foreach( char => {
-        val charToInt = char.toInt
-        println("restrictiveResidue char = " + char + ", char.toInt = " + char.toInt)
-        if(!(charToInt >=65 && charToInt <=90) && !(charToInt >=97 && charToInt >=122)) return false
+        if(!isAlphabeticChar(char)) return false
       })
     }
 
     true
 	}
+	
+	def isXmlFileFormat(filePath : String ) : Boolean = { 
+	  if(filePath.length > 4 && filePath.substring(filePath.length - 4, filePath.length).equals(".xml")) return true 
+	  else return false
+	}
+
+//	def isSpectraFileFormat(filePath : String ) : Boolean = {
+//	  if(filePath.length > 4 &&
+//	      (filePath.substring(filePath.length - 4, filePath.length).toLowerCase.equals(".dta")
+//	      || filePath.substring(filePath.length - 4, filePath.length).toLowerCase.equals(".mgf")
+//	      || filePath.substring(filePath.length - 4, filePath.length).toLowerCase.equals(".pkl")
+//	      )) { return true }
+//	  else if (filePath.length > 5 &&
+//	      (filePath.substring(filePath.length - 4, filePath.length).toLowerCase.equals(".gaml")
+//	      || filePath.substring(filePath.length - 4, filePath.length).toLowerCase.equals(".mzml")
+//	      )
+//	     ) { return true}
+//	  else return false
+//	  
+//	}
+	  
+	def isYesOrNo(str : String ) : Boolean = {  str.equals("yes") || str.equals("no")  }
+	
+	def isPtmWithResidueFormat(ptm : String) : Boolean = {
+	  var i = 0
+	  val commaParts: Array[String] = ptm.split(",") // Format : M1@X1,M2@X2,.... for, ex 57.022@C,42,010565@C
+    for (i <- 0 until commaParts.length) {
+      if(commaParts(i).length > 5 && commaParts(i).substring(commaParts(i).length-2, commaParts(i).length-1).equals("@"))
+      {
+        val atSignParts: Array[String] = commaParts(i).split("@")
+        if(!checkDouble(atSignParts(0)).isDefined || atSignParts(1).length != 1 || !isAlphabeticChar(atSignParts(1).head)) return false
+      } else {
+        return false
+      }
+    }
+	  return true
+	}
+	
+  def isPtmCtermSquareBracketsFormat(ptm : String) : Boolean = {
+	  var i = 0
+	  val commaParts: Array[String] = ptm.split(",") // Format : M1@X1,M2@X2,.... for, ex 42.010565@[
+    for (i <- 0 until commaParts.length) {
+      if(commaParts(i).length > 5 && commaParts(i).substring(commaParts(i).length-2, commaParts(i).length-1).equals("@"))
+      {
+        val atSignParts: Array[String] = commaParts(i).split("@")
+        if(!checkDouble(atSignParts(0)).isDefined || atSignParts(1).length != 1 || !atSignParts(1).equals("]")) return false
+      } else {
+        return false
+      }
+    }
+	  return true
+	}
+  	
+  def isPtmNtermSquareBracketsFormat(ptm : String) : Boolean = {
+    var isFormatOK = true
+	  var i = 0
+	  val commaParts: Array[String] = ptm.split(",") // Format : M1@X1,M2@X2,.... for, ex 42.010565@[
+    for (i <- 0 until commaParts.length) {
+      if(commaParts(i).length > 5 && commaParts(i).substring(commaParts(i).length-2, commaParts(i).length-1).equals("@"))
+      {
+        val atSignParts: Array[String] = commaParts(i).split("@")
+        if(!checkDouble(atSignParts(0)).isDefined || atSignParts(1).length != 1 || !atSignParts(1).equals("[")) return false
+      } else {
+        return false
+      }
+    }
+	  return true
+	}
+  
 }

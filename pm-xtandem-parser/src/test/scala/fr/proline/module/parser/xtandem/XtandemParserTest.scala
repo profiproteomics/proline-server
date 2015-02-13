@@ -81,10 +81,10 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     // small : output.2014_11_18_11_22_40.t.xml
     // big : (81 Mo) output.2014_11_18_11_46_01.t.xml
   
-//  @Test
+  @Test
   def preParsingTest {
     // test if structure is wrong or needed markups and labels are missing
-    val filePath = "src\\test\\resources\\xtandemResultFile\\output.2014_11_18_11_46_01.t.xml"
+    val filePath = "src\\test\\resources\\xtandemResultFile\\output.2014_11_18_11_22_40.t.xml"
     
     val factory: SAXParserFactory = SAXParserFactory.newInstance()
     var parseur: SAXParser = factory.newSAXParser()
@@ -170,7 +170,7 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
   }
   
 //  @Test
-  def twoEnzymesFound {
+  def twoEnzymesFound {  // we found 'None' enzyme instead 'Trypsin' that generating failure
     // Find following two enzymes writen in Xtandem input file : Trypsin, Asp-N_ambic
     var trypsinFound : Boolean = false
     var AspNAmbicFound : Boolean = false
