@@ -324,13 +324,13 @@ class MasterQuantPeptideIonsView( val quantiDS: QuantiDataSet ) extends IFixedDa
   }
    
    
-   def onEachRecord( recordFormatter: Map[String,Any] => Unit ) {
+  def onEachRecord( recordFormatter: Map[String,Any] => Unit ) {
     val quantRsm = quantiDS.quantRSM
     val protSetCellsById = quantiDS.protSetCellsById
     val qcIds = quantiDS.qcIds
     val ratioDefs = quantiDS.ratioDefs
     
-    val pepMatchById = Map() ++ quantRsm.resultSummary.resultSet.get.peptideMatchById
+    val pepMatchById = quantRsm.resultSummary.resultSet.get.getPeptideMatchById()
     
     // Create some mappings
     val mqPepById = Map() ++ quantRsm.masterQuantPeptides.map( mqPep => mqPep.id -> mqPep ) 
