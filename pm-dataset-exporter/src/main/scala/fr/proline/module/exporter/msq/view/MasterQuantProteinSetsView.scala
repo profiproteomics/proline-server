@@ -21,7 +21,10 @@ class MasterQuantProteinSetsViewFields(qcIds: Array[Long], ratioDefs: Array[Rati
   // MQ PROT SET PROFILE HEADER 
   val PEPTIDE_COUNT = Field("peptides_count")
   
-  // fields completed with dat name
+  qcIds.foreach( qcId => {
+    Field("raw_abundance_"+nameByQchId(qcId))
+  })
+  
   qcIds.foreach( qcId => {
     Field("abundance_"+nameByQchId(qcId))
   })
@@ -29,6 +32,10 @@ class MasterQuantProteinSetsViewFields(qcIds: Array[Long], ratioDefs: Array[Rati
   qcIds.foreach( qcId => {
     Field("psm_count_"+nameByQchId(qcId))
   })
+  
+  def addRawAbundanceField(qcId: Long):  Field= {
+    return Field("raw_abundance_"+nameByQchId(qcId))
+  }
   
   def addAbundanceField(qcId: Long):  Field= {
     return Field("abundance_"+nameByQchId(qcId))
@@ -44,6 +51,7 @@ class MasterQuantProteinSetsViewFields(qcIds: Array[Long], ratioDefs: Array[Rati
       Field("ratio"+ ("_g" + r.numeratorGroupNumber +" _vs_g"+ r.denominatorGroupNumber))
       Field("t-test_pvalue"+ ("_g" + r.numeratorGroupNumber +" _vs_g"+ r.denominatorGroupNumber))
       Field("z-test_pvalue"+ ("_g" + r.numeratorGroupNumber +" _vs_g"+ r.denominatorGroupNumber))
+      Field("z-score"+ ("_g" + r.numeratorGroupNumber +" _vs_g"+ r.denominatorGroupNumber))
   }
   
   
@@ -55,6 +63,9 @@ class MasterQuantProteinSetsViewFields(qcIds: Array[Long], ratioDefs: Array[Rati
   }
   def addZTestValueField(r: RatioDefinition): Field= {
     return Field("z-test_pvalue" + ("_g" + r.numeratorGroupNumber +" _vs_g"+ r.denominatorGroupNumber))
+  }
+  def addZScoreField(r: RatioDefinition): Field = {
+    return Field("z-score" + ("_g" + r.numeratorGroupNumber +" _vs_g"+ r.denominatorGroupNumber))
   }
   
 }
@@ -93,12 +104,16 @@ class MasterQuantProteinSetsView (val quantiDS: QuantiDataSet ) extends IFixedDa
       )
     }
     
-      
-    
-        
+    // rawabundance
+    var k=0;
+    qcIds.foreach( qcId => {
+        var qcRawAbun = if (profile.rawAbundances.isEmpty || profile.rawAbundances(k).isNaN ) "" else profile.rawAbundances(k)
+          exportMap += ( fields.addRawAbundanceField(qcId) -> qcRawAbun)
+          k = k+1
+        })
      
     // abundance
-    var k=0;
+    k=0;
     qcIds.foreach( qcId => {
     	  var qcAbun = if (profile.abundances(k).isNaN ) "" else profile.abundances(k)
           exportMap += ( fields.addAbundanceField(qcId) -> qcAbun)
@@ -136,6 +151,9 @@ class MasterQuantProteinSetsView (val quantiDS: QuantiDataSet ) extends IFixedDa
           if (nbS > i+2) {
             exportMap += ( fields.addZTestValueField(r) -> stats(i+2))
           }  
+          if (nbS > i+3) {
+            exportMap += ( fields.addZScoreField(r) -> stats(i+3))
+          }  
           i=i+1
      }
         
@@ -143,7 +161,9 @@ class MasterQuantProteinSetsView (val quantiDS: QuantiDataSet ) extends IFixedDa
     
   }
   
-  private def _getRatioStats(r: ComputedRatio) = Array(r.getState, r.getTTestPValue.getOrElse(""), r.getZTestPValue.getOrElse(""))
+  private def _getRatioStats(r: ComputedRatio) = Array(
+    r.getState, r.getTTestPValue.getOrElse(""), r.getZTestPValue.getOrElse(""), r.getZScore().getOrElse("")
+  )
   
   protected def stringifyRatiosStats(ratios: List[Option[ComputedRatio]]): List[String] = {
     ratios.flatMap(_.map( this._getRatioStats(_).map(_.toString) ).getOrElse(Array.fill(3)("")) )
