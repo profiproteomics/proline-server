@@ -72,9 +72,9 @@ class MzIdExporter(
   
   val msiSearch = optionalMsiSearch.get
   val searchSettings = msiSearch.searchSettings
-  val pepById = rs.peptideById
+  val pepById = rs.getPeptideById
   //println("nb peptides="+pepById.size)
-  val protMatchById = rs.proteinMatchById
+  val protMatchById = rs.getProteinMatchById
   //val pepMatchById = rs.peptideMatchById
   val pepInstByPepId = Map() ++ rsm.peptideInstances.map( pi => pi.peptide.id -> pi )
   val validPepMatchIdSet = rsm.peptideInstances.flatMap( _.peptideMatchIds ).toSet
