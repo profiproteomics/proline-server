@@ -61,7 +61,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView {
     
     val rsm = identDS.resultSummary
     val rs = rsm.resultSet.get
-    val protMatchById = rs.proteinMatchById
+    val protMatchById = rs.getProteinMatchById
     
     // Go through protein sets
     for( protSet <- rsm.proteinSets ) {

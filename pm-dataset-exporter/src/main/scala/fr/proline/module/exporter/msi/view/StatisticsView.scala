@@ -56,7 +56,7 @@ class StatisticsView( val rsm: ResultSummary ) extends IFormLikeView {
 
     
     // --- Group specific peptide sequences by protein sets ---
-    val pepInstById = rsm.peptideInstanceById    
+    val pepInstById = rsm.getPeptideInstanceById    
     val speSeqsByProtSet = new HashMap[ProteinSet,ArrayBuffer[String]]
     
     for(

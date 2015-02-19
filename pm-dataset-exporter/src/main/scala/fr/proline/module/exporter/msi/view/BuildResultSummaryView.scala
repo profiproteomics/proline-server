@@ -35,12 +35,12 @@ case class IdentDataSet (
   })
 
     
-  lazy val pepMatchById = resultSummary.resultSet.get.peptideMatchById
+  lazy val pepMatchById = resultSummary.resultSet.get.getPeptideMatchById
   
   //   Create list of all ProtMatches for pepMatches (validated or not) 
   lazy val allProtMatchSetByPepId =  { 
     val resultBuilder = new HashMap[Long, HashSet[ProteinMatch]]
-    for( protMatch <- resultSummary.resultSet.get.proteinMatches ) {    
+    for( protMatch <- resultSummary.resultSet.get.proteinMatches ) {
       if (protMatch.sequenceMatches != null) {
         protMatch.sequenceMatches.foreach(seqMatch => {
           val pepId = seqMatch.getPeptideId

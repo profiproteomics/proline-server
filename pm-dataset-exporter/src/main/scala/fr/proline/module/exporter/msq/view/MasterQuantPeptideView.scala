@@ -246,7 +246,7 @@ class MasterQuantPeptideView( val quantiDS: QuantiDataSet ) extends IFixedDatase
 //      logger.info(" Pep "+entry._1+" => nbr protSet " +entry._2.size)
 //    })
     
-    val pepMatchById = Map() ++ quantRsm.resultSummary.resultSet.get.peptideMatchById
+    val pepMatchById = Map() ++ quantRsm.resultSummary.resultSet.get.getPeptideMatchById
     
     // Iterate over master quant peptides to export them
     quantRsm.masterQuantPeptides.foreach { mqPep =>

@@ -102,8 +102,8 @@ class TypicalProtMatchToAllPepMatchesView( override val identDS: IdentDataSet ) 
     
     val rsm = identDS.resultSummary
     val rs = rsm.resultSet.get
-    val protMatchById = rs.proteinMatchById
-    val pepMatchById = rs.peptideMatchById
+    val protMatchById = rs.getProteinMatchById
+    val pepMatchById = rs.getPeptideMatchById
     
     // Keep track of peptide matches which are exported in the next loop
     val exportedPepMatchIds = new collection.mutable.HashSet[Long]

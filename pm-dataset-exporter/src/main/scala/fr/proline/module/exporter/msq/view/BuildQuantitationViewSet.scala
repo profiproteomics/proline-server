@@ -97,7 +97,7 @@ object BuildQuantitationViewSet {
    }
     
     // 
-    val protMatchById = quantRSM.resultSummary.resultSet.get.proteinMatchById
+    val protMatchById = quantRSM.resultSummary.resultSet.get.getProteinMatchById()
     
     //
     val protSetCellsById = {

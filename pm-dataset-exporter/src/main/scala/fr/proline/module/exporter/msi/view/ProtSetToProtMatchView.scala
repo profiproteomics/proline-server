@@ -55,7 +55,7 @@ class ProtSetToProtMatchView( val identDS: IdentDataSet ) extends IFixedDatasetV
     
     val rsm = identDS.resultSummary
     val rs = rsm.resultSet.get
-    val protMatchById = rs.proteinMatchById
+    val protMatchById = rs.getProteinMatchById
     
     for( protSet <- rsm.proteinSets ) {
       // Note that we export only protein matches which are loaded with the RSM
