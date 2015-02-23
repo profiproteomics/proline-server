@@ -492,12 +492,12 @@ class MascotDataParser(
       var seqPos = -1
 
       modifLocation match {
-        case PtmLocation.ANY_N_TERM => { //Modification is a C-Term modification, so for all peptides
+        case PtmLocation.ANY_C_TERM => { //Modification is a C-Term modification, so for all peptides
           isCter = true
           seqPos = -1
           ptmMatchPep = true
         }
-        case PtmLocation.ANY_C_TERM => {//Modification is a N-Term modification, so for all peptides
+        case PtmLocation.ANY_N_TERM => {//Modification is a N-Term modification, so for all peptides
           isNter = true
           seqPos = 0
           ptmMatchPep = true
