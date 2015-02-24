@@ -16,7 +16,7 @@ trait IViewFormatter {
     require((viewDir != null) && viewDir.isDirectory, "viewDir must be a directory")
 
     // Create a unique name for this view
-    val fileBaseName = view.viewName + '_' + UUID.randomUUID().toString + '.' + fileExtension
+    val fileBaseName = view.viewName + '_' + new java.util.Date().getTime() + '.' + fileExtension
     new File(viewDir, fileBaseName)
   }
 
