@@ -32,6 +32,12 @@ import javax.jms.Connection
 import javax.jms.ConnectionFactory
 import javax.jms.JMSException
 import javax.jms.ExceptionListener
+import fr.proline.cortex.service.dps.msi.UpdateSpectraParams
+import fr.proline.cortex.service.dps.msi.MergeResultSets
+import fr.proline.cortex.service.dps.msi.ImportResultFilesDecoyRegExp
+import fr.proline.cortex.service.dps.msi.ImportResultFilesprotMatchDecoyRule
+import fr.proline.cortex.service.dps.msi.ChangeTypicalProteinMatch
+import fr.proline.cortex.service.dps.msi.CertifyResultFiles
 
 object ProcessingNode extends Logging {
 
@@ -226,7 +232,12 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
     ServiceRegistry.addService(new InfoService()) // Monitoring
 
     ServiceRegistry.addService(new ValidateResultSet())
-
+    ServiceRegistry.addService(new UpdateSpectraParams())
+    ServiceRegistry.addService(new MergeResultSets())
+    ServiceRegistry.addService(new  ImportResultFilesDecoyRegExp())
+    ServiceRegistry.addService(new  ImportResultFilesprotMatchDecoyRule())
+    ServiceRegistry.addService(new  ChangeTypicalProteinMatch())
+    ServiceRegistry.addService(new  CertifyResultFiles())
   }
 
   /**
