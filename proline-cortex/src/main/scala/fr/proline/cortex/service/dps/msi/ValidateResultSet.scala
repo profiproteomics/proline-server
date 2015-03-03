@@ -1,19 +1,16 @@
 package fr.proline.cortex.service.dps.msi
 
 import scala.Array.canBuildFrom
-
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.algo.msi.InferenceMethods
+import fr.proline.core.algo.msi.InferenceMethod
 import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
 import fr.proline.core.algo.msi.filtering.IPeptideMatchSorter
 import fr.proline.core.algo.msi.filtering.IProteinSetFilter
@@ -37,6 +34,7 @@ import fr.proline.core.service.msi.ValidationConfig
 import fr.proline.cortex.service.IRemoteService
 import fr.proline.cortex.util.jsonrpc.JSONRPC2Utils
 import fr.proline.cortex.util.jsonrpc.ProfiJSONRPC2Response
+import fr.proline.cortex.service.AbstractRemoteProcessService
 
 case class FilterConfig(
   parameter: String,
@@ -54,38 +52,20 @@ case class ProtSetValidatorConfig(
   thresholds: Option[Map[String, AnyVal]] = None,
   @JsonDeserialize(contentAs = classOf[java.lang.Float]) expectedFdr: Option[Float] = None)
 
-class ValidateResultSet extends IRemoteService with Logging {
+/**
+ *  Define JMS Service which valides ResultSet and creates appropriates ResultSummaries. 
+ *  Specified PSMs, Proteins filters and validations are applied. 
+ *  
+ */
+class ValidateResultSet extends AbstractRemoteProcessService with Logging {
 
   /* JMS Service identification */
   val serviceName = "proline/dps/msi/ValidateResultSet"
   val serviceVersion = "1.0"
   override val defaultVersion = true
 
-  /* Define the concrete service method */
-  override def service(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
-    require((req != null), "Req is null")
-
-    val requestId = req.getID
-    val methodName = req.getMethod
-
-    /* Method dispatch */
-    methodName match {
-
-      case "process" => {
-        val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(req)
-
-        val result = doProcess(paramsRetriever) // Call service
-
-        new ProfiJSONRPC2Response(java.lang.Long.valueOf(result), requestId)
-      }
-
-      // Method name not supported
-      case _ => new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, requestId)
-    }
-
-  }
-
-  private def doProcess(paramsRetriever: NamedParamsRetriever): Long = {
+  
+  override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
     require((paramsRetriever != null), "ParamsRetriever is null")
 
     val projectId = paramsRetriever.getLong("project_id")
@@ -93,7 +73,7 @@ class ValidateResultSet extends IRemoteService with Logging {
     val description = paramsRetriever.getString("description")
     val useTdCompet = if (paramsRetriever.hasParam("use_td_competition")) paramsRetriever.getBoolean("use_td_competition") else false
 
-    var result: Long = -1L;
+    var result: java.lang.Long = -1L;
 
     var msiDbConnectionContext: DatabaseConnectionContext = null
     var msiDbTransacOk: Boolean = false
@@ -137,7 +117,7 @@ class ValidateResultSet extends IRemoteService with Logging {
         pepMatchValidator = validationConfig.pepMatchValidator,
         protSetFilters = validationConfig.protSetFilters,
         protSetValidator = validationConfig.protSetValidator,
-        inferenceMethod = Some(InferenceMethods.communist),
+        inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
         peptideSetScoring = Some(validationConfig.pepSetScoring.getOrElse(PepSetScoring.MASCOT_STANDARD_SCORE))
       )
 
@@ -194,7 +174,7 @@ class ValidateResultSet extends IRemoteService with Logging {
   def parseFilterConfig(paramsMap: Object): FilterConfig = {
     val configAsMap = deserialize[Map[String, AnyRef]](serialize(paramsMap))
     if (configAsMap.contains("post_validation"))
-      new FilterConfig(configAsMap("parameter").asInstanceOf[String], configAsMap("threshold").asInstanceOf[AnyVal], configAsMap.contains("post_validation"))
+      new FilterConfig(configAsMap("parameter").asInstanceOf[String], configAsMap("threshold").asInstanceOf[AnyVal], configAsMap("post_validation").asInstanceOf[Boolean])
     else
       new FilterConfig(configAsMap("parameter").asInstanceOf[String], configAsMap("threshold").asInstanceOf[AnyVal])
   }
