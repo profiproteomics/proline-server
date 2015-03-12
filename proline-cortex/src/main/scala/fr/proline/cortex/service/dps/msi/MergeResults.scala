@@ -76,17 +76,17 @@ class MergeResultSets extends IRemoteService with Logging {
       case "merge_result_sets" => {
         val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(req)
         val result = doMergeResultSetProcess(paramsRetriever) // Call service
-        new ProfiJSONRPC2Response(result, requestId)
+        return new ProfiJSONRPC2Response(result, requestId)
       }
       
     case "merge_result_summaries" => {
         val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(req)
         val result = doMergeResultSummariesProcess(paramsRetriever) // Call service
-        new ProfiJSONRPC2Response(result, requestId)
+        return new ProfiJSONRPC2Response(result, requestId)
       }    
 
       // Method name not supported
-      case _ => new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, requestId)
+      case _ => return new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, requestId)
     }
  
     new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, requestId)
