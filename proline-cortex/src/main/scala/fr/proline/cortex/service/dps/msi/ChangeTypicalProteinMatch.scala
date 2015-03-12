@@ -11,6 +11,12 @@ import fr.proline.core.orm.util.DataStoreConnectorFactory
 import fr.proline.core.service.msi.RSMTypicalProteinChooser
 import fr.proline.cortex.service.AbstractRemoteProcessService
 
+/**
+ *  Define JMS Service wich allows to select the ProteinSets typical protein using regexp based rules (on protien accession or description). 
+ *  List of rules could be specified and will be applied using order priority
+ *  
+ */
+
 class ChangeTypicalProteinMatch extends AbstractRemoteProcessService with Logging {
 
   /* JMS Service identification */

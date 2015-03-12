@@ -21,6 +21,8 @@ import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.core.orm.util.DataStoreConnectorFactory
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import java.io.File
+import fr.proline.core.om.provider.msi.ProteinFakeProvider
+import fr.proline.core.om.provider.msi.SeqDbFakeProvider
 
 trait IResultFileDescriptor {
 
@@ -91,8 +93,8 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessService wi
     //parserContext.putProvider(classOf[IPeptideProvider], PeptideFakeProvider)
 
     // TODO: use real protein and seqDb providers
-    //    parserContext.putProvider(classOf[IProteinProvider], ProteinFakeProvider)
-    //    parserContext.putProvider(classOf[ISeqDatabaseProvider], SeqDbFakeProvider)
+    parserContext.putProvider(classOf[IProteinProvider], ProteinFakeProvider)
+    parserContext.putProvider(classOf[ISeqDatabaseProvider], SeqDbFakeProvider)
 
     val psSQLCtx = executionContext.getPSDbConnectionContext
     val sqlPTMProvider = new SQLPTMProvider(psSQLCtx)
@@ -196,10 +198,6 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessService wi
 
 }
 
-class ImportResultFilesDecoyRegExp extends AbstractImportResultFiles {
-  /* JMS Service identification */
-  val serviceVersion = "1.0"
-  override val defaultVersion = true
 
   /*
    * format :  The type of the file to be imported (for instance 'mascot.dat', 'omssa.omx').
@@ -207,14 +205,21 @@ class ImportResultFilesDecoyRegExp extends AbstractImportResultFiles {
    * decoyStrategy : The Regular expression used to detect decoy protein matches.
    * peaklistId : The id of the software which has been used to generate the peaklist.
    */
-  case class ResultFileDescriptor(format: String, path: String, decoyStrategy: Option[String] = None, peaklistId: Option[Long] = None) extends IResultFileDescriptor
+case class ResultFileDescriptorsDecoyRegExp (format: String, path: String, decoyStrategy: Option[String] = None, peaklistId: Option[Long] = None) extends IResultFileDescriptor
+
+  
+class ImportResultFilesDecoyRegExp extends AbstractImportResultFiles {
+  /* JMS Service identification */
+  val serviceVersion = "1.0"
+  override val defaultVersion = true
+
 
   protected def parseResultFileDescriptor(rfDescObj: Object): IResultFileDescriptor = {
-    deserialize[ResultFileDescriptor](serialize(rfDescObj))
+    deserialize[ResultFileDescriptorsDecoyRegExp](serialize(rfDescObj))
   }
 
   protected def getProtMatchDecoyRegex(resultFileDescriptor: IResultFileDescriptor, decoyRegexById: Map[Long, Regex]): Option[Regex] = {
-    resultFileDescriptor.asInstanceOf[ResultFileDescriptor].decoyStrategy.map(new Regex(_))
+    resultFileDescriptor.asInstanceOf[ResultFileDescriptorsDecoyRegExp].decoyStrategy.map(new Regex(_))
   }
 }
 
