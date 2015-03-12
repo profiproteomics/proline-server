@@ -42,14 +42,14 @@ class FileSystem extends IRemoteService with Logging {
       case "retrieve_all_directory_types" => {
         val directoryTypes = MountPointRegistry.retrieveAllDirectoryTypes()
 
-        new ProfiJSONRPC2Response(directoryTypes, requestId)
+        return new ProfiJSONRPC2Response(directoryTypes, requestId)
       }
 
       case "retrieve_all_mount_points" => {
         // Do not return real absolute path to client
         val mountPoints = MountPointRegistry.retrieveAllMountPoints(false)
 
-        new ProfiJSONRPC2Response(mountPoints, requestId)
+        return new ProfiJSONRPC2Response(mountPoints, requestId)
       }
 
       case "retrieve_mount_points_by_type" => {
@@ -61,7 +61,7 @@ class FileSystem extends IRemoteService with Logging {
         // Do not return real absolute path to client
         val mountPoints = MountPointRegistry.retrieveMountPointsByType(directoryType, false)
 
-        new ProfiJSONRPC2Response(mountPoints, requestId)
+        return new ProfiJSONRPC2Response(mountPoints, requestId)
       }
 
       case "retrieve_mount_points_by_label" => {
@@ -73,15 +73,15 @@ class FileSystem extends IRemoteService with Logging {
         // Do not return real absolute path to client
         val mountPoints = MountPointRegistry.retrieveMountPointsByType(label, false)
 
-        new ProfiJSONRPC2Response(mountPoints, requestId)
+        return new ProfiJSONRPC2Response(mountPoints, requestId)
       }
 
       case "retrieve_directory_content" => {
-        retrieveDirectoryContent(req)
+        return retrieveDirectoryContent(req)
       }
 
       // Method name not supported
-      case _ => new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, requestId)
+      case _ => return new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, requestId)
     }
 
   }
