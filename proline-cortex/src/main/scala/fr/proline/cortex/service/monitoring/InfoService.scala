@@ -39,18 +39,18 @@ class InfoService extends IRemoteService with Logging {
 
     /* Method dispatcher */
     method match {
-      case "test" => new JSONRPC2Response("OK", requestId)
+      case "test" => return new JSONRPC2Response("OK", requestId)
 
       case "version" => {
         val buff = new StringBuilder()
         appendVersions(buff)
 
-        new JSONRPC2Response(buff.toString, requestId)
+        return new JSONRPC2Response(buff.toString, requestId)
       }
 
       case "error" => throw new RuntimeException("Fake Exception thrown by " + getClass.getSimpleName)
 
-      case _       => new JSONRPC2Response(buildMessage(jmsMessageContext, requestId, method), requestId)
+      case _       => return  new JSONRPC2Response(buildMessage(jmsMessageContext, requestId, method), requestId)
     }
 
   }
