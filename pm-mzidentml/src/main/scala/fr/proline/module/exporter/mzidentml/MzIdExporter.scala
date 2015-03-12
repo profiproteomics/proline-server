@@ -11,18 +11,20 @@ import javax.xml.parsers.SAXParserFactory
 import scala.collection.mutable.{ArrayBuffer,HashMap}
 import org.xml.sax.InputSource
 import com.typesafe.scalalogging.slf4j.Logging
-
 import uk.ac.ebi.jmzidml.model.mzidml.{ CvParam => _, Enzyme => MzIdEnzyme, Peptide => MzIdPeptide, UserParam => _, _ }
 import uk.ac.ebi.jmzidml.xml.io.MzIdentMLMarshaller
 import uk.ac.ebi.jmzidml.xml.jaxb.marshaller.MarshallerFactory
 import uk.ac.ebi.jmzidml.xml.jaxb.unmarshaller.UnmarshallerFactory
 import uk.ac.ebi.jmzidml.model.utils.ModelConstants
-
 import fr.profi.cv._
 import fr.profi.cv.psiMsTermName2psiMsTermId
 import fr.profi.cv.BuildCvParam.makeParamGroup
 import fr.profi.obo._
 import fr.proline.core.om.model.msi._
+import fr.proline.context.IExecutionContext
+import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
+import fr.proline.core.dal.DoJDBCReturningWork
+import fr.proline.core.dal.helper.{ MsiDbHelper, PsDbHelper }
 
 object MzIdExporter {
   
@@ -50,6 +52,41 @@ object MzIdExporter {
     jaxbObject.asInstanceOf[JAXBElement[T]].getValue()
   }
   
+   def _loadResultSummary(rsmId: Long, execContext: IExecutionContext): ResultSummary = {
+     
+	  val rsmProvider = new SQLResultSummaryProvider(execContext.getMSIDbConnectionContext(), execContext.getPSDbConnectionContext(),execContext.getUDSDbConnectionContext())
+      val rsm = rsmProvider.getResultSummary(rsmId, true).get
+      rsm
+  }
+   
+  def _getUnimodIdByPtmId(execContext: IExecutionContext) : Map[Long, Long] = {
+     val unimodIdByPtmId = DoJDBCReturningWork.withEzDBC( execContext.getPSDbConnectionContext(), { psEzDBC =>
+        new PsDbHelper(psEzDBC).getUnimodIdByPtmId()
+      })
+
+  	unimodIdByPtmId
+      
+   }
+  
+  def _getSpectrumNumberById(execContext: IExecutionContext, rsId : Long) : Map[Long, Int] = {
+    
+       val msiDbHelper = new MsiDbHelper(execContext.getMSIDbConnectionContext())
+       
+
+      //val pklId = rsm.resultSet.get.msiSearch.peakList.id
+      //val specNumById = msiDbHelper.getSpectrumNumberById( pklId )
+
+      // TODO: use peaklist_relation instead ?
+      val msiIds = msiDbHelper.getResultSetsMsiSearchIds(Array(rsId))
+      val pklIds = DoJDBCReturningWork.withEzDBC(execContext.getMSIDbConnectionContext(), { msiEzDBC =>
+        msiEzDBC.selectLongs("SELECT peaklist_id FROM msi_search WHERE id IN (" + msiIds.mkString(",") + ")")
+      })
+
+      // TODO: find another way to have this map
+      val specNumById = msiDbHelper.getSpectrumNumberById(pklIds)
+      specNumById
+   }
+  
 }
 
 /**
@@ -59,17 +96,29 @@ object MzIdExporter {
 class MzIdExporter(
   rsm: ResultSummary,
   unimodIdByPtmId: Map[Long, Long],
-  spectrumNumberById: Map[Long, Int]
+  spectrumNumberByIdOpt: Option[Map[Long, Int]] = None,
+  executionContextOpt : Option[IExecutionContext] = None
 ) extends ParamMaker with Logging {
+    
+  def this(rsmId: Long, executionContext : IExecutionContext) {
+     this(MzIdExporter._loadResultSummary(rsmId, executionContext) , MzIdExporter._getUnimodIdByPtmId(executionContext) , None, Some(executionContext) )
+  }
+  
+  require(spectrumNumberByIdOpt.isDefined || executionContextOpt.isDefined,"Should specify ExecutionContext or Map of spectrum number by ID " )
   
   // Retrieve some proline objects
   val rs = rsm.resultSet.get
   val rsId = rs.id
+  //TODO VDS : Should use method MsiDbHelper.getResultSetsMsiSearchIds !?
   val optionalMsiSearch = rs.msiSearch
+  val spectrumNumberById = if(spectrumNumberByIdOpt.isDefined) spectrumNumberByIdOpt.get else {
+   MzIdExporter._getSpectrumNumberById(executionContextOpt.get, rsId : Long)
+  }
   
   // TODO LMN : May not work for merged ResultSet (refs #7486)
   require((optionalMsiSearch != null) && optionalMsiSearch.isDefined, "ResultSet #" + rsId+" has no associated MSI Search")
   
+    
   val msiSearch = optionalMsiSearch.get
   val searchSettings = msiSearch.searchSettings
   val pepById = rs.getPeptideById
