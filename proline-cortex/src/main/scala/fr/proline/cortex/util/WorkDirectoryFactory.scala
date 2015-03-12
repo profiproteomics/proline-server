@@ -5,10 +5,9 @@ import java.nio.file.Files
 import java.util.Timer
 import java.util.TimerTask
 import java.util.concurrent.TimeUnit
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.profi.util.ThreadLogger
+import org.apache.commons.io.FileUtils
 
 object WorkDirectoryFactory extends Logging {
 
@@ -111,18 +110,23 @@ class TempDirectoryPurgeTask(tempDirectory: File) extends TimerTask with Logging
       logger.warn("Cannot list [" + tempDirectory.getAbsoluteFile + ']')
     } else {
 
-      for (file <- files) {
+      for (fileOrDir <- files) {
 
-        if (file.lastModified + PURGE_DELAY < now) {
-          val fileAbsolutePathname = file.getAbsolutePath
-
-          val result = file.delete()
-
-          if (result) {
-            logger.info("Old file [" + fileAbsolutePathname + "] DELETED")
+        if (fileOrDir.lastModified + PURGE_DELAY < now) {
+          val fileAbsolutePathname = fileOrDir.getAbsolutePath
+          
+		  if( fileOrDir.isFile() ) {
+            val result = fileOrDir.delete()
+  
+            if (result) {
+              logger.info("Old file [" + fileAbsolutePathname + "] DELETED")
+            } else {
+              logger.error("Cannot delete [" + fileAbsolutePathname + ']')
+            }
           } else {
-            logger.error("Cannot delete [" + fileAbsolutePathname + ']')
+            FileUtils.deleteDirectory(fileOrDir)
           }
+         
 
         } // End if (file is old)
 
