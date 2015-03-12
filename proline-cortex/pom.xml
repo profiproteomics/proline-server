@@ -17,7 +17,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.path>${project.basedir}/src/main/scala/fr/proline/cortex</version.path>
     <core.version>0.3.0-SNAPSHOT</core.version> <!-- Snapshot Trunk version -->
-    <sqlite4java.version>0.282</sqlite4java.version>
+    <sqlite4java.version>1.0.392</sqlite4java.version>
   </properties>
 
   <dependencies>
@@ -97,6 +97,26 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+    	<groupId>fr.proline</groupId>
+    	<artifactId>PM-DatasetExporter</artifactId>
+    	<version>0.1.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+    	<groupId>fr.proline</groupId>
+    	<artifactId>PM-MzIdentML</artifactId>
+    	<version>0.1.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+    	<groupId>fr.proline</groupId>
+    	<artifactId>PM-MascotParser</artifactId>
+    	<version>0.1.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+    	<groupId>fr.proline</groupId>
+    	<artifactId>PM-OmssaParser</artifactId>
+    	<version>0.1.0-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 
   <build>
