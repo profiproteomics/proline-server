@@ -29,11 +29,11 @@ abstract class AbstractRemoteProcessService extends IRemoteService {
 
         val result = doProcess(paramsRetriever) // Call service
 
-        new ProfiJSONRPC2Response(result, _requestId)
+        return new ProfiJSONRPC2Response(result, _requestId)
       }
 
       // Method name not supported
-      case _ => new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, _requestId)
+      case _ => return new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, _requestId)
     }
  
     new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, _requestId)
