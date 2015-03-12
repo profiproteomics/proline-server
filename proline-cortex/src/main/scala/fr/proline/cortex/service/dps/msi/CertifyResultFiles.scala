@@ -23,6 +23,13 @@ import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.core.orm.util.DataStoreConnectorFactory
 import com.typesafe.scalalogging.slf4j.Logging
 
+/**
+ *  Define JMS Service to :
+ *  Verify result files integrity for importation in the MSIdb. This service should be called before an import result file
+ *  
+ */
+case class ResultFileDescriptor( path: String, format: String)
+ 
 class CertifyResultFiles extends AbstractRemoteProcessService with Logging {
 
   /* JMS Service identification */
@@ -30,7 +37,6 @@ class CertifyResultFiles extends AbstractRemoteProcessService with Logging {
   val serviceVersion = "1.0"
   override val defaultVersion = true
 
-  case class ResultFileDescriptor(format: String, path: String)
 
   //    // Configure service interface
   //  val wsParams = Array(
@@ -61,7 +67,7 @@ class CertifyResultFiles extends AbstractRemoteProcessService with Logging {
 
     var processResult: String = null
 
-    val projectId = paramsRetriever.getLong("project_id")
+    val projectId = paramsRetriever.getLong("project_id")   
     val resultFiles = paramsRetriever.getList("result_files").toArray.map { rfd => deserialize[ResultFileDescriptor](serialize(rfd)) }
 
     val importerProperties = if (paramsRetriever.hasParam("importer_properties") == false) Map.empty[String, Any]
