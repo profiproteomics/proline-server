@@ -4,14 +4,18 @@ import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import scala.collection.JavaConversions._
+
+import scala.collection.JavaConversions.mutableMapAsJavaMap
 import scala.collection.mutable
+
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.jms.HornetQJMSClient
 import org.hornetq.api.jms.JMSFactoryType
 import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory
 import org.hornetq.core.remoting.impl.netty.TransportConstants
+
 import com.typesafe.scalalogging.slf4j.Logging
+
 import Constants.MAX_PORT
 import NodeConfig.ENABLE_IMPORTS
 import NodeConfig.JMS_SERVER_HOST
@@ -22,6 +26,13 @@ import fr.profi.util.StringUtils
 import fr.profi.util.ThreadLogger
 import fr.proline.admin.service.db.SetupProline
 import fr.proline.core.orm.util.DataStoreConnectorFactory
+import fr.proline.cortex.service.dps.msi.CertifyResultFiles
+import fr.proline.cortex.service.dps.msi.ChangeTypicalProteinMatch
+import fr.proline.cortex.service.dps.msi.ExportResultSummary
+import fr.proline.cortex.service.dps.msi.ImportResultFilesDecoyRegExp
+import fr.proline.cortex.service.dps.msi.ImportResultFilesprotMatchDecoyRule
+import fr.proline.cortex.service.dps.msi.MergeResultSets
+import fr.proline.cortex.service.dps.msi.UpdateSpectraParams
 import fr.proline.cortex.service.dps.msi.ValidateResultSet
 import fr.proline.cortex.service.misc.FileSystem
 import fr.proline.cortex.service.monitoring.InfoService
@@ -30,14 +41,8 @@ import fr.proline.cortex.util.MountPointRegistry
 import fr.proline.cortex.util.WorkDirectoryRegistry
 import javax.jms.Connection
 import javax.jms.ConnectionFactory
-import javax.jms.JMSException
 import javax.jms.ExceptionListener
-import fr.proline.cortex.service.dps.msi.UpdateSpectraParams
-import fr.proline.cortex.service.dps.msi.MergeResultSets
-import fr.proline.cortex.service.dps.msi.ImportResultFilesDecoyRegExp
-import fr.proline.cortex.service.dps.msi.ImportResultFilesprotMatchDecoyRule
-import fr.proline.cortex.service.dps.msi.ChangeTypicalProteinMatch
-import fr.proline.cortex.service.dps.msi.CertifyResultFiles
+import javax.jms.JMSException
 
 object ProcessingNode extends Logging {
 
@@ -234,10 +239,11 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
     ServiceRegistry.addService(new ValidateResultSet())
     ServiceRegistry.addService(new UpdateSpectraParams())
     ServiceRegistry.addService(new MergeResultSets())
-    ServiceRegistry.addService(new  ImportResultFilesDecoyRegExp())
-    ServiceRegistry.addService(new  ImportResultFilesprotMatchDecoyRule())
-    ServiceRegistry.addService(new  ChangeTypicalProteinMatch())
-    ServiceRegistry.addService(new  CertifyResultFiles())
+    ServiceRegistry.addService(new ImportResultFilesDecoyRegExp())
+    ServiceRegistry.addService(new ImportResultFilesprotMatchDecoyRule())
+    ServiceRegistry.addService(new ChangeTypicalProteinMatch())
+    ServiceRegistry.addService(new CertifyResultFiles())
+    ServiceRegistry.addService(new ExportResultSummary())
   }
 
   /**
