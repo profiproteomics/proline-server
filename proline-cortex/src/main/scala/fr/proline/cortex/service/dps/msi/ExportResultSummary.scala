@@ -1,41 +1,31 @@
 package fr.proline.cortex.service.dps.msi
 
-import scala.collection.JavaConversions.mapAsScalaMap
-import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
-import fr.proline.context.IExecutionContext
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.core.om.provider.msi.IProteinProvider
-import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
-import fr.proline.core.om.provider.msi.ProteinFakeProvider
-import fr.proline.core.om.provider.msi.SeqDbFakeProvider
-import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
-import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.cortex.service.AbstractRemoteProcessService
-import fr.profi.util.serialization.ProfiJson._
-import fr.proline.core.service.msi.ResultFileCertifier
-import fr.proline.cortex.util.MountPointRegistry
-import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
-import fr.profi.util.StringUtils
 import java.io.File
+import java.util.HashMap
+import java.util.UUID
+
+import scala.Array.canBuildFrom
+
+import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
+import com.typesafe.scalalogging.slf4j.Logging
+
+import fr.profi.util.StringUtils
+import fr.profi.util.serialization.ProfiJson.deserialize
+import fr.profi.util.serialization.ProfiJson.serialize
+import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.core.orm.util.DataStoreConnectorFactory
-import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.cortex.service.IRemoteService
-import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.dal.DoJDBCReturningWork
+import fr.proline.cortex.Constants
+import fr.proline.cortex.NodeConfig
+import fr.proline.cortex.service.AbstractRemoteProcessService
+import fr.proline.cortex.util.WorkDirectoryFactory
+import fr.proline.module.exporter.commons.ViewSetExporter
 import fr.proline.module.exporter.msi.template.AllPSMViewSetTemplateAsXLSX
+import fr.proline.module.exporter.msi.template.IRMaLikeFullViewSetTemplateAsXLSX
 import fr.proline.module.exporter.msi.template.IRMaLikeViewSetTemplateAsTSV
 import fr.proline.module.exporter.msi.template.IRMaLikeViewSetTemplateAsXLSX
-import fr.proline.module.exporter.msi.template.IRMaLikeFullViewSetTemplateAsXLSX
 import fr.proline.module.exporter.msi.template.ProlineViewSetTemplateAsXLSX
-import java.util.UUID
-import fr.proline.cortex.util.WorkDirectoryFactory
 import fr.proline.module.exporter.msi.view.BuildResultSummaryViewSet
-import fr.proline.module.exporter.commons.ViewSetExporter
 import fr.proline.module.exporter.mzidentml.MzIdExporter
 
 /**
@@ -54,10 +44,12 @@ object OutputMode extends Enumeration {
   val STREAM = Value("STREAM")
 }
 
-class ExportResultSummaries  extends AbstractRemoteProcessService with Logging {
+case class ResultSummaryIdentifier(projectId: Long, rsmId: Long)
+
+class ExportResultSummary  extends AbstractRemoteProcessService with Logging {
 
   /* JMS Service identification */
-  val serviceName = "proline/dps/msi/ExportResultSummaries"
+  val serviceName = "proline/dps/msi/ExportResultSummary"
   val serviceVersion = "1.0"
   override val defaultVersion = true
   
@@ -100,8 +92,7 @@ class ExportResultSummaries  extends AbstractRemoteProcessService with Logging {
 //    )
 //  )
 
-  case class ResultSummaryIdentifier(projectId: Long, rsmId: Long)
-  
+    
     // TODO: find a more dynamic way to load the templates
   val viewSetTemplateByName = Map(
     "ALL_PEP_MATCHES_XLSX" -> AllPSMViewSetTemplateAsXLSX,
@@ -116,7 +107,8 @@ class ExportResultSummaries  extends AbstractRemoteProcessService with Logging {
     require((paramsRetriever != null), "ParamsRetriever is null")
 
     //val rsmIdentifiers = paramsRetriever.getList("rsm_identifiers").toArray.map { rsmIdent => deserialize[ResultSummaryIdentifier](serialize(rsmIdent)) }
-    val rsmIdentifiers = Some(paramsRetriever.getMap("rsm_identifier")).map { rsmIdent => deserialize[ResultSummaryIdentifier](serialize(rsmIdent)) }
+//    val rsmIdentifiers = paramsRetriever.getList("rsm_identifier").toArray.map { rsmIdent => deserialize[ResultSummaryIdentifier](serialize(rsmIdent)) }
+    val rsmIdentifier = Some(paramsRetriever.getMap("rsm_identifier")).map { rsmIdent => deserialize[ResultSummaryIdentifier](serialize(rsmIdent)) }
     
     val fileFormat = FileFormat.withName(paramsRetriever.getString("file_format"))
 
@@ -128,8 +120,10 @@ class ExportResultSummaries  extends AbstractRemoteProcessService with Logging {
     val outputParams = OutputMode.withName(paramsRetriever.getOptString("output_mode", "FILE"))
 
     fileFormat match {
-      case FileFormat.MZIDENTML => exportToMzIdentML(Seq(rsmIdentifiers.get), fileName, fileDirectory, outputParams, extraParams)
-      case FileFormat.TEMPLATED => exportToTemplatedFile(Seq(rsmIdentifiers.get), fileName, fileDirectory, outputParams, extraParams)
+//      case FileFormat.MZIDENTML => exportToMzIdentML(Seq(rsmIdentifiers.get), fileName, fileDirectory, outputParams, extraParams)
+//      case FileFormat.TEMPLATED => exportToTemplatedFile(Seq(rsmIdentifiers.get), fileName, fileDirectory, outputParams, extraParams)
+      case FileFormat.MZIDENTML => exportToMzIdentML(rsmIdentifier.get, fileName, fileDirectory, outputParams, extraParams)
+      case FileFormat.TEMPLATED => exportToTemplatedFile(rsmIdentifier.get, fileName, fileDirectory, outputParams, extraParams)
     }
     
   }
@@ -155,15 +149,15 @@ class ExportResultSummaries  extends AbstractRemoteProcessService with Logging {
   }
 
  def exportToMzIdentML(
-    rsmIdentifiers: Seq[ResultSummaryIdentifier],
+    rsmIdentifier: ResultSummaryIdentifier,
     fileName: String,
     fileDir: String,
     outputFormat: OutputMode.Value,
     extraParams: Option[Map[String, Any]]): Array[String] = {
 
-	  require(rsmIdentifiers.length == 1, "can only export one RSM at a time for the mzIdentML file format")
+//	  require(rsmIdentifiers.length == 1, "can only export one RSM at a time for the mzIdentML file format")
 
-    val rsmIdentifier = rsmIdentifiers(0)
+//    val rsmIdentifier = rsmIdentifiers(0)
     var filePath = ""
     val execCtx = BuildExecutionContext(DataStoreConnectorFactory.getInstance(), rsmIdentifier.projectId, false)
      
@@ -187,14 +181,14 @@ class ExportResultSummaries  extends AbstractRemoteProcessService with Logging {
   }
 
   def exportToTemplatedFile(
-    rsmIdentifiers: Seq[ResultSummaryIdentifier],
+    rsmIdentifier: ResultSummaryIdentifier,
     fileName: String,
     fileDir: String,
     outputFormat: OutputMode.Value,
     extraParams: Option[Map[String, Any]]
-  ): Array[String] = {
+  ): Object  = {
 
-    require(rsmIdentifiers.length == 1, "can only export one RSM at a time for this file format")
+//    require(rsmIdentifiers.length == 1, "can only export one RSM at a time for this file format")
     require(extraParams.isDefined, "some extra parameters must be provided")
 
     val viewSetTemplateName = extraParams.get("template_name").asInstanceOf[String]
@@ -203,7 +197,7 @@ class ExportResultSummaries  extends AbstractRemoteProcessService with Logging {
     val viewSetTemplate = viewSetTemplateByName(viewSetTemplateName)
     val loadFullResultSet =  if( viewSetTemplate == AllPSMViewSetTemplateAsXLSX ||viewSetTemplate == IRMaLikeFullViewSetTemplateAsXLSX) true else false
     
-    val rsmIdentifier = rsmIdentifiers(0)
+//    val rsmIdentifier = rsmIdentifiers(0)
 
     var exportLocation = new java.io.File(fileDir)
     var exportedFiles: Seq[java.io.File] = Seq()
@@ -231,7 +225,10 @@ class ExportResultSummaries  extends AbstractRemoteProcessService with Logging {
 
     if (outputFormat == OutputMode.STREAM) {
       // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
-      exportedFiles.toArray.map(_.getAbsolutePath) // Local to this Web-Core host
+      val resultMap = new HashMap[String, Object]()
+      resultMap.put("file_paths", exportedFiles.toArray.map(_.getAbsolutePath))
+      resultMap.put(Constants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
+      resultMap
     } else {
       exportedFiles.toArray.map(_.getName)
     }
