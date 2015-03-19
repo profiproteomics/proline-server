@@ -106,15 +106,35 @@ class SpectrumMatchesGenerator(
         storerContext = StorerContext(executionContext)
         val allPepMatchIds = Seq.newBuilder[Long]
         
+	    // check if RS is a merge other RSs or a single RS
+        var mergedResultSet = false
+	    val jdbcWork2 = new JDBCWork() {
+          override def execute(con: Connection) {
+            val pStmt = con.prepareStatement("SELECT count(*) FROM result_set_relation WHERE parent_result_set_id = ? ")
+            pStmt.setLong(1, resultSetId)
+            val sqlResultSet = pStmt.executeQuery()
+            sqlResultSet.next()
+            val count = sqlResultSet.getLong(1)
+            if(count > 0) {
+    		  logger.debug("ResultSet is the merge of "+count+" datasets")
+    		  mergedResultSet = true
+    		}
+    		pStmt.close()
+          }
+	    } // End of jdbcWork anonymous inner class    	 
+	    executionContext.getMSIDbConnectionContext().doWork(jdbcWork2, false)
+	    if(mergedResultSet) logger.debug("Resultset is a merge")
+        
     	if (!resultSummaryId.isDefined) {
-    		val jdbcWork = new JDBCWork() {
+    	  logger.debug("Get all peptide matches of the given RSM")
+			val jdbcWork = new JDBCWork() {
 	            override def execute(con: Connection) {
 		
-		              val pStmt = con.prepareStatement("SELECT id from peptide_match WHERE result_set_id = ?")
+		              val pStmt = if(mergedResultSet) con.prepareStatement("SELECT best_child_id from peptide_match WHERE result_set_id = ?") else con.prepareStatement("SELECT id from peptide_match WHERE result_set_id = ?")
 		              pStmt.setLong(1, resultSetId)
 		              val sqlResultSet = pStmt.executeQuery()
 		              while(sqlResultSet.next){
-		                allPepMatchIds += sqlResultSet.getLong("id")
+		                allPepMatchIds += sqlResultSet.getLong(1)
 		              }		                
 		              pStmt.close()
 	            }
@@ -123,29 +143,36 @@ class SpectrumMatchesGenerator(
 		
 	          executionContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
     	} else {
-	          val jdbcWork = new JDBCWork() {
-	        	  override def execute(con: Connection) {
-		
-		              val pStmt = con.prepareStatement("SELECT peptide_match.id FROM peptide_match, peptide_instance_peptide_match_map  pipm "+ 
-		            		  	" WHERE pipm.peptide_match_id = peptide_match.id AND pipm.result_summary_id = ? ")
-		              pStmt.setLong(1, resultSummaryId.get)
-		              val sqlResultSet = pStmt.executeQuery()
-		              while(sqlResultSet.next){
-		                allPepMatchIds += sqlResultSet.getLong("id")
-		              }		                
-		              pStmt.close()
-		            }
-		
-	          } // End of jdbcWork anonymous inner class    	 
-		
-	          executionContext.getMSIDbConnectionContext().doWork(jdbcWork, false)        	  
+    	  logger.debug("Get all peptide matches of the given RS")
+          val jdbcWork = new JDBCWork() {
+        	  override def execute(con: Connection) {
+	
+	              val pStmt = if(mergedResultSet) {
+	                con.prepareStatement("SELECT peptide_match.best_child_id FROM peptide_match, peptide_instance_peptide_match_map  pipm "+
+	            		  	" WHERE pipm.peptide_match_id = peptide_match.id AND pipm.result_summary_id = ? ") 
+	              } else {
+	                con.prepareStatement("SELECT peptide_match.id FROM peptide_match, peptide_instance_peptide_match_map  pipm "+
+	            		  	" WHERE pipm.peptide_match_id = peptide_match.id AND pipm.result_summary_id = ? ")
+	              }
+	              pStmt.setLong(1, resultSummaryId.get)
+	              val sqlResultSet = pStmt.executeQuery()
+	              while(sqlResultSet.next){
+	                allPepMatchIds += sqlResultSet.getLong(1)
+	              }		                
+	              pStmt.close()
+	            }
+	
+          } // End of jdbcWork anonymous inner class    	 
+	
+          executionContext.getMSIDbConnectionContext().doWork(jdbcWork, false)        	  
     	}
         	        
     	val msiSearch = getAndTestMSISearch(resultSetId, msiDbCtx )       	
     	val ms2ErrorTol = msiSearch.searchSettings.msmsSearchSettings.get.ms2ErrorTol
 		val ms2ErrorTolUnit = msiSearch.searchSettings.msmsSearchSettings.get.ms2ErrorTolUnit
 		val peptideMatchProvider = new SQLPeptideMatchProvider(msiDbCtx, executionContext.getPSDbConnectionContext)
-        	
+
+    	logger.info(""+allPepMatchIds.result.length+" spectrum matches have been generated")
 		val pepMatchIDsIterator = allPepMatchIds.result.sliding(1000,1000)
 		while(pepMatchIDsIterator.hasNext){
 		   val pepMatchIds = pepMatchIDsIterator.next
