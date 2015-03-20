@@ -58,7 +58,7 @@ class PrideExporterTest extends Logging {
       val exporter = new PrideExporterService(PrideExporterTest.executionContext, rsm.id, f.getAbsolutePath(), extraParams.result)
       exporter.runService()
       assertTrue(f.exists())
-      //      f.delete()
+      f.delete()
     } catch {
       case e: Exception => logger.error("error", e)
     }
