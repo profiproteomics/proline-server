@@ -14,10 +14,12 @@ import fr.proline.core.om.provider.msi.impl.SQLSpectrumProvider
 class PrideExporterService (
   execCtx: IExecutionContext,
   resultSummaryId: Long,
-  filePath: String ) extends IService with Logging {
+  filePath: String ,
+  extraDataMap: Map[String, Object]) extends IService with Logging {
 
   def runService(): Boolean = {
 
+    require(!execCtx.isJPA(), "SQL connextion should be provided")
     val udsSQLCtx = execCtx.getUDSDbConnectionContext()
     val psSQLCtx = execCtx.getPSDbConnectionContext()
     val msiSQLCtx = execCtx.getMSIDbConnectionContext()
@@ -37,8 +39,8 @@ class PrideExporterService (
       msiEzDBC.selectLongs("SELECT peaklist_id FROM msi_search WHERE id IN (" + msiIds.mkString(",") + ")")
     })
     
-    val exporter = new PrideExporter(rsm, unimodIdByPtmId, msiSQLCtx)
-    exporter.exportResultSummary(filePath)
+    val exporter = new PrideExporter(rsm, unimodIdByPtmId, execCtx)
+    exporter.exportResultSummary(filePath, extraDataMap)
 
     true
   }
