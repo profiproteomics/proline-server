@@ -13,24 +13,33 @@ import fr.proline.core.om.provider.msi.{IResultFileVerifier, IResultFileProvider
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import com.typesafe.scalalogging.slf4j.Logging
 
-object OmssaResultFileProviderType {
+object XtandemResultFileProviderType {
     final val fileType: String = "xtandem.xml"
 }
 
 
-class XtandemResultFileProvider(  val xtandemFilePath : String, 
-                                  val parserContext: ProviderDecoratedExecutionContext
-                                  ) extends IResultFileProvider with Logging {
+class XtandemResultFileProvider extends IResultFileProvider with Logging {
 
-  val fileType: String = OmssaResultFileProviderType.fileType
+  var parserContext: ProviderDecoratedExecutionContext = _
+  val fileType: String = XtandemResultFileProviderType.fileType
 
   def getResultFile( fileLocation: File, importProperties : Map[String, Any], parserContext: ProviderDecoratedExecutionContext ): IResultFile = {
-    new XtandemParser(xtandemFilePath, parserContext)
+    new XtandemParser(fileLocation, parserContext)
   }
 
   val resultFileProperties : Map[String, Class[_]] = null
   
   def getResultFileVerifier : IResultFileVerifier = {
-    new XtandemResultFileVerifier(xtandemFilePath, parserContext)
+    // Requirements
+    require(parserContext != null,"No parser context found. Use setParserContext(parserContext: ProviderDecoratedExecutionContext)")
+    val RFVerifier = new XtandemResultFileVerifier
+    RFVerifier.setParserContext(parserContext)
+    RFVerifier
   }
+  
+  override def setParserContext(parserContext: ProviderDecoratedExecutionContext) {
+    this.parserContext = parserContext
+    logger.debug("### PM-XtandemParser - IY # setParserContext parserContext = " + parserContext);
+  }
+  
 }

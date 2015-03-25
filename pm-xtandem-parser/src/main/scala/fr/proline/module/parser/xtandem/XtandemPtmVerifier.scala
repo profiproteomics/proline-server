@@ -198,12 +198,12 @@ class XtandemPtmVerifier( val parserContext: ProviderDecoratedExecutionContext
 
 		fixedPtms.foreach(ptms => {
       val _ptm = ptmProvider.getPtmDefinition(ptms._1, ptmMonoMassMargin, ptms._2, ptms._3)
-      if (_ptm.get != null) { fixedPtmDefs.append(_ptm.get); /*println("fixedPtms _ptm = " + _ptm.get + ", monoMass = " + _ptm.get.ptmEvidences(0).monoMass)*/ }
+      if (_ptm.get != null) { fixedPtmDefs.append(_ptm.get); logger.debug("fixedPtms _ptm = " + _ptm.get + ", monoMass = " + _ptm.get.ptmEvidences(0).monoMass) }
       else { /*_ptm = Some(null) */ logger.error("Ptm don't exists in database : mono mass = " + ptms._1 + ", residue = " + ptms._2 + ", location = " + ptms._3); isPTMsDefinedInDB = false }
     })
     variablePtms.foreach(ptms => {
       val _ptm = ptmProvider.getPtmDefinition(ptms._1, ptmMonoMassMargin, ptms._2, ptms._3)
-      if (_ptm.get != null) { variablePtmDefs.append(_ptm.get); /*println("variablePtms_ptm = " + _ptm.get + "_ptm.get.ptmEvidences.monoMass = " + _ptm.get.ptmEvidences(0).monoMass)*/ }
+      if (_ptm.get != null) { variablePtmDefs.append(_ptm.get); logger.debug("variablePtms_ptm = " + _ptm.get + "_ptm.get.ptmEvidences.monoMass = " + _ptm.get.ptmEvidences(0).monoMass) }
       else { /*_ptm = Some(null) */ logger.error("Ptm don't exists in database : mono mass = " + ptms._1 + ", residue = " + ptms._2 + ", location = " + ptms._3); isPTMsDefinedInDB = false }
     })
     

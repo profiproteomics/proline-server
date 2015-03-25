@@ -56,11 +56,11 @@ class Filename(str: String, sep: Char, ext: Char) {
   }
 }
 
-class XtandemParser(  val xtandemFilePath : String, 
+class XtandemParser(  val xtandemFile : File, 
                       val parserContext: ProviderDecoratedExecutionContext
                       ) extends DefaultHandler with  IResultFile with Logging {
 
-  val fileLocation: File = new File(xtandemFilePath)
+  val fileLocation: File = xtandemFile
   val importProperties: Map[String,Any] = null
   val msLevel: Int = 2
   
@@ -552,7 +552,7 @@ class XtandemParser(  val xtandemFilePath : String,
       title = msiSearchResultFileName,
       queriesCount = resultBioml.groupModelList.length)
 
-    logger.info("resultBioml.groupModelList.length = " + resultBioml.groupModelList.length)
+    logger.info("IY - XtandemParser - resultBioml.groupModelList.length = " + resultBioml.groupModelList.length)
     val resultSet = new ResultSet(
       peptides = peptides.toArray,
       peptideMatches = peptideMatches.toArray,
@@ -588,6 +588,7 @@ class XtandemParser(  val xtandemFilePath : String,
 	  allEnzymesArray.foreach( enz => {
       if(enz.enzymeCleavages.length == 1
          && residue.length() == enz.enzymeCleavages.head.residues.length()
+         && enz.enzymeCleavages.head.restrictiveResidues != None
          && restrictiveResidue.length() == enz.enzymeCleavages.head.restrictiveResidues.get.length()
          && residue.toUpperCase.sorted.equals(enz.enzymeCleavages.head.residues.toUpperCase.sorted)
          && restrictiveResidue.toUpperCase.sorted.equals(enz.enzymeCleavages.head.restrictiveResidues.get.toUpperCase.sorted)

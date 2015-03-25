@@ -21,16 +21,21 @@ import _root_.fr.proline.core.om.model.msi.Enzyme
 import _root_.fr.proline.core.om.provider.msi.IResultFileVerifier
 import com.typesafe.scalalogging.slf4j.Logging
 
-class XtandemResultFileVerifier(  val xtandemFilePath : String, 
-                                  val parserContext: ProviderDecoratedExecutionContext
-                                  ) extends IResultFileVerifier with Logging {
+class XtandemResultFileVerifier extends IResultFileVerifier with Logging {
 
-  // returns PtmDefinitions referenced by the specified file
+  var parserContext: ProviderDecoratedExecutionContext = _
+  
   def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): Seq[PtmDefinition] = {
+    // Requirements
+    require(parserContext != null,"No parser context found. Use setParserContext(parserContext: ProviderDecoratedExecutionContext)")
+    
+    logger.debug("### PM-XtandemParser - IY # getPtmDefinitions");
+    logger.debug("### PM-XtandemParser - IY # getPtmDefinitions parserContext = " + parserContext);
+    
     val factory: SAXParserFactory = SAXParserFactory.newInstance()
     var parseur: SAXParser = factory.newSAXParser()
     var manager = new XtandemPtmVerifier(parserContext)
-    parseur.parse(new File(xtandemFilePath), manager)
+    parseur.parse(fileLocation, manager)
     
     var ptmDefinitions : ArrayBuffer[PtmDefinition] = new ArrayBuffer[PtmDefinition]
     ptmDefinitions = manager.fixedPtmDefs ++ manager.variablePtmDefs
@@ -44,11 +49,19 @@ class XtandemResultFileVerifier(  val xtandemFilePath : String,
   }
 
   def getEnzyme(fileLocation: File, importProperties: Map[String, Any]): Array[Enzyme] = {
+    // Requirements
+    require(parserContext != null,"No parser context found. Use setParserContext(parserContext: ProviderDecoratedExecutionContext)")
+    
     val factory: SAXParserFactory = SAXParserFactory.newInstance()
     var parseur: SAXParser = factory.newSAXParser()
     var manager = new XTandemEnzymeVerifier(parserContext)
-    val file = new File(xtandemFilePath)
-    parseur.parse(file, manager)
+    parseur.parse(fileLocation, manager)
     manager.usedEnzymes.toArray
+  }
+  
+  def setParserContext(parserContext: ProviderDecoratedExecutionContext) {
+    this.parserContext = parserContext
+    logger.debug("### PM-XtandemParser - IY # setParserContext");
+    logger.debug("### PM-XtandemParser - IY # setParserContext parserContext = " + parserContext);
   }
 }

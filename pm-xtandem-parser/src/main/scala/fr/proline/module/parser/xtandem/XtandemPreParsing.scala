@@ -24,7 +24,7 @@ import java.io._
 import scala.collection.mutable.ArrayBuffer
 import com.typesafe.scalalogging.slf4j.Logging
 
-class XtandemPreParsing(  val xtandemFilePath : String 
+class XtandemPreParsing(  val xtandemFile : File 
                           ) extends DefaultHandler with Logging {
 
   var isMarkUpTestOK : Boolean = false
@@ -32,7 +32,7 @@ class XtandemPreParsing(  val xtandemFilePath : String
   
   def xtandemFileTest {
     try {
-      val file = new File(xtandemFilePath)
+      val file = xtandemFile
     } catch {
       case e: IOException => logger.error("File test IOException : " + e.getMessage())
       case e: Throwable => logger.error("File test Throwable : " + e.getMessage())

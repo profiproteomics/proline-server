@@ -18,6 +18,7 @@ import _root_.fr.proline.context.BasicExecutionContext
 import _root_.fr.proline.core.om.provider.msi.impl.{ ORMResultSetProvider, SQLPTMProvider, SQLResultSetProvider }  // getPTMDefinition
 import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider  //getEnzyme
 import _root_.fr.proline.core.dal.AbstractMultipleDBTestCase
+import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 
 //Test
 //import org.junit.After
@@ -70,13 +71,6 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     assertNotNull(parserContext)
   }
 
-  // Tests variables 
-  var isFileTestOK: Boolean = false
-  var isUnknownMarkUpTestOK: Boolean = false
-  var isUsefulLabelEnableTestOK: Boolean = false
-  var isPTMsDefinedInDB : Boolean = true
-  var isEnzymesDefinedInDB : Boolean = true
-
   var file: File = _
     // small : output.2014_11_18_11_22_40.t.xml
     // big : (81 Mo) output.2014_11_18_11_46_01.t.xml
@@ -84,17 +78,22 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
   @Test
   def preParsingTest {
     // test if structure is wrong or needed markups and labels are missing
-    val filePath = "src\\test\\resources\\xtandemResultFile\\output.2014_11_18_11_22_40.t.xml"
+
+    try{
+      file = new File(getClass.getResource("/xtandemResultFile/output.2014_11_18_11_22_40.t.xml").toURI)
+    } catch {
+      case e: Throwable => logger.error("IY - ERROR : new File 1: " + e.getMessage())
+    }
     
     val factory: SAXParserFactory = SAXParserFactory.newInstance()
     var parseur: SAXParser = factory.newSAXParser()
-    var manager = new XtandemPreParsing(filePath)
-    file = new File(filePath)
+    var manager = new XtandemPreParsing(file)
     try {
       parseur.parse(file, manager)
     } catch {
       case e: ParserConfigurationException => logger.error("FileTest ParserConfigurationException : " + e.getMessage())
       case e: SAXException => logger.error("FileTest SAXException : " + e.getMessage())
+      case e: Throwable => logger.error("FileTest Throwable : " + e.getMessage())
     }
 
 //    assert(manager.isMarkUpTestOK == true)
@@ -106,7 +105,7 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     var startTime : Long = System.currentTimeMillis()
     logger.info("startTime")
 
-    val myXtandemParser = new XtandemParser("src\\test\\resources\\xtandemResultFile\\output.2014_11_18_11_46_01.t.xml", parserContext)
+    val myXtandemParser = new XtandemParser(new File(getClass.getResource("/xtandemResultFile/output.2014_11_18_11_46_01.t.xml").toURI), parserContext)
     logger.info("endTime")
     var endTime : Long = System.currentTimeMillis()
 
@@ -147,14 +146,16 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
   @Test
   def XtandemResultFileVerifierTest {
     logger.info("Start XtandemResultFileVerifierTest")
-    val filePath : String = "src\\test\\resources\\xtandemResultFile\\output.2014_11_18_11_46_01.t.xml"
-    val myXtandemResultFileVerifier = new XtandemResultFileVerifier(filePath, parserContext)
+    val file : File = new File(getClass.getResource("/xtandemResultFile/output.2014_11_18_11_46_01.t.xml").toURI)
+    val myXtandemResultFileVerifier = new XtandemResultFileVerifier
+    myXtandemResultFileVerifier.setParserContext(parserContext)
+    
     logger.info("XtandemResultFileVerifierTest - XtandemResultFileVerifierTest-XtandemResultFileVerifierTest")
-    myXtandemResultFileVerifier.getPtmDefinitions(new File(filePath), null).foreach(ptm => {
+    myXtandemResultFileVerifier.getPtmDefinitions(file, null).foreach(ptm => {
       logger.debug("ptm = " + ptm)
     })
     
-    myXtandemResultFileVerifier.getEnzyme(new File(filePath), null).foreach(enz => {
+    myXtandemResultFileVerifier.getEnzyme(file, null).foreach(enz => {
       logger.debug("enz = " + enz)
     })
     logger.info("End XtandemResultFileVerifierTest")
@@ -162,10 +163,11 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
   
   @Test
   def XtandemResultFileProviderTest {
-	  val filePath : String = "src\\test\\resources\\xtandemResultFile\\output.2014_11_18_11_46_01.t.xml"
+	  val file : File = new File(getClass.getResource("/xtandemResultFile/output.2014_11_18_11_46_01.t.xml").toURI)
     logger.info("Start XtandemResultFileProviderTest")
-    val myXtandemResultFileProvider = new XtandemResultFileProvider(filePath, parserContext)
-    myXtandemResultFileProvider.getResultFile(new File(filePath), null, parserContext).getResultSet(false)
+    val myXtandemResultFileProvider = new XtandemResultFileProvider
+    myXtandemResultFileProvider.setParserContext(parserContext)
+    myXtandemResultFileProvider.getResultFile(file, null, parserContext).getResultSet(false)
     logger.info("End XtandemResultFileProviderTest")
   }
   
@@ -175,9 +177,10 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     var trypsinFound : Boolean = false
     var AspNAmbicFound : Boolean = false
     var enzymeCount : Int = 0
-    val filePath : String = "src\\test\\resources\\xtandemResultFile\\output.test.2Enzymes.xml"
-    val myXtandemResultFileVerifier = new XtandemResultFileVerifier(filePath, parserContext)
-    myXtandemResultFileVerifier.getEnzyme(new File(filePath), null).foreach(enz => {
+    val file : File = new File(getClass.getResource("/xtandemResultFile/output.test.2Enzymes.xml").toURI)
+    val myXtandemResultFileVerifier = new XtandemResultFileVerifier
+    myXtandemResultFileVerifier.setParserContext(parserContext)
+    myXtandemResultFileVerifier.getEnzyme(file, null).foreach(enz => {
       logger.debug("enz = " + enz)
       if(enz.name.toLowerCase().equals("Trypsin".toLowerCase)) trypsinFound = true
       else if(enz.name.toLowerCase().equals("Asp-N_ambic".toLowerCase)) AspNAmbicFound = true
@@ -203,9 +206,10 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     var PyroGluFromEFound : Boolean = false
     var AcetylationFound : Boolean = false
     var ptmCount : Int = 0
-    val filePath : String = "src\\test\\resources\\xtandemResultFile\\output.test.2PTM.xml"
-    val myXtandemResultFileVerifier = new XtandemResultFileVerifier(filePath, parserContext)
-    myXtandemResultFileVerifier.getPtmDefinitions(new File(filePath), null).foreach(ptm => {
+    val file : File = new File(getClass.getResource("/xtandemResultFile/output.test.2PTM.xml").toURI)
+    val myXtandemResultFileVerifier = new XtandemResultFileVerifier
+    myXtandemResultFileVerifier.setParserContext(parserContext)
+    myXtandemResultFileVerifier.getPtmDefinitions(file, null).foreach(ptm => {
       logger.debug("ptm = " + ptm)
 
       if(ptm.names.fullName.toLowerCase().equals("Iodoacetamide derivative".toLowerCase)) IodoacetamideDerivativeFound = true
@@ -234,9 +238,10 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     var enzyme1Found : String = ""
     var enzyme1Count : Int = 0
     
-    var filePath : String = "src\\test\\resources\\xtandemResultFile\\output.test.EnzymeKRP.xml"
-    var myXtandemResultFileVerifier = new XtandemResultFileVerifier(filePath, parserContext)
-    myXtandemResultFileVerifier.getEnzyme(new File(filePath), null).foreach(enz => {
+    var file : File = new File(getClass.getResource("/xtandemResultFile/output.test.EnzymeKRP.xml").toURI)
+    var myXtandemResultFileVerifier = new XtandemResultFileVerifier
+    myXtandemResultFileVerifier.setParserContext(parserContext)
+    myXtandemResultFileVerifier.getEnzyme(file, null).foreach(enz => {
       logger.debug("enz = " + enz)
       enzyme1Found = enz.name
       enzyme1Count +=1
@@ -247,9 +252,10 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     var enzyme2Found : String = ""
     var enzyme2Count : Int = 0
     
-    filePath = "src\\test\\resources\\xtandemResultFile\\output.test.EnzymeRKP.xml"
-    myXtandemResultFileVerifier = new XtandemResultFileVerifier(filePath, parserContext)
-    myXtandemResultFileVerifier.getEnzyme(new File(filePath), null).foreach(enz => {
+    file = new File(getClass.getResource("/xtandemResultFile/output.test.EnzymeRKP.xml").toURI)
+    myXtandemResultFileVerifier = new XtandemResultFileVerifier
+    myXtandemResultFileVerifier.setParserContext(parserContext)
+    myXtandemResultFileVerifier.getEnzyme(file, null).foreach(enz => {
       logger.debug("enz = " + enz)
       enzyme2Found = enz.name
       enzyme2Count +=1
@@ -260,11 +266,12 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     assertEquals(enzyme1Found,enzyme2Found)
   }
 
-//      
+
+// TODO Can uncomment following line for for more test : requires .xml test files, ask to IY     
 ////  @Test
 //  def noHistograms {
 //    logger.info("Start twoEnzymes test")
-//    val myXtandemParser = new XtandemParser("src\\test\\resources\\xtandemResultFile\\output.test.2Enzymes.xml", parserContext)
+//    val myXtandemParser = new XtandemParser(getClass.getResource("/xtandemResultFile/output.test.2Enzymes.xml").toURI, parserContext)
 //    myXtandemParser.getResultSet(false)
 //    logger.info("End twoEnzymes test")
 //  }
@@ -272,7 +279,7 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
 ////  @Test
 //  def noInputParameters {
 //    logger.info("Start twoEnzymes test")
-//    val myXtandemParser = new XtandemParser("src\\test\\resources\\xtandemResultFile\\output.test.2Enzymes.xml", parserContext)
+//    val myXtandemParser = new XtandemParser(getClass.getResource("/xtandemResultFile/output.test.2Enzymes.xml").toURI, parserContext)
 //    myXtandemParser.getResultSet(false)
 //    logger.info("End twoEnzymes test")
 //  }
@@ -280,7 +287,7 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
 ////  @Test
 //  def sortByProtein {
 //    logger.info("Start twoEnzymes test")
-//    val myXtandemParser = new XtandemParser("src\\test\\resources\\xtandemResultFile\\output.test.2Enzymes.xml", parserContext)
+//    val myXtandemParser = new XtandemParser(getClass.getResource("/xtandemResultFile/output.test.2Enzymes.xml").toURI, parserContext)
 //    myXtandemParser.getResultSet(false)
 //    logger.info("End twoEnzymes test")
 //  }
