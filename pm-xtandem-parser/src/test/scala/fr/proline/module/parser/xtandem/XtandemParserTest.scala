@@ -44,19 +44,19 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
   
   @Before
   def init() {
-    //    logger.debug("Test initialization")
+        logger.debug("Test initialization")
     super.initDBsDBManagement(driverType)
 
     //Load Data
-    //    logger.info("Initializing Dbs")
+    logger.info("Initializing Dbs")
     psDBTestCase.loadDataSet("/default_datasets/Unimod_Dataset.xml")
     pdiDBTestCase.loadDataSet("/default_datasets/Proteins_Dataset.xml")
     msiDBTestCase.loadDataSet("/default_datasets/Init_Dataset.xml")
 
-//        logger.info("PS, PDI and MSI dbs succesfully initialized")
+    logger.info("PS, PDI and MSI dbs succesfully initialized")
 
     udsDBTestCase.loadDataSet("/default_datasets/UDS_Simple_Dataset.xml")
-    //    logger.info("UDS db succesfully initialized")
+    logger.info("UDS db succesfully initialized")
 
     val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, true) // default: false
     val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true) // default: true
@@ -82,7 +82,7 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     try{
       file = new File(getClass.getResource("/xtandemResultFile/output.2014_11_18_11_22_40.t.xml").toURI)
     } catch {
-      case e: Throwable => logger.error("IY - ERROR : new File 1: " + e.getMessage())
+      case e: Throwable => logger.error("Error : Input file error " + e.getMessage())
     }
     
     val factory: SAXParserFactory = SAXParserFactory.newInstance()
