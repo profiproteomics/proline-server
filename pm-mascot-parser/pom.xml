@@ -44,7 +44,7 @@
     <dependency>
       <groupId>fr.proline.unimod</groupId>
       <artifactId>UnimodUnmarshaller</artifactId>
-      <version>0.0.6-SNAPSHOT</version>
+      <version>0.6.0</version>
     </dependency>
 
     <!-- Mascot Parser native libraries (for all OSes, loaded at runtime) 
@@ -52,7 +52,7 @@
     <dependency>
       <groupId>matrixscience</groupId>
       <artifactId>MSParser-native-libraries-2.4.00</artifactId>
-      <version>0.0.5</version>
+      <version>0.0.6</version>
     </dependency>
 
     <!-- Proline -->
