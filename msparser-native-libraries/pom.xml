@@ -32,7 +32,7 @@
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Java</artifactId>
-      <version>0.0.7</version>
+      <version>0.1.0</version>
     </dependency>
 
     <!-- JUnit tests -->
