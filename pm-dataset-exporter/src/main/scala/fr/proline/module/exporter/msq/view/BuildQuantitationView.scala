@@ -9,6 +9,7 @@ import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.om.model.msq.RatioDefinition
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import fr.proline.module.exporter.commons.config.ExportConfig
 
 case class ProtSetCells(accession: String, description : String, selectionLevel: Int, proteinSetId : Long)   
       
@@ -31,7 +32,7 @@ object BuildQuantitationView {
 			QuantitationViewTypes.BASIC_MASTER_QUANT_PROTEIN_SETS -> { ds: QuantiDataSet => new BasicMasterQuantProteinSetsView(ds) }
   )
 
-  def apply( quantiDS: QuantiDataSet, viewType: IViewTypeEnumeration#Value ): IDataView = {
+  def apply( quantiDS: QuantiDataSet, viewType: IViewTypeEnumeration#Value, exportConfig : ExportConfig): IDataView = {
     _builders(viewType)(quantiDS)
   }
 }

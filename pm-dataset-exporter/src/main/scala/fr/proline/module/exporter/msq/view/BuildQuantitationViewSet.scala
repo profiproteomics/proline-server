@@ -17,20 +17,22 @@ import fr.proline.core.om.provider.msq.impl.SQLExperimentalDesignProvider
 import fr.proline.core.om.model.msq.ExperimentalDesign
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import fr.proline.module.exporter.commons.config.ExportConfig
+import fr.proline.module.exporter.commons.config.ExportConfigManager
 
 
 object BuildQuantitationViewSet {
 
-  def apply(ds: QuantiDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate): QuantitationViewSet = {
+  def apply(ds: QuantiDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate, exportConfig : ExportConfig): QuantitationViewSet = {
 
     val templatedViews = viewSetTemplate.templatedViewTypes.map { templatedViewType =>
-      val viewWithTpl = ViewWithTemplate(BuildQuantitationView(ds, templatedViewType.viewType), templatedViewType.template)
+      val viewWithTpl = ViewWithTemplate(BuildQuantitationView(ds, templatedViewType.viewType, exportConfig), templatedViewType.template)
       if (templatedViewType.viewName.isDefined) viewWithTpl.dataView.viewName = templatedViewType.viewName.get
 
       viewWithTpl
     }
 
-    new QuantitationViewSet(viewSetName, templatedViews)
+    new QuantitationViewSet(viewSetName, templatedViews, exportConfig)
   }
   
   def apply(
@@ -41,6 +43,38 @@ object BuildQuantitationViewSet {
     expDesign: ExperimentalDesign,
     viewSetName: String,
     viewSetTemplate: IViewSetTemplate
+    
+  ): QuantitationViewSet = {
+    
+    return apply(executionContext,projectId,quantDSId , masterQuantChannelId, expDesign, viewSetName, viewSetTemplate, null )
+  }
+  
+  
+  def apply(
+    executionContext: IExecutionContext,
+    projectId: Long,
+    quantDSId: Long,
+    masterQuantChannelId: Long,
+    expDesign: ExperimentalDesign,
+    viewSetName: String,
+    exportConfigStr: String
+    
+  ): QuantitationViewSet = {
+    val exportConfig : ExportConfig = ExportConfigManager.readConfig(exportConfigStr)
+    return apply(executionContext,projectId,quantDSId , masterQuantChannelId, expDesign, viewSetName, null, exportConfig )
+  }
+  
+  
+  def apply(
+    executionContext: IExecutionContext,
+    projectId: Long,
+    quantDSId: Long,
+    masterQuantChannelId: Long,
+    expDesign: ExperimentalDesign,
+    viewSetName: String,
+    viewSetTemplate: IViewSetTemplate, 
+    exportConfig : ExportConfig
+    
   ): QuantitationViewSet = {
 
     val udsSQLCtx = executionContext.getUDSDbConnectionContext()
@@ -117,7 +151,7 @@ object BuildQuantitationViewSet {
     val groupSetupNumber = 1
 	val ratioDefs = expDesign.groupSetupByNumber(groupSetupNumber).ratioDefinitions
 	
-    return apply(QuantiDataSet(masterQuantChannelId, quantRSM, protMatchById, protSetCellsById, qcIds, expDesign, ratioDefs, nameByQchId), viewSetName, viewSetTemplate)
+    return apply(QuantiDataSet(masterQuantChannelId, quantRSM, protMatchById, protSetCellsById, qcIds, expDesign, ratioDefs, nameByQchId), viewSetName, viewSetTemplate, exportConfig)
   }
   
 }

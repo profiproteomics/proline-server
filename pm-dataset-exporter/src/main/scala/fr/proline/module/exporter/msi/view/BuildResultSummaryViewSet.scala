@@ -15,21 +15,27 @@ import fr.proline.module.exporter.api.view.IDatasetView
 import fr.proline.core.dal.DoJDBCReturningWork
 import java.sql.Connection
 import fr.proline.repository.util.JDBCWork
+import fr.proline.module.exporter.commons.config.ExportConfig
+import fr.proline.module.exporter.commons.config.template.ProlineConfigViewSetTemplateAsXLSX
+import fr.proline.module.exporter.commons.config.ExportConfigManager
+import fr.proline.module.exporter.commons.config.ExportConfigConstant
+import fr.proline.module.exporter.commons.config.template.ProlineConfigViewSetTemplateAsTSV
 
 object BuildResultSummaryViewSet {
 
-  def apply(ds: IdentDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate): ResultSummaryViewSet = {
+  def apply(ds: IdentDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate, exportConfig :ExportConfig): ResultSummaryViewSet = {
 
     val templatedViews = viewSetTemplate.templatedViewTypes.map { templatedViewType =>
-      val viewWithTpl = ViewWithTemplate(BuildResultSummaryView(ds, templatedViewType.viewType), templatedViewType.template)
+      val viewWithTpl = ViewWithTemplate(BuildResultSummaryView(ds, templatedViewType.viewType, exportConfig), templatedViewType.template)
       if (templatedViewType.viewName.isDefined) viewWithTpl.dataView.viewName = templatedViewType.viewName.get
 
       viewWithTpl
     }
 
-    new ResultSummaryViewSet(viewSetName, templatedViews)
+    new ResultSummaryViewSet(viewSetName, templatedViews, exportConfig)
   }
-
+  
+  
   def apply(
     executionContext: IExecutionContext,
     projectId: Long,
@@ -38,6 +44,41 @@ object BuildResultSummaryViewSet {
     loadFullResultSet: Boolean,
     viewSetName: String,
     viewSetTemplate: IViewSetTemplate
+  ): ResultSummaryViewSet = {
+    return apply(executionContext, projectId, rsmId,loadSubsets, loadFullResultSet, viewSetName, viewSetTemplate, null )
+  }
+  
+  
+  
+  // build template from the  config
+  def apply(
+    executionContext: IExecutionContext,
+    projectId: Long,
+    rsmId: Long,
+    viewSetName: String,
+    exportConfigStr: String
+  ): ResultSummaryViewSet = {
+
+    val exportConfig : ExportConfig = ExportConfigManager.readConfig(exportConfigStr)
+    val loadFullResultSet:Boolean = exportConfig.dataExport.dataExportAllProteinSet
+    val loadSubsets :Boolean = true // TODO moved in the config export param?
+    
+    // Build the template
+    var viewSetTemplate: IViewSetTemplate = if (exportConfig.format == ExportConfigConstant.FORMAT_XLSX) new ProlineConfigViewSetTemplateAsXLSX(exportConfig) else new ProlineConfigViewSetTemplateAsTSV(exportConfig)
+    
+    return apply(executionContext, projectId, rsmId,loadSubsets, loadFullResultSet, viewSetName, viewSetTemplate, exportConfig )
+  }
+  
+
+  def apply(
+    executionContext: IExecutionContext,
+    projectId: Long,
+    rsmId: Long,
+    loadSubsets: Boolean,
+    loadFullResultSet: Boolean,
+    viewSetName: String,
+    viewSetTemplate: IViewSetTemplate, 
+    exportConfig: ExportConfig
   ): ResultSummaryViewSet = {
 
     val udsSQLCtx = executionContext.getUDSDbConnectionContext()
@@ -96,8 +137,9 @@ object BuildResultSummaryViewSet {
       }
     }
 
-    return apply(IdentDataSet(projectName, rsm), viewSetName, viewSetTemplate)
+    return apply(IdentDataSet(projectName, rsm), viewSetName, viewSetTemplate, exportConfig)
 
   }
+  
 
 }

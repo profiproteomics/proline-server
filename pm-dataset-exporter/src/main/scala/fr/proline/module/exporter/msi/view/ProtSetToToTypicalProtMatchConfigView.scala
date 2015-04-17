@@ -1,0 +1,256 @@
+package fr.proline.module.exporter.msi.view
+
+
+import fr.proline.core.om.model.msi._
+import fr.proline.module.exporter.api.view.IFixedDatasetView
+import java.text.SimpleDateFormat
+import fr.proline.module.exporter.commons.config._
+import fr.proline.module.exporter.commons.config.view.SheetViewFieldsConfig
+import fr.proline.module.exporter.api.view.IRecordBuildingContext
+import java.text.DecimalFormat
+import scala.collection.immutable.ListMap
+
+abstract class AbstractProtSetToTypicalProtMatchConfigView  extends IFixedDatasetView {
+  val identDS: IdentDataSet
+  val sheetConfig : ExportConfigSheet
+  val dateFormat : SimpleDateFormat
+  val decimalFormat: DecimalFormat
+  val exportAllProteinSet: Boolean
+   
+  val fields = new SheetViewFieldsConfig(sheetConfig)
+    
+    def buildRecord( buildingContext: IRecordBuildingContext ): Map[String,Any] = {
+    
+    var dcf1 : DecimalFormat = new DecimalFormat("0.#")
+    dcf1.setDecimalFormatSymbols(decimalFormat.getDecimalFormatSymbols())
+    var dcf2 : DecimalFormat = new DecimalFormat("0.##")
+    dcf2.setDecimalFormatSymbols(decimalFormat.getDecimalFormatSymbols())
+    var dcf4 : DecimalFormat = new DecimalFormat("0.####")
+    dcf4.setDecimalFormatSymbols(decimalFormat.getDecimalFormatSymbols())
+    
+    val isProtSetCtx: Boolean =  (buildingContext.isInstanceOf[ProtMatchBuildingContext]) 
+    val isPepSetCtx: Boolean = (buildingContext.isInstanceOf[PepMatchBuildingContext])
+    val isProtSetCtxDefinedForPep: Boolean = (isPepSetCtx && buildingContext.asInstanceOf[PepMatchBuildingContext].protMatchBuildingCtx.isDefined)
+    
+    
+    val protSetBuildingCtxOpt: ProtMatchBuildingContext = if (isProtSetCtx) buildingContext.asInstanceOf[ProtMatchBuildingContext] else (if (isProtSetCtxDefinedForPep)buildingContext.asInstanceOf[PepMatchBuildingContext].protMatchBuildingCtx.get else null)
+    val allPepMatchesBuildingCtx: PepMatchBuildingContext = if (isProtSetCtx) null else buildingContext.asInstanceOf[PepMatchBuildingContext]
+    
+    var protSet :ProteinSet = null
+    var protMatch: ProteinMatch = null
+    var peptideSet: PeptideSet = null
+     if (protSetBuildingCtxOpt != null) {
+        protSet = protSetBuildingCtxOpt.protSet
+        protMatch = protSetBuildingCtxOpt.protMatch
+        peptideSet = protSetBuildingCtxOpt.peptideSet
+     }
+    
+    var protSetId = -1l
+    var protSetScore = -1d
+    var protSetValid = "false"
+    if (protSetBuildingCtxOpt != null) {
+      protSetId = protSetBuildingCtxOpt.protSet.id
+      protSetScore = dcf1.format(protSetBuildingCtxOpt.protSet.peptideSet.score).toDouble
+      protSetValid = protSetBuildingCtxOpt.protSet.isValidated.toString
+    }
+    
+    var pepMatch : PeptideMatch = null
+    var seqMatch: SequenceMatch = null
+    if (allPepMatchesBuildingCtx != null){
+      pepMatch = allPepMatchesBuildingCtx.pepMatch
+      seqMatch=  allPepMatchesBuildingCtx.seqMatch;
+    }
+
+    val peptide = if (pepMatch == null) null else pepMatch.peptide
+    val initialQueryId = if (pepMatch == null) null else Option(pepMatch.msQuery).map(_.initialId).getOrElse(null)
+    val experimentalMoz = if (pepMatch == null) null else decimalFormat.format(Option(pepMatch.msQuery).map(_.moz).getOrElse(null))
+
+    val resBefore = if (pepMatch == null) null else if (seqMatch.residueBefore == '\0') '-' else seqMatch.residueBefore
+    val resAfter = if (pepMatch == null) null else if (seqMatch.residueAfter == '\0') '-' else seqMatch.residueAfter
+
+    val dbProtMatchesCount = {
+      if (identDS.allProtMatchSetByPepId == null || pepMatch == null) null
+      else
+      if (identDS.allProtMatchSetByPepId.get(pepMatch.peptideId).isDefined) {
+        identDS.allProtMatchSetByPepId.get(pepMatch.peptideId).get.size
+      } else
+        0
+    }
+    
+    var exportMap:ListMap[String,Any] = ListMap()
+    
+    val listFields :Array[ExportConfigField] = sheetConfig.fields
+    for ( f <- listFields ) {
+      f.id match{
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_ID => {
+          	exportMap += ( fields.addField(f.title) -> protSet.id)
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_ACCESSION => {
+          	exportMap += ( fields.addField(f.title) -> protMatch.accession)
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_DESCRIPTION => {
+          	exportMap += ( fields.addField(f.title) -> protMatch.description)
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_SCORE => {
+          	exportMap += ( fields.addField(f.title) -> dcf1.format(protSet.peptideSet.score).toDouble)
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_IS_VALIDATED => {
+          	exportMap += ( fields.addField(f.title) -> protSet.isValidated.toString)
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SAMESET_PROTEIN_MATCHES => {
+          	exportMap += ( fields.addField(f.title) -> protSet.getSameSetProteinMatchIds.length)
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SUBSET_PROTEIN_MATCHES => {
+          	exportMap += ( fields.addField(f.title) -> protSet.getSubSetProteinMatchIds.length)
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_COVERAGE => {
+          	exportMap += ( fields.addField(f.title) -> dcf1.format(protMatch.coverage).toDouble)
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_MW => {
+          	exportMap += ( fields.addField(f.title) -> Option(protMatch.protein).flatMap( _.map( _.mass ) ).getOrElse(0.0))
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SEQUENCES => {
+          	exportMap += ( fields.addField(f.title) -> protSetBuildingCtxOpt.allSeqs.distinct.length)
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SPECIFIC_SEQUENCES => {
+          	exportMap += ( fields.addField(f.title) -> protSetBuildingCtxOpt.specificSeqs.distinct.length)
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_NB_PEPTIDES => {
+          	exportMap += ( fields.addField(f.title) -> protSetBuildingCtxOpt.peptideCount)
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDES => {
+          	exportMap += ( fields.addField(f.title) -> protSetBuildingCtxOpt.specificPeps.length)
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_NB_PEPTIDE_MATCHES => {
+          	exportMap += ( fields.addField(f.title) -> protSet.peptideSet.peptideMatchesCount)
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDE_MATCHES => {
+          	exportMap += ( fields.addField(f.title) -> protSetBuildingCtxOpt.specificPepMatchIds.length)
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_MATCH_IS_TYPICAL_PROTEIN => {
+          	exportMap += ( fields.addField(f.title) -> (protSet.getTypicalProteinMatchId == protMatch.id))
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_MATCH_IS_SAMESET => {
+          	exportMap += ( fields.addField(f.title) -> !peptideSet.isSubset)
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_MATCH_PEPTIDE_SET_SCORE => {
+          	exportMap += ( fields.addField(f.title) -> dcf1.format(peptideSet.score).toDouble)
+        }
+        case ExportConfigConstant.FIELD_PSM_PEPTIDE_ID => {
+          	exportMap += ( fields.addField(f.title) -> peptide.id )
+        }
+        case ExportConfigConstant.FIELD_PSM_SEQUENCE => {
+          	exportMap += ( fields.addField(f.title) -> peptide.sequence)
+        }
+        case ExportConfigConstant.FIELD_PSM_MODIFICATIONS => {
+          	exportMap += ( fields.addField(f.title) -> peptide.readablePtmString)
+        }
+        case ExportConfigConstant.FIELD_PSM_SCORE => {
+          	exportMap += ( fields.addField(f.title) -> dcf2.format(pepMatch.score).toDouble)
+        }
+        case ExportConfigConstant.FIELD_PSM_CALCULATED_MASS => {
+          	exportMap += ( fields.addField(f.title) -> dcf4.format(peptide.calculatedMass).toDouble)
+        }
+        case ExportConfigConstant.FIELD_PSM_CHARGE => {
+          	exportMap += ( fields.addField(f.title) -> Option(pepMatch.msQuery).map(_.charge).getOrElse(null))
+        }
+        case ExportConfigConstant.FIELD_PSM_EXPERIMENTAL_MOZ => {
+          	exportMap += ( fields.addField(f.title) -> experimentalMoz )
+        }
+        case ExportConfigConstant.FIELD_PSM_DELTA_MOZ => {
+          	exportMap += ( fields.addField(f.title) -> decimalFormat.format(pepMatch.deltaMoz))
+        }
+        case ExportConfigConstant.FIELD_PSM_RT => {
+          	exportMap += ( fields.addField(f.title) -> "-")
+        }
+        case ExportConfigConstant.FIELD_PSM_PEPTIDE_LENGTH => {
+          	exportMap += ( fields.addField(f.title) -> peptide.sequence.length)
+        }
+        case ExportConfigConstant.FIELD_PSM_INITIAL_QUERY_ID => {
+          	exportMap += ( fields.addField(f.title) -> initialQueryId)
+        }
+        case ExportConfigConstant.FIELD_PSM_MISSED_CLEAVAGES => {
+          	exportMap += ( fields.addField(f.title) -> pepMatch.missedCleavage )
+        }
+        case ExportConfigConstant.FIELD_PSM_RANK => {
+          	exportMap += ( fields.addField(f.title) -> pepMatch.rank)
+        }
+        case ExportConfigConstant.FIELD_PSM_CD_PRETTY_RANK => {
+          	exportMap += ( fields.addField(f.title) -> pepMatch.cdPrettyRank)
+        }
+        case ExportConfigConstant.FIELD_PSM_FRAGMENT_MATCHES_COUNT => {
+          	exportMap += ( fields.addField(f.title) -> pepMatch.fragmentMatchesCount)
+        }
+        case ExportConfigConstant.FIELD_PSM_SPECTRUM_TITLE => {
+          	exportMap += ( fields.addField(f.title) -> Option(pepMatch.getMs2Query).map(_.spectrumTitle).getOrElse(""))
+        }
+        case ExportConfigConstant.FIELD_PSM_NB_PROTEIN_SETS => {
+          	exportMap += ( fields.addField(f.title) -> identDS.validProtSetIdSetByPepMatchId.get(pepMatch.id).map(_.size).getOrElse(0) )
+        }
+        case ExportConfigConstant.FIELD_PSM_NB_PROTEIN_MATCHES => {
+          	exportMap += ( fields.addField(f.title) -> identDS.validProtMatchIdSetByPepMatchId.get(pepMatch.id).map(_.size).getOrElse(0))
+        }
+        case ExportConfigConstant.FIELD_PSM_NB_DATABANK_PROTEIN_MATCHES => {
+          	exportMap += ( fields.addField(f.title) -> dbProtMatchesCount)
+        }
+        case ExportConfigConstant.FIELD_PSM_START => {
+          	exportMap += ( fields.addField(f.title) -> seqMatch.start)
+        }
+        case ExportConfigConstant.FIELD_PSM_END => {
+          	exportMap += ( fields.addField(f.title) -> seqMatch.end)
+        }
+        case ExportConfigConstant.FIELD_PSM_RESIDUE_BEFORE => {
+          	exportMap += ( fields.addField(f.title) -> resBefore)
+        }
+        case ExportConfigConstant.FIELD_PSM_RESIDUE_AFTER => {
+          	exportMap += ( fields.addField(f.title) -> resAfter)
+        }
+        case other => {
+          // should not happen
+        }
+      }
+    }
+    
+    //exportMap.map( r => r._1.toString -> r._2)
+    exportMap
+  }
+  
+  def onEachRecord( recordFormatter: Map[String,Any] => Unit ) {
+    
+    val rsm = identDS.resultSummary
+    val rs = rsm.resultSet.get
+    val protMatchById = rs.getProteinMatchById
+    
+    // Go through protein sets
+    for( protSet <- rsm.proteinSets ) {
+      if (exportAllProteinSet || protSet.isValidated){ // filter on validated proteinSet
+      // Note that we export only protein matches which are loaded with the RSM
+      // The result will depend of provider which have been used
+      
+      // Typical Protein Match is put first
+      val typicalProtMatchId = protSet.getTypicalProteinMatchId
+      
+      val typicalProtMatch = if( typicalProtMatchId != 0 ) { 
+        protMatchById(typicalProtMatchId)
+      } else {
+        protMatchById( protSet.getSameSetProteinMatchIds.head )
+      }
+      
+      val buildingContext = new ProtMatchBuildingContext(
+        protSet,
+        protSet.peptideSet,
+        typicalProtMatch
+      )
+      
+      this.formatRecord( buildingContext, recordFormatter )
+      }
+    }
+  }
+}
+
+
+
+class ProtSetToTypicalProtMatchConfigView( val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val exportAllProteinSet :Boolean  ) extends AbstractProtSetToTypicalProtMatchConfigView {
+  var viewName = "prot_set_to_typical_prot_match"
+  
+}
