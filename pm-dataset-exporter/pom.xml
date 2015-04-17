@@ -41,12 +41,14 @@
     </dependency>
 
     <!-- If log4j is needed, add log4j-over-slf4j dependency -->
-
+<!-- unused
     <dependency>
       <groupId>antlr</groupId>
       <artifactId>antlr</artifactId>
       <version>2.7.7</version>
     </dependency>
+    
+    -->
     
     <!-- Commons IO used for resursive delete -->
     <dependency>
