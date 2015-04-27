@@ -27,8 +27,8 @@ import com.typesafe.scalalogging.slf4j.Logging
 class XtandemPreParsing(  val xtandemFile : File 
                           ) extends DefaultHandler with Logging {
 
-  var isMarkUpTestOK : Boolean = false
-  var areNeededMarkupPresent : Boolean = false
+//  var isMarkUpTestOK : Boolean = false
+//  var areNeededMarkupPresent : Boolean = false
   
   def xtandemFileTest {
     try {
@@ -52,11 +52,11 @@ class XtandemPreParsing(  val xtandemFile : File
 	
 	// buffer allow to collect "info" datas
 	private var buffer : StringBuffer = new StringBuffer()
-	private var canReadBuffer : Boolean = false
+//	private var canReadBuffer : Boolean = false
 	private var parametersLabel : String = ""
 	
-	private var residueModificationMassCount : Int = 0
-	private var refineParamIsYes: Boolean = false    // considering or not input parameters with "refine" label
+//	private var residueModificationMassCount : Int = 0
+//	private var refineParamIsYes: Boolean = false    // considering or not input parameters with "refine" label
 	
 	
 	// Existence of useful parameters in Xtandem file
@@ -375,7 +375,7 @@ class XtandemPreParsing(  val xtandemFile : File
 	// Check Type and return converted value, return None else
 	private def checkDouble(s: String) = try { Some(augmentString(s).toDouble) } catch { case _: Throwable => None }
 	private def checkInt(s: String) = try { Some(augmentString(s).toInt) } catch { case _: Throwable => None }
-	private def checkChar(s: String) = {if(s.length() == 1) Some(s.charAt(0)) else None}
+//	private def checkChar(s: String) = {if(s.length() == 1) Some(s.charAt(0)) else None}
 	
 	private def isAlphabeticChar(c : Char ) : Boolean = {
 	  var result = false

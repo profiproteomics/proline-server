@@ -24,7 +24,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 class XTandemEnzymeVerifier ( val parserContext: ProviderDecoratedExecutionContext
                               ) extends DefaultHandler with Logging {
 
-  var isEnzymesDefinedInDB : Boolean = true
+//  var isEnzymesDefinedInDB : Boolean = true
 
 	// flags indicate in which markups we are
   private var inBioml = false; private var inNote = false; private var inGroupParameters = false;
@@ -141,10 +141,10 @@ class XTandemEnzymeVerifier ( val parserContext: ProviderDecoratedExecutionConte
               foundEnzymeInDBCount += 1 
             }
           }
-          if(foundEnzymeInDBCount < inputParametersEnzymeCount ) {
-            logger.error("Can't find all enzymes in database")
-            isEnzymesDefinedInDB = false
-          } 
+//          if(foundEnzymeInDBCount < inputParametersEnzymeCount ) {
+//            logger.error("Can't find all enzymes in database")
+//            isEnzymesDefinedInDB = false
+//          } 
         }
 	    }
 			buffer.delete(0, buffer.length())

@@ -81,14 +81,14 @@ class XTGroupSupport {
 
 class XTGroupModel {
 	var id : Int = _
-	var typeMU : String ="model"
+//	var typeMU : String ="model"
 	var mh : Double = _
 	var z : Int = _
 	var groupSupportList : ArrayBuffer[XTGroupSupport] = new ArrayBuffer[XTGroupSupport]()
 }
 
 class XTGroupParameters {
-	var typeMU : String = "parameters"
+//	var typeMU : String = "parameters"
 	var noteList : ArrayBuffer[XTNote] = new ArrayBuffer[XTNote]()
 }
 

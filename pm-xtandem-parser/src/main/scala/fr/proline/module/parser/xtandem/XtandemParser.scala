@@ -61,14 +61,17 @@ class XtandemParser(  val xtandemFile : File,
                       ) extends DefaultHandler with IResultFile with Logging {
 
   val fileLocation: File = xtandemFile
+  // Inherited methods
   val importProperties: Map[String,Any] = null
   val msLevel: Int = 2
+  var msQueries: Array[MsQuery] = Array()
+  val hasDecoyResultSet: Boolean = searchSettingIsDecoy 
+  val hasMs2Peaklist: Boolean = true
   
   
   private var searchSettingIsDecoy: Boolean = false
   private var ms2Query: Ms2Query = null
   private var msiSearchForResultSet : MSISearch = null
-  var msQueries: Array[MsQuery] = Array()
   private var spectrumList : ArrayBuffer[Spectrum] = new ArrayBuffer[Spectrum]
   var resultBioml: XTBioml = new XTBioml()
   
@@ -344,7 +347,7 @@ class XtandemParser(  val xtandemFile : File,
       fileType = peaklistFilePathNameExt.extension,
       path = peaklistFilePathNameExt.path,
       rawFileName = peaklistFilePathNameExt.filename,
-      msLevel = 2)
+      msLevel = msLevel)
 
     //GroupModel variables
     for (gm <- resultBioml.groupModelList) {
@@ -633,8 +636,7 @@ class XtandemParser(  val xtandemFile : File,
     resultSet
   }
 
-  val hasDecoyResultSet: Boolean = searchSettingIsDecoy 
-  val hasMs2Peaklist: Boolean = true
+  
 
   def eachSpectrum(onEachSpectrum: Spectrum => Unit): Unit = {
     spectrumList.foreach(spectra => {

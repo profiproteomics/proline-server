@@ -23,10 +23,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 class XtandemPtmVerifier( val parserContext: ProviderDecoratedExecutionContext
                           ) extends DefaultHandler with Logging {
 
-  var isPTMsDefinedInDB : Boolean = true
-
-	// Management of the parser
-	private var displayTree = false	// Display tree structure of xml file in console
+//  var isPTMsDefinedInDB : Boolean = true
 
 	// flags indicate in which markups we are
   private var inBioml = false; private var inNote = false; private var inGroupParameters = false;
@@ -199,17 +196,17 @@ class XtandemPtmVerifier( val parserContext: ProviderDecoratedExecutionContext
 		fixedPtms.foreach(ptms => {
       val _ptm = ptmProvider.getPtmDefinition(ptms._1, ptmMonoMassMargin, ptms._2, ptms._3)
       if (_ptm.get != null) { fixedPtmDefs.append(_ptm.get); logger.debug("fixedPtms _ptm = " + _ptm.get + ", monoMass = " + _ptm.get.ptmEvidences(0).monoMass) }
-      else { /*_ptm = Some(null) */ logger.error("Ptm don't exists in database : mono mass = " + ptms._1 + ", residue = " + ptms._2 + ", location = " + ptms._3); isPTMsDefinedInDB = false }
+      else { /*_ptm = Some(null) */ logger.error("Ptm don't exists in database : mono mass = " + ptms._1 + ", residue = " + ptms._2 + ", location = " + ptms._3); /*isPTMsDefinedInDB = false*/ }
     })
     variablePtms.foreach(ptms => {
       val _ptm = ptmProvider.getPtmDefinition(ptms._1, ptmMonoMassMargin, ptms._2, ptms._3)
       if (_ptm.get != null) { variablePtmDefs.append(_ptm.get); logger.debug("variablePtms_ptm = " + _ptm.get + "_ptm.get.ptmEvidences.monoMass = " + _ptm.get.ptmEvidences(0).monoMass) }
-      else { /*_ptm = Some(null) */ logger.error("Ptm don't exists in database : mono mass = " + ptms._1 + ", residue = " + ptms._2 + ", location = " + ptms._3); isPTMsDefinedInDB = false }
+      else { /*_ptm = Some(null) */ logger.error("Ptm don't exists in database : mono mass = " + ptms._1 + ", residue = " + ptms._2 + ", location = " + ptms._3); /*isPTMsDefinedInDB = false*/ }
     })
     
     if(fixedPtmDefs.length != fixedPtms.length || variablePtmDefs.length != variablePtms.length+3) {
       logger.error("XtandemPtmVerifier :: Given PTMs count don't match with PTMs found in database")
-      isPTMsDefinedInDB = false
+//      isPTMsDefinedInDB = false
     }
 	}
 }
