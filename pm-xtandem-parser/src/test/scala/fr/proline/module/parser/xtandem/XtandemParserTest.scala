@@ -103,13 +103,13 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
   def xtandemParserTest {
     logger.info("Start xtandemParserTest")
     var startTime : Long = System.currentTimeMillis()
-    logger.info("startTime")
+//    logger.info("startTime")
 
     val myXtandemParser = new XtandemParser(new File(getClass.getResource("/xtandemResultFile/output.2015_04_08_13_00_45.t.xml").toURI), parserContext)  // output.2014_11_18_11_46_01.t.xml
-    logger.info("endTime")
+//    logger.info("endTime")
     var endTime : Long = System.currentTimeMillis()
 
-    logger.info("XtandemParser took " + (endTime - startTime) + " milliseconds")
+//    logger.info("XtandemParser took " + (endTime - startTime) + " milliseconds")
 
     // Let's test if useful values in xml file are in Xtandem classes
     val resultSet = myXtandemParser.getResultSet(false)
@@ -267,7 +267,8 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
   }
 
 
-// TODO Can uncomment following line for for more test : requires .xml test files, ask to IY     
+// TODO Can uncomment following line for for more test : requires .xml test files, ask to IY
+// Before uncomment tests, be sure that this cases are managed in XtandemParser.scala 
 ////  @Test
 //  def noHistograms {
 //    logger.info("Start twoEnzymes test")
@@ -276,21 +277,23 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
 //    logger.info("End twoEnzymes test")
 //  }
 //        
-////  @Test
+//  @Test
 //  def noInputParameters {
-//    logger.info("Start twoEnzymes test")
-//    val myXtandemParser = new XtandemParser(getClass.getResource("/xtandemResultFile/output.test.2Enzymes.xml").toURI, parserContext)
+//    logger.info("Start noInputParameters test")
+//    val myXtandemParser = new XtandemParser(getClass.getResource("/xtandemResultFile/output.test.NoInputParameters.xml").toURI, parserContext)
 //    myXtandemParser.getResultSet(false)
-//    logger.info("End twoEnzymes test")
+//    logger.info("End noInputParameters test")
 //  }
 //  
-////  @Test
-//  def sortByProtein {
-//    logger.info("Start twoEnzymes test")
-//    val myXtandemParser = new XtandemParser(getClass.getResource("/xtandemResultFile/output.test.2Enzymes.xml").toURI, parserContext)
-//    myXtandemParser.getResultSet(false)
-//    logger.info("End twoEnzymes test")
-//  }
+  @Test
+  def sortByProtein {
+    logger.info("Start sortByProtein test")
+//    val file : File = new File(getClass.getResource("/xtandemResultFile/output.test.2Enzymes.xml").toURI)
+//    val myXtandemParser = new XtandemParser(getClass.getResource("/xtandemResultFile/output.test.SortResultByProtein.xml").toURI, parserContext)
+    val myXtandemParser = new XtandemParser(new File(getClass.getResource("/xtandemResultFile/output.test.SortResultByProtein.xml").toURI), parserContext)
+    myXtandemParser.getResultSet(false)
+    logger.info("End sortByProtein test")
+  }
   
   // Other tests : XML File Structure is respected(use preParsingTest ?)
 }
