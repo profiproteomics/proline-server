@@ -83,7 +83,8 @@ object BuildResultSummaryView {
        var decSep: DecimalFormatSymbols = new DecimalFormatSymbols()
        decSep.setDecimalSeparator(exportConfig.decimalSeparator)
        decimalFormat.setDecimalFormatSymbols(decSep)
-       val exportAllProteinSet: Boolean = exportConfig.dataExport.dataExportAllProteinSet
+       decimalFormat.setGroupingUsed(false)
+       val exportAllProteinSet: Boolean = exportConfig.dataExport.allProteinSet
     	for ( sheet <- exportConfig.sheets ) {
     		sheet.id match {
             	case ExportConfigConstant.SHEET_INFORMATION => {

@@ -63,7 +63,7 @@ abstract class AbstractProtSetToTypicalProtMatchConfigView  extends IFixedDatase
 
     val peptide = if (pepMatch == null) null else pepMatch.peptide
     val initialQueryId = if (pepMatch == null) null else Option(pepMatch.msQuery).map(_.initialId).getOrElse(null)
-    val experimentalMoz = if (pepMatch == null) null else decimalFormat.format(Option(pepMatch.msQuery).map(_.moz).getOrElse(null))
+    val experimentalMoz = if (pepMatch == null) null else decimalFormat.format(Option(pepMatch.msQuery).map(_.moz).getOrElse(null)).toDouble
 
     val resBefore = if (pepMatch == null) null else if (seqMatch.residueBefore == '\0') '-' else seqMatch.residueBefore
     val resAfter = if (pepMatch == null) null else if (seqMatch.residueAfter == '\0') '-' else seqMatch.residueAfter
@@ -158,7 +158,7 @@ abstract class AbstractProtSetToTypicalProtMatchConfigView  extends IFixedDatase
           	exportMap += ( fields.addField(f.title) -> experimentalMoz )
         }
         case ExportConfigConstant.FIELD_PSM_DELTA_MOZ => {
-          	exportMap += ( fields.addField(f.title) -> decimalFormat.format(pepMatch.deltaMoz))
+          	exportMap += ( fields.addField(f.title) -> decimalFormat.format(pepMatch.deltaMoz).toDouble)
         }
         case ExportConfigConstant.FIELD_PSM_RT => {
           	exportMap += ( fields.addField(f.title) -> "-")

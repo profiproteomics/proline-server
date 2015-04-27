@@ -60,7 +60,7 @@ object BuildResultSummaryViewSet {
   ): ResultSummaryViewSet = {
 
     val exportConfig : ExportConfig = ExportConfigManager.readConfig(exportConfigStr)
-    val loadFullResultSet:Boolean = exportConfig.dataExport.dataExportAllProteinSet
+    val loadFullResultSet:Boolean = exportConfig.dataExport.allProteinSet
     val loadSubsets :Boolean = true // TODO moved in the config export param?
     
     // Build the template

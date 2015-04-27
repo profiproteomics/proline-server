@@ -3,7 +3,7 @@
 	"decimal_separator": ".",
 	"date_format": "YYYY:MM:DD HH:mm:ss",
 	"data_export": {
-		"data_export_all_protein_set": true
+		"all_protein_set": true
 	},
 	"sheets": [{
 		"id": "information",

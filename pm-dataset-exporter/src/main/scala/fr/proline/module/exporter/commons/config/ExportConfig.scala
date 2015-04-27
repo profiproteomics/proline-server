@@ -8,7 +8,7 @@ import fr.profi.util.serialization._
  */
 
 case class ExportConfig(
-    var format :String, 
+    var format :String, // cf FORMAT_XLSX or FORMAT_TSV
     var decimalSeparator  :Char, 
     var dateFormat : String, 
     var dataExport : ExportConfigData,
