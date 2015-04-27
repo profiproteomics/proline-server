@@ -105,7 +105,7 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     var startTime : Long = System.currentTimeMillis()
     logger.info("startTime")
 
-    val myXtandemParser = new XtandemParser(new File(getClass.getResource("/xtandemResultFile/output.2014_11_18_11_46_01.t.xml").toURI), parserContext)
+    val myXtandemParser = new XtandemParser(new File(getClass.getResource("/xtandemResultFile/output.2015_04_08_13_00_45.t.xml").toURI), parserContext)  // output.2014_11_18_11_46_01.t.xml
     logger.info("endTime")
     var endTime : Long = System.currentTimeMillis()
 
@@ -172,7 +172,7 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
   }
   
 //  @Test
-  def twoEnzymesFound {  // we found 'None' enzyme instead 'Trypsin' that generating failure
+  def twoEnzymesFound {  // we found 'None' enzyme instead 'Trypsin' in DB , that generating failure
     // Find following two enzymes writen in Xtandem input file : Trypsin, Asp-N_ambic
     var trypsinFound : Boolean = false
     var AspNAmbicFound : Boolean = false

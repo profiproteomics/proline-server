@@ -17,7 +17,6 @@ object XtandemResultFileProviderType {
     final val fileType: String = "xtandem.xml"
 }
 
-
 class XtandemResultFileProvider extends IResultFileProvider with Logging {
 
   var parserContext: ProviderDecoratedExecutionContext = _
@@ -31,7 +30,7 @@ class XtandemResultFileProvider extends IResultFileProvider with Logging {
   
   def getResultFileVerifier : IResultFileVerifier = {
     // Requirements
-    require(parserContext != null,"No parser context found. Use setParserContext(parserContext: ProviderDecoratedExecutionContext)")
+    require(parserContext != null,"getResultFileVerifier - No parser context found. Use setParserContext(parserContext: ProviderDecoratedExecutionContext)")
     val RFVerifier = new XtandemResultFileVerifier
     RFVerifier.setParserContext(parserContext)
     RFVerifier
@@ -39,7 +38,7 @@ class XtandemResultFileProvider extends IResultFileProvider with Logging {
   
   override def setParserContext(parserContext: ProviderDecoratedExecutionContext) {
     this.parserContext = parserContext
-    logger.debug("### PM-XtandemParser - IY # setParserContext parserContext = " + parserContext);
+//    logger.debug("IY - XtandemResultFileProvider - setParserContext parserContext = " + parserContext)
   }
   
 }

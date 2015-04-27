@@ -27,10 +27,9 @@ class XtandemResultFileVerifier extends IResultFileVerifier with Logging {
   
   def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): Seq[PtmDefinition] = {
     // Requirements
-    require(parserContext != null,"No parser context found. Use setParserContext(parserContext: ProviderDecoratedExecutionContext)")
+    require(parserContext != null,"getPtmDefinitions - No parser context found. Use setParserContext(parserContext: ProviderDecoratedExecutionContext)")
     
-    logger.debug("### PM-XtandemParser - IY # getPtmDefinitions");
-    logger.debug("### PM-XtandemParser - IY # getPtmDefinitions parserContext = " + parserContext);
+//    logger.debug("IY - XtandemResultFileVerifier - getPtmDefinitions parserContext = " + parserContext)
     
     val factory: SAXParserFactory = SAXParserFactory.newInstance()
     var parseur: SAXParser = factory.newSAXParser()
@@ -50,7 +49,7 @@ class XtandemResultFileVerifier extends IResultFileVerifier with Logging {
 
   def getEnzyme(fileLocation: File, importProperties: Map[String, Any]): Array[Enzyme] = {
     // Requirements
-    require(parserContext != null,"No parser context found. Use setParserContext(parserContext: ProviderDecoratedExecutionContext)")
+    require(parserContext != null,"getEnzyme - No parser context found. Use setParserContext(parserContext: ProviderDecoratedExecutionContext)")
     
     val factory: SAXParserFactory = SAXParserFactory.newInstance()
     var parseur: SAXParser = factory.newSAXParser()
@@ -61,7 +60,6 @@ class XtandemResultFileVerifier extends IResultFileVerifier with Logging {
   
   def setParserContext(parserContext: ProviderDecoratedExecutionContext) {
     this.parserContext = parserContext
-    logger.debug("### PM-XtandemParser - IY # setParserContext");
-    logger.debug("### PM-XtandemParser - IY # setParserContext parserContext = " + parserContext);
+//    logger.debug("IY - XtandemResultFileVerifier - setParserContext parserContext = " + parserContext)
   }
 }

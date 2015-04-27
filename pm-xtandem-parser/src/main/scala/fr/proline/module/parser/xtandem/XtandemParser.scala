@@ -26,7 +26,7 @@ import java.io._
 import java.util.Date
 import java.io.ByteArrayOutputStream
 import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.core.om.model.msi.PeptideMatchScoreType
+import _root_.fr.proline.core.om.model.msi._
 
 //This class allows to separate file path, name and extension
 class Filename(str: String, sep: Char, ext: Char) {
@@ -58,7 +58,7 @@ class Filename(str: String, sep: Char, ext: Char) {
 
 class XtandemParser(  val xtandemFile : File, 
                       val parserContext: ProviderDecoratedExecutionContext
-                      ) extends DefaultHandler with  IResultFile with Logging {
+                      ) extends DefaultHandler with IResultFile with Logging {
 
   val fileLocation: File = xtandemFile
   val importProperties: Map[String,Any] = null
@@ -94,19 +94,23 @@ class XtandemParser(  val xtandemFile : File,
     // Using MSI DataBase classes to send collected XML informations
     // Some invariable definition
     val ptmProvider: IPTMProvider = parserContext.getProvider(classOf[IPTMProvider])
-    val ptmMonoMassMargin = 0.03
+    val ptmMonoMassMargin = 0.01
     var fixedPtmDefs: ArrayBuffer[PtmDefinition] = new ArrayBuffer[PtmDefinition]
     var variablePtmDefs: ArrayBuffer[PtmDefinition] = new ArrayBuffer[PtmDefinition]
     var fixedPtms: ArrayBuffer[Tuple3[Double, Char, PtmLocation.Value]] = new ArrayBuffer[Tuple3[Double, Char, PtmLocation.Value]]
     var variablePtms: ArrayBuffer[Tuple3[Double, Char, PtmLocation.Value]] = new ArrayBuffer[Tuple3[Double, Char, PtmLocation.Value]]
     
-    //     val defaultPtms = XTandem apply the following PTMs as defaut variable PTMs. For reading facilities, we create this new variable. Mass values are XTandem values( and not Proline values ).
+    //     val defaultPtms = XTandem use the following PTMs as defaut variable PTMs. For reading facilities, we create this new variable. Mass values are XTandem values( and not Proline values ).
     //	  (‘Q’,-17.02655, ANY_N_TERM)  => Gln->pyro-Glu,Pyro-glu from Q
     //    (‘C’,-17.02655, ANY_N_TERM)  => Ammonia-loss,Loss of ammonia
     //    (‘E’, -18.01056, ANY_N_TERM)  => Glu->pyro-Glu,Pyro-glu from E
     variablePtmDefs.append(ptmProvider.getPtmDefinition(-17.02655, ptmMonoMassMargin, 'Q', PtmLocation.ANY_N_TERM).get)
     variablePtmDefs.append(ptmProvider.getPtmDefinition(-17.02655, ptmMonoMassMargin, 'C', PtmLocation.ANY_N_TERM).get)
     variablePtmDefs.append(ptmProvider.getPtmDefinition(-18.01056, ptmMonoMassMargin, 'E', PtmLocation.ANY_N_TERM).get)
+    
+    var locatedPtmIsNTerm : Boolean = false;
+    var locatedPtmIsCTerm : Boolean = false;
+    var locatedPtmSeqPosition : Int = 0; 
 
     var seqDatabases: ArrayBuffer[SeqDatabase] = new ArrayBuffer[SeqDatabase]
     var seqDatabasesLocal: ArrayBuffer[SeqDatabase] = new ArrayBuffer[SeqDatabase]
@@ -114,6 +118,7 @@ class XtandemParser(  val xtandemFile : File,
     var proteinMatches: ArrayBuffer[ProteinMatch] = new ArrayBuffer[ProteinMatch]
     var peptides: ArrayBuffer[Peptide] = new ArrayBuffer[Peptide]
     var peptideMatches: ArrayBuffer[PeptideMatch] = new ArrayBuffer[PeptideMatch]
+    var peptide : Peptide = null
 
     val ptmEvidence = new PtmEvidence(
       ionType = IonTypes.Precursor,
@@ -126,7 +131,8 @@ class XtandemParser(  val xtandemFile : File,
     var searchSettingTaxonomy: String = "Unknown taxon"  // possible values of taxon for Xtandem file are listed in input.xml or taxonomy.xml files which are given for X!Tandem search
     var searchSettingMaxMissedCleavages: Int = -1
     var searchSettingMs1ChargeStates: String = "4"   // default value in Xtandem = 4
-    var searchSettingMs1ErrorTol: Double = 0.0  // (what value) X!Tandem inserts a default value for this parameter if it doesn't exist or is set to 0.0
+    var searchSettingMs1ErrorTolMinus: Double = 0.0  // (what value) X!Tandem inserts a default value for this parameter if it doesn't exist or is set to 0.0
+    var searchSettingMs1ErrorTolPlus: Double = 0.0  
     var searchSettingMs1ErrorTolUnit: String = "Xtandem default unit"
     var msiSearchResultFileName: String = "output.xml"
 
@@ -140,6 +146,7 @@ class XtandemParser(  val xtandemFile : File,
 
     var peaklistFilePathNameExt: Filename = null
     var dbProteinFileMarkupURLList: ArrayBuffer[String] = new ArrayBuffer()
+    var dbDomainSeqList : ArrayBuffer[String] = new ArrayBuffer()
 
     //GroupParameters variables
     for (gp <- resultBioml.groupParametersList) {
@@ -150,7 +157,7 @@ class XtandemParser(  val xtandemFile : File,
         val dbGroupParametersNoteInfo: String = note.info
         // ERROR : (unavailable parameters) We first manage case where we can't continue parsing of XML file
         if (dbGroupParametersNoteLabel.equals("output, sort results by")) {
-          if(dbGroupParametersNoteInfo.equals("protein") || dbGroupParametersNoteInfo.isEmpty) logger.error("Xtandem Parser does not manage protein sorted Xtandem File")
+          if(dbGroupParametersNoteInfo.equals("protein") || dbGroupParametersNoteInfo.isEmpty) logger.error("Xtandem Parser does not manage \"sort result by protein\" sorted Xtandem File")
           else if(!dbGroupParametersNoteInfo.equals("spectrum")) logger.error("Parameter \'sort results by\' should be \'spectrum\' to be manage by Xtandemm Parser")  //This case shouldn't be appear
 
         } else if (dbGroupParametersNoteLabel.equals("spectrum, path") && !dbGroupParametersNoteInfo.isEmpty) {
@@ -166,11 +173,14 @@ class XtandemParser(  val xtandemFile : File,
         } else if (dbGroupParametersNoteLabel.equals("scoring, maximum missed cleavage sites") && !dbGroupParametersNoteInfo.isEmpty) {
           searchSettingMaxMissedCleavages = augmentString(dbGroupParametersNoteInfo).toInt
 
-        } else if (dbGroupParametersNoteLabel.equals("spectrum, fragment monoisotopic mass error") && !dbGroupParametersNoteInfo.isEmpty) {
-          searchSettingMs1ErrorTol = augmentString(dbGroupParametersNoteInfo).toDouble
+        } else if (dbGroupParametersNoteLabel.equals("spectrum, parent monoisotopic mass error minus") && !dbGroupParametersNoteInfo.isEmpty) {
+          searchSettingMs1ErrorTolMinus = augmentString(dbGroupParametersNoteInfo).toDouble
 
-        } else if (dbGroupParametersNoteLabel.equals("spectrum, fragment monoisotopic mass error units") && !dbGroupParametersNoteInfo.isEmpty) {
-          searchSettingMs1ErrorTolUnit = dbGroupParametersNoteInfo
+        } else if (dbGroupParametersNoteLabel.equals("spectrum, parent monoisotopic mass error minus") && !dbGroupParametersNoteInfo.isEmpty) {
+          searchSettingMs1ErrorTolPlus = augmentString(dbGroupParametersNoteInfo).toDouble
+
+        } else if (dbGroupParametersNoteLabel.equals("spectrum, parent monoisotopic mass error units") && !dbGroupParametersNoteInfo.isEmpty) {
+          searchSettingMs1ErrorTolUnit = if(dbGroupParametersNoteInfo.equals("Daltons")) "Da" else /*ppm*/dbGroupParametersNoteInfo
 
         } else if (dbGroupParametersNoteLabel.equals("output, path") && !dbGroupParametersNoteInfo.isEmpty) {
           msiSearchResultFileName = dbGroupParametersNoteInfo
@@ -242,7 +252,7 @@ class XtandemParser(  val xtandemFile : File,
           for (i <- 0 until commaParts.length) {
             val atSignParts: Array[String] = commaParts(i).split("@")
             val residue = if (atSignParts(1).charAt(0) == '[') '\0' else atSignParts(1).charAt(0)
-            variablePtms.append(Tuple3(augmentString(atSignParts(0)).toDouble, residue, PtmLocation.PROT_C_TERM))
+            variablePtms.append(Tuple3(augmentString(atSignParts(0)).toDouble, residue, PtmLocation.ANY_C_TERM))
           }
 
         } else if (refineParamIsYes && dbGroupParametersNoteLabel.equals("refine, potential N-terminus modifications") && !dbGroupParametersNoteInfo.isEmpty) { // variable ptms
@@ -251,7 +261,7 @@ class XtandemParser(  val xtandemFile : File,
           for (i <- 0 until commaParts.length) {
             val atSignParts: Array[String] = commaParts(i).split("@")
             val residue = if (atSignParts(1).charAt(0) == '[') '\0' else atSignParts(1).charAt(0)
-            variablePtms.append(Tuple3(augmentString(atSignParts(0)).toDouble, residue, PtmLocation.PROT_N_TERM))
+            variablePtms.append(Tuple3(augmentString(atSignParts(0)).toDouble, residue, PtmLocation.ANY_N_TERM))
           }
         } else if ((dbGroupParametersNoteLabel.equals("protein, cleavage semi") || dbGroupParametersNoteLabel.equals("refine, cleavage semi")) // TODO ? In Xtandem's xml results file, we can't distingue if semi cleavage is after standard research or refine research 
                     && dbGroupParametersNoteInfo.equals("yes")) { 
@@ -307,30 +317,40 @@ class XtandemParser(  val xtandemFile : File,
     } //End "for groupParameters gp" loop
 
 
+//    logger.debug("fixedPtms.length = " + fixedPtms.length )
     // Searching PTM in Database for each PTM given in parameters
     fixedPtms.foreach(ptms => {
       val _ptm = ptmProvider.getPtmDefinition(ptms._1, ptmMonoMassMargin, ptms._2, ptms._3)
-      if (_ptm.get != null) { fixedPtmDefs.append(_ptm.get)}
-//      else { /*_ptm = Some(null) */ logger.warn("Can not identify ptm with : mono mass = " + ptms._1 + ", residue = " + ptms._2 + ", location = " + ptms._3) }
+      if (_ptm.get != null) { fixedPtmDefs.append(_ptm.get); logger.warn("fixedPtmDefs : mono mass = " + ptms._1 + ", residue = " + ptms._2 + ", location = " + ptms._3 + " ... is " + _ptm.get.names.shortName)}
+      else { /*_ptm = Some(null) */ logger.warn("Can not identify ptm with : mono mass = " + ptms._1 + ", residue = " + ptms._2 + ", location = " + ptms._3) }
     })
+//    logger.debug("variablePtms.length = " + variablePtms.length )
     variablePtms.foreach(ptms => {
       val _ptm = ptmProvider.getPtmDefinition(ptms._1, ptmMonoMassMargin, ptms._2, ptms._3)
-      if (_ptm.get != null) { variablePtmDefs.append(_ptm.get)}
-//      else { /*_ptm = Some(null) */ logger.warn("Can not identify ptm with : mono mass = " + ptms._1 + ", residue = " + ptms._2 + ", location = " + ptms._3) }
+      if (_ptm.get != null) { variablePtmDefs.append(_ptm.get); logger.warn("variablePtmDefs : mono mass = " + ptms._1 + ", residue = " + ptms._2 + ", location = " + ptms._3 + " ... is " + _ptm.get.names.shortName)}
+      else { /*_ptm = Some(null) */ logger.warn("Can not identify ptm with : mono mass = " + ptms._1 + ", residue = " + ptms._2 + ", location = " + ptms._3) }
     })
+//    logger.debug("IY - XtandemParser.scala -fixedPtmDefs.length = " + fixedPtmDefs.length )
+//    fixedPtmDefs.foreach(fpd => {
+//      logger.debug("IY - XtandemParser.scala - fpd.ptmEvidences.head.mono_mass = " + fpd.ptmEvidences.head.monoMass + ", fpd.residue = " + fpd.residue + ", fpd.names.shortName" + fpd.names.shortName + ", fpd.location" + fpd.location )
+//    })
+//    logger.debug("variablePtmDefs.length = " + variablePtmDefs.length )
+//    variablePtmDefs.foreach(fpd => {
+//      logger.debug("IY - XtandemParser.scala - fpd.ptmEvidences.head.mono_mass = " + fpd.ptmEvidences.head.monoMass + ", fpd.residue = " + fpd.residue + ", fpd.names.shortName = " + fpd.names.shortName + ", fpd.location = " + fpd.location )
+//    })
 
     val peaklist = new Peaklist(
       id = Peaklist.generateNewId(),
       fileType = peaklistFilePathNameExt.extension,
       path = peaklistFilePathNameExt.path,
-      rawFileName = "", // ? peaklistFilePathNameExt.filename(),
+      rawFileName = peaklistFilePathNameExt.filename,
       msLevel = 2)
 
     //GroupModel variables
     for (gm <- resultBioml.groupModelList) {
       val dbGroupModelId: Int = gm.id
       val dGroupModelMh: Double = gm.mh
-      val dbGroupModelZ: Int = gm.z // ORF : peptideCharge
+      val dbGroupModelZ: Int = gm.z
 
       //GroupSupport variables
       for (gs <- gm.groupSupportList) {
@@ -344,13 +364,13 @@ class XtandemParser(  val xtandemFile : File,
         ms2Query = new Ms2Query(
           id = Ms2Query.generateNewId(),
           initialId = dbGroupModelId,
-          moz = dGroupModelMh / dbGroupModelZ, // (ok ?) groupModelMh Calcul de masse/charge ?
+          moz = dGroupModelMh / dbGroupModelZ,
           charge = dbGroupModelZ,
           spectrumTitle = spectrumTitle
           )
         
 //        msQueries.put(dbGroupModelId,ms2Query)
-        msQueries :+ ms2Query
+//        msQueries :+ ms2Query
 
         //GAMLTrace variables
         for (gamlTrace <- gs.gamlTraceList) {
@@ -395,8 +415,8 @@ class XtandemParser(  val xtandemFile : File,
               mozList = Some(mozListParts), //
               intensityList = Some(intensityListParts),
               peaksCount = mozListTempParts.length,
-              instrumentConfigId = 0L, // (?) val instConfigId = if (instrumentConfig != null) instrumentConfig.id else 0
-              peaklistId = 0L // (ok) <note label="Description">Label: W581, Spot_Id: 159751, Peak_List_Id: 184490, MSMS Job_Run_Id: 14047, Comment:  </note>
+              instrumentConfigId = if (instrumentConfig.isDefined) instrumentConfig.get.id else 0, // (?) val instConfigId = if (instrumentConfig != null) instrumentConfig.id else 0
+              peaklistId = peaklist.id // (ok) <note label="Description">Label: W581, Spot_Id: 159751, Peak_List_Id: 184490, MSMS Job_Run_Id: 14047, Comment:  </note>
               )
           }
         }
@@ -425,8 +445,8 @@ class XtandemParser(  val xtandemFile : File,
             sequencesCount = -1, 
             releaseDate = new Date())
 
-          // Test if fasta file name already exist to avoid redundancies
-          if (dbProteinFileMarkupURLList.contains(dbProteinFileMarkupURL) == false) {
+          // Avoid redundancies by testing if fasta file name already exist
+          if (dbProteinFileMarkupURLList.contains(dbProteinFileMarkupURL) == false && seqDatabases.length < 0) {
             dbProteinFileMarkupURLList.append(dbProteinFileMarkupURL)
             seqDatabases.append(seqDatabase)
           }
@@ -442,11 +462,14 @@ class XtandemParser(  val xtandemFile : File,
             accession = dbProteinLabel,
             description = dbProteinNoteLabel,
             id = ProteinMatch.generateNewId(),
-            seqDatabaseIds = seqDatabaseIdsArray)
+            seqDatabaseIds = seqDatabaseIdsArray, 
+            scoreType = "xtandem:hyperscore")
 
           for (dbPeptideDomain <- dbProteinPeptide.domainList) {
             //Domain variables
             val dbDomainId: String = dbPeptideDomain.id
+            var dbDomainStart: Int = dbPeptideDomain.start
+            val dbDomainEnd: Int = dbPeptideDomain.end
             val dbDomainDelta: Double = dbPeptideDomain.delta
             val dbDomainHyperScore: Double = dbPeptideDomain.hyperScore
             val dbDomainSeq: String = dbPeptideDomain.seq
@@ -455,50 +478,82 @@ class XtandemParser(  val xtandemFile : File,
             val locatedPtms: ArrayBuffer[LocatedPtm] = new ArrayBuffer[LocatedPtm]
             for (aam <- dbPeptideDomain.aaMarkupList) {
               val dbAAMarkupType: Char = aam.typeMU
-              val dbAAMarkupAt: Int = aam.at
+              var dbAAMarkupAt: Int = aam.at
               val dbAAMarkupModified: Double = aam.modified
 
               var _ptm: PtmDefinition = null
+              // First  : search among fixedPTM
               fixedPtmDefs.foreach(ptm => {
                 ptm.ptmEvidences.foreach(e => {
                   if (scala.math.abs(dbAAMarkupModified - e.monoMass) <= ptmMonoMassMargin) {
-                    if (ptm.residue == '\0') _ptm = ptm
-                    else if (ptm.residue == dbAAMarkupType) _ptm = ptm
+                    if (ptm.residue == '\0' || ptm.residue == dbAAMarkupType) _ptm = ptm
                   }
                 })
               })
 
+              // Second  : search among variablePTM
               if (_ptm == null) {
                 variablePtmDefs.foreach(ptm => {
                   ptm.ptmEvidences.foreach(e => {
                     if (scala.math.abs(dbAAMarkupModified - e.monoMass) <= ptmMonoMassMargin) {
-                      if (ptm.residue == '\0') _ptm = ptm
-                      else if (ptm.residue == dbAAMarkupType) _ptm = ptm
+                      if (ptm.residue == '\0' || ptm.residue == dbAAMarkupType) _ptm = ptm
                     }
                   })
                 })
               }
 
-              if (_ptm != null) {
+              if (_ptm != null) { 
+//                println("IY - XtandemParser.scala - _ptm.names.shortName = " + _ptm.names.shortName + ", _ptm.location = " + _ptm.location + ", dbAAMarkupAt = " + dbAAMarkupAt)
+//                println("IY - XtandemParser.scala - dbDomainStart = " + dbDomainStart + ", dbAAMarkupAt = " + dbAAMarkupAt + ", dbAAMarkupAt - dbDomainStart = " + (dbAAMarkupAt - dbDomainStart))
+//                if(_ptm.location.contains("N-term")) { dbAAMarkupAt = 0 ; println("Now dbAAMarkupAt = " + dbAAMarkupAt)}
+//                else if(_ptm.location.contains("C-term")) { dbAAMarkupAt = -1 ; println("Now dbAAMarkupAt = " + dbAAMarkupAt)}
+//                if(dbAAMarkupAt==67 ) dbAAMarkupAt=0
+//                logger.debug("IY - _ptm.location = " + _ptm.location)
+                if( _ptm.location matches ".+N-term$" ) {
+                  locatedPtmIsNTerm = true
+                  locatedPtmSeqPosition = 0 
+//                  println("IY : N-term : "+dbDomainId+": "+dbAAMarkupAt +" "+ dbDomainStart)
+                } else if( _ptm.location matches ".+C-term$" ) {
+                  locatedPtmIsCTerm = true
+                  locatedPtmSeqPosition = -1 
+//                  println("IY : C-term : "+dbDomainId+": "+dbAAMarkupAt +" "+ dbDomainStart)
+                } else {
+                  locatedPtmIsNTerm = false
+                  locatedPtmIsCTerm = false
+                  locatedPtmSeqPosition = dbAAMarkupAt - dbDomainStart
+//                  println("IY : "+dbDomainId+": "+dbAAMarkupAt +" "+ dbDomainStart)
+                }
                 _ptm.ptmEvidences.foreach(e => {
                   locatedPtms += new LocatedPtm(
                     definition = _ptm,
-                    seqPosition = dbAAMarkupAt,
+                    seqPosition = locatedPtmSeqPosition ,
                     monoMass = e.monoMass,
                     averageMass = e.averageMass,
-                    composition = e.composition)
-                })
+                    composition = e.composition, 
+                    isNTerm = locatedPtmIsNTerm, 
+                    isCTerm = locatedPtmIsCTerm)
+                
+                }) 
               } else {
                 logger.error("Missing PTM definiton : dbDomainId = " + dbDomainId + " , _ptm = " + _ptm + " , dbAAMarkupType = " + dbAAMarkupType + " , dbAAMarkupModified = " + dbAAMarkupModified + " , dbAAMarkupAt = " + dbAAMarkupAt)
               }
             }
 
-            val peptide = new Peptide(
-              sequence = dbDomainSeq,
-              ptms = locatedPtms.toArray,
-              calculatedMass = dbProteinSumI)
-            peptides.append(peptide)
+            if(!dbDomainSeqList.contains(dbDomainSeq)) {  // Creating new peptide only if there is a new sequence, otherwise pgAdmin return duplicated sequence value
+              peptide = new Peptide(
+                sequence = dbDomainSeq,
+                ptms = locatedPtms.toArray,
+                calculatedMass = dbProteinSumI)
+//              logger.debug("IY - XtandemParser.scala - Creating new peptide. Seq = " + dbDomainSeq + ", peptide = " + peptide)
+              peptides.append(peptide)
+              dbDomainSeqList.append(dbDomainSeq)
+            } else {
+              peptide = peptides.find(e => e.sequence.equals(dbDomainSeq)).get
+                
+//              logger.debug("IY - XtandemParser.scala - Ignoring new peptide. Seq = " + dbDomainSeq + ", peptide = " + peptide)
+            }
             locatedPtms.clear()
+            
 
             val dbDomainIdParts: Array[String] = dbDomainId.split("\\.")
             var dbDomainIdPartsInt: Array[Int] = new Array[Int](dbDomainIdParts.length)
@@ -509,6 +564,7 @@ class XtandemParser(  val xtandemFile : File,
             var peptideMatchIsDecoy: Boolean = false
             if (dbProteinNoteInfo.contains("reversed")) peptideMatchIsDecoy = true
 
+//            logger.debug("IY - XtandemParser.scala - ms2Query.id = " + ms2Query.id)
             peptideMatches += new PeptideMatch(
               id = PeptideMatch.generateNewId(),
               rank = dbDomainIdPartsInt(1), /*3 dans DomainId<domain id=987.3.1 ...> */
@@ -524,22 +580,22 @@ class XtandemParser(  val xtandemFile : File,
         }
       } // end of GroupSupport loop
     } //End "for groupModel gm" loop
-
+//logger.debug("IY - XtandemParser.scala - peptideMatches = " + peptideMatches )
     val searchSettings = new SearchSettings(
       id = SearchSettings.generateNewId(),
-      softwareName = "X!Tandem ",
+      softwareName = "X!Tandem",
       softwareVersion = searchSettingSoftwareVersion,
       taxonomy = searchSettingTaxonomy,
       maxMissedCleavages = searchSettingMaxMissedCleavages,
       ms1ChargeStates = searchSettingMs1ChargeStates,
-      ms1ErrorTol = searchSettingMs1ErrorTol,
+      ms1ErrorTol = searchSettingMs1ErrorTolMinus,  // TODO Only minus value are given to SearchSettings !! manage minus and plus values !!
       ms1ErrorTolUnit = searchSettingMs1ErrorTolUnit,
       isDecoy = searchSettingIsDecoy,
       usedEnzymes = usedEnzymes.toArray,
       variablePtmDefs = variablePtmDefs.toArray,
       fixedPtmDefs = fixedPtmDefs.toArray,
       seqDatabases = seqDatabases.toArray,
-      instrumentConfig = null
+      instrumentConfig = instrumentConfig.getOrElse(null)
       )
 
     msiSearchForResultSet = new MSISearch(
@@ -552,7 +608,9 @@ class XtandemParser(  val xtandemFile : File,
       title = msiSearchResultFileName,
       queriesCount = resultBioml.groupModelList.length)
 
-    logger.info("IY - XtandemParser - resultBioml.groupModelList.length = " + resultBioml.groupModelList.length)
+//    logger.info("IY - XtandemParser - msiSearchForResultSet.peaklist = " + msiSearchForResultSet)
+    
+//    logger.info("IY - XtandemParser - resultBioml.groupModelList.length = " + resultBioml.groupModelList.length)
     val resultSet = new ResultSet(
       peptides = peptides.toArray,
       peptideMatches = peptideMatches.toArray,
@@ -566,6 +624,12 @@ class XtandemParser(  val xtandemFile : File,
       isSearchResult = true, 
       isValidatedContent = false
       )
+//    logger.info("IY - XtandemParser - resultSet = " + resultSet)
+//    peptideMatches.foreach(pm => {
+//      pm.peptide.ptms.foreach(p => {
+//        if(p.definition.location matches ".+N-term$") logger.debug("NTERM: "+pm.peptide.sequence+" ptm="+pm.peptide.ptmString+" Position="+p.seqPosition)
+//      })
+//    })
     resultSet
   }
 
@@ -578,7 +642,7 @@ class XtandemParser(  val xtandemFile : File,
     })
   }
 
-  val msiSearch: MSISearch = msiSearchForResultSet
+  lazy val msiSearch: MSISearch = msiSearchForResultSet
   def eachSpectrumMatch(wantDecoy: Boolean, onEachSpectrumMatch: SpectrumMatch => Unit): Unit = {}
   def close() {}
   

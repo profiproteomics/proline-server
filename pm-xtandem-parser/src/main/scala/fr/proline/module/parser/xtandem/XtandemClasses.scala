@@ -19,6 +19,8 @@ class XTAAMarkup {
 
 class XTDomain {
 	var id : String = _
+	var start : Int = _
+	var end : Int = _
 	var delta : Double = _
 	var hyperScore : Double = _
 	var seq : String = _

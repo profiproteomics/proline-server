@@ -98,6 +98,8 @@ class XtandemHandler extends DefaultHandler with Logging {
 		} else if(qName.equals("domain") && inPeptide) {
 			if(displayTree) println(" -  -  -  - domain")
 			domain.id = attributes.getValue("id")
+			domain.start = augmentString(attributes.getValue("start")).toInt
+			domain.end = augmentString(attributes.getValue("end")).toInt
 			domain.delta = augmentString(attributes.getValue("delta")).toDouble
 			domain.hyperScore = augmentString(attributes.getValue("hyperscore")).toDouble
 			domain.seq = attributes.getValue("seq")
