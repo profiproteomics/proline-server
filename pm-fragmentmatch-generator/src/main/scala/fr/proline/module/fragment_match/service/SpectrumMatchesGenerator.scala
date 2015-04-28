@@ -110,7 +110,7 @@ class SpectrumMatchesGenerator(
         val allPepMatchIdsPerMsiSearchId = new HashMap[Long, Long]
         
     	if (!resultSummaryId.isDefined) {
-    	  logger.debug("Get all peptide matches of the given RSM")
+    	  logger.debug("Get all peptide matches of the given RS")
 			val jdbcWork = new JDBCWork() {
 	            override def execute(con: Connection) {
 		
@@ -129,7 +129,7 @@ class SpectrumMatchesGenerator(
 		
 	          executionContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
     	} else {
-    	  logger.debug("Get all peptide matches of the given RS")
+    	  logger.debug("Get all peptide matches of the given RSM")
           val jdbcWork = new JDBCWork() {
         	  override def execute(con: Connection) {
 	
