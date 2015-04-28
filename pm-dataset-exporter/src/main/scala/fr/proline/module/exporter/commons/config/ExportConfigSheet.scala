@@ -11,87 +11,99 @@ class ExportConfigSheet (
     var title  :String, 
     var presentation :String,
     var fields : Array[ExportConfigField] // sorted by positions
+   
 )  {
 	// Plain constructor
 	def this() = this("", "",  ExportConfigConstant.PRESENTATION_SHEET_COLUMNS, new Array(0))
+	var defaultDisplayed: Boolean = true
 }
+
 
 object ExportConfigSheet {
   
   // get all config for information sheet
-	def getAllInformationSheet() :ExportConfigSheet={
-	  val sheet: ExportConfigSheet = new ExportConfigSheet()
-	  sheet.id = ExportConfigConstant.SHEET_INFORMATION
-	  sheet.title = "search settings and infos"
-	  sheet.presentation = ExportConfigConstant.PRESENTATION_SHEET_ROWS
-	  sheet.fields =  ExportConfigField.getAllInformationFieldsArray()
+	def getAllInformationSheet() :ExportConfigSheet= {
+	  val sheet: ExportConfigSheet = new ExportConfigSheet(
+	      ExportConfigConstant.SHEET_INFORMATION,
+	      "search settings and infos",
+	     ExportConfigConstant.PRESENTATION_SHEET_ROWS,
+	     ExportConfigField.getAllInformationFieldsArray()
+	  )
+	  sheet.defaultDisplayed = true
+	  
 	  return sheet
 	}
 	
 	// get all for import sheet
 	def getAllImportSheet() :ExportConfigSheet={
-	  val sheet: ExportConfigSheet = new ExportConfigSheet()
-	  sheet.id = ExportConfigConstant.SHEET_IMPORT
-	  sheet.title = "import and filters"
-	  sheet.presentation = ExportConfigConstant.PRESENTATION_SHEET_ROWS
-	  
-	  sheet.fields =  ExportConfigField.getAllImportFieldsArray()
+	  val sheet: ExportConfigSheet = new ExportConfigSheet(
+	      ExportConfigConstant.SHEET_IMPORT, 
+	      "import and filters", 
+	      ExportConfigConstant.PRESENTATION_SHEET_ROWS, 
+	      ExportConfigField.getAllImportFieldsArray()
+	  )
+	  sheet.defaultDisplayed = true
 	  return sheet
 	}
 	
 	// get all for proteinSet sheet
 	def getAllProteinSetSheet() :ExportConfigSheet={
-	  val sheet: ExportConfigSheet = new ExportConfigSheet()
-	  sheet.id = ExportConfigConstant.SHEET_PROTEIN_SETS
-	  sheet.title = "protein sets"
-	  sheet.presentation = ExportConfigConstant.PRESENTATION_SHEET_COLUMNS
-	  
-	  sheet.fields =  ExportConfigField.getAllProteinSetsFieldsArray()
+	  val sheet: ExportConfigSheet = new ExportConfigSheet(
+	      ExportConfigConstant.SHEET_PROTEIN_SETS, 
+	      "protein sets", 
+	      ExportConfigConstant.PRESENTATION_SHEET_COLUMNS, 
+	      ExportConfigField.getAllProteinSetsFieldsArray(true)
+	  )
+	  sheet.defaultDisplayed = true
 	  return sheet
 	}
 	
 	// get all for best PSM sheet
 	def getAllBestPSMSheet() :ExportConfigSheet={
-	  val sheet: ExportConfigSheet = new ExportConfigSheet()
-	  sheet.id = ExportConfigConstant.SHEET_BEST_PSM
-	  sheet.title = "best PSM from protein sets"
-	  sheet.presentation = ExportConfigConstant.PRESENTATION_SHEET_COLUMNS
-	  
-	  sheet.fields =  ExportConfigField.getAllBestPSMFieldsArray()
+	  val sheet: ExportConfigSheet = new ExportConfigSheet(
+	      ExportConfigConstant.SHEET_BEST_PSM, 
+	      "best PSM from protein sets", 
+	      ExportConfigConstant.PRESENTATION_SHEET_COLUMNS, 
+	      ExportConfigField.getAllBestPSMFieldsArray()
+	      )
+	  sheet.defaultDisplayed = true
 	  return sheet
 	}
 	
 	// get all for protein match sheet
 	def getAllProteinMatchSheet() :ExportConfigSheet={
-	  val sheet: ExportConfigSheet = new ExportConfigSheet()
-	  sheet.id = ExportConfigConstant.SHEET_PROTEIN_MATCH
-	  sheet.title = "protein matches in protein set"
-	  sheet.presentation = ExportConfigConstant.PRESENTATION_SHEET_COLUMNS
-	  
-	  sheet.fields =  ExportConfigField.getAllProteinMatchFieldsArray()
+	  val sheet: ExportConfigSheet = new ExportConfigSheet(
+	      ExportConfigConstant.SHEET_PROTEIN_MATCH, 
+	      "protein matches in protein set", 
+	      ExportConfigConstant.PRESENTATION_SHEET_COLUMNS, 
+	      ExportConfigField.getAllProteinMatchFieldsArray()
+	      )
+	  sheet.defaultDisplayed = true
 	  return sheet
 	}
 	
 	// get all for all psm sheet
 	def getAllAllPSMSheet() :ExportConfigSheet={
-	  val sheet: ExportConfigSheet = new ExportConfigSheet()
-	  sheet.id = ExportConfigConstant.SHEET_ALL_PSM
-	  sheet.title = "all PSMs from protein sets"
-	  sheet.presentation = ExportConfigConstant.PRESENTATION_SHEET_COLUMNS
-	  
-	  sheet.fields =  ExportConfigField.getAllPSMFieldsArray()
+	  val sheet: ExportConfigSheet = new ExportConfigSheet(
+	      ExportConfigConstant.SHEET_ALL_PSM,
+	      "all PSMs from protein sets", 
+	      ExportConfigConstant.PRESENTATION_SHEET_COLUMNS, 
+	      ExportConfigField.getAllPSMFieldsArray()
+	      )
+	  sheet.defaultDisplayed = false
 	  return sheet
 	}
 	
 	
   // get all for stat sheet
 	def getAllStatSheet() :ExportConfigSheet={
-	  val sheet: ExportConfigSheet = new ExportConfigSheet()
-	  sheet.id = ExportConfigConstant.SHEET_STAT
-	  sheet.title = "statistics"
-	  sheet.presentation = ExportConfigConstant.PRESENTATION_SHEET_ROWS
-	  
-	  sheet.fields =  ExportConfigField.getAllStatFieldsArray()
+	  val sheet: ExportConfigSheet = new ExportConfigSheet(
+	      ExportConfigConstant.SHEET_STAT, 
+	      "statistics", 
+	      ExportConfigConstant.PRESENTATION_SHEET_ROWS, 
+	      ExportConfigField.getAllStatFieldsArray()
+	      )
+	  sheet.defaultDisplayed = true
 	  return sheet
 	}
 	

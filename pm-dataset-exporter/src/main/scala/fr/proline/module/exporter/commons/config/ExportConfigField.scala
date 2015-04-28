@@ -12,6 +12,7 @@ class ExportConfigField (
 )  {
 	// Plain constructor
 	def this() = this("", "")
+	var defaultDisplayed: Boolean = true
 }
 
 object ExportConfigField {
@@ -67,23 +68,38 @@ object ExportConfigField {
 	}
 	    
 	// get all fields for protein sets sheet
-	def getAllProteinSetsFieldsArray() :Array[ExportConfigField]={
+	def getAllProteinSetsFieldsArray(fromProtein: Boolean) :Array[ExportConfigField]={
+	  val fieldId : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_ID, "protein_set_id")
+	  val fieldAcc : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_ACCESSION, "accession")
+	  val fieldDesc : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_DESCRIPTION, "description")
+	  val fieldScore : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_SCORE, "score")
+	  val fieldIsVal : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_IS_VALIDATED, "is_validated")
+	  val fieldNbSameset : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SAMESET_PROTEIN_MATCHES, "#sameset_protein_matches")
+	  val fieldNbSubset : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SUBSET_PROTEIN_MATCHES, "#subset_protein_matches")
+	  val fieldCoverage : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_COVERAGE, "coverage")
+	  val fieldMw : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_MW, "MW")
+	  val fieldNbSeq : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SEQUENCES, "#sequences")
+	  val fieldNbSpecSeq : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SPECIFIC_SEQUENCES, "#specific_sequences")
+	  val fieldNbPep : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_PEPTIDES, "#peptides")
+	  val fieldNbSpecPep : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDES, "#specific_peptides")
+	  val fieldNbPepMatch : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_PEPTIDE_MATCHES, "#peptide_matches")
+	  val fieldNbSpecPepMatch : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDE_MATCHES, "#specific_peptide_matches")
+	  
+	  fieldNbSameset.defaultDisplayed = fromProtein
+	  fieldNbSubset.defaultDisplayed = fromProtein
+	  fieldCoverage.defaultDisplayed = fromProtein
+	  fieldMw.defaultDisplayed = fromProtein
+	  fieldNbSeq.defaultDisplayed = fromProtein
+	  fieldNbSpecSeq.defaultDisplayed = fromProtein
+	  fieldNbPep.defaultDisplayed = fromProtein
+	  fieldNbSpecPep.defaultDisplayed = fromProtein
+	  fieldNbPepMatch.defaultDisplayed = fromProtein
+	  fieldNbSpecPepMatch.defaultDisplayed = fromProtein
+	  
+	    
 	  var  listFields  : Array[ExportConfigField]= Array(
-	  new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_ID, "protein_set_id"),
-	  new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_ACCESSION, "accession"),
-	  new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_DESCRIPTION, "description"),
-	  new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_SCORE, "score"),
-	  new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_IS_VALIDATED, "is_validated"),
-	  new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SAMESET_PROTEIN_MATCHES, "#sameset_protein_matches"),
-	  new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SUBSET_PROTEIN_MATCHES, "#subset_protein_matches"),
-	  new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_COVERAGE, "coverage"),
-	  new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_MW, "MW"),
-	  new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SEQUENCES, "#sequences"),
-	  new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SPECIFIC_SEQUENCES, "#specific_sequences"),
-	  new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_PEPTIDES, "#peptides"),
-	  new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDES, "#specific_peptides"),
-	  new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_PEPTIDE_MATCHES, "#peptide_matches"),
-	  new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDE_MATCHES, "#specific_peptide_matches")
+	  fieldId, fieldAcc, fieldDesc, fieldScore, fieldIsVal,
+	  fieldNbSameset, fieldNbSubset, fieldCoverage, fieldMw, fieldNbSeq, fieldNbSpecSeq, fieldNbPep, fieldNbSpecPep, fieldNbPepMatch, fieldNbSpecPepMatch
 	  )
 	  
 	  return listFields
@@ -139,7 +155,7 @@ object ExportConfigField {
 	  new ExportConfigField(ExportConfigConstant.FIELD_PSM_RESIDUE_BEFORE, "residue_before"),
 	  new ExportConfigField(ExportConfigConstant.FIELD_PSM_RESIDUE_AFTER, "residue_after")
 	  )
-	  listFields = listFields ++  getAllProteinSetsFieldsArray()
+	  listFields = listFields ++  getAllProteinSetsFieldsArray(false)
 	  return listFields
 	}
         

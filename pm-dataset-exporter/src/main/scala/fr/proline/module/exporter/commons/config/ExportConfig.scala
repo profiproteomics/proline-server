@@ -12,13 +12,19 @@ case class ExportConfig(
     var decimalSeparator  :Char, 
     var dateFormat : String, 
     var dataExport : ExportConfigData,
-    var sheets : Array[ExportConfigSheet] // sorted by positions
+    var sheets : Array[ExportConfigSheet]  // sorted by positions
+    
 )  {
 	// Plain constructor
-	def this() = this("xlsx", '.', "YYYYMMDD HH:mm:ss", new ExportConfigData() , Array.empty[ExportConfigSheet])
-	
+	def this() = this(ExportConfigConstant.FORMAT_XLSX, ExportConfigConstant.DECIMAL_SEPARATOR_DOT, ExportConfigConstant.DATE_FORMAT_HOUR, new ExportConfigData() , Array.empty[ExportConfigSheet] )
+	      
+	val formatValues: Array[String] = ExportConfigConstant.FORMAT_VALUES
+    val decimalSeparatorValues: Array[String] = ExportConfigConstant.DECIMAL_SPEARATOR_VALUES
+    val dateFormatValues: Array[String] = ExportConfigConstant.DATE_FORMAT_VALUES   
+    val sheetPresentationValues: Array[String] = ExportConfigConstant.PRESENTATION_SHEET_VALUES
 	
 }
+
 
 object ExportConfig{
   
@@ -41,21 +47,65 @@ object ExportConfig{
   
     // get all config for identification export
 	def getAllForIdentificationExport() :ExportConfig={
-	  var conf :ExportConfig = new  ExportConfig()
-	  conf.format = "xlsx"
-	  conf.decimalSeparator = '.'
-	  conf.dateFormat = "YYYY:MM:DD HH:mm:ss"
-	  conf.dataExport = ExportConfigData.getAllConfig()
-	  var informationSheet : ExportConfigSheet =ExportConfigSheet.getAllInformationSheet()
+	   var informationSheet : ExportConfigSheet =ExportConfigSheet.getAllInformationSheet()
 	  var importSheet : ExportConfigSheet =ExportConfigSheet.getAllImportSheet
 	  var proteinSetSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinSetSheet
 	  var bestPSMSheet : ExportConfigSheet =ExportConfigSheet.getAllBestPSMSheet
 	  var proteinMatchSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinMatchSheet
 	  var allPSMSheet : ExportConfigSheet = ExportConfigSheet.getAllAllPSMSheet
 	  var statSheet : ExportConfigSheet =ExportConfigSheet.getAllStatSheet()
-	  conf.sheets =  Array(informationSheet, importSheet, proteinSetSheet, bestPSMSheet, proteinMatchSheet, allPSMSheet, statSheet)
+	  var sheetsList: Array[ExportConfigSheet] =  Array(informationSheet, importSheet, proteinSetSheet, bestPSMSheet, proteinMatchSheet, allPSMSheet, statSheet)
+	  var conf :ExportConfig = new  ExportConfig(
+	      ExportConfigConstant.FORMAT_XLSX, 
+	      ExportConfigConstant.DECIMAL_SEPARATOR_DOT,  
+	      ExportConfigConstant.DATE_FORMAT_HOUR, 
+	      ExportConfigData.getAllConfig(),
+	      sheetsList
+	      )
+	  
+	  
+	  return conf
+	}
+	
+	
+	// get all config for SC export
+	def getAllForSCExport() :ExportConfig={
+	  var informationSheet : ExportConfigSheet =ExportConfigSheet.getAllInformationSheet()
+	  var importSheet : ExportConfigSheet =ExportConfigSheet.getAllImportSheet
+	  var proteinSetSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinSetSheet
+	  var bestPSMSheet : ExportConfigSheet =ExportConfigSheet.getAllBestPSMSheet
+	  bestPSMSheet.defaultDisplayed = false
+	  var proteinMatchSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinMatchSheet
+	  var allPSMSheet : ExportConfigSheet = ExportConfigSheet.getAllAllPSMSheet
+	  allPSMSheet.defaultDisplayed = false
+	  var statSheet : ExportConfigSheet =ExportConfigSheet.getAllStatSheet()
+	  statSheet.defaultDisplayed = false
+	  var sheetsList: Array[ExportConfigSheet] =  Array(informationSheet, importSheet, proteinSetSheet, bestPSMSheet, proteinMatchSheet, allPSMSheet, statSheet)
+	  var conf :ExportConfig = new  ExportConfig(
+	      ExportConfigConstant.FORMAT_XLSX, 
+	      ExportConfigConstant.DECIMAL_SEPARATOR_DOT,  
+	      ExportConfigConstant.DATE_FORMAT_HOUR, 
+	      ExportConfigData.getAllConfig(),
+	      sheetsList
+	      )
+	  
+	  
+	  return conf
+	}
+	
+	// get all config for XIC export
+	def getAllForXICExport() :ExportConfig={
+	   var informationSheet : ExportConfigSheet =ExportConfigSheet.getAllInformationSheet()
+	  var sheetsList: Array[ExportConfigSheet] =  Array(informationSheet)
+	  var conf :ExportConfig = new  ExportConfig(
+	      ExportConfigConstant.FORMAT_XLSX, 
+	      ExportConfigConstant.DECIMAL_SEPARATOR_DOT,  
+	      ExportConfigConstant.DATE_FORMAT_HOUR, 
+	      ExportConfigData.getAllConfig(),
+	      sheetsList
+	      )
+	  
 	  
 	  return conf
 	}
 }
-	

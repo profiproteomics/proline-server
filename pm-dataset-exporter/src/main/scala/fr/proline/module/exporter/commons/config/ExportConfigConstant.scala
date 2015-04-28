@@ -5,9 +5,26 @@ object ExportConfigConstant {
      // presentation of a sheet : by rows or columns
      final val PRESENTATION_SHEET_ROWS: String = "rows"
      final val PRESENTATION_SHEET_COLUMNS: String = "columns"  
+      final val PRESENTATION_SHEET_VALUES: Array[String] = Array(PRESENTATION_SHEET_ROWS, PRESENTATION_SHEET_COLUMNS)
      // format
      final val FORMAT_XLSX: String = "xlsx"
      final val FORMAT_TSV: String = "tsv"
+       final val FORMAT_VALUES: Array[String] = Array(FORMAT_XLSX, FORMAT_TSV)
+       
+     // date format
+     final val DATE_FORMAT_HOUR: String = "YYYY:MM:DD HH:mm:ss"
+     final val DATE_FORMAT: String = "YYYY:MM:DD" 
+       final val DATE_FORMAT_VALUES: Array[String] = Array(DATE_FORMAT_HOUR, DATE_FORMAT)
+       
+     final val MODE_IDENT: String = "IDENT"
+     final val MODE_QUANT_SC: String = "QUANT_SC"
+     final val MODE_QUANT_XIC: String = "QUANT_XIC"
+       
+       
+     // decimal separator
+     final val DECIMAL_SEPARATOR_COMMA: Char = ','
+     final val DECIMAL_SEPARATOR_DOT: Char = '.'  
+       final val DECIMAL_SPEARATOR_VALUES: Array[String] = Array(".", ",")
        
      // information sheet
      final val SHEET_INFORMATION : String = "information"
