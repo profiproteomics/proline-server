@@ -14,6 +14,7 @@ abstract class AbstractRemoteProcessService extends IRemoteService {
   protected var _requestId : Object = null
   def getRequestId = { _requestId}
     
+  //Exception are catched by ServicRunner to return Error
   override def service(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
     
     require((req != null), "Req is null")

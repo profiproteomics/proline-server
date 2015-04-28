@@ -21,6 +21,7 @@ trait IRemoteService {
    */
   val defaultVersion: Boolean = false
 
+    //Exception are catched by ServicRunner to return Error
   def service(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
     require((req != null), "Req is null")
 
