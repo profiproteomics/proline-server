@@ -3,12 +3,9 @@ package fr.proline.cortex.service.dps.msi
 import java.io.File
 import java.util.HashMap
 import java.util.UUID
-
 import scala.Array.canBuildFrom
-
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.slf4j.Logging
-
 import fr.profi.util.StringUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
@@ -27,6 +24,7 @@ import fr.proline.module.exporter.msi.template.IRMaLikeViewSetTemplateAsXLSX
 import fr.proline.module.exporter.msi.template.ProlineViewSetTemplateAsXLSX
 import fr.proline.module.exporter.msi.view.BuildResultSummaryViewSet
 import fr.proline.module.exporter.mzidentml.MzIdExporter
+import fr.proline.module.exporter.pridexml.PrideExporterService
 
 /**
  * Define a JMS Service to :
@@ -37,6 +35,7 @@ import fr.proline.module.exporter.mzidentml.MzIdExporter
 object FileFormat extends Enumeration {
   val MZIDENTML = Value("MZIDENTML")
   val TEMPLATED = Value("TEMPLATED")
+  val PRIDE = Value("PRIDE")
 }
 
 object OutputMode extends Enumeration {
@@ -66,7 +65,7 @@ class ExportResultSummary  extends AbstractRemoteProcessService with Logging {
 //    MethodParam(
 //      "file_format",
 //      JSONType.String,
-//      description = Some("The expected file format. Valid values are: MZIDENTML, TEMPLATED."),
+//      description = Some("The expected file format. Valid values are: MZIDENTML, TEMPLATED, PRIDE."),
 //      scalaType = Some(typeOf[String])
 //    ),
 //    MethodParam(
@@ -116,7 +115,7 @@ class ExportResultSummary  extends AbstractRemoteProcessService with Logging {
     val fileDirectory = this.parseFileDirectory(paramsRetriever)
 
     val extraParamsAsOptStr = Option(paramsRetriever.getOptMap("extra_params", true, null)).map(serialize(_))
-    val extraParams = extraParamsAsOptStr.map(deserialize[Map[String, Any]](_))
+    val extraParams = extraParamsAsOptStr.map(deserialize[Map[String, Object]](_))
     val outputParams = OutputMode.withName(paramsRetriever.getOptString("output_mode", "FILE"))
 
     fileFormat match {
@@ -124,6 +123,7 @@ class ExportResultSummary  extends AbstractRemoteProcessService with Logging {
 //      case FileFormat.TEMPLATED => exportToTemplatedFile(Seq(rsmIdentifiers.get), fileName, fileDirectory, outputParams, extraParams)
       case FileFormat.MZIDENTML => exportToMzIdentML(rsmIdentifier.get, fileName, fileDirectory, outputParams, extraParams)
       case FileFormat.TEMPLATED => exportToTemplatedFile(rsmIdentifier.get, fileName, fileDirectory, outputParams, extraParams)
+      case FileFormat.PRIDE => exportToPrideFile(rsmIdentifier.get, fileName, fileDirectory, outputParams, extraParams)
     }
     
   }
@@ -231,6 +231,49 @@ class ExportResultSummary  extends AbstractRemoteProcessService with Logging {
       resultMap
     } else {
       exportedFiles.toArray.map(_.getName)
+    }
+
+  }
+  
+  def exportToPrideFile(
+    rsmIdentifier: ResultSummaryIdentifier,
+    fileName: String,
+    fileDir: String,
+    outputFormat: OutputMode.Value,
+    extraParams: Option[Map[String, Object]]
+  ): Object  = {
+
+
+//    require(extraParams.isDefined, "some extra parameters must be provided")
+
+
+    var exportLocation = new java.io.File(fileDir)
+    val filePath = fileDir+ File.separator + fileName
+    var executionContext: IExecutionContext = null
+    
+    try {
+      executionContext =  BuildExecutionContext(DataStoreConnectorFactory.getInstance(), rsmIdentifier.projectId, false)
+           
+      val extraParameters : Map[String, Object] = if(extraParams.isDefined) extraParams.get  else Map.empty
+      // Export
+      
+      val exporter = new PrideExporterService(executionContext, rsmIdentifier.rsmId, filePath, extraParameters)
+      exporter.runService()
+      
+    } finally {
+      if (executionContext != null) {
+        executionContext.closeAll()
+      }
+    }
+
+    if (outputFormat == OutputMode.STREAM) {
+      // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
+      val resultMap = new HashMap[String, Object]()
+      resultMap.put("file_paths", Seq(filePath))
+      resultMap.put(Constants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
+      resultMap
+    } else {
+    	Seq(filePath)
     }
 
   }
