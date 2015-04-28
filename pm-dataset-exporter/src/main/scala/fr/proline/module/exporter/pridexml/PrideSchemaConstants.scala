@@ -42,12 +42,27 @@ object PrideSchemaConstants {
 //    final def PSIMOD_DB_NAME="MOD";
     final def PROTOCOL_STD_NAME="Protocol Name : To replace ! ";
     
-    
-    
     // CV entries
+    
+    
+    final def MS_CV_NANOELECTROSPRAY_ACC="MS:1000398";
+    final def MS_CV_NANOELECTROSPRAY_NAME="nanoelectrospray";
+
     final def PRIDE_CV_SOFT_ACC="PRIDE:0000175";
     final def PRIDE_CV_SOFT_NAME="XML generation software";
-    
+        
+    final def PRIDE_CV_FRAGMENTMASS_TOL_ACC="PRIDE:0000161";
+    final def PRIDE_CV_FRAGMENTMASS_TOL_NAME="Fragment mass tolerance setting";
+        
+    final def MS_CV_ELECTRON_MULTIPLIER_ACC="MS:1000253";
+    final def MS_CV_ELECTRON_MULTIPLIER_NAME="electron multiplier";
+
+    final def PRIDE_CV_PEPMASS_TOL_ACC="PRIDE:0000078";
+    final def PRIDE_CV_PEPMASS_TOL_NAME="Peptide mass tolerance setting";
+
+    final def PRIDE_CV_ALLOWED_MC_ACC="PRIDE:0000162";
+    final def PRIDE_CV_ALLOWED_MC_NAME="Allowed missed cleavages";
+
     final def PRIDE_CV_PROJECT_ACC="PRIDE:0000097";
     final def PRIDE_CV_PROJECT_NAME="Project";
     

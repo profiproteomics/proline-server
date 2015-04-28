@@ -1,6 +1,9 @@
 package fr.proline.module.exporter.pridexml
 
 import uk.ac.ebi.pride.jaxb.model._
+import uk.ac.ebi.pride.jaxb.xml.marshaller.PrideXmlMarshallerFactory
+import uk.ac.ebi.pride.jaxb.xml.unmarshaller.PrideXmlUnmarshallerFactory
+
 
 object FragmentMatchMapper {
 
@@ -11,8 +14,8 @@ object FragmentMatchMapper {
   	  mapper += ("a" -> (PrideSchemaConstants.PRIDE_CV_A_ION_ACC, PrideSchemaConstants.PRIDE_CV_A_ION_NAME))
   	  mapper += ("a*" -> (PrideSchemaConstants.PRIDE_CV_ANH3_ION_ACC, PrideSchemaConstants.PRIDE_CV_ANH3_ION_NAME))
   	  mapper += ("a0" -> (PrideSchemaConstants.PRIDE_CV_AH20_ION_ACC, PrideSchemaConstants.PRIDE_CV_AH20_ION_NAME))
-  	  mapper += ("b" -> (PrideSchemaConstants.PRIDE_CV_B_ION_ACC, PrideSchemaConstants.PRIDE_CV_BNH3_ION_NAME))
-  	  mapper += ("b*" -> (PrideSchemaConstants.PRIDE_CV_BNH3_ION_ACC, PrideSchemaConstants.PRIDE_CV_A_ION_NAME))
+  	  mapper += ("b" -> (PrideSchemaConstants.PRIDE_CV_B_ION_ACC, PrideSchemaConstants.PRIDE_CV_B_ION_NAME))
+  	  mapper += ("b*" -> (PrideSchemaConstants.PRIDE_CV_BNH3_ION_ACC, PrideSchemaConstants.PRIDE_CV_BNH3_ION_NAME))
   	  mapper += ("b0" -> (PrideSchemaConstants.PRIDE_CV_BH2O_ION_ACC, PrideSchemaConstants.PRIDE_CV_BH2O_ION_NAME))
   	  mapper += ("c" -> (PrideSchemaConstants.PRIDE_CV_C_ION_ACC, PrideSchemaConstants.PRIDE_CV_C_ION_NAME))
   	  mapper += ("c*" -> (PrideSchemaConstants.PRIDE_CV_CNH3_ION_ACC, PrideSchemaConstants.PRIDE_CV_CNH3_ION_NAME))
@@ -50,7 +53,7 @@ object FragmentMatchMapper {
 
 object CvParam {
   
-  def apply(accession: String, name: String, cvLabel: String, value: String): CvParam = {
+  def apply(accession: String, name: String, cvLabel: String, value: String): uk.ac.ebi.pride.jaxb.model.CvParam = {
     val cvp = new CvParam()
     cvp.setName(name)
     cvp.setAccession(accession)
@@ -59,12 +62,19 @@ object CvParam {
     cvp
   }
   
-   def apply(accession: String, name: String, value: String): CvParam = {
+   def apply(accession: String, name: String, value: String): uk.ac.ebi.pride.jaxb.model.CvParam = {
     val cvp = new CvParam()
     cvp.setName(name)
     cvp.setAccession(accession)
     cvp.setCvLabel(PrideSchemaConstants.PRIDE_CV_NAME)
     if( value != null ) cvp.setValue(value)
+    cvp
+  }
+   
+   def apply(xmlString: String): uk.ac.ebi.pride.jaxb.model.CvParam = {     
+	val pof = PrideXmlUnmarshallerFactory.getInstance();
+    val unmarshaller = pof.initializeUnmarshaller();
+    val cvp =  unmarshaller.unmarshal(xmlString, classOf[CvParam])
     cvp
   }
   
