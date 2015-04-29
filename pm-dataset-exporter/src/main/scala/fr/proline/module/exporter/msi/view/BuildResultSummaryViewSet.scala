@@ -2,6 +2,7 @@ package fr.proline.module.exporter.msi.view
 
 import scala.collection.mutable.ArrayBuffer
 import fr.profi.jdbc.easy._
+import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.model.msi.ResultSummary
@@ -20,8 +21,13 @@ import fr.proline.module.exporter.commons.config.template.ProlineConfigViewSetTe
 import fr.proline.module.exporter.commons.config.ExportConfigManager
 import fr.proline.module.exporter.commons.config.ExportConfigConstant
 import fr.proline.module.exporter.commons.config.template.ProlineConfigViewSetTemplateAsTSV
+import fr.proline.core.om.provider.msi.IResultSetProvider
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.orm.msi.MsiSearch
+import fr.proline.core.om.provider.msi.IResultSummaryProvider
 
-object BuildResultSummaryViewSet {
+object BuildResultSummaryViewSet extends Logging {
 
   def apply(ds: IdentDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate, exportConfig :ExportConfig): ResultSummaryViewSet = {
 
@@ -136,10 +142,106 @@ object BuildResultSummaryViewSet {
         }
       }
     }
+    
+    // load childs resultSummary (merge)
+    var childsResultSummarys: ArrayBuffer[ResultSummary] = new ArrayBuffer[ResultSummary]()
+    val providerRsm: IResultSummaryProvider = getResultSummaryProvider(executionContext)
+    var leavesRsmIds: Seq[Long] = getRsmLeafChildsID(rsm.id, executionContext)
+    leavesRsmIds.foreach(rsmID => {
+       val resultSummaryRS = providerRsm.getResultSummary(rsmID, true)
+          if (resultSummaryRS.isDefined) {
+            val resultSummaryLeaf:ResultSummary = resultSummaryRS.get
+            childsResultSummarys +=  resultSummaryLeaf
+          } else {
+            val msg = " !!! Unable to get leave search result with id " + rsmID
+            logger.warn(msg)
+            throw new Exception(msg)
+          }
+      })
+    
+    // load childs resultSets (merge)
+    var childsResultSets: ArrayBuffer[ResultSet] = new ArrayBuffer[ResultSet]()
+    if (rsm.resultSet.isDefined){
+        val providerContext = ProviderDecoratedExecutionContext(executionContext)
+        val provider: IResultSetProvider = providerContext.getProvider(classOf[IResultSetProvider])
+    	val rs = rsm.resultSet.get
+    	var leavesRsIds: Seq[Long] = getLeafChildsID(rs.id, executionContext)
+    	leavesRsIds.foreach(rsID => {
+          val resultRS = provider.getResultSet(rsID)
+          if (resultRS.isDefined) {
+            val resultSetLeaf:ResultSet = resultRS.get
+            childsResultSets +=  resultSetLeaf
+          } else {
+            val msg = " !!! Unable to get leave search result with id " + rsID
+            logger.warn(msg)
+            throw new Exception(msg)
+          }
+      })
+    }
 
-    return apply(IdentDataSet(projectName, rsm), viewSetName, viewSetTemplate, exportConfig)
+    return apply(IdentDataSet(projectName, rsm, childsResultSummarys.toArray, childsResultSets.toArray), viewSetName, viewSetTemplate, exportConfig)
 
   }
+  
+  private def getLeafChildsID(rsId: Long, execContext: IExecutionContext): Seq[Long] = {
+    var allRSIds = Seq.newBuilder[Long]
+
+    val jdbcWork = new JDBCWork() {
+
+      override def execute(con: Connection) {
+
+        val stmt = con.prepareStatement("select child_result_set_id from result_set_relation where result_set_relation.parent_result_set_id = ?")
+        stmt.setLong(1, rsId)
+        val sqlResultSet = stmt.executeQuery()
+        var childDefined = false
+        while (sqlResultSet.next) {
+          childDefined = true
+          val nextChildId = sqlResultSet.getInt(1)
+          allRSIds ++= getLeafChildsID(nextChildId, execContext)
+        }
+        if (!childDefined)
+          allRSIds += rsId
+        stmt.close()
+      } // End of jdbcWork anonymous inner class
+    }
+    execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
+
+    allRSIds.result
+  }
+  
+  private def getRsmLeafChildsID(rsmId: Long, execContext: IExecutionContext): Seq[Long] = {
+    var allRSMIds = Seq.newBuilder[Long]
+
+    val jdbcWork = new JDBCWork() {
+
+      override def execute(con: Connection) {
+
+        val stmt = con.prepareStatement("select child_result_summary_id from result_summary_relation where result_summary_relation.parent_result_summary_id = ?")
+        stmt.setLong(1, rsmId)
+        val sqlResultSummary = stmt.executeQuery()
+        var childDefined = false
+        while (sqlResultSummary.next) {
+          childDefined = true
+          val nextChildId = sqlResultSummary.getInt(1)
+          allRSMIds ++= getRsmLeafChildsID(nextChildId, execContext)
+        }
+        if (!childDefined)
+          allRSMIds += rsmId
+        stmt.close()
+      } // End of jdbcWork anonymous inner class
+    }
+    execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
+
+    allRSMIds.result
+  }
+  
+  private def getResultSummaryProvider(execContext: IExecutionContext): IResultSummaryProvider = {
+		  
+    new SQLResultSummaryProvider(execContext.getMSIDbConnectionContext,
+      execContext.getPSDbConnectionContext,
+      execContext.getUDSDbConnectionContext)
+  }
+  
   
 
 }

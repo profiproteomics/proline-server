@@ -12,26 +12,46 @@ import java.text.SimpleDateFormat
 import java.text.DecimalFormat
 import fr.proline.module.exporter.api.view.IFormLikeView
 import scala.collection.immutable.ListMap
+import fr.proline.module.exporter.api.view.IFixedDatasetView
+import fr.proline.module.exporter.api.view.IRecordBuildingContext
+import com.typesafe.scalalogging.slf4j.Logging
 
 
-class ImportAndValidationPropsView (val rsm: ResultSummary, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat) extends IFormLikeView {
+class ImportAndValidationPropsView (val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat) extends IFixedDatasetView with Logging{
   
   var viewName = "import and validation"
-  private val rs = rsm.resultSet
+  val childResultSummarys = identDS.childsResultSummarys
   val fields = new SheetViewFieldsConfig(sheetConfig)
   
-  def getFieldValueMap() = _fieldValueMap
-  def getFieldsNames() = _fieldValueMap.keys.toArray  
-  
-   private val _fieldValueMap = {
-   // *** Get import Parameters
+  case class MyBuildingContext(rsm : ResultSummary ) extends IRecordBuildingContext
+   
+  def buildRecord( buildingContext: IRecordBuildingContext ): Map[String,Any] = {
+    
+    val myBuildingContext = buildingContext.asInstanceOf[MyBuildingContext]
+    val rsm = myBuildingContext.rsm
+    val rs = rsm.resultSet.get
+    
+    var fileName: String = ""
+    for( msiSearch <- rs.msiSearch if msiSearch != null ) {
+      if (rs.childMsiSearches.isEmpty) {
+    		for (msiSearch <- rs.msiSearch if msiSearch != null) {
+    			fileName = msiSearch.resultFileName
+    		}
+    	} else {
+    		for (msiSearch <- rs.childMsiSearches) {
+    			fileName = msiSearch.resultFileName
+    		}
+    	}
+    }
+    logger.debug("Import and validation fileName "+fileName)
+    // *** Get import Parameters
     val importParamsBuilder = new StringBuilder("")
-    if (rs.isDefined && rs.get.properties.isDefined) {
-      val rsProp = rs.get.properties.get
+    if ( rs.properties.isDefined) {
+      val rsProp = rs.properties.get
   
       // Targer/Decoy Mode 
       if (rsProp.getTargetDecoyMode.isDefined)
-        importParamsBuilder.append("Target-Decoy Mode : ").append(rs.get.properties.get.getTargetDecoyMode.get).append("; ")
+        importParamsBuilder.append("Target-Decoy Mode : ").append(rs.properties.get.getTargetDecoyMode.get).append("; ")
         
       // TODO: more generic way to handle search engine specific params (iterate over bean properties)
   
@@ -55,15 +75,14 @@ class ImportAndValidationPropsView (val rsm: ResultSummary, val sheetConfig : Ex
           })
         }
       }
-    } //End get Parser parameters
-  
-  // 
+       } //End get Parser parameters
+    // 
   var hasPsmFilterExpectedFdr: Boolean = false
-  var psmFilterExpectedFdr: Float = Float.NaN
+  var psmFilterExpectedFdr: String = "-"
   var hasPsmFilter: Boolean = false
   var psmFilters: Array[String] = Array()
   var hasProteinFilterExpectedFdr: Boolean = false
-  var proteinFilterExpectedFdr:Float =  Float.NaN
+  var proteinFilterExpectedFdr: String =  "-"
   var hasProteinFilter: Boolean = false
   var proteinFilters: Array[String] = Array()
     
@@ -76,13 +95,15 @@ class ImportAndValidationPropsView (val rsm: ResultSummary, val sheetConfig : Ex
         //resultMapBuilder += (fields.PSM_FILTER_EXPECTED_FDR.toString -> { if (rsmValProp.getParams.getPeptideExpectedFdr.isDefined) rsmValProp.getParams.getPeptideExpectedFdr.get else "-" })
         //allFieldsNames += fields.PSM_FILTER_EXPECTED_FDR.toString 
         hasPsmFilterExpectedFdr = true
-        psmFilterExpectedFdr = decimalFormat.format(if (rsmValProp.getParams.getPeptideExpectedFdr.isDefined) rsmValProp.getParams.getPeptideExpectedFdr.get else "-").toFloat
+        if (rsmValProp.getParams.getPeptideExpectedFdr.isDefined){
+        	psmFilterExpectedFdr = decimalFormat.format(rsmValProp.getParams.getPeptideExpectedFdr.get)
+        }
         
         //Add PSM Filters
         if (rsmValProp.getParams.getPeptideFilters.isDefined) {
           
           var fNumber = 1
-          var nbFilters: Int = rsmValProp.getParams.getPeptideFilters.size
+          var nbFilters: Int = rsmValProp.getParams.getPeptideFilters.get.size
           psmFilters = new Array(nbFilters)
           //Go through applied PSM filters and register them 
           rsmValProp.getParams.getPeptideFilters.get.foreach(filter => {
@@ -112,7 +133,9 @@ class ImportAndValidationPropsView (val rsm: ResultSummary, val sheetConfig : Ex
         //resultMapBuilder += (fields.PROT_FILTER_EXPECTED_FDR.toString -> { if (rsmValProp.getParams.getProteinExpectedFdr.isDefined) rsmValProp.getParams.getProteinExpectedFdr.get else "-" })
 		//allFieldsNames +=  fields.PROT_FILTER_EXPECTED_FDR.toString
 		hasProteinFilterExpectedFdr = true
-		proteinFilterExpectedFdr = decimalFormat.format(if (rsmValProp.getParams.getProteinExpectedFdr.isDefined) rsmValProp.getParams.getProteinExpectedFdr.get else "-" ).toFloat
+		if (rsmValProp.getParams.getProteinExpectedFdr.isDefined){
+		  proteinFilterExpectedFdr= decimalFormat.format(rsmValProp.getParams.getProteinExpectedFdr.get)
+		}
         
 		//Add Protein Filters
         if (rsmValProp.getParams.getProteinFilters.isDefined) {
@@ -147,13 +170,16 @@ class ImportAndValidationPropsView (val rsm: ResultSummary, val sheetConfig : Ex
   
       } //End Validation properties defined
       
-  
-   var exportMap:ListMap[String,Any] = ListMap()
     
+    
+    var exportMap:ListMap[String,Any] = ListMap()
     
     val listFields :Array[ExportConfigField] = sheetConfig.fields
     for ( f <- listFields ) {
       f.id match{
+        case ExportConfigConstant.FIELD_INFORMATION_RESULT_FILE_NAME => {
+          	exportMap += ( fields.addField(f.title) -> fileName)
+        }
         case ExportConfigConstant.FIELD_IMPORT_PARAMS => {
           exportMap += ( fields.addField(f.title) -> importParamsBuilder.result)
         }
@@ -187,5 +213,12 @@ class ImportAndValidationPropsView (val rsm: ResultSummary, val sheetConfig : Ex
     
     //exportMap.map( r => r._1.toString -> r._2)
    exportMap
+  }
+  
+  def onEachRecord( recordFormatter: Map[String,Any] => Unit ) {
+    for (childRsm <- childResultSummarys) {
+    	this.formatRecord(MyBuildingContext(childRsm), recordFormatter)
+    }
+    
   }
 }

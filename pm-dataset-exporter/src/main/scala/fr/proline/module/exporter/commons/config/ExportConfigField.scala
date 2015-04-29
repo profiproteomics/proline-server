@@ -57,6 +57,7 @@ object ExportConfigField {
 	// get all fields for import sheet
 	def getAllImportFieldsArray() :Array[ExportConfigField]={
 	  var  listFields  : Array[ExportConfigField]= Array(
+	  new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_RESULT_FILE_NAME, "result_file_name"),
 	  new ExportConfigField(ExportConfigConstant.FIELD_IMPORT_PARAMS, "import_params"),
 	  new ExportConfigField(ExportConfigConstant.FIELD_IMPORT_PSM_FILTER_EXPECTED_FDR, "psm_filter_expected_fdr"),
 	  new ExportConfigField(ExportConfigConstant.FIELD_IMPORT_PSM_FILTER, "psm_filter"), // incremental

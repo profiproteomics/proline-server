@@ -16,6 +16,7 @@ class MsiSearchConfigExtendedView( val identDS: IdentDataSet , val sheetConfig :
   val rsm = identDS.resultSummary
   var viewName = "msi_search"
   val fields = new SheetViewFieldsConfig(sheetConfig)
+  val childResultSets = identDS.childsResultSets
   
   case class MyBuildingContext( msiSearch: MSISearch ) extends IRecordBuildingContext
   def buildRecord( buildingContext: IRecordBuildingContext ): Map[String,Any] = {
@@ -142,7 +143,7 @@ class MsiSearchConfigExtendedView( val identDS: IdentDataSet , val sheetConfig :
     
     val rs = rsm.resultSet.get
     
-    if( rs.childMsiSearches.isEmpty ) {
+    /*if( rs.childMsiSearches.isEmpty ) {
       for( msiSearch <- rs.msiSearch if msiSearch != null ) {
         this.formatRecord(MyBuildingContext(msiSearch), recordFormatter)
       }
@@ -150,8 +151,20 @@ class MsiSearchConfigExtendedView( val identDS: IdentDataSet , val sheetConfig :
       for( msiSearch <- rs.childMsiSearches ) {
         this.formatRecord(MyBuildingContext(msiSearch), recordFormatter)
       }
+    }*/  // rs is in the child childRs list
+
+    for (childRs <- childResultSets) {
+    	if (childRs.childMsiSearches.isEmpty) {
+    		for (msiSearch <- childRs.msiSearch if msiSearch != null) {
+    			this.formatRecord(MyBuildingContext(msiSearch), recordFormatter)
+    		}
+    	} else {
+    		for (msiSearch <- childRs.childMsiSearches) {
+    			this.formatRecord(MyBuildingContext(msiSearch), recordFormatter)
+    		}
+    	}
     }
-    
+
   }
 
 }

@@ -3,6 +3,7 @@ package fr.proline.module.exporter.msi.view
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import fr.proline.core.om.model.msi.ResultSummary
+import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.module.exporter.api.view.IDataView
 import fr.proline.module.exporter.api.view.IViewTypeEnumeration
 import scala.collection.mutable.ArrayBuffer
@@ -19,8 +20,10 @@ import scala.collection.immutable.ListMap
 
 case class IdentDataSet (
   projectName: String,
-  resultSummary: ResultSummary
+  resultSummary: ResultSummary,
   // TODO: represent the result set hierarchy here (merge) ???
+  childsResultSummarys: Array[ResultSummary],
+  childsResultSets: Array[ResultSet]
 ) extends Logging {
 
   // Count the number of protein sets and proteins matches related to a given peptide match
@@ -91,7 +94,7 @@ object BuildResultSummaryView {
             		buildMap += (ResultSummaryViewTypes.MSI_SEARCH_EXTENDED -> { ds: IdentDataSet => new MsiSearchConfigExtendedView(ds, sheet, dateFormat, decimalFormat) })
             	}
             	case ExportConfigConstant.SHEET_IMPORT => {
-            		buildMap += (ResultSummaryViewTypes.IMPORT_AND_VALIDATION_PROPS -> { ds: IdentDataSet => new ImportAndValidationPropsView(ds.resultSummary, sheet, dateFormat, decimalFormat) })
+            		buildMap += (ResultSummaryViewTypes.IMPORT_AND_VALIDATION_PROPS -> { ds: IdentDataSet => new ImportAndValidationPropsView(ds, sheet, dateFormat, decimalFormat) })
             	}
             	case ExportConfigConstant.SHEET_PROTEIN_SETS => {
             		buildMap += (ResultSummaryViewTypes.PROT_SET_TO_TYPICAL_PROT_MATCH -> { ds: IdentDataSet => new ProtSetToTypicalProtMatchConfigView(ds, sheet, dateFormat, decimalFormat, exportAllProteinSet) })
