@@ -1,5 +1,6 @@
 package fr.proline.module.seq.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ import fr.proline.core.orm.util.DataStoreConnectorFactory;
 import fr.proline.module.seq.DatabaseAccess;
 import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
 import fr.proline.module.seq.dto.SEDbInstanceWrapper;
+import fr.proline.module.seq.dto.SequenceMatchWrapper;
 import fr.proline.repository.IDatabaseConnector;
 import fr.profi.util.ThreadLogger;
 
@@ -44,63 +46,57 @@ public final class RetrieveService {
      *            If used as periodic timer, first arg is timer delay in hour.
      */
     public static void main(final String[] args) {
+    	
 	Thread.currentThread().setUncaughtExceptionHandler(new ThreadLogger(LOG));
 
 	/* Force initialization of seq_db on service starting */
 	DatabaseAccess.getSEQDatabaseConnector(true);
-
+   
 	int hourDelay = -1;
-
+	
 	if ((args != null) && (args.length > 0)) {
 	    final String trimmedDelay = args[0].trim();
-
+	  
 	    if (!trimmedDelay.isEmpty()) {
 		try {
 		    hourDelay = Integer.parseInt(trimmedDelay);
 		} catch (NumberFormatException nfEx) {
 		    LOG.warn("Cannot parse [" + trimmedDelay + "] as Integer value", nfEx);
 		}
-	    }
-
+	   }
 	}
 
-	if (hourDelay > 0) {
-	    final Timer timer = new Timer("Timer-retrieveBioSequencesForAllProjects");
+	if (hourDelay > 0 ) { 
+		final Timer timer = new Timer("Timer-retrieveBioSequencesForAllProjects");
 
-	    final TimerTask timerTask = new TimerTask() {
+		final TimerTask timerTask = new TimerTask() {
 
-		public void run() {
-		    final Thread currentThread = Thread.currentThread();
+			public void run() {
+				final Thread currentThread = Thread.currentThread();
 
-		    if (!(currentThread.getUncaughtExceptionHandler() instanceof ThreadLogger)) {
-			currentThread.setUncaughtExceptionHandler(new ThreadLogger(LOG));
-		    }
+				if (!(currentThread.getUncaughtExceptionHandler() instanceof ThreadLogger)) {
+					currentThread.setUncaughtExceptionHandler(new ThreadLogger(LOG));
+				}
 
-		    try {
-			retrieveBioSequencesForAllProjects();
-		    } catch (Exception ex) {
-			LOG.error("Error running  retrieveBioSequencesForAllProjects()", ex);
-		    }
+				try {
+					retrieveBioSequencesForAllProjects();
+				} catch (Exception ex) {
+					LOG.error("Error running  retrieveBioSequencesForAllProjects()", ex);
+				}
+			}
 
-		}
+		};
+		timer.scheduleAtFixedRate(timerTask, TIMER_BEFORE_DELAY, TimeUnit.HOURS.toMillis(hourDelay));
 
-	    };
-
-	    timer.scheduleAtFixedRate(timerTask, TIMER_BEFORE_DELAY, TimeUnit.HOURS.toMillis(hourDelay));
-
-	    LOG.info("Running \"retrieve task\" every {} hour(s)", hourDelay);
+		LOG.info("Running \"retrieve task\" every {} hour(s)", hourDelay);
 	} else {
-	    LOG.info("No given hourDelay : Running a single \"retrieve task\"");
+		retrieveBioSequencesForAllProjects();
+		BioSequenceRetriever.waitExecutorShutdown();
 
-	    retrieveBioSequencesForAllProjects();
-
-	    BioSequenceRetriever.waitExecutorShutdown();
-
-	    System.out.println("\nMain terminated !");
+		System.out.println("\nMain terminated !");
 	}
-
+	
     }
-
     public static void retrieveBioSequencesForAllProjects() {
 	int totalHandledSEDbIdents = 0;
 
@@ -115,15 +111,17 @@ public final class RetrieveService {
 	}
 
 	final long end = System.currentTimeMillis();
-
+	
 	final long duration = end - start;
-
+	
 	LOG.info(
-		"Total retrieveBioSequencesForAllProjects() execution : {} SEDbIdentifiers handled in {} ms",
+		"Total retrieveBioSequencesForAllProjects() execution : {} SEDbIdentifiers handleds in {} ms",
 		totalHandledSEDbIdents, duration);
     }
+   
 
     public static void retrieveBioSequencesForProject(final long projectId) {
+   
 	int totalHandledSEDbIdents = 0;
 
 	final long start = System.currentTimeMillis();
@@ -142,10 +140,16 @@ public final class RetrieveService {
 
 	final long duration = end - start;
 
-	LOG.info("Total retrieveBioSequencesForProject(#{}) execution : {} SEDbIdentifiers handled in {} ms",
+	LOG.info("Total retrieveBioSequencesForProject(#{}) execution : {} SEDbIdentifiers handleds in {} ms",
 		projectId, totalHandledSEDbIdents, duration);
     }
-
+    public static void getsequenceCoverage(final long projectId) {
+    	final long start = System.currentTimeMillis();
+    	ProjectHandler.fillsequenceMatchesByProteinMatch(projectId);  
+    	final long end = System.currentTimeMillis();
+    	final long duration = end - start;
+    	LOG.info("Total sequence coverage for the projectId {} handleds in {} ms",projectId, duration);
+        }
     private static Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> fillSEDbIdentifiersForAllProjects() {
 	Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = null;
 
@@ -169,7 +173,6 @@ public final class RetrieveService {
 		    LOG.error("Error closing UDS Db EntityManager", exClose);
 		}
 	    }
-
 	}
 
 	if ((projectIds == null) || projectIds.isEmpty()) {
@@ -180,14 +183,14 @@ public final class RetrieveService {
 	    for (final Long pId : projectIds) {
 
 		if (pId != null) {
+			
 		    ProjectHandler.fillSEDbIdentifiersBySEDb(pId.longValue(), seDbIdentifiers);
+		    ProjectHandler.fillsequenceMatchesByProteinMatch(pId.longValue());   
 		}
 
 	    }
-
 	}
-
 	return seDbIdentifiers;
     }
-
+    
 }

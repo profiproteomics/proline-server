@@ -71,9 +71,7 @@ public final class DatabaseAccess {
 				udsDbConfigFileName);
 			result.initialize(udsDbConfigFileName);
 		    }
-
 		}
-
 		connectorFactory = result;
 	    } else {
 		result = connectorFactory;

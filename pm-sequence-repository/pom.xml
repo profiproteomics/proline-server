@@ -11,7 +11,7 @@
 
   <groupId>fr.proline</groupId>
   <artifactId>PM-SequenceRepository</artifactId>
-  <version>0.2.0-SNAPSHOT</version>
+  <version>0.2.1-SNAPSHOT</version>
 
   <name>PM-SequenceRepository</name>
 
@@ -145,7 +145,57 @@
           </descriptors>
         </configuration>
       </plugin>
-      
+      <plugin>
+
+                           <groupId>org.apache.maven.plugins</groupId>
+
+                           <artifactId>maven-resources-plugin</artifactId>
+
+                           <configuration>
+
+                                  <encoding>UTF-8</encoding>
+
+                           </configuration>
+
+                           <executions>
+
+                                  <execution>
+
+                                        <id>copy-scripts</id>
+
+                                        <phase>validate</phase>
+
+                                        <goals>
+
+                                               <goal>copy-resources</goal>
+
+                                        </goals>
+
+                                        <configuration>
+
+                                               <encoding>UTF-8</encoding>
+
+                                               <outputDirectory>${project.build.directory}</outputDirectory>
+
+                                               <resources>
+
+                                                      <resource>
+
+                                                            <directory>scripts</directory>
+
+                                                            <filtering>true</filtering>
+
+                                                      </resource>
+
+                                               </resources>
+
+                                        </configuration>
+
+                                  </execution>
+
+                           </executions>
+
+                    </plugin>
 
     </plugins>
   </build>

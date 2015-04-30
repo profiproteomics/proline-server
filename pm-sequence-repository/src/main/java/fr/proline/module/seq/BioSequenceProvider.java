@@ -36,7 +36,7 @@ public final class BioSequenceProvider {
     public static Map<String, List<BioSequenceWrapper>> findBioSequencesBySEDbIdentValues(
 	    final Collection<String> values) {
 	Map<String, List<BioSequenceWrapper>> result = null;
-
+     
 	/* Client / Provider side */
 	final IDatabaseConnector seqDb = DatabaseAccess.getSEQDatabaseConnector(false);
 	final EntityManagerFactory emf = seqDb.getEntityManagerFactory();
@@ -54,12 +54,9 @@ public final class BioSequenceProvider {
 		    LOG.error("Error closing SEQ Db EntityManager", exClose);
 		}
 	    }
-
 	}
-
 	return result;
-    }
-
+}
     public static Map<String, List<BioSequenceWrapper>> findBioSequencesBySEDbIdentValues(
 	    final EntityManager seqEM, final Collection<String> values) {
 	final Map<String, List<BioSequenceWrapper>> result = new HashMap<>();

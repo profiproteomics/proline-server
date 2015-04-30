@@ -129,7 +129,6 @@ public class BioSequenceWrapper implements Serializable {
     public String getSEDbRelease() {
 	return m_seDbRelease;
     }
-
     /**
      * Can be <code>null</code>.
      * 

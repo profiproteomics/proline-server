@@ -35,7 +35,6 @@ public class SEDbIdentifierWrapper {
     public String getValue() {
 	return m_value;
     }
-
     /**
      * 
      * @return can be <code>null</code> .

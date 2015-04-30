@@ -66,12 +66,10 @@ public final class ServiceConfiguration {
 	    if (StringUtils.isEmpty(result)) {
 		LOG.error(NO_PROPERTY_MESSAGE, key);
 	    }
-
 	}
 
 	return result;
     }
-
     public static String[] getLocalFASTAPaths() {
 	String[] paths = null;
 

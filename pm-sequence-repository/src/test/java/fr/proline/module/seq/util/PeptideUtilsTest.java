@@ -12,6 +12,7 @@ public class PeptideUtilsTest {
     public void testMass() {
 	final double mass = PeptideUtils.calculateMolecularWeight(FAKE_SEQUENCE);
 	assertTrue("MolecularWeight", mass > 0.0);
+	
     }
 
     @Test

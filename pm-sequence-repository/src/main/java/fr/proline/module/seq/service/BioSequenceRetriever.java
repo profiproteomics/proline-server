@@ -86,7 +86,6 @@ public final class BioSequenceRetriever {
      */
     public static int retrieveBioSequences(
 	    final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers) {
-
 	if ((seDbIdentifiers == null) || seDbIdentifiers.isEmpty()) {
 	    throw new IllegalArgumentException("Invalid seDbIdentifiers Map");
 	}
@@ -167,7 +166,6 @@ public final class BioSequenceRetriever {
 
 	try {
 	    EXECUTOR.shutdown();
-
 	    result = EXECUTOR.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS);
 	} catch (Exception ex) {
 	    LOG.error("Error shutting-down BioSequenceRetriever EXECUTOR", ex);
