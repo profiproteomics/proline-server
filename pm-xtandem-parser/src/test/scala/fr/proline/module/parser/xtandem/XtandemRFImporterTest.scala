@@ -19,9 +19,8 @@ import java.io.File
 class XtandemRFImporterTest extends AbstractMultipleDBTestCase {
 
   val driverType = DriverType.H2
-  var _xtandemFileName = "--- "
   var parserContext: ProviderDecoratedExecutionContext = null
-  _xtandemFileName = "/xtandemResultFile/output.2014_11_18_11_22_40.t.xml"
+  var _xtandemFileName =  "/xtandemResultFile/output.2014_11_18_11_22_40.t.xml"
 
   @Before
   @throws(classOf[Exception])
@@ -72,7 +71,7 @@ class XtandemRFImporterTest extends AbstractMultipleDBTestCase {
       var identFile: File = new File(this.getClass.getResource(_xtandemFileName).toURI)
 
       val importer = new ResultFileImporter(
-        executionContext,
+        parserContext,
         resultIdentFile = identFile,
         fileType = "xtandem.xml",
         instrumentConfigId = 1,
