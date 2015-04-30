@@ -81,8 +81,12 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
 
     try{
       file = new File(getClass.getResource("/xtandemResultFile/output.2014_11_18_11_22_40.t.xml").toURI)
-    } catch {
-      case e: Throwable => logger.error("Error : Input file error " + e.getMessage())
+    } catch {      
+      case e: Throwable =>{ 
+    	  val msg = "Error : Input file error " + e.getMessage()
+    	  logger.error(msg) 
+    	  fail(msg) //Fail du test si erreur.
+      }
     }
     
     val factory: SAXParserFactory = SAXParserFactory.newInstance()
@@ -114,6 +118,7 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     // Let's test if useful values in xml file are in Xtandem classes
     val resultSet = myXtandemParser.getResultSet(false)
     
+    assertNotNull(resultSet)
     println("resultSet.peptideMatches.length = " + resultSet.peptideMatches.length)  // Number of <domain> markup
 //    println("resultSet.name = " + resultSet.name)
 //    resultSet.getProteins().foreach(protein => {
