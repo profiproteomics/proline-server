@@ -8,9 +8,9 @@
 
 package fr.proline.module.parser.xtandem
 //Proline
-import _root_.fr.proline.core.om.model.msi._
-import _root_.fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import _root_.fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider  //getEnzyme
+import fr.proline.core.om.model.msi._
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider  //getEnzyme
 
 //Parser
 import org.xml.sax._

@@ -9,20 +9,20 @@
 
 package fr.proline.module.parser.xtandem
 //Proline
-import _root_.fr.proline.core.om.model.msi._
-import _root_.fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import _root_.fr.proline.core.om.provider.msi.IPTMProvider
-import _root_.fr.proline.repository.DriverType
-import _root_.fr.proline.core.dal.ContextFactory
-import _root_.fr.proline.context.BasicExecutionContext
-import _root_.fr.proline.core.om.provider.msi.impl.{ ORMResultSetProvider, SQLPTMProvider, SQLResultSetProvider }  // getPTMDefinition
+import fr.proline.core.om.model.msi._
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.provider.msi.IPTMProvider
+import fr.proline.repository.DriverType
+import fr.proline.core.dal.ContextFactory
+import fr.proline.context.BasicExecutionContext
+import fr.proline.core.om.provider.msi.impl.{ ORMResultSetProvider, SQLPTMProvider, SQLResultSetProvider }  // getPTMDefinition
 import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider  //getEnzyme
-import _root_.fr.proline.core.dal.AbstractMultipleDBTestCase
+import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 
 //Test
-//import org.junit.After
 import org.junit.Before
+import org.junit.After
 import org.junit.Test
 import org.junit.Assert._
 
@@ -71,6 +71,12 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     assertNotNull(parserContext)
   }
 
+  
+  @After
+  override def tearDown() {
+    super.tearDown()
+  }
+    
   var file: File = _
     // small : output.2014_11_18_11_22_40.t.xml
     // big : (81 Mo) output.2014_11_18_11_46_01.t.xml
@@ -79,7 +85,7 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
   def preParsingTest {
     // test if structure is wrong or needed markups and labels are missing
 
-    try{
+    try {
       file = new File(getClass.getResource("/xtandemResultFile/output.2014_11_18_11_22_40.t.xml").toURI)
     } catch {      
       case e: Throwable =>{ 
@@ -95,9 +101,9 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     try {
       parseur.parse(file, manager)
     } catch {
-      case e: ParserConfigurationException => logger.error("FileTest ParserConfigurationException : " + e.getMessage())
-      case e: SAXException => logger.error("FileTest SAXException : " + e.getMessage())
-      case e: Throwable => logger.error("FileTest Throwable : " + e.getMessage())
+      case e: ParserConfigurationException => var msg = "FileTest ParserConfigurationException : " + e.getMessage(); logger.error(msg);fail(msg)
+      case e: SAXException => var msg = "FileTest SAXException : " + e.getMessage(); logger.error(msg);fail(msg)
+      case e: Throwable => var msg = "FileTest Throwable : " + e.getMessage(); logger.error(msg);fail(msg)
     }
 
 //    assert(manager.isMarkUpTestOK == true)
@@ -109,7 +115,7 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     var startTime : Long = System.currentTimeMillis()
 //    logger.info("startTime")
 
-    val myXtandemParser = new XtandemParser(new File(getClass.getResource("/xtandemResultFile/output.2015_04_08_13_00_45.t.xml").toURI), parserContext)  // output.2014_11_18_11_46_01.t.xml
+    val myXtandemParser = new XtandemParser(new File(getClass.getResource("/xtandemResultFile/output.2015_04_08_13_00_45.t.xml").toURI), parserContext)  // output.2015_04_08_13_00_45.t
 //    logger.info("endTime")
     var endTime : Long = System.currentTimeMillis()
 
@@ -176,7 +182,7 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     logger.info("End XtandemResultFileProviderTest")
   }
   
-//  @Test
+//  @Test after clear DB
   def twoEnzymesFound {  // we found 'None' enzyme instead 'Trypsin' in DB , that generating failure
     // Find following two enzymes writen in Xtandem input file : Trypsin, Asp-N_ambic
     var trypsinFound : Boolean = false

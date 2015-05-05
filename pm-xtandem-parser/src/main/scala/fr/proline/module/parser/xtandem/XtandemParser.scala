@@ -10,13 +10,13 @@
 package fr.proline.module.parser.xtandem
 
 //Proline
-import _root_.fr.proline.core.om.model.msi._
-import _root_.fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import _root_.fr.proline.core.om.provider.msi.IPTMProvider
-import _root_.fr.proline.repository.DriverType
-import _root_.fr.proline.core.dal.ContextFactory
-import _root_.fr.proline.context.BasicExecutionContext
-import _root_.fr.proline.core.om.provider.msi.impl.{ ORMResultSetProvider, SQLPTMProvider, SQLResultSetProvider }
+import fr.proline.core.om.model.msi._
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.provider.msi.IPTMProvider
+import fr.proline.repository.DriverType
+import fr.proline.core.dal.ContextFactory
+import fr.proline.context.BasicExecutionContext
+import fr.proline.core.om.provider.msi.impl.{ ORMResultSetProvider, SQLPTMProvider, SQLResultSetProvider }
 import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider
 import org.xml.sax._
 import org.xml.sax.helpers._
@@ -26,7 +26,6 @@ import java.io._
 import java.util.Date
 import java.io.ByteArrayOutputStream
 import com.typesafe.scalalogging.slf4j.Logging
-import _root_.fr.proline.core.om.model.msi._
 
 //This class allows to separate file path, name and extension
 class Filename(str: String, sep: Char, ext: Char) {
@@ -116,8 +115,11 @@ class XtandemParser(  val xtandemFile : File,
     var locatedPtmSeqPosition : Int = 0; 
 
     var seqDatabases: ArrayBuffer[SeqDatabase] = new ArrayBuffer[SeqDatabase]
-    var seqDatabasesLocal: ArrayBuffer[SeqDatabase] = new ArrayBuffer[SeqDatabase]
     var seqDatabaseIdsArray: Array[Long] = null
+    var seqDatabaseFileNames : String = ""
+    var seqDatabaseFileNamesPath: String = ""
+    var seqDatabase : SeqDatabase = null
+    
     var proteinMatches: ArrayBuffer[ProteinMatch] = new ArrayBuffer[ProteinMatch]
     var peptides: ArrayBuffer[Peptide] = new ArrayBuffer[Peptide]
     var peptideMatches: ArrayBuffer[PeptideMatch] = new ArrayBuffer[PeptideMatch]
@@ -154,6 +156,8 @@ class XtandemParser(  val xtandemFile : File,
     //GroupParameters variables
     for (gp <- resultBioml.groupParametersList) {
       var residueModificationMassCount = 1
+      var sequenceSourceCount = 1
+      
       //Note variables
       for (note <- gp.noteList) {
         val dbGroupParametersNoteLabel: String = note.label
@@ -315,6 +319,32 @@ class XtandemParser(  val xtandemFile : File,
               usedEnzymes += enzyme.get
             }
           }
+        } else if (dbGroupParametersNoteLabel.equals("list path, sequence source #".concat(sequenceSourceCount.toString()))) {
+
+//          if(sequenceSourceCount == 1 ) {
+            val FPATH: String = dbGroupParametersNoteInfo
+            seqDatabaseFileNamesPath = new Filename(dbGroupParametersNoteInfo, '/', '.').path
+            seqDatabaseFileNames = new Filename(FPATH, '/', '.').filename()
+            
+//            logger.debug("IY - 05/05 - XtandemParser.scala - seqDatabasefileNamesPath = " + seqDatabaseFileNamesPath)
+//            logger.debug("IY - 05/05 - XtandemParser.scala - seqDatabaseFileNames = " + seqDatabaseFileNames)
+          
+          seqDatabase = new SeqDatabase(
+            id = SeqDatabase.generateNewId(),
+            name = seqDatabaseFileNames, 
+            filePath = seqDatabaseFileNamesPath,
+            sequencesCount = -1, 
+            releaseDate = new Date())
+
+          seqDatabases.append(seqDatabase)
+
+          seqDatabaseIdsArray = new Array[Long](seqDatabases.size)
+          for (i <- 0 until seqDatabases.size) {
+            seqDatabaseIdsArray(i) = seqDatabases(i).id
+//            logger.debug("IY - XtandemParser.scala - seqDatabaseIdsArray(" + i + " ) = " + seqDatabaseIdsArray(i))
+          }
+          
+          sequenceSourceCount += 1
         }
       }
     } //End "for groupParameters gp" loop
@@ -348,7 +378,7 @@ class XtandemParser(  val xtandemFile : File,
       path = peaklistFilePathNameExt.path,
       rawFileName = peaklistFilePathNameExt.filename,
       msLevel = msLevel)
-
+    
     //GroupModel variables
     for (gm <- resultBioml.groupModelList) {
       val dbGroupModelId: Int = gm.id
@@ -438,28 +468,6 @@ class XtandemParser(  val xtandemFile : File,
 
           //FileMarkup variables
           val dbProteinFileMarkupURL: String = dbProteinFileMarkup.URL
-
-          val fileNameToParse = new Filename(dbProteinFileMarkupURL, '/', '.')
-
-          val seqDatabase = new SeqDatabase(
-            id = SeqDatabase.generateNewId(),
-            name = fileNameToParse.filename(),
-            filePath = fileNameToParse.path(),
-            sequencesCount = -1, 
-            releaseDate = new Date())
-
-          // Avoid redundancies by testing if fasta file name already exist
-          if (dbProteinFileMarkupURLList.contains(dbProteinFileMarkupURL) == false && seqDatabases.length < 0) {
-            dbProteinFileMarkupURLList.append(dbProteinFileMarkupURL)
-            seqDatabases.append(seqDatabase)
-          }
-          seqDatabasesLocal.append(seqDatabase)
-
-          seqDatabaseIdsArray = new Array[Long](seqDatabasesLocal.size)
-          for (i <- 0 until seqDatabasesLocal.size) {
-            seqDatabaseIdsArray(i) = seqDatabasesLocal(i).id
-          }
-          seqDatabasesLocal.clear
 
           proteinMatches += new ProteinMatch(
             accession = dbProteinLabel,
@@ -583,7 +591,9 @@ class XtandemParser(  val xtandemFile : File,
         }
       } // end of GroupSupport loop
     } //End "for groupModel gm" loop
-//logger.debug("IY - XtandemParser.scala - peptideMatches = " + peptideMatches )
+    
+
+    //logger.debug("IY - XtandemParser.scala - peptideMatches = " + peptideMatches )
     val searchSettings = new SearchSettings(
       id = SearchSettings.generateNewId(),
       softwareName = "X!Tandem",

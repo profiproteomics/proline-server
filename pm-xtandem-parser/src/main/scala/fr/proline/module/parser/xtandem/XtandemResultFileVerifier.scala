@@ -16,9 +16,9 @@ import org.xml.sax._
 import org.xml.sax.helpers._
 import javax.xml.parsers._
 
-import _root_.fr.proline.core.om.model.msi.PtmDefinition
-import _root_.fr.proline.core.om.model.msi.Enzyme
-import _root_.fr.proline.core.om.provider.msi.IResultFileVerifier
+import fr.proline.core.om.model.msi.PtmDefinition
+import fr.proline.core.om.model.msi.Enzyme
+import fr.proline.core.om.provider.msi.IResultFileVerifier
 import com.typesafe.scalalogging.slf4j.Logging
 
 class XtandemResultFileVerifier extends IResultFileVerifier with Logging {

@@ -60,7 +60,7 @@ class XtandemRFImporterTest extends AbstractMultipleDBTestCase {
   }
 
   @Test
-  def runRFImpoter() = {
+  def runRFImporter() = {
     val (executionContext, rsProvider) = buildJPAContext
 
     assertNotNull(executionContext)
