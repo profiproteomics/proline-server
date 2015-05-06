@@ -47,12 +47,12 @@ object ExportConfigSheet {
 	}
 	
 	// get all for proteinSet sheet
-	def getAllProteinSetSheet() :ExportConfigSheet={
+	def getAllProteinSetSheet(fromXIC: Boolean, fromSC: Boolean ) :ExportConfigSheet={
 	  val sheet: ExportConfigSheet = new ExportConfigSheet(
 	      ExportConfigConstant.SHEET_PROTEIN_SETS, 
 	      "protein sets", 
 	      ExportConfigConstant.PRESENTATION_SHEET_COLUMNS, 
-	      ExportConfigField.getAllProteinSetsFieldsArray(true)
+	      ExportConfigField.getAllProteinSetsFieldsArray(true, fromXIC, fromSC)
 	  )
 	  sheet.defaultDisplayed = true
 	  return sheet

@@ -85,6 +85,13 @@ object ExportConfigConstant {
 	  final val FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDES : String  = "protein_sets_nb_specific_peptides"
 	  final val FIELD_PROTEIN_SETS_NB_PEPTIDE_MATCHES : String  = "protein_sets_nb_peptide_matches"
 	  final val FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDE_MATCHES : String  = "protein_sets_nb_specific_peptide_matches"
+	  final val FIELD_PROTEIN_SETS_SELECTION_LEVEL: String  = "protein_sets_selection_level"
+	  
+	  final val FIELD_PROTEIN_SETS_QUANTI_STATUS: String  = "protein_sets_status" //incremental
+	  final val FIELD_PROTEIN_SETS_QUANTI_PEPTIDE_NUMBER: String  = "protein_sets_qc_peptide_number" //incremental
+	  final val FIELD_PROTEIN_SETS_QUANTI_RAW_ABUNDANCE: String = "raw_abundance"  //incremental // SC Specific 
+	  final val FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE: String = "abundance" // incremental // SC Weighted
+	  final val FIELD_PROTEIN_SETS_QUANTI_PSM_COUNT: String = "psm_count" // incremental  // SC Basic
 	    
 	  
 	 // best psm sheet

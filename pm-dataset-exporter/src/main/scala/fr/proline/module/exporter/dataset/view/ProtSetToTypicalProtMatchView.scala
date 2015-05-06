@@ -1,4 +1,4 @@
-package fr.proline.module.exporter.msi.view
+package fr.proline.module.exporter.dataset.view
 
 
 import fr.proline.core.om.model.msi._
@@ -9,15 +9,66 @@ import fr.proline.module.exporter.commons.config.view.SheetViewFieldsConfig
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
 import java.text.DecimalFormat
 import scala.collection.immutable.ListMap
+import fr.proline.core.om.model.msq.MasterQuantProteinSet
+import scala.collection.mutable.ArrayBuffer
+import com.typesafe.scalalogging.slf4j.Logging
+import java.util.NoSuchElementException
 
-abstract class AbstractProtSetToTypicalProtMatchConfigView  extends IFixedDatasetView {
+
+abstract class AbstractProtSetToTypicalProtMatchView  extends IFixedDatasetView with Logging{
   val identDS: IdentDataSet
   val sheetConfig : ExportConfigSheet
   val dateFormat : SimpleDateFormat
   val decimalFormat: DecimalFormat
   val exportAllProteinSet: Boolean
+  
+  val isQuanti: Boolean = identDS.isInstanceOf[QuantiDataSet]
+  val quantiDS: QuantiDataSet = if (isQuanti) identDS.asInstanceOf[QuantiDataSet] else null
    
-  val fields = new SheetViewFieldsConfig(sheetConfig)
+   var listFields: ArrayBuffer[String] = new ArrayBuffer()
+   for ( f <- sheetConfig.fields ) {
+     f.id match{
+       case ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_STATUS => {
+          if (isQuanti) {
+            quantiDS.qcIds.foreach(qcId => {
+          	listFields += f.title+"_"+quantiDS.nameByQchId(qcId)
+          })
+          }
+        }
+       case ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_PEPTIDE_NUMBER => {
+          if (isQuanti) {
+            quantiDS.qcIds.foreach(qcId => {
+          	listFields += f.title+"_"+quantiDS.nameByQchId(qcId)
+          })
+          }
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE => {
+          if (isQuanti) {
+            quantiDS.qcIds.foreach(qcId => {
+          	listFields += f.title+"_"+quantiDS.nameByQchId(qcId)
+          })
+          }
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_RAW_ABUNDANCE => {
+          if (isQuanti) {
+          quantiDS.qcIds.foreach(qcId => {
+          	listFields += f.title+"_"+quantiDS.nameByQchId(qcId)
+          })
+          }
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_PSM_COUNT => {
+          if (isQuanti) {
+          quantiDS.qcIds.foreach(qcId => {
+          	listFields += f.title+"_"+quantiDS.nameByQchId(qcId)
+          })
+          }
+        }
+        case other => {
+    	 listFields += f.title
+        }
+     }
+   }
+  val fields = new SheetViewFieldsConfig(listFields.toArray)
     
     def buildRecord( buildingContext: IRecordBuildingContext ): Map[String,Any] = {
     
@@ -30,11 +81,13 @@ abstract class AbstractProtSetToTypicalProtMatchConfigView  extends IFixedDatase
     
     val isProtSetCtx: Boolean =  (buildingContext.isInstanceOf[ProtMatchBuildingContext]) 
     val isPepSetCtx: Boolean = (buildingContext.isInstanceOf[PepMatchBuildingContext])
+    val isProtSetQuantiCtx: Boolean = (buildingContext.isInstanceOf[ProtMatchQuantiBuildingContext]) 
     val isProtSetCtxDefinedForPep: Boolean = (isPepSetCtx && buildingContext.asInstanceOf[PepMatchBuildingContext].protMatchBuildingCtx.isDefined)
     
     
-    val protSetBuildingCtxOpt: ProtMatchBuildingContext = if (isProtSetCtx) buildingContext.asInstanceOf[ProtMatchBuildingContext] else (if (isProtSetCtxDefinedForPep)buildingContext.asInstanceOf[PepMatchBuildingContext].protMatchBuildingCtx.get else null)
+    val protSetBuildingCtxOpt: ProtMatchBuildingContext = if (isProtSetCtx) buildingContext.asInstanceOf[ProtMatchBuildingContext] else  (if (isProtSetCtxDefinedForPep)buildingContext.asInstanceOf[PepMatchBuildingContext].protMatchBuildingCtx.get else null)
     val allPepMatchesBuildingCtx: PepMatchBuildingContext = if (isProtSetCtx) null else buildingContext.asInstanceOf[PepMatchBuildingContext]
+    val protSetQuantiBuildingCtx: ProtMatchQuantiBuildingContext = if(isProtSetQuantiCtx) buildingContext.asInstanceOf[ProtMatchQuantiBuildingContext] else null
     
     var protSet :ProteinSet = null
     var protMatch: ProteinMatch = null
@@ -76,9 +129,9 @@ abstract class AbstractProtSetToTypicalProtMatchConfigView  extends IFixedDatase
       } else
         0
     }
+   
     
     var exportMap:ListMap[String,Any] = ListMap()
-    
     val listFields :Array[ExportConfigField] = sheetConfig.fields
     for ( f <- listFields ) {
       f.id match{
@@ -96,6 +149,9 @@ abstract class AbstractProtSetToTypicalProtMatchConfigView  extends IFixedDatase
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_IS_VALIDATED => {
           	exportMap += ( fields.addField(f.title) -> protSet.isValidated.toString)
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_SELECTION_LEVEL => {
+          	exportMap += ( fields.addField(f.title) -> protSet.selectionLevel)
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SAMESET_PROTEIN_MATCHES => {
           	exportMap += ( fields.addField(f.title) -> protSet.getSameSetProteinMatchIds.length)
@@ -205,6 +261,78 @@ abstract class AbstractProtSetToTypicalProtMatchConfigView  extends IFixedDatase
         case ExportConfigConstant.FIELD_PSM_RESIDUE_AFTER => {
           	exportMap += ( fields.addField(f.title) -> resAfter)
         }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_STATUS => {
+          	protSetQuantiBuildingCtx.qcIds.foreach(qcId => {
+          	  var pmId: Long = -1
+          	  //Get QuantProteinSet for current ProteinSet in current QuantChannel
+          		val protQuant = protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap.get(qcId)
+          	    if (protQuant.isDefined) {
+          	    	if (protQuant.get.proteinSetId.isDefined) {
+          	    	  pmId = protQuant.get.proteinMatchId.getOrElse(-1)
+          	    	}
+          	  }
+          	  var qcStatus :String= if (quantiDS.protMatchStatusByIdPepMatchByQCId.contains(qcId)){
+          	    val protMatchStatusById: Map[Long, String] = quantiDS.protMatchStatusByIdPepMatchByQCId.get(qcId).get
+          	    if (protMatchStatusById.contains(pmId)){
+          	      protMatchStatusById.get(pmId).get
+          	    }else{""}
+          	  }else{
+          	    ""
+          	  }
+            exportMap += (fields.addField(f.title+"_"+protSetQuantiBuildingCtx.nameByQchId(qcId)) -> qcStatus)
+          })
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_PEPTIDE_NUMBER => {
+          	protSetQuantiBuildingCtx.qcIds.foreach(qcId => {
+          	var pmId: Long = -1
+          	  //Get QuantProteinSet for current ProteinSet in current QuantChannel
+          		val protQuant = protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap.get(qcId)
+          	    if (protQuant.isDefined) {
+          	    	if (protQuant.get.proteinSetId.isDefined) {
+          	    	  pmId = protQuant.get.proteinMatchId.getOrElse(-1)
+          	    	}
+          	  }
+            var qcPeptideNumber :Int= if (quantiDS.protMatchPeptideNumberByPepMatchIdByQCId.contains(qcId)){
+          	    val protMatchPeptideNumberByPepMatchId: Map[Long, Int] = quantiDS.protMatchPeptideNumberByPepMatchIdByQCId.get(qcId).get
+          	    if (protMatchPeptideNumberByPepMatchId.contains(pmId)){
+          	      protMatchPeptideNumberByPepMatchId.get(pmId).get
+          	    }else{0}
+          	  }else{
+          	    0
+          	  }
+            exportMap += (fields.addField(f.title+"_"+protSetQuantiBuildingCtx.nameByQchId(qcId)) -> qcPeptideNumber)
+          })
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_RAW_ABUNDANCE => {
+          protSetQuantiBuildingCtx.qcIds.foreach(qcId => {
+            var qcRawAbun = if (protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap.contains(qcId)) {
+              protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap(qcId).rawAbundance
+            } else {
+              ""
+            }
+            exportMap += (fields.addField(f.title+"_"+protSetQuantiBuildingCtx.nameByQchId(qcId)) -> qcRawAbun)
+          })
+        }
+        case ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE => {
+          protSetQuantiBuildingCtx.qcIds.foreach(qcId => {
+            var qcAbun = if (protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap.contains(qcId)) {
+              protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap(qcId).abundance
+            } else {
+              ""
+            }
+            exportMap += (fields.addField(f.title+"_"+protSetQuantiBuildingCtx.nameByQchId(qcId)) -> qcAbun)
+          })
+        }
+         case ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_PSM_COUNT => {
+          protSetQuantiBuildingCtx.qcIds.foreach(qcId => {
+            var qcPSMCount = if (protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap.contains(qcId)) {
+              protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap(qcId).peptideMatchesCount
+            } else {
+              ""
+            }
+            exportMap += (fields.addField(f.title+"_"+protSetQuantiBuildingCtx.nameByQchId(qcId)) -> qcPSMCount)
+          })
+        }
         case other => {
           // should not happen
         }
@@ -214,6 +342,7 @@ abstract class AbstractProtSetToTypicalProtMatchConfigView  extends IFixedDatase
     //exportMap.map( r => r._1.toString -> r._2)
     exportMap
   }
+  
   
   def onEachRecord( recordFormatter: Map[String,Any] => Unit ) {
     
@@ -231,16 +360,40 @@ abstract class AbstractProtSetToTypicalProtMatchConfigView  extends IFixedDatase
       val typicalProtMatchId = protSet.getTypicalProteinMatchId
       
       val typicalProtMatch = if( typicalProtMatchId != 0 ) { 
-        protMatchById(typicalProtMatchId)
+        try{
+          protMatchById(typicalProtMatchId)
+        }catch{
+          case e: NoSuchElementException => {
+          // "old"SC, proteinSetSC.typicalProteinMatchId refers to identRS.proteinMatch, instead of quantiRS.proteinMatch cf Issue #12421  
+            logger.error("Exception while retrieving typicalProteinMatchId on a Spectral Count. Spectral Count must be relaunched before export.")
+            throw new Exception("Exception while retrieving typicalProteinMatchId on a Spectral Count. Spectral Count must be relaunched to be exported.")
+          }
+        }
       } else {
         protMatchById( protSet.getSameSetProteinMatchIds.head )
       }
       
-      val buildingContext = new ProtMatchBuildingContext(
+      var buildingContext = new ProtMatchBuildingContext(
         protSet,
         protSet.peptideSet,
         typicalProtMatch
       )
+      if (isQuanti){
+        var masterQuantProteinSet : MasterQuantProteinSet = null
+        for( mqProtSet <- quantiDS.quantRSM.masterQuantProteinSets ) {
+          if (mqProtSet.proteinSet.id == protSet.id) {
+            masterQuantProteinSet  =mqProtSet
+          }
+        }
+        buildingContext = new ProtMatchQuantiBuildingContext(
+        protSet,
+        protSet.peptideSet,
+        typicalProtMatch, 
+        masterQuantProteinSet, 
+        quantiDS.qcIds, 
+        quantiDS.nameByQchId
+      )
+      }
       
       this.formatRecord( buildingContext, recordFormatter )
       }
@@ -250,7 +403,8 @@ abstract class AbstractProtSetToTypicalProtMatchConfigView  extends IFixedDatase
 
 
 
-class ProtSetToTypicalProtMatchConfigView( val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val exportAllProteinSet :Boolean  ) extends AbstractProtSetToTypicalProtMatchConfigView {
+
+class ProtSetToTypicalProtMatchView ( val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val exportAllProteinSet :Boolean  ) extends AbstractProtSetToTypicalProtMatchView {
   var viewName = "prot_set_to_typical_prot_match"
   
 }

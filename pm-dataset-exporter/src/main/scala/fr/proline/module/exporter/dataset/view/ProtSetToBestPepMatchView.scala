@@ -1,4 +1,5 @@
-package fr.proline.module.exporter.msi.view
+package fr.proline.module.exporter.dataset.view
+
 
 
 import java.text.DecimalFormat
@@ -11,7 +12,8 @@ import fr.proline.module.exporter.commons.config.ExportConfigField
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
 import fr.proline.module.exporter.commons.config.ExportConfigConstant
 
-class ProtSetToBestPepMatchConfigView ( val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val exportAllProteinSet: Boolean  )  extends AbstractProtSetToTypicalProtMatchConfigView {
+
+class ProtSetToBestPepMatchView ( val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val exportAllProteinSet: Boolean  )  extends AbstractProtSetToTypicalProtMatchView {
    var viewName = "prot_set_to_best_pep_match"
      
     // def onEachRecord is inherited from AbstractProtSetToTypicalProtMatchView

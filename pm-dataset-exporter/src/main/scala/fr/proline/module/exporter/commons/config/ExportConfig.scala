@@ -48,11 +48,11 @@ object ExportConfig{
     // get all config for identification export
 	def getAllForIdentificationExport() :ExportConfig={
 	   var informationSheet : ExportConfigSheet =ExportConfigSheet.getAllInformationSheet()
-	  var importSheet : ExportConfigSheet =ExportConfigSheet.getAllImportSheet
-	  var proteinSetSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinSetSheet
-	  var bestPSMSheet : ExportConfigSheet =ExportConfigSheet.getAllBestPSMSheet
-	  var proteinMatchSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinMatchSheet
-	  var allPSMSheet : ExportConfigSheet = ExportConfigSheet.getAllAllPSMSheet
+	  var importSheet : ExportConfigSheet =ExportConfigSheet.getAllImportSheet()
+	  var proteinSetSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinSetSheet(false, false)
+	  var bestPSMSheet : ExportConfigSheet =ExportConfigSheet.getAllBestPSMSheet()
+	  var proteinMatchSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinMatchSheet()
+	  var allPSMSheet : ExportConfigSheet = ExportConfigSheet.getAllAllPSMSheet()
 	  var statSheet : ExportConfigSheet =ExportConfigSheet.getAllStatSheet()
 	  var sheetsList: Array[ExportConfigSheet] =  Array(informationSheet, importSheet, proteinSetSheet, bestPSMSheet, proteinMatchSheet, allPSMSheet, statSheet)
 	  var conf :ExportConfig = new  ExportConfig(
@@ -71,12 +71,12 @@ object ExportConfig{
 	// get all config for SC export
 	def getAllForSCExport() :ExportConfig={
 	  var informationSheet : ExportConfigSheet =ExportConfigSheet.getAllInformationSheet()
-	  var importSheet : ExportConfigSheet =ExportConfigSheet.getAllImportSheet
-	  var proteinSetSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinSetSheet
-	  var bestPSMSheet : ExportConfigSheet =ExportConfigSheet.getAllBestPSMSheet
+	  var importSheet : ExportConfigSheet =ExportConfigSheet.getAllImportSheet()
+	  var proteinSetSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinSetSheet(false, true)
+	  var bestPSMSheet : ExportConfigSheet =ExportConfigSheet.getAllBestPSMSheet()
 	  bestPSMSheet.defaultDisplayed = false
-	  var proteinMatchSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinMatchSheet
-	  var allPSMSheet : ExportConfigSheet = ExportConfigSheet.getAllAllPSMSheet
+	  var proteinMatchSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinMatchSheet()
+	  var allPSMSheet : ExportConfigSheet = ExportConfigSheet.getAllAllPSMSheet()
 	  allPSMSheet.defaultDisplayed = false
 	  var statSheet : ExportConfigSheet =ExportConfigSheet.getAllStatSheet()
 	  statSheet.defaultDisplayed = false
@@ -96,7 +96,9 @@ object ExportConfig{
 	// get all config for XIC export
 	def getAllForXICExport() :ExportConfig={
 	   var informationSheet : ExportConfigSheet =ExportConfigSheet.getAllInformationSheet()
-	  var sheetsList: Array[ExportConfigSheet] =  Array(informationSheet)
+	   var importSheet : ExportConfigSheet =ExportConfigSheet.getAllImportSheet()
+	   var proteinSetSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinSetSheet(true, false)
+	  var sheetsList: Array[ExportConfigSheet] =  Array(informationSheet, importSheet, proteinSetSheet)
 	  var conf :ExportConfig = new  ExportConfig(
 	      ExportConfigConstant.FORMAT_XLSX, 
 	      ExportConfigConstant.DECIMAL_SEPARATOR_DOT,  

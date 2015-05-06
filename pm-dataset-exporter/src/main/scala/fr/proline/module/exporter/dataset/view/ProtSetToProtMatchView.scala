@@ -1,4 +1,5 @@
-package fr.proline.module.exporter.msi.view
+package fr.proline.module.exporter.dataset.view
+
 
 import java.text.DecimalFormat
 import fr.proline.module.exporter.commons.config.view.SheetViewFieldsConfig
@@ -10,7 +11,7 @@ import fr.proline.module.exporter.commons.config.ExportConfigField
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
 import fr.proline.module.exporter.commons.config.ExportConfigConstant
 
-class ProtSetToProtMatchConfigView ( val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val exportAllProteinSet: Boolean  ) extends AbstractProtSetToTypicalProtMatchConfigView {
+class ProtSetToProtMatchView ( val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val exportAllProteinSet: Boolean  ) extends AbstractProtSetToTypicalProtMatchView {
    var viewName = "prot_set_to_prot_match"
    
   override  def onEachRecord( recordFormatter: Map[String,Any] => Unit ) {
@@ -27,7 +28,7 @@ class ProtSetToProtMatchConfigView ( val identDS: IdentDataSet, val sheetConfig 
       // Typical Protein Match is put first
       val typicalProteinMatchId = protSet.getTypicalProteinMatchId
       val typicalProtMatch = protMatchById.get(typicalProteinMatchId).get
-      this.formatRecord(ProtMatchBuildingContext(protSet, protSet.peptideSet, typicalProtMatch ), recordFormatter)
+      this.formatRecord(new ProtMatchBuildingContext(protSet, protSet.peptideSet, typicalProtMatch ), recordFormatter)
 
             
       for (       
@@ -37,7 +38,7 @@ class ProtSetToProtMatchConfigView ( val identDS: IdentDataSet, val sheetConfig 
         protMatch <- protMatchById.get(protMatchId)
       ) {
     	  if(protMatchId !=typicalProteinMatchId )
-        	this.formatRecord(ProtMatchBuildingContext(protSet, protSet.peptideSet, protMatch ), recordFormatter)
+        	this.formatRecord(new ProtMatchBuildingContext(protSet, protSet.peptideSet, protMatch ), recordFormatter)
       }
 
       
@@ -52,7 +53,7 @@ class ProtSetToProtMatchConfigView ( val identDS: IdentDataSet, val sheetConfig 
         // Retrieve the protein match
         protMatch <- protMatchById.get(protMatchId)
       ) {
-         this.formatRecord(ProtMatchBuildingContext(protSet, peptideSet, protMatch ), recordFormatter)
+         this.formatRecord(new ProtMatchBuildingContext(protSet, peptideSet, protMatch ), recordFormatter)
       }
       }
     }

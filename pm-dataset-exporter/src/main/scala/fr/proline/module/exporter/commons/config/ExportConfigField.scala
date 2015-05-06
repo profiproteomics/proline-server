@@ -2,6 +2,7 @@ package fr.proline.module.exporter.commons.config
 
 
 import scala.Array.canBuildFrom
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * represents the configuration for a field in the customizable export
@@ -69,12 +70,13 @@ object ExportConfigField {
 	}
 	    
 	// get all fields for protein sets sheet
-	def getAllProteinSetsFieldsArray(fromProtein: Boolean) :Array[ExportConfigField]={
+	def getAllProteinSetsFieldsArray(fromProtein: Boolean, fromXIC: Boolean, fromSC: Boolean) :Array[ExportConfigField]={
 	  val fieldId : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_ID, "protein_set_id")
 	  val fieldAcc : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_ACCESSION, "accession")
 	  val fieldDesc : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_DESCRIPTION, "description")
 	  val fieldScore : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_SCORE, "score")
 	  val fieldIsVal : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_IS_VALIDATED, "is_validated")
+	  val fieldSelLevel : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_SELECTION_LEVEL, "selection_level")
 	  val fieldNbSameset : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SAMESET_PROTEIN_MATCHES, "#sameset_protein_matches")
 	  val fieldNbSubset : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SUBSET_PROTEIN_MATCHES, "#subset_protein_matches")
 	  val fieldCoverage : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_COVERAGE, "coverage")
@@ -86,6 +88,7 @@ object ExportConfigField {
 	  val fieldNbPepMatch : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_PEPTIDE_MATCHES, "#peptide_matches")
 	  val fieldNbSpecPepMatch : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDE_MATCHES, "#specific_peptide_matches")
 	  
+	  fieldSelLevel.defaultDisplayed = fromXIC || fromSC
 	  fieldNbSameset.defaultDisplayed = fromProtein
 	  fieldNbSubset.defaultDisplayed = fromProtein
 	  fieldCoverage.defaultDisplayed = fromProtein
@@ -98,12 +101,27 @@ object ExportConfigField {
 	  fieldNbSpecPepMatch.defaultDisplayed = fromProtein
 	  
 	    
-	  var  listFields  : Array[ExportConfigField]= Array(
-	  fieldId, fieldAcc, fieldDesc, fieldScore, fieldIsVal,
+	  var  listFields  : ArrayBuffer[ExportConfigField]= ArrayBuffer(
+	  fieldId, fieldAcc, fieldDesc, fieldScore, fieldIsVal,fieldSelLevel,
 	  fieldNbSameset, fieldNbSubset, fieldCoverage, fieldMw, fieldNbSeq, fieldNbSpecSeq, fieldNbPep, fieldNbSpecPep, fieldNbPepMatch, fieldNbSpecPepMatch
 	  )
 	  
-	  return listFields
+	  if (fromXIC || fromSC) {
+	    val fieldRawAbundance : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_RAW_ABUNDANCE, if (fromXIC) "raw_abundance" else "Specific SC") 
+	    val fieldAbundance : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE, if (fromXIC) "abundance" else "Weighted SC") 
+	    val fieldPsmCount : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_PSM_COUNT, if (fromXIC) "psm_count" else "Basic SC") 
+	    val fieldStatus : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_STATUS, "status")
+	    val fieldPeptideNumber : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_PEPTIDE_NUMBER, "peptide_number")
+	    fieldStatus.defaultDisplayed = fromSC
+	    fieldPeptideNumber.defaultDisplayed = fromSC
+	    listFields += fieldStatus
+	    listFields += fieldPeptideNumber
+	    listFields += fieldPsmCount
+	    listFields += fieldRawAbundance
+	    listFields += fieldAbundance
+	  }
+	  
+	  return listFields.toArray
 	}
 	
 	// get all fields for protein match sheet
@@ -156,7 +174,7 @@ object ExportConfigField {
 	  new ExportConfigField(ExportConfigConstant.FIELD_PSM_RESIDUE_BEFORE, "residue_before"),
 	  new ExportConfigField(ExportConfigConstant.FIELD_PSM_RESIDUE_AFTER, "residue_after")
 	  )
-	  listFields = listFields ++  getAllProteinSetsFieldsArray(false)
+	  listFields = listFields ++  getAllProteinSetsFieldsArray(false, false, false)
 	  return listFields
 	}
         

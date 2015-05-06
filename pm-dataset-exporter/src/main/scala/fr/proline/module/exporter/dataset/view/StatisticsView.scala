@@ -1,4 +1,5 @@
-package fr.proline.module.exporter.msi.view
+package fr.proline.module.exporter.dataset.view
+
 
 import fr.proline.module.exporter.commons.config.view.SheetViewFieldsConfig
 import java.text.SimpleDateFormat
@@ -12,9 +13,14 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.immutable.ListMap
 
-class StatisticsConfigView ( val rsm: ResultSummary , val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat) extends IFormLikeView {
+
+class StatisticsView ( val rsm: ResultSummary , val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat) extends IFormLikeView {
   var viewName = "stats"
-  val fields = new SheetViewFieldsConfig(sheetConfig)
+   var listFields: ArrayBuffer[String] = new ArrayBuffer()
+   for ( f <- sheetConfig.fields ) {
+    	 listFields += f.title
+   }
+  val fields = new SheetViewFieldsConfig(listFields.toArray)
   
   def getFieldValueMap() = _fieldValueMap
   def getFieldsNames() = _fieldValueMap.keys.toArray  

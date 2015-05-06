@@ -1,4 +1,5 @@
-package fr.proline.module.exporter.msi.view
+package fr.proline.module.exporter.dataset.view
+
 
 import fr.proline.module.exporter.api.view._
 import fr.proline.core.om.model.msi._
@@ -9,13 +10,20 @@ import fr.proline.module.exporter.commons.config.ExportConfigConstant
 import java.text.SimpleDateFormat
 import java.text.DecimalFormat
 import scala.collection.immutable.ListMap
+import scala.collection.mutable.ArrayBuffer
 
 
-class MsiSearchConfigExtendedView( val identDS: IdentDataSet , val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat) extends IFixedDatasetView {
+
+
+class MsiSearchExtendedView ( val identDS: IdentDataSet , val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat) extends IFixedDatasetView {
   
   val rsm = identDS.resultSummary
   var viewName = "msi_search"
-  val fields = new SheetViewFieldsConfig(sheetConfig)
+   var listFields: ArrayBuffer[String] = new ArrayBuffer()
+   for ( f <- sheetConfig.fields ) {
+    	 listFields += f.title
+   }
+  val fields = new SheetViewFieldsConfig(listFields.toArray)
   val childResultSets = identDS.childsResultSets
   
   case class MyBuildingContext( msiSearch: MSISearch ) extends IRecordBuildingContext

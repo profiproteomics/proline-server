@@ -32,7 +32,7 @@ object BuildResultSummaryViewSet extends Logging {
   def apply(ds: IdentDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate, exportConfig :ExportConfig): ResultSummaryViewSet = {
 
     val templatedViews = viewSetTemplate.templatedViewTypes.map { templatedViewType =>
-      val viewWithTpl = ViewWithTemplate(BuildResultSummaryView(ds, templatedViewType.viewType, exportConfig), templatedViewType.template)
+      val viewWithTpl = ViewWithTemplate(BuildResultSummaryView(ds, templatedViewType.viewType), templatedViewType.template)
       if (templatedViewType.viewName.isDefined) viewWithTpl.dataView.viewName = templatedViewType.viewName.get
 
       viewWithTpl
@@ -56,26 +56,6 @@ object BuildResultSummaryViewSet extends Logging {
   
   
   
-  // build template from the  config
-  def apply(
-    executionContext: IExecutionContext,
-    projectId: Long,
-    rsmId: Long,
-    viewSetName: String,
-    exportConfigStr: String
-  ): ResultSummaryViewSet = {
-
-    val exportConfig : ExportConfig = ExportConfigManager.readConfig(exportConfigStr)
-    val loadFullResultSet:Boolean = exportConfig.dataExport.allProteinSet
-    val loadSubsets :Boolean = true // TODO moved in the config export param?
-    
-    // Build the template
-    var viewSetTemplate: IViewSetTemplate = if (exportConfig.format == ExportConfigConstant.FORMAT_XLSX) new ProlineConfigViewSetTemplateAsXLSX(exportConfig) else new ProlineConfigViewSetTemplateAsTSV(exportConfig)
-    
-    return apply(executionContext, projectId, rsmId,loadSubsets, loadFullResultSet, viewSetName, viewSetTemplate, exportConfig )
-  }
-  
-
   def apply(
     executionContext: IExecutionContext,
     projectId: Long,

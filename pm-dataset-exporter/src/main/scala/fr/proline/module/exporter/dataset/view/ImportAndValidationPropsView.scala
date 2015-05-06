@@ -1,4 +1,4 @@
-package fr.proline.module.exporter.msi.view
+package fr.proline.module.exporter.dataset.view
 
 
 import fr.proline.core.om.model.msi._
@@ -21,7 +21,46 @@ class ImportAndValidationPropsView (val identDS: IdentDataSet, val sheetConfig :
   
   var viewName = "import and validation"
   val childResultSummarys = identDS.childsResultSummarys
-  val fields = new SheetViewFieldsConfig(sheetConfig)
+  var listFields: ArrayBuffer[String] = new ArrayBuffer()
+  var nbFiltersPsm: Int = 0
+  var nbFiltersProt: Int = 0
+  if (identDS.resultSummary.properties.isDefined) {
+      if (identDS.resultSummary.properties.get.getValidationProperties.isDefined) {
+        val rsmValProp = identDS.resultSummary.properties.get.getValidationProperties.get
+  
+        //Add PSM Filters
+        if (rsmValProp.getParams.getPeptideFilters.isDefined) {
+          nbFiltersPsm = rsmValProp.getParams.getPeptideFilters.get.size
+        }
+        if (rsmValProp.getParams.getProteinFilters.isDefined) {
+           nbFiltersProt = rsmValProp.getParams.getProteinFilters.size
+        }
+      }
+  }
+  logger.debug("ImportAndValidationPropsView with "+nbFiltersPsm+", "+nbFiltersProt)
+  for ( f <- sheetConfig.fields ) {
+     f.id match{
+        case ExportConfigConstant.FIELD_IMPORT_PSM_FILTER => {
+          if (nbFiltersPsm > 0) {
+             for(i <- 0 to (nbFiltersPsm - 1)){
+        	  listFields += f.title+" "+(i +1)
+            }
+          }
+        }
+        case ExportConfigConstant.FIELD_IMPORT_PROT_FILTER => {
+          if (nbFiltersProt > 0) {
+             for(i <- 0 to (nbFiltersProt - 1)){
+        	  listFields += f.title+" "+i 
+             }
+          }
+        }
+        case other => {
+          logger.debug("build Fields for import "+f.title)
+    	 listFields += f.title
+        }
+     }
+   }
+  val fields = new SheetViewFieldsConfig(listFields.toArray)
   
   case class MyBuildingContext(rsm : ResultSummary ) extends IRecordBuildingContext
    
@@ -190,8 +229,9 @@ class ImportAndValidationPropsView (val identDS: IdentDataSet, val sheetConfig :
         }
         case ExportConfigConstant.FIELD_IMPORT_PSM_FILTER => {
           if (hasPsmFilter) {
-             for(i <- 0 to (psmFilters.size - 1))
+             for(i <- 0 to (psmFilters.size - 1)){
         	  exportMap += ( fields.addField(f.title+" "+(i +1)) -> psmFilters(i))
+            }
           }
         }
         case ExportConfigConstant.FIELD_IMPORT_PROT_FILTER_EXPECTED_FDR => {
@@ -201,8 +241,9 @@ class ImportAndValidationPropsView (val identDS: IdentDataSet, val sheetConfig :
         }
         case ExportConfigConstant.FIELD_IMPORT_PROT_FILTER => {
           if (hasProteinFilter) {
-             for(i <- 0 to (proteinFilters.size - 1))
+             for(i <- 0 to (proteinFilters.size - 1)){
         	  exportMap += ( fields.addField(f.title+" "+i ) -> proteinFilters(i))
+             }
           }
         }
         case other => {

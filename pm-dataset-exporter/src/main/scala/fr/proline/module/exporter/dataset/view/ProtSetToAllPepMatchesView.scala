@@ -1,5 +1,4 @@
-package fr.proline.module.exporter.msi.view
-
+package fr.proline.module.exporter.dataset.view
 
 
 import java.text.DecimalFormat
@@ -13,7 +12,7 @@ import fr.proline.module.exporter.api.view.IRecordBuildingContext
 import fr.proline.module.exporter.commons.config.ExportConfigConstant
 import fr.proline.core.om.model.msi._
 
-class ProtSetToAllPepMatchesConfigView ( val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val exportAllProteinSet: Boolean  )  extends AbstractProtSetToTypicalProtMatchConfigView {
+class ProtSetToAllPepMatchesView( val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val exportAllProteinSet: Boolean  )  extends AbstractProtSetToTypicalProtMatchView {
   override var viewName = "all_prot_set_peptide_matches"
 
   override def onEachRecord(recordFormatter: Map[String, Any] => Unit) {

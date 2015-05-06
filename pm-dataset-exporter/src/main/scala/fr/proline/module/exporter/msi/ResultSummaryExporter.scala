@@ -20,7 +20,7 @@ class ResultSummaryExporter(
     template: IViewTemplate, 
     exportConfig:ExportConfig
   ) = {
-    this(BuildResultSummaryView( ds, viewType, exportConfig), template, exportConfig)
+    this(BuildResultSummaryView( ds, viewType), template, exportConfig)
   }
   
 }

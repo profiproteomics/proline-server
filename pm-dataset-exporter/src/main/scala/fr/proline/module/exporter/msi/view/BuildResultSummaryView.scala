@@ -65,63 +65,21 @@ case class IdentDataSet (
 
 object BuildResultSummaryView {
   
-  private def _builders(exportConfig :ExportConfig): Map[IViewTypeEnumeration#Value, IdentDataSet => IDataView ] = {
-    var buildMap: ListMap[IViewTypeEnumeration#Value, IdentDataSet => IDataView ] =  ListMap()
-    if (exportConfig == null) {
-      // TODO to be removed as soon as the current templates are moved to config JSON
-      Map( 
-       ResultSummaryViewTypes.MSI_SEARCH_EXTENDED -> { ds: IdentDataSet => new MsiSearchExtendedView(ds) },
-       ResultSummaryViewTypes.IMPORT_AND_VALIDATION_PROPS -> { ds: IdentDataSet => new ResultParseAndFiltersView(ds.resultSummary) },
-       ResultSummaryViewTypes.STATISTICS -> { ds: IdentDataSet => new StatisticsView(ds.resultSummary) },
-       ResultSummaryViewTypes.PEP_SET_TO_PROT_MATCH -> { ds: IdentDataSet => new PepSetToProtMatchView(ds) },
-       ResultSummaryViewTypes.PROT_SET_TO_PROT_MATCH -> { ds: IdentDataSet => new ProtSetToProtMatchView(ds) },
-       ResultSummaryViewTypes.PROT_SET_TO_TYPICAL_PROT_MATCH -> { ds: IdentDataSet => new ProtSetToTypicalProtMatchView(ds) },
-       ResultSummaryViewTypes.PROT_SET_TO_BEST_PEPTIDE_MATCH -> { ds: IdentDataSet => new ProtSetToBestPepMatchView(ds) },
-       ResultSummaryViewTypes.PROT_SET_TO_ALL_PEPTIDE_MATCHES -> { ds: IdentDataSet => new ProtSetToAllPepMatchesView(ds) },
-       ResultSummaryViewTypes.TYPICAL_PROT_MATCH_TO_ALL_PEP_MATCHES -> { ds: IdentDataSet => new TypicalProtMatchToAllPepMatchesView(ds) } 
-      )
-    }else{
-       val dateFormat : SimpleDateFormat = new SimpleDateFormat(exportConfig.dateFormat)
-       val decimalFormat : DecimalFormat = new DecimalFormat()
-       var decSep: DecimalFormatSymbols = new DecimalFormatSymbols()
-       decSep.setDecimalSeparator(exportConfig.decimalSeparator)
-       decimalFormat.setDecimalFormatSymbols(decSep)
-       decimalFormat.setGroupingUsed(false)
-       val exportAllProteinSet: Boolean = exportConfig.dataExport.allProteinSet
-    	for ( sheet <- exportConfig.sheets ) {
-    		sheet.id match {
-            	case ExportConfigConstant.SHEET_INFORMATION => {
-            		buildMap += (ResultSummaryViewTypes.MSI_SEARCH_EXTENDED -> { ds: IdentDataSet => new MsiSearchConfigExtendedView(ds, sheet, dateFormat, decimalFormat) })
-            	}
-            	case ExportConfigConstant.SHEET_IMPORT => {
-            		buildMap += (ResultSummaryViewTypes.IMPORT_AND_VALIDATION_PROPS -> { ds: IdentDataSet => new ImportAndValidationPropsView(ds, sheet, dateFormat, decimalFormat) })
-            	}
-            	case ExportConfigConstant.SHEET_PROTEIN_SETS => {
-            		buildMap += (ResultSummaryViewTypes.PROT_SET_TO_TYPICAL_PROT_MATCH -> { ds: IdentDataSet => new ProtSetToTypicalProtMatchConfigView(ds, sheet, dateFormat, decimalFormat, exportAllProteinSet) })
-            	}
-            	case ExportConfigConstant.SHEET_BEST_PSM => {
-            		buildMap += (ResultSummaryViewTypes.PROT_SET_TO_BEST_PEPTIDE_MATCH -> { ds: IdentDataSet => new ProtSetToBestPepMatchConfigView(ds, sheet, dateFormat, decimalFormat, exportAllProteinSet) })
-            	}
-            	case ExportConfigConstant.SHEET_PROTEIN_MATCH => {
-            		buildMap += (ResultSummaryViewTypes.PROT_SET_TO_PROT_MATCH -> { ds: IdentDataSet => new ProtSetToProtMatchConfigView(ds, sheet, dateFormat, decimalFormat, exportAllProteinSet) })
-            	}
-            	case ExportConfigConstant.SHEET_ALL_PSM => {
-            		buildMap += (ResultSummaryViewTypes.PROT_SET_TO_ALL_PEPTIDE_MATCHES -> { ds: IdentDataSet => new ProtSetToAllPepMatchesConfigView(ds, sheet, dateFormat, decimalFormat, exportAllProteinSet) })
-            	}
-            	case ExportConfigConstant.SHEET_STAT => {
-            		buildMap += (ResultSummaryViewTypes.STATISTICS -> { ds: IdentDataSet => new StatisticsConfigView(ds.resultSummary, sheet, dateFormat, decimalFormat) })
-            	}
-            	case other => {
-			  
-            	}
-    		}
-    	}
-    	return buildMap
-    }
-}
+  private def _builders: Map[IViewTypeEnumeration#Value, IdentDataSet => IDataView ] = Map( 
+    ResultSummaryViewTypes.MSI_SEARCH_EXTENDED -> { ds: IdentDataSet => new MsiSearchExtendedView(ds) },
+    ResultSummaryViewTypes.IMPORT_AND_VALIDATION_PROPS -> { ds: IdentDataSet => new ResultParseAndFiltersView(ds.resultSummary) },
+    ResultSummaryViewTypes.STATISTICS -> { ds: IdentDataSet => new StatisticsView(ds.resultSummary) },
+    ResultSummaryViewTypes.PEP_SET_TO_PROT_MATCH -> { ds: IdentDataSet => new PepSetToProtMatchView(ds) },
+    ResultSummaryViewTypes.PROT_SET_TO_PROT_MATCH -> { ds: IdentDataSet => new ProtSetToProtMatchView(ds) },
+    ResultSummaryViewTypes.PROT_SET_TO_TYPICAL_PROT_MATCH -> { ds: IdentDataSet => new ProtSetToTypicalProtMatchView(ds) },
+    ResultSummaryViewTypes.PROT_SET_TO_BEST_PEPTIDE_MATCH -> { ds: IdentDataSet => new ProtSetToBestPepMatchView(ds) },
+    ResultSummaryViewTypes.PROT_SET_TO_ALL_PEPTIDE_MATCHES -> { ds: IdentDataSet => new ProtSetToAllPepMatchesView(ds) },
+    ResultSummaryViewTypes.TYPICAL_PROT_MATCH_TO_ALL_PEP_MATCHES -> { ds: IdentDataSet => new TypicalProtMatchToAllPepMatchesView(ds) }    
+  )
 
-  def apply( identDS: IdentDataSet, viewType: IViewTypeEnumeration#Value, exportConfig :ExportConfig ): IDataView = {
-    _builders(exportConfig)(viewType)(identDS)
+  def apply( identDS: IdentDataSet, viewType: IViewTypeEnumeration#Value ): IDataView = {
+    _builders(viewType)(identDS)
   }
+  
   
 }
