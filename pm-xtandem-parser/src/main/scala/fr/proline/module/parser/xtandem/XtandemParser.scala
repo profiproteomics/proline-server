@@ -150,7 +150,6 @@ class XtandemParser(  val xtandemFile : File,
     var inputParametersEnzymeCount : Int = 0
 
     var peaklistFilePathNameExt: Filename = null
-    var dbProteinFileMarkupURLList: ArrayBuffer[String] = new ArrayBuffer()
     var dbDomainSeqList : ArrayBuffer[String] = new ArrayBuffer()
 
     //GroupParameters variables
@@ -322,13 +321,10 @@ class XtandemParser(  val xtandemFile : File,
         } else if (dbGroupParametersNoteLabel.equals("list path, sequence source #".concat(sequenceSourceCount.toString()))) {
 
 //          if(sequenceSourceCount == 1 ) {
-            val FPATH: String = dbGroupParametersNoteInfo
-            seqDatabaseFileNamesPath = new Filename(dbGroupParametersNoteInfo, '/', '.').path
-            seqDatabaseFileNames = new Filename(FPATH, '/', '.').filename()
-            
-//            logger.debug("IY - 05/05 - XtandemParser.scala - seqDatabasefileNamesPath = " + seqDatabaseFileNamesPath)
-//            logger.debug("IY - 05/05 - XtandemParser.scala - seqDatabaseFileNames = " + seqDatabaseFileNames)
-          
+          val FPATH: String = dbGroupParametersNoteInfo
+          seqDatabaseFileNames = new Filename(FPATH, '/', '.').filename()
+          seqDatabaseFileNamesPath = new Filename(dbGroupParametersNoteInfo, '/', '.').path + "/" + seqDatabaseFileNames
+                    
           seqDatabase = new SeqDatabase(
             id = SeqDatabase.generateNewId(),
             name = seqDatabaseFileNames, 
