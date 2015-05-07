@@ -11,7 +11,7 @@ import fr.proline.module.exporter.commons.config.ExportConfigField
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
 import fr.proline.module.exporter.commons.config.ExportConfigConstant
 
-class ProtSetToProtMatchView ( val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val exportAllProteinSet: Boolean  ) extends AbstractProtSetToTypicalProtMatchView {
+class ProtSetToProtMatchView ( val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val titleSep: String, val exportAllProteinSet: Boolean , val exportBestProfile: Boolean ) extends AbstractProtSetToTypicalProtMatchView {
    var viewName = "prot_set_to_prot_match"
    
   override  def onEachRecord( recordFormatter: Map[String,Any] => Unit ) {

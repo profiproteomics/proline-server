@@ -17,7 +17,7 @@ import fr.proline.module.exporter.api.view.IRecordBuildingContext
 import com.typesafe.scalalogging.slf4j.Logging
 
 
-class ImportAndValidationPropsView (val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat) extends IFixedDatasetView with Logging{
+class ImportAndValidationPropsView (val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val titleSep: String ) extends IFixedDatasetView with Logging{
   
   var viewName = "import and validation"
   val childResultSummarys = identDS.childsResultSummarys
@@ -43,14 +43,14 @@ class ImportAndValidationPropsView (val identDS: IdentDataSet, val sheetConfig :
         case ExportConfigConstant.FIELD_IMPORT_PSM_FILTER => {
           if (nbFiltersPsm > 0) {
              for(i <- 0 to (nbFiltersPsm - 1)){
-        	  listFields += f.title+" "+(i +1)
+        	  listFields += f.title+titleSep+(i +1)
             }
           }
         }
         case ExportConfigConstant.FIELD_IMPORT_PROT_FILTER => {
           if (nbFiltersProt > 0) {
              for(i <- 0 to (nbFiltersProt - 1)){
-        	  listFields += f.title+" "+i 
+        	  listFields += f.title+titleSep+i 
              }
           }
         }
@@ -230,7 +230,7 @@ class ImportAndValidationPropsView (val identDS: IdentDataSet, val sheetConfig :
         case ExportConfigConstant.FIELD_IMPORT_PSM_FILTER => {
           if (hasPsmFilter) {
              for(i <- 0 to (psmFilters.size - 1)){
-        	  exportMap += ( fields.addField(f.title+" "+(i +1)) -> psmFilters(i))
+        	  exportMap += ( fields.addField(f.title+titleSep+(i +1)) -> psmFilters(i))
             }
           }
         }
@@ -242,7 +242,7 @@ class ImportAndValidationPropsView (val identDS: IdentDataSet, val sheetConfig :
         case ExportConfigConstant.FIELD_IMPORT_PROT_FILTER => {
           if (hasProteinFilter) {
              for(i <- 0 to (proteinFilters.size - 1)){
-        	  exportMap += ( fields.addField(f.title+" "+i ) -> proteinFilters(i))
+        	  exportMap += ( fields.addField(f.title+titleSep+i ) -> proteinFilters(i))
              }
           }
         }

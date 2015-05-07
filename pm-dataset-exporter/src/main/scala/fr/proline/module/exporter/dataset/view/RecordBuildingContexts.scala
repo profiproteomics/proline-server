@@ -7,6 +7,7 @@ import scala.collection.mutable.HashSet
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq.MasterQuantProteinSet
+import fr.proline.core.om.model.msq.MasterQuantProteinSetProfile
 
 
 class ProtMatchBuildingContext(
@@ -46,6 +47,7 @@ class ProtMatchQuantiBuildingContext(
     peptideSet: PeptideSet,
    protMatch: ProteinMatch,
    var masterQuantProteinSet: MasterQuantProteinSet,
+   var profile: MasterQuantProteinSetProfile,
    var qcIds: Array[Long], 
    var nameByQchId:  Map[Long,String]
    ) extends ProtMatchBuildingContext(protSet, peptideSet, protMatch) 

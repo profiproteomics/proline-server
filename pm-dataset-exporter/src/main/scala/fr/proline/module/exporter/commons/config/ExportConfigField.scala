@@ -120,6 +120,16 @@ object ExportConfigField {
 	    listFields += fieldRawAbundance
 	    listFields += fieldAbundance
 	  }
+	  if (fromXIC){
+	    val fieldRatio: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_XIC_PROFILIZER_RATIO, "ratio")
+	    val fieldTTest: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_XIC_PROFILIZER_TTEST_PVALUE, "t-test")
+	    val fieldZTest: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZTEST_PVALUE, "z-test")
+	    val fieldZScore: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZSCORE, "z-score")
+	    listFields += fieldRatio
+	    listFields += fieldTTest
+	    listFields += fieldZTest
+	    listFields += fieldZScore
+	  }
 	  
 	  return listFields.toArray
 	}

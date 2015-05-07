@@ -12,7 +12,7 @@ import fr.proline.module.exporter.api.view.IRecordBuildingContext
 import fr.proline.module.exporter.commons.config.ExportConfigConstant
 import fr.proline.core.om.model.msi._
 
-class ProtSetToAllPepMatchesView( val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val exportAllProteinSet: Boolean  )  extends AbstractProtSetToTypicalProtMatchView {
+class ProtSetToAllPepMatchesView( val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val titleSep: String, val exportAllProteinSet: Boolean , val exportBestProfile: Boolean )  extends AbstractProtSetToTypicalProtMatchView {
   override var viewName = "all_prot_set_peptide_matches"
 
   override def onEachRecord(recordFormatter: Map[String, Any] => Unit) {

@@ -70,6 +70,7 @@ object ExportConfigManager extends Logging {
 	  confObj.dateFormat = allConfigObj.dateFormat
 	  var exportConfigData : ExportConfigData = new ExportConfigData()
 	  exportConfigData.allProteinSet = allConfigObj.dataExport.allProteinSet
+	  exportConfigData.bestProfile = allConfigObj.dataExport.bestProfile
 	  confObj.dataExport = exportConfigData
 	  var sheets: ArrayBuffer[ExportConfigSheet] = new ArrayBuffer()
 	  for(s <- allConfigObj.sheets){

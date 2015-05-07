@@ -6,10 +6,11 @@ package fr.proline.module.exporter.commons.config
  * for now, only which protein to export (all or validated proteins)
  */
 class ExportConfigData  (
-    var allProteinSet :Boolean
+    var allProteinSet :Boolean,
+    var bestProfile: Boolean  // export  bestProfile or iterates over profiles
 ) {
 	// Plain constructor
-	def this() = this(true)
+	def this() = this(true, true)
 }
 
 object ExportConfigData {
@@ -18,6 +19,7 @@ object ExportConfigData {
 	def getAllConfig() :ExportConfigData={
 	  var dataConfig :ExportConfigData = new ExportConfigData()
 	  dataConfig.allProteinSet = true
+	  dataConfig.bestProfile = true
 	  return dataConfig
 	}
 }

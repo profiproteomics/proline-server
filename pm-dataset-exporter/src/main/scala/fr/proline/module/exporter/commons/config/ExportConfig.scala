@@ -11,16 +11,19 @@ case class ExportConfig(
     var format :String, // cf FORMAT_XLSX or FORMAT_TSV
     var decimalSeparator  :Char, 
     var dateFormat : String, 
+    var titleSeparator: String,
     var dataExport : ExportConfigData,
     var sheets : Array[ExportConfigSheet]  // sorted by positions
     
 )  {
 	// Plain constructor
-	def this() = this(ExportConfigConstant.FORMAT_XLSX, ExportConfigConstant.DECIMAL_SEPARATOR_DOT, ExportConfigConstant.DATE_FORMAT_HOUR, new ExportConfigData() , Array.empty[ExportConfigSheet] )
+	def this() = this(ExportConfigConstant.FORMAT_XLSX, ExportConfigConstant.DECIMAL_SEPARATOR_DOT, ExportConfigConstant.DATE_FORMAT_HOUR, 
+	       ExportConfigConstant.SEPARATOR_INCREMENTAL_TITLE_UNDERSCORE, new ExportConfigData() , Array.empty[ExportConfigSheet] )
 	      
 	val formatValues: Array[String] = ExportConfigConstant.FORMAT_VALUES
     val decimalSeparatorValues: Array[String] = ExportConfigConstant.DECIMAL_SPEARATOR_VALUES
-    val dateFormatValues: Array[String] = ExportConfigConstant.DATE_FORMAT_VALUES   
+    val dateFormatValues: Array[String] = ExportConfigConstant.DATE_FORMAT_VALUES 
+    val titleSeparatorValues: Array[String] = ExportConfigConstant.SEPARATOR_INCREMENTAL_TITLE_VALUES
     val sheetPresentationValues: Array[String] = ExportConfigConstant.PRESENTATION_SHEET_VALUES
 	
 }
@@ -59,6 +62,7 @@ object ExportConfig{
 	      ExportConfigConstant.FORMAT_XLSX, 
 	      ExportConfigConstant.DECIMAL_SEPARATOR_DOT,  
 	      ExportConfigConstant.DATE_FORMAT_HOUR, 
+	       ExportConfigConstant.SEPARATOR_INCREMENTAL_TITLE_UNDERSCORE,
 	      ExportConfigData.getAllConfig(),
 	      sheetsList
 	      )
@@ -85,6 +89,7 @@ object ExportConfig{
 	      ExportConfigConstant.FORMAT_XLSX, 
 	      ExportConfigConstant.DECIMAL_SEPARATOR_DOT,  
 	      ExportConfigConstant.DATE_FORMAT_HOUR, 
+	       ExportConfigConstant.SEPARATOR_INCREMENTAL_TITLE_UNDERSCORE,
 	      ExportConfigData.getAllConfig(),
 	      sheetsList
 	      )
@@ -103,6 +108,7 @@ object ExportConfig{
 	      ExportConfigConstant.FORMAT_XLSX, 
 	      ExportConfigConstant.DECIMAL_SEPARATOR_DOT,  
 	      ExportConfigConstant.DATE_FORMAT_HOUR, 
+	       ExportConfigConstant.SEPARATOR_INCREMENTAL_TITLE_UNDERSCORE,
 	      ExportConfigData.getAllConfig(),
 	      sheetsList
 	      )

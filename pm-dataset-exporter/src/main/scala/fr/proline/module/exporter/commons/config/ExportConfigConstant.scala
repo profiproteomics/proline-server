@@ -16,6 +16,14 @@ object ExportConfigConstant {
      final val DATE_FORMAT: String = "YYYY:MM:DD" 
        final val DATE_FORMAT_VALUES: Array[String] = Array(DATE_FORMAT_HOUR, DATE_FORMAT)
        
+     // separator title when the field is "incremental"
+      final val SEPARATOR_INCREMENTAL_TITLE_UNDERSCORE = "_"
+	  final val SEPARATOR_INCREMENTAL_TITLE_SPACE = " "
+	  final val SEPARATOR_INCREMENTAL_TITLE_VALUES: Array[String] = Array(SEPARATOR_INCREMENTAL_TITLE_UNDERSCORE, SEPARATOR_INCREMENTAL_TITLE_SPACE)  
+	  
+	  final val GROUP : String = "g"
+	  final val VERSUS: String  = "vs"  
+       
      final val MODE_IDENT: String = "IDENT"
      final val MODE_QUANT_SC: String = "QUANT_SC"
      final val MODE_QUANT_XIC: String = "QUANT_XIC"
@@ -92,7 +100,11 @@ object ExportConfigConstant {
 	  final val FIELD_PROTEIN_SETS_QUANTI_RAW_ABUNDANCE: String = "raw_abundance"  //incremental // SC Specific 
 	  final val FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE: String = "abundance" // incremental // SC Weighted
 	  final val FIELD_PROTEIN_SETS_QUANTI_PSM_COUNT: String = "psm_count" // incremental  // SC Basic
-	    
+	  final val FIELD_PROTEIN_SETS_XIC_PROFILIZER_RATIO: String = "ratio" // incremental
+	  final val FIELD_PROTEIN_SETS_XIC_PROFILIZER_TTEST_PVALUE: String = "t-test_pvalue" // incremental
+	  final val FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZTEST_PVALUE: String = "z-test_pvalue" // incremental
+	  final val FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZSCORE: String = "z-score" // incremental
+	  
 	  
 	 // best psm sheet
 	final val SHEET_BEST_PSM : String  = "best_psm"

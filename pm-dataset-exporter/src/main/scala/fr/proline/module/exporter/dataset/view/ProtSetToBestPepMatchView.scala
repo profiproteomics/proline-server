@@ -13,7 +13,7 @@ import fr.proline.module.exporter.api.view.IRecordBuildingContext
 import fr.proline.module.exporter.commons.config.ExportConfigConstant
 
 
-class ProtSetToBestPepMatchView ( val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val exportAllProteinSet: Boolean  )  extends AbstractProtSetToTypicalProtMatchView {
+class ProtSetToBestPepMatchView ( val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val titleSep: String, val exportAllProteinSet: Boolean, val exportBestProfile: Boolean  )  extends AbstractProtSetToTypicalProtMatchView {
    var viewName = "prot_set_to_best_pep_match"
      
     // def onEachRecord is inherited from AbstractProtSetToTypicalProtMatchView
