@@ -125,39 +125,11 @@ object BuildResultSummaryViewSet extends Logging {
     
     // load childs resultSummary (merge)
     var childsResultSummarys: ArrayBuffer[ResultSummary] = new ArrayBuffer[ResultSummary]()
-    val providerRsm: IResultSummaryProvider = getResultSummaryProvider(executionContext)
-    var leavesRsmIds: Seq[Long] = getRsmLeafChildsID(rsm.id, executionContext)
-    leavesRsmIds.foreach(rsmID => {
-       val resultSummaryRS = providerRsm.getResultSummary(rsmID, true)
-          if (resultSummaryRS.isDefined) {
-            val resultSummaryLeaf:ResultSummary = resultSummaryRS.get
-            childsResultSummarys +=  resultSummaryLeaf
-          } else {
-            val msg = " !!! Unable to get leave search result with id " + rsmID
-            logger.warn(msg)
-            throw new Exception(msg)
-          }
-      })
+    
     
     // load childs resultSets (merge)
     var childsResultSets: ArrayBuffer[ResultSet] = new ArrayBuffer[ResultSet]()
-    if (rsm.resultSet.isDefined){
-        val providerContext = ProviderDecoratedExecutionContext(executionContext)
-        val provider: IResultSetProvider = providerContext.getProvider(classOf[IResultSetProvider])
-    	val rs = rsm.resultSet.get
-    	var leavesRsIds: Seq[Long] = getLeafChildsID(rs.id, executionContext)
-    	leavesRsIds.foreach(rsID => {
-          val resultRS = provider.getResultSet(rsID)
-          if (resultRS.isDefined) {
-            val resultSetLeaf:ResultSet = resultRS.get
-            childsResultSets +=  resultSetLeaf
-          } else {
-            val msg = " !!! Unable to get leave search result with id " + rsID
-            logger.warn(msg)
-            throw new Exception(msg)
-          }
-      })
-    }
+    
 
     return apply(IdentDataSet(projectName, rsm, childsResultSummarys.toArray, childsResultSets.toArray), viewSetName, viewSetTemplate, exportConfig)
 
