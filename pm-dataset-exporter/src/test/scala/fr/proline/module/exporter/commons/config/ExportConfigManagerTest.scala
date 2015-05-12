@@ -55,7 +55,7 @@ class ExportConfigManagerTest  extends  Logging{
 	    val configStr = ExportConfigManager.getAllConfigurationForXICExport();
 	    //  reserialize check the conf
 	    val config = ExportConfigManager.readConfig(configStr)
-	    assertTrue("All XIC export nbSheets" , config.sheets.length == 3)
+	    assertTrue("All XIC export nbSheets" , config.sheets.length == 4)
 	    assertTrue("All XIC export nbFields in ProteinSet sheet " , config.sheets(2).fields.length == 25)
 	  } catch {
       	case e: Exception => logger.error("error", e)

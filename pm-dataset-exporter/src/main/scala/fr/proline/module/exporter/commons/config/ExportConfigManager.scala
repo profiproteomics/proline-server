@@ -12,7 +12,8 @@ import scala.collection.mutable.ArrayBuffer
 object ExportConfigManager extends Logging {
    // read a config file and build the  corresponding ExportConfig
 	def readConfig(jsonConfig:String) : ExportConfig = {
-	  logger.debug("BuildCongif export "+jsonConfig);
+	  //logger.debug("BuildCongif export "+jsonConfig);
+	  logger.debug("BuildCongif export ");
 	  var config: ExportConfig = ExportConfig.fromJSON(jsonConfig)
 	   return config
 	}

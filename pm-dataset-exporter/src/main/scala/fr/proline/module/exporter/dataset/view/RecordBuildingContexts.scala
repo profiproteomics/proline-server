@@ -8,6 +8,7 @@ import fr.proline.module.exporter.api.view.IRecordBuildingContext
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq.MasterQuantProteinSet
 import fr.proline.core.om.model.msq.MasterQuantProteinSetProfile
+import fr.proline.core.om.model.msq.MasterQuantPeptide
 
 
 class ProtMatchBuildingContext(
@@ -34,12 +35,14 @@ class ProtMatchBuildingContext(
 
 }
 
-case class PepMatchBuildingContext(
-  pepMatch: PeptideMatch,
-  protMatch: ProteinMatch,
-  seqMatch: SequenceMatch,
-  protMatchBuildingCtx: Option[ProtMatchBuildingContext] = None
-) extends IRecordBuildingContext
+class PepMatchBuildingContext(
+  var pepMatch: PeptideMatch,
+  var protMatch: ProteinMatch,
+  var seqMatch: SequenceMatch,
+  var protMatchBuildingCtx: Option[ProtMatchBuildingContext] = None
+) extends IRecordBuildingContext {
+  
+}
 
 
 class ProtMatchQuantiBuildingContext(
@@ -47,7 +50,14 @@ class ProtMatchQuantiBuildingContext(
     peptideSet: PeptideSet,
    protMatch: ProteinMatch,
    var masterQuantProteinSet: MasterQuantProteinSet,
-   var profile: MasterQuantProteinSetProfile,
-   var qcIds: Array[Long], 
-   var nameByQchId:  Map[Long,String]
+   var profile: MasterQuantProteinSetProfile
    ) extends ProtMatchBuildingContext(protSet, peptideSet, protMatch) 
+
+
+class PepMatchQuantiBuildingContext(
+     pepMatch: PeptideMatch,
+   protMatch: ProteinMatch,
+   seqMatch: SequenceMatch,
+   protMatchBuildingCtx: Option[ProtMatchBuildingContext] ,
+  var masterQuantPeptide: MasterQuantPeptide
+  ) extends PepMatchBuildingContext (pepMatch, protMatch,seqMatch, protMatchBuildingCtx )

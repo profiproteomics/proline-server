@@ -158,8 +158,8 @@ object ExportConfigField {
 	
 	
 	// get all fields for Best PSM sheet
-	def getAllBestPSMFieldsArray() :Array[ExportConfigField]={
-	  var  listFields  : Array[ExportConfigField]= Array(
+	def getAllBestPSMFieldsArray(fromXIC: Boolean, fromSC: Boolean) :Array[ExportConfigField]={
+	  var  listFields  : ArrayBuffer[ExportConfigField]= ArrayBuffer(
 	  new ExportConfigField(ExportConfigConstant.FIELD_PSM_PEPTIDE_ID, "peptide_id"),
 	  new ExportConfigField(ExportConfigConstant.FIELD_PSM_SEQUENCE, "sequence"),
 	  new ExportConfigField(ExportConfigConstant.FIELD_PSM_MODIFICATIONS, "modifications"),
@@ -185,14 +185,39 @@ object ExportConfigField {
 	  new ExportConfigField(ExportConfigConstant.FIELD_PSM_RESIDUE_AFTER, "residue_after")
 	  )
 	  listFields = listFields ++  getAllProteinSetsFieldsArray(false, false, false)
-	  return listFields
+	  
+	  if (fromXIC || fromSC) {
+	    val fieldMasterQuantPeptideId: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PSM_QUANTI_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id")
+	    val fieldQuantiElutionTime: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PSM_QUANTI_ELUTION_TIME, "elution_time")
+	    val fieldQuantiSelectionLevel: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PSM_QUANTI_SELECTION_LEVEL, "selection_level")
+	    val fieldRawAbundance : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_RAW_ABUNDANCE, if (fromXIC) "raw_abundance" else "Specific SC") 
+	    val fieldAbundance : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE, if (fromXIC) "abundance" else "Weighted SC") 
+	    val fieldPsmCount : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_PSM_COUNT, if (fromXIC) "psm_count" else "Basic SC") 
+	    listFields += fieldMasterQuantPeptideId
+	    listFields += fieldQuantiElutionTime
+	    listFields += fieldQuantiSelectionLevel
+	    listFields += fieldPsmCount
+	    listFields += fieldRawAbundance
+	    listFields += fieldAbundance
+	  }
+	  if (fromXIC){
+	    val fieldRatio: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_XIC_PROFILIZER_RATIO, "ratio")
+	    val fieldTTest: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_XIC_PROFILIZER_TTEST_PVALUE, "t-test")
+	    val fieldZTest: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZTEST_PVALUE, "z-test")
+	    val fieldZScore: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZSCORE, "z-score")
+	    listFields += fieldRatio
+	    listFields += fieldTTest
+	    listFields += fieldZTest
+	    listFields += fieldZScore
+	  }
+	  return listFields.toArray
 	}
         
         
 	
 	// get all fields for all PSM sheet
-	def getAllPSMFieldsArray() :Array[ExportConfigField]={
-	  return getAllBestPSMFieldsArray()
+	def getAllPSMFieldsArray(fromXIC: Boolean, fromSC: Boolean) :Array[ExportConfigField]={
+	  return getAllBestPSMFieldsArray(fromXIC, fromSC)
 	}
         
 	// get all fields for stat sheet

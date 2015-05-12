@@ -27,6 +27,9 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
   val isQuanti: Boolean = identDS.isInstanceOf[QuantiDataSet]
   val quantiDS: QuantiDataSet = if (isQuanti) identDS.asInstanceOf[QuantiDataSet] else null
 
+  // TODO: retrieve the right value
+  val groupSetupNumber = 1
+
   var listFields: ArrayBuffer[String] = new ArrayBuffer()
   for (f <- sheetConfig.fields) {
     f.id match {
@@ -113,10 +116,12 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
     val isPepSetCtx: Boolean = (buildingContext.isInstanceOf[PepMatchBuildingContext])
     val isProtSetQuantiCtx: Boolean = (buildingContext.isInstanceOf[ProtMatchQuantiBuildingContext])
     val isProtSetCtxDefinedForPep: Boolean = (isPepSetCtx && buildingContext.asInstanceOf[PepMatchBuildingContext].protMatchBuildingCtx.isDefined)
+    val isPepSetQuantiCtx: Boolean = (buildingContext.isInstanceOf[PepMatchQuantiBuildingContext])
 
     val protSetBuildingCtxOpt: ProtMatchBuildingContext = if (isProtSetCtx) buildingContext.asInstanceOf[ProtMatchBuildingContext] else (if (isProtSetCtxDefinedForPep) buildingContext.asInstanceOf[PepMatchBuildingContext].protMatchBuildingCtx.get else null)
     val allPepMatchesBuildingCtx: PepMatchBuildingContext = if (isProtSetCtx) null else buildingContext.asInstanceOf[PepMatchBuildingContext]
     val protSetQuantiBuildingCtx: ProtMatchQuantiBuildingContext = if (isProtSetQuantiCtx) buildingContext.asInstanceOf[ProtMatchQuantiBuildingContext] else null
+    val pepSetQuantiBuildingCtx: PepMatchQuantiBuildingContext = if (isPepSetQuantiCtx) buildingContext.asInstanceOf[PepMatchQuantiBuildingContext] else null
 
     var protSet: ProteinSet = null
     var protMatch: ProteinMatch = null
@@ -164,6 +169,17 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
     if (isQuanti && protSetQuantiBuildingCtx != null && protSetQuantiBuildingCtx.profile != null) {
       stats = this.stringifyRatiosStats(protSetQuantiBuildingCtx.profile.getRatios)
       nbS = stats.size
+    }
+    if (isQuanti && pepSetQuantiBuildingCtx != null && pepSetQuantiBuildingCtx.masterQuantPeptide != null && pepSetQuantiBuildingCtx.masterQuantPeptide.getRatios(groupSetupNumber) != null) {
+      stats = this.stringifyRatiosStats(pepSetQuantiBuildingCtx.masterQuantPeptide.getRatios(groupSetupNumber))
+      nbS = stats.size
+    }
+
+    // masterquantPeptide
+    var elutionTime: Double = Double.NaN
+    if (isPepSetQuantiCtx && pepSetQuantiBuildingCtx != null && pepSetQuantiBuildingCtx.masterQuantPeptide != null) {
+      val bestQPep = pepSetQuantiBuildingCtx.masterQuantPeptide.getBestQuantPeptide
+      elutionTime = if (bestQPep.elutionTime.isNaN()) Double.NaN else dcf4.format(bestQPep.elutionTime).toDouble
     }
 
     var exportMap: ListMap[String, Any] = ListMap()
@@ -297,79 +313,119 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
           exportMap += (fields.addField(f.title) -> resAfter)
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_STATUS => {
-          protSetQuantiBuildingCtx.qcIds.foreach(qcId => {
-            var pmId: Long = -1
-            //Get QuantProteinSet for current ProteinSet in current QuantChannel
-            val protQuant = protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap.get(qcId)
-            if (protQuant.isDefined) {
-              if (protQuant.get.proteinSetId.isDefined) {
-                pmId = protQuant.get.proteinMatchId.getOrElse(-1)
+          if (isQuanti) {
+            quantiDS.qcIds.foreach(qcId => {
+              var pmId: Long = -1
+              //Get QuantProteinSet for current ProteinSet in current QuantChannel
+              val protQuant = protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap.get(qcId)
+              if (protQuant.isDefined) {
+                if (protQuant.get.proteinSetId.isDefined) {
+                  pmId = protQuant.get.proteinMatchId.getOrElse(-1)
+                }
               }
-            }
-            var qcStatus: String = if (quantiDS.protMatchStatusByIdPepMatchByQCId.contains(qcId)) {
-              val protMatchStatusById: Map[Long, String] = quantiDS.protMatchStatusByIdPepMatchByQCId.get(qcId).get
-              if (protMatchStatusById.contains(pmId)) {
-                protMatchStatusById.get(pmId).get
-              } else { "" }
-            } else {
-              ""
-            }
-            exportMap += (fields.addField(f.title + titleSep + protSetQuantiBuildingCtx.nameByQchId(qcId)) -> qcStatus)
-          })
+              var qcStatus: String = if (quantiDS.protMatchStatusByIdPepMatchByQCId.contains(qcId)) {
+                val protMatchStatusById: Map[Long, String] = quantiDS.protMatchStatusByIdPepMatchByQCId.get(qcId).get
+                if (protMatchStatusById.contains(pmId)) {
+                  protMatchStatusById.get(pmId).get
+                } else { "" }
+              } else {
+                ""
+              }
+              exportMap += (fields.addField(f.title + titleSep + quantiDS.nameByQchId(qcId)) -> qcStatus)
+            })
+          }
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_PEPTIDE_NUMBER => {
-          protSetQuantiBuildingCtx.qcIds.foreach(qcId => {
-            var pmId: Long = -1
-            //Get QuantProteinSet for current ProteinSet in current QuantChannel
-            val protQuant = protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap.get(qcId)
-            if (protQuant.isDefined) {
-              if (protQuant.get.proteinSetId.isDefined) {
-                pmId = protQuant.get.proteinMatchId.getOrElse(-1)
+          if (isQuanti) {
+            quantiDS.qcIds.foreach(qcId => {
+              var pmId: Long = -1
+              //Get QuantProteinSet for current ProteinSet in current QuantChannel
+              val protQuant = protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap.get(qcId)
+              if (protQuant.isDefined) {
+                if (protQuant.get.proteinSetId.isDefined) {
+                  pmId = protQuant.get.proteinMatchId.getOrElse(-1)
+                }
               }
-            }
-            var qcPeptideNumber: Int = if (quantiDS.protMatchPeptideNumberByPepMatchIdByQCId.contains(qcId)) {
-              val protMatchPeptideNumberByPepMatchId: Map[Long, Int] = quantiDS.protMatchPeptideNumberByPepMatchIdByQCId.get(qcId).get
-              if (protMatchPeptideNumberByPepMatchId.contains(pmId)) {
-                protMatchPeptideNumberByPepMatchId.get(pmId).get
-              } else { 0 }
-            } else {
-              0
-            }
-            exportMap += (fields.addField(f.title + titleSep + protSetQuantiBuildingCtx.nameByQchId(qcId)) -> qcPeptideNumber)
-          })
+              var qcPeptideNumber: Int = if (quantiDS.protMatchPeptideNumberByPepMatchIdByQCId.contains(qcId)) {
+                val protMatchPeptideNumberByPepMatchId: Map[Long, Int] = quantiDS.protMatchPeptideNumberByPepMatchIdByQCId.get(qcId).get
+                if (protMatchPeptideNumberByPepMatchId.contains(pmId)) {
+                  protMatchPeptideNumberByPepMatchId.get(pmId).get
+                } else { 0 }
+              } else {
+                0
+              }
+              exportMap += (fields.addField(f.title + titleSep + quantiDS.nameByQchId(qcId)) -> qcPeptideNumber)
+            })
+          }
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_RAW_ABUNDANCE => {
-          protSetQuantiBuildingCtx.qcIds.foreach(qcId => {
-            var qcRawAbun = if (protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap.contains(qcId)) {
-              protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap(qcId).rawAbundance
-            } else {
-              ""
-            }
-            exportMap += (fields.addField(f.title + titleSep + protSetQuantiBuildingCtx.nameByQchId(qcId)) -> qcRawAbun)
-          })
+          if (isQuanti) {
+            quantiDS.qcIds.foreach(qcId => {
+              var qcRawAbun: Any = null
+              if (protSetQuantiBuildingCtx != null) {
+                qcRawAbun = if (protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap.contains(qcId)) {
+                  protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap(qcId).rawAbundance
+                } else {
+                  ""
+                }
+              }
+              if (pepSetQuantiBuildingCtx != null && pepSetQuantiBuildingCtx.masterQuantPeptide != null && pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap != null) {
+            	qcRawAbun = if (pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap.contains(qcId)) {
+                  pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap(qcId).rawAbundance
+                } else {
+                  ""
+                }
+              }
+              exportMap += (fields.addField(f.title + titleSep + quantiDS.nameByQchId(qcId)) -> qcRawAbun)
+            })
+          }
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE => {
-          protSetQuantiBuildingCtx.qcIds.foreach(qcId => {
-            var qcAbun = if (protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap.contains(qcId)) {
-              protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap(qcId).abundance
-            } else {
-              ""
-            }
-            exportMap += (fields.addField(f.title + titleSep + protSetQuantiBuildingCtx.nameByQchId(qcId)) -> qcAbun)
-          })
+          if (isQuanti) {
+            quantiDS.qcIds.foreach(qcId => {
+              var qcAbun: Any = null
+              if (protSetQuantiBuildingCtx != null) {
+                qcAbun = if (protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap.contains(qcId)) {
+                  protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap(qcId).abundance
+                } else {
+                  ""
+                }
+              }
+              if (pepSetQuantiBuildingCtx != null && pepSetQuantiBuildingCtx.masterQuantPeptide != null && pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap != null) {
+            	qcAbun = if (pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap.contains(qcId)) {
+                  pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap(qcId).abundance
+                } else {
+                  ""
+                }
+              }
+              exportMap += (fields.addField(f.title + titleSep + quantiDS.nameByQchId(qcId)) -> qcAbun)
+            })
+          }
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_PSM_COUNT => {
-          protSetQuantiBuildingCtx.qcIds.foreach(qcId => {
-            var qcPSMCount = if (protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap.contains(qcId)) {
-              protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap(qcId).peptideMatchesCount
-            } else {
-              ""
-            }
-            exportMap += (fields.addField(f.title + titleSep + protSetQuantiBuildingCtx.nameByQchId(qcId)) -> qcPSMCount)
-          })
+          if (isQuanti) {
+            quantiDS.qcIds.foreach(qcId => {
+              var qcPSMCount: Any = null
+              if (protSetQuantiBuildingCtx != null) {
+                qcPSMCount = if (protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap.contains(qcId)) {
+                  protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap(qcId).peptideMatchesCount
+                } else {
+                  ""
+                }
+              }
+              if (pepSetQuantiBuildingCtx != null && pepSetQuantiBuildingCtx.masterQuantPeptide != null && pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap != null) {
+            	qcPSMCount = if (pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap.contains(qcId)) {
+                  pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap(qcId).peptideMatchesCount
+                } else {
+                  ""
+                }
+              }
+              exportMap += (fields.addField(f.title + titleSep + quantiDS.nameByQchId(qcId)) -> qcPSMCount)
+            })
+          }
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_XIC_PROFILIZER_RATIO => {
-          if (quantiDS.ratioDefs != null) {
+          if (isQuanti && quantiDS.ratioDefs != null) {
             var i = 0;
             for (r <- quantiDS.ratioDefs) {
               if (nbS > i + 0) {
@@ -380,7 +436,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
           }
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_XIC_PROFILIZER_TTEST_PVALUE => {
-          if (quantiDS.ratioDefs != null) {
+          if (isQuanti && quantiDS.ratioDefs != null) {
             var i = 0;
             for (r <- quantiDS.ratioDefs) {
               if (nbS > i + 1) {
@@ -391,7 +447,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
           }
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZTEST_PVALUE => {
-          if (quantiDS.ratioDefs != null) {
+          if (isQuanti && quantiDS.ratioDefs != null) {
             var i = 0;
             for (r <- quantiDS.ratioDefs) {
               if (nbS > i + 2) {
@@ -402,7 +458,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
           }
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZSCORE => {
-          if (quantiDS.ratioDefs != null) {
+          if (isQuanti && quantiDS.ratioDefs != null) {
             var i = 0;
             for (r <- quantiDS.ratioDefs) {
               if (nbS > i + 3) {
@@ -410,6 +466,21 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
               }
               i = i + 1
             }
+          }
+        }
+        case ExportConfigConstant.FIELD_PSM_QUANTI_MASTER_QUANT_PEPTIDE_ID => {
+          if (isPepSetQuantiCtx && pepSetQuantiBuildingCtx != null && pepSetQuantiBuildingCtx.masterQuantPeptide != null) {
+            exportMap += (fields.addField(f.title) -> pepSetQuantiBuildingCtx.masterQuantPeptide.id)
+          }
+        }
+        case ExportConfigConstant.FIELD_PSM_QUANTI_ELUTION_TIME => {
+          if (isPepSetQuantiCtx && pepSetQuantiBuildingCtx != null && pepSetQuantiBuildingCtx.masterQuantPeptide != null) {
+            exportMap += (fields.addField(f.title) -> elutionTime)
+          }
+        }
+        case ExportConfigConstant.FIELD_PSM_QUANTI_SELECTION_LEVEL => {
+          if (isPepSetQuantiCtx && pepSetQuantiBuildingCtx != null && pepSetQuantiBuildingCtx.masterQuantPeptide != null) {
+            exportMap += (fields.addField(f.title) -> pepSetQuantiBuildingCtx.masterQuantPeptide.selectionLevel)
           }
         }
         case other => {
@@ -438,9 +509,6 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
     val rsm = identDS.resultSummary
     val rs = rsm.resultSet.get
     val protMatchById = rs.getProteinMatchById
-
-    // TODO: retrieve the right value
-    val groupSetupNumber = 1
 
     // Go through protein sets
     for (protSet <- rsm.proteinSets) {
@@ -476,42 +544,40 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
           for (mqProtSet <- quantiDS.quantRSM.masterQuantProteinSets) {
             if (mqProtSet.proteinSet.id == protSet.id) {
               masterQuantProteinSet = mqProtSet
-              if (exportBestProfile){
+              if (exportBestProfile) {
                 val bestProfile = mqProtSet.getBestProfile(groupSetupNumber)
-                if (bestProfile.isDefined){
+                if (bestProfile.isDefined) {
                   mprofile = bestProfile.get
                 }
-              }else{
+              } else {
                 // all profiles
                 // Iterate over all profiles to export them
-            	for( props <- mqProtSet.properties;
-                   profileByGSNum <- props.getMqProtSetProfilesByGroupSetupNumber;
-                   profiles <- profileByGSNum.get(groupSetupNumber);
-                   profile <- profiles) {
-            	      profileList += profile
-            	}
+                for (
+                  props <- mqProtSet.properties;
+                  profileByGSNum <- props.getMqProtSetProfilesByGroupSetupNumber;
+                  profiles <- profileByGSNum.get(groupSetupNumber);
+                  profile <- profiles
+                ) {
+                  profileList += profile
+                }
               }
             }
           }
-          if (profileList.size == 0){
-          buildingContext = new ProtMatchQuantiBuildingContext(
-            protSet,
-            protSet.peptideSet,
-            typicalProtMatch,
-            masterQuantProteinSet,
-            mprofile,
-            quantiDS.qcIds,
-            quantiDS.nameByQchId)
-          }else{
-            for (p <- profileList){
+          if (profileList.size == 0) {
+            buildingContext = new ProtMatchQuantiBuildingContext(
+              protSet,
+              protSet.peptideSet,
+              typicalProtMatch,
+              masterQuantProteinSet,
+              mprofile)
+          } else {
+            for (p <- profileList) {
               buildingContext = new ProtMatchQuantiBuildingContext(
-            protSet,
-            protSet.peptideSet,
-            typicalProtMatch,
-            masterQuantProteinSet,
-            p,
-            quantiDS.qcIds,
-            quantiDS.nameByQchId)
+                protSet,
+                protSet.peptideSet,
+                typicalProtMatch,
+                masterQuantProteinSet,
+                p)
               this.formatRecord(buildingContext, recordFormatter)
             }
           }

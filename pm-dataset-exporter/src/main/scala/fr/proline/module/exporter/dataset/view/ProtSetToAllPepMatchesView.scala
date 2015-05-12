@@ -11,6 +11,7 @@ import fr.proline.module.exporter.commons.config.ExportConfigField
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
 import fr.proline.module.exporter.commons.config.ExportConfigConstant
 import fr.proline.core.om.model.msi._
+import fr.proline.core.om.model.msq.MasterQuantPeptide
 
 class ProtSetToAllPepMatchesView( val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val titleSep: String, val exportAllProteinSet: Boolean , val exportBestProfile: Boolean )  extends AbstractProtSetToTypicalProtMatchView {
   override var viewName = "all_prot_set_peptide_matches"
@@ -47,15 +48,35 @@ class ProtSetToAllPepMatchesView( val identDS: IdentDataSet, val sheetConfig : E
         typicalProtMatch
       )
 
+       
       protSet.peptideSet.getPeptideInstances.foreach(pepI => {
         val allPepMatchIds = pepI.getPeptideMatchIds
         allPepMatchIds.foreach(pepMatchId => {
-          val buildingContext = new PepMatchBuildingContext(
+          var buildingContext = new PepMatchBuildingContext(
             pepMatch = pepMatchById(pepMatchId),
             protMatch = typicalProtMatch,
             seqMatch = seqMatchByPepId(pepMatchById(pepMatchId).peptideId),
             protMatchBuildingCtx = Some(protMatchBuildingCtx)
           )
+          if (isQuanti){
+            var masterQuantPeptide: MasterQuantPeptide = null
+            for (mqPepSet <- quantiDS.quantRSM.masterQuantPeptides) {
+              var pepId:  Long = -1
+              if( mqPepSet.peptideInstance.isDefined) {
+            	  	pepId = mqPepSet.peptideInstance.get.peptide.id
+              }
+              if (pepId == pepMatchById(pepMatchId).peptide.id) {
+            	  masterQuantPeptide = mqPepSet
+              }
+            }
+              buildingContext = new PepMatchQuantiBuildingContext(
+                pepMatch = pepMatchById(pepMatchId),
+                protMatch = typicalProtMatch,
+                seqMatch = seqMatchByPepId(pepMatchById(pepMatchId).peptideId),
+                protMatchBuildingCtx = Some(protMatchBuildingCtx), 
+                masterQuantPeptide
+                )
+          }
           // Format this peptide match with protein set information
           this.formatRecord(buildingContext, recordFormatter)
 

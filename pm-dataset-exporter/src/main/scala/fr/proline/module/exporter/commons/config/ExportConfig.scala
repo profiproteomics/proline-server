@@ -53,9 +53,9 @@ object ExportConfig{
 	   var informationSheet : ExportConfigSheet =ExportConfigSheet.getAllInformationSheet()
 	  var importSheet : ExportConfigSheet =ExportConfigSheet.getAllImportSheet()
 	  var proteinSetSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinSetSheet(false, false)
-	  var bestPSMSheet : ExportConfigSheet =ExportConfigSheet.getAllBestPSMSheet()
+	  var bestPSMSheet : ExportConfigSheet =ExportConfigSheet.getAllBestPSMSheet(false, false)
 	  var proteinMatchSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinMatchSheet()
-	  var allPSMSheet : ExportConfigSheet = ExportConfigSheet.getAllAllPSMSheet()
+	  var allPSMSheet : ExportConfigSheet = ExportConfigSheet.getAllAllPSMSheet(false, false)
 	  var statSheet : ExportConfigSheet =ExportConfigSheet.getAllStatSheet()
 	  var sheetsList: Array[ExportConfigSheet] =  Array(informationSheet, importSheet, proteinSetSheet, bestPSMSheet, proteinMatchSheet, allPSMSheet, statSheet)
 	  var conf :ExportConfig = new  ExportConfig(
@@ -77,11 +77,11 @@ object ExportConfig{
 	  var informationSheet : ExportConfigSheet =ExportConfigSheet.getAllInformationSheet()
 	  var importSheet : ExportConfigSheet =ExportConfigSheet.getAllImportSheet()
 	  var proteinSetSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinSetSheet(false, true)
-	  var bestPSMSheet : ExportConfigSheet =ExportConfigSheet.getAllBestPSMSheet()
+	  var bestPSMSheet : ExportConfigSheet =ExportConfigSheet.getAllBestPSMSheet(false, true)
 	  bestPSMSheet.defaultDisplayed = false
 	  var proteinMatchSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinMatchSheet()
-	  var allPSMSheet : ExportConfigSheet = ExportConfigSheet.getAllAllPSMSheet()
-	  allPSMSheet.defaultDisplayed = false
+	  var allPSMSheet : ExportConfigSheet = ExportConfigSheet.getAllAllPSMSheet(false, true)
+	  //allPSMSheet.defaultDisplayed = false
 	  var statSheet : ExportConfigSheet =ExportConfigSheet.getAllStatSheet()
 	  statSheet.defaultDisplayed = false
 	  var sheetsList: Array[ExportConfigSheet] =  Array(informationSheet, importSheet, proteinSetSheet, bestPSMSheet, proteinMatchSheet, allPSMSheet, statSheet)
@@ -103,7 +103,8 @@ object ExportConfig{
 	   var informationSheet : ExportConfigSheet =ExportConfigSheet.getAllInformationSheet()
 	   var importSheet : ExportConfigSheet =ExportConfigSheet.getAllImportSheet()
 	   var proteinSetSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinSetSheet(true, false)
-	  var sheetsList: Array[ExportConfigSheet] =  Array(informationSheet, importSheet, proteinSetSheet)
+	   var allPSMSheet : ExportConfigSheet = ExportConfigSheet.getAllAllPSMSheet(true, false)
+	  var sheetsList: Array[ExportConfigSheet] =  Array(informationSheet, importSheet, proteinSetSheet, allPSMSheet)
 	  var conf :ExportConfig = new  ExportConfig(
 	      ExportConfigConstant.FORMAT_XLSX, 
 	      ExportConfigConstant.DECIMAL_SEPARATOR_DOT,  

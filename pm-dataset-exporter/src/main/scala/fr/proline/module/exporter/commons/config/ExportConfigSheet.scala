@@ -59,12 +59,12 @@ object ExportConfigSheet {
 	}
 	
 	// get all for best PSM sheet
-	def getAllBestPSMSheet() :ExportConfigSheet={
+	def getAllBestPSMSheet(fromXIC: Boolean, fromSC: Boolean) :ExportConfigSheet={
 	  val sheet: ExportConfigSheet = new ExportConfigSheet(
 	      ExportConfigConstant.SHEET_BEST_PSM, 
 	      "best PSM from protein sets", 
 	      ExportConfigConstant.PRESENTATION_SHEET_COLUMNS, 
-	      ExportConfigField.getAllBestPSMFieldsArray()
+	      ExportConfigField.getAllBestPSMFieldsArray(fromXIC, fromSC)
 	      )
 	  sheet.defaultDisplayed = true
 	  return sheet
@@ -83,12 +83,12 @@ object ExportConfigSheet {
 	}
 	
 	// get all for all psm sheet
-	def getAllAllPSMSheet() :ExportConfigSheet={
+	def getAllAllPSMSheet(fromXIC: Boolean, fromSC: Boolean) :ExportConfigSheet={
 	  val sheet: ExportConfigSheet = new ExportConfigSheet(
 	      ExportConfigConstant.SHEET_ALL_PSM,
 	      "all PSMs from protein sets", 
 	      ExportConfigConstant.PRESENTATION_SHEET_COLUMNS, 
-	      ExportConfigField.getAllPSMFieldsArray()
+	      ExportConfigField.getAllPSMFieldsArray(fromXIC, fromSC)
 	      )
 	  sheet.defaultDisplayed = false
 	  return sheet

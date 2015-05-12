@@ -144,6 +144,11 @@ object ExportConfigConstant {
       final val FIELD_PSM_RESIDUE_BEFORE: String = "psm_residue_before"
       final val FIELD_PSM_RESIDUE_AFTER: String = "psm_residue_after"
         
+      final val FIELD_PSM_QUANTI_MASTER_QUANT_PEPTIDE_ID = "psm_master_quant_peptide_id"
+      final val FIELD_PSM_QUANTI_ELUTION_TIME = "psm_quanti_elution_time"
+      final val FIELD_PSM_QUANTI_SELECTION_LEVEL = "psm_quanti_selection_level"
+        
+        
       
     // statistics sheet
     final val SHEET_STAT : String  = "stat"  

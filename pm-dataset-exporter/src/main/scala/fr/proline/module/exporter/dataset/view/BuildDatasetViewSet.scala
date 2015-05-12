@@ -168,7 +168,7 @@ object BuildDatasetViewSet extends Logging {
     var childsResultSets: ArrayBuffer[ResultSet] = new ArrayBuffer[ResultSet]()
     if (rsm.resultSet.isDefined) {
       val providerContext = ProviderDecoratedExecutionContext(executionContext)
-      val provider: IResultSetProvider = providerContext.getProvider(classOf[IResultSetProvider])
+      val provider: IResultSetProvider = new SQLResultSetProvider(msiSQLCtx, psSQLCtx, udsSQLCtx)
       val rs = rsm.resultSet.get
       var leavesRsIds: Seq[Long] = getLeafChildsID(rs.id, executionContext)
       leavesRsIds.foreach(rsID => {
