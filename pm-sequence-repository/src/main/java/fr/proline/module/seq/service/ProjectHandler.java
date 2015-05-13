@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -13,11 +12,13 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.persistence.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import fr.profi.util.StringUtils;
 import fr.proline.core.orm.msi.SeqDatabase;
 import fr.proline.core.orm.msi.SequenceMatch;
+import fr.proline.core.orm.msi.ProteinMatch;
 import fr.proline.core.orm.msi.SequenceMatchPK;
 import fr.proline.core.orm.util.DataStoreConnectorFactory;
 import fr.proline.module.seq.BioSequenceProvider;
@@ -63,19 +64,27 @@ public class ProjectHandler {
     	    + " AND ((upper(pm.resultSet.type) = 'SEARCH') OR (upper(pm.resultSet.type) = 'USER'))"
     	    + " AND (ps.proteinSet.isValidated = true) AND(ps.proteinSet.resultSummary IS NOT NULL)";
     
-    // In this version : find all sequence coverage for each protein match via the projectId
+    private static final String UPDATE_QUERY = "UPDATE protein_match  set coverage=? where accession=?";
+    
+    // In this version : find all sequence coverage for each protein match via the projectId and store it in msi db
+   
     public static void fillsequenceMatchesByProteinMatch(final long projectId) {
     	final DataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();
     	final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId);
     	Map<String, Integer> accessionSqmatch = new HashMap<String, Integer>();
+    	int sequencesmatcheslength=0;
     	List<BioSequenceWrapper> bioSequenceWrapperList;
     	if (msiDbConnector == null) {
     		LOG.warn("Project #{} has NO associated MSI Db", projectId);
-    	} else {
+    	}else {
     		EntityManager msiEM = null;
     		try {
     			final EntityManagerFactory emf = msiDbConnector.getEntityManagerFactory();
     			msiEM = emf.createEntityManager();
+    			final Map<Long, SEDbInstanceWrapper> seDbInstances = retrieveAllSeqDatabases(msiEM);
+    			if ((seDbInstances == null) || seDbInstances.isEmpty()) {
+    				LOG.warn("There is NO SEDbInstance in MSI Project #{}", projectId);
+    			} else {
     				final Query pmSdmQuery = msiEM.createQuery(VALIDATED_ACCRSM_QUERY);
     				final List<Object[]> pmSdmLines = pmSdmQuery.getResultList();
     				if ((pmSdmLines != null) && !pmSdmLines.isEmpty()) {
@@ -83,26 +92,32 @@ public class ProjectHandler {
     					accessionSqmatch=fillproteinmatch(pmSdmLines);   					
     					ArrayList<String> values = new ArrayList<>();
     					int biosequencelentgh = 0;
+    					List<String> val = new ArrayList<>();
     					for (Entry<String, Integer> entry : accessionSqmatch.entrySet())
-    					{   
-    						values.add(entry.getKey());
-    						Map<String, List<BioSequenceWrapper>> result = BioSequenceProvider.findBioSequencesBySEDbIdentValues(values);
-    						if(result.get(entry.getKey())!=null){
-    							bioSequenceWrapperList = result.get(entry.getKey());
-    							biosequencelentgh=bioSequenceWrapperList.get(0).getSequence().length();
-    							LOG.debug("the sequence coverage : "+calculsequenceCoverage(biosequencelentgh,entry.getValue()));
-    							result.clear(); 
-    						}else
-    						{
-    							LOG.warn("biosequence does not exist for this proteinmatch");
-    						}  
+    					{   val.add(entry.getKey());
+    					sequencesmatcheslength=entry.getValue();
+    					Map<String, List<BioSequenceWrapper>> result = BioSequenceProvider
+    							.findBioSequencesBySEDbIdentValues(val);
+    					for (Map.Entry<String, List<BioSequenceWrapper>> entry0 : result.entrySet()) {
+    						String seDbIdentValue = entry0.getKey();
+    						List<BioSequenceWrapper> bioSequences = entry0.getValue();
+    						for ( BioSequenceWrapper bsw : bioSequences) {
+    							biosequencelentgh=bsw.getSequence().length();
+    						}	
+    						msiEM.getTransaction().begin();
+    						final Query updateQuery = msiEM.createNativeQuery(UPDATE_QUERY);
+    						updateQuery.setParameter(1, calculsequenceCoverage(biosequencelentgh,sequencesmatcheslength));
+    						updateQuery.setParameter(2, seDbIdentValue);
+    						updateQuery.executeUpdate();
+    						msiEM.getTransaction().commit();
+    					}
+    					val.clear();
     					}
     				}
-    			
+    			}
     		} catch (Exception ex) {
     			LOG.error("Error accessing MSI Db Project #" + projectId, ex);
     		} finally {
-
     			if (msiEM != null) {
     				try {
     					msiEM.close();
@@ -110,12 +125,9 @@ public class ProjectHandler {
     					LOG.error("Error closing MSI Db EntityManager", exClose);
     				}
     			}
-
     		}
     	}
     }
-
-  
     private static final int EXPECTED_LINE_LENGTH = 3;
     
     private static final int EXPECTED_LINE_LENGTH_PM_SQM = 3;
@@ -173,9 +185,7 @@ public class ProjectHandler {
 			
 			if ((pmSdmLines != null) && !pmSdmLines.isEmpty()) {
 			    nSEDbIdentifiers = fillSEDbIdentifiers(pmSdmLines, seDbInstances, seDbIdentifiers);
-			  
 			}
-
 			if (nSEDbIdentifiers >= nExpectedAccessions) {
 			    LOG.debug(
 				    "{} distinct (validated Accession, Description, SeqDatabase) retrieved via ProteinMatchSeqDatabaseMap",
@@ -191,7 +201,6 @@ public class ProjectHandler {
 				nSEDbIdentifiers = fillSEDbIdentifiers(pmLines, seDbInstances,
 					seDbIdentifiers);
 			    }
-
 			    LOG.info(
 				    "{} distinct (validated Accession, Description, SeqDatabase) WITHOUT ProteinMatchSeqDatabaseMap",
 				    nSEDbIdentifiers);
@@ -226,9 +235,7 @@ public class ProjectHandler {
 
 	    for (final SeqDatabase seqDb : seqDbs) {
 		final long seqDbId = seqDb.getId();
-		 LOG.warn("seqDbId", seqDbId);
 		final String name = seqDb.getName();
-		 LOG.warn("seqDbId", name);
 		if (name == null) {
 		    LOG.error("SeqDb #{} name is null", seqDbId);
 		} else {
@@ -317,11 +324,10 @@ public class ProjectHandler {
 	} // End loop for each Result line
 	return nIdentifiers;
     }
-    
-    //***aymen
     private static Map<String, Integer> fillproteinmatch(final List<Object[]> lines) {
     	assert (lines != null) : "fillproteinmatch() lines can not be null";
     	Map<String, Integer> accessionSqmatch = new HashMap<String, Integer>();
+    	List<String> Accessionduplicates = new ArrayList<>();
     	for (final Object[] line : lines) {
     		final int lineLength = line.length;
     		if(lineLength>=EXPECTED_LINE_LENGTH_PM_SQM)
@@ -331,12 +337,13 @@ public class ProjectHandler {
     			String accessvalue=null;
     			int start =0;
     			int stop=0;
+    			int diff=0;
     			Long peptidID=null;
     			if (line[0] instanceof Long) {
     				Id = (Long) line[0];
     			}
     			if (line[1] instanceof String) {
-    				accessvalue = ((String) line[1]).trim(); 
+    				accessvalue = ((String) line[1]).trim();
     			}
     			if (line[2] instanceof SequenceMatchPK) {
     				id = (SequenceMatchPK) line[2];
@@ -346,15 +353,23 @@ public class ProjectHandler {
     			peptidID=(Long)id.getPeptideId();
     			if(Id==null)
     			{
-    				LOG.error("ProteinMAtch id can not be null:{}",Id);
+    				LOG.error("ProteinMatch id can not be null:{}",Id);
     			}else{
     				if(accessvalue==null){
     					LOG.error("accession is null,:{}",accessvalue);
     				}else{
     					if((id.getStart()<0)||(id.getStop()<0)){
-    						LOG.error("sequence Match is null");
+    						LOG.error("sequenceMatch is null");
     					}else{
-    						accessionSqmatch.put(accessvalue, stop-start);
+    							if(Accessionduplicates.contains(accessvalue)){
+    								diff=accessionSqmatch.get(accessvalue);
+    								diff+=stop-start;
+    								accessionSqmatch.put(accessvalue,diff);
+    							}else{
+    								diff+=stop-start;
+    								accessionSqmatch.put(accessvalue,diff);
+    							}
+    						Accessionduplicates.add(accessvalue);
     					}
     				}
     			}
@@ -368,13 +383,10 @@ public class ProjectHandler {
     	}
     	return (Map<String, Integer>) accessionSqmatch;
     }
-    
-public static Set<Long> findDuplicates(List<Long> listContainingDuplicates) {
-    	 
-		final Set<Long> setToReturn = new HashSet<Long>();
-		final Set<Long> set1 = new HashSet<Long>();
- 
-		for (Long yourInt : listContainingDuplicates) {
+public static Set<String> findDuplicates(List<String> listContainingDuplicates) {
+		final Set<String> setToReturn = new HashSet<String>();
+		final Set<String> set1 = new HashSet<String>();
+		for (String yourInt : listContainingDuplicates) {
 			if (!set1.add(yourInt)) {
 				setToReturn.add(yourInt);
 			}
@@ -386,4 +398,5 @@ public static double calculsequenceCoverage(int biosequencelentgth,int sequencem
 	 double average=((double)sequencematchlenttgh/(double)biosequencelentgth)*100;
 	 return average;
 }
+
 }
