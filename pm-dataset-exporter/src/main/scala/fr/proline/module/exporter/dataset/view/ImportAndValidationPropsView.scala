@@ -24,18 +24,20 @@ class ImportAndValidationPropsView (val identDS: IdentDataSet, val sheetConfig :
   var listFields: ArrayBuffer[String] = new ArrayBuffer()
   var nbFiltersPsm: Int = 0
   var nbFiltersProt: Int = 0
-  if (identDS.resultSummary.properties.isDefined) {
-      if (identDS.resultSummary.properties.get.getValidationProperties.isDefined) {
-        val rsmValProp = identDS.resultSummary.properties.get.getValidationProperties.get
+  for (childRsm <- childResultSummarys) {
+  if (childRsm.properties.isDefined) {
+      if (childRsm.properties.get.getValidationProperties.isDefined) {
+        val rsmValProp = childRsm.properties.get.getValidationProperties.get
   
         //Add PSM Filters
         if (rsmValProp.getParams.getPeptideFilters.isDefined) {
-          nbFiltersPsm = rsmValProp.getParams.getPeptideFilters.get.size
+          nbFiltersPsm = Math.max(nbFiltersPsm, rsmValProp.getParams.getPeptideFilters.get.size)
         }
         if (rsmValProp.getParams.getProteinFilters.isDefined) {
-           nbFiltersProt = rsmValProp.getParams.getProteinFilters.size
+           nbFiltersProt = Math.max(nbFiltersProt, rsmValProp.getParams.getProteinFilters.size)
         }
       }
+  }
   }
   logger.debug("ImportAndValidationPropsView with "+nbFiltersPsm+", "+nbFiltersProt)
   for ( f <- sheetConfig.fields ) {
