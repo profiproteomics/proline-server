@@ -49,15 +49,12 @@ public final class TestBioSequenceProvider {
 		System.out.println();
 		System.out.println(formatBioSequenceWrapper(seDbIdentValue, bsw));
 	    }
-
 	}
-
     }
     private static String formatBioSequenceWrapper(final String seDbIdentValue,
 	    final BioSequenceWrapper bioSequenceW) {
 	assert (!StringUtils.isEmpty(seDbIdentValue)) : "formatBioSequenceWrapper() invalid seDbIdentValue";
 	assert (bioSequenceW != null) : "formatBioSequenceWrapper() bioSequenceW is null";
-	assert (StringUtils.isEmpty(seDbIdentValue)) : "hhhh";
 	final StringBuilder buff = new StringBuilder();
 	buff.append(seDbIdentValue);
 	buff.append(SEPARATOR);
