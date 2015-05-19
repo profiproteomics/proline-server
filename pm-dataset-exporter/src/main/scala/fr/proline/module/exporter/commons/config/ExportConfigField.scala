@@ -219,6 +219,41 @@ object ExportConfigField {
 	def getAllPSMFieldsArray(fromXIC: Boolean, fromSC: Boolean) :Array[ExportConfigField]={
 	  return getAllBestPSMFieldsArray(fromXIC, fromSC)
 	}
+	
+	// get all fields for masterQuantPeptideIon
+	def getAllMasterQuantPeptideIon() :Array[ExportConfigField]={
+	  var  listFields  : ArrayBuffer[ExportConfigField]= new ArrayBuffer()
+	  listFields = listFields ++  getAllProteinSetsFieldsArray(false, false, false)
+	  val fieldMasterQuantPeptideId: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PSM_QUANTI_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id")
+	    val fieldQuantiElutionTime: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PSM_QUANTI_ELUTION_TIME, "elution_time")
+	    val fieldQuantiSelectionLevel: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PSM_QUANTI_SELECTION_LEVEL, "selection_level")
+	    val fieldRawAbundance : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_RAW_ABUNDANCE, "raw_abundance") 
+	    val fieldAbundance : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE, "abundance" ) 
+	    val fieldPsmCount : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_PSM_COUNT, "psm_count") 
+	    val fieldRatio: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_XIC_PROFILIZER_RATIO, "ratio")
+	    val fieldTTest: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_XIC_PROFILIZER_TTEST_PVALUE, "t-test")
+	    val fieldZTest: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZTEST_PVALUE, "z-test")
+	    val fieldZScore: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZSCORE, "z-score")
+	    val fieldQuantPeptideIon: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_MASTER_QUANT_PEPTIDE_ION_ID, "master_quant_peptide_ion")
+	    val fieldQuantPeptideIonCharge: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_MASTER_QUANT_PEPTIDE_ION_CHARGE, "master_quant_peptide_ion_charge")
+	    val fieldQuantPeptideIonElutionTime: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME, "master_quant_peptide_ion_elution_time")
+	    val fieldQuantPeptideIonFeatureId: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_MASTER_QUANT_PEPTIDE_ION_FEATURE_ID, "master_quant_peptide_ion_feature_id")
+	    listFields += fieldMasterQuantPeptideId
+	    listFields += fieldQuantiElutionTime
+	    listFields += fieldQuantiSelectionLevel
+	    listFields += fieldPsmCount
+	    listFields += fieldRawAbundance
+	    listFields += fieldAbundance
+	    listFields += fieldRatio
+	    listFields += fieldTTest
+	    listFields += fieldZTest
+	    listFields += fieldZScore
+	    listFields += fieldQuantPeptideIon
+	    listFields += fieldQuantPeptideIonCharge
+	    listFields += fieldQuantPeptideIonElutionTime
+	    listFields += fieldQuantPeptideIonFeatureId
+	  return listFields.toArray
+	}
         
 	// get all fields for stat sheet
 	def getAllStatFieldsArray() :Array[ExportConfigField]={

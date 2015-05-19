@@ -51,6 +51,9 @@ class ProlineConfigViewSetTemplateAsXLSX(config:ExportConfig)  extends IViewSetT
 	      case ExportConfigConstant.SHEET_ALL_PSM => {
 	         viewType = DatasetViewTypes.PROT_SET_TO_ALL_PEPTIDE_MATCHES
 	      }
+	      case ExportConfigConstant.SHEET_MASTER_QUANT_PEPTIDE_ION => {
+	         viewType = DatasetViewTypes.MASTER_QUANT_PEPTIDE_ION
+	      }
 	      case ExportConfigConstant.SHEET_STAT => {
 	         viewType = DatasetViewTypes.STATISTICS
 	      }

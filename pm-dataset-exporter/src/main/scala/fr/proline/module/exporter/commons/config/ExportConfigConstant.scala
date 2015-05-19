@@ -148,6 +148,12 @@ object ExportConfigConstant {
       final val FIELD_PSM_QUANTI_ELUTION_TIME = "psm_quanti_elution_time"
       final val FIELD_PSM_QUANTI_SELECTION_LEVEL = "psm_quanti_selection_level"
         
+        // masterQuantPeptideIon sheet  
+    final val SHEET_MASTER_QUANT_PEPTIDE_ION : String  = "master_quant_peptide_ion"
+      final val FIELD_MASTER_QUANT_PEPTIDE_ION_ID = "master_quant_peptide_ion_id"
+      final val FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME = "master_quant_peptide_ion_elution_time"
+      final val FIELD_MASTER_QUANT_PEPTIDE_ION_CHARGE = "master_quant_peptide_ion_charge"
+      final val FIELD_MASTER_QUANT_PEPTIDE_ION_FEATURE_ID = "master_quant_peptide_ion_feature_id"  
         
       
     // statistics sheet

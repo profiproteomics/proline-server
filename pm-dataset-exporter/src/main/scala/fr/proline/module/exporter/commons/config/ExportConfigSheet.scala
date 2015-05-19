@@ -94,6 +94,19 @@ object ExportConfigSheet {
 	  return sheet
 	}
 	
+	// get all for masterQuantPeptideIon
+	def getAllMasterQuantPeptideIon() :ExportConfigSheet={
+	  val sheet: ExportConfigSheet = new ExportConfigSheet(
+	      ExportConfigConstant.SHEET_MASTER_QUANT_PEPTIDE_ION,
+	      "master quant peptide ion", 
+	      ExportConfigConstant.PRESENTATION_SHEET_COLUMNS, 
+	      ExportConfigField.getAllMasterQuantPeptideIon()
+	      )
+	  sheet.defaultDisplayed = false
+	  return sheet
+	}
+	
+	
 	
   // get all for stat sheet
 	def getAllStatSheet() :ExportConfigSheet={

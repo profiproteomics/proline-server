@@ -117,11 +117,13 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
     val isProtSetQuantiCtx: Boolean = (buildingContext.isInstanceOf[ProtMatchQuantiBuildingContext])
     val isProtSetCtxDefinedForPep: Boolean = (isPepSetCtx && buildingContext.asInstanceOf[PepMatchBuildingContext].protMatchBuildingCtx.isDefined)
     val isPepSetQuantiCtx: Boolean = (buildingContext.isInstanceOf[PepMatchQuantiBuildingContext])
+    val isPepIonSetQuantiCtx: Boolean = (buildingContext.isInstanceOf[PepIonMatchQuantiBuildingContext])
 
     val protSetBuildingCtxOpt: ProtMatchBuildingContext = if (isProtSetCtx) buildingContext.asInstanceOf[ProtMatchBuildingContext] else (if (isProtSetCtxDefinedForPep) buildingContext.asInstanceOf[PepMatchBuildingContext].protMatchBuildingCtx.get else null)
     val allPepMatchesBuildingCtx: PepMatchBuildingContext = if (isProtSetCtx) null else buildingContext.asInstanceOf[PepMatchBuildingContext]
     val protSetQuantiBuildingCtx: ProtMatchQuantiBuildingContext = if (isProtSetQuantiCtx) buildingContext.asInstanceOf[ProtMatchQuantiBuildingContext] else null
     val pepSetQuantiBuildingCtx: PepMatchQuantiBuildingContext = if (isPepSetQuantiCtx) buildingContext.asInstanceOf[PepMatchQuantiBuildingContext] else null
+    val pepIonSetQuantiBuildingCtx: PepIonMatchQuantiBuildingContext = if (isPepIonSetQuantiCtx) buildingContext.asInstanceOf[PepIonMatchQuantiBuildingContext] else null
 
     var protSet: ProteinSet = null
     var protMatch: ProteinMatch = null
@@ -376,6 +378,13 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
                   ""
                 }
               }
+              if (pepIonSetQuantiBuildingCtx != null && pepIonSetQuantiBuildingCtx.masterQuantPeptideIon != null && pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.quantPeptideIonMap != null) {
+            	qcRawAbun = if (pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.quantPeptideIonMap.contains(qcId)) {
+                  pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.quantPeptideIonMap(qcId).rawAbundance
+                } else {
+                  ""
+                }
+              }
               exportMap += (fields.addField(f.title + titleSep + quantiDS.nameByQchId(qcId)) -> qcRawAbun)
             })
           }
@@ -398,6 +407,13 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
                   ""
                 }
               }
+              if (pepIonSetQuantiBuildingCtx != null && pepIonSetQuantiBuildingCtx.masterQuantPeptideIon != null && pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.quantPeptideIonMap != null) {
+            	qcAbun = if (pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.quantPeptideIonMap.contains(qcId)) {
+                  pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.quantPeptideIonMap(qcId).abundance
+                } else {
+                  ""
+                }
+              }
               exportMap += (fields.addField(f.title + titleSep + quantiDS.nameByQchId(qcId)) -> qcAbun)
             })
           }
@@ -416,6 +432,13 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
               if (pepSetQuantiBuildingCtx != null && pepSetQuantiBuildingCtx.masterQuantPeptide != null && pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap != null) {
             	qcPSMCount = if (pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap.contains(qcId)) {
                   pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap(qcId).peptideMatchesCount
+                } else {
+                  ""
+                }
+              }
+              if (pepIonSetQuantiBuildingCtx != null && pepIonSetQuantiBuildingCtx.masterQuantPeptideIon != null && pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.quantPeptideIonMap != null) {
+            	qcPSMCount = if (pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.quantPeptideIonMap.contains(qcId)) {
+                  pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.quantPeptideIonMap(qcId).peptideMatchesCount
                 } else {
                   ""
                 }
@@ -481,6 +504,26 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
         case ExportConfigConstant.FIELD_PSM_QUANTI_SELECTION_LEVEL => {
           if (isPepSetQuantiCtx && pepSetQuantiBuildingCtx != null && pepSetQuantiBuildingCtx.masterQuantPeptide != null) {
             exportMap += (fields.addField(f.title) -> pepSetQuantiBuildingCtx.masterQuantPeptide.selectionLevel)
+          }
+        }
+        case ExportConfigConstant.FIELD_MASTER_QUANT_PEPTIDE_ION_ID => {
+          if (isPepIonSetQuantiCtx && pepIonSetQuantiBuildingCtx != null && pepIonSetQuantiBuildingCtx.masterQuantPeptideIon != null) {
+            exportMap += (fields.addField(f.title) -> pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.id)
+          }
+        }
+        case ExportConfigConstant.FIELD_MASTER_QUANT_PEPTIDE_ION_CHARGE => {
+          if (isPepIonSetQuantiCtx && pepIonSetQuantiBuildingCtx != null && pepIonSetQuantiBuildingCtx.masterQuantPeptideIon != null) {
+            exportMap += (fields.addField(f.title) -> pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.charge)
+          }
+        }
+        case ExportConfigConstant.FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME => {
+          if (isPepIonSetQuantiCtx && pepIonSetQuantiBuildingCtx != null && pepIonSetQuantiBuildingCtx.masterQuantPeptideIon != null) {
+            exportMap += (fields.addField(f.title) -> dcf4.format(pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.elutionTime))
+          }
+        }
+        case ExportConfigConstant.FIELD_MASTER_QUANT_PEPTIDE_ION_FEATURE_ID => {
+          if (isPepIonSetQuantiCtx && pepIonSetQuantiBuildingCtx != null && pepIonSetQuantiBuildingCtx.masterQuantPeptideIon != null) {
+            exportMap += (fields.addField(f.title) -> pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.lcmsMasterFeatureId.get)
           }
         }
         case other => {

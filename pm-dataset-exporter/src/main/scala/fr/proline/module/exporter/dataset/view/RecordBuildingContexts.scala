@@ -9,6 +9,7 @@ import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq.MasterQuantProteinSet
 import fr.proline.core.om.model.msq.MasterQuantProteinSetProfile
 import fr.proline.core.om.model.msq.MasterQuantPeptide
+import fr.proline.core.om.model.msq.MasterQuantPeptideIon
 
 
 class ProtMatchBuildingContext(
@@ -61,3 +62,14 @@ class PepMatchQuantiBuildingContext(
    protMatchBuildingCtx: Option[ProtMatchBuildingContext] ,
   var masterQuantPeptide: MasterQuantPeptide
   ) extends PepMatchBuildingContext (pepMatch, protMatch,seqMatch, protMatchBuildingCtx )
+
+
+
+class PepIonMatchQuantiBuildingContext(
+     pepMatch: PeptideMatch,
+   protMatch: ProteinMatch,
+   seqMatch: SequenceMatch,
+   protMatchBuildingCtx: Option[ProtMatchBuildingContext] ,
+   masterQuantPeptide: MasterQuantPeptide,
+  var masterQuantPeptideIon: MasterQuantPeptideIon
+  ) extends PepMatchQuantiBuildingContext (pepMatch, protMatch,seqMatch, protMatchBuildingCtx, masterQuantPeptide )

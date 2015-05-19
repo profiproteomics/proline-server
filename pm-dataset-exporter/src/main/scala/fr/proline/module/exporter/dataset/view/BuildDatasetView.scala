@@ -91,7 +91,7 @@ object BuildDatasetView {
     decSep.setDecimalSeparator(exportConfig.decimalSeparator)
     decimalFormat.setDecimalFormatSymbols(decSep)
     decimalFormat.setGroupingUsed(false)
-    val titleSep: String = exportConfig.titleSeparator
+    val titleSep: String = if (exportConfig.titleSeparator == null)  ExportConfigConstant.SEPARATOR_INCREMENTAL_TITLE_UNDERSCORE else exportConfig.titleSeparator
     val exportAllProteinSet: Boolean = exportConfig.dataExport.allProteinSet
     val exportBestProfile: Boolean = exportConfig.dataExport.bestProfile
     for (sheet <- exportConfig.sheets) {
@@ -113,6 +113,9 @@ object BuildDatasetView {
         }
         case ExportConfigConstant.SHEET_ALL_PSM => {
           buildMap += (DatasetViewTypes.PROT_SET_TO_ALL_PEPTIDE_MATCHES -> { ds: IdentDataSet => new ProtSetToAllPepMatchesView(ds, sheet, dateFormat, decimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
+        }
+        case ExportConfigConstant.SHEET_MASTER_QUANT_PEPTIDE_ION => {
+          buildMap += (DatasetViewTypes.MASTER_QUANT_PEPTIDE_ION -> { ds: IdentDataSet => new MasterQuantPeptideIonView(ds, sheet, dateFormat, decimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
         }
         case ExportConfigConstant.SHEET_STAT => {
           buildMap += (DatasetViewTypes.STATISTICS -> { ds: IdentDataSet => new StatisticsView(ds.resultSummary, sheet, dateFormat, decimalFormat) })
