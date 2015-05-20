@@ -63,10 +63,11 @@ class XtandemParser(  val xtandemFile : File,
   // Inherited methods
   val importProperties: Map[String,Any] = null
   val msLevel: Int = 2
-  var msQueries: Array[MsQuery] = Array()
+  var msQueriesList : ArrayBuffer[MsQuery] =  new ArrayBuffer[MsQuery]
+  var msQueries = msQueriesList.toArray
   val hasDecoyResultSet: Boolean = searchSettingIsDecoy 
   val hasMs2Peaklist: Boolean = true
-  
+
   
   private var searchSettingIsDecoy: Boolean = false
   private var ms2Query: Ms2Query = null
@@ -398,8 +399,7 @@ class XtandemParser(  val xtandemFile : File,
           spectrumTitle = spectrumTitle
           )
         
-//        msQueries.put(dbGroupModelId,ms2Query)
-//        msQueries :+ ms2Query
+        msQueriesList += ms2Query
 
         //GAMLTrace variables
         for (gamlTrace <- gs.gamlTraceList) {
@@ -560,7 +560,6 @@ class XtandemParser(  val xtandemFile : File,
 //              logger.debug("IY - XtandemParser.scala - Ignoring new peptide. Seq = " + dbDomainSeq + ", peptide = " + peptide)
             }
             locatedPtms.clear()
-            
 
             val dbDomainIdParts: Array[String] = dbDomainId.split("\\.")
             var dbDomainIdPartsInt: Array[Int] = new Array[Int](dbDomainIdParts.length)
@@ -588,6 +587,7 @@ class XtandemParser(  val xtandemFile : File,
       } // end of GroupSupport loop
     } //End "for groupModel gm" loop
     
+    msQueries = msQueriesList.toArray
 
     //logger.debug("IY - XtandemParser.scala - peptideMatches = " + peptideMatches )
     val searchSettings = new SearchSettings(
