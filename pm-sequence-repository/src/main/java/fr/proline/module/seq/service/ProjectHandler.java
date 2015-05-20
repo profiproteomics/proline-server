@@ -8,13 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
+
 import javax.persistence.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import fr.profi.util.StringUtils;
 import fr.proline.core.orm.msi.SeqDatabase;
 import fr.proline.core.orm.msi.SequenceMatch;
@@ -73,6 +72,7 @@ public class ProjectHandler {
     	final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId);
     	Map<String, Integer> accessionSqmatch = new HashMap<String, Integer>();
     	int sequencesmatcheslength=0;
+        
     	List<BioSequenceWrapper> bioSequenceWrapperList;
     	if (msiDbConnector == null) {
     		LOG.warn("Project #{} has NO associated MSI Db", projectId);
@@ -106,7 +106,7 @@ public class ProjectHandler {
     						}	
     						msiEM.getTransaction().begin();
     						final Query updateQuery = msiEM.createNativeQuery(UPDATE_QUERY);
-    						updateQuery.setParameter(1, calculsequenceCoverage(biosequencelentgh,sequencesmatcheslength));
+    						updateQuery.setParameter(1,calculsequenceCoverage(biosequencelentgh,sequencesmatcheslength));
     						updateQuery.setParameter(2, seDbIdentValue);
     						updateQuery.executeUpdate();
     						msiEM.getTransaction().commit();
@@ -222,7 +222,6 @@ public class ProjectHandler {
 	    }
 	}
    }
- 
     private static Map<Long, SEDbInstanceWrapper> retrieveAllSeqDatabases(final EntityManager msiEM) {
 	Map<Long, SEDbInstanceWrapper> result = null;
 
@@ -327,23 +326,26 @@ public class ProjectHandler {
     private static Map<String, Integer> fillproteinmatch(final List<Object[]> lines) {
     	assert (lines != null) : "fillproteinmatch() lines can not be null";
     	Map<String, Integer> accessionSqmatch = new HashMap<String, Integer>();
-    	List<String> Accessionduplicates = new ArrayList<>();
+    	Map<String, List<Integer>> temp = new HashMap<String, List<Integer>>();
+    	HashSet<Integer> Seqsorted = new HashSet<Integer>();
+    	List<String> Accessionduplicated = new ArrayList<>();
+    	List<Integer> SeqLists = new ArrayList<Integer>();
+    	List<Integer> Seqindex = new ArrayList<Integer>();
     	for (final Object[] line : lines) {
     		final int lineLength = line.length;
     		if(lineLength>=EXPECTED_LINE_LENGTH_PM_SQM)
     		{
     			SequenceMatchPK id = null;
     			Long Id = null;
-    			String accessvalue=null;
+    			String accession=null;
     			int start =0;
     			int stop=0;
-    			int diff=0;
     			Long peptidID=null;
     			if (line[0] instanceof Long) {
     				Id = (Long) line[0];
     			}
     			if (line[1] instanceof String) {
-    				accessvalue = ((String) line[1]).trim();
+    				accession = ((String) line[1]).trim();
     			}
     			if (line[2] instanceof SequenceMatchPK) {
     				id = (SequenceMatchPK) line[2];
@@ -355,21 +357,28 @@ public class ProjectHandler {
     			{
     				LOG.error("ProteinMatch id can not be null:{}",Id);
     			}else{
-    				if(accessvalue==null){
-    					LOG.error("accession is null,:{}",accessvalue);
+    				if(accession==null){
+    					LOG.error("accession is null,:{}",accession);
     				}else{
     					if((id.getStart()<0)||(id.getStop()<0)){
     						LOG.error("sequenceMatch is null");
-    					}else{
-    							if(Accessionduplicates.contains(accessvalue)){
-    								diff=accessionSqmatch.get(accessvalue);
-    								diff+=stop-start;
-    								accessionSqmatch.put(accessvalue,diff);
-    							}else{
-    								diff+=stop-start;
-    								accessionSqmatch.put(accessvalue,diff);
-    							}
-    						Accessionduplicates.add(accessvalue);
+    					}else{  
+    						if(Accessionduplicated.contains(accession)){
+    							Seqindex.clear();Seqsorted.clear();SeqLists=temp.get(accession);
+    							SeqLists.addAll(getSequencesIndexes(start,stop));
+    							temp.put(accession,SeqLists);
+    							Seqindex.addAll(temp.get(accession));
+    							Seqsorted.addAll(Seqindex);
+    							accessionSqmatch.put(accession,Seqsorted.size());
+    						}else{
+    							SeqLists.clear();Seqsorted.clear();Seqindex.clear();
+    							SeqLists.addAll(getSequencesIndexes(start,stop));
+    							temp.put(accession,SeqLists);
+    							Seqindex.addAll(temp.get(accession));
+    							Seqsorted.addAll(Seqindex);
+    							accessionSqmatch.put(accession,Seqsorted.size());
+    						}
+    						Accessionduplicated.add(accession);
     					}
     				}
     			}
@@ -398,5 +407,11 @@ public static double calculsequenceCoverage(int biosequencelentgth,int sequencem
 	 double average=((double)sequencematchlenttgh/(double)biosequencelentgth)*100;
 	 return average;
 }
-
+public static List<Integer> getSequencesIndexes(int start,int stop){
+	List<Integer> seqList = new ArrayList();
+	for(int i=start;i<=stop;i++){
+		seqList.add(i);
+	}
+	return (seqList);
+}
 }
