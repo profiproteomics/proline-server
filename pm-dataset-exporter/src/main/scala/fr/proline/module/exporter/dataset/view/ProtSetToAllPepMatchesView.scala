@@ -28,6 +28,7 @@ class ProtSetToAllPepMatchesView( val identDS: IdentDataSet, val sheetConfig : E
 
     // Iterate over RSM protein sets
     for (protSet <- rsm.proteinSets) {
+       if (exportAllProteinSet || protSet.isValidated){ // filter on validated proteinSet
       // Note that we export only protein matches which are loaded with the RSM
       // The result will depend of provider which have been used
 
@@ -82,7 +83,7 @@ class ProtSetToAllPepMatchesView( val identDS: IdentDataSet, val sheetConfig : E
 
         })
       })
-
+    }
     }
 
   }
