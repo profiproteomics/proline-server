@@ -36,6 +36,7 @@ object ExportConfigField {
 	  new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_SUBMITTED_QUERIES_COUNT, "submitted_queries_count"),
 	  new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_SEARCHED_SEQUENCES_COUNT, "searched_sequences_count"),
 	  new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_SOFTWARE_NAME, "software_name"),
+	  new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_SOFTWARE_VERSION, "software_version"),
 	  new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_INSTRUMENT_CONFIG, "instrument_config"),
 	  new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_DATABASE_NAMES, "database_names"),
 	  new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_DATABASE_RELEASES, "database_releases"),
