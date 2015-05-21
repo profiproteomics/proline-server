@@ -75,7 +75,7 @@ object ExportConfigField {
 	  val fieldId : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_ID, "protein_set_id")
 	  val fieldAcc : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_ACCESSION, "accession")
 	  val fieldDesc : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_DESCRIPTION, "description")
-	  val fieldScore : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_SCORE, "score")
+	  val fieldScore : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_SCORE, "protein_set_score")
 	  val fieldIsVal : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_IS_VALIDATED, "is_validated")
 	  val fieldSelLevel : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_SELECTION_LEVEL, "selection_level")
 	  val fieldNbSameset : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SAMESET_PROTEIN_MATCHES, "#sameset_protein_matches")
@@ -164,7 +164,7 @@ object ExportConfigField {
 	  new ExportConfigField(ExportConfigConstant.FIELD_PSM_PEPTIDE_ID, "peptide_id"),
 	  new ExportConfigField(ExportConfigConstant.FIELD_PSM_SEQUENCE, "sequence"),
 	  new ExportConfigField(ExportConfigConstant.FIELD_PSM_MODIFICATIONS, "modifications"),
-	  new ExportConfigField(ExportConfigConstant.FIELD_PSM_SCORE, "score"),
+	  new ExportConfigField(ExportConfigConstant.FIELD_PSM_SCORE, "psm_score"),
 	  new ExportConfigField(ExportConfigConstant.FIELD_PSM_CALCULATED_MASS, "calculated_mass"),
 	  new ExportConfigField(ExportConfigConstant.FIELD_PSM_CHARGE, "charge"),
 	  new ExportConfigField(ExportConfigConstant.FIELD_PSM_EXPERIMENTAL_MOZ, "experimental_moz"),

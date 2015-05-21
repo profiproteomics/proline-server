@@ -4,6 +4,7 @@ package fr.proline.module.exporter.commons.config
 import com.typesafe.scalalogging.slf4j.Logging
 import fr.profi.util.serialization._
 import scala.collection.mutable.ArrayBuffer
+import java.text.DecimalFormat
 
 /**
  * read the configuration file (json) and build the configuration parameters
@@ -97,6 +98,23 @@ object ExportConfigManager extends Logging {
 	  // to JSON
 	  defaultConfig = ExportConfig.toJSON(confObj)
 	  return defaultConfig
+	}
+	
+	// format the given value depending of the given DecimalFormat
+	def format(decimalFormat: DecimalFormat, value: Any): Any = {
+	  if (value == null || value.equals("") || (value.isInstanceOf[Double]  && value.asInstanceOf[Double].isNaN()) || (value.isInstanceOf[Float]  && value.asInstanceOf[Float].isNaN())){
+	    return ""
+	  }else if (!value.isInstanceOf[Double] && !value.isInstanceOf[Float] && !value.isInstanceOf[Int]){
+	    return value
+	  }
+	  else{
+	    if (decimalFormat.getDecimalFormatSymbols().getDecimalSeparator() == ExportConfigConstant.DECIMAL_SEPARATOR_DOT){
+	      return decimalFormat.format(value).toDouble
+	    }else {
+	      return decimalFormat.format(value)
+	    }
+	  }
+	  
 	}
 	
 	

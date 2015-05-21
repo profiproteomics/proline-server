@@ -15,6 +15,7 @@ import scala.collection.immutable.ListMap
 import fr.proline.module.exporter.api.view.IFixedDatasetView
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
 import com.typesafe.scalalogging.slf4j.Logging
+import fr.proline.module.exporter.commons.config.ExportConfigManager
 
 
 class ImportAndValidationPropsView (val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val titleSep: String ) extends IFixedDatasetView with Logging{
@@ -119,11 +120,11 @@ class ImportAndValidationPropsView (val identDS: IdentDataSet, val sheetConfig :
        } //End get Parser parameters
     // 
   var hasPsmFilterExpectedFdr: Boolean = false
-  var psmFilterExpectedFdr: String = "-"
+  var psmFilterExpectedFdr: Any = "-"
   var hasPsmFilter: Boolean = false
   var psmFilters: Array[String] = Array()
   var hasProteinFilterExpectedFdr: Boolean = false
-  var proteinFilterExpectedFdr: String =  "-"
+  var proteinFilterExpectedFdr: Any =  "-"
   var hasProteinFilter: Boolean = false
   var proteinFilters: Array[String] = Array()
     
@@ -137,7 +138,7 @@ class ImportAndValidationPropsView (val identDS: IdentDataSet, val sheetConfig :
         //allFieldsNames += fields.PSM_FILTER_EXPECTED_FDR.toString 
         hasPsmFilterExpectedFdr = true
         if (rsmValProp.getParams.getPeptideExpectedFdr.isDefined){
-        	psmFilterExpectedFdr = decimalFormat.format(rsmValProp.getParams.getPeptideExpectedFdr.get)
+        	psmFilterExpectedFdr = ExportConfigManager.format(decimalFormat, rsmValProp.getParams.getPeptideExpectedFdr.get)
         }
         
         //Add PSM Filters
@@ -175,7 +176,7 @@ class ImportAndValidationPropsView (val identDS: IdentDataSet, val sheetConfig :
 		//allFieldsNames +=  fields.PROT_FILTER_EXPECTED_FDR.toString
 		hasProteinFilterExpectedFdr = true
 		if (rsmValProp.getParams.getProteinExpectedFdr.isDefined){
-		  proteinFilterExpectedFdr= decimalFormat.format(rsmValProp.getParams.getProteinExpectedFdr.get)
+		  proteinFilterExpectedFdr= ExportConfigManager.format(decimalFormat, rsmValProp.getParams.getProteinExpectedFdr.get)
 		}
         
 		//Add Protein Filters

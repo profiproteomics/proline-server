@@ -111,6 +111,8 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
     dcf2.setDecimalFormatSymbols(decimalFormat.getDecimalFormatSymbols())
     var dcf4: DecimalFormat = new DecimalFormat("0.####")
     dcf4.setDecimalFormatSymbols(decimalFormat.getDecimalFormatSymbols())
+    var dcf6: DecimalFormat = new DecimalFormat("0.######")
+    dcf6.setDecimalFormatSymbols(decimalFormat.getDecimalFormatSymbols())
 
     val isProtSetCtx: Boolean = (buildingContext.isInstanceOf[ProtMatchBuildingContext])
     val isPepSetCtx: Boolean = (buildingContext.isInstanceOf[PepMatchBuildingContext])
@@ -135,11 +137,11 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
     }
 
     var protSetId = -1l
-    var protSetScore = ""
+    var protSetScore: Any = ""
     var protSetValid = "false"
     if (protSetBuildingCtxOpt != null) {
       protSetId = protSetBuildingCtxOpt.protSet.id
-      protSetScore = dcf1.format(protSetBuildingCtxOpt.protSet.peptideSet.score)
+      protSetScore = ExportConfigManager.format(dcf1, protSetBuildingCtxOpt.protSet.peptideSet.score)
       protSetValid = protSetBuildingCtxOpt.protSet.isValidated.toString
     }
 
@@ -152,7 +154,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
 
     val peptide = if (pepMatch == null) null else pepMatch.peptide
     val initialQueryId = if (pepMatch == null) null else Option(pepMatch.msQuery).map(_.initialId).getOrElse(null)
-    val experimentalMoz = if (pepMatch == null) null else decimalFormat.format(Option(pepMatch.msQuery).map(_.moz).getOrElse(null))
+    val experimentalMoz = if (pepMatch == null) null else ExportConfigManager.format(dcf4, (Option(pepMatch.msQuery).map(_.moz).getOrElse(null)))
 
     val resBefore = if (pepMatch == null) null else if (seqMatch.residueBefore == '\0') '-' else seqMatch.residueBefore
     val resAfter = if (pepMatch == null) null else if (seqMatch.residueAfter == '\0') '-' else seqMatch.residueAfter
@@ -165,6 +167,8 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
         0
     }
 
+    // score
+    var score: Double = protSet.peptideSet.score
     // Add some statistics
     var stats: List[String] = null
     var nbS = 0
@@ -178,10 +182,10 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
     }
 
     // masterquantPeptide
-    var elutionTime: String = ""
+    var elutionTime: Any = ""
     if (isPepSetQuantiCtx && pepSetQuantiBuildingCtx != null && pepSetQuantiBuildingCtx.masterQuantPeptide != null) {
       val bestQPep = pepSetQuantiBuildingCtx.masterQuantPeptide.getBestQuantPeptide
-      elutionTime = if (bestQPep.elutionTime.isNaN()) "" else dcf4.format(bestQPep.elutionTime)
+      elutionTime = if (bestQPep.elutionTime.isNaN()) "" else ExportConfigManager.format(dcf4, bestQPep.elutionTime) 
     }
 
     var exportMap: ListMap[String, Any] = ListMap()
@@ -198,7 +202,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
           exportMap += (fields.addField(f.title) -> protMatch.description)
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_SCORE => {
-          exportMap += (fields.addField(f.title) -> dcf1.format(protSet.peptideSet.score))
+          exportMap += (fields.addField(f.title) -> ExportConfigManager.format(decimalFormat, score))
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_IS_VALIDATED => {
           exportMap += (fields.addField(f.title) -> protSet.isValidated.toString)
@@ -213,10 +217,10 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
           exportMap += (fields.addField(f.title) -> protSet.getSubSetProteinMatchIds.length)
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_COVERAGE => {
-          exportMap += (fields.addField(f.title) -> dcf1.format(protMatch.coverage))
+          exportMap += (fields.addField(f.title) -> ExportConfigManager.format(dcf1, protMatch.coverage))
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_MW => {
-          exportMap += (fields.addField(f.title) -> Option(protMatch.protein).flatMap(_.map(_.mass)).getOrElse(0.0))
+          exportMap += (fields.addField(f.title) -> ExportConfigManager.format(decimalFormat, Option(protMatch.protein).flatMap(_.map(_.mass)).getOrElse(0.0)))
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SEQUENCES => {
           exportMap += (fields.addField(f.title) -> protSetBuildingCtxOpt.allSeqs.distinct.length)
@@ -243,7 +247,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
           exportMap += (fields.addField(f.title) -> !peptideSet.isSubset)
         }
         case ExportConfigConstant.FIELD_PROTEIN_MATCH_PEPTIDE_SET_SCORE => {
-          exportMap += (fields.addField(f.title) -> dcf1.format(peptideSet.score))
+          exportMap += (fields.addField(f.title) -> ExportConfigManager.format(dcf1, peptideSet.score))
         }
         case ExportConfigConstant.FIELD_PSM_PEPTIDE_ID => {
           exportMap += (fields.addField(f.title) -> peptide.id)
@@ -255,10 +259,10 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
           exportMap += (fields.addField(f.title) -> peptide.readablePtmString)
         }
         case ExportConfigConstant.FIELD_PSM_SCORE => {
-          exportMap += (fields.addField(f.title) -> dcf2.format(pepMatch.score))
+          exportMap += (fields.addField(f.title) -> ExportConfigManager.format(decimalFormat, pepMatch.score))
         }
         case ExportConfigConstant.FIELD_PSM_CALCULATED_MASS => {
-          exportMap += (fields.addField(f.title) -> dcf4.format(peptide.calculatedMass))
+          exportMap += (fields.addField(f.title) -> ExportConfigManager.format(dcf4, peptide.calculatedMass))
         }
         case ExportConfigConstant.FIELD_PSM_CHARGE => {
           exportMap += (fields.addField(f.title) -> Option(pepMatch.msQuery).map(_.charge).getOrElse(null))
@@ -267,7 +271,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
           exportMap += (fields.addField(f.title) -> experimentalMoz)
         }
         case ExportConfigConstant.FIELD_PSM_DELTA_MOZ => {
-          exportMap += (fields.addField(f.title) -> decimalFormat.format(pepMatch.deltaMoz))
+          exportMap += (fields.addField(f.title) -> ExportConfigManager.format(dcf6, pepMatch.deltaMoz))
         }
         case ExportConfigConstant.FIELD_PSM_RT => {
           exportMap += (fields.addField(f.title) -> "-")
@@ -385,7 +389,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
                   ""
                 }
               }
-              exportMap += (fields.addField(f.title + titleSep + quantiDS.nameByQchId(qcId)) -> qcRawAbun)
+              exportMap += (fields.addField(f.title + titleSep + quantiDS.nameByQchId(qcId)) -> ExportConfigManager.format(decimalFormat,qcRawAbun))
             })
           }
         }
@@ -414,7 +418,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
                   ""
                 }
               }
-              exportMap += (fields.addField(f.title + titleSep + quantiDS.nameByQchId(qcId)) -> qcAbun)
+              exportMap += (fields.addField(f.title + titleSep + quantiDS.nameByQchId(qcId)) -> ExportConfigManager.format(decimalFormat,qcAbun))
             })
           }
         }
@@ -443,7 +447,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
                   ""
                 }
               }
-              exportMap += (fields.addField(f.title + titleSep + quantiDS.nameByQchId(qcId)) -> qcPSMCount)
+              exportMap += (fields.addField(f.title + titleSep + quantiDS.nameByQchId(qcId)) -> ExportConfigManager.format(decimalFormat,qcPSMCount))
             })
           }
         }
@@ -518,7 +522,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
         }
         case ExportConfigConstant.FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME => {
           if (isPepIonSetQuantiCtx && pepIonSetQuantiBuildingCtx != null && pepIonSetQuantiBuildingCtx.masterQuantPeptideIon != null) {
-            exportMap += (fields.addField(f.title) -> dcf4.format(pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.elutionTime))
+            exportMap += (fields.addField(f.title) -> ExportConfigManager.format(dcf4, pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.elutionTime))
           }
         }
         case ExportConfigConstant.FIELD_MASTER_QUANT_PEPTIDE_ION_FEATURE_ID => {
@@ -580,17 +584,33 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
           protSet,
           protSet.peptideSet,
           typicalProtMatch)
+        var ctxList: ArrayBuffer[ProtMatchBuildingContext] = new ArrayBuffer()
         if (isQuanti) {
           var masterQuantProteinSet: MasterQuantProteinSet = null
           var mprofile: MasterQuantProteinSetProfile = null
-          var profileList: ArrayBuffer[MasterQuantProteinSetProfile] = new ArrayBuffer()
           for (mqProtSet <- quantiDS.quantRSM.masterQuantProteinSets) {
             if (mqProtSet.proteinSet.id == protSet.id) {
+              var profileList: ArrayBuffer[MasterQuantProteinSetProfile] = new ArrayBuffer()
               masterQuantProteinSet = mqProtSet
               if (exportBestProfile) {
                 val bestProfile = mqProtSet.getBestProfile(groupSetupNumber)
                 if (bestProfile.isDefined) {
                   mprofile = bestProfile.get
+                  buildingContext = new ProtMatchQuantiBuildingContext(
+                    protSet,
+                    protSet.peptideSet,
+                    typicalProtMatch,
+                    masterQuantProteinSet,
+                    mprofile)
+                  ctxList += buildingContext
+                }else{ // SC
+                  buildingContext = new ProtMatchQuantiBuildingContext(
+                    protSet,
+                    protSet.peptideSet,
+                    typicalProtMatch,
+                    masterQuantProteinSet,
+                    null)
+                  ctxList += buildingContext
                 }
               } else {
                 // all profiles
@@ -602,31 +622,24 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
                   profile <- profiles
                 ) {
                   profileList += profile
+                  var ctx = new ProtMatchQuantiBuildingContext(
+                    protSet,
+                    protSet.peptideSet,
+                    typicalProtMatch,
+                    masterQuantProteinSet,
+                    mprofile)
+                  ctxList += ctx
                 }
               }
             }
           }
-          if (profileList.size == 0) {
-            buildingContext = new ProtMatchQuantiBuildingContext(
-              protSet,
-              protSet.peptideSet,
-              typicalProtMatch,
-              masterQuantProteinSet,
-              mprofile)
-          } else {
-            for (p <- profileList) {
-              buildingContext = new ProtMatchQuantiBuildingContext(
-                protSet,
-                protSet.peptideSet,
-                typicalProtMatch,
-                masterQuantProteinSet,
-                p)
-              this.formatRecord(buildingContext, recordFormatter)
-            }
-          }
+        }else{ // not quanti
+          ctxList += buildingContext
         }
 
-        this.formatRecord(buildingContext, recordFormatter)
+        for(ctx <- ctxList){
+        	this.formatRecord(ctx, recordFormatter)
+        }
       }
     }
   }

@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat
 import java.text.DecimalFormat
 import scala.collection.immutable.ListMap
 import scala.collection.mutable.ArrayBuffer
+import fr.proline.module.exporter.commons.config.ExportConfigManager
 
 
 
@@ -37,7 +38,7 @@ class MsiSearchExtendedView ( val identDS: IdentDataSet , val sheetConfig : Expo
     val ms2SettingsOpt = searchSettings.msmsSearchSettings
     
     val fragmentTol = if( ms2SettingsOpt.isEmpty ) ""
-    else decimalFormat.format(ms2SettingsOpt.get.ms2ErrorTol) + " " + ms2SettingsOpt.get.ms2ErrorTolUnit
+    else ExportConfigManager.format(decimalFormat, ms2SettingsOpt.get.ms2ErrorTol) + " " + ms2SettingsOpt.get.ms2ErrorTolUnit
     
     var releaseDates:String = ""
     for (i <- 0 to (seqDatabases.length-1)){
@@ -128,7 +129,7 @@ class MsiSearchExtendedView ( val identDS: IdentDataSet , val sheetConfig : Expo
           	exportMap += ( fields.addField(f.title) -> searchSettings.ms1ChargeStates)
         }
         case ExportConfigConstant.FIELD_INFORMATION_PEPTIDE_MASS_ERROR_TOLERANCE => {
-          	exportMap += ( fields.addField(f.title) -> (decimalFormat.format(searchSettings.ms1ErrorTol) + " " + searchSettings.ms1ErrorTolUnit))
+          	exportMap += ( fields.addField(f.title) -> (ExportConfigManager.format(decimalFormat, searchSettings.ms1ErrorTol) + " " + searchSettings.ms1ErrorTolUnit))
         }
         case ExportConfigConstant.FIELD_INFORMATION_FRAGMENT_MASS_ERROR_TOLERANCE => {
           	exportMap += ( fields.addField(f.title) -> fragmentTol)
