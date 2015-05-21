@@ -23,6 +23,7 @@ import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import java.io.File
 import fr.proline.core.om.provider.msi.ProteinFakeProvider
 import fr.proline.core.om.provider.msi.SeqDbFakeProvider
+import fr.proline.cortex.service.ISingleThreadedService
 
 trait IResultFileDescriptor {
 
@@ -34,7 +35,7 @@ trait IResultFileDescriptor {
 /**
  * Import a result file in the MSIdb corresponding to the provided project id
  */
-abstract class AbstractImportResultFiles extends AbstractRemoteProcessService with Logging {
+abstract class AbstractImportResultFiles extends AbstractRemoteProcessService with Logging with ISingleThreadedService {
   /* JMS Service identification */
   val serviceName = "proline/dps/msi/ImportResultFiles"
 
