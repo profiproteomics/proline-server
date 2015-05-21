@@ -190,7 +190,7 @@ object ExportConfigField {
 	  if (fromXIC || fromSC) {
 	    val fieldMasterQuantPeptideId: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PSM_QUANTI_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id")
 	    val fieldQuantiElutionTime: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PSM_QUANTI_ELUTION_TIME, "elution_time")
-	    val fieldQuantiSelectionLevel: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PSM_QUANTI_SELECTION_LEVEL, "selection_level")
+	    val fieldQuantiSelectionLevel: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PSM_QUANTI_SELECTION_LEVEL, "master_quant_selection_level")
 	    val fieldRawAbundance : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_RAW_ABUNDANCE, if (fromXIC) "raw_abundance" else "Specific SC") 
 	    val fieldAbundance : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE, if (fromXIC) "abundance" else "Weighted SC") 
 	    val fieldPsmCount : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_PSM_COUNT, if (fromXIC) "psm_count" else "Basic SC") 
@@ -227,7 +227,7 @@ object ExportConfigField {
 	  listFields = listFields ++  getAllProteinSetsFieldsArray(false, false, false)
 	  val fieldMasterQuantPeptideId: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PSM_QUANTI_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id")
 	    val fieldQuantiElutionTime: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PSM_QUANTI_ELUTION_TIME, "elution_time")
-	    val fieldQuantiSelectionLevel: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PSM_QUANTI_SELECTION_LEVEL, "selection_level")
+	    val fieldQuantiSelectionLevel: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PSM_QUANTI_SELECTION_LEVEL, "master_quant_selection_level")
 	    val fieldRawAbundance : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_RAW_ABUNDANCE, "raw_abundance") 
 	    val fieldAbundance : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE, "abundance" ) 
 	    val fieldPsmCount : ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_PSM_COUNT, "psm_count") 

@@ -19,6 +19,25 @@ object ExportConfigManager extends Logging {
 	   return config
 	}
 	
+	// check that all titles in a sheet are different -- returns true if ok
+	def checkTitle(config : ExportConfig): Boolean = {
+	  for(s <- config.sheets){
+	    var i:Int = 0
+	    for (f <- s.fields){
+	      if (f.title == null || f.title.trim().equals("")){
+	        logger.info("The sheet "+s.id+" contains an empty title" )
+	        return false
+	      }
+	      if (s.isContainTitle(f.title, i)){
+	        logger.info("The sheet "+s.id+" contains already the field "+f.title )
+	        return false
+	      }
+	      i = i+1
+	    }
+	  }
+	  return true
+	}
+	
 	// returns the json string corresponding to the given mode
 	def getAllConfigurationExport(mode : String) : String = {
 	  logger.debug("getAllConfigurationExport ");

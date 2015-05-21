@@ -61,6 +61,12 @@ object BuildDatasetViewSet extends Logging {
     exportConfigStr: String): DatasetViewSet = {
 
     val exportConfig: ExportConfig = ExportConfigManager.readConfig(exportConfigStr)
+    val checkTitle : Boolean = ExportConfigManager.checkTitle(exportConfig)
+    if (!checkTitle){
+        val msg = " Some titles in the configuration file for export are incorrect! " 
+        logger.warn(msg)
+        throw new Exception(msg)
+    }
     val loadFullResultSet: Boolean = exportConfig.dataExport.allProteinSet
     val loadSubsets: Boolean = true // TODO moved in the config export param?
 

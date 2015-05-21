@@ -55,7 +55,7 @@ class ExportConfigManagerTest  extends  Logging{
 	    val configStr = ExportConfigManager.getAllConfigurationForXICExport();
 	    //  reserialize check the conf
 	    val config = ExportConfigManager.readConfig(configStr)
-	    assertTrue("All XIC export nbSheets" , config.sheets.length == 6)
+	    assertTrue("All XIC export nbSheets" , config.sheets.length == 8)
 	    assertTrue("All XIC export nbFields in ProteinSet sheet " , config.sheets(2).fields.length == 25)
 	  } catch {
       	case e: Exception => logger.error("error", e)
@@ -80,6 +80,45 @@ class ExportConfigManagerTest  extends  Logging{
 	    // reserialize to check
 	    val defaultXICConfObj = ExportConfigManager.readConfig(defaultXICConf)
 	    assertTrue("Default Configuration for XIC ", defaultXICConfObj.sheets.length == 3)
+	  } catch {
+      	case e: Exception => logger.error("error", e)
+	  }
+	}
+	
+	@Test
+	def testCheckTitleIdent(){
+	 try {
+	     val configStr = ExportConfigManager.getAllConfigurationForIdentificationExport();
+	    //  reserialize check the conf
+	    val config = ExportConfigManager.readConfig(configStr)
+	    val check: Boolean = ExportConfigManager.checkTitle(config)
+	    assertTrue("Check Title Identification ", check == true)
+	  } catch {
+      	case e: Exception => logger.error("error", e)
+	  }
+	}
+	
+	@Test
+	def testCheckTitleSC(){
+	 try {
+	     val configStr = ExportConfigManager.getAllConfigurationForSCExport();
+	    //  reserialize check the conf
+	    val config = ExportConfigManager.readConfig(configStr)
+	    val check: Boolean = ExportConfigManager.checkTitle(config)
+	    assertTrue("Check Title SC ", check == true)
+	  } catch {
+      	case e: Exception => logger.error("error", e)
+	  }
+	}
+	
+	@Test
+	def testCheckTitleXIC(){
+	 try {
+	     val configStr = ExportConfigManager.getAllConfigurationForXICExport();
+	    //  reserialize check the conf
+	    val config = ExportConfigManager.readConfig(configStr)
+	    val check: Boolean = ExportConfigManager.checkTitle(config)
+	    assertTrue("Check Title XIC ", check == true)
 	  } catch {
       	case e: Exception => logger.error("error", e)
 	  }

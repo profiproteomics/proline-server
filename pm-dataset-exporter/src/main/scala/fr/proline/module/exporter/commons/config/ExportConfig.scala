@@ -103,12 +103,16 @@ object ExportConfig{
 	   var informationSheet : ExportConfigSheet =ExportConfigSheet.getAllInformationSheet()
 	   var importSheet : ExportConfigSheet =ExportConfigSheet.getAllImportSheet()
 	   var proteinSetSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinSetSheet(true, false)
+	   var bestPSMSheet : ExportConfigSheet =ExportConfigSheet.getAllBestPSMSheet(false, true)
+	   bestPSMSheet.defaultDisplayed = false
+	   var proteinMatchSheet : ExportConfigSheet =ExportConfigSheet.getAllProteinMatchSheet()
+	   proteinMatchSheet.defaultDisplayed = false
 	   var allPSMSheet : ExportConfigSheet = ExportConfigSheet.getAllAllPSMSheet(true, false)
 	   var masterQuantPeptideIon : ExportConfigSheet = ExportConfigSheet.getAllMasterQuantPeptideIon()
 	   var statSheet : ExportConfigSheet =ExportConfigSheet.getAllStatSheet()
-	  statSheet.defaultDisplayed = false
-	  var sheetsList: Array[ExportConfigSheet] =  Array(informationSheet, importSheet, proteinSetSheet, allPSMSheet, masterQuantPeptideIon, statSheet)
-	  var conf :ExportConfig = new  ExportConfig(
+	   statSheet.defaultDisplayed = false
+	   var sheetsList: Array[ExportConfigSheet] =  Array(informationSheet, importSheet, proteinSetSheet,bestPSMSheet,  proteinMatchSheet, allPSMSheet, masterQuantPeptideIon, statSheet)
+	   var conf :ExportConfig = new  ExportConfig(
 	      ExportConfigConstant.FORMAT_XLSX, 
 	      ExportConfigConstant.DECIMAL_SEPARATOR_DOT,  
 	      ExportConfigConstant.DATE_FORMAT_HOUR, 

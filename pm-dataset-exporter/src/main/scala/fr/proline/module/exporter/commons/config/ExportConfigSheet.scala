@@ -16,6 +16,19 @@ class ExportConfigSheet (
 	// Plain constructor
 	def this() = this("", "",  ExportConfigConstant.PRESENTATION_SHEET_COLUMNS, new Array(0))
 	var defaultDisplayed: Boolean = true
+	
+	// return true if the sheet contains the given title before the given index (not included)
+	def isContainTitle(title : String, index : Int) : Boolean = {
+	  if (fields.length >= index){
+		  for(i <- 0 until index) {
+			  if (fields(i).title.equals(title)){
+			    return true
+			  }
+		  }
+	  }
+	  return false
+	}
+	
 }
 
 
@@ -119,5 +132,7 @@ object ExportConfigSheet {
 	  sheet.defaultDisplayed = true
 	  return sheet
 	}
+	
+	
 	
 }
