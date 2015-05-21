@@ -330,7 +330,7 @@ object MountPointRegistry extends Logging {
       }
 
     } catch {
-      case t: Throwable => logger.error("Error initializing MountPointRegistry fom \"application.conf\" file", t)
+      case t: Throwable => logger.error("Error initializing MountPointRegistry from \"application.conf\" file", t)
     }
 
     /* Logg all found MountPoints with full path at Info level */
