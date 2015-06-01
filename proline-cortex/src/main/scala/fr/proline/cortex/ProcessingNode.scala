@@ -4,18 +4,14 @@ import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-
 import scala.collection.JavaConversions.mutableMapAsJavaMap
 import scala.collection.mutable
-
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.jms.HornetQJMSClient
 import org.hornetq.api.jms.JMSFactoryType
 import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory
 import org.hornetq.core.remoting.impl.netty.TransportConstants
-
 import com.typesafe.scalalogging.slf4j.Logging
-
 import Constants.MAX_PORT
 import NodeConfig.ENABLE_IMPORTS
 import NodeConfig.JMS_SERVER_HOST
@@ -43,6 +39,7 @@ import javax.jms.Connection
 import javax.jms.ConnectionFactory
 import javax.jms.ExceptionListener
 import javax.jms.JMSException
+import fr.proline.cortex.service.dps.uds.GetExportInformation
 
 object ProcessingNode extends Logging {
 
@@ -244,6 +241,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
     ServiceRegistry.addService(new ChangeTypicalProteinMatch())
     ServiceRegistry.addService(new CertifyResultFiles())
     ServiceRegistry.addService(new ExportResultSummary())
+    ServiceRegistry.addService(new GetExportInformation())
   }
 
   /**
