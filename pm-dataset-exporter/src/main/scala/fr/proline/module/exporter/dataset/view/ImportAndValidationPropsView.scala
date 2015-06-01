@@ -183,7 +183,7 @@ class ImportAndValidationPropsView (val identDS: IdentDataSet, val sheetConfig :
         if (rsmValProp.getParams.getProteinFilters.isDefined) {
           
           var fNumber = 0
-           var nbFilters: Int = rsmValProp.getParams.getProteinFilters.size
+           var nbFilters: Int = rsmValProp.getParams.getProteinFilters.get.size
            proteinFilters = new Array(nbFilters)
           rsmValProp.getParams.getProteinFilters.get.foreach(filter => {
             val fBuilder = new StringBuilder()
