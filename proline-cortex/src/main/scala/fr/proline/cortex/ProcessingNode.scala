@@ -40,6 +40,7 @@ import javax.jms.ConnectionFactory
 import javax.jms.ExceptionListener
 import javax.jms.JMSException
 import fr.proline.cortex.service.dps.uds.GetExportInformation
+import fr.proline.cortex.service.dps.msi.ExportResultSummaryV2_0
 
 object ProcessingNode extends Logging {
 
@@ -241,6 +242,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
     ServiceRegistry.addService(new ChangeTypicalProteinMatch())
     ServiceRegistry.addService(new CertifyResultFiles())
     ServiceRegistry.addService(new ExportResultSummary())
+    ServiceRegistry.addService(new ExportResultSummaryV2_0())
     ServiceRegistry.addService(new GetExportInformation())
   }
 
