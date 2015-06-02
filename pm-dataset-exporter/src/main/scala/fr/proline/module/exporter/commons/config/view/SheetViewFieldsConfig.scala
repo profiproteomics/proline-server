@@ -8,14 +8,13 @@ import fr.proline.module.exporter.commons.config.ExportConfigConstant
 /**
  * generates a ViewFieldEnumeration based on a configuration of a sheet
  */
-class SheetViewFieldsConfig (fields: Array[String]) extends IViewFieldEnumeration{
-   for ( f <- fields ) {
-     Field(f)
-   }
-   
-   
-   def addField(title: String):  String= {
+class SheetViewFieldsConfig(fields: Array[String]) extends IViewFieldEnumeration {
+  for (f <- fields) {
+    Field(f)
+  }
+
+  def addField(title: String): String = {
     return Field(title).toString()
-    
+
   }
 }

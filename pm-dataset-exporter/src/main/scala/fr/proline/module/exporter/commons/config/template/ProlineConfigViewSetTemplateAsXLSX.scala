@@ -12,60 +12,60 @@ import fr.proline.module.exporter.commons.config.ExportConfigConstant
 import fr.proline.module.exporter.commons.config.ExportConfigSheet
 import fr.proline.module.exporter.commons.config.view.DatasetViewTypes
 
-class ProlineConfigViewSetTemplateAsXLSX(config:ExportConfig)  extends IViewSetTemplate with Logging{
-	val templatedViewTypes: Seq[ViewTypeWithTemplate] = buildTemplate(config)
-  
-	def buildTemplate(config:ExportConfig):Array[ViewTypeWithTemplate]={
-	  // Create a generic XLSX template for views columns
-	  val xlsxTemplate = new BasicXLSXTemplate()
-  
-	  // Create an XLSX template specific to the infos view rows
-	  val verticalXlsxTemplate = new InfoXLSXTemplate()
-	  val sheets :Array[ExportConfigSheet] = config.sheets
-	  val nbSheets:Int = sheets.size
-	  logger.debug("build template from config with "+nbSheets+ " sheets")
-	  var templateList : Array[ViewTypeWithTemplate] = new Array(nbSheets)
-	  for (i <- 0 to (nbSheets - 1)){
-	  	var s :ExportConfigSheet = sheets(i)
-	    var template:IViewTemplate = xlsxTemplate
-	    if (s.presentation.endsWith(ExportConfigConstant.PRESENTATION_SHEET_ROWS)){
-	      template = verticalXlsxTemplate
-	    }
-	    var viewType: IViewTypeEnumeration#Value = null 
-	    s.id match{
-	      case ExportConfigConstant.SHEET_INFORMATION => {
-	         viewType = DatasetViewTypes.MSI_SEARCH_EXTENDED
-	      }
-	      case ExportConfigConstant.SHEET_IMPORT => {
-	         viewType = DatasetViewTypes.IMPORT_AND_VALIDATION_PROPS
-	      }
-	      case ExportConfigConstant.SHEET_PROTEIN_SETS => {
-	         viewType = DatasetViewTypes.PROT_SET_TO_TYPICAL_PROT_MATCH
-	      }
-	      case ExportConfigConstant.SHEET_BEST_PSM => {
-	         viewType = DatasetViewTypes.PROT_SET_TO_BEST_PEPTIDE_MATCH
-	      }
-	      case ExportConfigConstant.SHEET_PROTEIN_MATCH => {
-	         viewType = DatasetViewTypes.PROT_SET_TO_PROT_MATCH
-	      }
-	      case ExportConfigConstant.SHEET_ALL_PSM => {
-	         viewType = DatasetViewTypes.PROT_SET_TO_ALL_PEPTIDE_MATCHES
-	      }
-	      case ExportConfigConstant.SHEET_MASTER_QUANT_PEPTIDE_ION => {
-	         viewType = DatasetViewTypes.MASTER_QUANT_PEPTIDE_ION
-	      }
-	      case ExportConfigConstant.SHEET_STAT => {
-	         viewType = DatasetViewTypes.STATISTICS
-	      }
-	      case other => {
-	        // should not happen
-	      }
-	    }
-	    var t :ViewTypeWithTemplate = ViewTypeWithTemplate(viewType, template, viewName = Some(s.title))
-	    templateList(i) = t
-	  }
-	  return templateList
-	    
-	}
-	
+class ProlineConfigViewSetTemplateAsXLSX(config: ExportConfig) extends IViewSetTemplate with Logging {
+  val templatedViewTypes: Seq[ViewTypeWithTemplate] = buildTemplate(config)
+
+  def buildTemplate(config: ExportConfig): Array[ViewTypeWithTemplate] = {
+    // Create a generic XLSX template for views columns
+    val xlsxTemplate = new BasicXLSXTemplate()
+
+    // Create an XLSX template specific to the infos view rows
+    val verticalXlsxTemplate = new InfoXLSXTemplate()
+    val sheets: Array[ExportConfigSheet] = config.sheets
+    val nbSheets: Int = sheets.size
+    logger.debug("build template from config with " + nbSheets + " sheets")
+    var templateList: Array[ViewTypeWithTemplate] = new Array(nbSheets)
+    for (i <- 0 to (nbSheets - 1)) {
+      var s: ExportConfigSheet = sheets(i)
+      var template: IViewTemplate = xlsxTemplate
+      if (s.presentation.endsWith(ExportConfigConstant.PRESENTATION_SHEET_ROWS)) {
+        template = verticalXlsxTemplate
+      }
+      var viewType: IViewTypeEnumeration#Value = null
+      s.id match {
+        case ExportConfigConstant.SHEET_INFORMATION => {
+          viewType = DatasetViewTypes.MSI_SEARCH_EXTENDED
+        }
+        case ExportConfigConstant.SHEET_IMPORT => {
+          viewType = DatasetViewTypes.IMPORT_AND_VALIDATION_PROPS
+        }
+        case ExportConfigConstant.SHEET_PROTEIN_SETS => {
+          viewType = DatasetViewTypes.PROT_SET_TO_TYPICAL_PROT_MATCH
+        }
+        case ExportConfigConstant.SHEET_BEST_PSM => {
+          viewType = DatasetViewTypes.PROT_SET_TO_BEST_PEPTIDE_MATCH
+        }
+        case ExportConfigConstant.SHEET_PROTEIN_MATCH => {
+          viewType = DatasetViewTypes.PROT_SET_TO_PROT_MATCH
+        }
+        case ExportConfigConstant.SHEET_ALL_PSM => {
+          viewType = DatasetViewTypes.PROT_SET_TO_ALL_PEPTIDE_MATCHES
+        }
+        case ExportConfigConstant.SHEET_MASTER_QUANT_PEPTIDE_ION => {
+          viewType = DatasetViewTypes.MASTER_QUANT_PEPTIDE_ION
+        }
+        case ExportConfigConstant.SHEET_STAT => {
+          viewType = DatasetViewTypes.STATISTICS
+        }
+        case other => {
+          // should not happen
+        }
+      }
+      var t: ViewTypeWithTemplate = ViewTypeWithTemplate(viewType, template, viewName = Some(s.title))
+      templateList(i) = t
+    }
+    return templateList
+
+  }
+
 }
