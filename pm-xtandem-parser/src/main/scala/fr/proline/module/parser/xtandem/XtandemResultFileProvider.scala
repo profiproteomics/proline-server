@@ -23,6 +23,7 @@ class XtandemResultFileProvider extends IResultFileProvider with Logging {
   val fileType: String = XtandemResultFileProviderType.fileType
 
   def getResultFile( fileLocation: File, importProperties : Map[String, Any], parserContext: ProviderDecoratedExecutionContext ): IResultFile = {
+
     require(parserContext != null,"getResultFile - No parser context found. Use setParserContext(parserContext: ProviderDecoratedExecutionContext)")
     new XtandemParser(fileLocation, parserContext)
   }

@@ -67,7 +67,6 @@ class XtandemParser(  val xtandemFile : File,
   var msQueries = msQueriesList.toArray
   val hasDecoyResultSet: Boolean = searchSettingIsDecoy 
   val hasMs2Peaklist: Boolean = true
-
   
   private var searchSettingIsDecoy: Boolean = false
   private var ms2Query: Ms2Query = null
@@ -125,6 +124,7 @@ class XtandemParser(  val xtandemFile : File,
     var peptides: ArrayBuffer[Peptide] = new ArrayBuffer[Peptide]
     var peptideMatches: ArrayBuffer[PeptideMatch] = new ArrayBuffer[PeptideMatch]
     var peptide : Peptide = null
+    var newPeptideMatch : PeptideMatch = null
 
     val ptmEvidence = new PtmEvidence(
       ionType = IonTypes.Precursor,
@@ -152,6 +152,7 @@ class XtandemParser(  val xtandemFile : File,
 
     var peaklistFilePathNameExt: Filename = null
     var dbDomainSeqList : ArrayBuffer[String] = new ArrayBuffer()
+    var seqMatch : SequenceMatch = null
 
     //GroupParameters variables
     for (gp <- resultBioml.groupParametersList) {
@@ -164,7 +165,7 @@ class XtandemParser(  val xtandemFile : File,
         val dbGroupParametersNoteInfo: String = note.info
         // ERROR : (unavailable parameters) We first manage case where we can't continue parsing of XML file
         if (dbGroupParametersNoteLabel.equals("output, sort results by")) {
-          if(dbGroupParametersNoteInfo.equals("protein") || dbGroupParametersNoteInfo.isEmpty) logger.error("Xtandem Parser does not manage \"sort result by protein\" sorted Xtandem File")
+          if(dbGroupParametersNoteInfo.equals("protein") || dbGroupParametersNoteInfo.isEmpty) throw new Exception("Xtandem Parser does not manage \"sort result by protein\" X!Tandem File")
           else if(!dbGroupParametersNoteInfo.equals("spectrum")) logger.error("Parameter \'sort results by\' should be \'spectrum\' to be manage by Xtandemm Parser")  //This case shouldn't be appear
 
         } else if (dbGroupParametersNoteLabel.equals("spectrum, path") && !dbGroupParametersNoteInfo.isEmpty) {
@@ -457,6 +458,7 @@ class XtandemParser(  val xtandemFile : File,
           val dbProteinNote: XTNote = p.note
           val dbProteinFileMarkup: XTFileMarkup = p.fileMarkup
           val dbProteinPeptide: XTPeptide = p.peptide
+          val dbProteinPeptideEnd : Int = p.peptide.end
 
           //Note variables
           val dbProteinNoteLabel: String = dbProteinNote.label
@@ -465,12 +467,13 @@ class XtandemParser(  val xtandemFile : File,
           //FileMarkup variables
           val dbProteinFileMarkupURL: String = dbProteinFileMarkup.URL
 
-          proteinMatches += new ProteinMatch(
+          val newProteinMatch = new ProteinMatch(
             accession = dbProteinLabel,
             description = dbProteinNoteLabel,
             id = ProteinMatch.generateNewId(),
             seqDatabaseIds = seqDatabaseIdsArray, 
             scoreType = "xtandem:hyperscore")
+          var lastProteinMatchId = newProteinMatch.id
 
           for (dbPeptideDomain <- dbProteinPeptide.domainList) {
             //Domain variables
@@ -479,8 +482,22 @@ class XtandemParser(  val xtandemFile : File,
             val dbDomainEnd: Int = dbPeptideDomain.end
             val dbDomainDelta: Double = dbPeptideDomain.delta
             val dbDomainHyperScore: Double = dbPeptideDomain.hyperScore
+            val dbDomainPre: String = dbPeptideDomain.pre
+            val dbDomainPost: String = dbPeptideDomain.post
             val dbDomainSeq: String = dbPeptideDomain.seq
-
+            
+                      // Create SequenceMatch and ProteinMatch, if necessary, for current Matched Protein
+          seqMatch = new SequenceMatch(
+            start = dbDomainStart,
+            end = dbDomainEnd,
+            residueBefore = if(dbDomainStart == 1) '\0' else dbDomainPre.charAt(dbDomainPre.length()-1),
+            residueAfter = if(dbDomainEnd == dbProteinPeptideEnd) '\0' else dbDomainPost.charAt(0),
+            isDecoy = false
+//            peptide = Some(peptide),
+//            bestPeptideMatch = Some(newPeptideMatch)
+//            resultSetId = bestPepMatch.resultSetId
+          )
+            
             //AAMarkup variables 
             val locatedPtms: ArrayBuffer[LocatedPtm] = new ArrayBuffer[LocatedPtm]
             for (aam <- dbPeptideDomain.aaMarkupList) {
@@ -560,6 +577,9 @@ class XtandemParser(  val xtandemFile : File,
 //              logger.debug("IY - XtandemParser.scala - Ignoring new peptide. Seq = " + dbDomainSeq + ", peptide = " + peptide)
             }
             locatedPtms.clear()
+            
+            // Complete seqMatch parameters before add to ProteinMatch
+            seqMatch.peptide = Some(peptide)
 
             val dbDomainIdParts: Array[String] = dbDomainId.split("\\.")
             var dbDomainIdPartsInt: Array[Int] = new Array[Int](dbDomainIdParts.length)
@@ -571,7 +591,7 @@ class XtandemParser(  val xtandemFile : File,
             if (dbProteinNoteInfo.contains("reversed")) peptideMatchIsDecoy = true
 
 //            logger.debug("IY - XtandemParser.scala - ms2Query.id = " + ms2Query.id)
-            peptideMatches += new PeptideMatch(
+            newPeptideMatch = new PeptideMatch(
               id = PeptideMatch.generateNewId(),
               rank = dbDomainIdPartsInt(1), /*3 dans DomainId<domain id=987.3.1 ...> */
               score = dbDomainHyperScore.toFloat,
@@ -582,11 +602,26 @@ class XtandemParser(  val xtandemFile : File,
               peptide = peptide,
               msQuery = ms2Query
               )
+            peptideMatches += newPeptideMatch
+            seqMatch.bestPeptideMatch =  Some(newPeptideMatch)
           }
+          
+//        proteinMatches += newProteinMatch
+            val newSeqMatches = new ArrayBuffer[SequenceMatch]()
+            if (newProteinMatch.sequenceMatches != null) newSeqMatches ++= newProteinMatch.sequenceMatches
+            newSeqMatches += seqMatch
+            newProteinMatch.sequenceMatches = newSeqMatches.toArray
+            proteinMatches += newProteinMatch
         }
       } // end of GroupSupport loop
     } //End "for groupModel gm" loop
-    
+    var compteur = 0
+    proteinMatches.foreach(pm => {
+      logger.debug("IY 02/06 - XtandemParser - pm.sequenceMatches.length = " + pm.sequenceMatches.length)
+      logger.debug("IY 02/06 - XtandemParser - pm.sequenceMatches = " + pm.sequenceMatches)
+      compteur +=1
+    })
+    logger.debug("IY 02/06 - XtandemParser - compteur = " + compteur)
     msQueries = msQueriesList.toArray
 
     //logger.debug("IY - XtandemParser.scala - peptideMatches = " + peptideMatches )

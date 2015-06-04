@@ -23,11 +23,14 @@ class XTDomain {
 	var end : Int = _
 	var delta : Double = _
 	var hyperScore : Double = _
+	var pre : String = _
+	var post : String = _
 	var seq : String = _
 	var aaMarkupList : ArrayBuffer[XTAAMarkup] = new ArrayBuffer[XTAAMarkup]()
 }
 
 class XTPeptide {
+  var end : Int = _
 	var info : String = _
 	var domainList : ArrayBuffer[XTDomain] = new ArrayBuffer[XTDomain]()
 }
