@@ -165,7 +165,7 @@ class XtandemParser(  val xtandemFile : File,
         val dbGroupParametersNoteInfo: String = note.info
         // ERROR : (unavailable parameters) We first manage case where we can't continue parsing of XML file
         if (dbGroupParametersNoteLabel.equals("output, sort results by")) {
-          if(dbGroupParametersNoteInfo.equals("protein") || dbGroupParametersNoteInfo.isEmpty) throw new Exception("Xtandem Parser does not manage \"sort result by protein\" X!Tandem File")
+          if(dbGroupParametersNoteInfo.equals("protein") || dbGroupParametersNoteInfo.isEmpty) logger.error("Xtandem Parser does not manage \"sort result by protein\" X!Tandem File")
           else if(!dbGroupParametersNoteInfo.equals("spectrum")) logger.error("Parameter \'sort results by\' should be \'spectrum\' to be manage by Xtandemm Parser")  //This case shouldn't be appear
 
         } else if (dbGroupParametersNoteLabel.equals("spectrum, path") && !dbGroupParametersNoteInfo.isEmpty) {
