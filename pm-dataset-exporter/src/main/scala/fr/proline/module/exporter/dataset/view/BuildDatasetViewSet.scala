@@ -231,7 +231,28 @@ object BuildDatasetViewSet extends Logging {
               resultBuilder += qChIdByRsmId(toLong(r.nextAny)) -> r.nextString
               ()
             }
-
+            if (resultBuilder.result().size == 0) {
+              for (qcId <- qcIds){
+              // get the name
+              val qcNameWork = new JDBCWork() {
+                override def execute(con: Connection) {
+                  val getQCName = "SELECT ds.name FROM data_set ds, quant_channel qc WHERE qc.id = ? AND qc.ident_result_summary_id = ds.result_summary_id"
+                  val pStmt = con.prepareStatement(getQCName)
+                  pStmt.setLong(1, qcId)
+                  val sqlResultSet = pStmt.executeQuery()
+                  while (sqlResultSet.next) { //Should be One ! 
+                    val nameQC = sqlResultSet.getString("name")
+                    resultBuilder += qcId -> nameQC
+                  }
+                  pStmt.close()
+                }
+              }
+              udsSQLCtx.doWork(qcNameWork, false)
+                
+                 //resultBuilder += qcId -> (""+qcId)
+              }
+            }
+            
             resultBuilder.result
 
           })
@@ -242,7 +263,7 @@ object BuildDatasetViewSet extends Logging {
           val quantRsmProvider = new SQLQuantResultSummaryProvider(msiSQLCtx, psSQLCtx, udsSQLCtx)
           quantRsmProvider.getQuantResultSummary(quantRsmId.get, qcIds, true).get
         }
-
+        
         val expDesignProvider = new SQLExperimentalDesignProvider(udsSQLCtx)
         val expDesign = if (expDesignProvider.getExperimentalDesign(dsId).isDefined) expDesignProvider.getExperimentalDesign(dsId).get else null
         var ratioDefs: Array[RatioDefinition] = null
