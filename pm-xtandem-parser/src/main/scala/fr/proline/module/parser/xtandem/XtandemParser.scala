@@ -490,8 +490,8 @@ class XtandemParser(  val xtandemFile : File,
           seqMatch = new SequenceMatch(
             start = dbDomainStart,
             end = dbDomainEnd,
-            residueBefore = if(dbDomainStart == 1) '\0' else dbDomainPre.charAt(dbDomainPre.length()-1),
-            residueAfter = if(dbDomainEnd == dbProteinPeptideEnd) '\0' else dbDomainPost.charAt(0),
+            residueBefore = if(dbDomainStart == 1) '-' else dbDomainPre.charAt(dbDomainPre.length()-1),
+            residueAfter = if(dbDomainEnd == dbProteinPeptideEnd) '-' else dbDomainPost.charAt(0),
             isDecoy = false
 //            peptide = Some(peptide),
 //            bestPeptideMatch = Some(newPeptideMatch)
