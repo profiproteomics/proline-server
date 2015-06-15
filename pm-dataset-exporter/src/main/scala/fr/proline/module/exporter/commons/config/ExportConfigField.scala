@@ -31,7 +31,6 @@ object ExportConfigField {
       new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_USER_NAME, "user_name"),
       new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_USER_EMAIL, "user_email"),
       new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_QUERIES_COUNT, "queries_count"),
-      new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_SUBMITTED_QUERIES_COUNT, "submitted_queries_count"),
       new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_SEARCHED_SEQUENCES_COUNT, "searched_sequences_count"),
       new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_SOFTWARE_NAME, "software_name"),
       new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_SOFTWARE_VERSION, "software_version"),

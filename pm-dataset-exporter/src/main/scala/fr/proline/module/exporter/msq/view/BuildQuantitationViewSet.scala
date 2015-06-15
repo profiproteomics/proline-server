@@ -138,7 +138,7 @@ object BuildQuantitationViewSet {
     
     val tmpProtSetCellsById = new HashMap[Long,ProtSetCells]
     for( mqProtSet <- quantRSM.masterQuantProteinSets ) {
-      val protMatch = protMatchById( mqProtSet.proteinSet.getTypicalProteinMatchId )
+      val protMatch = protMatchById( mqProtSet.proteinSet.getRepresentativeProteinMatchId )
       val protSetCells = new ProtSetCells(accession = protMatch.accession, description =  protMatch.description, selectionLevel = mqProtSet.selectionLevel, proteinSetId = mqProtSet.proteinSet.id)
       
       tmpProtSetCellsById += mqProtSet.id -> protSetCells

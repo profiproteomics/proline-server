@@ -451,10 +451,10 @@ class PrideExporter(
     try {
 	    writer = new FileWriter(filePath,true)
 	
-	    val proteinSets = rsm.proteinSets.filter(_.isValidated).sortBy { p => proteinMatchesById(p.getTypicalProteinMatchId).score }.reverse
+	    val proteinSets = rsm.proteinSets.filter(_.isValidated).sortBy { p => proteinMatchesById(p.getRepresentativeProteinMatchId).score }.reverse
 	    for (protSet <- proteinSets) {
 	
-	      val typicalProteinMatch = proteinMatchesById(protSet.getTypicalProteinMatchId)
+	      val typicalProteinMatch = proteinMatchesById(protSet.getRepresentativeProteinMatchId)
 	      val idf = new GelFreeIdentification()
 	      val seqDb = seqDbById(typicalProteinMatch.seqDatabaseIds(0))
 	      
@@ -517,7 +517,7 @@ class PrideExporter(
 	      protAdditional.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_PROT_DESCRIPTION_ACC, PrideSchemaConstants.PRIDE_CV_PROT_DESCRIPTION_NAME, typicalProteinMatch.description))
 	      protAdditional.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_PROT_IDENTIFIED_PEP_FRAG_ACC, PrideSchemaConstants.PRIDE_CV_PROT_IDENTIFIED_PEP_FRAG_NAME, ""))
 	      protSet.getSameSetProteinMatchIds.foreach( ssId => {
-	        if(!ssId.equals(protSet.getTypicalProteinMatchId)){
+	        if(!ssId.equals(protSet.getRepresentativeProteinMatchId)){
 	        	val ssProteinMatch = proteinMatchesById(ssId)
 	        	protAdditional.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_PROT_SAMSET_ACC, PrideSchemaConstants.PRIDE_CV_PROT_SAMSET_NAME,ssProteinMatch.accession))
 	        }         

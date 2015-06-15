@@ -241,7 +241,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
           exportMap += (fields.addField(f.title) -> protSetBuildingCtxOpt.specificPepMatchIds.length)
         }
         case ExportConfigConstant.FIELD_PROTEIN_MATCH_IS_TYPICAL_PROTEIN => {
-          exportMap += (fields.addField(f.title) -> (protSet.getTypicalProteinMatchId == protMatch.id))
+          exportMap += (fields.addField(f.title) -> (protSet.getRepresentativeProteinMatchId == protMatch.id))
         }
         case ExportConfigConstant.FIELD_PROTEIN_MATCH_IS_SAMESET => {
           exportMap += (fields.addField(f.title) -> !peptideSet.isSubset)
@@ -564,7 +564,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
         // The result will depend of provider which have been used
 
         // Typical Protein Match is put first
-        val typicalProtMatchId = protSet.getTypicalProteinMatchId
+        val typicalProtMatchId = protSet.getRepresentativeProteinMatchId
 
         val typicalProtMatch = if (typicalProtMatchId != 0) {
           try {

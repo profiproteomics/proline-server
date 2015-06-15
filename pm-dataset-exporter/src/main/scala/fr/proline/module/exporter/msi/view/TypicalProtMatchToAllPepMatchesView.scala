@@ -114,7 +114,7 @@ class TypicalProtMatchToAllPepMatchesView( override val identDS: IdentDataSet ) 
       // The result will depend of provider which have been used
       
       // Typical Protein Match is put first
-      val typicalProtMatchId = protSet.getTypicalProteinMatchId
+      val typicalProtMatchId = protSet.getRepresentativeProteinMatchId
       
       val typicalProtMatch = if( typicalProtMatchId != 0 ) { 
         protMatchById(typicalProtMatchId)

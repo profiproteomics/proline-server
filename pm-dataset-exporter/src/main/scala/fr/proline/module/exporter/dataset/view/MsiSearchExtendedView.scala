@@ -88,9 +88,6 @@ class MsiSearchExtendedView ( val identDS: IdentDataSet , val sheetConfig : Expo
         case ExportConfigConstant.FIELD_INFORMATION_QUERIES_COUNT => {
           	exportMap += ( fields.addField(f.title) -> msiSearch.queriesCount)
         }
-        case ExportConfigConstant.FIELD_INFORMATION_SUBMITTED_QUERIES_COUNT => {
-          	exportMap += ( fields.addField(f.title) -> msiSearch.submittedQueriesCount)
-        }
         case ExportConfigConstant.FIELD_INFORMATION_SEARCHED_SEQUENCES_COUNT => {
           	exportMap += ( fields.addField(f.title) -> msiSearch.searchedSequencesCount)
         }

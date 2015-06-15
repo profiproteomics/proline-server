@@ -37,7 +37,7 @@ class ProtSetToProtMatchView( val identDS: IdentDataSet ) extends IFixedDatasetV
       fields.PROTEIN_SET_ID -> protSet.id,
       fields.ACCESSION -> protMatch.accession,
       fields.DESCRIPTION -> protMatch.description,
-      fields.IS_TYPICAL_PROTEIN -> (protSet.getTypicalProteinMatchId == protMatch.id),
+      fields.IS_TYPICAL_PROTEIN -> (protSet.getRepresentativeProteinMatchId == protMatch.id),
       fields.IS_SAMESET -> !peptideSet.isSubset,
       fields.PEPTIDE_SET_SCORE -> "%.1f".format(peptideSet.score).toDouble,
       fields.COVERAGE -> "%.1f".format(protMatch.coverage).toDouble,
@@ -62,7 +62,7 @@ class ProtSetToProtMatchView( val identDS: IdentDataSet ) extends IFixedDatasetV
       // The result will depend of provider which have been used
       
       // Typical Protein Match is put first
-      val typicalProteinMatchId = protSet.getTypicalProteinMatchId
+      val typicalProteinMatchId = protSet.getRepresentativeProteinMatchId
       val typicalProtMatch = protMatchById.get(typicalProteinMatchId).get
       this.formatRecord(ProtMatchBuildingContext(protSet, protSet.peptideSet, typicalProtMatch ), recordFormatter)
 

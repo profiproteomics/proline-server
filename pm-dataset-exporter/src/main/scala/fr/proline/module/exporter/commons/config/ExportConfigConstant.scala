@@ -48,7 +48,6 @@ object ExportConfigConstant {
   final val FIELD_INFORMATION_USER_NAME: String = "information_user_name"
   final val FIELD_INFORMATION_USER_EMAIL: String = "information_user_email"
   final val FIELD_INFORMATION_QUERIES_COUNT: String = "information_queries_count"
-  final val FIELD_INFORMATION_SUBMITTED_QUERIES_COUNT: String = "information_submitted_queries_count"
   final val FIELD_INFORMATION_SEARCHED_SEQUENCES_COUNT: String = "information_searched_sequences_count"
   final val FIELD_INFORMATION_SOFTWARE_NAME: String = "information_software_name"
   final val FIELD_INFORMATION_SOFTWARE_VERSION: String = "information_software_version"

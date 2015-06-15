@@ -24,7 +24,6 @@ object ProlineViewSetTemplateAsXLSX extends IViewSetTemplate {
         MsiSearchExtendedViewFields.USER_NAME,
         MsiSearchExtendedViewFields.USER_EMAIL,
         MsiSearchExtendedViewFields.QUERIES_COUNT,
-        MsiSearchExtendedViewFields.SUBMITTED_QUERIES_COUNT,
         MsiSearchExtendedViewFields.SEARCHED_SEQUENCES_COUNT,
         MsiSearchExtendedViewFields.SOFTWARE_NAME,
         MsiSearchExtendedViewFields.SOFTWARE_VERSION,

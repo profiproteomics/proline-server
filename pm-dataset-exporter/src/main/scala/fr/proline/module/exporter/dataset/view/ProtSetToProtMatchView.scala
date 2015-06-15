@@ -26,7 +26,7 @@ class ProtSetToProtMatchView ( val identDS: IdentDataSet, val sheetConfig : Expo
       // The result will depend of provider which have been used
       
       // Typical Protein Match is put first
-      val typicalProteinMatchId = protSet.getTypicalProteinMatchId
+      val typicalProteinMatchId = protSet.getRepresentativeProteinMatchId
       val typicalProtMatch = protMatchById.get(typicalProteinMatchId).get
       this.formatRecord(new ProtMatchBuildingContext(protSet, protSet.peptideSet, typicalProtMatch ), recordFormatter)
 

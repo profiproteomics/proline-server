@@ -19,7 +19,6 @@ object MsiSearchExtendedViewFields extends IViewFieldEnumeration {
   val USER_EMAIL = Field("user_email")
   
   val QUERIES_COUNT = Field("queries_count")
-  val SUBMITTED_QUERIES_COUNT = Field("submitted_queries_count")
   val SEARCHED_SEQUENCES_COUNT = Field("searched_sequences_count")
   val SOFTWARE_NAME = Field("software_name")
   val SOFTWARE_VERSION = Field("software_version")
@@ -72,7 +71,6 @@ class MsiSearchExtendedView( val identDS: IdentDataSet ) extends IFixedDatasetVi
       fields.USER_NAME -> msiSearch.userName,
       fields.USER_EMAIL -> msiSearch.userEmail,
       fields.QUERIES_COUNT -> msiSearch.queriesCount,
-      fields.SUBMITTED_QUERIES_COUNT -> msiSearch.submittedQueriesCount,
       fields.SEARCHED_SEQUENCES_COUNT -> msiSearch.searchedSequencesCount,
       fields.SOFTWARE_NAME -> searchSettings.softwareName,
       fields.SOFTWARE_VERSION -> searchSettings.softwareVersion,
