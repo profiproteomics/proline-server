@@ -241,8 +241,19 @@ class MascotResultFile(
       if (usedSeqSDb != None)
         seqDbs.update(dbIndex - 1, usedSeqSDb.get)
       else {
-        val msg = "Sequence database used for identification does not exist in Proline datastore. Please load this database in proline datastore"
+        val msg = "Sequence database used for identification does not exist in Proline datastore...."
         logger.warn(msg)
+        
+//        val version = if(filePath.lastIndexOf(dbName) != -1) {         
+//        	var versionBuilder = filePath.substring(filePath.lastIndexOf(dbName)+dbName.length())
+//			if(versionBuilder.startsWith("_"))
+//				versionBuilder = versionBuilder.substring(1)
+//			if(versionBuilder.lastIndexOf('.') != -1)
+//				versionBuilder = versionBuilder.substring(0,versionBuilder.lastIndexOf('.'))
+//                 
+//			versionBuilder
+//        } else ""
+        
         seqDbs.update(
           dbIndex - 1,
           new SeqDatabase(
@@ -251,6 +262,7 @@ class MascotResultFile(
             filePath = filePath,
             sequencesCount = mascotResFile.getNumSeqs(dbIndex),
             releaseDate = new java.util.Date
+//            version = version
           )
         )
       }
@@ -274,8 +286,7 @@ class MascotResultFile(
       variablePtmDefs = ptmHelper.varPtmDefsByModName.values.toArray.flatten,
       fixedPtmDefs = ptmHelper.fixedPtmDefsByModName.values.toArray.flatten,
       seqDatabases = seqDbs,
-      instrumentConfig = instrumentConfig.getOrElse(null),
-      quantitation = ""
+      instrumentConfig = instrumentConfig.getOrElse(null)
     )
 
     if (msLevel == 2) {
@@ -291,7 +302,6 @@ class MascotResultFile(
     new MSISearch(
       id = MSISearch.generateNewId(),
       resultFileName = fileLocation.getName(), //mascotResFile.getFileName(),
-      submittedQueriesCount = nbQueries,
       searchSettings = sSettings,
       peakList = peaklist,
       title = searchParams.getCOM(),
