@@ -12,7 +12,7 @@ import org.junit.Ignore
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.provider.msi.IResultSetProvider
 
-object RFImporterSQLiteTest extends Logging {
+object RFImporterSQLiteJPATest extends Logging {
 
   // TODO: retrieve this value from the properties
   /* On Linux servers, the lock file name contains ":uds_test?mode=memory&cache=shared" suffix */
@@ -69,7 +69,7 @@ object RFImporterSQLiteTest extends Logging {
 }
 
 @Test
-class RFImporterSQLiteTest extends AbstractRFImporterTestCase {
+class RFImporterSQLiteJPATest extends AbstractRFImporterTestCase {
 
   val driverType = DriverType.SQLITE
 
@@ -77,7 +77,7 @@ class RFImporterSQLiteTest extends AbstractRFImporterTestCase {
   protected override def afterAllTests() {}
   var executionContext : IExecutionContext = _
   var rsProvider : IResultSetProvider = _
-  
+
   @Before
   @throws(classOf[Exception])
   override def setUp() = {
@@ -88,10 +88,10 @@ class RFImporterSQLiteTest extends AbstractRFImporterTestCase {
     _datFileName = "/dat_samples/STR_F122817_Mascot_v2.3.dat"
     udsDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml")
     logger.info("UDS db succesfully initialized")
-    val (execContext, rsP) = buildSQLContext
+ 
+    val (execContext, rsP) = buildJPAContext
     executionContext = execContext
     rsProvider = rsP
-
     // Remove existing external DB connections
 
     //val udsSqlHelper = new SQLQueryHelper( dbManagerForTest.asInstanceOf[DatabaseManager].getMsiDbConnector(1) ).ezDBC
@@ -104,5 +104,52 @@ class RFImporterSQLiteTest extends AbstractRFImporterTestCase {
     super.tearDown()
   }
 
+
+  @Test
+  def runRFIwithJPA() = {
+   
+    assertNotNull(executionContext)
+
+    try {
+      logger.debug(" --- Get File " + _datFileName)
+      var datFile: File = new File(this.getClass.getResource(_datFileName).toURI)
+
+      val propertiedBuilder = Map.newBuilder[String, Any]
+      propertiedBuilder += ("ion.score.cutoff" -> 0.5)
+      propertiedBuilder += ("subset.threshold" -> 0.5)
+
+      val importer = new ResultFileImporter(
+        executionContext,
+        resultIdentFile = datFile,
+        fileType = "mascot.dat",
+        instrumentConfigId = 1,
+        peaklistSoftwareId = 1, // TODO : provide the right value
+        importerProperties = Map.empty, // TODO Use propertiedBuilder here ?
+        acDecoyRegex = None)
+
+      logger.debug(" --- run service ")
+      val result = importer.runService()
+      val id = importer.getTargetResultSetId
+      logger.debug(" --- done " + result + " save with resultID " + id)
+
+      assertTrue(result)
+      assertNotNull(id)
+      assertTrue(id > 0)
+
+      val rsBackOp = rsProvider.getResultSet(id)
+      assertTrue(rsBackOp.isDefined)
+      val rsBack: ResultSet = rsBackOp.get
+      assertNotNull(rsBack)
+
+      //msiEzDBC.connection.close()
+      //psEzDBC.connection.close()
+
+      // Other verifs....
+
+    } finally {
+      executionContext.closeAll()
+    }
+
+  }
 
 }

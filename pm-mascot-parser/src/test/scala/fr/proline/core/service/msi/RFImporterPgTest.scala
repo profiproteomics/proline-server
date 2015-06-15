@@ -35,6 +35,7 @@ class RFImporterPgTest extends AbstractRFImporterTestCase {
 
   @After
   override def tearDown() {
+	  if (executionContext != null) executionContext.closeAll()
     super.tearDown()
   }
 
