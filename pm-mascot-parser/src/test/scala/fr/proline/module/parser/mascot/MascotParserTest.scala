@@ -107,7 +107,6 @@ class MascotParserTest extends Logging { // }extends DatabaseTestCase {
 
     assertThat(msiSearch.jobNumber, CoreMatchers.equalTo(68213))
     assertThat(msiSearch.queriesCount, CoreMatchers.equalTo(7047))
-    assertThat(msiSearch.submittedQueriesCount, CoreMatchers.equalTo(7047))
     assertThat(msiSearch.resultFileName, CoreMatchers.equalTo("GRE_F068213_M2.4_TD_EColi.dat"))
     assertThat(msiSearch.searchedSequencesCount, CoreMatchers.equalTo(32182))
     assertThat(msiSearch.title, CoreMatchers.equalTo("K12 Test nano trap duree gradient T12 HCD QEx1_000192.raw (DH5_50)"))

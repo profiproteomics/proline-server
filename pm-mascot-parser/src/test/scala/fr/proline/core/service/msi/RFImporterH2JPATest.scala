@@ -9,7 +9,7 @@ import org.junit.Assert._
 import fr.proline.repository.DriverType
 
 @Test
-class RFImporterH2Test extends AbstractRFImporterTestCase {
+class RFImporterH2JPATest extends AbstractRFImporterTestCase {
 
   val driverType = DriverType.H2
 
@@ -29,86 +29,16 @@ class RFImporterH2Test extends AbstractRFImporterTestCase {
     super.tearDown()
   }
 
-  @Test
-  def testRFIwithSQL() = {
-    val (executionContext, rsProvider) = buildSQLContext
-
-    val (jpaContext, ormProvider) = buildJPAContext
-
-    assertNotNull(executionContext)
-
-    try {
-      logger.debug(" --- Get File " + _datFileName)
-      var datFile: File = new File(RFImporterH2Test.this.getClass.getResource(_datFileName).toURI)
-
-      val propertiedBuilder = Map.newBuilder[String, Any]
-      propertiedBuilder += ("ion.score.cutoff" -> 0.5)
-      propertiedBuilder += ("subset.threshold" -> 0.5)
-
-      val importer = new ResultFileImporter(
-        executionContext,
-        resultIdentFile = datFile,
-        fileType = "mascot.dat",
-        instrumentConfigId = 1,
-        peaklistSoftwareId = 1, // TODO : provide the right value
-        importerProperties = Map.empty, // TODO use propertiedBuilder here ?
-        acDecoyRegex = None)
-
-      logger.debug(" --- run service ")
-      val result = importer.runService()
-      val id = importer.getTargetResultSetId
-      logger.debug(" --- done " + result + " save with resultID " + id)
-
-      assertTrue(result)
-
-      assertTrue(id > 0)
-
-      val rsBackOp = rsProvider.getResultSet(id)
-      assertTrue(rsBackOp.isDefined)
-      val rsBack = rsBackOp.get
-      assertNotNull(rsBack)
-
-      var nbrMascotProperties = 0
-      rsBack.peptideMatches.foreach(psm => {
-        assertTrue(psm.properties.isDefined)
-        if (psm.properties.get.getMascotProperties.isDefined)
-          nbrMascotProperties += 1
-      })
-      assertTrue(nbrMascotProperties > 0)
-
-      // Other verifs....
-
-      /* Reload with JPA */
-      val ormLoadedRsOp = ormProvider.getResultSet(id)
-      assertTrue(ormLoadedRsOp.isDefined)
-      val ormLoadedRs = ormLoadedRsOp.get
-      assertNotNull(ormLoadedRs)
-
-      nbrMascotProperties = 0
-      ormLoadedRs.peptideMatches.foreach(psm => {
-        assertTrue(psm.properties.isDefined)
-        if (psm.properties.get.getMascotProperties.isDefined)
-          nbrMascotProperties += 1
-      })
-      assertTrue(nbrMascotProperties > 0)
-
-    } finally {
-      jpaContext.closeAll()
-
-      executionContext.closeAll()
-    }
-
-  }
 
   @Test
-  def runRFIwithJPA() = {
+  def testRFIwithJPA() = {
     val (executionContext, rsProvider) = buildJPAContext
 
     assertNotNull(executionContext)
 
     try {
       logger.debug(" --- Get File " + _datFileName)
-      var datFile: File = new File(RFImporterH2Test.this.getClass.getResource(_datFileName).toURI)
+      var datFile: File = new File(this.getClass.getResource(_datFileName).toURI)
 
       val propertiedBuilder = Map.newBuilder[String, Any]
       propertiedBuilder += ("ion.score.cutoff" -> 0.5)
@@ -159,8 +89,8 @@ class RFImporterH2Test extends AbstractRFImporterTestCase {
   }
 
   @Test
-  def runRFIwithDoubleJPA() = {
-    var datFile: File = new File(RFImporterH2Test.this.getClass.getResource(_datFileName).toURI)
+  def testRFIwithDoubleJPA() = {
+    var datFile: File = new File(this.getClass.getResource(_datFileName).toURI)
 
     val propertiedBuilder = Map.newBuilder[String, Any]
     propertiedBuilder += ("ion.score.cutoff" -> 0.5)
@@ -210,7 +140,7 @@ class RFImporterH2Test extends AbstractRFImporterTestCase {
 
     try {
       logger.debug(" --- Get second File " + _datFileName)
-      datFile = new File(RFImporterH2Test.this.getClass.getResource(_datFileName).toURI)
+      datFile = new File(this.getClass.getResource(_datFileName).toURI)
 
       val importer2 = new ResultFileImporter(
         executionContext2,
