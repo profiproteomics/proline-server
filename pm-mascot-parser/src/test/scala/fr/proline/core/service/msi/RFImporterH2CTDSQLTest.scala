@@ -10,11 +10,14 @@ import fr.proline.repository.DriverType
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.dal.ContextFactory
+import org.junit.Ignore
 
 @Test
 class RFImporterH2CTDSQLTest extends AbstractRFImporterTestCase {
   
-  val driverType = DriverType.H2
+  val driverType = DriverType.H2    
+  var executionContext : IExecutionContext = _
+  var rsProvider : IResultSetProvider = _
     
   @Before
   @throws( classOf[Exception] )
@@ -23,16 +26,19 @@ class RFImporterH2CTDSQLTest extends AbstractRFImporterTestCase {
     _datFileName = "/dat_samples/STR_F136482_CTD.dat"
     udsDBTestCase.loadDataSet( "/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml" )
     logger.info( "UDS db succesfully initialized" )
+    val (execContext, rsP) = buildJPAContext
+    executionContext = execContext
+    rsProvider = rsP
   }
   
   @After
   override def tearDown() {
+    if (executionContext != null) executionContext.closeAll()
     super.tearDown()
   }
   
   @Test
   def testRFIwithSQL() = {
-    val (executionContext, rsProvider) = buildSQLContext()
   
     logger.debug( " --- Get File " + _datFileName )
     var datFile: File = new File( this.getClass.getResource( _datFileName ).toURI )

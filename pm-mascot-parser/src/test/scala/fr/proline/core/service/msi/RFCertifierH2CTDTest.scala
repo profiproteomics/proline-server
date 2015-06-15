@@ -18,12 +18,14 @@ import fr.proline.core.orm.ps.PtmEvidence
 import scala.collection.JavaConversions._
 import fr.proline.core.orm.ps.PtmSpecificity
 import fr.proline.core.util.ResidueUtils._
+import org.junit.Ignore
 
 @Test
 class RFCertifierH2CTDTest extends AbstractRFImporterTestCase {
 
   val driverType = DriverType.H2
-
+  var executionContext : IExecutionContext = _
+ 
   @Before
   @throws(classOf[Exception])
   override def setUp() = {
@@ -37,7 +39,8 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTestCase {
     pdiDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/Proteins_Dataset.xml")
     udsDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml")
     logger.info("UDS db succesfully initialized")
-
+    val (execContext, rsProvider) = buildJPAContext
+    executionContext = execContext
   }
 
   @After
@@ -47,7 +50,6 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTestCase {
 
   @Test
   def testRFCertifier() = {
-    val (executionContext, rsProvider) = buildJPAContext()
     ResultFileProviderRegistry.register(new MascotResultFileProvider())
     logger.debug(" --- Get File " + _datFileName)
     var datFile: File = new File(RFCertifierH2CTDTest.this.getClass.getResource(_datFileName).toURI)
@@ -67,7 +69,6 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTestCase {
 
   @Test
   def testRFCertifierWithMissingPtm() = {
-    val (executionContext, rsProvider) = buildJPAContext()
     deletePtm(executionContext, "Carbamidomethyl")
 
     ResultFileProviderRegistry.register(new MascotResultFileProvider())
@@ -89,7 +90,6 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTestCase {
 
   @Test
   def testRFCertifierWithMissingSpecificity() = {
-    val (executionContext, rsProvider) = buildJPAContext()
     val psEM = executionContext.getPSDbConnectionContext().getEntityManager()
     deletePtmSpecificity(executionContext, "Carbamidomethyl", 'E')
     var psPtm = PsPtmRepository.findPtmForShortName(psEM, "Carbamidomethyl")
@@ -122,7 +122,6 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTestCase {
 
   @Test
   def testTwoRFCertifier() = {
-    val (executionContext, rsProvider) = buildJPAContext()
     ResultFileProviderRegistry.register(new MascotResultFileProvider())
     logger.debug(" --- Get File " + _datFileName)
     var datFile: File = new File(RFCertifierH2CTDTest.this.getClass.getResource(_datFileName).toURI)
@@ -181,7 +180,6 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTestCase {
 
   @Test
   def testRFCertifierWithUnknwonEnzyme() = {
-    val (executionContext, rsProvider) = buildJPAContext()
     ResultFileProviderRegistry.register(new MascotResultFileProvider())
     val unkownEnzyme_datFileName = "/dat_samples/F159835_unknown_enzyme.dat"
     logger.debug(" --- Get File " + unkownEnzyme_datFileName)

@@ -1,17 +1,19 @@
 package fr.proline.core.service.msi
 
 import java.io.File
-
 import org.junit.{ Before, Ignore, Test }
 import org.junit.After
 import org.junit.Assert._
-
 import fr.proline.repository.DriverType
+import fr.proline.context.IExecutionContext
+import fr.proline.core.om.provider.msi.IResultSetProvider
 
 @Test
 class RFImporterH2SQLTest extends AbstractRFImporterTestCase {
 
   val driverType = DriverType.H2
+  var executionContext : IExecutionContext = _
+   var rsProvider : IResultSetProvider = _
 
   @Before
   @throws(classOf[Exception])
@@ -22,18 +24,20 @@ class RFImporterH2SQLTest extends AbstractRFImporterTestCase {
     _datFileName = "/dat_samples/STR_F122817_Mascot_v2.3.dat"
     udsDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml")
     logger.info("UDS db succesfully initialized")
+    val (execContext, rsP) = buildJPAContext
+    executionContext = execContext
+    rsProvider = rsP
   }
 
   @After
   override def tearDown() {
+    if (executionContext != null) executionContext.closeAll()
     super.tearDown()
   }
 
   @Test
   def testRFIwithSQL() = {
-    val (executionContext, rsProvider) = buildSQLContext
 
-    val (jpaContext, ormProvider) = buildJPAContext
 
     assertNotNull(executionContext)
 
@@ -79,7 +83,7 @@ class RFImporterH2SQLTest extends AbstractRFImporterTestCase {
       // Other verifs....
 
       /* Reload with JPA */
-      val ormLoadedRsOp = ormProvider.getResultSet(id)
+      val ormLoadedRsOp = rsProvider.getResultSet(id)
       assertTrue(ormLoadedRsOp.isDefined)
       val ormLoadedRs = ormLoadedRsOp.get
       assertNotNull(ormLoadedRs)
@@ -93,7 +97,6 @@ class RFImporterH2SQLTest extends AbstractRFImporterTestCase {
       assertTrue(nbrMascotProperties > 0)
 
     } finally {
-      jpaContext.closeAll()
 
       executionContext.closeAll()
     }

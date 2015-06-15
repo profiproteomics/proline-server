@@ -8,13 +8,15 @@ import org.junit.Assert._
 import fr.proline.repository.DriverType
 import fr.proline.module.parser.mascot.MascotResultFileProvider
 import fr.proline.core.om.model.msi.IonTypes
+import fr.proline.context.IExecutionContext
 
 @Test
 class RFImporterNewPTMTest extends AbstractRFImporterTestCase {
 
   val driverType = DriverType.H2
   val fileType = "mascot.dat"
-
+  var executionContext : IExecutionContext = _
+  
   @Before
   @throws(classOf[Exception])
   override def setUp() = {
@@ -24,16 +26,19 @@ class RFImporterNewPTMTest extends AbstractRFImporterTestCase {
     _datFileName = "/dat_samples/STR_F122817_Hydroxylation.dat"
     udsDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml")
     logger.info("UDS db succesfully initialized")
+    val (execContext, rsProvider) = buildJPAContext
+    executionContext = execContext
   }
 
   @After
-  override def tearDown() {
+  override def tearDown() {   
+    if (executionContext != null) executionContext.closeAll()
     super.tearDown()
   }
 
   @Test
   def testImportRFWithNewPTM() = {
-    val (executionContext, rsProvider) = buildJPAContext
+    //val (executionContext, rsProvider) = buildJPAContext
     val psDbCtx = executionContext.getPSDbConnectionContext()
     val psEM = psDbCtx.getEntityManager()
 

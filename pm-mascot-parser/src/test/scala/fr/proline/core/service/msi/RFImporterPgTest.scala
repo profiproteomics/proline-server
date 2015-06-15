@@ -7,12 +7,16 @@ import org.junit.Assert.{ assertNotNull, assertTrue }
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.repository.DriverType
 import javax.persistence.FlushModeType
+import fr.proline.core.om.provider.msi.IResultSetProvider
+import fr.proline.context.IExecutionContext
 
 @Test /* Manual PostgreSQL Test */
 class RFImporterPgTest extends AbstractRFImporterTestCase {
 
   val driverType = DriverType.POSTGRESQL
-
+ var executionContext : IExecutionContext = _
+  var rsProvider : IResultSetProvider = _
+  
   @Before
   @throws(classOf[Exception])
   override def setUp() = {
@@ -24,6 +28,9 @@ class RFImporterPgTest extends AbstractRFImporterTestCase {
     logger.info("UDS db succesfully initialized")
 
     updatePsPeptideSequence()
+    val (execContext, rsP) = buildJPAContext
+    executionContext = execContext
+    rsProvider = rsP
   }
 
   @After
@@ -33,7 +40,6 @@ class RFImporterPgTest extends AbstractRFImporterTestCase {
 
   @Ignore
   def testRFIwithSQL() = {
-    val (executionContext, rsProvider) = buildSQLContext
 
     assertNotNull(executionContext)
 
@@ -78,7 +84,6 @@ class RFImporterPgTest extends AbstractRFImporterTestCase {
 
   @Ignore
   def runRFIwithJPA() = {
-    val (executionContext, rsProvider) = buildJPAContext
 
     assertNotNull(executionContext)
 
