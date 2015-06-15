@@ -8,7 +8,7 @@ object ProtSetToProtMatchViewFields extends IViewFieldEnumeration {
   val PROTEIN_SET_ID = Field("protein_set_id")
   val ACCESSION = Field("accession")
   val DESCRIPTION = Field("description")
-  val IS_TYPICAL_PROTEIN = Field("is_typical_protein")
+  val IS_REPRESENTATIVE_PROTEIN = Field("is_representative_protein")
   val IS_SAMESET = Field("is_sameset")
   val PEPTIDE_SET_SCORE = Field("peptide_set_score")
   val COVERAGE = Field("coverage")
@@ -37,7 +37,7 @@ class ProtSetToProtMatchView( val identDS: IdentDataSet ) extends IFixedDatasetV
       fields.PROTEIN_SET_ID -> protSet.id,
       fields.ACCESSION -> protMatch.accession,
       fields.DESCRIPTION -> protMatch.description,
-      fields.IS_TYPICAL_PROTEIN -> (protSet.getRepresentativeProteinMatchId == protMatch.id),
+      fields.IS_REPRESENTATIVE_PROTEIN -> (protSet.getRepresentativeProteinMatchId == protMatch.id),
       fields.IS_SAMESET -> !peptideSet.isSubset,
       fields.PEPTIDE_SET_SCORE -> "%.1f".format(peptideSet.score).toDouble,
       fields.COVERAGE -> "%.1f".format(protMatch.coverage).toDouble,
