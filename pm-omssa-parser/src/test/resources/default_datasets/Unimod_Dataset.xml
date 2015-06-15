@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-
+<!DOCTYPE dataset SYSTEM "ps-dataset.dtd">
 <dataset>
 	<PTM ID="1" UNIMOD_ID="1" FULL_NAME="Acetylation" SHORT_NAME="Acetyl" />
 	<PTM ID="2" UNIMOD_ID="2" FULL_NAME="Amidation" SHORT_NAME="Amidated" />
