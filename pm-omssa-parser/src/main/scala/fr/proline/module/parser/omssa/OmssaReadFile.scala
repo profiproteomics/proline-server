@@ -529,7 +529,7 @@ class OmssaReadFile(val omxFile: File,
     var strTaxonomies = ""
     if (taxonomies.size > 0) strTaxonomies = taxonomies.reduceLeft(_ + ", " + _)
 
-    var searchSettings: SearchSettings = new SearchSettings(
+    val searchSettings = SearchSettings(
       id = SearchSettings.generateNewId(),
       softwareName = "OMSSA",
       softwareVersion = parseProperties.get(OmssaParseParams.OMSSA_VERSION).getOrElse("").toString, // not in omx file
@@ -543,8 +543,8 @@ class OmssaReadFile(val omxFile: File,
       variablePtmDefs = msVarPtms.toArray,
       fixedPtmDefs = msFixedPtms.toArray,
       seqDatabases = Array(seqDatabase),
-      instrumentConfig = null, // not instanciated at this moment
-      quantitation = "")
+      instrumentConfig = null // not instanciated at this moment
+    )
     
     if (msLevel == 2) {
       searchSettings.msmsSearchSettings = Some(
@@ -556,11 +556,11 @@ class OmssaReadFile(val omxFile: File,
     }
 
     searchSettingsReference.filter(element => element.contains("/MSInFile_infile/")).foreach(element => { setPeaklist(extract(element)) })
+    
     //Create MSISearch regrouping all these information
-    msiSearch = new MSISearch(
+    msiSearch = MSISearch(
       id = MSISearch.generateNewId(),
       resultFileName = omxFile.getName(),
-      submittedQueriesCount = nbSpectra,
       searchSettings = searchSettings,
       peakList = peaklist,
       date = new java.util.Date(omxFile.lastModified()), // the lastModified date of the file will not always correspond to the search date
