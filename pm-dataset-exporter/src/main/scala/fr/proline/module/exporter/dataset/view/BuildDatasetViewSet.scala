@@ -302,7 +302,7 @@ object BuildDatasetViewSet extends Logging {
             override def execute(con: Connection) {
               //---- Read Prot Status
 
-              val getProtStatus = "SELECT protein_set_id, protein_match_id, is_in_subset, typical_protein_match_id FROM protein_set_protein_match_item, protein_set " +
+              val getProtStatus = "SELECT protein_set_id, protein_match_id, is_in_subset, representative_protein_match_id FROM protein_set_protein_match_item, protein_set " +
                 " WHERE protein_set.id = protein_set_protein_match_item.protein_set_id " +
                 " AND protein_set_protein_match_item.result_summary_id = ? "
               val pStmt = con.prepareStatement(getProtStatus)
@@ -311,7 +311,7 @@ object BuildDatasetViewSet extends Logging {
               val sqlResultSet = pStmt.executeQuery()
               while (sqlResultSet.next) {
                 val isInSubset = sqlResultSet.getBoolean("is_in_subset")
-                val protSetTypID = sqlResultSet.getLong("typical_protein_match_id")
+                val protSetTypID = sqlResultSet.getLong("representative_protein_match_id")
                 val protMatchId = sqlResultSet.getLong("protein_match_id")
                 val protSetId = sqlResultSet.getLong("protein_set_id")
                 var protMatchStatus: String = null
