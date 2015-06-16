@@ -325,8 +325,7 @@ class MzIdResultFile(
         variablePtmDefs = varPtms.toArray,
         fixedPtmDefs = fixedPtms.toArray,
         seqDatabases = seqDbs,
-        instrumentConfig = instrumentConfig.getOrElse(null),
-        quantitation = ""
+        instrumentConfig = instrumentConfig.getOrElse(null)
       )
       
     } else {
@@ -361,8 +360,7 @@ class MzIdResultFile(
         variablePtmDefs = varPtms.toArray,
         fixedPtmDefs = fixedPtms.toArray,
         seqDatabases = seqDbs,
-        instrumentConfig = instrumentConfig.getOrElse(null),
-        quantitation = ""
+        instrumentConfig = instrumentConfig.getOrElse(null)
       )
     }
     
@@ -391,7 +389,6 @@ class MzIdResultFile(
     MSISearch(
       id = MSISearch.generateNewId(),
       resultFileName = fileLocation.getName(),
-      submittedQueriesCount = queriesCount,
       searchSettings = searchSettings,
       peakList = peaklist,
       title = "",
