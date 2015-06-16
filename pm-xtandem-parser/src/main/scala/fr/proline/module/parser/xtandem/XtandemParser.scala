@@ -467,13 +467,12 @@ class XtandemParser(  val xtandemFile : File,
           //FileMarkup variables
           val dbProteinFileMarkupURL: String = dbProteinFileMarkup.URL
 
-          val newProteinMatch = new ProteinMatch(
+          var newProteinMatch = new ProteinMatch(
             accession = dbProteinLabel,
             description = dbProteinNoteLabel,
             id = ProteinMatch.generateNewId(),
             seqDatabaseIds = seqDatabaseIdsArray, 
             scoreType = "xtandem:hyperscore")
-          var lastProteinMatchId = newProteinMatch.id
 
           for (dbPeptideDomain <- dbProteinPeptide.domainList) {
             //Domain variables
@@ -573,11 +572,11 @@ class XtandemParser(  val xtandemFile : File,
               dbDomainSeqList.append(dbDomainSeq)
             } else {
               peptide = peptides.find(e => e.sequence.equals(dbDomainSeq)).get
-                
+
 //              logger.debug("IY - XtandemParser.scala - Ignoring new peptide. Seq = " + dbDomainSeq + ", peptide = " + peptide)
             }
             locatedPtms.clear()
-            
+
             // Complete seqMatch parameters before add to ProteinMatch
             seqMatch.peptide = Some(peptide)
 
@@ -607,21 +606,37 @@ class XtandemParser(  val xtandemFile : File,
           }
           
 //        proteinMatches += newProteinMatch
-            val newSeqMatches = new ArrayBuffer[SequenceMatch]()
-            if (newProteinMatch.sequenceMatches != null) newSeqMatches ++= newProteinMatch.sequenceMatches
-            newSeqMatches += seqMatch
-            newProteinMatch.sequenceMatches = newSeqMatches.toArray
-            proteinMatches += newProteinMatch
+        val newSeqMatches = new ArrayBuffer[SequenceMatch]()
+        if (newProteinMatch.sequenceMatches != null) newSeqMatches ++= newProteinMatch.sequenceMatches
+        newSeqMatches += seqMatch
+        newProteinMatch.sequenceMatches = newSeqMatches.toArray
+
+        var proteinMatchAlreadyExists = false
+        proteinMatches.foreach(pm => {
+          if(pm.accession == newProteinMatch.accession) {
+            pm.sequenceMatches.foreach(sm => {
+              if(sm.start == newProteinMatch.sequenceMatches.head.start && sm.end == newProteinMatch.sequenceMatches.head.end ) {
+                logger.debug("IY 11/06 - XtandemParser - pm.accession "+pm.accession+" already exists !")
+                newProteinMatch.sequenceMatches.head +: pm.sequenceMatches
+                proteinMatchAlreadyExists = true
+              }
+            })
+          } 
+        })
+
+        if(!proteinMatchAlreadyExists) proteinMatches += newProteinMatch
         }
       } // end of GroupSupport loop
     } //End "for groupModel gm" loop
     var compteur = 0
     proteinMatches.foreach(pm => {
-      logger.debug("IY 02/06 - XtandemParser - pm.sequenceMatches.length = " + pm.sequenceMatches.length)
-      logger.debug("IY 02/06 - XtandemParser - pm.sequenceMatches = " + pm.sequenceMatches)
-      compteur +=1
+//      logger.debug("IY 02/06 - XtandemParser - pm.sequenceMatches.length = " + pm.sequenceMatches.length)
+//      logger.debug("IY 02/06 - XtandemParser - pm.sequenceMatches = " + pm.sequenceMatches)
+//      logger.debug("IY 02/06 - XtandemParser - pm.accession = " + pm.accession)
+//      logger.debug("IY 11/06 - XtandemParser - pm.protein= " + pm.protein)
+      if(pm.sequenceMatches.length > 1 ) compteur +=1
     })
-    logger.debug("IY 02/06 - XtandemParser - compteur = " + compteur)
+    logger.debug("IY 02/06 - XtandemParser - Il y a " + compteur + " sequenceMatch de longueur superieur à 1 !")
     msQueries = msQueriesList.toArray
 
     //logger.debug("IY - XtandemParser.scala - peptideMatches = " + peptideMatches )
@@ -645,7 +660,7 @@ class XtandemParser(  val xtandemFile : File,
     msiSearchForResultSet = new MSISearch(
       id = MSISearch.generateNewId(),
       resultFileName = msiSearchResultFileName,
-      submittedQueriesCount = resultBioml.groupModelList.length,
+//      submittedQueriesCount = resultBioml.groupModelList.length,
       searchSettings = searchSettings,
       peakList = peaklist,
       date = new java.util.Date(),
