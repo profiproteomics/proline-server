@@ -75,7 +75,7 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-Admin</artifactId>
-      <version>0.1.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+      <version>0.2.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
     </dependency>
 
     
