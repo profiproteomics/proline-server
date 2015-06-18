@@ -56,15 +56,9 @@ public class ProjectHandler {
    
     private static final String ALL_PM_SQM = "select id FROM fr.proline.core.orm.msi.SequenceMatch";
  
-    private static final String VALIDATED_ACCRSM_QUERY = " SELECT pm.id, pm.accession, pmsqm.id"
-    	    + " FROM fr.proline.core.orm.msi.ProteinMatch pm, fr.proline.core.orm.msi.SeqDatabase sdb, fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMap pmsdb,"
-    		+"fr.proline.core.orm.msi.SequenceMatch pmsqm,fr.proline.core.orm.msi.Peptide pep,fr.proline.core.orm.msi.PeptideMatch pepm"
-    	    + " JOIN pm.proteinSetProteinMatchItems ps"
-    	    + " WHERE (pmsdb.id.proteinMatchId = pm.id) AND (pmsdb.id.seqDatabaseId = sdb.id) AND (pmsqm.id.proteinMatchId=pm.id) AND (pmsqm.id.peptideId=pep.id) AND (pep.id=pepm.peptideId)"
-    	    + " AND ((upper(pm.resultSet.type) = 'SEARCH') OR (upper(pm.resultSet.type) = 'USER'))"
-    	    + " AND (ps.proteinSet.isValidated = true) AND (ps.proteinSet.resultSummary IS NOT NULL) ";
+
    
-    private static final String VALIDATED_ACCRSM_QUERY1 = "SELECT pm.accession,sm.id FROM ProteinMatch pm, ProteinSet ps,  ProteinSetProteinMatchItem pspmm, SequenceMatch sm WHERE pm.id = pspmm.id.proteinMatchId AND ps.id = pspmm.id.proteinSetId AND sm.id.proteinMatchId = pm.id AND ps.isValidated = 'true'";
+    private static final String VALIDATED_ACCRSM_QUERY = "SELECT pm,sm.id FROM ProteinMatch pm, ProteinSet ps,  ProteinSetProteinMatchItem pspmm, SequenceMatch sm WHERE pm.id = pspmm.id.proteinMatchId AND ps.id = pspmm.id.proteinSetId AND sm.id.proteinMatchId = pm.id AND ps.isValidated = 'true'";
     
     private static final String UPDATE_QUERY = "UPDATE protein_match  set coverage=? where accession=?";
     
@@ -268,7 +262,7 @@ public class ProjectHandler {
 	public static void fillsequenceMatchesByProteinMatch(final long projectId) {
     	final DataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();
     	final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId);
-    	Map<String, Integer> accessionSqmatch = new HashMap<String, Integer>();
+    	Map<ProteinMatch, Integer> accessionSqmatch = new HashMap<ProteinMatch, Integer>();
     	int sequencesmatcheslength=0;
     	List<BioSequenceWrapper> bioSequenceWrapperList;
     	if (msiDbConnector == null) {
@@ -282,7 +276,7 @@ public class ProjectHandler {
     			if ((seDbInstances == null) || seDbInstances.isEmpty()) {
     				LOG.warn("There is NO SEDbInstance in MSI Project #{}", projectId);
     			} else {
-    				final Query pmSdmQuery = msiEM.createQuery(VALIDATED_ACCRSM_QUERY1);	
+    				final Query pmSdmQuery = msiEM.createQuery(VALIDATED_ACCRSM_QUERY);	
     				final List<Object[]> pmSdmLines = pmSdmQuery.getResultList();
     				if ((pmSdmLines != null) && !pmSdmLines.isEmpty()) {
     					fillproteinmatch(pmSdmLines);
@@ -290,8 +284,8 @@ public class ProjectHandler {
     					ArrayList<String> values = new ArrayList<>();
     					int biosequencelentgh = 0;
     					List<String> Accession = new ArrayList<>();
-    					for (Entry<String, Integer> entry : accessionSqmatch.entrySet())
-    					{   Accession.add(entry.getKey());
+    					for (Entry<ProteinMatch, Integer> entry : accessionSqmatch.entrySet())
+    					{   Accession.add(entry.getKey().getAccession());
     						sequencesmatcheslength=entry.getValue();
     						Map<String, List<BioSequenceWrapper>> result = BioSequenceProvider
     							.findBioSequencesBySEDbIdentValues(Accession);
@@ -300,8 +294,11 @@ public class ProjectHandler {
     							List<BioSequenceWrapper> bioSequences = entry0.getValue();
     							for ( BioSequenceWrapper bsw : bioSequences) {
     								biosequencelentgh=bsw.getSequence().length();
+    								if(sequencesmatcheslength>biosequencelentgh)
+    								{
+    									sequencesmatcheslength=biosequencelentgh;
+    									}
     							}
-    							LOG.warn("calculsequenceCoverage :"+calculsequenceCoverage(biosequencelentgh,sequencesmatcheslength));
      							msiEM.getTransaction().begin();
     							final Query updateQuery = msiEM.createNativeQuery(UPDATE_QUERY);
     							updateQuery.setParameter(1,calculsequenceCoverage(biosequencelentgh,sequencesmatcheslength));
@@ -326,119 +323,48 @@ public class ProjectHandler {
     		}
     	}
     }
-    private static Map<String,Integer> fillproteinmatch(final List<Object[]> lines) {
-       	Map<String, Integer> accessionSqmatch = new HashMap<String, Integer>();
+    private static Map<ProteinMatch,Integer> fillproteinmatch(final List<Object[]> lines) {
+       	Map<ProteinMatch, Integer> accessionSqmatch = new HashMap<ProteinMatch, Integer>();
        	HashSet<Integer> Seqsorted = new HashSet<Integer>();
-    	Map<String, List<Integer>> temp = new HashMap<String, List<Integer>>();
-    	List<String> Accessionduplicated = new ArrayList<>();
+    	Map<ProteinMatch, List<Integer>> temp = new HashMap<ProteinMatch, List<Integer>>();
+    	List<ProteinMatch> ProteinMatchduplicated = new ArrayList<>();
     	List<Integer> SeqLists = new ArrayList<Integer>();
     	List<Integer> Seqindex = new ArrayList<Integer>();
-    	String accession = null;
+    	ProteinMatch proteinmatch= null;
     	SequenceMatchPK SequenceMatch = null; 
     	for (final Object[] line : lines) {
     		int start =0;
 			int stop=0;
 			
-    				if (line[0] instanceof String) {
-    					accession = (String) line[0];
+    				if (line[0] instanceof ProteinMatch) {
+    					proteinmatch = (ProteinMatch) line[0];
     				}
     				if (line[1] instanceof SequenceMatchPK) {
     					SequenceMatch = (SequenceMatchPK) line[1];
     				}
     				start=(int)SequenceMatch.getStart();
     				stop=(int)SequenceMatch.getStop();
-    				if(Accessionduplicated.contains(accession)){
+    				if(ProteinMatchduplicated.contains(proteinmatch)){
 						Seqindex.clear();Seqsorted.clear();
-						SeqLists=temp.get(accession);
+						SeqLists=temp.get(proteinmatch);
 						SeqLists.addAll(getSequencesIndexes(start,stop));
-						temp.put(accession,SeqLists);
-						Seqindex.addAll(temp.get(accession));
+						temp.put(proteinmatch,SeqLists);
+						Seqindex.addAll(temp.get(proteinmatch));
 						Seqsorted.addAll(Seqindex);
-						accessionSqmatch.put(accession,Seqsorted.size());
+						accessionSqmatch.put(proteinmatch,Seqsorted.size());
 					}else{
 						SeqLists.clear();Seqsorted.clear();Seqindex.clear();
 						SeqLists.addAll(getSequencesIndexes(start,stop));
-						temp.put(accession,SeqLists);
-						Seqindex.addAll(temp.get(accession));
+						temp.put(proteinmatch,SeqLists);
+						Seqindex.addAll(temp.get(proteinmatch));
 						Seqsorted.addAll(Seqindex);
-						accessionSqmatch.put(accession,Seqsorted.size());
+						accessionSqmatch.put(proteinmatch,Seqsorted.size());
 					 }
-    				Accessionduplicated.add(accession);
+    				ProteinMatchduplicated.add(proteinmatch);
     			}
-    	
     	return accessionSqmatch;
-    }
-    
-//    
-//    private static Map<String, Integer> fillproteinmatch(final List<Object[]> lines) {
-//    	assert (lines != null) : "fillproteinmatch() lines can not be null";
-//    	Map<String, Integer> accessionSqmatch = new HashMap<String, Integer>();
-//    	Map<String, List<Integer>> temp = new HashMap<String, List<Integer>>();
-//    	HashSet<Integer> Seqsorted = new HashSet<Integer>();
-//    	List<String> Accessionduplicated = new ArrayList<>();
-//    	List<Integer> SeqLists = new ArrayList<Integer>();
-//    	List<Integer> Seqindex = new ArrayList<Integer>();
-//    	for (final Object[] line : lines) {
-//    		final int lineLength = line.length;
-//    		if(lineLength>=EXPECTED_LINE_LENGTH_PM_SQM)
-//    			{
-//    				SequenceMatchPK id = null;
-//    				Long Id = null;
-//    				String accession=null;
-//    				int start =0;
-//    				int stop=0;
-//    				Long peptidID=null;
-//    				if (line[0] instanceof Long) {
-//    					Id = (Long) line[0];
-//    				}
-//    				if (line[1] instanceof String) {
-//    					accession = ((String) line[1]).trim();
-//    				}
-//    				if (line[2] instanceof SequenceMatchPK) {
-//    					id = (SequenceMatchPK) line[2];
-//    				}
-//    				start=(int)id.getStart();
-//    				stop=(int)id.getStop();
-//    				peptidID=(Long)id.getPeptideId();
-//    				if(Id==null)
-//    				{
-//    					LOG.error("ProteinMatch id can not be null:{}",Id);
-//    				}else{
-//    					if(accession==null){
-//    						LOG.error("accession is null,:{}",accession);
-//    					}else{
-//    					if((id.getStart()<0)||(id.getStop()<0)){
-//    						LOG.error("sequenceMatch is null");
-//    					}else{  
-//    						if(Accessionduplicated.contains(accession)){
-//    							Seqindex.clear();Seqsorted.clear();SeqLists=temp.get(accession);
-//    							SeqLists.addAll(getSequencesIndexes(start,stop));
-//    							temp.put(accession,SeqLists);
-//    							Seqindex.addAll(temp.get(accession));
-//    							Seqsorted.addAll(Seqindex);
-//    							accessionSqmatch.put(accession,Seqsorted.size());
-//    						}else{
-//    							SeqLists.clear();Seqsorted.clear();Seqindex.clear();
-//    							SeqLists.addAll(getSequencesIndexes(start,stop));
-//    							temp.put(accession,SeqLists);
-//    							Seqindex.addAll(temp.get(accession));
-//    							Seqsorted.addAll(Seqindex);
-//    							accessionSqmatch.put(accession,Seqsorted.size());
-//    						}
-//    						Accessionduplicated.add(accession);
-//    					}
-//    				}
-//    			}
-//    		}else
-//    		{
-//    			LOG.error("Invalid result line length {} (expected : {})", lineLength, EXPECTED_LINE_LENGTH_PM_SQM);
-//    		}    
-//    	} 
-//    	if(accessionSqmatch.isEmpty()){
-//    		LOG.error("Invalid proteinmatch Map:{}",accessionSqmatch);
-//    	}
-//    	return (Map<String, Integer>) accessionSqmatch;
-//    }
+    } 
+
 public static Set<String> findDuplicates(List<String> listContainingDuplicates) {
 		final Set<String> setToReturn = new HashSet<String>();
 		final Set<String> set1 = new HashSet<String>();
