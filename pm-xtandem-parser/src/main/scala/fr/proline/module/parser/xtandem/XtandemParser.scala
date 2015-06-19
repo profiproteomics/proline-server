@@ -606,25 +606,32 @@ class XtandemParser(  val xtandemFile : File,
           }
           
 //        proteinMatches += newProteinMatch
-        val newSeqMatches = new ArrayBuffer[SequenceMatch]()
-        if (newProteinMatch.sequenceMatches != null) newSeqMatches ++= newProteinMatch.sequenceMatches
-        newSeqMatches += seqMatch
-        newProteinMatch.sequenceMatches = newSeqMatches.toArray
+          val newSeqMatches = new ArrayBuffer[SequenceMatch]()
+          if (newProteinMatch.sequenceMatches != null) newSeqMatches ++= newProteinMatch.sequenceMatches
+          newSeqMatches += seqMatch
+          newProteinMatch.sequenceMatches = newSeqMatches.toArray
 
-        var proteinMatchAlreadyExists = false
-        proteinMatches.foreach(pm => {
-          if(pm.accession == newProteinMatch.accession) {
-            pm.sequenceMatches.foreach(sm => {
-              if(sm.start == newProteinMatch.sequenceMatches.head.start && sm.end == newProteinMatch.sequenceMatches.head.end ) {
-                logger.debug("IY 11/06 - XtandemParser - pm.accession "+pm.accession+" already exists !")
-                newProteinMatch.sequenceMatches.head +: pm.sequenceMatches
-                proteinMatchAlreadyExists = true
-              }
-            })
-          } 
-        })
+          var proteinMatchAlreadyExists = false
+          proteinMatches.foreach(pm => {
+            if(pm.accession == newProteinMatch.accession) {
+              pm.sequenceMatches.foreach(sm => {
+                if(sm.start == newProteinMatch.sequenceMatches.head.start && sm.end == newProteinMatch.sequenceMatches.head.end ) {
+//                  logger.debug("IY 11/06 - XtandemParser - pm.accession "+pm.accession+" already exists !")
+//                  newProteinMatch.sequenceMatches.head +: pm.sequenceMatches
+                  proteinMatchAlreadyExists = true
+                }
+              })
+            } 
+          })
 
-        if(!proteinMatchAlreadyExists) proteinMatches += newProteinMatch
+          if(!proteinMatchAlreadyExists){
+            proteinMatches += newProteinMatch
+//            logger.debug("IY 18/06 - XtandemParser - Il y a " + compteur + " newProteinMatch enregistrés dans proteinMatches !")
+          }
+//          else {
+//            logger.debug("IY 18/06 - XtandemParser - newProteinMatch " + newProteinMatch.accession + " n'a pas été enregistré dans proteinMatches !")
+//          }
+          
         }
       } // end of GroupSupport loop
     } //End "for groupModel gm" loop
@@ -636,7 +643,7 @@ class XtandemParser(  val xtandemFile : File,
 //      logger.debug("IY 11/06 - XtandemParser - pm.protein= " + pm.protein)
       if(pm.sequenceMatches.length > 1 ) compteur +=1
     })
-    logger.debug("IY 02/06 - XtandemParser - Il y a " + compteur + " sequenceMatch de longueur superieur à 1 !")
+    logger.debug("IY 16/06 - XtandemParser - Il y a " + compteur + " sequenceMatch de longueur superieur à 1 !")
     msQueries = msQueriesList.toArray
 
     //logger.debug("IY - XtandemParser.scala - peptideMatches = " + peptideMatches )
