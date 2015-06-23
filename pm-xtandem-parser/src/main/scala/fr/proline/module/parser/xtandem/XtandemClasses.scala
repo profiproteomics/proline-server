@@ -21,6 +21,7 @@ class XTDomain {
 	var id : String = _
 	var start : Int = _
 	var end : Int = _
+	var mh : Double = _
 	var delta : Double = _
 	var hyperScore : Double = _
 	var pre : String = _

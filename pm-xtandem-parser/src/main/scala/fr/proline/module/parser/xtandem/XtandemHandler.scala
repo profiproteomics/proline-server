@@ -101,6 +101,7 @@ class XtandemHandler extends DefaultHandler with Logging {
 			domain.id = attributes.getValue("id")
 			domain.start = augmentString(attributes.getValue("start")).toInt
 			domain.end = augmentString(attributes.getValue("end")).toInt
+			domain.mh = augmentString(attributes.getValue("mh")).toDouble
 			domain.delta = augmentString(attributes.getValue("delta")).toDouble
 			domain.hyperScore = augmentString(attributes.getValue("hyperscore")).toDouble
 			domain.pre = attributes.getValue("pre")

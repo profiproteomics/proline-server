@@ -125,6 +125,8 @@ class XtandemParser(  val xtandemFile : File,
     var peptideMatches: ArrayBuffer[PeptideMatch] = new ArrayBuffer[PeptideMatch]
     var peptide : Peptide = null
     var newPeptideMatch : PeptideMatch = null
+    var protein : Protein = null
+    var proteinList : ArrayBuffer[Protein] = new ArrayBuffer[Protein]
 
     val ptmEvidence = new PtmEvidence(
       ionType = IonTypes.Precursor,
@@ -374,7 +376,7 @@ class XtandemParser(  val xtandemFile : File,
       id = Peaklist.generateNewId(),
       fileType = peaklistFilePathNameExt.extension,
       path = peaklistFilePathNameExt.path,
-      rawFileName = peaklistFilePathNameExt.filename,
+      rawFileIdentifier = peaklistFilePathNameExt.filename,
       msLevel = msLevel)
     
     //GroupModel variables
@@ -458,6 +460,7 @@ class XtandemParser(  val xtandemFile : File,
           val dbProteinNote: XTNote = p.note
           val dbProteinFileMarkup: XTFileMarkup = p.fileMarkup
           val dbProteinPeptide: XTPeptide = p.peptide
+          val dbProteinPeptideInfo: String = p.peptide.info
           val dbProteinPeptideEnd : Int = p.peptide.end
 
           //Note variables
@@ -467,18 +470,25 @@ class XtandemParser(  val xtandemFile : File,
           //FileMarkup variables
           val dbProteinFileMarkupURL: String = dbProteinFileMarkup.URL
 
+          protein = new Protein(
+            id = Protein.generateNewId(),
+            sequence = dbProteinPeptideInfo
+          )
+
           var newProteinMatch = new ProteinMatch(
             accession = dbProteinLabel,
             description = dbProteinNoteLabel,
             id = ProteinMatch.generateNewId(),
-            seqDatabaseIds = seqDatabaseIdsArray, 
-            scoreType = "xtandem:hyperscore")
+            seqDatabaseIds = seqDatabaseIdsArray,
+            scoreType = "xtandem:hyperscore",
+            protein = Some(protein))
 
           for (dbPeptideDomain <- dbProteinPeptide.domainList) {
             //Domain variables
             val dbDomainId: String = dbPeptideDomain.id
             var dbDomainStart: Int = dbPeptideDomain.start
             val dbDomainEnd: Int = dbPeptideDomain.end
+            val dbDomainMh: Double = dbPeptideDomain.mh
             val dbDomainDelta: Double = dbPeptideDomain.delta
             val dbDomainHyperScore: Double = dbPeptideDomain.hyperScore
             val dbDomainPre: String = dbPeptideDomain.pre
@@ -566,7 +576,7 @@ class XtandemParser(  val xtandemFile : File,
               peptide = new Peptide(
                 sequence = dbDomainSeq,
                 ptms = locatedPtms.toArray,
-                calculatedMass = dbProteinSumI)
+                calculatedMass = dbDomainMh)
 //              logger.debug("IY - XtandemParser.scala - Creating new peptide. Seq = " + dbDomainSeq + ", peptide = " + peptide)
               peptides.append(peptide)
               dbDomainSeqList.append(dbDomainSeq)
