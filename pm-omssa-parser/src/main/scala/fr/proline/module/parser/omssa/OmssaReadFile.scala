@@ -581,8 +581,9 @@ class OmssaReadFile(val omxFile: File,
       id = Peaklist.generateNewId,
       fileType = peaklistType,
       path = if(peaklistPath != "") peaklistPath else parseProperties.get(OmssaParseParams.PEAK_LIST_FILE_PATH).getOrElse("").toString,
-      rawFileName = parseProperties.get(OmssaParseParams.RAW_FILE_PATH).getOrElse("").toString,
-      msLevel = 2)
+      rawFileIdentifier = parseProperties.get(OmssaParseParams.RAW_FILE_PATH).getOrElse("").toString,
+      msLevel = 2
+    )
   }
   
   /**
