@@ -380,7 +380,7 @@ class MzIdResultFile(
       id = Peaklist.generateNewId,
       fileType = Option(mzIdSpectraData.getFileFormat).map(_.getCvParam().getValue()).getOrElse(""),
       path = mzIdSpectraData.getLocation(),
-      rawFileName = "",
+      rawFileIdentifier = "",
       msLevel = 2 // TODO: parse from SearchType
     )
     
