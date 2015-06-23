@@ -206,7 +206,7 @@ class MascotResultFile(
       id = Peaklist.generateNewId,
       fileType = mascotSearchParams.getFORMAT(), // TODO: check file extension first (ex: .raw)
       path = mascotSearchParams.getFILENAME(),
-      rawFileName = "", // TODO: retrieve this
+      rawFileIdentifier = "", // TODO: retrieve this
       msLevel = 2
     )
   }
