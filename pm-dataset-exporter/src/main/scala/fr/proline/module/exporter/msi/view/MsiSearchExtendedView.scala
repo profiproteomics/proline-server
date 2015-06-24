@@ -63,7 +63,7 @@ class MsiSearchExtendedView( val identDS: IdentDataSet ) extends IFixedDatasetVi
       fields.RESULT_SET_NAME -> rsm.resultSet.map(_.name).getOrElse(""),
       fields.SEARCH_TITLE -> msiSearch.title,
       fields.SEARCH_DATE -> msiSearch.date,
-      fields.RAW_FILE_NAME -> Option(pkl.rawFileName).getOrElse(""),
+      fields.RAW_FILE_NAME -> Option(pkl.rawFileIdentifier).getOrElse(""),
       fields.PEAKLIST_FILE_PATH -> pkl.path,
       fields.RESULT_FILE_NAME -> msiSearch.resultFileName,
       fields.RESULT_FILE_DIRECTORY -> msiSearch.resultFileDirectory,

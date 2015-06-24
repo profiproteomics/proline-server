@@ -65,7 +65,7 @@ class MsiSearchExtendedView ( val identDS: IdentDataSet , val sheetConfig : Expo
           	exportMap += ( fields.addField(f.title) -> dateFormat.format(msiSearch.date))
         }
         case ExportConfigConstant.FIELD_INFORMATION_RAW_FILE_NAME => {
-          	exportMap += ( fields.addField(f.title) -> Option(pkl.rawFileName).getOrElse(""))
+          	exportMap += ( fields.addField(f.title) -> Option(pkl.rawFileIdentifier).getOrElse(""))
         }
         case ExportConfigConstant.FIELD_INFORMATION_PEAKLIST_FILE_PATH => {
           	exportMap += ( fields.addField(f.title) -> pkl.path)
