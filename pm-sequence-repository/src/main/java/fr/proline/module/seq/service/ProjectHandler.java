@@ -284,7 +284,7 @@ public class ProjectHandler {
     				final List<Object[]> listresul = listresultsummaries.getResultList();
     				rsmlist.addAll(getrsms(listresul));
     				for(Long RSM:rsmlist)
-    				{    LOG.warn("RSM :"+RSM);
+    				{    //LOG.warn("RSM :"+RSM);
     					final Query pmSdmQuery = msiEM.createQuery(VALIDATED_ACCRSM_QUERY);	
         				pmSdmQuery.setParameter(1,RSM);
         				final List<Object[]> pmSdmLines = pmSdmQuery.getResultList();
