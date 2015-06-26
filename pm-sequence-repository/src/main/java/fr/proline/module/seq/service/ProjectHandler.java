@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.lang.Long;
 
 import javax.persistence.*;
 
@@ -15,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.profi.util.StringUtils;
+import fr.proline.core.orm.msi.ResultSummary;
 import fr.proline.core.orm.msi.SeqDatabase;
 import fr.proline.core.orm.msi.SequenceMatch;
 import fr.proline.core.orm.msi.ProteinMatch;
@@ -27,7 +29,6 @@ import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
 import fr.proline.module.seq.dto.SEDbInstanceWrapper;
 import fr.proline.module.seq.dto.SequenceMatchWrapper;
 import fr.proline.repository.IDatabaseConnector;
-//
 import fr.proline.core.orm.msi.dto.DProteinSet;
 public class ProjectHandler {
 
@@ -54,13 +55,14 @@ public class ProjectHandler {
 	    + " AND ((upper(pm.resultSet.type) = 'SEARCH') OR (upper(pm.resultSet.type) = 'USER'))"
 	    + " AND (ps.proteinSet.isValidated = true) AND (ps.proteinSet.resultSummary IS NOT NULL)";
    
-    private static final String ALL_PM_SQM = "select id FROM fr.proline.core.orm.msi.SequenceMatch";
- 
-
    
-    private static final String VALIDATED_ACCRSM_QUERY = "SELECT pm,sm.id FROM ProteinMatch pm, ProteinSet ps,  ProteinSetProteinMatchItem pspmm, SequenceMatch sm WHERE pm.id = pspmm.id.proteinMatchId AND ps.id = pspmm.id.proteinSetId AND sm.id.proteinMatchId = pm.id AND ps.isValidated = 'true'";
+    private static final String ALL_PM_SQM = "select id FROM fr.proline.core.orm.msi.SequenceMatch";
     
-    private static final String UPDATE_QUERY = "UPDATE protein_match  set coverage=? where accession=?";
+    private static final String VALIDATED_ACCRSM_QUERY = "SELECT pm,sm.id,ps.resultSummary FROM ProteinMatch pm, ProteinSet ps,  ProteinSetProteinMatchItem pspmm, SequenceMatch sm WHERE pm.id = pspmm.id.proteinMatchId AND ps.id = pspmm.id.proteinSetId AND sm.id.proteinMatchId = pm.id AND ps.isValidated = 'true' and ps.resultSummary.id=?";
+    private static final String LIST_RSMS = "SELECT pm,sm.id,ps.resultSummary FROM ProteinMatch pm, ProteinSet ps,  ProteinSetProteinMatchItem pspmm, SequenceMatch sm WHERE pm.id = pspmm.id.proteinMatchId AND ps.id = pspmm.id.proteinSetId AND sm.id.proteinMatchId = pm.id AND ps.isValidated = 'true'";
+  
+    private static final String UPDATE_QUERY = "UPDATE protein_match  set coverage=? where id=?";
+    private static final String UPDATE_QUERY_PSPMI = "UPDATE protein_set_protein_match_item  set coverage=? where protein_match_id=?";
     
     private static final int EXPECTED_LINE_LENGTH_PM_SQM = 3;
     private static final int EXPECTED_LINE_LENGTH = 3;
@@ -69,7 +71,6 @@ public class ProjectHandler {
     public static void fillSEDbIdentifiersBySEDb(final long projectId,
 	    final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers) {
     	
-
 	if (seDbIdentifiers == null) {
 	    throw new IllegalArgumentException("SeDbIdentifiers Map is null");
 	}
@@ -263,7 +264,9 @@ public class ProjectHandler {
     	final DataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();
     	final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId);
     	Map<ProteinMatch, Integer> accessionSqmatch = new HashMap<ProteinMatch, Integer>();
-    	int sequencesmatcheslength=0;
+    	int sequencesmatcheslength;
+    	HashSet<Long> rsmlist = new HashSet<Long>();
+    	Long proteinmatchid;
     	List<BioSequenceWrapper> bioSequenceWrapperList;
     	if (msiDbConnector == null) {
     		LOG.warn("Project #{} has NO associated MSI Db", projectId);
@@ -276,39 +279,56 @@ public class ProjectHandler {
     			if ((seDbInstances == null) || seDbInstances.isEmpty()) {
     				LOG.warn("There is NO SEDbInstance in MSI Project #{}", projectId);
     			} else {
-    				final Query pmSdmQuery = msiEM.createQuery(VALIDATED_ACCRSM_QUERY);	
-    				final List<Object[]> pmSdmLines = pmSdmQuery.getResultList();
-    				if ((pmSdmLines != null) && !pmSdmLines.isEmpty()) {
-    					fillproteinmatch(pmSdmLines);
-    					accessionSqmatch=fillproteinmatch(pmSdmLines);   					
-    					ArrayList<String> values = new ArrayList<>();
-    					int biosequencelentgh = 0;
-    					List<String> Accession = new ArrayList<>();
-    					for (Entry<ProteinMatch, Integer> entry : accessionSqmatch.entrySet())
-    					{   Accession.add(entry.getKey().getAccession());
-    						sequencesmatcheslength=entry.getValue();
-    						Map<String, List<BioSequenceWrapper>> result = BioSequenceProvider
-    							.findBioSequencesBySEDbIdentValues(Accession);
-    						for (Map.Entry<String, List<BioSequenceWrapper>> entry0 : result.entrySet()) {
-    							String seDbIdentValue = entry0.getKey();
-    							List<BioSequenceWrapper> bioSequences = entry0.getValue();
-    							for ( BioSequenceWrapper bsw : bioSequences) {
-    								biosequencelentgh=bsw.getSequence().length();
-    								if(sequencesmatcheslength>biosequencelentgh)
-    								{
-    									sequencesmatcheslength=biosequencelentgh;
-    									}
-    							}
-     							msiEM.getTransaction().begin();
-    							final Query updateQuery = msiEM.createNativeQuery(UPDATE_QUERY);
-    							updateQuery.setParameter(1,calculsequenceCoverage(biosequencelentgh,sequencesmatcheslength));
-    							updateQuery.setParameter(2, seDbIdentValue);
-    							updateQuery.executeUpdate();
-    							msiEM.getTransaction().commit();
-    					}
-    					Accession.clear();
-    					}
+    				
+    				final Query listresultsummaries=msiEM.createQuery(LIST_RSMS);
+    				final List<Object[]> listresul = listresultsummaries.getResultList();
+    				rsmlist.addAll(getrsms(listresul));
+    				for(Long RSM:rsmlist)
+    				{    LOG.warn("RSM :"+RSM);
+    					final Query pmSdmQuery = msiEM.createQuery(VALIDATED_ACCRSM_QUERY);	
+        				pmSdmQuery.setParameter(1,RSM);
+        				final List<Object[]> pmSdmLines = pmSdmQuery.getResultList();
+        				if ((pmSdmLines != null) && !pmSdmLines.isEmpty()) {
+        					fillproteinmatch(pmSdmLines);
+        					accessionSqmatch=fillproteinmatch(pmSdmLines);   					
+        					ArrayList<String> values = new ArrayList<>();
+        					int biosequencelentgh = 0;
+        					List<String> Accession = new ArrayList<>();
+        					for (Entry<ProteinMatch, Integer> entry : accessionSqmatch.entrySet())
+        					{   Accession.add(entry.getKey().getAccession());
+        						sequencesmatcheslength=entry.getValue();
+        						Map<String, List<BioSequenceWrapper>> result = BioSequenceProvider
+        							.findBioSequencesBySEDbIdentValues(Accession);
+        						for (Map.Entry<String, List<BioSequenceWrapper>> entry0 : result.entrySet()) {
+        							String seDbIdentValue = entry0.getKey();
+        							List<BioSequenceWrapper> bioSequences = entry0.getValue();
+        							for ( BioSequenceWrapper bsw : bioSequences) {
+        								biosequencelentgh=bsw.getSequence().length();
+        								if(sequencesmatcheslength>biosequencelentgh)
+        								{
+        									sequencesmatcheslength=biosequencelentgh;
+        								}
+        							}
+        							proteinmatchid=entry.getKey().getId();
+         							msiEM.getTransaction().begin();
+        							final Query updateQuery = msiEM.createNativeQuery(UPDATE_QUERY);
+        							updateQuery.setParameter(1,calculsequenceCoverage(biosequencelentgh,sequencesmatcheslength));
+        							updateQuery.setParameter(2, proteinmatchid);
+        							updateQuery.executeUpdate();
+        							msiEM.getTransaction().commit();
+        							msiEM.getTransaction().begin();
+        							final Query updateQuerypspmi = msiEM.createNativeQuery(UPDATE_QUERY_PSPMI);
+        							updateQuerypspmi.setParameter(1,calculsequenceCoverage(biosequencelentgh,sequencesmatcheslength));
+        							updateQuerypspmi.setParameter(2, proteinmatchid);
+        							updateQuerypspmi.executeUpdate();
+        							msiEM.getTransaction().commit();
+        					   }
+        					Accession.clear();
+        					}
+        				}
+    					
     				}
+    			
     			}
     		} catch (Exception ex) {
     			LOG.error("Error accessing MSI Db Project #" + projectId, ex);
@@ -330,8 +350,11 @@ public class ProjectHandler {
     	List<ProteinMatch> ProteinMatchduplicated = new ArrayList<>();
     	List<Integer> SeqLists = new ArrayList<Integer>();
     	List<Integer> Seqindex = new ArrayList<Integer>();
+    	List<Long> Listrsms = new ArrayList<Long>();
+    	Map<Long,Map<ProteinMatch,Integer>> listRsms =new HashMap<Long,Map<ProteinMatch,Integer>>();
     	ProteinMatch proteinmatch= null;
     	SequenceMatchPK SequenceMatch = null; 
+    	ResultSummary rsm = null ;
     	for (final Object[] line : lines) {
     		int start =0;
 			int stop=0;
@@ -342,6 +365,10 @@ public class ProjectHandler {
     				if (line[1] instanceof SequenceMatchPK) {
     					SequenceMatch = (SequenceMatchPK) line[1];
     				}
+    				if (line[2] instanceof ResultSummary) {
+    					rsm = (ResultSummary) line[2];
+    				}
+    				Listrsms.add(rsm.getId());
     				start=(int)SequenceMatch.getStart();
     				stop=(int)SequenceMatch.getStop();
     				if(ProteinMatchduplicated.contains(proteinmatch)){
@@ -387,4 +414,17 @@ public static List<Integer> getSequencesIndexes(int start,int stop){
 	}
 	return (seqList);
 }
+
+private static List<Long> getrsms(final List<Object[]> lines) {
+	List<Long> Listrsms = new ArrayList<Long>();
+	ResultSummary rsm=null;
+	for (final Object[] line : lines) {
+	if (line[2] instanceof ResultSummary) {
+		rsm = (ResultSummary) line[2];
+	}
+	Listrsms.add(rsm.getId());
+	}
+	return Listrsms;
+}
+
 }
