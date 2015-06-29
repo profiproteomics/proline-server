@@ -185,8 +185,9 @@ object ExportConfigField {
       val fieldQuantiElutionTime: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PSM_QUANTI_ELUTION_TIME, "elution_time")
       val fieldQuantiSelectionLevel: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PSM_QUANTI_SELECTION_LEVEL, "master_quant_selection_level")
       val fieldRawAbundance: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_RAW_ABUNDANCE, if (fromXIC) "raw_abundance" else "Specific SC")
-      val fieldAbundance: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE, if (fromXIC) "abundance" else "Weighted SC")
+      val fieldAbundance: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE, "abundance")
       val fieldPsmCount: ExportConfigField = new ExportConfigField(ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_PSM_COUNT, if (fromXIC) "psm_count" else "Basic SC")
+      fieldAbundance.defaultDisplayed = fromXIC
       listFields += fieldMasterQuantPeptideId
       listFields += fieldQuantiElutionTime
       listFields += fieldQuantiSelectionLevel
