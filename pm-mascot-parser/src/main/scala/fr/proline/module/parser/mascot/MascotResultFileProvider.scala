@@ -24,6 +24,8 @@ object MascotResultFileProviderType {
 class MascotResultFileProvider extends IResultFileProvider with IResultFileVerifier with Logging {
 
   final val mascotMultipartBoundary: String = "--gc0p4Jq0M2Yt08jU534c0p"
+  final val mascotUnimodContentTypeName: String = "name=\"unimod\""
+    
   val fileType: String = MascotResultFileProviderType.fileType
 
   def getResultFile(fileLocation: File, importProperties: Map[String, Any], parserContext: ProviderDecoratedExecutionContext): IResultFile = {
@@ -181,16 +183,21 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
 
     try {
       var line: String = ""
-      val maxCount = 4
-      var count = 0
+      var endSection = false
+      var startSection = false
+      
       line = bfr.readLine()
-      while ((count < maxCount) && (line != null)) {
+      while (!endSection && (line != null)) {
         if (line == mascotMultipartBoundary) {
-          count += 1
-          if (count == (maxCount - 1))
-            bfr.readLine() //skip first line following the boundary mark
+          if(startSection) //Already reading unimod. Stop reading
+            endSection = true
+           else { 
+        	   var contentType = bfr.readLine() //read next line = content type 
+			   if(contentType.endsWith(mascotUnimodContentTypeName))
+				   startSection = true
+           }
         } else {
-          if (count == (maxCount - 1)) section += line
+          if (startSection) section += line
         }
         line = bfr.readLine()
       }
