@@ -467,9 +467,22 @@ class XtandemParser(  val xtandemFile : File,
           val dbProteinNoteLabel: String = dbProteinNote.label
           val dbProteinNoteInfo: String = dbProteinNote.info
 
+          //VDS : Try to find seqDB for current Protein... removing ".pro" extention !
           //FileMarkup variables
-          val dbProteinFileMarkupURL: String = dbProteinFileMarkup.URL
-
+          val dbProteinFileMarkupURL: String = if(dbProteinFileMarkup.URL.endsWith(".pro"))dbProteinFileMarkup.URL.substring(0, dbProteinFileMarkup.URL.length()-4) else dbProteinFileMarkup.URL
+          
+          val currentProtMatchSeqDBIdsBuilder = Array.newBuilder[Long]
+          seqDatabases.foreach(seqDB=>{
+            if(seqDB.filePath.equals(dbProteinFileMarkupURL)){
+              currentProtMatchSeqDBIdsBuilder += seqDB.id
+            }
+          })
+          var currentProtMatchSeqDBIds = currentProtMatchSeqDBIdsBuilder.result
+          if(currentProtMatchSeqDBIds.length <1){
+           currentProtMatchSeqDBIds = seqDatabaseIdsArray
+           logger.trace(" ===== NOT FOUND SEQ DB ! ")
+          }
+          
           protein = new Protein(
             id = Protein.generateNewId(),
             sequence = dbProteinPeptideInfo
@@ -479,7 +492,7 @@ class XtandemParser(  val xtandemFile : File,
             accession = dbProteinLabel,
             description = dbProteinNoteLabel,
             id = ProteinMatch.generateNewId(),
-            seqDatabaseIds = seqDatabaseIdsArray,
+            seqDatabaseIds = currentProtMatchSeqDBIds,
             scoreType = "xtandem:hyperscore",
             protein = Some(protein))
 
@@ -622,21 +635,38 @@ class XtandemParser(  val xtandemFile : File,
           newProteinMatch.sequenceMatches = newSeqMatches.toArray
 
           var proteinMatchAlreadyExists = false
-          proteinMatches.foreach(pm => {
+          var indexProtMatch = 0
+          while(indexProtMatch < proteinMatches.length && !proteinMatchAlreadyExists){
+        	val pm =  proteinMatches(indexProtMatch)
+        	indexProtMatch +=1
             if(pm.accession == newProteinMatch.accession) {
-              pm.sequenceMatches.foreach(sm => {
-                if(sm.start == newProteinMatch.sequenceMatches.head.start && sm.end == newProteinMatch.sequenceMatches.head.end ) {
-//                  logger.debug("IY 11/06 - XtandemParser - pm.accession "+pm.accession+" already exists !")
-//                  newProteinMatch.sequenceMatches.head +: pm.sequenceMatches
-                  proteinMatchAlreadyExists = true
-                }
+              //ProteinMatch found, just update necessary properties
+              newProteinMatch.seqDatabaseIds.foreach( seqDbId =>{
+            	  if(!pm.seqDatabaseIds.contains(seqDbId)){
+            	    val finalSeqDB = new ArrayBuffer[Long]()
+    	    		finalSeqDB ++= pm.seqDatabaseIds
+    	    		finalSeqDB += seqDbId
+    	    		pm.seqDatabaseIds = finalSeqDB.toArray
+            	  }
               })
-            } 
-          })
+              
+              newProteinMatch.sequenceMatches.foreach( seqMatch =>{
+            	  if(!pm.sequenceMatches.contains(seqMatch)){
+            	    val finalSeqMatches = new ArrayBuffer[SequenceMatch]()
+    	    		finalSeqMatches ++= pm.sequenceMatches
+    	    		finalSeqMatches += seqMatch
+    	    		pm.sequenceMatches = finalSeqMatches.toArray
+            	  }
+              })
+              
+
+              proteinMatchAlreadyExists = true
+            } //End if accession exist 
+          }
 
           if(!proteinMatchAlreadyExists){
             proteinMatches += newProteinMatch
-//            logger.debug("IY 18/06 - XtandemParser - Il y a " + compteur + " newProteinMatch enregistrés dans proteinMatches !")
+            logger.debug("IY 18/06 - XtandemParser - add newProteinMatch "+newProteinMatch.accession)
           }
 //          else {
 //            logger.debug("IY 18/06 - XtandemParser - newProteinMatch " + newProteinMatch.accession + " n'a pas été enregistré dans proteinMatches !")
