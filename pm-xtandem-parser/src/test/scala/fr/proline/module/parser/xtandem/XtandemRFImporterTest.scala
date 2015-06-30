@@ -106,7 +106,7 @@ class XtandemRFImporterTest extends AbstractMultipleDBTestCase {
         count = countObj.asInstanceOf[java.lang.Long].longValue
       }
 
-      assertTrue("Number of ProteinMatchSeqDatabaseMap created", count > 0L)
+      assertTrue("Invalid number of ProteinMatchSeqDatabaseMap created : "+count, count > 0L)
       logger.debug("Number of ProteinMatchSeqDatabaseMap created: " + count)
     } finally {
       executionContext.closeAll()
