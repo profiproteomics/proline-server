@@ -25,6 +25,7 @@ import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.module.fragment_match.PeptideSpectrumMatcher
 import fr.proline.module.fragment_match.PeptideSpectrumMatcherMascot
 import fr.proline.module.fragment_match.PeptideSpectrumMatcherOmssa
+import fr.proline.module.fragment_match.PeptideSpectrumMatcherXtandem
 import fr.proline.repository.util.JDBCWork
 import fr.proline.core.om.model.msi.MSISearch
 import fr.proline.context.DatabaseConnectionContext
@@ -312,8 +313,9 @@ class SpectrumMatchesGenerator(
     val spectraById = Map() ++ spectra.map { sp => (sp.id -> sp) }
     val psmMatcher = {
       searchSettings.softwareName.toLowerCase() match {
-        case "mascot" => new PeptideSpectrumMatcherMascot(spectraById, ms2ErrorTol, ms2ErrorTolUnitStr, searchSettings.instrumentConfig)
-        case "omssa"  => new PeptideSpectrumMatcherOmssa(spectraById, ms2ErrorTol, ms2ErrorTolUnitStr)
+        case "mascot"   => new PeptideSpectrumMatcherMascot(spectraById, ms2ErrorTol, ms2ErrorTolUnitStr, searchSettings.instrumentConfig)
+        case "omssa"    => new PeptideSpectrumMatcherOmssa(spectraById, ms2ErrorTol, ms2ErrorTolUnitStr)
+        case "xtandem"  => new PeptideSpectrumMatcherXtandem(spectraById, ms2ErrorTol, ms2ErrorTolUnitStr)
         case _ =>
           logger.error("Spectrum matches cannot be generated for this search engine")
           throw new RuntimeException("Spectrum matches cannot be generated for this search engine")
