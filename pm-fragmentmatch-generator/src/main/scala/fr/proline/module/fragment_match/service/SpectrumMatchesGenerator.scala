@@ -317,7 +317,7 @@ class SpectrumMatchesGenerator(
         case "omssa"    => new PeptideSpectrumMatcherOmssa(spectraById, ms2ErrorTol, ms2ErrorTolUnitStr)
         case "xtandem"  => new PeptideSpectrumMatcherXtandem(spectraById, ms2ErrorTol, ms2ErrorTolUnitStr)
         case _ =>
-          logger.error("Spectrum matches cannot be generated for this search engine")
+          logger.error("Spectrum matches cannot be generated for this search engine") 
           throw new RuntimeException("Spectrum matches cannot be generated for this search engine")
       }
     }
