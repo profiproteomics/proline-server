@@ -138,10 +138,13 @@ class XtandemParser(  val xtandemFile : File,
     var searchSettingSoftwareVersion: String = "Unknown software version"
     var searchSettingTaxonomy: String = "Unknown taxon"  // possible values of taxon for Xtandem file are listed in input.xml or taxonomy.xml files which are given for X!Tandem search
     var searchSettingMaxMissedCleavages: Int = -1
-    var searchSettingMs1ChargeStates: String = "4"   // default value in Xtandem = 4
+        var searchSettingMs1ChargeStates: String = "4"   // default value in Xtandem = 4
     var searchSettingMs1ErrorTolMinus: Double = 0.0  // (what value) X!Tandem inserts a default value for this parameter if it doesn't exist or is set to 0.0
     var searchSettingMs1ErrorTolPlus: Double = 0.0  
     var searchSettingMs1ErrorTolUnit: String = "Xtandem default unit"
+    var searchSettingMs2ChargeStates: String = "4"   // default value in Xtandem = 4
+    var searchSettingMs2ErrorTol: Double = 0.0  
+    var searchSettingMs2ErrorTolUnit: String = "Xtandem default unit"
     var msiSearchResultFileName: String = "output.xml"
 
     // Define (mass, residu, position) tuple for a fixed and variable PTMs. 
@@ -167,7 +170,10 @@ class XtandemParser(  val xtandemFile : File,
         val dbGroupParametersNoteInfo: String = note.info
         // ERROR : (unavailable parameters) We first manage case where we can't continue parsing of XML file
         if (dbGroupParametersNoteLabel.equals("output, sort results by")) {
-          if(dbGroupParametersNoteInfo.equals("protein") || dbGroupParametersNoteInfo.isEmpty) logger.error("Xtandem Parser does not manage \"sort result by protein\" X!Tandem File")
+          if(dbGroupParametersNoteInfo.equals("protein") || dbGroupParametersNoteInfo.isEmpty){
+            logger.error("Xtandem Parser does not manage \"sort result by protein\" X!Tandem File")
+//            throw new RuntimeException("Xtandem Parser does not manage \"sort result by protein\" X!Tandem File")
+          }
           else if(!dbGroupParametersNoteInfo.equals("spectrum")) logger.error("Parameter \'sort results by\' should be \'spectrum\' to be manage by Xtandemm Parser")  //This case shouldn't be appear
 
         } else if (dbGroupParametersNoteLabel.equals("spectrum, path") && !dbGroupParametersNoteInfo.isEmpty) {
@@ -183,10 +189,16 @@ class XtandemParser(  val xtandemFile : File,
         } else if (dbGroupParametersNoteLabel.equals("scoring, maximum missed cleavage sites") && !dbGroupParametersNoteInfo.isEmpty) {
           searchSettingMaxMissedCleavages = augmentString(dbGroupParametersNoteInfo).toInt
 
+        } else if (dbGroupParametersNoteLabel.equals("spectrum, fragment monoisotopic mass error") && !dbGroupParametersNoteInfo.isEmpty) {
+          searchSettingMs2ErrorTol = augmentString(dbGroupParametersNoteInfo).toDouble
+
+        } else if (dbGroupParametersNoteLabel.equals("spectrum, fragment monoisotopic mass error units") && !dbGroupParametersNoteInfo.isEmpty) {
+          searchSettingMs2ErrorTolUnit = if(dbGroupParametersNoteInfo.equals("Daltons")) "Da" else /*ppm*/dbGroupParametersNoteInfo
+
         } else if (dbGroupParametersNoteLabel.equals("spectrum, parent monoisotopic mass error minus") && !dbGroupParametersNoteInfo.isEmpty) {
           searchSettingMs1ErrorTolMinus = augmentString(dbGroupParametersNoteInfo).toDouble
 
-        } else if (dbGroupParametersNoteLabel.equals("spectrum, parent monoisotopic mass error minus") && !dbGroupParametersNoteInfo.isEmpty) {
+        } else if (dbGroupParametersNoteLabel.equals("spectrum, parent monoisotopic mass error plus") && !dbGroupParametersNoteInfo.isEmpty) {
           searchSettingMs1ErrorTolPlus = augmentString(dbGroupParametersNoteInfo).toDouble
 
         } else if (dbGroupParametersNoteLabel.equals("spectrum, parent monoisotopic mass error units") && !dbGroupParametersNoteInfo.isEmpty) {
@@ -666,7 +678,7 @@ class XtandemParser(  val xtandemFile : File,
 
           if(!proteinMatchAlreadyExists){
             proteinMatches += newProteinMatch
-            logger.debug("IY 18/06 - XtandemParser - add newProteinMatch "+newProteinMatch.accession)
+//            logger.debug("IY 18/06 - XtandemParser - add newProteinMatch "+newProteinMatch.accession)
           }
 //          else {
 //            logger.debug("IY 18/06 - XtandemParser - newProteinMatch " + newProteinMatch.accession + " n'a pas été enregistré dans proteinMatches !")
@@ -683,13 +695,13 @@ class XtandemParser(  val xtandemFile : File,
 //      logger.debug("IY 11/06 - XtandemParser - pm.protein= " + pm.protein)
       if(pm.sequenceMatches.length > 1 ) compteur +=1
     })
-    logger.debug("IY 16/06 - XtandemParser - Il y a " + compteur + " sequenceMatch de longueur superieur à 1 !")
+//    logger.debug("IY 16/06 - XtandemParser - Il y a " + compteur + " sequenceMatch de longueur superieur à 1 !")
     msQueries = msQueriesList.toArray
 
-    //logger.debug("IY - XtandemParser.scala - peptideMatches = " + peptideMatches )
+//    logger.debug("IY - XtandemParser.scala - peptideMatches = " + peptideMatches )
     val searchSettings = new SearchSettings(
       id = SearchSettings.generateNewId(),
-      softwareName = "X!Tandem",
+      softwareName = "XTandem",
       softwareVersion = searchSettingSoftwareVersion,
       taxonomy = searchSettingTaxonomy,
       maxMissedCleavages = searchSettingMaxMissedCleavages,
@@ -704,6 +716,15 @@ class XtandemParser(  val xtandemFile : File,
       instrumentConfig = instrumentConfig.getOrElse(null)
       )
 
+    if (msLevel == 2) {
+      searchSettings.msmsSearchSettings = Some(
+        new MSMSSearchSettings(
+          ms2ChargeStates = searchSettingMs2ChargeStates,
+          ms2ErrorTol = searchSettingMs2ErrorTol,
+          ms2ErrorTolUnit = searchSettingMs2ErrorTolUnit)
+      )
+    }
+    
     msiSearchForResultSet = new MSISearch(
       id = MSISearch.generateNewId(),
       resultFileName = msiSearchResultFileName,
