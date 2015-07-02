@@ -58,6 +58,7 @@ class XtandemHandler extends DefaultHandler with Logging {
 			if(typeMU.equals("model")) {
 				if(displayTree) println(" - groupModel")				
 				groupModel.id = augmentString(attributes.getValue("id")).toInt
+				groupModel.rt = try{ Some(augmentString(attributes.getValue("rt")).toDouble)} catch { case _ => None}
 				groupModel.mh = augmentString(attributes.getValue("mh")).toDouble
 				groupModel.z = augmentString(attributes.getValue("z")).toInt
 				inGroupModel = true

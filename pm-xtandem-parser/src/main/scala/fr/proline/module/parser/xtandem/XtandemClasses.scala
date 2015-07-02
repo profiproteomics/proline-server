@@ -86,6 +86,7 @@ class XTGroupSupport {
 class XTGroupModel {
 	var id : Int = _
 //	var typeMU : String ="model"
+	var rt : Option[Double] = _  // retention time
 	var mh : Double = _
 	var z : Int = _
 	var groupSupportList : ArrayBuffer[XTGroupSupport] = new ArrayBuffer[XTGroupSupport]()

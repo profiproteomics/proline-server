@@ -394,6 +394,7 @@ class XtandemParser(  val xtandemFile : File,
     //GroupModel variables
     for (gm <- resultBioml.groupModelList) {
       val dbGroupModelId: Int = gm.id
+      val dGroupModelRt: Option[Double] = gm.rt
       val dGroupModelMh: Double = gm.mh
       val dbGroupModelZ: Int = gm.z
 
@@ -451,11 +452,15 @@ class XtandemParser(  val xtandemFile : File,
               intensityListParts(i) = augmentString(intensityListTempParts(i)).toFloat
             }
 
+            val retentionTime : Float = if(dGroupModelRt.isDefined) dGroupModelRt.get.toFloat else 0.0F
+//            logger.debug("IY 02/07 - XtandemParser - retentionTime  = " + retentionTime )
             spectrumList+= new Spectrum(
               id = Spectrum.generateNewId(),
               title = spectrumTitle,
               precursorMoz = augmentString(gamlTrace.gamlAttributeList(0).info).toDouble,  // (ok?) <GAML:attribute type="M+H">2082.91</GAML:attribute>
               precursorCharge = augmentString(gamlTrace.gamlAttributeList(1).info).toInt,  // <GAML:attribute type="charge">1</GAML:attribute>
+              firstTime = retentionTime,
+              lastTime = retentionTime,
               mozList = Some(mozListParts), //
               intensityList = Some(intensityListParts),
               peaksCount = mozListTempParts.length,
