@@ -37,7 +37,6 @@ public final class RetrieveService {
     private static final long TIMER_BEFORE_DELAY = TimeUnit.SECONDS.toMillis(15L);
 
     private RetrieveService() {
-    
     }
 
     /**
@@ -57,6 +56,7 @@ public final class RetrieveService {
 	
 	if ((args != null) && (args.length > 0)) {
 	    final String trimmedDelay = args[0].trim();
+	  
 	    if (!trimmedDelay.isEmpty()) {
 		try {
 		    hourDelay = Integer.parseInt(trimmedDelay);
@@ -65,6 +65,7 @@ public final class RetrieveService {
 		}
 	   }
 	}
+
 	if (hourDelay > 0 ) { 
 		final Timer timer = new Timer("Timer-retrieveBioSequencesForAllProjects");
 
@@ -76,6 +77,7 @@ public final class RetrieveService {
 				if (!(currentThread.getUncaughtExceptionHandler() instanceof ThreadLogger)) {
 					currentThread.setUncaughtExceptionHandler(new ThreadLogger(LOG));
 				}
+
 				try {
 					retrieveBioSequencesForAllProjects();
 				} catch (Exception ex) {
@@ -90,10 +92,11 @@ public final class RetrieveService {
 	} else {
 		retrieveBioSequencesForAllProjects();
 		BioSequenceRetriever.waitExecutorShutdown();
+
 		System.out.println("\nMain terminated !");
 	}
+	
     }
- 
     public static void retrieveBioSequencesForAllProjects() {
 	int totalHandledSEDbIdents = 0;
 
@@ -115,6 +118,8 @@ public final class RetrieveService {
 		"Total retrieveBioSequencesForAllProjects() execution : {} SEDbIdentifiers handleds in {} ms",
 		totalHandledSEDbIdents, duration);
     }
+   
+
     public static void retrieveBioSequencesForProject(final long projectId) {
    
 	int totalHandledSEDbIdents = 0;
@@ -138,7 +143,13 @@ public final class RetrieveService {
 	LOG.info("Total retrieveBioSequencesForProject(#{}) execution : {} SEDbIdentifiers handleds in {} ms",
 		projectId, totalHandledSEDbIdents, duration);
     }
-
+    public static void getsequenceCoverage(final long projectId) {
+    	final long start = System.currentTimeMillis();
+    	ProjectHandler.fillsequenceMatchesByProteinMatch(projectId);  
+    	final long end = System.currentTimeMillis();
+    	final long duration = end - start;
+    	LOG.info("Total sequence coverage for the projectId {} handleds in {} ms",projectId, duration);
+        }
     private static Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> fillSEDbIdentifiersForAllProjects() {
 	Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = null;
 
@@ -153,7 +164,6 @@ public final class RetrieveService {
 
 	try {
 	    projectIds = ProjectRepository.findAllProjectIds(udsEM);
-	    
 	} finally {
 
 	    if (udsEM != null) {
@@ -175,12 +185,12 @@ public final class RetrieveService {
 		if (pId != null) {
 			
 		    ProjectHandler.fillSEDbIdentifiersBySEDb(pId.longValue(), seDbIdentifiers);
-		   // ProjectHandler.fillsequenceMatchesByProteinMatch(pId.longValue());   
+		    ProjectHandler.fillsequenceMatchesByProteinMatch(pId.longValue());   
 		}
 
 	    }
 	}
 	return seDbIdentifiers;
     }
-
+    
 }
