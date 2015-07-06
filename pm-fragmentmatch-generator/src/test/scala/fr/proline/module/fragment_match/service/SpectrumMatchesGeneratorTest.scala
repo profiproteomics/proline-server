@@ -24,6 +24,7 @@ import java.sql.Connection
 import fr.profi.util.serialization.ProfiJSMSerialization
 import fr.profi.util.serialization.CustomDoubleJacksonSerializer
 import fr.proline.core.om.model.msi.SpectrumMatch
+import org.junit.Ignore
 
 class SpectrumMatchesGeneratorTest extends AbstractMultipleDBTestCase with Logging {
 
