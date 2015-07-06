@@ -16,7 +16,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>0.4.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
+    <core.version>0.4.0</core.version>  <!-- Snapshot Trunk version -->
   </properties>
 	<scm>
 	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MzIdentML/trunk</connection>
