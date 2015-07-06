@@ -80,7 +80,7 @@ class SpectrumMatchesGeneratorTest extends AbstractMultipleDBTestCase with Loggi
     (parserContext, rsProvider)
   }
 
-  @Test
+  @Ignore
   def testGenerateSpectrumMatch() = {
     try {
       generatorService = new SpectrumMatchesGenerator(executionContext, targetRSId, None, None, false)
