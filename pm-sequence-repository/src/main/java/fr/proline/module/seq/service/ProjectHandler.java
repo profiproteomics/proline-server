@@ -3,23 +3,25 @@ package fr.proline.module.seq.service;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.lang.Long;
 
-import javax.persistence.*;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+
+import com.google.gson.Gson;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.profi.util.StringUtils;
+import fr.proline.core.orm.msi.ProteinMatch;
 import fr.proline.core.orm.msi.ResultSummary;
 import fr.proline.core.orm.msi.SeqDatabase;
-import fr.proline.core.orm.msi.SequenceMatch;
-import fr.proline.core.orm.msi.ProteinMatch;
 import fr.proline.core.orm.msi.SequenceMatchPK;
 import fr.proline.core.orm.util.DataStoreConnectorFactory;
 import fr.proline.module.seq.BioSequenceProvider;
@@ -27,9 +29,9 @@ import fr.proline.module.seq.DatabaseAccess;
 import fr.proline.module.seq.dto.BioSequenceWrapper;
 import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
 import fr.proline.module.seq.dto.SEDbInstanceWrapper;
-import fr.proline.module.seq.dto.SequenceMatchWrapper;
+import fr.proline.module.seq.orm.*;
 import fr.proline.repository.IDatabaseConnector;
-import fr.proline.core.orm.msi.dto.DProteinSet;
+
 public class ProjectHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectHandler.class);
@@ -55,10 +57,14 @@ public class ProjectHandler {
 	    + " AND ((upper(pm.resultSet.type) = 'SEARCH') OR (upper(pm.resultSet.type) = 'USER'))"
 	    + " AND (ps.proteinSet.isValidated = true) AND (ps.proteinSet.resultSummary IS NOT NULL)";
    
-   
     private static final String ALL_PM_SQM = "select id FROM fr.proline.core.orm.msi.SequenceMatch";
+    private static final String ALL_RSM_PROP = "select rs FROM fr.proline.core.orm.msi.ResultSummary rs where rs.id=?";
     
-    private static final String VALIDATED_ACCRSM_QUERY = "SELECT pm,sm.id,ps.resultSummary FROM ProteinMatch pm, ProteinSet ps,  ProteinSetProteinMatchItem pspmm, SequenceMatch sm WHERE pm.id = pspmm.id.proteinMatchId AND ps.id = pspmm.id.proteinSetId AND sm.id.proteinMatchId = pm.id AND ps.isValidated = 'true' and ps.resultSummary.id=?";
+    private static final String VALIDATED_ACCRSM_QUERY = "SELECT pm,sm.id,ps.resultSummary"
+    	+" FROM ProteinMatch pm, ProteinSet ps,  ProteinSetProteinMatchItem pspmm, SequenceMatch sm,PeptideMatch pepm "
+    	+"WHERE pm.id = pspmm.id.proteinMatchId AND ps.id = pspmm.id.proteinSetId AND sm.id.proteinMatchId = pm.id AND sm.bestPeptideMatchId=pepm.id"
+    	+" AND ps.isValidated = 'true' AND ps.resultSummary.id=? AND pepm.rank=? AND pepm.score>=?";
+    
     private static final String LIST_RSMS = "SELECT pm,sm.id,ps.resultSummary FROM ProteinMatch pm, ProteinSet ps,  ProteinSetProteinMatchItem pspmm, SequenceMatch sm WHERE pm.id = pspmm.id.proteinMatchId AND ps.id = pspmm.id.proteinSetId AND sm.id.proteinMatchId = pm.id AND ps.isValidated = 'true'";
   
     private static final String UPDATE_QUERY = "UPDATE protein_match  set coverage=? where id=?";
@@ -66,6 +72,7 @@ public class ProjectHandler {
     
     private static final int EXPECTED_LINE_LENGTH_PM_SQM = 3;
     private static final int EXPECTED_LINE_LENGTH = 3;
+    public static  Gson gson = new Gson();
     
     /* In this version : find all SEDbIdentifiers in all SEDbInstances */
     public static void fillSEDbIdentifiersBySEDb(final long projectId,
@@ -264,7 +271,11 @@ public class ProjectHandler {
     	final DataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();
     	final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId);
     	Map<ProteinMatch, Integer> accessionSqmatch = new HashMap<ProteinMatch, Integer>();
+    	Map<Long, Map<String,String>> rsmproprities = new HashMap<Long, Map<String,String>>();
+    	Map<String,String> props=new HashMap<String,String>();
     	int sequencesmatcheslength;
+    	int rank;
+    	Float score;
     	HashSet<Long> rsmlist = new HashSet<Long>();
     	Long proteinmatchid;
     	List<BioSequenceWrapper> bioSequenceWrapperList;
@@ -286,9 +297,18 @@ public class ProjectHandler {
     				for(Long RSM:rsmlist)
     				{   
     					LOG.debug("calculating for RSM: " + RSM);
-    					//LOG.warn("RSM :"+RSM);
+    					final Query listrsmprop = msiEM.createQuery(ALL_RSM_PROP);
+        				listrsmprop.setParameter(1, RSM);
+        				final List<ResultSummary> rsmpropLines = listrsmprop.getResultList();
+        				rsmproprities=fillvalidationproprieties(rsmpropLines);
+        				props=rsmproprities.get(RSM);
+        				rank=Integer.parseInt(props.get("rank"));
+        				score=Float.parseFloat(props.get("score"));
+        				//LOG.warn("rank :"+rank+"score"+score);
     					final Query pmSdmQuery = msiEM.createQuery(VALIDATED_ACCRSM_QUERY);	
         				pmSdmQuery.setParameter(1,RSM);
+        				pmSdmQuery.setParameter(2,rank);
+        				pmSdmQuery.setParameter(3,score);
         				final List<Object[]> pmSdmLines = pmSdmQuery.getResultList();
         				if ((pmSdmLines != null) && !pmSdmLines.isEmpty()) {
         					fillproteinmatch(pmSdmLines);
@@ -305,13 +325,10 @@ public class ProjectHandler {
         							String seDbIdentValue = entry0.getKey();
         							List<BioSequenceWrapper> bioSequences = entry0.getValue();
         							for ( BioSequenceWrapper bsw : bioSequences) {
+        								
         								biosequencelentgh=bsw.getSequence().length();
-        								if(sequencesmatcheslength>biosequencelentgh)
-        								{
-        									sequencesmatcheslength=biosequencelentgh;
-        								}
         							}
-        							//LOG.warn("has calculated calculsequenceCoverage with param:"+seDbIdentValue+" " + calculsequenceCoverage(biosequencelentgh,sequencesmatcheslength));
+        							LOG.warn("has calculated calculsequenceCoverage with param:"+seDbIdentValue+" " + calculsequenceCoverage(biosequencelentgh,sequencesmatcheslength));
         							proteinmatchid=entry.getKey().getId();
          							msiEM.getTransaction().begin();
         							final Query updateQuery = msiEM.createNativeQuery(UPDATE_QUERY);
@@ -428,6 +445,28 @@ private static List<Long> getrsms(final List<Object[]> lines) {
 	Listrsms.add(rsm.getId());
 	}
 	return Listrsms;
+}
+private static Map<Long,Map<String,String>>fillvalidationproprieties(final List<ResultSummary> lines) {
+
+	Map<Long,Map<String,String>> RsmProp=new HashMap<Long, Map<String,String>>();
+	Map<String,String> pepfilters=new HashMap<String, String>();
+	for (final ResultSummary line : lines) {
+		try {
+				String validationdpropstr=line.getSerializedProperties();
+				Proprieties validationdproprities = gson.fromJson(validationdpropstr,Proprieties.class);
+				String rank=validationdproprities.validation_properties.params.peptide_filters.get(0).properties.getThreshold_value();
+				String score=validationdproprities.validation_properties.params.peptide_filters.get(1).properties.getThreshold_value();
+				pepfilters.put("rank", rank);
+				pepfilters.put("score", score);
+				RsmProp.put(line.getId(), pepfilters);
+		
+				
+		  } catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	return RsmProp;
 }
 
 }
