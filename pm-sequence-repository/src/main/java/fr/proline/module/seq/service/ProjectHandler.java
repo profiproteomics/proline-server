@@ -284,7 +284,9 @@ public class ProjectHandler {
     				final List<Object[]> listresul = listresultsummaries.getResultList();
     				rsmlist.addAll(getrsms(listresul));
     				for(Long RSM:rsmlist)
-    				{    //LOG.warn("RSM :"+RSM);
+    				{   
+    					LOG.debug("calculating for RSM: " + RSM);
+    					//LOG.warn("RSM :"+RSM);
     					final Query pmSdmQuery = msiEM.createQuery(VALIDATED_ACCRSM_QUERY);	
         				pmSdmQuery.setParameter(1,RSM);
         				final List<Object[]> pmSdmLines = pmSdmQuery.getResultList();
@@ -309,6 +311,7 @@ public class ProjectHandler {
         									sequencesmatcheslength=biosequencelentgh;
         								}
         							}
+        							//LOG.warn("has calculated calculsequenceCoverage with param:"+seDbIdentValue+" " + calculsequenceCoverage(biosequencelentgh,sequencesmatcheslength));
         							proteinmatchid=entry.getKey().getId();
          							msiEM.getTransaction().begin();
         							final Query updateQuery = msiEM.createNativeQuery(UPDATE_QUERY);

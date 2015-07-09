@@ -53,17 +53,32 @@ public final class RetrieveService {
 	DatabaseAccess.getSEQDatabaseConnector(true);
    
 	int hourDelay = -1;
+	long projectId = 0; 
+	System.out.println("\nnumber of arguments: " + args.length);
+	System.out.println("\nArguments can be either 1 for periodicity (in hours) or p1 for project 1");
 	
 	if ((args != null) && (args.length > 0)) {
-	    final String trimmedDelay = args[0].trim();
+	    
+		String trimmedDelay = "";
+		
+		if(args[0].startsWith("p")) { // project id such as p1
+			projectId = Long.parseLong(args[0].substring(1));
+			System.out.println("\n is going to process project " + projectId);
+		} else {
+			trimmedDelay = args[0].trim();	
+		}
+		
 	  
 	    if (!trimmedDelay.isEmpty()) {
-		try {
-		    hourDelay = Integer.parseInt(trimmedDelay);
-		} catch (NumberFormatException nfEx) {
-		    LOG.warn("Cannot parse [" + trimmedDelay + "] as Integer value", nfEx);
-		}
-	   }
+			try {
+			    hourDelay = Integer.parseInt(trimmedDelay);
+			    System.out.println("\nPeriodicity: " + hourDelay);
+			    
+			} catch (NumberFormatException nfEx) {
+			    LOG.warn("Cannot parse [" + trimmedDelay + "] as Integer value", nfEx);
+			}
+	    }
+	    
 	}
 
 	if (hourDelay > 0 ) { 
@@ -80,6 +95,7 @@ public final class RetrieveService {
 
 				try {
 					retrieveBioSequencesForAllProjects();
+					//retrieveBioSequencesFor
 				} catch (Exception ex) {
 					LOG.error("Error running  retrieveBioSequencesForAllProjects()", ex);
 				}
@@ -90,16 +106,20 @@ public final class RetrieveService {
 
 		LOG.info("Running \"retrieve task\" every {} hour(s)", hourDelay);
 	} else {
-		retrieveBioSequencesForAllProjects();
+		if(projectId==0) {
+			retrieveBioSequencesForAllProjects();
+		}
+		else {
+			retrieveBioSequencesForProject(projectId);
+		}
 		BioSequenceRetriever.waitExecutorShutdown();
-
 		System.out.println("\nMain terminated !");
 	}
 	
     }
     public static void retrieveBioSequencesForAllProjects() {
 	int totalHandledSEDbIdents = 0;
-
+	System.out.println("\nComputing data for ALL projects ");
 	final long start = System.currentTimeMillis();
 
 	final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = fillSEDbIdentifiersForAllProjects();
@@ -122,6 +142,7 @@ public final class RetrieveService {
 
     public static void retrieveBioSequencesForProject(final long projectId) {
    
+    	System.out.println("retrieveBioSequencesForProject en cours ");
 	int totalHandledSEDbIdents = 0;
 
 	final long start = System.currentTimeMillis();
@@ -129,6 +150,8 @@ public final class RetrieveService {
 	final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = new HashMap<>();
 
 	ProjectHandler.fillSEDbIdentifiersBySEDb(projectId, seDbIdentifiers);
+	ProjectHandler.fillsequenceMatchesByProteinMatch(projectId);   
+	
 
 	if (seDbIdentifiers.isEmpty()) {
 	    LOG.warn("NO SEDbIdentifier found");
@@ -183,7 +206,7 @@ public final class RetrieveService {
 	    for (final Long pId : projectIds) {
 
 		if (pId != null) {
-			
+			System.out.println(" processing project: " + pId);
 		    ProjectHandler.fillSEDbIdentifiersBySEDb(pId.longValue(), seDbIdentifiers);
 		    ProjectHandler.fillsequenceMatchesByProteinMatch(pId.longValue());   
 		}
