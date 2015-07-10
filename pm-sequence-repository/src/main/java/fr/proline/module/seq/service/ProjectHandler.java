@@ -308,7 +308,6 @@ public class ProjectHandler {
         				rank=Integer.parseInt(props.get("RANK"));
         				score=Float.parseFloat(props.get("SCORE"));
         				peplength=Integer.parseInt(props.get("PEP_SEQ_LENGTH"));
-        				LOG.warn("rank :"+rank+"score"+score+"PEP_SEQ_LENGTH :"+peplength);
         				final Query pmSdmQuery = msiEM.createQuery(VALIDATED_ACCRSM_QUERY1);	
         				pmSdmQuery.setParameter(1,RSM);
         				pmSdmQuery.setParameter(2,rank);
@@ -333,7 +332,6 @@ public class ProjectHandler {
         								
         								biosequencelentgh=bsw.getSequence().length();
         							}
-        							LOG.warn("has calculated calculsequenceCoverage with param:"+seDbIdentValue+" " + calculsequenceCoverage(biosequencelentgh,sequencesmatcheslength));
         							proteinmatchid=entry.getKey().getId();
          							msiEM.getTransaction().begin();
         							final Query updateQuery = msiEM.createNativeQuery(UPDATE_QUERY);
