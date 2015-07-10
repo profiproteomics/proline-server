@@ -59,13 +59,15 @@ public class ProjectHandler {
    
     private static final String ALL_PM_SQM = "select id FROM fr.proline.core.orm.msi.SequenceMatch";
     private static final String ALL_RSM_PROP = "select rs FROM fr.proline.core.orm.msi.ResultSummary rs where rs.id=?";
-    
-    private static final String VALIDATED_ACCRSM_QUERY = "SELECT pm,sm.id,ps.resultSummary"
+    //
+    private static final String VALIDATED_ACCRSM_QUERY1 = "SELECT pm,sm.id,ps.resultSummary"
     	+" FROM ProteinMatch pm, ProteinSet ps,  ProteinSetProteinMatchItem pspmm, SequenceMatch sm,PeptideMatch pepm "
     	+"WHERE pm.id = pspmm.id.proteinMatchId AND ps.id = pspmm.id.proteinSetId AND sm.id.proteinMatchId = pm.id AND sm.bestPeptideMatchId=pepm.id"
-    	+" AND ps.isValidated = 'true' AND ps.resultSummary.id=? AND pepm.rank=? AND pepm.score>=?";
+    	+" AND ps.isValidated = 'true' AND ps.resultSummary.id=? AND pepm.rank<=? AND pepm.score>=?";
     
-    private static final String LIST_RSMS = "SELECT pm,sm.id,ps.resultSummary FROM ProteinMatch pm, ProteinSet ps,  ProteinSetProteinMatchItem pspmm, SequenceMatch sm WHERE pm.id = pspmm.id.proteinMatchId AND ps.id = pspmm.id.proteinSetId AND sm.id.proteinMatchId = pm.id AND ps.isValidated = 'true'";
+    private static final String LIST_RSMS = "SELECT pm,sm.id,ps.resultSummary FROM ProteinMatch pm, ProteinSet ps,"
+    +"  ProteinSetProteinMatchItem pspmm, SequenceMatch sm WHERE pm.id = pspmm.id.proteinMatchId AND ps.id = pspmm.id.proteinSetId"
+    +" AND sm.id.proteinMatchId = pm.id AND ps.isValidated = 'true'";
   
     private static final String UPDATE_QUERY = "UPDATE protein_match  set coverage=? where id=?";
     private static final String UPDATE_QUERY_PSPMI = "UPDATE protein_set_protein_match_item  set coverage=? where protein_match_id=?";
@@ -276,6 +278,7 @@ public class ProjectHandler {
     	int sequencesmatcheslength;
     	int rank;
     	Float score;
+    	int peplength;
     	HashSet<Long> rsmlist = new HashSet<Long>();
     	Long proteinmatchid;
     	List<BioSequenceWrapper> bioSequenceWrapperList;
@@ -302,17 +305,19 @@ public class ProjectHandler {
         				final List<ResultSummary> rsmpropLines = listrsmprop.getResultList();
         				rsmproprities=fillvalidationproprieties(rsmpropLines);
         				props=rsmproprities.get(RSM);
-        				rank=Integer.parseInt(props.get("rank"));
-        				score=Float.parseFloat(props.get("score"));
-        				//LOG.warn("rank :"+rank+"score"+score);
-    					final Query pmSdmQuery = msiEM.createQuery(VALIDATED_ACCRSM_QUERY);	
+        				rank=Integer.parseInt(props.get("RANK"));
+        				score=Float.parseFloat(props.get("SCORE"));
+        				peplength=Integer.parseInt(props.get("PEP_SEQ_LENGTH"));
+        				LOG.warn("rank :"+rank+"score"+score+"PEP_SEQ_LENGTH :"+peplength);
+        				final Query pmSdmQuery = msiEM.createQuery(VALIDATED_ACCRSM_QUERY1);	
         				pmSdmQuery.setParameter(1,RSM);
         				pmSdmQuery.setParameter(2,rank);
         				pmSdmQuery.setParameter(3,score);
+        				
         				final List<Object[]> pmSdmLines = pmSdmQuery.getResultList();
         				if ((pmSdmLines != null) && !pmSdmLines.isEmpty()) {
-        					fillproteinmatch(pmSdmLines);
-        					accessionSqmatch=fillproteinmatch(pmSdmLines);   					
+        					fillproteinmatch(pmSdmLines,peplength);
+        					accessionSqmatch=fillproteinmatch(pmSdmLines,peplength);   					
         					ArrayList<String> values = new ArrayList<>();
         					int biosequencelentgh = 0;
         					List<String> Accession = new ArrayList<>();
@@ -363,7 +368,7 @@ public class ProjectHandler {
     		}
     	}
     }
-    private static Map<ProteinMatch,Integer> fillproteinmatch(final List<Object[]> lines) {
+    private static Map<ProteinMatch,Integer> fillproteinmatch(final List<Object[]> lines,int peplength) {
        	Map<ProteinMatch, Integer> accessionSqmatch = new HashMap<ProteinMatch, Integer>();
        	HashSet<Integer> Seqsorted = new HashSet<Integer>();
     	Map<ProteinMatch, List<Integer>> temp = new HashMap<ProteinMatch, List<Integer>>();
@@ -394,14 +399,20 @@ public class ProjectHandler {
     				if(ProteinMatchduplicated.contains(proteinmatch)){
 						Seqindex.clear();Seqsorted.clear();
 						SeqLists=temp.get(proteinmatch);
-						SeqLists.addAll(getSequencesIndexes(start,stop));
+						if(getSequencesIndexes(start,stop).size()>=peplength)
+						{
+							SeqLists.addAll(getSequencesIndexes(start,stop));
+						}
 						temp.put(proteinmatch,SeqLists);
 						Seqindex.addAll(temp.get(proteinmatch));
 						Seqsorted.addAll(Seqindex);
 						accessionSqmatch.put(proteinmatch,Seqsorted.size());
 					}else{
 						SeqLists.clear();Seqsorted.clear();Seqindex.clear();
-						SeqLists.addAll(getSequencesIndexes(start,stop));
+						if(getSequencesIndexes(start,stop).size()>=peplength)
+						{
+							SeqLists.addAll(getSequencesIndexes(start,stop));
+						}
 						temp.put(proteinmatch,SeqLists);
 						Seqindex.addAll(temp.get(proteinmatch));
 						Seqsorted.addAll(Seqindex);
@@ -422,11 +433,13 @@ public static Set<String> findDuplicates(List<String> listContainingDuplicates) 
 		}
 		return setToReturn;
 	}
+
 public static double calculsequenceCoverage(int biosequencelentgth,int sequencematchlenttgh){
 	
 	 double average=((double)sequencematchlenttgh/(double)biosequencelentgth)*100;
 	 return average;
 }
+
 public static List<Integer> getSequencesIndexes(int start,int stop){
 	List<Integer> seqList = new ArrayList();
 	for(int i=start;i<=stop;i++){
@@ -450,16 +463,27 @@ private static Map<Long,Map<String,String>>fillvalidationproprieties(final List<
 
 	Map<Long,Map<String,String>> RsmProp=new HashMap<Long, Map<String,String>>();
 	Map<String,String> pepfilters=new HashMap<String, String>();
+	Map<String,String> profilters=new HashMap<String, String>();
 	for (final ResultSummary line : lines) {
 		try {
 				String validationdpropstr=line.getSerializedProperties();
 				Proprieties validationdproprities = gson.fromJson(validationdpropstr,Proprieties.class);
-				String rank=validationdproprities.validation_properties.params.peptide_filters.get(0).properties.getThreshold_value();
-				String score=validationdproprities.validation_properties.params.peptide_filters.get(1).properties.getThreshold_value();
-				pepfilters.put("rank", rank);
-				pepfilters.put("score", score);
-				RsmProp.put(line.getId(), pepfilters);
-		
+				if(validationdproprities.validation_properties.params.peptide_filters.size()>0)
+				{
+					for(Peptidefilters pepfilter : validationdproprities.validation_properties.params.peptide_filters){
+						pepfilters.put(pepfilter.getParameter(), pepfilter.properties.getThreshold_value());
+					}
+				}
+				if(!pepfilters.containsKey("SCORE"))
+				{pepfilters.put("SCORE","0.0");}
+				if(!pepfilters.containsKey("RANK"))
+				{pepfilters.put("RANK","1");}
+				if(!pepfilters.containsKey("SCORE"))
+				{pepfilters.put("SCORE","0.0");}
+				if(!pepfilters.containsKey("PEP_SEQ_LENGTH"))
+				{pepfilters.put("PEP_SEQ_LENGTH","0");}
+				
+				RsmProp.put(line.getId(),pepfilters);
 				
 		  } catch (Exception e) {
 			// TODO Auto-generated catch block
