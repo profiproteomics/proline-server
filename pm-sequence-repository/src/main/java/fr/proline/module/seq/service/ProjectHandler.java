@@ -322,7 +322,6 @@ public class ProjectHandler {
     							List<BioSequenceWrapper> bioSequences = entry0.getValue();
     							for ( BioSequenceWrapper bsw : bioSequences) {
     								biosequencelentgh=bsw.getSequence().length();}
-    							LOG.warn("has calculated calculsequenceCoverage with param:"+seDbIdentValue+" : " + calculsequenceCoverage(biosequencelentgh,sequencesmatcheslength));
     							proteinmatchid=entry.getKey().getId();
     							msiEM.getTransaction().begin();
     							final Query updateQuery = msiEM.createNativeQuery(UPDATE_QUERY);
