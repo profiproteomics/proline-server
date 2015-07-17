@@ -1,6 +1,5 @@
 package fr.proline.module.seq.service;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,19 +7,15 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
-
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import fr.proline.core.orm.uds.repository.ProjectRepository;
 import fr.proline.core.orm.util.DataStoreConnectorFactory;
 import fr.proline.module.seq.DatabaseAccess;
 import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
 import fr.proline.module.seq.dto.SEDbInstanceWrapper;
-import fr.proline.module.seq.dto.SequenceMatchWrapper;
 import fr.proline.repository.IDatabaseConnector;
 import fr.profi.util.ThreadLogger;
 
@@ -54,8 +49,8 @@ public final class RetrieveService {
    
 	int hourDelay = -1;
 	long projectId = 0; 
-	System.out.println("\nnumber of arguments: " + args.length);
-	System.out.println("\nArguments can be either 1 for periodicity (in hours) or p1 for project 1");
+	 LOG.info("\nnumber of arguments: " + args.length);
+	 LOG.info("\nArguments can be either 1 for periodicity (in hours) or p1 for project 1");
 	
 	if ((args != null) && (args.length > 0)) {
 	    
@@ -63,7 +58,7 @@ public final class RetrieveService {
 		
 		if(args[0].startsWith("p")) { // project id such as p1
 			projectId = Long.parseLong(args[0].substring(1));
-			System.out.println("\n is going to process project " + projectId);
+			 LOG.info("\n is going to process project " + projectId);
 		} else {
 			trimmedDelay = args[0].trim();	
 		}
@@ -72,7 +67,7 @@ public final class RetrieveService {
 	    if (!trimmedDelay.isEmpty()) {
 			try {
 			    hourDelay = Integer.parseInt(trimmedDelay);
-			    System.out.println("\nPeriodicity: " + hourDelay);
+			    LOG.info("\nPeriodicity: " + hourDelay);
 			    
 			} catch (NumberFormatException nfEx) {
 			    LOG.warn("Cannot parse [" + trimmedDelay + "] as Integer value", nfEx);
@@ -95,7 +90,7 @@ public final class RetrieveService {
 
 				try {
 					retrieveBioSequencesForAllProjects();
-					//retrieveBioSequencesFor
+					
 				} catch (Exception ex) {
 					LOG.error("Error running  retrieveBioSequencesForAllProjects()", ex);
 				}
@@ -113,7 +108,7 @@ public final class RetrieveService {
 			retrieveBioSequencesForProject(projectId);
 		}
 		BioSequenceRetriever.waitExecutorShutdown();
-		System.out.println("\nMain terminated !");
+		LOG.info("\nMain terminated !");
 	}
 	
     }
@@ -166,13 +161,6 @@ public final class RetrieveService {
 	LOG.info("Total retrieveBioSequencesForProject(#{}) execution : {} SEDbIdentifiers handleds in {} ms",
 		projectId, totalHandledSEDbIdents, duration);
     }
-    public static void getsequenceCoverage(final long projectId) {
-    	final long start = System.currentTimeMillis();
-    	ProjectHandler.fillsequenceMatchesByProteinMatch(projectId);  
-    	final long end = System.currentTimeMillis();
-    	final long duration = end - start;
-    	LOG.info("Total sequence coverage for the projectId {} handleds in {} ms",projectId, duration);
-        }
     private static Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> fillSEDbIdentifiersForAllProjects() {
 	Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = null;
 
@@ -206,7 +194,7 @@ public final class RetrieveService {
 	    for (final Long pId : projectIds) {
 
 		if (pId != null) {
-			System.out.println(" processing project: " + pId);
+			
 		    ProjectHandler.fillSEDbIdentifiersBySEDb(pId.longValue(), seDbIdentifiers);
 		    ProjectHandler.fillsequenceMatchesByProteinMatch(pId.longValue());   
 		}
