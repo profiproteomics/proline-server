@@ -25,11 +25,7 @@
 
 
   <dependencies>
-     <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.2.1</version>
-       </dependency>
+  
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-ORM</artifactId>
