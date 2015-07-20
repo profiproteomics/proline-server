@@ -14,15 +14,16 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import fr.profi.util.StringUtils;
 import fr.proline.core.orm.uds.ExternalDb;
 import fr.proline.core.orm.uds.repository.ExternalDbRepository;
-import fr.proline.core.orm.util.DataStoreConnectorFactory;
+import fr.proline.core.orm.util.DStoreCustomPoolConnectorFactory;
 import fr.proline.repository.DatabaseConnectorFactory;
 import fr.proline.repository.DatabaseUpgrader;
 import fr.proline.repository.DriverType;
+import fr.proline.repository.IDataStoreConnectorFactory;
 import fr.proline.repository.IDatabaseConnector;
 import fr.proline.repository.ProlineDatabaseType;
-import fr.profi.util.StringUtils;
 
 /**
  * Handle <code>DataStoreConnectorFactory</code> and DatabaseConnector keeping and initialization for
@@ -43,7 +44,7 @@ public final class DatabaseAccess {
 
     /* All mutable fields and their initialization are @GuardedBy("INITIALIZATION_LOCK") */
 
-    private static DataStoreConnectorFactory connectorFactory;
+    private static IDataStoreConnectorFactory connectorFactory;
 
     private static IDatabaseConnector seqDatabaseConnector;
 
@@ -51,13 +52,13 @@ public final class DatabaseAccess {
     private DatabaseAccess() {
     }
 
-    public static DataStoreConnectorFactory getDataStoreConnectorFactory() {
-	DataStoreConnectorFactory result = null;
+    public static IDataStoreConnectorFactory getDataStoreConnectorFactory() {
+	IDataStoreConnectorFactory result = null;
 
 	synchronized (INITIALIZATION_LOCK) {
 
 	    if (connectorFactory == null) {
-		result = DataStoreConnectorFactory.getInstance();
+		result = DStoreCustomPoolConnectorFactory.getInstance();
 
 		if (!result.isInitialized()) {
 		    /* Initialization holding INITIALIZATION_LOCK */
@@ -69,7 +70,7 @@ public final class DatabaseAccess {
 		    } else {
 			LOG.debug("Initializing DataStoreConnectorFactory from [{}] file",
 				udsDbConfigFileName);
-			result.initialize(udsDbConfigFileName);
+			((DStoreCustomPoolConnectorFactory)result).initialize(udsDbConfigFileName, "SequenceRepository");
 		    }
 		}
 		connectorFactory = result;
