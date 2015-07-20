@@ -7,17 +7,20 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import fr.profi.util.ThreadLogger;
 import fr.proline.core.orm.uds.repository.ProjectRepository;
-import fr.proline.core.orm.util.DataStoreConnectorFactory;
 import fr.proline.module.seq.DatabaseAccess;
 import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
 import fr.proline.module.seq.dto.SEDbInstanceWrapper;
+import fr.proline.repository.IDataStoreConnectorFactory;
 import fr.proline.repository.IDatabaseConnector;
-import fr.profi.util.ThreadLogger;
 
 /**
  * Launchs Sequence-Repository retrieve Service as single pass or as scheduled task (timer).
@@ -49,8 +52,8 @@ public final class RetrieveService {
    
 	int hourDelay = -1;
 	long projectId = 0; 
-	 LOG.info("\nnumber of arguments: " + args.length);
-	 LOG.info("\nArguments can be either 1 for periodicity (in hours) or p1 for project 1");
+	LOG.debug("number of arguments: " + args.length);
+	LOG.info("Arguments can be either 1 for periodicity (in hours) or p1 for project 1");
 	
 	if ((args != null) && (args.length > 0)) {
 	    
@@ -58,7 +61,7 @@ public final class RetrieveService {
 		
 		if(args[0].startsWith("p")) { // project id such as p1
 			projectId = Long.parseLong(args[0].substring(1));
-			 LOG.info("\n is going to process project " + projectId);
+			LOG.debug(" is going to process project " + projectId);
 		} else {
 			trimmedDelay = args[0].trim();	
 		}
@@ -67,7 +70,7 @@ public final class RetrieveService {
 	    if (!trimmedDelay.isEmpty()) {
 			try {
 			    hourDelay = Integer.parseInt(trimmedDelay);
-			    LOG.info("\nPeriodicity: " + hourDelay);
+			    LOG.debug("\nPeriodicity: " + hourDelay);
 			    
 			} catch (NumberFormatException nfEx) {
 			    LOG.warn("Cannot parse [" + trimmedDelay + "] as Integer value", nfEx);
@@ -101,6 +104,7 @@ public final class RetrieveService {
 
 		LOG.info("Running \"retrieve task\" every {} hour(s)", hourDelay);
 	} else {
+		LOG.info("No given hourDelay : Running a single \"retrieve task\"");
 		if(projectId==0) {
 			retrieveBioSequencesForAllProjects();
 		}
@@ -108,13 +112,14 @@ public final class RetrieveService {
 			retrieveBioSequencesForProject(projectId);
 		}
 		BioSequenceRetriever.waitExecutorShutdown();
-		LOG.info("\nMain terminated !");
+		System.out.println("\nMain terminated !");
 	}
 	
-    }
+	}
+    
     public static void retrieveBioSequencesForAllProjects() {
 	int totalHandledSEDbIdents = 0;
-	System.out.println("\nComputing data for ALL projects ");
+	LOG.debug("Computing data for ALL projects ");
 	final long start = System.currentTimeMillis();
 
 	final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = fillSEDbIdentifiersForAllProjects();
@@ -137,7 +142,7 @@ public final class RetrieveService {
 
     public static void retrieveBioSequencesForProject(final long projectId) {
    
-    	System.out.println("retrieveBioSequencesForProject en cours ");
+    	LOG.debug("retrieveBioSequencesForProject en cours ");
 	int totalHandledSEDbIdents = 0;
 
 	final long start = System.currentTimeMillis();
@@ -145,7 +150,7 @@ public final class RetrieveService {
 	final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = new HashMap<>();
 
 	ProjectHandler.fillSEDbIdentifiersBySEDb(projectId, seDbIdentifiers);
-	ProjectHandler.fillsequenceMatchesByProteinMatch(projectId);   
+	ProjectHandler.fillSequenceMatchesByProteinMatch(projectId);   
 	
 
 	if (seDbIdentifiers.isEmpty()) {
@@ -158,13 +163,15 @@ public final class RetrieveService {
 
 	final long duration = end - start;
 
-	LOG.info("Total retrieveBioSequencesForProject(#{}) execution : {} SEDbIdentifiers handleds in {} ms",
+	LOG.info("Total retrieveBioSequencesForProject(#{}) execution : {} SEDbIdentifiers handled in {} ms",
 		projectId, totalHandledSEDbIdents, duration);
     }
+    
+    
     private static Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> fillSEDbIdentifiersForAllProjects() {
 	Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = null;
 
-	final DataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();
+	final IDataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();
 
 	final IDatabaseConnector udsDbConnector = connectorFactory.getUdsDbConnector();
 	final EntityManagerFactory emf = udsDbConnector.getEntityManagerFactory();
@@ -196,7 +203,7 @@ public final class RetrieveService {
 		if (pId != null) {
 			
 		    ProjectHandler.fillSEDbIdentifiersBySEDb(pId.longValue(), seDbIdentifiers);
-		    ProjectHandler.fillsequenceMatchesByProteinMatch(pId.longValue());   
+		    ProjectHandler.fillSequenceMatchesByProteinMatch(pId.longValue());   
 		}
 
 	    }
