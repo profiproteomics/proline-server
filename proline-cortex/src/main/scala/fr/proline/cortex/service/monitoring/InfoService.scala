@@ -16,7 +16,10 @@ import fr.proline.cortex.service.IRemoteService
 import fr.proline.util.version.VersionHelper
 
 /**
- * Simple "info" Service : return "OK" on "test" method and an info string (instance and host IP) an any other method call.
+ * Simple "info" Service :
+ *    return "OK" on "test" method
+ *    Modules Versions for "version" method as a String
+ *    and an info string (instance and host IP) an any other method call.
  */
 class InfoService extends IRemoteService with Logging {
 
@@ -50,7 +53,7 @@ class InfoService extends IRemoteService with Logging {
 
       case "error" => throw new RuntimeException("Fake Exception thrown by " + getClass.getSimpleName)
 
-      case _       => return  new JSONRPC2Response(buildMessage(jmsMessageContext, requestId, method), requestId)
+      case _       => return new JSONRPC2Response(buildMessage(jmsMessageContext, requestId, method), requestId)
     }
 
   }
