@@ -6,17 +6,16 @@
   <parent>
     <groupId>fr.proline</groupId>
     <artifactId>ProFI-Pom</artifactId>
-    <version>0.0.6-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+    <version>0.0.6</version> <!-- Snapshot Trunk version -->
   </parent>
 
-  <groupId>fr.proline</groupId>
   <artifactId>Proline-Cortex</artifactId>
   <version>0.0.3-SNAPSHOT</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.path>${project.basedir}/src/main/scala/fr/proline/cortex</version.path>
-    <core.version>0.4.0-SNAPSHOT</core.version> <!-- Snapshot Trunk version -->
+    <core.version>0.5.0-SNAPSHOT</core.version> <!-- Snapshot Trunk version -->
     <sqlite4java.version>1.0.392</sqlite4java.version>
   </properties>
 
@@ -61,7 +60,7 @@
     <dependency>
        <groupId>fr.proline.util</groupId>
        <artifactId>ProFI-Commons-Java</artifactId>
-       <version>0.1.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+       <version>0.1.0</version> <!-- Snapshot Trunk version -->
     </dependency>
 
     <!-- Proline-Core Service layer -->
@@ -75,7 +74,7 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-Admin</artifactId>
-      <version>0.2.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+      <version>0.3.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
     </dependency>
 
     
@@ -101,22 +100,32 @@
     <dependency>
     	<groupId>fr.proline</groupId>
     	<artifactId>PM-DatasetExporter</artifactId>
-    	<version>0.2.0-SNAPSHOT</version>
+    	<version>0.2.0</version>
     </dependency>
     <dependency>
     	<groupId>fr.proline</groupId>
     	<artifactId>PM-MzIdentML</artifactId>
-    	<version>0.1.0-SNAPSHOT</version>
+    	<version>0.2.0</version>
     </dependency>
     <dependency>
     	<groupId>fr.proline</groupId>
     	<artifactId>PM-MascotParser</artifactId>
-    	<version>0.2.0-SNAPSHOT</version>
+    	<version>0.2.0</version>
     </dependency>
     <dependency>
     	<groupId>fr.proline</groupId>
     	<artifactId>PM-OmssaParser</artifactId>
-    	<version>0.1.0-SNAPSHOT</version>
+    	<version>0.2.0</version>
+    </dependency>
+    <dependency>
+    	<groupId>fr.proline</groupId>
+    	<artifactId>Proline-ORM</artifactId>
+    	<version>${core.version}</version>
+    </dependency>
+    <dependency>
+    	<groupId>fr.proline</groupId>
+    	<artifactId>Proline-DAL</artifactId>
+    	<version>${core.version}</version>
     </dependency>
   </dependencies>
 
