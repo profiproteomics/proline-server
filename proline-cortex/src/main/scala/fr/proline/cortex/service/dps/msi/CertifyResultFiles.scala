@@ -20,13 +20,21 @@ import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import fr.profi.util.StringUtils
 import java.io.File
 import fr.proline.core.dal.BuildExecutionContext
-import fr.proline.core.orm.util.DataStoreConnectorFactory
 import com.typesafe.scalalogging.slf4j.Logging
+import fr.proline.cortex.util.DbConnectionHelper
 
 /**
  *  Define JMS Service to :
  *  Verify result files integrity for importation in the MSIdb. This service should be called before an import result file
  *  
+ *  Input Params :
+ *    project_id : The id of the project used for data importation.
+ *    result_files : The list of the result files to be imported as ResultFileDescriptor
+ *    importer_properties : Properties map specific to result file type.
+ *    
+ *  Output Params :
+ *    "OK" if service run successfuly
+ *    Error message if service was not successfull
  */
 case class ResultFileDescriptor( path: String, format: String)
  
@@ -38,32 +46,9 @@ class CertifyResultFiles extends AbstractRemoteProcessService with Logging {
   override val defaultVersion = true
 
 
-  //    // Configure service interface
-  //  val wsParams = Array(
-  //    MethodParam(
-  //      "project_id",
-  //      JSONType.Integer,
-  //      description = Some("The id of the project used for data importation."),
-  //      scalaType = Some(typeOf[Long])
-  //    ),
-  //    MethodParam(
-  //      "result_files",
-  //      JSONType.Array,
-  //      description = Some("The list of the result files to be imported."),
-  //      scalaType = Some(typeOf[Array[ResultFileDescriptor]])
-  //    ),
-  //    MethodParam(
-  //      "importer_properties",
-  //      JSONType.Object,
-  //      description = Some("Properties map specific to result file type."),
-  //      optional = true,
-  //      scalaType = Some(typeOf[Map[String, Any]])
-  //    )
-  //  )
-
   override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
 
-    require((paramsRetriever != null), "ParamsRetriever is null")
+   require((paramsRetriever != null), "no parameter specified")
 
     var processResult: String = null
 
@@ -80,7 +65,7 @@ class CertifyResultFiles extends AbstractRemoteProcessService with Logging {
     } toMap
 
     // Initialize the providers    
-    val execCtx = BuildExecutionContext(DataStoreConnectorFactory.getInstance(), projectId, true) // Use JPA context
+    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, projectId, true) // Use JPA context
 
     try {
       val parserCtx = buildParserContext(execCtx)

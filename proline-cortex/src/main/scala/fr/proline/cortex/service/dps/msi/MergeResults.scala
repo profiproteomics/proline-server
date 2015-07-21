@@ -1,26 +1,38 @@
 package fr.proline.cortex.service.dps.msi
 
-import fr.proline.cortex.service.AbstractRemoteProcessService
-import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
-import fr.profi.util.serialization.ProfiJson._
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.service.msi.ResultSummaryMerger
-import fr.proline.core.dal.BuildExecutionContext
-import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.core.orm.util.DataStoreConnectorFactory
-import fr.proline.core.service.msi.ResultSetMerger
+import scala.Array.canBuildFrom
+
+import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
+import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
+import com.typesafe.scalalogging.slf4j.Logging
+
+import fr.profi.util.serialization.ProfiJson.deserialize
+import fr.profi.util.serialization.ProfiJson.serialize
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.dal.BuildExecutionContext
+import fr.proline.core.service.msi.ResultSetMerger
+import fr.proline.core.service.msi.ResultSummaryMerger
+import fr.proline.cortex.service.IRemoteService
+import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.jsonrpc.JSONRPC2Utils
 import fr.proline.cortex.util.jsonrpc.ProfiJSONRPC2Response
-import fr.proline.cortex.service.IRemoteService
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 
 /**
  * Merge specified result sets (or result summaries) into one new result set (or new result summary).
- * In case or merge result summaries,  only validated data will be taken into account for new result summary and associated result set. 
- * This service will return the merged result set Id or the merged result Summary Id and associated result set id (targetResultSummaryId/targetResultSetId). 
- * 
+ * In case or merge result summaries,  only validated data will be taken into account for new result summary and associated result set.
+ * This service will return the merged result set Id or the merged result Summary Id and associated result set id (targetResultSummaryId/targetResultSetId).
+ *
+ * Input params
+ *  project_id : the id of the project to which data is linked.
+ *     result_set_ids : The list of the result set to merged.
+ *  OR
+ *  result_summary_ids : The list of the result summaries to merged
+ *
+ *  Output param
+ *    for merge RS :  the merged result set Id
+ *    for merge RSM : the merged result Summary Id and associated result set id (as RSMMergeResult object)
  */
 class MergeResultSets extends IRemoteService with Logging {
 
@@ -28,48 +40,14 @@ class MergeResultSets extends IRemoteService with Logging {
   val serviceName = "proline/dps/msi/MergeResults"
   val serviceVersion = "1.0"
   override val defaultVersion = true
- 
-  // merge_result_sets Params description
-//  val wsParams = Array(
-//    MethodParam(
-//        "project_id", 
-//        JSONType.Integer,
-//        description = Some("The id of the project to which data is linked."),
-//        scalaType = Some(typeOf[Long])
-//	),
-//    MethodParam(
-//		"result_set_ids", 
-//        JSONType.Array,
-//        description = Some("The list of the result set to merged."),
-//        scalaType = Some(typeOf[Array[Long]])
-//	)
-//  ) 
-  
-  // merge_result_summaries Params description
-  //    val wsParams = Array(
-  //    MethodParam(
-  //        "project_id", 
-  //        JSONType.Integer,
-  //        description = Some("The id of the project to which data is linked."),
-  //        scalaType = Some(typeOf[Long])
-  //	),
-  //    MethodParam(
-  //        "result_summary_ids",
-  //        JSONType.Array,
-  //        description = Some("The list of the result summaries to merged."),
-  //        scalaType = Some(typeOf[Array[Long]])        
-  //    )
-  //  )
 
-  
-  
-   override def service(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
-    
+  override def service(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
+
     require((req != null), "Req is null")
 
     val requestId = req.getID
     val methodName = req.getMethod
-    
+
     /* Method dispatch */
     methodName match {
 
@@ -78,30 +56,33 @@ class MergeResultSets extends IRemoteService with Logging {
         val result = doMergeResultSetProcess(paramsRetriever) // Call service
         return new ProfiJSONRPC2Response(result, requestId)
       }
-      
-    case "merge_result_summaries" => {
+
+      case "merge_result_summaries" => {
         val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(req)
         val result = doMergeResultSummariesProcess(paramsRetriever) // Call service
         return new ProfiJSONRPC2Response(result, requestId)
-      }    
+      }
 
       // Method name not supported
       case _ => return new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, requestId)
     }
- 
+
     new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, requestId)
   }
 
-   case class RSMMergeResult(var targetResultSummaryId: Long = -1L, var targetResultSetId: Long = -1L)
-   
-   /* Define the doMergeResultSummariesProcess method */
-   def doMergeResultSummariesProcess(paramsRetriever: NamedParamsRetriever): Object = {
+  case class RSMMergeResult(var targetResultSummaryId: Long = -1L, var targetResultSetId: Long = -1L)
+
+  /* Define the doMergeResultSummariesProcess method */
+  def doMergeResultSummariesProcess(paramsRetriever: NamedParamsRetriever): Object = {
+    
+    require((paramsRetriever != null), "no parameter specified")
+    
     val projectId = paramsRetriever.getLong("project_id")
     val resultSummaryIds = paramsRetriever.getList("result_summary_ids").toArray.map { rf => deserialize[Long](serialize(rf)) }
 
     var result: RSMMergeResult = new RSMMergeResult()
     var msiDbConnectionContext: DatabaseConnectionContext = null
-    val execCtx = BuildExecutionContext(DataStoreConnectorFactory.getInstance(), projectId, false)
+    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), projectId, false)
 
     try {
       logger.info("ResultSummary merger service will start")
@@ -129,25 +110,24 @@ class MergeResultSets extends IRemoteService with Logging {
     result
   }
 
-   
   /* Define the doMergeResultSetProcess method */
   def doMergeResultSetProcess(paramsRetriever: NamedParamsRetriever): Object = {
     val projectId = paramsRetriever.getLong("project_id")
     val resultSetIds = paramsRetriever.getList("result_set_ids").toArray.map { rf => deserialize[Long](serialize(rf)) }
 
-    var result : java.lang.Long = -1L
+    var result: java.lang.Long = -1L
     var msiDbConnectionContext: DatabaseConnectionContext = null
-    val execCtx = BuildExecutionContext(DataStoreConnectorFactory.getInstance(), projectId, false)
+    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), projectId, false)
 
     try {
       logger.info("ResultSet merger service will start")
 
-       val rsMerger = new ResultSetMerger(
+      val rsMerger = new ResultSetMerger(
         execCtx = execCtx,
         resultSetIds = Some(resultSetIds),
         resultSets = None
       )
-      
+
       rsMerger.run
 
       logger.info("ResultSet merger done")

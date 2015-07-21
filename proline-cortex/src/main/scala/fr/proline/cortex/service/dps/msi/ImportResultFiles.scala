@@ -18,12 +18,12 @@ import fr.proline.core.dal.helper.UdsDbHelper
 import fr.proline.cortex.util.MountPointRegistry
 import fr.proline.core.service.msi.ResultFileImporter
 import fr.proline.core.dal.BuildExecutionContext
-import fr.proline.core.orm.util.DataStoreConnectorFactory
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import java.io.File
 import fr.proline.core.om.provider.msi.ProteinFakeProvider
 import fr.proline.core.om.provider.msi.SeqDbFakeProvider
 import fr.proline.cortex.service.ISingleThreadedService
+import fr.proline.cortex.util.DbConnectionHelper
 
 trait IResultFileDescriptor {
 
@@ -34,6 +34,17 @@ trait IResultFileDescriptor {
 
 /**
  * Import a result file in the MSIdb corresponding to the provided project id
+ * 
+ * Input params
+ *   project_id : The id of the project used for data importation.
+ *   result_files : The list of the result files to be imported, as IResultFileDescriptor object
+ *   instrument_config_id : id in datastore of the instrument config used for result file acquisition
+ *   peaklist_software_id : id in datastore of the software use to generate peaklist
+ *   save_spectrum_matches : If true, fragment matches of MS/MS spectra will be stored in the MSIdb.
+ *   importer_properties : Map of properties for importer, specific to result files format
+ *   
+ *  Output params
+ *    List of ImportedResultFile : path of imported file and Id of created target RS 
  */
 abstract class AbstractImportResultFiles extends AbstractRemoteProcessService with Logging with ISingleThreadedService {
   /* JMS Service identification */
@@ -41,44 +52,6 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessService wi
 
   case class ImportedResultFile(path: String, var targetResultSetId: Long = -1L)
 
-  // Configure service interface 
-  //  val wsParams = Array(
-  //    MethodParam(
-  //      "project_id",
-  //      JSONType.Integer,
-  //      description = Some("The id of the project used for data importation."),
-  //      scalaType = Some(typeOf[Long])
-  //    ),
-  //    MethodParam(
-  //      "result_files",
-  //      JSONType.Array,
-  //      description = Some("The list of the result files to be imported."),
-  //      scalaType = Some(typeOf[Array[IResultFileDescriptor]])
-  //    ),
-  //    MethodParam(
-  //      "instrument_config_id",
-  //      JSONType.Integer,
-  //      scalaType = Some(typeOf[Long])
-  //    ),
-  //    MethodParam(
-  //      "peaklist_software_id",
-  //      JSONType.Integer,
-  //      scalaType = Some(typeOf[Long])
-  //    ),
-  //    MethodParam(
-  //      "save_spectrum_matches",
-  //      JSONType.Boolean,
-  //      optional = true,
-  //      description = Some("If true, fragment matches of MS/MS spectra will be stored in the MSIdb."),
-  //      scalaType = Some(typeOf[Long])
-  //    ),
-  //    MethodParam(
-  //      "importer_properties",
-  //      JSONType.Object,
-  //      optional = true,
-  //      scalaType = Some(typeOf[Map[String, Any]])
-  //    )
-  //  )
 
   // Methods to be implemented
   protected def parseResultFileDescriptor(rfDescObj: Object): IResultFileDescriptor
@@ -109,7 +82,8 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessService wi
 
   /* Define the concrete doProcess method */
   override def doProcess(params: NamedParamsRetriever): Object = {
-
+    require((params != null), "no parameter specified")
+    
     val projectId = params.getLong("project_id")
     val resultFiles = params.getList("result_files").toArray.map { rfd => parseResultFileDescriptor(rfd) }
     val instrumentConfigId = params.getLong("instrument_config_id")
@@ -134,7 +108,7 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessService wi
     var result: Array[ImportedResultFile] = null
 
     // Initialize the providers    
-    val execCtx = BuildExecutionContext(DataStoreConnectorFactory.getInstance(), projectId, false)
+    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), projectId, false)
 
     try {
       val parserCtx = this.buildParserContext(execCtx)

@@ -28,13 +28,13 @@ import fr.proline.core.algo.msi.validation.ITargetDecoyAnalyzer
 import fr.proline.core.algo.msi.validation.ProtSetValidationMethods
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.dal.BuildExecutionContext
-import fr.proline.core.orm.util.DataStoreConnectorFactory
 import fr.proline.core.service.msi.ResultSetValidator
 import fr.proline.core.service.msi.ValidationConfig
 import fr.proline.cortex.service.IRemoteService
 import fr.proline.cortex.util.jsonrpc.JSONRPC2Utils
 import fr.proline.cortex.util.jsonrpc.ProfiJSONRPC2Response
 import fr.proline.cortex.service.AbstractRemoteProcessService
+import fr.proline.cortex.util.DbConnectionHelper
 
 case class FilterConfig(
   parameter: String,
@@ -53,102 +53,25 @@ case class ProtSetValidatorConfig(
   @JsonDeserialize(contentAs = classOf[java.lang.Float]) expectedFdr: Option[Float] = None)
 
 /**
- *  Define JMS Service which valides ResultSet and creates appropriates ResultSummaries. 
- *  Specified PSMs, Proteins filters and validations are applied. 
- *  
+ *  Define JMS Service which valides ResultSet and creates appropriates ResultSummaries.
+ *  Specified PSMs, Proteins filters and validations are applied.
+ *
+ * Input params :
+ *  project_id : The id of the project result set to validate belongs to.
+ *  result_set_id : The ResultSet id to validate.
+ *  // description : Description of the generated ResultSummary // NOT USED
+ *  // use_td_competition : specify if TargetDecoy Competition Based should be used // DEPRECATED
+ *  pep_match_filters : List of PSM filters to use (parameter, threshold and post_validation)
+ *  pep_match_validator_config : PSM validation configuration (as PepMatchValidatorConfig : parameter, threshold, expectedFdr)
+ *  pep_set_score_type : PeptideSet Scoring to use, one of PepSetScoring (mascot:standard score, mascot:modified mudpit score)
+ *  prot_set_filters : List of ProteinSet filters to use (parameter, threshold)
+ *  prot_set_validator_config : ProteinSet validation configuration  (as ProtSetValidatorConfig : validation_method, parameter, thresholds, expectedFdr)
+ *
+ * Output params :
+ *   generated ResultSummary ID
  */
-class ValidateResultSet extends AbstractRemoteProcessService with Logging {
 
-  /* JMS Service identification */
-  val serviceName = "proline/dps/msi/ValidateResultSet"
-  val serviceVersion = "1.0"
-  override val defaultVersion = true
-
-  
-  override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
-    require((paramsRetriever != null), "ParamsRetriever is null")
-
-    val projectId = paramsRetriever.getLong("project_id")
-    val resultSetId = paramsRetriever.getLong("result_set_id")
-    val description = paramsRetriever.getString("description")
-    val useTdCompet = if (paramsRetriever.hasParam("use_td_competition")) paramsRetriever.getBoolean("use_td_competition") else false
-
-    var result: java.lang.Long = -1L;
-
-    var msiDbConnectionContext: DatabaseConnectionContext = null
-    var msiDbTransacOk: Boolean = false
-
-    val execCtx = BuildExecutionContext(DataStoreConnectorFactory.getInstance(), projectId, false)
-
-    try {
-      val validationConfig = parseValidationConfig(paramsRetriever)
-
-      // Use peptide match validator as sorter if provided, else use default ScorePSM         
-      val sorter: IPeptideMatchSorter =
-        if (validationConfig.pepMatchValidator.isDefined
-          && validationConfig.pepMatchValidator.get.validationFilter.isInstanceOf[IPeptideMatchSorter])
-          validationConfig.pepMatchValidator.get.validationFilter.asInstanceOf[IPeptideMatchSorter]
-        else if (validationConfig.pepMatchPreFilters.isDefined) {
-          var foundSorter: IPeptideMatchSorter = null
-          val index = 0
-          while (foundSorter == null && index < validationConfig.pepMatchPreFilters.get.size) {
-            if (validationConfig.pepMatchPreFilters.get(index).isInstanceOf[IPeptideMatchSorter]) {
-              foundSorter = validationConfig.pepMatchPreFilters.get(index).asInstanceOf[IPeptideMatchSorter]
-            }
-          }
-          if (foundSorter == null)
-            foundSorter = new ScorePSMFilter()
-          foundSorter
-        } else {
-          new ScorePSMFilter()
-        }
-
-      // Begin transaction
-      msiDbConnectionContext = execCtx.getMSIDbConnectionContext
-      msiDbConnectionContext.beginTransaction() // Start a transaction on MSI Db
-      msiDbTransacOk = false
-
-      // Instantiate a result set validator
-      val rsValidator = ResultSetValidator(
-        execContext = execCtx,
-        targetRsId = resultSetId,
-        tdAnalyzer = validationConfig.tdAnalyzer,
-        pepMatchPreFilters = validationConfig.pepMatchPreFilters,
-        pepMatchValidator = validationConfig.pepMatchValidator,
-        protSetFilters = validationConfig.protSetFilters,
-        protSetValidator = validationConfig.protSetValidator,
-        inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
-        peptideSetScoring = Some(validationConfig.pepSetScoring.getOrElse(PepSetScoring.MASCOT_STANDARD_SCORE))
-      )
-
-      rsValidator.run()
-
-      // Commit transaction
-      msiDbConnectionContext.commitTransaction()
-      msiDbTransacOk = true
-
-      result = rsValidator.validatedTargetRsm.id
-    } finally {
-
-      if ((msiDbConnectionContext != null) && !msiDbTransacOk) {
-        try {
-          msiDbConnectionContext.rollbackTransaction()
-        } catch {
-          case ex: Exception => logger.error("Error rollbacking MSI Db Transaction", ex)
-        }
-      }
-
-      try {
-        execCtx.closeAll()
-      } catch {
-        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-      }
-
-    }
-
-    result
-  }
-
+object ValidateResultSet {
   def parseValidationConfig(paramsRetriever: NamedParamsRetriever): ValidationConfig = {
 
     // val pepMatchFilters =  .parsePepMatchFilters(params,targetRS )
@@ -253,6 +176,99 @@ class ValidateResultSet extends AbstractRemoteProcessService with Logging {
       )
 
     } else None
+  }
+
+}
+
+class ValidateResultSet extends AbstractRemoteProcessService with Logging {
+
+  /* JMS Service identification */
+  val serviceName = "proline/dps/msi/ValidateResultSet"
+  val serviceVersion = "1.0"
+  override val defaultVersion = true
+
+  override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
+    require((paramsRetriever != null), "No Parameters specified")
+
+    val projectId = paramsRetriever.getLong("project_id")
+    val resultSetId = paramsRetriever.getLong("result_set_id")
+    //    val description = paramsRetriever.getString("description") // UNUSED 
+    //    val useTdCompet = if (paramsRetriever.hasParam("use_td_competition")) paramsRetriever.getBoolean("use_td_competition") else false // DEPRECATED
+
+    var result: java.lang.Long = -1L;
+
+    var msiDbConnectionContext: DatabaseConnectionContext = null
+    var msiDbTransacOk: Boolean = false
+
+    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), projectId, false)
+
+    try {
+      val validationConfig = ValidateResultSet.parseValidationConfig(paramsRetriever)
+
+      // Use peptide match validator as sorter if provided, else use default ScorePSM         
+      val sorter: IPeptideMatchSorter =
+        if (validationConfig.pepMatchValidator.isDefined
+          && validationConfig.pepMatchValidator.get.validationFilter.isInstanceOf[IPeptideMatchSorter])
+          validationConfig.pepMatchValidator.get.validationFilter.asInstanceOf[IPeptideMatchSorter]
+        else if (validationConfig.pepMatchPreFilters.isDefined) {
+          var foundSorter: IPeptideMatchSorter = null
+          val index = 0
+          while (foundSorter == null && index < validationConfig.pepMatchPreFilters.get.size) {
+            if (validationConfig.pepMatchPreFilters.get(index).isInstanceOf[IPeptideMatchSorter]) {
+              foundSorter = validationConfig.pepMatchPreFilters.get(index).asInstanceOf[IPeptideMatchSorter]
+            }
+          }
+          if (foundSorter == null)
+            foundSorter = new ScorePSMFilter()
+          foundSorter
+        } else {
+          new ScorePSMFilter()
+        }
+
+      // Begin transaction
+      msiDbConnectionContext = execCtx.getMSIDbConnectionContext
+      msiDbConnectionContext.beginTransaction() // Start a transaction on MSI Db
+      msiDbTransacOk = false
+
+      // Instantiate a result set validator
+      val rsValidator = ResultSetValidator(
+        execContext = execCtx,
+        targetRsId = resultSetId,
+        tdAnalyzer = validationConfig.tdAnalyzer,
+        pepMatchPreFilters = validationConfig.pepMatchPreFilters,
+        pepMatchValidator = validationConfig.pepMatchValidator,
+        protSetFilters = validationConfig.protSetFilters,
+        protSetValidator = validationConfig.protSetValidator,
+        inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+        peptideSetScoring = Some(validationConfig.pepSetScoring.getOrElse(PepSetScoring.MASCOT_STANDARD_SCORE))
+      )
+
+      rsValidator.run()
+
+      // Commit transaction
+      msiDbConnectionContext.commitTransaction()
+      msiDbTransacOk = true
+
+      result = rsValidator.validatedTargetRsm.id
+    } finally {
+
+      if ((msiDbConnectionContext != null) && !msiDbTransacOk) {
+        try {
+          msiDbConnectionContext.rollbackTransaction()
+        } catch {
+          case ex: Exception => logger.error("Error rollbacking MSI Db Transaction", ex)
+        }
+      }
+
+      try {
+        execCtx.closeAll()
+      } catch {
+        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
+      }
+
+    }
+
+    result
   }
 
 }

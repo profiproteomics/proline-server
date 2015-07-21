@@ -11,7 +11,6 @@ import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.BuildExecutionContext
-import fr.proline.core.orm.util.DataStoreConnectorFactory
 import fr.proline.cortex.Constants
 import fr.proline.cortex.NodeConfig
 import fr.proline.cortex.service.AbstractRemoteProcessService
@@ -34,11 +33,30 @@ import fr.proline.core.service.msq.QuantMethodType
 import fr.proline.core.service.msq.AbundanceUnit
 import fr.proline.module.exporter.dataset.view.BuildDatasetViewSet
 import scala.collection.mutable.ArrayBuffer
+import fr.proline.cortex.util.DbConnectionHelper
 
 /**
  * Define a JMS Service to :
  * Exports result summaries on server side in various files formats.
  *
+ *  Version 1.0
+ *  Input Params 
+ *    rsm_identifier : A tuple containing the project id and the result summary id.
+ *    file_format : The expected file format. Valid values are: MZIDENTML, TEMPLATED, PRIDE.
+ *    file_name : The desired name for the file. If not provided, a name beginning with 'IdentificationSummaryExport_' will be generated.
+ *    file_directory : The desired output directory. If not provided, files will be exported in a temporary directory.
+ *    extra_params : A map of parameters specific to the used file format. Possible keys for the TEMPLATED format: template_name.
+ *    output_mode : Result exported file format : FILE or STREAM
+ *    
+ *   Output params 
+ *   	If FILE output mode was specified, the files path 
+ *      if STREAM the files path and  PROLINE_NODE_ID
+ *      
+ *   Version 2.0 : Use the customizable export service which also allow quanti RSM export. 
+ *   Input Params  
+ *     Same as Version 1.0 but rsm_identifier contains also the Dataset ID to export. 
+ *   Output params 
+ *     Same as Version 1.0 
  */
 
 object FileFormat extends Enumeration {
@@ -62,43 +80,6 @@ class ExportResultSummary extends AbstractRemoteProcessService with Logging {
   val serviceVersion = "1.0"
   override val defaultVersion = true
 
-  // Configure service interface
-
-  //  val wsParams = Array(
-  //    MethodParam(
-  //      "rsm_identifier",
-  //      JSONType.Object,
-  //      description = Some("A tuple containing the project id and the result summary id."),
-  //      scalaType = Some(typeOf[ResultSummaryIdentifier])
-  //    ),
-  //    MethodParam(
-  //      "file_format",
-  //      JSONType.String,
-  //      description = Some("The expected file format. Valid values are: MZIDENTML, TEMPLATED, PRIDE."),
-  //      scalaType = Some(typeOf[String])
-  //    ),
-  //    MethodParam(
-  //      "file_name",
-  //      JSONType.String,
-  //      optional = true,
-  //      description = Some("The desired name for the file. If not provided, a name beginning with 'IdentificationSummaryExport_' will be generated."),
-  //      scalaType = Some(typeOf[String])
-  //    ),
-  //    MethodParam(
-  //      "file_directory",
-  //      JSONType.String,
-  //      optional = true,
-  //      description = Some("The desired output directory. If not provided, files will be exported in a temporary directory."),
-  //      scalaType = Some(typeOf[String])
-  //    ),
-  //    MethodParam(
-  //      "extra_params",
-  //      JSONType.Object,
-  //      optional = true,
-  //      description = Some("A map of parameters specific to the used file format. Possible keys for the TEMPLATED format: template_name."),
-  //      scalaType = Some(typeOf[Map[String, Any]])
-  //    )
-  //  )
 
   // TODO: find a more dynamic way to load the templates
   val viewSetTemplateByName = Map(
@@ -110,7 +91,7 @@ class ExportResultSummary extends AbstractRemoteProcessService with Logging {
 
   override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
 
-    require((paramsRetriever != null), "ParamsRetriever is null")
+    require((paramsRetriever != null), "No parameter specified")
 
     //val rsmIdentifiers = paramsRetriever.getList("rsm_identifiers").toArray.map { rsmIdent => deserialize[ResultSummaryIdentifier](serialize(rsmIdent)) }
     //    val rsmIdentifiers = paramsRetriever.getList("rsm_identifier").toArray.map { rsmIdent => deserialize[ResultSummaryIdentifier](serialize(rsmIdent)) }
@@ -166,7 +147,7 @@ class ExportResultSummary extends AbstractRemoteProcessService with Logging {
 
     //    val rsmIdentifier = rsmIdentifiers(0)
     var filePath = ""
-    val execCtx = BuildExecutionContext(DataStoreConnectorFactory.getInstance(), rsmIdentifier.projectId, false)
+    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, rsmIdentifier.projectId, false)
 
     try {
 
@@ -210,7 +191,7 @@ class ExportResultSummary extends AbstractRemoteProcessService with Logging {
 
     var executionContext: IExecutionContext = null
     try {
-      executionContext = BuildExecutionContext(DataStoreConnectorFactory.getInstance(), rsmIdentifier.projectId, true)
+      executionContext = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, rsmIdentifier.projectId, true)
 
       // Export
       val viewSet = BuildResultSummaryViewSet(
@@ -254,7 +235,7 @@ class ExportResultSummary extends AbstractRemoteProcessService with Logging {
     var executionContext: IExecutionContext = null
 
     try {
-      executionContext = BuildExecutionContext(DataStoreConnectorFactory.getInstance(), rsmIdentifier.projectId, false)
+      executionContext = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), rsmIdentifier.projectId, false)
 
       val extraParameters: Map[String, Object] = if (extraParams.isDefined) extraParams.get else Map.empty
       // Export
@@ -339,7 +320,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with Logging 
 
     //    val rsmIdentifier = rsmIdentifiers(0)
     var filePath = ""
-    val execCtx = BuildExecutionContext(DataStoreConnectorFactory.getInstance(), rsmIdentifier.projectId, false)
+    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), rsmIdentifier.projectId, false)
 
     try {
 
@@ -374,7 +355,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with Logging 
     var executionContext: IExecutionContext = null
 
     try {
-      executionContext = BuildExecutionContext(DataStoreConnectorFactory.getInstance(), rsmIdentifier.projectId, false)
+      executionContext = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), rsmIdentifier.projectId, false)
 
       val extraParameters: Map[String, Object] = if (extraParams.isDefined) extraParams.get else Map.empty
       // Export
@@ -418,7 +399,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with Logging 
         //require(StringUtils.isNotEmpty(exportConfigStr), "the export configuration must be provided")
     }else{// default conf if not filled -- all dataset have same type, so the config is based on the first
       var mode: String = ExportConfigConstant.MODE_IDENT
-      val execCtx = BuildExecutionContext(DataStoreConnectorFactory.getInstance(), rsmIdentifiers(0).projectId, true) 
+      val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), rsmIdentifiers(0).projectId, true) 
       try {
         val udsDbCtx = execCtx.getUDSDbConnectionContext()
         val udsEM = udsDbCtx.getEntityManager()
@@ -450,7 +431,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with Logging 
     for (rsmIdentifier <- rsmIdentifiers) {
       var executionContext: IExecutionContext = null
       try {
-        executionContext =  BuildExecutionContext(DataStoreConnectorFactory.getInstance(), rsmIdentifier.projectId, true)
+        executionContext =  BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), rsmIdentifier.projectId, true)
         
        var fileDatasetName = fileName
        if (StringUtils.isEmpty(fileName)) {
