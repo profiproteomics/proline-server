@@ -16,6 +16,25 @@ import fr.proline.cortex.util.WorkDirectoryRegistry
 import fr.proline.cortex.util.jsonrpc.JSONRPC2Utils
 import fr.proline.cortex.util.jsonrpc.ProfiJSONRPC2Response
 
+/**
+ * Define JMS Service to get information on Proline Server FileSystem.
+ *
+ *
+ * retrieve_all_directory_types :  Return hard-coded Proline directory types (result_files, raw_files, mzdb_files)
+ * retrieve_all_mount_points : Return all MountPoints for all Proline directory types and all labels
+ * retrieve_mount_points_by_type :  Return all MountPoints for given Proline directory type.
+ *   Input Param : dir_type : directory types (result_files, raw_files, mzdb_files) to get Mountpoint for
+ * retrieve_mount_points_by_label: Return all MountPoints for given label
+ *   Input Param : label : label to get Mountpoint for
+ * retrieve_directory_content : Returns the list of files/directories found in a given managed directory.
+ *   Input Param :
+ *       label_path : The aliased path of the directory to browse. It has to be prefixed by a registered label
+ *       dir_type : The mount point type of the targeted directory
+ *       include_files : specify if file should be listed
+ *       include_dirs : specify if directory should be listed
+ *       extension_filter : specify a file extension to use as filter
+ *
+ */
 class FileSystem extends IRemoteService with Logging {
 
   /* Constants */
@@ -71,7 +90,7 @@ class FileSystem extends IRemoteService with Logging {
         require(!StringUtils.isEmpty(label), "Invalid \"" + LABEL_PARAM_NAME + "\" parameter")
 
         // Do not return real absolute path to client
-        val mountPoints = MountPointRegistry.retrieveMountPointsByType(label, false)
+        val mountPoints = MountPointRegistry.retrieveMountPointsByLabel(label, false)
 
         return new ProfiJSONRPC2Response(mountPoints, requestId)
       }

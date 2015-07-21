@@ -9,27 +9,34 @@ import fr.proline.core.orm.uds.QuantitationMethod
 import fr.proline.core.orm.uds.Dataset.DatasetType
 import fr.proline.core.service.msq.QuantMethodType
 import fr.proline.core.dal.BuildExecutionContext
-import fr.proline.core.orm.util.DataStoreConnectorFactory
 import fr.proline.core.orm.uds.{ Dataset => UdsDataset }
 import fr.proline.core.service.msq.AbundanceUnit
 import fr.proline.cortex.service.AbstractRemoteProcessService
+import fr.proline.cortex.util.DbConnectionHelper
 
 /**
  * Define a JMS Service to :
- * Get information about the export default configuration file for a dataset 
- * 
+ * Get information about the export default configuration file for a dataset
+ *
+ * Input param
+ *   project_id : The id of the project
+ *   dataset_id : The id of the dataset
+ *   extra_params: A map of specific parameters : export_mode can contain the mode (IDENT, QUANT_SC or QUANT_XIC)
+ *
+ *  Output param
+ *    The JSON String corresponding to the default export configuration of specified mode
+ *
  */
 
-class GetExportInformation  extends AbstractRemoteProcessService with Logging {
-	/* JMS Service identification */
+class GetExportInformation extends AbstractRemoteProcessService with Logging {
+  /* JMS Service identification */
   val serviceName = "proline/dps/uds/GetExportInformation"
   val serviceVersion = "1.0"
   override val defaultVersion = true
-  
-  
-   /* Define the concrete doProcess method */
+
+  /* Define the concrete doProcess method */
   override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
-    require((paramsRetriever != null), "ParamsRetriever is null")
+    require((paramsRetriever != null), "No Parameters specified")
 
     val projectId = paramsRetriever.getLong("project_id")
     val datasetId = paramsRetriever.getLong("dataset_id")
@@ -38,7 +45,7 @@ class GetExportInformation  extends AbstractRemoteProcessService with Logging {
 
     var mode: String = ExportConfigConstant.MODE_IDENT
     if (projectId > 0) {
-      val execCtx =  BuildExecutionContext(DataStoreConnectorFactory.getInstance(), projectId, true)
+      val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), projectId, true)
       try {
         val udsDbCtx = execCtx.getUDSDbConnectionContext()
         val udsEM = udsDbCtx.getEntityManager()
@@ -57,7 +64,7 @@ class GetExportInformation  extends AbstractRemoteProcessService with Logging {
         }
       } finally {
         if (execCtx != null) {
-        	execCtx.closeAll()
+          execCtx.closeAll()
         }
       }
     } else {
@@ -67,7 +74,6 @@ class GetExportInformation  extends AbstractRemoteProcessService with Logging {
     }
 
     return ExportConfigManager.getAllConfigurationExport(mode)
-    
 
   }
 

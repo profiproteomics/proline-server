@@ -4,21 +4,30 @@ import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
+
+import scala.annotation.elidable
+import scala.annotation.elidable.ASSERTION
+
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.cortex.Constants.PROLINE_NODE_ID_KEY
+
 import fr.profi.util.StringUtils
+import fr.proline.cortex.IServiceMonitoringNotifier
+import fr.proline.cortex.ServiceEvent
 import fr.proline.cortex.ServiceRunner
 import javax.jms.Message
 import javax.jms.MessageProducer
 import javax.jms.Session
 import javax.jms.TextMessage
-import fr.proline.cortex.NodeConfig
-import fr.proline.cortex.IServiceMonitoringNotifier
-import fr.proline.cortex.ServiceEvent
 
+/**
+ * JMS Service to get a resource on Proline Server side as a Stream. Value is returned in BytesMessage
+ *
+ * Input param :  file_path : specify the path to the resource to get.
+ *
+ */
 class ResourceService extends Logging {
 
   /* Service Constants */
