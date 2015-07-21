@@ -21,7 +21,6 @@ import NodeConfig.SERVICE_THREAD_POOL_SIZE
 import fr.profi.util.StringUtils
 import fr.profi.util.ThreadLogger
 import fr.proline.admin.service.db.SetupProline
-import fr.proline.core.orm.util.DataStoreConnectorFactory
 import fr.proline.cortex.service.dps.msi.CertifyResultFiles
 import fr.proline.cortex.service.dps.msi.ChangeTypicalProteinMatch
 import fr.proline.cortex.service.dps.msi.ExportResultSummary
@@ -41,6 +40,7 @@ import javax.jms.ExceptionListener
 import javax.jms.JMSException
 import fr.proline.cortex.service.dps.uds.GetExportInformation
 import fr.proline.cortex.service.dps.msi.ExportResultSummaryV2_0
+import fr.proline.cortex.util.DbConnectionHelper
 
 object ProcessingNode extends Logging {
 
@@ -142,7 +142,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
 
         initFileSystem()
 
-        initDataStore()
+        DbConnectionHelper.initDataStore()
 
         initServices()
 
@@ -203,20 +203,6 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
 
   }
 
-  private def initDataStore() {
-    val dsConnectorFactory = DataStoreConnectorFactory.getInstance
-
-    if (!dsConnectorFactory.isInitialized) {
-      val prolineConfig = SetupProline.config
-
-      val udsDbProperties = prolineConfig.udsDBConfig.dbConnProperties
-
-      logger.debug("Initializing DataStoreConnectorFactory from UDS Db Properties")
-
-      dsConnectorFactory.initialize(udsDbProperties)
-    }
-
-  }
 
   private def initServices() {
 
