@@ -59,11 +59,8 @@ public class ProjectHandler {
         	+"WHERE pm.id = pspmm.id.proteinMatchId AND ps.id = pspmm.id.proteinSetId AND sm.id.proteinMatchId = pm.id AND sm.id.peptideId = pepinst.peptide.id AND pepset.proteinSet.id = ps.id AND "
         	+"pepsetinsitem.peptideSet.id=pepset.id AND pepsetinsitem.peptideInstance.id=pepinst.id "
         	+"AND ps.isValidated = 'true' AND ps.resultSummary.id=?";
-
-//    private static final String LIST_RSMS = "SELECT pm,sm.id,ps.resultSummary FROM ProteinMatch pm, ProteinSet ps,"
-//    +"  ProteinSetProteinMatchItem pspmm, SequenceMatch sm WHERE pm.id = pspmm.id.proteinMatchId AND ps.id = pspmm.id.proteinSetId"
-//    +" AND sm.id.proteinMatchId = pm.id AND ps.isValidated = 'true'";
- 
+	
+	
     private static final String LIST_RSM_IDS = "SELECT rsm.id  FROM ResultSummary rsm";
 
 	
@@ -298,7 +295,6 @@ public class ProjectHandler {
 					final Query rsmsQuery = msiEM.createQuery(LIST_RSM_IDS);
 					final List<Long> rsmIds = rsmsQuery.getResultList();
 					for (Long rsmId : rsmIds) {
-						LOG.debug("calculating for RSM: " + rsmId);
 						final Query pmSdmQuery = msiEM.createQuery(VALIDATED_ACC_RSM_QUERY);
 						pmSdmQuery.setParameter(1, rsmId);
 						final List<Object[]> pmSdmLines = pmSdmQuery.getResultList();
@@ -317,19 +313,10 @@ public class ProjectHandler {
 									}
 									proteinmatchid = entry.getKey().getId();
 									msiEM.getTransaction().begin();
-									// LOG.debug(": " +
-									// seDbIdentValue+" : "+calculsequenceCoverage(biosequencelentgh,sequencesmatcheslength));
-									//VDS => An niveau du proteinMatch il faudrait mettre la couverture de tous les seqMatch meme non valides ... 
 									final Query updateQuery = msiEM.createNativeQuery(UPDATE_QUERY); 
-									updateQuery.setParameter(1, calculateSequenceCoverage(biosequencelentgh,sequencesmatcheslength));
+									updateQuery.setParameter(1,calculateSequenceCoverage(biosequencelentgh, sequencesmatcheslength));
 									updateQuery.setParameter(2, proteinmatchid);
 									updateQuery.executeUpdate();
-									msiEM.getTransaction().commit();
-									msiEM.getTransaction().begin();
-									final Query updateQuerypspmi = msiEM.createNativeQuery(UPDATE_QUERY_PSPMI);
-									updateQuerypspmi.setParameter(1, calculateSequenceCoverage(biosequencelentgh, sequencesmatcheslength));
-									updateQuerypspmi.setParameter(2, proteinmatchid);
-									updateQuerypspmi.executeUpdate();
 									msiEM.getTransaction().commit();
 								}
 								accession.clear();
@@ -360,8 +347,8 @@ public class ProjectHandler {
 		HashSet<Integer> coveredAASet = new HashSet<Integer>();
 		Map<ProteinMatch, List<Integer>> temp = new HashMap<ProteinMatch, List<Integer>>();
 		List<ProteinMatch> proteinMatchDuplicated = new ArrayList<>();
-
 		List<Integer> coveredAAIndexList = new ArrayList<Integer>();
+		List<Integer> sequencematchLists = new ArrayList<Integer>();
 		ProteinMatch proteinMatch = null;
 		SequenceMatchPK sequenceMatch = null;
 
@@ -375,21 +362,16 @@ public class ProjectHandler {
 			if (line[1] instanceof SequenceMatchPK) {
 				sequenceMatch = (SequenceMatchPK) line[1];
 			}
-			
 			start = (int) sequenceMatch.getStart();
 			stop = (int) sequenceMatch.getStop();
 			coveredAASet.clear();
 			coveredAAIndexList.clear();
-			
-			if (proteinMatchDuplicated.contains(proteinMatch)) {
-				coveredAAIndexList = temp.get(proteinMatch); //init index list using previously saved indexes for this Prot Match
-			}
-			
-			coveredAAIndexList.addAll(getSequencesIndexes(start, stop)); //Add new indexes 
-			temp.put(proteinMatch, coveredAAIndexList); //save final list for next SeqMatch
-			coveredAASet.addAll(coveredAAIndexList); //use set to remove duplicate indexes 
-			nbrCoveredAAPerProMatch.put(proteinMatch, coveredAASet.size()); // save size of covered AA dfor ProteinMatch
-		
+			if(proteinMatchDuplicated.contains(proteinMatch)){sequencematchLists=temp.get(proteinMatch);}else{sequencematchLists.clear();} //init index list using previously saved indexes for this Prot Match
+				sequencematchLists.addAll(getSequencesIndexes(start,stop));		//Add new indexes 
+				temp.put(proteinMatch,sequencematchLists);						//save final list for next SeqMatch
+				coveredAAIndexList.addAll(temp.get(proteinMatch));				//add all indexes
+				coveredAASet.addAll(coveredAAIndexList);						//use set to remove duplicate indexes 
+				nbrCoveredAAPerProMatch.put(proteinMatch,coveredAASet.size()); // save size of covered AA for ProteinMatch
 			proteinMatchDuplicated.add(proteinMatch);
 		}
 		return nbrCoveredAAPerProMatch;
