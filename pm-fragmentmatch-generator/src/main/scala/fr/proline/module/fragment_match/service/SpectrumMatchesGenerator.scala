@@ -315,7 +315,7 @@ class SpectrumMatchesGenerator(
       searchSettings.softwareName.toLowerCase() match {
         case "mascot"   => new PeptideSpectrumMatcherMascot(spectraById, ms2ErrorTol, ms2ErrorTolUnitStr, searchSettings.instrumentConfig)
         case "omssa"    => new PeptideSpectrumMatcherOmssa(spectraById, ms2ErrorTol, ms2ErrorTolUnitStr)
-        case "xtandem"  => new PeptideSpectrumMatcherXtandem(spectraById, ms2ErrorTol, ms2ErrorTolUnitStr)
+        case "xtandem"  => new PeptideSpectrumMatcherXtandem(spectraById, ms2ErrorTol, ms2ErrorTolUnitStr, searchSettings.instrumentConfig)
         case _ =>
           logger.error("Spectrum matches cannot be generated for this search engine") 
           throw new RuntimeException("Spectrum matches cannot be generated for this search engine")
