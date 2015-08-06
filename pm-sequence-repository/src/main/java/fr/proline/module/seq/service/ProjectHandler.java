@@ -66,7 +66,7 @@ public class ProjectHandler {
         	+"AND pm.resultSet.id=?";
 	
     private static final String LIST_RSM_IDS = "SELECT max(rsm.id)  FROM ResultSet rs, ResultSummary rsm where rs.id=rsm.resultSet.id and  rs.id=?";
-    private static final String LIST_RS_IDS = "SELECT rs.id  FROM ResultSet rs";
+    private static final String LIST_RS_IDS = "SELECT distinct(rsm.resultSet.id) FROM  ResultSummary rsm";
 	
 	private static final String UPDATE_QUERY = "UPDATE protein_match  set coverage=? where id=?";
 	private static final String UPDATE_QUERY_PSPMI = "UPDATE protein_set_protein_match_item  set coverage=? where protein_match_id=?";
@@ -303,9 +303,10 @@ public class ProjectHandler {
 						for (Long rsId : rsIds) {
 							final Query rsmsQuery = msiEM.createQuery(LIST_RSM_IDS).setParameter(1, rsId);
 							final List<Long> rsmIds = rsmsQuery.getResultList();
+							LOG.info("rsm"+rsmIds.get(0));
 							//in the level of resultsummary
 							final Query pmSdmQuery = msiEM.createQuery(VALIDATED_ACC_RSM_QUERY);
-							pmSdmQuery.setParameter(1, rsmIds.get(0));
+							pmSdmQuery.setParameter(1,rsmIds.get(0));
 							final List<Object[]> pmSdmLines = pmSdmQuery.getResultList();
 							if ((pmSdmLines != null) && !pmSdmLines.isEmpty()) {
 								coveredSeqLengthByProtMatch = fillProteinMatch(pmSdmLines);
