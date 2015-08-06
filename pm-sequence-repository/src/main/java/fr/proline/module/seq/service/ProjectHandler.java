@@ -65,7 +65,7 @@ public class ProjectHandler {
         	+" WHERE sm.id.proteinMatchId = pm.id AND pm.resultSet.id=rs.id "
         	+"AND pm.resultSet.id=?";
 	
-    private static final String LIST_RSM_IDS = "SELECT rsm.id  FROM ResultSummary rsm";
+    private static final String LIST_RSM_IDS = "SELECT max(rsm.id)  FROM ResultSet rs, ResultSummary rsm where rs.id=rsm.resultSet.id and  rs.id=?";
     private static final String LIST_RS_IDS = "SELECT rs.id  FROM ResultSet rs";
 	
 	private static final String UPDATE_QUERY = "UPDATE protein_match  set coverage=? where id=?";
@@ -291,79 +291,53 @@ public class ProjectHandler {
 			try {
 				final EntityManagerFactory emf = msiDbConnector.getEntityManagerFactory();
 				msiEM = emf.createEntityManager();
-				
+
 				final Map<Long, SEDbInstanceWrapper> seDbInstances = retrieveAllSeqDatabases(msiEM);
 				if ((seDbInstances == null) || seDbInstances.isEmpty()) {
 					LOG.warn("There is NO SEDbInstance in MSI Project #{}", projectId);
 				} else {
 
-					final Query rsmsQuery = msiEM.createQuery(LIST_RSM_IDS);
-					final List<Long> rsmIds = rsmsQuery.getResultList();
-					//in the level of resultsummary
-					for (Long rsmId : rsmIds) {
-						final Query pmSdmQuery = msiEM.createQuery(VALIDATED_ACC_RSM_QUERY);
-						pmSdmQuery.setParameter(1, rsmId);
-						final List<Object[]> pmSdmLines = pmSdmQuery.getResultList();
-						if ((pmSdmLines != null) && !pmSdmLines.isEmpty()) {
-							coveredSeqLengthByProtMatch = fillProteinMatch(pmSdmLines);
-							int biosequencelentgh = 0;
-							List<String> accession = new ArrayList<>();
-							for (Entry<ProteinMatch, Integer> entry : coveredSeqLengthByProtMatch.entrySet()) {
-								accession.add(entry.getKey().getAccession());
-								sequencesmatcheslength = entry.getValue();
-								Map<String, List<BioSequenceWrapper>> result = BioSequenceProvider.findBioSequencesBySEDbIdentValues(accession);
-								for (Map.Entry<String, List<BioSequenceWrapper>> entry0 : result.entrySet()) {
-									List<BioSequenceWrapper> bioSequences = entry0.getValue();
-									for (BioSequenceWrapper bsw : bioSequences) {
-										biosequencelentgh = bsw.getSequence().length();
+					final Query rsQuery = msiEM.createQuery(LIST_RS_IDS);
+					final List<Long> rsIds = rsQuery.getResultList();
+					if(rsIds.size()>0){
+						for (Long rsId : rsIds) {
+							final Query rsmsQuery = msiEM.createQuery(LIST_RSM_IDS).setParameter(1, rsId);
+							final List<Long> rsmIds = rsmsQuery.getResultList();
+							//in the level of resultsummary
+							final Query pmSdmQuery = msiEM.createQuery(VALIDATED_ACC_RSM_QUERY);
+							pmSdmQuery.setParameter(1, rsmIds.get(0));
+							final List<Object[]> pmSdmLines = pmSdmQuery.getResultList();
+							if ((pmSdmLines != null) && !pmSdmLines.isEmpty()) {
+								coveredSeqLengthByProtMatch = fillProteinMatch(pmSdmLines);
+								int biosequencelentgh = 0;
+								List<String> accession = new ArrayList<>();
+								for (Entry<ProteinMatch, Integer> entry : coveredSeqLengthByProtMatch.entrySet()) {
+									accession.add(entry.getKey().getAccession());
+									sequencesmatcheslength = entry.getValue();
+									Map<String, List<BioSequenceWrapper>> result = BioSequenceProvider.findBioSequencesBySEDbIdentValues(accession);
+									for (Map.Entry<String, List<BioSequenceWrapper>> entry0 : result.entrySet()) {
+										List<BioSequenceWrapper> bioSequences = entry0.getValue();
+										for (BioSequenceWrapper bsw : bioSequences) {
+											biosequencelentgh = bsw.getSequence().length();
+										}
+										proteinmatchid = entry.getKey().getId();
+										msiEM.getTransaction().begin();
+										final Query updateQuery = msiEM.createNativeQuery(UPDATE_QUERY); 
+										updateQuery.setParameter(1,calculateSequenceCoverage(biosequencelentgh, sequencesmatcheslength));
+										updateQuery.setParameter(2, proteinmatchid);
+										updateQuery.executeUpdate();
+										msiEM.getTransaction().commit();
+
 									}
-									proteinmatchid = entry.getKey().getId();
-									msiEM.getTransaction().begin();
-									final Query updateQuery = msiEM.createNativeQuery(UPDATE_QUERY_PSPMI); 
-									updateQuery.setParameter(1,calculateSequenceCoverage(biosequencelentgh, sequencesmatcheslength));
-									updateQuery.setParameter(2, proteinmatchid);
-									updateQuery.executeUpdate();
-									msiEM.getTransaction().commit();
-									
+									accession.clear();
 								}
-								accession.clear();
 							}
+
 						}
 					}
-					
+				
 					//in the level of resultset
-					
-//					final Query rssQuery = msiEM.createQuery(LIST_RS_IDS);
-//					final List<Long> rsIds = rsmsQuery.getResultList();
-//					for (Long rsId : rsIds) {	
-//						final Query pmRsQuery = msiEM.createQuery(ALL_ACC_RS_QUERY);
-//						pmRsQuery.setParameter(1, rsId);
-//						final List<Object[]> pmRsLines = pmRsQuery.getResultList();
-//						if ((pmRsLines != null) && !pmRsLines.isEmpty()) {
-//						allCoveredSeqLengthByProtMatch = fillProteinMatch(pmRsLines);
-//						int biosequencelentgh = 0;
-//						List<String> accession = new ArrayList<>();
-//						for (Entry<ProteinMatch, Integer> entry : allCoveredSeqLengthByProtMatch.entrySet()) {
-//							accession.add(entry.getKey().getAccession());
-//							sequencesmatcheslength = entry.getValue();
-//							Map<String, List<BioSequenceWrapper>> result = BioSequenceProvider.findBioSequencesBySEDbIdentValues(accession);
-//							for (Map.Entry<String, List<BioSequenceWrapper>> entry0 : result.entrySet()) {
-//								List<BioSequenceWrapper> bioSequences = entry0.getValue();
-//								for (BioSequenceWrapper bsw : bioSequences) {
-//									biosequencelentgh = bsw.getSequence().length();
-//								}
-//								proteinmatchid = entry.getKey().getId();
-//								msiEM.getTransaction().begin();
-//								final Query updateQuery = msiEM.createNativeQuery(UPDATE_QUERY); 
-//								updateQuery.setParameter(1,calculateSequenceCoverage(biosequencelentgh, sequencesmatcheslength));
-//								updateQuery.setParameter(2, proteinmatchid);
-//								updateQuery.executeUpdate();
-//								msiEM.getTransaction().commit();
-//							}
-//							accession.clear();
-//						}
-//					}
-//					}
+					//TODO
 				}
 			} catch (Exception ex) {
 				LOG.error("Error accessing MSI Db Project #" + projectId, ex);
