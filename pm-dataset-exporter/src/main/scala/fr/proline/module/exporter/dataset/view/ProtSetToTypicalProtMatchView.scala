@@ -169,6 +169,8 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
 
     // score
     var score: Double = protSet.peptideSet.score
+    // coverage
+    var coverage: Float = if (protSet.proteinMatchCoverageById.contains(protMatch.id)) protSet.proteinMatchCoverageById.get(protMatch.id).get else 0
     // Add some statistics
     var stats: List[String] = null
     var nbS = 0
@@ -217,7 +219,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
           exportMap += (fields.addField(f.title) -> protSet.getSubSetProteinMatchIds.length)
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_COVERAGE => {
-          exportMap += (fields.addField(f.title) -> ExportConfigManager.format(dcf1, protMatch.coverage))
+          exportMap += (fields.addField(f.title) -> ExportConfigManager.format(dcf1, coverage))
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_MW => {
           exportMap += (fields.addField(f.title) -> ExportConfigManager.format(decimalFormat, Option(protMatch.protein).flatMap(_.map(_.mass)).getOrElse(0.0)))
