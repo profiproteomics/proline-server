@@ -336,7 +336,6 @@ class XtandemParser(  val xtandemFile : File,
           }
         } else if (dbGroupParametersNoteLabel.equals("list path, sequence source #".concat(sequenceSourceCount.toString()))) {
 
-//          if(sequenceSourceCount == 1 ) {
           val FPATH: String = dbGroupParametersNoteInfo
           seqDatabaseFileNames = new Filename(FPATH, '/', '.').filename()
           seqDatabaseFileNamesPath = new Filename(dbGroupParametersNoteInfo, '/', '.').path + "/" + seqDatabaseFileNames
@@ -353,7 +352,6 @@ class XtandemParser(  val xtandemFile : File,
           seqDatabaseIdsArray = new Array[Long](seqDatabases.size)
           for (i <- 0 until seqDatabases.size) {
             seqDatabaseIdsArray(i) = seqDatabases(i).id
-//            logger.debug("IY - XtandemParser.scala - seqDatabaseIdsArray(" + i + " ) = " + seqDatabaseIdsArray(i))
           }
           
           sequenceSourceCount += 1
@@ -362,14 +360,13 @@ class XtandemParser(  val xtandemFile : File,
     } //End "for groupParameters gp" loop
 
 
-//    logger.debug("fixedPtms.length = " + fixedPtms.length )
     // Searching PTM in Database for each PTM given in parameters
     fixedPtms.foreach(ptms => {
       val _ptm = ptmProvider.getPtmDefinition(ptms._1, ptmMonoMassMargin, ptms._2, ptms._3)
       if (_ptm.get != null) { fixedPtmDefs.append(_ptm.get); logger.warn("fixedPtmDefs : mono mass = " + ptms._1 + ", residue = " + ptms._2 + ", location = " + ptms._3 + " ... is " + _ptm.get.names.shortName)}
       else { /*_ptm = Some(null) */ logger.warn("Can not identify ptm with : mono mass = " + ptms._1 + ", residue = " + ptms._2 + ", location = " + ptms._3) }
     })
-//    logger.debug("variablePtms.length = " + variablePtms.length )
+
     variablePtms.foreach(ptms => {
       val _ptm = ptmProvider.getPtmDefinition(ptms._1, ptmMonoMassMargin, ptms._2, ptms._3)
       if (_ptm.get != null) { variablePtmDefs.append(_ptm.get); logger.warn("variablePtmDefs : mono mass = " + ptms._1 + ", residue = " + ptms._2 + ", location = " + ptms._3 + " ... is " + _ptm.get.names.shortName)}
@@ -410,11 +407,10 @@ class XtandemParser(  val xtandemFile : File,
         ms2Query = new Ms2Query(
           id = Ms2Query.generateNewId(),
           initialId = dbGroupModelId,
-          moz = dGroupModelMh / dbGroupModelZ,
+          moz = dGroupModelMh/dbGroupModelZ,
           charge = dbGroupModelZ,
           spectrumTitle = spectrumTitle
           )
-        
         msQueriesList += ms2Query
 
         //GAMLTrace variables
@@ -457,14 +453,14 @@ class XtandemParser(  val xtandemFile : File,
             spectrumList+= new Spectrum(
               id = Spectrum.generateNewId(),
               title = spectrumTitle,
-              precursorMoz = augmentString(gamlTrace.gamlAttributeList(0).info).toDouble,  // (ok?) <GAML:attribute type="M+H">2082.91</GAML:attribute>
+              precursorMoz = dGroupModelMh/augmentString(gamlTrace.gamlAttributeList(1).info).toInt,  // (ok?) <GAML:attribute type="M+H">2082.91</GAML:attribute>
               precursorCharge = augmentString(gamlTrace.gamlAttributeList(1).info).toInt,  // <GAML:attribute type="charge">1</GAML:attribute>
               firstTime = retentionTime,
               lastTime = retentionTime,
               mozList = Some(mozListParts), //
               intensityList = Some(intensityListParts),
               peaksCount = mozListTempParts.length,
-              instrumentConfigId = if (instrumentConfig.isDefined) instrumentConfig.get.id else 0, // (?) val instConfigId = if (instrumentConfig != null) instrumentConfig.id else 0
+              instrumentConfigId = if (instrumentConfig.isDefined) instrumentConfig.get.id else 0,
               peaklistId = peaklist.id // (ok) <note label="Description">Label: W581, Spot_Id: 159751, Peak_List_Id: 184490, MSMS Job_Run_Id: 14047, Comment:  </note>
               )
           }
@@ -607,13 +603,11 @@ class XtandemParser(  val xtandemFile : File,
                 sequence = dbDomainSeq,
                 ptms = locatedPtms.toArray,
                 calculatedMass = dbDomainMh)
-//              logger.debug("IY - XtandemParser.scala - Creating new peptide. Seq = " + dbDomainSeq + ", peptide = " + peptide)
               peptides.append(peptide)
               dbDomainSeqList.append(dbDomainSeq)
+              
             } else {
               peptide = peptides.find(e => e.sequence.equals(dbDomainSeq)).get
-
-//              logger.debug("IY - XtandemParser.scala - Ignoring new peptide. Seq = " + dbDomainSeq + ", peptide = " + peptide)
             }
             locatedPtms.clear()
 
@@ -629,7 +623,6 @@ class XtandemParser(  val xtandemFile : File,
             var peptideMatchIsDecoy: Boolean = false
             if (dbProteinNoteInfo.contains("reversed")) peptideMatchIsDecoy = true
 
-//            logger.debug("IY - XtandemParser.scala - ms2Query.id = " + ms2Query.id)
             newPeptideMatch = new PeptideMatch(
               id = PeptideMatch.generateNewId(),
               rank = dbDomainIdPartsInt(1), /*3 dans DomainId<domain id=987.3.1 ...> */
@@ -645,7 +638,6 @@ class XtandemParser(  val xtandemFile : File,
             seqMatch.bestPeptideMatch =  Some(newPeptideMatch)
           }
           
-//        proteinMatches += newProteinMatch
           val newSeqMatches = new ArrayBuffer[SequenceMatch]()
           if (newProteinMatch.sequenceMatches != null) newSeqMatches ++= newProteinMatch.sequenceMatches
           newSeqMatches += seqMatch
@@ -692,6 +684,7 @@ class XtandemParser(  val xtandemFile : File,
         }
       } // end of GroupSupport loop
     } //End "for groupModel gm" loop
+    
     var compteur = 0
     proteinMatches.foreach(pm => {
 //      logger.debug("IY 02/06 - XtandemParser - pm.sequenceMatches.length = " + pm.sequenceMatches.length)
@@ -740,9 +733,6 @@ class XtandemParser(  val xtandemFile : File,
       title = msiSearchResultFileName,
       queriesCount = resultBioml.groupModelList.length)
 
-//    logger.info("IY - XtandemParser - msiSearchForResultSet.peaklist = " + msiSearchForResultSet)
-    
-//    logger.info("IY - XtandemParser - resultBioml.groupModelList.length = " + resultBioml.groupModelList.length)
     val resultSet = new ResultSet(
       peptides = peptides.toArray,
       peptideMatches = peptideMatches.toArray,
