@@ -41,9 +41,11 @@ class MsiSearchExtendedView ( val identDS: IdentDataSet , val sheetConfig : Expo
     else ExportConfigManager.format(decimalFormat, ms2SettingsOpt.get.ms2ErrorTol) + " " + ms2SettingsOpt.get.ms2ErrorTolUnit
     
     var releaseDates:String = ""
+    var databasesName: String = "";
     for (i <- 0 to (seqDatabases.length-1)){
       val seqDB = seqDatabases(i)
       releaseDates = releaseDates + dateFormat.format(seqDB.releaseDate) + "; "
+      databasesName = databasesName + seqDB.filePath+ "; "
     }
     
    var exportMap:ListMap[String,Any] = ListMap()
@@ -101,7 +103,7 @@ class MsiSearchExtendedView ( val identDS: IdentDataSet , val sheetConfig : Expo
           	exportMap += ( fields.addField(f.title) -> searchSettings.instrumentConfig.name)
         }
         case ExportConfigConstant.FIELD_INFORMATION_DATABASE_NAMES => {
-          	exportMap += ( fields.addField(f.title) -> seqDatabases.map(_.name).mkString("; "))
+          	exportMap += ( fields.addField(f.title) -> databasesName)
         }
         case ExportConfigConstant.FIELD_INFORMATION_DATABASE_RELEASES => {
           

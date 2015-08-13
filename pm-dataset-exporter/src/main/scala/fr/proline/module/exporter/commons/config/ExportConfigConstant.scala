@@ -12,8 +12,8 @@ object ExportConfigConstant {
   final val FORMAT_VALUES: Array[String] = Array(FORMAT_XLSX, FORMAT_TSV)
 
   // date format
-  final val DATE_FORMAT_HOUR: String = "YYYY:MM:DD HH:mm:ss"
-  final val DATE_FORMAT: String = "YYYY:MM:DD"
+  final val DATE_FORMAT_HOUR: String = "yyyy:MM:dd HH:mm:ss"
+  final val DATE_FORMAT: String = "yyyy:MM:dd"
   final val DATE_FORMAT_VALUES: Array[String] = Array(DATE_FORMAT_HOUR, DATE_FORMAT)
 
   // separator title when the field is "incremental"
