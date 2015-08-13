@@ -37,6 +37,7 @@ object ExportConfigField {
       new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_INSTRUMENT_CONFIG, "instrument_config"),
       new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_DATABASE_NAMES, "database_names"),
       new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_DATABASE_RELEASES, "database_releases"),
+      new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_DATABASE_SEQ_COUNT, "database_sequence_count"),
       new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_TAXONOMY, "taxonomy"),
       new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_ENZYMES, "enzymes"),
       new ExportConfigField(ExportConfigConstant.FIELD_INFORMATION_MAX_MISSED_CLEAVAGES, "max_missed_cleavages"),

@@ -54,6 +54,7 @@ object ExportConfigConstant {
   final val FIELD_INFORMATION_INSTRUMENT_CONFIG: String = "information_instrument_config"
   final val FIELD_INFORMATION_DATABASE_NAMES: String = "information_database_names"
   final val FIELD_INFORMATION_DATABASE_RELEASES: String = "information_database_releases"
+  final val FIELD_INFORMATION_DATABASE_SEQ_COUNT: String = "information_database_seq_count"
   final val FIELD_INFORMATION_TAXONOMY: String = "information_taxonomy"
   final val FIELD_INFORMATION_ENZYMES: String = "information_enzymes"
   final val FIELD_INFORMATION_MAX_MISSED_CLEAVAGES: String = "information_max_missed_cleavages"

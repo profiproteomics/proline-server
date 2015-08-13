@@ -42,10 +42,12 @@ class MsiSearchExtendedView ( val identDS: IdentDataSet , val sheetConfig : Expo
     
     var releaseDates:String = ""
     var databasesName: String = "";
+    var databasesSeqCount: String = "";
     for (i <- 0 to (seqDatabases.length-1)){
       val seqDB = seqDatabases(i)
       releaseDates = releaseDates + dateFormat.format(seqDB.releaseDate) + "; "
       databasesName = databasesName + seqDB.filePath+ "; "
+      databasesSeqCount = databasesSeqCount + seqDB.sequencesCount+ "; "
     }
     
    var exportMap:ListMap[String,Any] = ListMap()
@@ -106,8 +108,10 @@ class MsiSearchExtendedView ( val identDS: IdentDataSet , val sheetConfig : Expo
           	exportMap += ( fields.addField(f.title) -> databasesName)
         }
         case ExportConfigConstant.FIELD_INFORMATION_DATABASE_RELEASES => {
-          
           	exportMap += ( fields.addField(f.title) -> releaseDates)
+        }
+        case ExportConfigConstant.FIELD_INFORMATION_DATABASE_SEQ_COUNT => {
+          	exportMap += ( fields.addField(f.title) -> databasesSeqCount)
         }
         case ExportConfigConstant.FIELD_INFORMATION_TAXONOMY => {
           	exportMap += ( fields.addField(f.title) -> searchSettings.taxonomy)
