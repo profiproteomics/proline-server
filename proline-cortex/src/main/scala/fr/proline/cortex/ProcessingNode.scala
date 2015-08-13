@@ -43,6 +43,7 @@ import fr.proline.cortex.service.dps.msi.ExportResultSummaryV2_0
 import fr.proline.cortex.service.dps.msi.GenerateSpectrumMatches
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.service.dps.msi.GenerateMSDiagReport
+import fr.proline.cortex.service.dps.msi.FilterRSMProteinSets
 
 object ProcessingNode extends Logging {
 
@@ -234,6 +235,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
     ServiceRegistry.addService(new GetExportInformation())
     ServiceRegistry.addService(new GenerateSpectrumMatches())
     ServiceRegistry.addService(new GenerateMSDiagReport())
+    ServiceRegistry.addService(new FilterRSMProteinSets())
   }
 
   /**
