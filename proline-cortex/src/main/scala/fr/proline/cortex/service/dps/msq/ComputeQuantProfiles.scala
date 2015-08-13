@@ -50,8 +50,8 @@ class ComputeQuantProfiles  extends AbstractRemoteProcessService with Logging{
 			} catch {
 				case ex: Exception => {
 					result = false;
-					logger.error("Error running Spectrum Matches Generator", ex);
-					val msg = if (ex.getCause() != null) { "Error running Spectrum Matches Generator " + ex.getCause().getMessage() } else { "Error running Spectrum Matches Generator " + ex.getMessage() };
+					logger.error("Error runningComputeQuantProfiles", ex);
+					val msg = if (ex.getCause() != null) { "Error running ComputeQuantProfiles " + ex.getCause().getMessage() } else { "Error running ComputeQuantProfiles " + ex.getMessage() };
 					throw new Exception(msg)
 				}
 			} finally {
