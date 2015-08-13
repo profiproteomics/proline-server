@@ -42,6 +42,7 @@ import fr.proline.cortex.service.dps.uds.GetExportInformation
 import fr.proline.cortex.service.dps.msi.ExportResultSummaryV2_0
 import fr.proline.cortex.service.dps.msi.GenerateSpectrumMatches
 import fr.proline.cortex.util.DbConnectionHelper
+import fr.proline.cortex.service.dps.msi.GenerateMSDiagReport
 
 object ProcessingNode extends Logging {
 
@@ -218,7 +219,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
       logger.info("This node do NOT handle Result Files Import")
     }
 
-    /* Parallelizable Sevice */
+    /* Parallelizable Service */
     ServiceRegistry.addService(new InfoService()) // Monitoring
 
     ServiceRegistry.addService(new ValidateResultSet())
@@ -232,6 +233,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
     ServiceRegistry.addService(new ExportResultSummaryV2_0())
     ServiceRegistry.addService(new GetExportInformation())
     ServiceRegistry.addService(new GenerateSpectrumMatches())
+    ServiceRegistry.addService(new GenerateMSDiagReport())
   }
 
   /**

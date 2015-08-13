@@ -76,7 +76,13 @@
       <artifactId>Proline-Admin</artifactId>
       <version>0.3.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
     </dependency>
-
+    
+    <!--  MSDiag -->
+	<dependency>
+    	<groupId>fr.proline</groupId>
+     	<artifactId>PM-MSDiag</artifactId>
+	  	<version>0.1.0</version>
+	</dependency>
     
     <!-- Test -->
     <dependency>
