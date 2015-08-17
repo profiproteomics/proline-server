@@ -46,6 +46,7 @@ import fr.proline.cortex.service.dps.msi.GenerateMSDiagReport
 import fr.proline.cortex.service.dps.msi.FilterRSMProteinSets
 import fr.proline.cortex.service.dps.msq.ComputeQuantProfiles
 import fr.proline.cortex.service.dps.msq.Quantify
+import fr.proline.cortex.service.dps.msq.QuantifySC
 
 object ProcessingNode extends Logging {
 
@@ -240,6 +241,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
     ServiceRegistry.addService(new FilterRSMProteinSets())
     ServiceRegistry.addService(new ComputeQuantProfiles())
     ServiceRegistry.addService(new Quantify())
+    ServiceRegistry.addService(new QuantifySC())
   }
 
   /**
