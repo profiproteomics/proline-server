@@ -29,8 +29,15 @@
     <!-- Logging -->
     <dependency>
       <groupId>com.typesafe</groupId>
-      <artifactId>scalalogging-slf4j_2.10</artifactId>
+        <artifactId>scalalogging-slf4j_${scala.version}</artifactId>
       <!-- Version inherited from ProFI-Pom -->
+    </dependency>
+    
+    <!-- Configuration -->
+    <dependency>
+      <groupId>com.typesafe</groupId>
+      <artifactId>config</artifactId>
+      <version>1.0.0</version>
     </dependency>
 
     <!-- JMS Spec 2.0 + HornetQ JMS client + Netty (versions checked 10 july 2014) -->
@@ -45,9 +52,39 @@
 	  <version>2.4.1.Final</version>
     </dependency>
     <dependency>
+	  <groupId>org.hornetq</groupId>
+	  <artifactId>hornetq-core-client</artifactId>
+	  <version>2.4.1.Final</version>
+    </dependency>
+    <dependency>
+    	<groupId>org.hibernate.javax.persistence</groupId>
+    	<artifactId>hibernate-jpa-2.0-api</artifactId>
+    	<version>1.0.1.Final</version>
+    </dependency>
+    <!--  
+    <dependency>
 	  <groupId>io.netty</groupId>
       <artifactId>netty-all</artifactId>
       <version>4.0.20.Final</version>
+    </dependency>
+    -->
+     <!-- Logger facade -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <!-- Serialization -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <!-- Version inherited from parent POM -->
+    </dependency>
+    
+    <!-- Commons IO used for resursive delete -->
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>1.4</version>
     </dependency>
 
     <!-- JSON-RPC -->
@@ -60,7 +97,12 @@
     <dependency>
        <groupId>fr.proline.util</groupId>
        <artifactId>ProFI-Commons-Java</artifactId>
-       <version>0.1.0</version> <!-- Snapshot Trunk version -->
+       <version>0.1.0</version> 
+    </dependency>
+    <dependency>
+      <groupId>fr.proline.util</groupId>
+      <artifactId>ProFI-Commons-Scala</artifactId>
+      <version>0.2.0-SNAPSHOT</version>
     </dependency>
 
     <!-- Proline-Core Service layer -->
@@ -91,6 +133,7 @@
       <scope>test</scope>
     </dependency>
 
+<!--
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-core</artifactId>
@@ -102,6 +145,7 @@
       <artifactId>logback-classic</artifactId>
       <scope>test</scope>
     </dependency>
+-->
 
     <dependency>
     	<groupId>fr.proline</groupId>
@@ -115,6 +159,12 @@
     </dependency>
     <dependency>
     	<groupId>fr.proline</groupId>
+     	<artifactId>PM-FragmentMatchGenerator</artifactId>
+     	<version>0.3.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+     </dependency>
+    <!-- 
+    <dependency>
+    	<groupId>fr.proline</groupId>
     	<artifactId>PM-MascotParser</artifactId>
     	<version>0.2.0</version>
     </dependency>
@@ -123,6 +173,7 @@
     	<artifactId>PM-OmssaParser</artifactId>
     	<version>0.2.0</version>
     </dependency>
+     -->
     <dependency>
     	<groupId>fr.proline</groupId>
     	<artifactId>Proline-ORM</artifactId>
@@ -131,6 +182,16 @@
     <dependency>
     	<groupId>fr.proline</groupId>
     	<artifactId>Proline-DAL</artifactId>
+    	<version>${core.version}</version>
+    </dependency>
+    <dependency>
+    	<groupId>fr.proline</groupId>
+    	<artifactId>Proline-OM</artifactId>
+    	<version>${core.version}</version>
+    </dependency>
+    <dependency>
+    	<groupId>fr.proline</groupId>
+    	<artifactId>Proline-Databases</artifactId>
     	<version>${core.version}</version>
     </dependency>
   </dependencies>
@@ -155,6 +216,7 @@
                     <groupId>com.google.code.maven-replacer-plugin</groupId>
                     <artifactId>replacer</artifactId>
                     <versionRange>[1.5.2,)</versionRange>
+                    
                     <goals>
                       <goal>replace</goal>
                     </goals>
@@ -178,12 +240,65 @@
                        <runOnIncremental>false</runOnIncremental>
                      </execute>
                   </action>
+                   <execution>
+            		<id>copy-dll</id>
+            		<phase>compile</phase>
+            		<goals>
+              			<goal>copy-dependencies</goal>
+            		</goals>
+            		<configuration>
+              			<outputDirectory>${project.build.directory}/lib</outputDirectory>
+              			<includeTypes>dll,exe,so</includeTypes>
+              			<stripVersion>true</stripVersion>
+              			<overWriteReleases>false</overWriteReleases>
+              			<overWriteSnapshots>false</overWriteSnapshots>
+              			<overWriteIfNewer>true</overWriteIfNewer>
+              
+              			<artifactItems>
+
+                			<artifactItem>
+                  				<groupId>com.almworks.sqlite4java</groupId>
+                 				<artifactId>sqlite4java-win32-x64</artifactId>
+                  				<version>${sqlite4java.version}</version>
+                  				<type>dll</type>
+                  				<overWrite>true</overWrite>
+                  				<outputDirectory>${project.build.directory}/lib</outputDirectory>
+                			</artifactItem>
+
+                			<artifactItem>
+                  				<groupId>com.almworks.sqlite4java</groupId>
+                  				<artifactId>libsqlite4java-linux-amd64</artifactId>
+                  				<version>${sqlite4java.version}</version>
+                  				<type>so</type>
+                  				<overWrite>true</overWrite>
+                  				<outputDirectory>${project.build.directory}/lib</outputDirectory>
+                			</artifactItem>
+
+              			</artifactItems>
+            		</configuration>
+                        
+          			</execution>
                 </pluginExecution>
 
               </pluginExecutions>
             </lifecycleMappingMetadata>
           </configuration>
         </plugin>
+        
+        <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.18.1</version> <!-- Latest version checked on 21 january 2015 -->
+        <configuration>
+          <systemProperties>
+            <property>
+              <name>sqlite4java.library.path</name>
+              <value>${project.build.directory}/lib</value>
+            </property>
+          </systemProperties>
+        </configuration>
+      </plugin>
+      
       </plugins>
     </pluginManagement>
 
