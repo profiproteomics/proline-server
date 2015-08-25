@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import fr.profi.util.StringUtils;
 import fr.proline.core.orm.msi.ProteinMatch;
 import fr.proline.core.orm.msi.ProteinSetProteinMatchItem;
+import fr.proline.core.orm.msi.ResultSummary;
 import fr.proline.core.orm.msi.SeqDatabase;
 import fr.proline.core.orm.msi.SequenceMatchPK;
 import fr.proline.module.seq.BioSequenceProvider;
@@ -29,6 +30,10 @@ import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
 import fr.proline.module.seq.dto.SEDbInstanceWrapper;
 import fr.proline.repository.IDataStoreConnectorFactory;
 import fr.proline.repository.IDatabaseConnector;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 public class ProjectHandler {
 
@@ -60,9 +65,10 @@ public class ProjectHandler {
         	+"WHERE pm.id = pspmm.id.proteinMatchId AND ps.id = pspmm.id.proteinSetId AND sm.id.proteinMatchId = pm.id AND sm.id.peptideId = pepinst.peptide.id AND pepset.proteinSet.id = ps.id AND "
         	+"pepsetinsitem.peptideSet.id=pepset.id AND pepsetinsitem.peptideInstance.id=pepinst.id "
         	+"AND ps.isValidated = 'true' AND ps.resultSummary.id=?";
-
+	private static final String CALCULATED_RSM = "FROM fr.proline.core.orm.msi.ResultSummary where id=?";
+	private static final String UPDATE_QUERY_RSM = "UPDATE result_summary  set serialized_properties=? where id=?";
 	private static final String LIST_RSM = "select distinct(dt.resultSummaryId) from Dataset dt where dt.project.id=? and dt.resultSummaryId is not null";
-	private static final String UPDATE_QUERY_PSPMI = "UPDATE protein_set_protein_match_item  set coverage=? where protein_match_id=?";
+	private static final String UPDATE_QUERY_PSPMI = "UPDATE protein_set_protein_match_item  set coverage=? where protein_match_id=? and result_summary_id=?";
 
 	private static final int EXPECTED_LINE_LENGTH = 3;
 
@@ -292,36 +298,55 @@ public class ProjectHandler {
 				if ((seDbInstances == null) || seDbInstances.isEmpty()) {
 					LOG.warn("There is NO SEDbInstance in MSI Project #{}", projectId);
 				} else {
+					//for the last RSMs in data_set
 					for (Long rsmId : rsmIds) {
-						final Query pmSdmQuery = msiEM.createQuery(VALIDATED_ACC_RSM_QUERY);
-						pmSdmQuery.setParameter(1,rsmId);
-						final List<Object[]> pmSdmLines = pmSdmQuery.getResultList();
-						if ((pmSdmLines != null) && !pmSdmLines.isEmpty()) {
-							coveredSeqLengthByProtMatch = fillProteinMatch(pmSdmLines);
-							int biosequencelentgh = 0;
-							List<String> accession = new ArrayList<>();
-							for (Entry<ProteinMatch, Integer> entry : coveredSeqLengthByProtMatch.entrySet()) {
-								accession.add(entry.getKey().getAccession());
-								sequencesmatcheslength = entry.getValue();
-								Map<String, List<BioSequenceWrapper>> result = BioSequenceProvider.findBioSequencesBySEDbIdentValues(accession);
+						final TypedQuery<ResultSummary> rsms = msiEM.createQuery(CALCULATED_RSM, ResultSummary.class);
+						rsms.setParameter(1, rsmId);
+						String properties = rsms.getResultList().get(0).getSerializedProperties();
+						JsonParser parser = new JsonParser();
+			            Gson gson = new Gson();
+						JsonObject array = parser.parse(properties).getAsJsonObject();
+						//check if RSM is already calculated
+						if(!array.has("is_calculated")){
+							array.addProperty("is_calculated", true);
+							msiEM.getTransaction().begin();
+							//update serialized properties of RSM
+							final Query updateQueryprop = msiEM.createNativeQuery(UPDATE_QUERY_RSM); 
+							updateQueryprop.setParameter(1,array.toString());
+							updateQueryprop.setParameter(2,rsmId);
+							updateQueryprop.executeUpdate();
+							msiEM.getTransaction().commit();
+							//compute sequence Coverage
+							final Query pmSdmQuery = msiEM.createQuery(VALIDATED_ACC_RSM_QUERY);
+							pmSdmQuery.setParameter(1,rsmId);
+							final List<Object[]> pmSdmLines = pmSdmQuery.getResultList();
+							if ((pmSdmLines != null) && !pmSdmLines.isEmpty()) {
+								coveredSeqLengthByProtMatch = fillProteinMatch(pmSdmLines);
+								int biosequencelentgh = 0;
+								List<String> accession = new ArrayList<>();
+								for (Entry<ProteinMatch, Integer> entry : coveredSeqLengthByProtMatch.entrySet()) {
+									accession.add(entry.getKey().getAccession());
+									sequencesmatcheslength = entry.getValue();
+									Map<String, List<BioSequenceWrapper>> result = BioSequenceProvider.findBioSequencesBySEDbIdentValues(accession);
 								for (Map.Entry<String, List<BioSequenceWrapper>> entry0 : result.entrySet()) {
 									List<BioSequenceWrapper> bioSequences = entry0.getValue();
 									for (BioSequenceWrapper bsw : bioSequences) {
-										biosequencelentgh = bsw.getSequence().length();
-									}
+										biosequencelentgh = bsw.getSequence().length();}
 									proteinmatchid = entry.getKey().getId();
+									//update protein_set_protein_match_item.coverage
 									msiEM.getTransaction().begin();
 									final Query updateQuery = msiEM.createNativeQuery(UPDATE_QUERY_PSPMI); 
 									updateQuery.setParameter(1,calculateSequenceCoverage(biosequencelentgh, sequencesmatcheslength));
 									updateQuery.setParameter(2, proteinmatchid);
+									updateQuery.setParameter(3,rsmId);
 									updateQuery.executeUpdate();
 									msiEM.getTransaction().commit();
 								}
 								accession.clear();
-							}}
+							}
+								}
+						}
 					}
-					//in the level of resultset
-					//TODO
 				}
 			} catch (Exception ex) {
 				LOG.error("Error accessing MSI Db Project #" + projectId, ex);
