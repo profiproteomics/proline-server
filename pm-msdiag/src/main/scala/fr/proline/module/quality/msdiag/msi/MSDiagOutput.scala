@@ -35,6 +35,8 @@ case class MSDiagOutput(
   val cellType: String = scala.Int.toString, // the (native) type of cell values (integer, string, float)
   val description: String = "", // the string description of the output (ie. Number of matches)
   val columnNames: Seq[_] = Seq[String](), // the column headers
+  val columnTypes: Seq[_] = Seq[String](), // the column types (i.e. Integer, Double, String) to determine action for graphs
+  val columnCategories: Seq[_] = Seq[String](), // tells whether it is a legend or data
   val xAxisDescription: String = "", // the string description of the X axis (ie. Retention times)
   val yAxisDescription: String = "" // the string description of the Y axis (ie. Score)
   ) {
