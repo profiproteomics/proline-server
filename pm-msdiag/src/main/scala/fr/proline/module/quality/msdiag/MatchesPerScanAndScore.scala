@@ -36,8 +36,12 @@ object MatchesPerScanAndScore extends Logging {
     val data = Array.ofDim[Any](nbGroups, scoreWindow.length + 3) // add one column for the scan group, and one for the unassigned
 
     val columnNames = new ArrayBuffer[String]()
+    val columnTypes = new ArrayBuffer[String]()
+    val columnCategories = new ArrayBuffer[String]()
     columnNames += "Scan group"
     columnNames += "Unassigned"
+    columnTypes += "String"
+    columnTypes += "Integer"
     val allQueries = rs.getAllMsQueries.map(q => q.initialId)
     for (i <- 0 until nbGroups) {
       // extract concerned query ids
@@ -53,7 +57,10 @@ object MatchesPerScanAndScore extends Logging {
         // add array content
         data(i)(s+2) = MSDiagUtils.countMatchesPerScore(peptideMatchesPerGroup, minScore, maxScore)
         // add column headers
-        if (i == 0) columnNames += MSDiagUtils.getScoreLabel(minScore, maxScore)
+        if (i == 0) { 
+          columnNames += MSDiagUtils.getScoreLabel(minScore, maxScore)
+          columnTypes += "Integer"
+        }
       }
     }
 
@@ -63,6 +70,8 @@ object MatchesPerScanAndScore extends Logging {
       outputType = MSDiagOutputTypes.Chromatogram,
       description = "Number of matches per group of scans and score",
       columnNames = columnNames.toSeq,
+      columnTypes = columnTypes.toSeq,
+      columnCategories = columnCategories.toSeq,
       xAxisDescription = "Scan numbers",
       yAxisDescription = "Matches")
   }

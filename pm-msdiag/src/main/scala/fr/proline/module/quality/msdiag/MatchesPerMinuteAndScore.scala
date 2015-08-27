@@ -41,8 +41,15 @@ object MatchesPerMinuteAndScore extends Logging {
 	    val data = Array.ofDim[Any](rts.length, scoreWindow.length + 3) // add one column for the rt, and one for the unassigned
 	
 	    val columnNames = new ArrayBuffer[String]()
+      val columnTypes = new ArrayBuffer[String]()
+      val columnCategories = ArrayBuffer[String]()
 	    columnNames += "Retention time"
 	    columnNames += "Unassigned"
+      columnTypes += "Double"
+      columnTypes += "Integer"
+      columnCategories += "Category"
+      columnCategories += "Data"
+       
 	    for (rt <- 0 until rts.length) {
 	      data(rt)(0) = rts(rt)
 	      data(rt)(1) = unassignedSpectra.count(s => extractRT(s) == rts(rt))
@@ -53,7 +60,12 @@ object MatchesPerMinuteAndScore extends Logging {
 	        // add array content
 	        data(rt)(s + 2) = MSDiagUtils.countMatchesPerScore(peptideMatchesPerMinute, minScore, maxScore)
 	        // add column headers
-	        if (rt == 0) columnNames += MSDiagUtils.getScoreLabel(minScore, maxScore)
+	        if (rt == 0)  
+          {
+            columnNames += MSDiagUtils.getScoreLabel(minScore, maxScore)
+            columnTypes += "Integer"
+            columnCategories += "Data"
+          }
 	      }
 	    }
 	
@@ -63,6 +75,8 @@ object MatchesPerMinuteAndScore extends Logging {
 	      outputType = MSDiagOutputTypes.Chromatogram,
 	      description = "Number of matches per minute of retention time and score",
 	      columnNames = columnNames.toSeq,
+        columnTypes = columnTypes.toSeq,
+        columnCategories = columnCategories.toSeq,
 	      xAxisDescription = "Retention time",
 	      yAxisDescription = "Matches")
     } catch {

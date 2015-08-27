@@ -23,6 +23,8 @@ object MassesPerCharge extends Logging {
     val peptideMatches = if(rs.isTargetOnly) rs.getAllPeptideMatches.filter(_.sdPrettyRank <= maxRank) else rs.getAllPeptideMatches.filter(_.cdPrettyRank <= maxRank)
 
     val columnNames = Array[String]("Charge", "Lowest Mass", "Highest Mass", "Average Mass", "Median Mass")
+    val columnTypes = Array[String]("Integer", "Double", "Double", "Double", "Double")
+    val columnCategories = Array[String]("Category", "Data",  "Data", "Data", "Data")
     val charges: Array[Int] = MSDiagUtils.getCharges(rs)
     val data = Array.ofDim[Any](charges.length, columnNames.length)
 
@@ -46,6 +48,8 @@ object MassesPerCharge extends Logging {
       cellType = scala.Double.toString,
       description = "Calculated masses per charge",
       columnNames = columnNames.toSeq,
+      columnTypes = columnTypes.toSeq,
+      columnCategories = columnCategories.toSeq,
       xAxisDescription = "Masses",
       yAxisDescription = "Charges")
   }

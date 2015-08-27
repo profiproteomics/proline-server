@@ -17,8 +17,10 @@ object MassesPerChargeAndScore extends Logging {
     val peptideMatches = if(rs.isTargetOnly) rs.getAllPeptideMatches.filter(_.sdPrettyRank <= maxRank) else rs.getAllPeptideMatches.filter(_.cdPrettyRank <= maxRank)
 
     // get the boundaries
-//    val columnNames = Array[String]("Charge", "Score", "Lowest Mass", "Highest Mass", "Average Mass", "Median Mass")
-    val columnNames = Array[String]("Charge & Score", "Lowest Mass", "Highest Mass", "Average Mass", "Median Mass")
+    val columnNames = Array[String]("Charge", "Score", "Lowest Mass", "Highest Mass", "Average Mass", "Median Mass")
+ //   val columnNames = Array[String]("Charge & Score", "Lowest Mass", "Highest Mass", "Average Mass", "Median Mass")
+    val columnTypes = Array[String]("Integer", "String", "Double", "Double", "Double", "Double")
+    val columnCategories = Array[String]("Category", "Category", "Data", "Data", "Data", "Data")
     val charges: Array[Int] = MSDiagUtils.getCharges(rs)
     val data = Array.ofDim[Any](charges.length*(scoreWindow.length+3), columnNames.length)
     var line = 0
@@ -43,17 +45,19 @@ object MassesPerChargeAndScore extends Logging {
     // return output
     new MSDiagOutput(
       matrix = data,
-      outputType = MSDiagOutputTypes.Table,
+      outputType = MSDiagOutputTypes.Box,
 //      cellType = scala.Double.toString,
       cellType = scala.Double.toString,
       description = "Exp. MoZ per charge and score",
       columnNames = columnNames.toSeq,
+      columnTypes = columnTypes.toSeq,
+      columnCategories = columnCategories.toSeq,
       xAxisDescription = "Masses",
       yAxisDescription = "Charges and scores")
   }
 
-//  private def getRowValues(charge: Int, score: String, matches: Any): Array[Any] = Array(charge, score, getMinMoz(matches), getMaxMoz(matches), getAverageMoz(matches), getMedianMoz(matches))  
-  private def getRowValues(charge: Int, score: String, matches: Any): Array[Any] = Array(score+" for charge "+charge, getMinMoz(matches), getMaxMoz(matches), getAverageMoz(matches), getMedianMoz(matches))
+  private def getRowValues(charge: Int, score: String, matches: Any): Array[Any] = Array(charge, score, getMinMoz(matches), getMaxMoz(matches), getAverageMoz(matches), getMedianMoz(matches))  
+//  private def getRowValues(charge: Int, score: String, matches: Any): Array[Any] = Array(score+" for charge "+charge, getMinMoz(matches), getMaxMoz(matches), getAverageMoz(matches), getMedianMoz(matches))
 
   private def getMinMoz(matches: Any): Double = {
     matches match {

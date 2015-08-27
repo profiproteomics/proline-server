@@ -17,6 +17,8 @@ object AssignementRepartition extends Logging {
   def get(rs: MSDiagResultSetManager): MSDiagOutput = {
     
     val columnNames = Array[String]("Unassigned", "Assigned")
+    val columnTypes = Array[String]("Double", "Double")
+    val columnCategories = Array[String]("Data", "Data")
     val data = Array.ofDim[Any](1, 2)
     data(0)(0) = rs.getUnassignedQueries.size
     data(0)(1) = rs.getAllMsQueries.size - rs.getUnassignedQueries.size
@@ -25,6 +27,8 @@ object AssignementRepartition extends Logging {
     new MSDiagOutput(
       matrix = data,
       outputType = MSDiagOutputTypes.Pie,
+      columnTypes = columnTypes.toSeq,
+      columnCategories = columnCategories.toSeq,
       description = "Assigned and unassigned spectra",
       columnNames = columnNames.toSeq)
   }

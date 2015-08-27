@@ -36,8 +36,22 @@ object MatchesPerChargeAndScore extends Logging {
 
     // set up main array
     val columnNames = new ArrayBuffer[String]()
+    val columnTypes = new ArrayBuffer[String]()
+    val columnCategories = new ArrayBuffer[String]()
+    
     columnNames += "Charge"
     columnNames += "Unassigned"
+    columnTypes += "Integer" // Charge
+    columnTypes += "Integer" // Unassigned
+      
+    columnCategories += "Category"
+    columnCategories += "Data"
+    columnCategories += "Data" 
+    columnCategories += "Data" 
+      
+      
+      
+    
     for (c <- 0 until charges.length) {
       data(c)(0) = charges(c)
       data(c)(1) = rs.getUnassignedQueries.count(q => q.charge == charges(c))
@@ -48,7 +62,10 @@ object MatchesPerChargeAndScore extends Logging {
         // add array content
         data(c)(s+2) = MSDiagUtils.countMatchesPerScore(peptideMatchesPerCharge, minScore, maxScore)
         // add column headers
-        if(c == 0) columnNames += MSDiagUtils.getScoreLabel(minScore, maxScore)
+        if(c == 0) {
+          columnTypes += "Integer" // number of PSM per charge and score (AW)
+          columnNames += MSDiagUtils.getScoreLabel(minScore, maxScore)
+        }
       }
     }
 
@@ -58,8 +75,10 @@ object MatchesPerChargeAndScore extends Logging {
       outputType = MSDiagOutputTypes.Table,
       description = "PSM per charge and score",
       columnNames = columnNames.toSeq,
-      xAxisDescription = "Scores",
-      yAxisDescription = "Charges")
+      columnTypes = columnTypes.toSeq,
+      columnCategories = columnCategories.toSeq,
+      xAxisDescription = "Charge",
+      yAxisDescription = "PSMs")
   }
 
 }

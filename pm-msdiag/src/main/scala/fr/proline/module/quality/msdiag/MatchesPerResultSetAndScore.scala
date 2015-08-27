@@ -30,18 +30,25 @@ object MatchesPerResultSetAndScore extends Logging {
     
     // set up main array
     val columnNames = new ArrayBuffer[String]()
+    val columnTypes = new ArrayBuffer[String]()
+    val columnCategories = ArrayBuffer[String]()
+    
     columnNames += "Resultset"
+    columnTypes += "String"
+    columnCategories += "Category"
     data(0)(0) = "Target PSM"
     data(1)(0) = "Decoy PSM"
     for (s <- 0 to scoreWindow.length) {
-		val minScore = if (s == 0) Float.NaN else scoreWindow(s - 1)
-		val maxScore = if (s == scoreWindow.length) Float.NaN else scoreWindow(s)
-		// add array content
-		data(0)(s+1) = MSDiagUtils.countMatchesPerScore(targetPeptideMatches, minScore, maxScore)
-		data(1)(s+1) = MSDiagUtils.countMatchesPerScore(decoyPeptideMatches, minScore, maxScore)
-//		System.out.println("ABU "+minScore+" "+maxScore+" "+data(0)(s+1)+" "+data(1)(s+1)+" "+targetPeptideMatches.size+" "+decoyPeptideMatches.size)
-		// add column headers
-		columnNames += MSDiagUtils.getScoreLabel(minScore, maxScore)
+  		val minScore = if (s == 0) Float.NaN else scoreWindow(s - 1)
+  		val maxScore = if (s == scoreWindow.length) Float.NaN else scoreWindow(s)
+  		// add array content
+  		data(0)(s+1) = MSDiagUtils.countMatchesPerScore(targetPeptideMatches, minScore, maxScore)
+  		data(1)(s+1) = MSDiagUtils.countMatchesPerScore(decoyPeptideMatches, minScore, maxScore)
+  //		System.out.println("ABU "+minScore+" "+maxScore+" "+data(0)(s+1)+" "+data(1)(s+1)+" "+targetPeptideMatches.size+" "+decoyPeptideMatches.size)
+  		// add column headers
+  		columnNames += MSDiagUtils.getScoreLabel(minScore, maxScore)
+      columnTypes += "Integer"
+      columnCategories += "Data"
 	}
     
     // return output
@@ -50,6 +57,8 @@ object MatchesPerResultSetAndScore extends Logging {
       outputType = MSDiagOutputTypes.Table,
       description = "Score repartition for Target/Decoy data",
       columnNames = columnNames.toSeq,
+      columnTypes= columnTypes.toSeq,
+      columnCategories = columnCategories.toSeq,
       xAxisDescription = "Scores",
       yAxisDescription = "Resultsets")
   }
