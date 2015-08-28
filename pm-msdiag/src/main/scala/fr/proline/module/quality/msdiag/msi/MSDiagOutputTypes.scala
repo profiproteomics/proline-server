@@ -7,4 +7,5 @@ object MSDiagOutputTypes extends Enumeration {
   val Pie = Value("pie") // ?
   val Chromatogram = Value("chromatogram") // 2D
   val Box = Value("box") // 2D
+  val CategoryPlot = Value("categoryplot")
 }
