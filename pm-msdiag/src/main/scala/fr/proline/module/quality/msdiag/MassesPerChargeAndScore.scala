@@ -45,7 +45,7 @@ object MassesPerChargeAndScore extends Logging {
     // return output
     new MSDiagOutput(
       matrix = data,
-      outputType = MSDiagOutputTypes.Box,
+      outputType = MSDiagOutputTypes.Table,
 //      cellType = scala.Double.toString,
       cellType = scala.Double.toString,
       description = "Exp. MoZ per charge and score",

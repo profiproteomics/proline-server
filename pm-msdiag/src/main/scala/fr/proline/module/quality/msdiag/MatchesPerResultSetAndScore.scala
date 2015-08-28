@@ -54,7 +54,7 @@ object MatchesPerResultSetAndScore extends Logging {
     // return output
     new MSDiagOutput(
       matrix = data,
-      outputType = MSDiagOutputTypes.Table,
+      outputType = MSDiagOutputTypes.CategoryPlot,
       description = "Score repartition for Target/Decoy data",
       columnNames = columnNames.toSeq,
       columnTypes= columnTypes.toSeq,

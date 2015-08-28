@@ -72,7 +72,7 @@ object MatchesPerChargeAndScore extends Logging {
     // return output
     new MSDiagOutput(
       matrix = data,
-      outputType = MSDiagOutputTypes.Table,
+      outputType = MSDiagOutputTypes.Chromatogram,
       description = "PSM per charge and score",
       columnNames = columnNames.toSeq,
       columnTypes = columnTypes.toSeq,
