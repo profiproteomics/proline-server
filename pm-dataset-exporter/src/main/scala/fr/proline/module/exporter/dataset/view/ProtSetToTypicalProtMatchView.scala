@@ -219,7 +219,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
           exportMap += (fields.addField(f.title) -> protSet.getSubSetProteinMatchIds.length)
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_COVERAGE => {
-          exportMap += (fields.addField(f.title) -> ExportConfigManager.format(dcf1, coverage))
+          exportMap += (fields.addField(f.title) -> ExportConfigManager.format(dcf2, coverage))
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_MW => {
           exportMap += (fields.addField(f.title) -> ExportConfigManager.format(decimalFormat, Option(protMatch.protein).flatMap(_.map(_.mass)).getOrElse(0.0)))
