@@ -51,6 +51,8 @@ import fr.proline.core.om.model.msi.FragmentMatch
 import fr.proline.core.om.model.msi.SpectrumMatch
 import uk.ac.ebi.pride.jaxb.model.SampleDescription
 import java.io.IOException
+import uk.ac.ebi.pride.jaxb.model.Protocol
+import uk.ac.ebi.pride.jaxb.model.ProtocolSteps
 
 
 object PrideExporter {
@@ -164,12 +166,27 @@ class PrideExporter(
    *  Accepted parameters are :
    *  - exp_title : Title of the experiment described in the pride XML file
    *  - exp_short_label : Short label of the experiment described in the pride XML file
-   *  - protocol_description : String representation of the full Protocol PRIDE Section (! mandatory in final doc)
+   * ---- 
+   *  - protocol_description : String representation of the full Protocol PRIDE Section (! mandatory in final doc). The string should be something like 
+   *        <Protocol>
+   *    	   <ProtocolName>TO BE REPLACED !!!! </ProtocolName>
+   *    	   <ProtocolSteps>
+   *             <StepDescription><cvParam cvLabel="PRIDE" accession="PRIDE:0000025" name="Reduction" value="DTT" /></StepDescription>
+   *              ...
+   *           </ProtocolSteps>
+   *    	</Protocol>
+   * OR
+   *  - protocol_name : Name of the described protocol
+   *  - protocol_steps : List of CVParam (as XML String: <cvparam .../>) corresponding to each protocol steps (Reduction, ...) 
+   * ----
    *  - contact_name : Name of the contact for the data exported to the Pride XML file   (! mandatory in final doc)
    *  - contact_institution : Institution to which belongs the Contact (! mandatory in final doc)
    *  - sample_name : Name of the sample analysed (! mandatory in final doc)
-   *  - sample_desc : Description of the sample represented as a map with a comment, tissue ... to be completed
+   *  - sample_desc : Description of the sample 
+   *  - sample_additional : List of CVParam (as XML String: <cvparam .../>) for sample definition : Species, Tissues, Cell Localization 
    *  - project_name 
+   *  - instrument_name : or will be read from MSISearch
+   *  
    *  
    */ 
   def exportResultSummary(filePath: String, extraDataMap: Map[String, Object]) {
@@ -254,6 +271,19 @@ class PrideExporter(
 	      writer.write(extraDataMap("protocol_description").toString())
 	      writer.write('\n')
 	
+	    } else if(extraDataMap.get("protocol_name").isDefined){
+      
+	      val protocol = new Protocol()
+	      protocol.setProtocolName(extraDataMap("protocol_name").asInstanceOf[String])
+	      val steps = new ProtocolSteps
+	      steps.getStepDescription().add(0, new Param())
+	      if(extraDataMap.get("protocol_steps").isDefined){
+	        
+	         val addValues : List[String] = extraDataMap("protocol_steps").asInstanceOf[List[String]]
+    		 addValues.foreach( nextEntry => {
+    			 steps.getStepDescription().get(0).getCvParam().add(0,CvParam(nextEntry))
+    		 })
+	      }
 	    } else {
 	      val protocolSample = 
 	        <Protocol>
