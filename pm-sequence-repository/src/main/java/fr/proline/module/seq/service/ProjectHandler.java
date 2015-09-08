@@ -78,7 +78,7 @@ public class ProjectHandler {
 	
 	private static final String UPDATE_QUERY_RSM = "UPDATE result_summary  set serialized_properties=? where id=?";
 	
-	private static final String LIST_RSM = "select distinct(dt.resultSummaryId) from Dataset dt where dt.project.id=? and dt.resultSummaryId is not null";
+	private static final String LIST_RSM = "select distinct(dt.resultSummaryId) from Dataset dt where dt.project.id=? and dt.resultSummaryId is not null and dt.type = 'IDENTIFICATION'";
 	
 	private static final String UPDATE_QUERY_PSPMI = "UPDATE protein_set_protein_match_item  set coverage=? where protein_match_id=? and result_summary_id=?";
 	
