@@ -47,7 +47,7 @@ class QuantifySC extends AbstractRemoteProcessService with Logging with ISingleT
 			val projectId = paramsRetriever.getLong("project_id");
 			val refRSMId = paramsRetriever.getLong("ref_rsm_id");
 			val refDSId = paramsRetriever.getLong("ref_ds_id")
-			val pepRedRSMIds : Seq[Long] = if(paramsRetriever.hasParameter("peptide_ref_rsm_ids") ) paramsRetriever.getList("peptide_ref_rsm_ids").toSeq.map(toLong(_)) else Seq.empty[Long]
+			val pepRedRSMIds : Seq[Long] = if(paramsRetriever.hasParam("peptide_ref_rsm_ids") ) paramsRetriever.getList("peptide_ref_rsm_ids").toSeq.map(toLong(_)) else Seq.empty[Long]
     
 			val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, projectId, true); // Use JPA context
 			val udsDbCtx = execCtx.getUDSDbConnectionContext();
