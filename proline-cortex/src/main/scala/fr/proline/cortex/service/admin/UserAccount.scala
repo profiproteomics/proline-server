@@ -60,6 +60,7 @@ class UserAccount extends IRemoteService with Logging {
 
   override def service(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
     require((req != null), "Req is null")
+    logger.debug("service UserAccount");
 
     val requestId = req.getID
     val methodName = req.getMethod
@@ -118,6 +119,7 @@ class UserAccount extends IRemoteService with Logging {
 
     require((paramsRetriever != null), "no parameter specified")
     
+    logger.debug("doChangePassword");
     val userLogin = paramsRetriever.getString("login")
     val newPassword = paramsRetriever.getString("new_password_hash")
     val oldPassword = paramsRetriever.getString("old_password_hash")
