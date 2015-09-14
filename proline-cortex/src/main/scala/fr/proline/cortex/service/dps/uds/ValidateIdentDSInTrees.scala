@@ -44,7 +44,7 @@ class ValidateIdentDSInTree extends AbstractRemoteProcessService with Logging {
 //    val useTdCompet = paramsRetriever.getOptBoolean("use_td_competition", false)
     val validationConfig = ValidateResultSet.parseValidationConfig(paramsRetriever)
    
-    val execCtx = DbConnectionHelper.createExecutionContext(projectId)
+    val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId)
     
     try {
       

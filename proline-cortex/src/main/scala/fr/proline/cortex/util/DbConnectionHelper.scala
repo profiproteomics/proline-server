@@ -34,7 +34,7 @@ object DbConnectionHelper extends Logging {
     m_dsConnectorFactory
   }
 
-  def createExecutionContext(projectID: Long): IExecutionContext = {
+  def createJPAExecutionContext(projectID: Long): IExecutionContext = {
     BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, projectID, true)
   }
 
