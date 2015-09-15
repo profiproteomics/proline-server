@@ -49,6 +49,7 @@ import fr.proline.cortex.service.dps.msq.Quantify
 import fr.proline.cortex.service.dps.msq.QuantifySC
 import fr.proline.cortex.service.admin.UserAccount
 import fr.proline.cortex.service.admin.CreateProject
+import fr.proline.cortex.service.dps.uds.RegisterRawFile
 
 object ProcessingNode extends Logging {
 
@@ -246,6 +247,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging 
     ServiceRegistry.addService(new QuantifySC())
     ServiceRegistry.addService(new UserAccount())
     ServiceRegistry.addService(new CreateProject())
+    ServiceRegistry.addService(new RegisterRawFile())
   }
 
   /**
