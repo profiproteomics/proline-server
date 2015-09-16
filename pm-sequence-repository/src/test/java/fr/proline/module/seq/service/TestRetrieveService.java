@@ -18,9 +18,8 @@ public final class TestRetrieveService {
     /* Private constructor (Utility class) */
     private TestRetrieveService() {}
     public static void main(final String[] args) {
-	RetrieveService.retrieveBioSequencesForProject(PROJECT_ID);
+	RetrieveService.retrieveBioSequencesForProject(PROJECT_ID, false);
 	BioSequenceRetriever.waitExecutorShutdown();
 	System.out.println("\nMain terminated !");
     }
-
 }
