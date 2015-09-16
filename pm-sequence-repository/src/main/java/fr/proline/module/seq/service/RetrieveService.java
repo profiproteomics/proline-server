@@ -34,6 +34,8 @@ public final class RetrieveService {
 
     private static final long TIMER_BEFORE_DELAY = TimeUnit.SECONDS.toMillis(15L);
 
+	private static boolean force_update = false;
+
     private RetrieveService() {
     }
 
@@ -62,7 +64,15 @@ public final class RetrieveService {
 		if(args[0].startsWith("p")) { // project id such as p1
 			projectId = Long.parseLong(args[0].substring(1));
 			LOG.debug(" is going to process project " + projectId);
-		} else {
+		} else if (args[0].startsWith("f")) {
+			force_update = true;
+			LOG.debug(" force mode: will compute even if already computed");
+			if(args[0].substring(1, 2).equals("p")) {
+				projectId = Long.parseLong(args[0].substring(2));
+				LOG.debug(" is going to process project " + projectId);
+			}
+		}
+		else {
 			trimmedDelay = args[0].trim();	
 		}
 		
@@ -92,7 +102,7 @@ public final class RetrieveService {
 				}
 
 				try {
-					retrieveBioSequencesForAllProjects();
+					retrieveBioSequencesForAllProjects(force_update);
 					
 				} catch (Exception ex) {
 					LOG.error("Error running  retrieveBioSequencesForAllProjects()", ex);
@@ -106,10 +116,10 @@ public final class RetrieveService {
 	} else {
 		LOG.info("No given hourDelay : Running a single \"retrieve task\"");
 		if(projectId==0) {
-			retrieveBioSequencesForAllProjects();
+			retrieveBioSequencesForAllProjects(force_update);
 		}
 		else {
-			retrieveBioSequencesForProject(projectId);
+			retrieveBioSequencesForProject(projectId,force_update);
 		}
 		BioSequenceRetriever.waitExecutorShutdown();
 		System.out.println("\nMain terminated !");
@@ -117,7 +127,7 @@ public final class RetrieveService {
 	
 	}
     
-    public static void retrieveBioSequencesForAllProjects() {
+    public static void retrieveBioSequencesForAllProjects(boolean force_update2) {
 	int totalHandledSEDbIdents = 0;
 	LOG.debug("Computing data for ALL projects ");
 	final long start = System.currentTimeMillis();
@@ -140,9 +150,10 @@ public final class RetrieveService {
     }
    
 
-    public static void retrieveBioSequencesForProject(final long projectId) {
+    public static void retrieveBioSequencesForProject(final long projectId, boolean force_update2) {
    
     	LOG.debug("retrieveBioSequencesForProject en cours ");
+
 	int totalHandledSEDbIdents = 0;
 
 	final long start = System.currentTimeMillis();
@@ -150,7 +161,7 @@ public final class RetrieveService {
 	final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = new HashMap<>();
 
 	ProjectHandler.fillSEDbIdentifiersBySEDb(projectId, seDbIdentifiers);
-	ProjectHandler.fillSequenceMatchesByProteinMatch(projectId);   
+	ProjectHandler.fillSequenceMatchesByProteinMatch(projectId,force_update2);   
 	
 
 	if (seDbIdentifiers.isEmpty()) {
@@ -202,8 +213,8 @@ public final class RetrieveService {
 
 		if (pId != null) {
 			
-		    ProjectHandler.fillSEDbIdentifiersBySEDb(pId.longValue(), seDbIdentifiers);
-		    ProjectHandler.fillSequenceMatchesByProteinMatch(pId.longValue());   
+		   ProjectHandler.fillSEDbIdentifiersBySEDb(pId.longValue(), seDbIdentifiers);
+		   ProjectHandler.fillSequenceMatchesByProteinMatch(pId.longValue(), force_update);   
 		}
 
 	    }
