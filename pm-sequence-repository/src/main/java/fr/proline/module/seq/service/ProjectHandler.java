@@ -73,11 +73,11 @@ public class ProjectHandler {
 			+"FROM ProteinMatch pm, ProteinSet ps, ProteinSetProteinMatchItem pspmm, SequenceMatch sm, PeptideSet pepset, PeptideSetPeptideInstanceItem pepsetinsitem, PeptideInstance pepinst "
 			+"WHERE pm.id = pspmm.id.proteinMatchId AND ps.id = pspmm.id.proteinSetId AND sm.id.proteinMatchId = pm.id AND sm.id.peptideId = pepinst.peptide.id AND pepset.proteinSet.id = ps.id AND "
 			+"pepsetinsitem.peptideSet.id=pepset.id AND pepsetinsitem.peptideInstance.id=pepinst.id "
-			+"AND ps.isValidated = 'true' AND pspmm.id.proteinSetId=? AND pspmm.id.proteinMatchId=? AND ps.resultSummary.id=? ";
+			+"AND ps.isValidated = 'true' AND pspmm.id.proteinSetId=:psId AND pspmm.id.proteinMatchId=:pmId AND ps.resultSummary.id=:rsmId ";
 
-	private static final String CALCULATED_RSM = "FROM fr.proline.core.orm.msi.ResultSummary where id=?";
+	private static final String CALCULATED_RSM = "FROM fr.proline.core.orm.msi.ResultSummary where id=:rsmId";
 
-	private static final String UPDATE_QUERY_RSM = "UPDATE result_summary  set serialized_properties=? where id=?";
+	private static final String UPDATE_QUERY_RSM = "UPDATE result_summary  set serialized_properties=:sr where id=:rsmId";
 
 	private static final String LIST_RSM = "select distinct(dt.resultSummaryId) from Dataset dt where dt.project.id= :projectId and dt.type='IDENTIFICATION' and dt.resultSummaryId IS NOT NULL";
 	private static final String LIST_PS = "select distinct(ps.id) from ProteinSetProteinMatchItem pspm, ProteinSet ps where ps.id = pspm.id.proteinSetId and pspm.resultSummary.id= :rsmId and ps.isValidated = 'true' and pspm.resultSummary.id IS NOT NULL";
@@ -351,7 +351,7 @@ public class ProjectHandler {
 
 						//get the properties of the RSM to update
 						final TypedQuery<ResultSummary> rsms = msiEM.createQuery(CALCULATED_RSM, ResultSummary.class);
-						rsms.setParameter(1, rsmId);
+						rsms.setParameter("rsmId", rsmId);
 						String properties = rsms.getResultList().get(0).getSerializedProperties();
 						JsonParser parser = new JsonParser();
 						Gson gson = new Gson();
@@ -376,9 +376,9 @@ public class ProjectHandler {
 								for(Long pmId : pmIds){
 									coveredSeqLengthByProtMatch.clear();
 									final Query pmAccQuery = msiEM.createQuery(VALIDATED_ACC_RSM_QUERY);
-									pmAccQuery.setParameter(1,psId);
-									pmAccQuery.setParameter(2,pmId);
-									pmAccQuery.setParameter(3,rsmId);
+									pmAccQuery.setParameter("psId",psId);
+									pmAccQuery.setParameter("pmId",pmId);
+									pmAccQuery.setParameter("rsmId",rsmId);
 									final List<Object[]> pmSdmLines = pmAccQuery.getResultList();
 									if ((pmSdmLines != null) && !pmSdmLines.isEmpty()) {
 										//coveredSeqLengthByProtMatch :get for protein_match_id -the number of AA 
@@ -468,8 +468,8 @@ public class ProjectHandler {
 								array.addProperty("is_coverage_updated", true);
 								msiEM.getTransaction().begin();
 								final Query updateQueryprop = msiEM.createNativeQuery(UPDATE_QUERY_RSM); 
-								updateQueryprop.setParameter(1,array.toString());
-								updateQueryprop.setParameter(2,rsmId);
+								updateQueryprop.setParameter("sr",array.toString());
+								updateQueryprop.setParameter("rsmId",rsmId);
 								updateQueryprop.executeUpdate();
 								msiEM.getTransaction().commit();
 							}
@@ -477,8 +477,8 @@ public class ProjectHandler {
 						} else {
 							LOG.info("rsmId: "+rsmId+" already calculated");
 						}
-
-
+					    con.setAutoCommit(false);
+						con.commit();
 					}
 				}
 			} catch (Exception ex) {
@@ -486,6 +486,7 @@ public class ProjectHandler {
 			} finally {
 				if (msiEM != null) {
 					try {
+						con.close();
 						msiEM.close();
 						udsEM.close();
 					} catch (Exception exClose) {
