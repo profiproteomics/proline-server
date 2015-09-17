@@ -395,7 +395,8 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with Logging 
     var exportConfigStr : String = null
     if (extraParams != null && extraParams.isDefined && extraParams.get.contains("config")){
         exportConfigStr = extraParams.get("config").asInstanceOf[String]
-        logger.debug("export with config "+exportConfigStr)
+        //logger.debug("export with config "+exportConfigStr)
+        logger.debug("exporting...")
         //require(StringUtils.isNotEmpty(exportConfigStr), "the export configuration must be provided")
     }else{// default conf if not filled -- all dataset have same type, so the config is based on the first
       var mode: String = ExportConfigConstant.MODE_IDENT
