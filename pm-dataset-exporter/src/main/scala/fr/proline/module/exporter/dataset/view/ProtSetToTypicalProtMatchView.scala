@@ -383,21 +383,21 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
                 qcRawAbun = if (protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap.contains(qcId)) {
                   protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap(qcId).rawAbundance
                 } else {
-                  ""
+                  0
                 }
               }
               if (pepSetQuantiBuildingCtx != null && pepSetQuantiBuildingCtx.masterQuantPeptide != null && pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap != null) {
             	qcRawAbun = if (pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap.contains(qcId)) {
                   pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap(qcId).rawAbundance
                 } else {
-                  ""
+                  0
                 }
               }
               if (pepIonSetQuantiBuildingCtx != null && pepIonSetQuantiBuildingCtx.masterQuantPeptideIon != null && pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.quantPeptideIonMap != null) {
             	qcRawAbun = if (pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.quantPeptideIonMap.contains(qcId)) {
                   pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.quantPeptideIonMap(qcId).rawAbundance
                 } else {
-                  ""
+                  0
                 }
               }
               exportMap += (fields.addField(f.title + titleSep + quantiDS.nameByQchId(qcId)) -> ExportConfigManager.format(decimalFormat,qcRawAbun))
@@ -412,21 +412,21 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
                 qcAbun = if (protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap.contains(qcId)) {
                   protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap(qcId).abundance
                 } else {
-                  ""
+                  0
                 }
               }
               if (pepSetQuantiBuildingCtx != null && pepSetQuantiBuildingCtx.masterQuantPeptide != null && pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap != null) {
             	qcAbun = if (pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap.contains(qcId)) {
                   pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap(qcId).abundance
                 } else {
-                  ""
+                  0
                 }
               }
               if (pepIonSetQuantiBuildingCtx != null && pepIonSetQuantiBuildingCtx.masterQuantPeptideIon != null && pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.quantPeptideIonMap != null) {
             	qcAbun = if (pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.quantPeptideIonMap.contains(qcId)) {
                   pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.quantPeptideIonMap(qcId).abundance
                 } else {
-                  ""
+                  0
                 }
               }
               exportMap += (fields.addField(f.title + titleSep + quantiDS.nameByQchId(qcId)) -> ExportConfigManager.format(decimalFormat,qcAbun))
@@ -441,21 +441,21 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
                 qcPSMCount = if (protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap.contains(qcId)) {
                   protSetQuantiBuildingCtx.masterQuantProteinSet.quantProteinSetMap(qcId).peptideMatchesCount
                 } else {
-                  ""
+                  0
                 }
               }
               if (pepSetQuantiBuildingCtx != null && pepSetQuantiBuildingCtx.masterQuantPeptide != null && pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap != null) {
             	qcPSMCount = if (pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap.contains(qcId)) {
                   pepSetQuantiBuildingCtx.masterQuantPeptide.quantPeptideMap(qcId).peptideMatchesCount
                 } else {
-                  ""
+                  0
                 }
               }
               if (pepIonSetQuantiBuildingCtx != null && pepIonSetQuantiBuildingCtx.masterQuantPeptideIon != null && pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.quantPeptideIonMap != null) {
             	qcPSMCount = if (pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.quantPeptideIonMap.contains(qcId)) {
                   pepIonSetQuantiBuildingCtx.masterQuantPeptideIon.quantPeptideIonMap(qcId).peptideMatchesCount
                 } else {
-                  ""
+                  0
                 }
               }
               exportMap += (fields.addField(f.title + titleSep + quantiDS.nameByQchId(qcId)) -> ExportConfigManager.format(decimalFormat,qcPSMCount))
