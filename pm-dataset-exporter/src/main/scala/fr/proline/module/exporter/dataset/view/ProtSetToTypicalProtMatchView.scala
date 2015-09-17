@@ -166,6 +166,15 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
       } else
         0
     }
+    
+    val bioSequenceByBioSeqId = identDS.bioSequenceByBioSeqId
+    
+    // MW 
+    var mass: Double = 0.0
+    if (protMatch.getProteinId > 0 && bioSequenceByBioSeqId.contains(protMatch.getProteinId)){
+      mass = bioSequenceByBioSeqId.get(protMatch.getProteinId).get.mass
+    }
+    //Option(protMatch.protein).flatMap(_.map(_.mass)).getOrElse(0))
 
     // score
     var score: Double = protSet.peptideSet.score
@@ -222,7 +231,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
           exportMap += (fields.addField(f.title) -> ExportConfigManager.format(dcf2, coverage))
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_MW => {
-          exportMap += (fields.addField(f.title) -> ExportConfigManager.format(decimalFormat, Option(protMatch.protein).flatMap(_.map(_.mass)).getOrElse(0.0)))
+          exportMap += (fields.addField(f.title) -> ExportConfigManager.format(decimalFormat, mass))
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_NB_SEQUENCES => {
           exportMap += (fields.addField(f.title) -> protSetBuildingCtxOpt.allSeqs.distinct.length)

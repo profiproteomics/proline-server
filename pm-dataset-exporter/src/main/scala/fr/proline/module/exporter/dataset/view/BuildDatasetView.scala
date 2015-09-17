@@ -21,12 +21,14 @@ import fr.proline.core.om.model.msq.QuantResultSummary
 import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.om.model.msq.RatioDefinition
 import fr.proline.module.exporter.commons.config.view.DatasetViewTypes
+import fr.proline.core.om.model.msi.Protein
 
 class IdentDataSet(
   var projectName: String,
   var resultSummary: ResultSummary,
   var childsResultSummarys: Array[ResultSummary],
-  var childsResultSets: Array[ResultSet]) extends Logging {
+  var childsResultSets: Array[ResultSet], 
+  var bioSequenceByBioSeqId: Map[Long, Protein]) extends Logging {
 
   // Count the number of protein sets and proteins matches related to a given peptide match
   val validProtSetIdSetByPepMatchId = new HashMap[Long, HashSet[Long]]()
@@ -71,6 +73,7 @@ class QuantiDataSet(
   resultSummary: ResultSummary,
   childsResultSummarys: Array[ResultSummary],
   childsResultSets: Array[ResultSet],
+  bioSequenceByBioSeqId: Map[Long, Protein],
   var masterQuantChannelId: Long,
   var quantRSM: QuantResultSummary,
   var qcIds: Array[Long],
@@ -78,7 +81,7 @@ class QuantiDataSet(
   var ratioDefs: Array[RatioDefinition],
   var nameByQchId: Map[Long, String],
   var protMatchStatusByIdPepMatchByQCId: Map[Long, Map[Long, String]],
-  var protMatchPeptideNumberByPepMatchIdByQCId: Map[Long, Map[Long, Int]]) extends IdentDataSet(projectName, resultSummary, childsResultSummarys, childsResultSets)
+  var protMatchPeptideNumberByPepMatchIdByQCId: Map[Long, Map[Long, Int]]) extends IdentDataSet(projectName, resultSummary, childsResultSummarys, childsResultSets, bioSequenceByBioSeqId)
 
 object BuildDatasetView {
 

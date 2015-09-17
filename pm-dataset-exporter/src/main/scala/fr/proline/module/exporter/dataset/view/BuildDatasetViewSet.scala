@@ -36,6 +36,7 @@ import fr.profi.util.primitives.toLong
 import fr.proline.core.om.provider.msq.impl.SQLExperimentalDesignProvider
 import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
 import fr.proline.core.om.model.msq.RatioDefinition
+import fr.proline.core.om.model.msi.Protein
 
 object BuildDatasetViewSet extends Logging {
 
@@ -122,7 +123,7 @@ object BuildDatasetViewSet extends Logging {
       tmpRsm.resultSet = rsProvider.getResultSet(tmpRsm.getResultSetId)
       tmpRsm
     }
-
+    
     //
     // Load all Subsets of Protein Sets
     //
@@ -189,8 +190,30 @@ object BuildDatasetViewSet extends Logging {
         }
       })
     }
+    
+    // BioSequence
+    var bioSeqByBioSequenceId: Map[Long, Protein] = Map()
+    // Go through protein sets
+    for (protSet <- rsm.proteinSets) {
+      val proteinMatchIds = protSet.getProteinMatchIds
+      for (protMatchId <- proteinMatchIds){
+        try{
+          var protMatch = rsm.resultSet.get.getProteinMatchById().get(protMatchId)
+          if (protMatch != null && protMatch.get.getProteinId > 0){
+            val bioSeqId: Long = protMatch.get.getProteinId
+            val  bioSeq = getBioSequence(bioSeqId, executionContext)
+            bioSeqByBioSequenceId += protMatch.get.getProteinId -> bioSeq
+          }
+        }catch {
+            case e: Exception => {
+              logger.error("Error while loading BioSequence "+e);
+            }
+            e.printStackTrace()
+        }
+      }
+    }
 
-    var identDs: IdentDataSet = new IdentDataSet(projectName, rsm, childsResultSummarys.toArray, childsResultSets.toArray)
+    var identDs: IdentDataSet = new IdentDataSet(projectName, rsm, childsResultSummarys.toArray, childsResultSets.toArray, bioSeqByBioSequenceId)
 
     // identRs
     if (dsId > 0) {
@@ -345,7 +368,7 @@ object BuildDatasetViewSet extends Logging {
           protMatchPeptideNumberByPepMatchIdByQCId += qcId -> protMatchPeptideNumberByPepMatchId
         })
 
-        identDs = new QuantiDataSet(projectName, rsm, childsResultSummarys.toArray, childsResultSets.toArray, masterQuantChannelId, quantRSM, qcIds, expDesign, ratioDefs, nameByQchId, protMatchStatusByIdPepMatchByQCId, protMatchPeptideNumberByPepMatchIdByQCId)
+        identDs = new QuantiDataSet(projectName, rsm, childsResultSummarys.toArray, childsResultSets.toArray, bioSeqByBioSequenceId, masterQuantChannelId, quantRSM, qcIds, expDesign, ratioDefs, nameByQchId, protMatchStatusByIdPepMatchByQCId, protMatchPeptideNumberByPepMatchIdByQCId)
       } // end masterQuantIds not null
     }
 
@@ -410,6 +433,33 @@ object BuildDatasetViewSet extends Logging {
     new SQLResultSummaryProvider(execContext.getMSIDbConnectionContext,
       execContext.getPSDbConnectionContext,
       execContext.getUDSDbConnectionContext)
+  }
+  
+  private def getBioSequence(bioseqId: Long, execContext: IExecutionContext): Protein = {
+    var protein : Protein  = null
+    val jdbcWork = new JDBCWork() {
+
+      override def execute(con: Connection) {
+
+        val stmt = con.prepareStatement("select id,sequence,  alphabet, mass, pi, crc64 from bio_sequence where id = ?")
+        stmt.setLong(1, bioseqId)
+        val sqlBioSeq = stmt.executeQuery()
+        while (sqlBioSeq.next) {
+           protein= new Protein (
+            id = sqlBioSeq.getLong("id"),
+            sequence = sqlBioSeq.getString("sequence"),
+            mass = sqlBioSeq.getDouble("mass"),
+            pi = sqlBioSeq.getFloat("pi"),
+            crc64 = sqlBioSeq.getString("crc64"),
+            alphabet = sqlBioSeq.getString("alphabet"),
+            None
+           )
+        }
+        stmt.close()
+      } // End of jdbcWork anonymous inner class
+    }
+    execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
+    protein
   }
 
 }
