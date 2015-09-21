@@ -474,4 +474,7 @@
     </plugins>
   </build>
 
+  <scm>
+  	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Cortex/trunk</connection>
+  </scm>
 </project>
