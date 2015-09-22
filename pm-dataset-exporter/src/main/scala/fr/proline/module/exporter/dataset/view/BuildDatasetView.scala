@@ -28,7 +28,7 @@ class IdentDataSet(
   var resultSummary: ResultSummary,
   var childsResultSummarys: Array[ResultSummary],
   var childsResultSets: Array[ResultSet], 
-  var bioSequenceByBioSeqId: Map[Long, Protein]) extends Logging {
+  var bioSequenceByBioSeqId: Map[Long, Double]) extends Logging {
 
   // Count the number of protein sets and proteins matches related to a given peptide match
   val validProtSetIdSetByPepMatchId = new HashMap[Long, HashSet[Long]]()
@@ -73,7 +73,7 @@ class QuantiDataSet(
   resultSummary: ResultSummary,
   childsResultSummarys: Array[ResultSummary],
   childsResultSets: Array[ResultSet],
-  bioSequenceByBioSeqId: Map[Long, Protein],
+  bioSequenceByBioSeqId: Map[Long, Double],
   var masterQuantChannelId: Long,
   var quantRSM: QuantResultSummary,
   var qcIds: Array[Long],

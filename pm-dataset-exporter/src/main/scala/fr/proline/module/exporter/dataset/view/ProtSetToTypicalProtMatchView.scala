@@ -172,7 +172,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
     // MW 
     var mass: Double = 0.0
     if (protMatch.getProteinId > 0 && bioSequenceByBioSeqId.contains(protMatch.getProteinId)){
-      mass = bioSequenceByBioSeqId.get(protMatch.getProteinId).get.mass
+      mass = bioSequenceByBioSeqId.get(protMatch.getProteinId).get
     }
     //Option(protMatch.protein).flatMap(_.map(_.mass)).getOrElse(0))
 

@@ -113,7 +113,8 @@ object BuildDatasetViewSet extends Logging {
       udsEzDBC.selectString(sqlQuery, projectId)
     })
 
-    // Load th RSM
+    // Load the RSM
+    logger.debug("load RSM")
     val rsmProvider = new SQLResultSummaryProvider(msiSQLCtx, psSQLCtx, udsSQLCtx)
 
     val rsm = if (loadFullResultSet == false) rsmProvider.getResultSummary(rsmId, true).get
@@ -128,7 +129,7 @@ object BuildDatasetViewSet extends Logging {
     // Load all Subsets of Protein Sets
     //
     if (loadSubsets) {
-
+    	logger.debug("Load all Subsets")
       // Instantiate additional providers
       val pepProvider = new SQLPeptideProvider(executionContext.getPSDbConnectionContext())
       val pepInstProvider = new SQLPeptideInstanceProvider(executionContext.getMSIDbConnectionContext, pepProvider)
@@ -155,6 +156,7 @@ object BuildDatasetViewSet extends Logging {
       }
     }
 
+    logger.debug("load childs resultSummary (merge)")
     // load childs resultSummary (merge)
     var childsResultSummarys: ArrayBuffer[ResultSummary] = new ArrayBuffer[ResultSummary]()
     val providerRsm: IResultSummaryProvider = getResultSummaryProvider(executionContext)
@@ -172,6 +174,7 @@ object BuildDatasetViewSet extends Logging {
     })
 
     // load childs resultSets (merge)
+    logger.debug("load childs resultSets (merge)")
     var childsResultSets: ArrayBuffer[ResultSet] = new ArrayBuffer[ResultSet]()
     if (rsm.resultSet.isDefined) {
       val providerContext = ProviderDecoratedExecutionContext(executionContext)
@@ -192,27 +195,26 @@ object BuildDatasetViewSet extends Logging {
     }
     
     // BioSequence
-    var bioSeqByBioSequenceId: Map[Long, Protein] = Map()
-    // Go through protein sets
-    for (protSet <- rsm.proteinSets) {
-      val proteinMatchIds = protSet.getProteinMatchIds
-      for (protMatchId <- proteinMatchIds){
-        try{
-          var protMatch = rsm.resultSet.get.getProteinMatchById().get(protMatchId)
-          if (protMatch != null && protMatch.get.getProteinId > 0){
-            val bioSeqId: Long = protMatch.get.getProteinId
-            val  bioSeq = getBioSequence(bioSeqId, executionContext)
-            bioSeqByBioSequenceId += protMatch.get.getProteinId -> bioSeq
-          }
-        }catch {
-            case e: Exception => {
-              logger.error("Error while loading BioSequence "+e);
-            }
-            e.printStackTrace()
-        }
+    logger.debug("load bioseq")
+    var proteinIdByProtMatchId: Map[Long, Long] = Map()
+    var loadBioSeq: Boolean = false
+    for ((protMatchId, protMatch) <- rsm.resultSet.get.getProteinMatchById()) {
+      if (protMatch != null && protMatch.getProteinId > 0) {
+        val bioSeqId: Long = protMatch.getProteinId
+        proteinIdByProtMatchId += protMatchId -> protMatch.getProteinId
+        loadBioSeq = true
+        //val mass: Double = getBioSequence(bioSeqId, executionContext)
+        //bioSeqByBioSequenceId += protMatch.getProteinId -> mass
       }
     }
+    var bioSeqByBioSequenceId: Map[Long, Double] = Map()
+    if (loadBioSeq){
+      bioSeqByBioSequenceId = getBioSequence(proteinIdByProtMatchId, executionContext)
+    }
+    
+    
 
+    logger.debug("build IdentDataSet")
     var identDs: IdentDataSet = new IdentDataSet(projectName, rsm, childsResultSummarys.toArray, childsResultSets.toArray, bioSeqByBioSequenceId)
 
     // identRs
@@ -221,6 +223,7 @@ object BuildDatasetViewSet extends Logging {
       val udsDbHelper = new UdsDbHelper(udsSQLCtx)
       val masterQuantIds = udsDbHelper.getMasterQuantChannelIdsForQuantId(dsId)
       if (masterQuantIds != null && masterQuantIds.length > 0) {
+    	logger.debug("load masterQuantIds")
         val masterQuantChannelId = masterQuantIds(0);
         val quantRsmId = udsDbHelper.getMasterQuantChannelQuantRsmId(masterQuantChannelId)
         val qcIds = udsDbHelper.getQuantChannelIds(masterQuantChannelId)
@@ -435,31 +438,27 @@ object BuildDatasetViewSet extends Logging {
       execContext.getUDSDbConnectionContext)
   }
   
-  private def getBioSequence(bioseqId: Long, execContext: IExecutionContext): Protein = {
-    var protein : Protein  = null
+  private def getBioSequence(proteinIdByProtMatchId: Map[Long, Long], execContext: IExecutionContext): Map[Long, Double] = {
+    
+    var bioSeqByBioSequenceId: Map[Long, Double] = Map()
+    var ids: String = proteinIdByProtMatchId.values.toList.mkString(",")
+    
     val jdbcWork = new JDBCWork() {
 
       override def execute(con: Connection) {
 
-        val stmt = con.prepareStatement("select id,sequence,  alphabet, mass, pi, crc64 from bio_sequence where id = ?")
-        stmt.setLong(1, bioseqId)
+        val stmt = con.prepareStatement("select id, mass from bio_sequence where id IN ("+ids+") ")
         val sqlBioSeq = stmt.executeQuery()
         while (sqlBioSeq.next) {
-           protein= new Protein (
-            id = sqlBioSeq.getLong("id"),
-            sequence = sqlBioSeq.getString("sequence"),
-            mass = sqlBioSeq.getDouble("mass"),
-            pi = sqlBioSeq.getFloat("pi"),
-            crc64 = sqlBioSeq.getString("crc64"),
-            alphabet = sqlBioSeq.getString("alphabet"),
-            None
-           )
+          var proteinId = sqlBioSeq.getLong("id")
+          var mass = sqlBioSeq.getDouble("mass")
+          bioSeqByBioSequenceId += proteinId -> mass
         }
         stmt.close()
       } // End of jdbcWork anonymous inner class
     }
     execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
-    protein
+    bioSeqByBioSequenceId
   }
 
 }
