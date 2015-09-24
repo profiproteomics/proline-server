@@ -1,6 +1,6 @@
 package fr.proline.module.parser.omssa
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import scala.collection.mutable.ArrayBuffer
 import java.io.File
 import javax.xml.stream.XMLInputFactory
@@ -10,7 +10,7 @@ import fr.proline.core.om.model.msi.{ Spectrum, InstrumentConfig, SpectrumTitleF
 import fr.profi.util.primitives._
 //import fr.proline.repository.DatabaseContext
 
-class OmssaListSpectrum(omxFile: File, peaklistId: Long, instrumentConfig: InstrumentConfig, specTitleParsingRule: Option[SpectrumTitleParsingRule], onEachSpectrum: Spectrum => Unit) extends Logging {
+class OmssaListSpectrum(omxFile: File, peaklistId: Long, instrumentConfig: InstrumentConfig, specTitleParsingRule: Option[SpectrumTitleParsingRule], onEachSpectrum: Spectrum => Unit) extends LazyLogging {
 
   private def toIntOrZero(v: Any): Int = try { toInt(v) } catch { case e: Throwable => 0 }
   private def toFloatOrZero(v: Any): Float = try { toFloat(v) } catch { case e: Throwable => 0f }

@@ -11,7 +11,7 @@ import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.BasicExecutionContext
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.om.model.msi.Spectrum
@@ -30,7 +30,7 @@ import fr.profi.util.MathUtils
 import fr.proline.core.om.model.msi.Ms2Query
 
 @Test
-class OmssaMSParserTest extends AbstractMultipleDBTestCase with Logging {
+class OmssaMSParserTest extends AbstractMultipleDBTestCase{
 
   val driverType = DriverType.H2
 

@@ -7,7 +7,7 @@ package fr.proline.module.parser.omssa
 //import scala.collection.mutable.HashMap
 //import com.typesafe.scalalogging.slf4j.Logging
 //import javax.xml.stream.XMLInputFactory
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import scala.collection.mutable.HashMap
 import java.io.File
 import java.io.FileReader
@@ -18,7 +18,7 @@ import java.io.InputStreamReader
 import org.apache.commons.compress.compressors.CompressorInputStream
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 
-class OmssaFilePreloader(omxFile: File) extends Logging {
+class OmssaFilePreloader(omxFile: File) extends LazyLogging {
   
   // prepare variables
   var enzymeId: Int = -1

@@ -9,7 +9,7 @@ import java.io.File
 import javax.xml.stream.XMLInputFactory
 import org.codehaus.staxmate.in.{ SMHierarchicCursor, SMInputCursor }
 import org.codehaus.staxmate.SMInputFactory
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.DatabaseConnectionContext
 import java.io.InputStream
 import java.io.FileInputStream
@@ -44,7 +44,7 @@ class OmssaReadFile(val omxFile: File,
                     val parseProperties: Map[OmssaParseParams.OmssaParseParam, Any],
                     val omssaLoader: OmssaMandatoryFilesLoader, 
                     val parserContext: ProviderDecoratedExecutionContext
-                    ) extends Logging {
+                    ) extends LazyLogging {
 
   private val OMSSA_HIGHEST_SCORE = 20
   

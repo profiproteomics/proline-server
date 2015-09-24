@@ -7,14 +7,14 @@ import fr.proline.core.om.provider.msi.IResultFileVerifier
 //import fr.proline.core.om.model.msi.{IResultFileProvider, IResultFile}
 //import fr.proline.repository.DatabaseContext
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 object OmssaResultFileProviderType {
     final val fileType: String = "omssa.omx"
 }
 
 
-class OmssaResultFileProvider extends IResultFileProvider with Logging {
+class OmssaResultFileProvider extends IResultFileProvider with LazyLogging {
 
   val fileType: String = OmssaResultFileProviderType.fileType
 

@@ -13,11 +13,11 @@ import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.IonTypes
 import fr.proline.core.om.model.msi.Enzyme
 import fr.proline.core.om.provider.msi.IResultFileVerifier
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import scala.io.Source
 import java.net.URL
 
-class OmssaResultFileVerifier extends IResultFileVerifier with Logging {
+class OmssaResultFileVerifier extends IResultFileVerifier with LazyLogging {
 
   // returns PtmDefinitions referenced by the specified file
   def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): Seq[PtmDefinition] = {

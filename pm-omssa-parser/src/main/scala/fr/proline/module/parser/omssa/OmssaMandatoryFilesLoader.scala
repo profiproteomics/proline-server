@@ -9,7 +9,7 @@ import scala.collection.mutable.HashMap
 import org.codehaus.staxmate.SMInputFactory
 import org.codehaus.staxmate.in.SMHierarchicCursor
 import org.codehaus.staxmate.in.SMInputCursor
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
@@ -19,7 +19,7 @@ import fr.proline.core.om.model.msi.PtmLocation
 
 
 //class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val parserContext: ProviderDecoratedExecutionContext) extends Logging {
-class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val ptmCompositionFilePath: String, val parserContext: ProviderDecoratedExecutionContext) extends Logging {
+class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val ptmCompositionFilePath: String, val parserContext: ProviderDecoratedExecutionContext) extends LazyLogging {
 
   private val ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
   private var _enzymes: HashMap[Int, String] = null

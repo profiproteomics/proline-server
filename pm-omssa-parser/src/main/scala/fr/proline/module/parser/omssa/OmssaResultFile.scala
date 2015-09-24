@@ -4,7 +4,7 @@ import java.io.File
 import java.io.FileNotFoundException
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPeptideProvider
@@ -65,7 +65,7 @@ class UnknownPTMException() extends Exception("A peptide matched with an unknown
  * @param importProperties : parameters to use for parsing. Allowed values are those specified by OmssaParseParams. Should not be null.
  *
  */
-class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecoratedExecutionContext, val importProperties: Map[String, Any]) extends IResultFile with Logging {
+class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecoratedExecutionContext, val importProperties: Map[String, Any]) extends IResultFile with LazyLogging {
 
   // Requirements
   require(importProperties != null)

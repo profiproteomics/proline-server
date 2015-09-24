@@ -5,7 +5,7 @@ import scala.collection.mutable.ArrayBuffer
 import org.codehaus.staxmate.SMInputFactory
 import org.codehaus.staxmate.in.SMHierarchicCursor
 import org.codehaus.staxmate.in.SMInputCursor
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi.SearchSettings
 import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.om.model.msi.SpectrumMatch
@@ -26,7 +26,7 @@ class OmssaSpectrumMatcher(omxFile: File,
 						   omssaLoader: OmssaMandatoryFilesLoader, 
 						   searchSettings: SearchSettings, 
 						   currentFileMzScale: Int, 
-						   onEachSpectrumMatch: SpectrumMatch => Unit) extends Logging {
+						   onEachSpectrumMatch: SpectrumMatch => Unit) extends LazyLogging {
 
   _parseOmxFile()
 
