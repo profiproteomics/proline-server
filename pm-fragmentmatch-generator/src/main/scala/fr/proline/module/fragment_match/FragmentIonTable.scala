@@ -4,7 +4,7 @@ import scala.Array.canBuildFrom
 import scala.Array.fallbackCanBuildFrom
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.chemistry.model.AminoAcidResidue
 import fr.profi.chemistry.model.AminoAcidTable
 import fr.profi.chemistry.model.AtomTable
@@ -80,7 +80,7 @@ object FragmentIonTable {
 class FragmentIonTable(peptide: Peptide,
   currentFragmentIonTypes: FragmentIons,
   sequence: Option[Array[Char]] = None,
-  ptmNeutralLosses: Option[Map[LocatedPtm, Double]] = None) extends Logging {
+  ptmNeutralLosses: Option[Map[LocatedPtm, Double]] = None) extends LazyLogging {
   
   val fragments: HashMap[String, ArrayBuffer[Fragment]] = {
     val _table = new HashMap[String, ArrayBuffer[Fragment]]

@@ -3,7 +3,7 @@ package fr.proline.module.fragment_match.service
 import java.sql.Connection
 import scala.Array.canBuildFrom
 import scala.Array.fallbackCanBuildFrom
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.helper.MsiDbHelper
@@ -73,7 +73,7 @@ class SpectrumMatchesGenerator(
   resultSetId: Long,
   resultSummaryId: Option[Long] = None,
   peptideMatchIds: Option[Array[Long]] = None,
-  forceInsert : Boolean = false ) extends IService with Logging {
+  forceInsert : Boolean = false ) extends IService with LazyLogging {
 
   def runService(): Boolean = {
     logger.info("Run service SpectrumMatchesGenerator on ResultSet.id=" + resultSetId)

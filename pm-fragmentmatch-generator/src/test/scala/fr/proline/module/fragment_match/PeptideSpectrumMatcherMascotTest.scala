@@ -5,7 +5,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
@@ -37,7 +37,7 @@ import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.model.msi.MSISearch
 import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider
 
-class PeptideSpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
+class PeptideSpectrumMatcherTest extends AbstractMultipleDBTestCase with StrictLogging {
 
   // Define the interface to be implemented
   val driverType = DriverType.H2

@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.StringBuilder
 import scala.util.control.Breaks.break
 import scala.util.control.Breaks.breakable
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.ms.MassTolUnit
 import fr.profi.util.ms.calcMozTolInDalton
 import fr.proline.core.om.model.msi.FragmentMatch
@@ -16,7 +16,7 @@ import fr.proline.core.om.model.msi.SpectrumMatch
 
 case class Peak(moz: Double, intensity: Float)
 
-trait PeptideSpectrumMatcher extends Logging {
+trait PeptideSpectrumMatcher extends LazyLogging {
 
   val spectraByIds: Map[Long, Spectrum]
   val ms2ErrorTol: Double

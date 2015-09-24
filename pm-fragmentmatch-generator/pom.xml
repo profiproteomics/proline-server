@@ -5,7 +5,7 @@
   <parent>
     <artifactId>ProFI-Pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.0.6</version>  <!-- Snapshot Trunk version -->
+    <version>0.1.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>PM-FragmentMatchGenerator</artifactId>
@@ -30,32 +30,15 @@
     </dependency>
 
     <!-- Logging -->
-    <dependency>
-      <groupId>com.typesafe</groupId>
-      <artifactId>scalalogging-slf4j_2.10</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
-    </dependency>
 
-    <!-- Override jmzidentml / xxindex dependency without com.springsource prefix -->
-    <!-- Use SLF4J instead of Apache common-loggings -->
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
-    </dependency>
+   		<dependency>
+        <groupId>com.typesafe.scala-logging</groupId>
+        <artifactId>scala-logging_${scala.version}</artifactId>
+      </dependency>
 
-    <!-- If log4j is needed, add log4j-over-slf4j dependency -->
+      <!-- Bridge Apache commons-logging over SLF4J -->
 
-    <dependency>
-      <groupId>antlr</groupId>
-      <artifactId>antlr</artifactId>
-      <version>2.7.7</version>
-    </dependency>
-
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>1.4</version>
-    </dependency>
+    
 
     <!-- Proline -->
     <dependency>
@@ -71,7 +54,7 @@
 	<dependency>
       <groupId>fr.profi</groupId>
       <artifactId>mzdb-processing</artifactId>
-      <version>0.2.1</version> <!-- Snapshot Trunk version -->
+      <version>0.4.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
     </dependency>
 
     <!-- Tests -->
@@ -131,10 +114,14 @@
       <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
-        <version>3.1.6</version>
       </plugin>
 
-      <plugin>
+	 <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+      </plugin>
+      
+     <!--  <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <executions>
@@ -145,7 +132,7 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
+      </plugin> -->
       
     </plugins>
   </build>
