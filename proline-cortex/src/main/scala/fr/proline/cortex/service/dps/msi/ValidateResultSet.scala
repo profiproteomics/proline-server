@@ -6,7 +6,7 @@ import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.DatabaseConnectionContext
@@ -180,7 +180,7 @@ object ValidateResultSet {
 
 }
 
-class ValidateResultSet extends AbstractRemoteProcessService with Logging {
+class ValidateResultSet extends AbstractRemoteProcessService with LazyLogging {
 
   /* JMS Service identification */
   val serviceName = "proline/dps/msi/ValidateResultSet"

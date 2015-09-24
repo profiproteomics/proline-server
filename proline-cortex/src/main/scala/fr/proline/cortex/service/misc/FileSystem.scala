@@ -5,7 +5,7 @@ import java.io.File
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.StringUtils
 import fr.proline.cortex.service.IRemoteService
@@ -35,7 +35,7 @@ import fr.proline.cortex.util.jsonrpc.ProfiJSONRPC2Response
  *       extension_filter : specify a file extension to use as filter
  *
  */
-class FileSystem extends IRemoteService with Logging {
+class FileSystem extends IRemoteService with LazyLogging {
 
   /* Constants */
   val LABEL_PARAM_NAME = "label"

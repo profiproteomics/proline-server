@@ -1,6 +1,6 @@
 package fr.proline.cortex.service.dps.uds
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import fr.profi.util.serialization.ProfiJson._
 import fr.proline.module.exporter.commons.config.ExportConfigConstant
@@ -28,7 +28,7 @@ import fr.proline.cortex.util.DbConnectionHelper
  *
  */
 
-class GetExportInformation extends AbstractRemoteProcessService with Logging {
+class GetExportInformation extends AbstractRemoteProcessService with LazyLogging {
   /* JMS Service identification */
   val serviceName = "proline/dps/uds/GetExportInformation"
   val serviceVersion = "1.0"

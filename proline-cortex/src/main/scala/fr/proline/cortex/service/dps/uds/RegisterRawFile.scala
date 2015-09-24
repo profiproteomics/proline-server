@@ -1,7 +1,7 @@
 package fr.proline.cortex.service.dps.uds
 
 import fr.proline.cortex.service.AbstractRemoteProcessService
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import fr.proline.core.orm.uds.RawFile
 import fr.proline.cortex.util.MountPointRegistry
@@ -22,7 +22,7 @@ import fr.proline.core.orm.uds.Run
  *  Output params :
  *    Boolean for service run status
  */
-class RegisterRawFile extends AbstractRemoteProcessService with Logging {
+class RegisterRawFile extends AbstractRemoteProcessService with LazyLogging {
 
   /* JMS Service identification */
   val serviceName = "proline/dps/uds/RegisterRawFile"

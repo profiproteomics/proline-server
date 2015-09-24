@@ -20,7 +20,7 @@ import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import fr.profi.util.StringUtils
 import java.io.File
 import fr.proline.core.dal.BuildExecutionContext
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.cortex.util.DbConnectionHelper
 
 /**
@@ -38,7 +38,7 @@ import fr.proline.cortex.util.DbConnectionHelper
  */
 case class ResultFileDescriptor( path: String, format: String)
  
-class CertifyResultFiles extends AbstractRemoteProcessService with Logging {
+class CertifyResultFiles extends AbstractRemoteProcessService with LazyLogging {
 
   /* JMS Service identification */
   val serviceName = "proline/dps/msi/CertifyResultFiles"

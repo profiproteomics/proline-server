@@ -5,7 +5,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import org.hornetq.api.jms.HornetQJMSClient
 
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Message
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.StringUtils
 import fr.profi.util.ThreadLogger
@@ -35,7 +35,7 @@ trait IServiceMonitoringNotifier {
 
 }
 
-class MonitoringTopicPublisherRunner(connection: Connection) extends IServiceMonitoringNotifier with Runnable with Logging {
+class MonitoringTopicPublisherRunner(connection: Connection) extends IServiceMonitoringNotifier with Runnable with LazyLogging {
 
   // No need to synchronize on BlockingQueue (Memory consistency effects with all concurrent collections)
   private val m_pendingTopicMessages = new LinkedBlockingQueue[TopicMessage]()

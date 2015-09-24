@@ -1,7 +1,7 @@
 package fr.proline.cortex.service.dps.msi
 
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.core.dal.BuildExecutionContext
@@ -24,7 +24,7 @@ import fr.proline.module.fragment_match.service.SpectrumMatchesGenerator
  *    Boolean for service run status
  */
 
-class GenerateSpectrumMatches extends AbstractRemoteProcessService with Logging {
+class GenerateSpectrumMatches extends AbstractRemoteProcessService with LazyLogging {
 
 	/* JMS Service identification */
 	val serviceName = "proline/dps/msi/GenerateSpectrumMatches";

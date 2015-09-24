@@ -1,7 +1,7 @@
 package fr.proline.cortex.service.dps.msq
 
 import fr.proline.cortex.service.AbstractRemoteProcessService
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import fr.profi.util.serialization.ProfiJson._
 import fr.proline.core.algo.msq.ProfilizerConfig
@@ -21,7 +21,7 @@ import fr.proline.core.service.msq.QuantProfilesComputer
  *  Output params :
  *    Boolean for service run status
  */
-class ComputeQuantProfiles  extends AbstractRemoteProcessService with Logging{
+class ComputeQuantProfiles  extends AbstractRemoteProcessService with LazyLogging{
 	/* JMS Service identification */
 	val serviceName = "proline/dps/msq/ComputeQuantProfiles";
 	val serviceVersion = "1.0"; // !!corresponds to V2 in webCore

@@ -10,7 +10,7 @@
 
   <appender name="fileAppender" class="ch.qos.logback.core.FileAppender">
     <append>true</append>
-    <file>proline-cortex_log.txt</file>
+    <file>logs/proline-cortex_log.txt</file>
 
     <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
       <level>INFO</level>

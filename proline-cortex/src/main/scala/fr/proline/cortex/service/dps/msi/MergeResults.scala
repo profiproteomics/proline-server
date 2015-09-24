@@ -6,7 +6,7 @@ import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
@@ -34,7 +34,7 @@ import fr.proline.cortex.util.jsonrpc.ProfiJSONRPC2Response
  *    for merge RS :  the merged result set Id
  *    for merge RSM : the merged result Summary Id and associated result set id (as RSMMergeResult object)
  */
-class MergeResultSets extends IRemoteService with Logging {
+class MergeResultSets extends IRemoteService with LazyLogging {
 
   /* JMS Service identification */
   val serviceName = "proline/dps/msi/MergeResults"

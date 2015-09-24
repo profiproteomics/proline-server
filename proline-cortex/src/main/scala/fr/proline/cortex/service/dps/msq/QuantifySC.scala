@@ -6,7 +6,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.universe.typeOf
 import fr.proline.cortex.service.AbstractRemoteProcessService
 import fr.proline.cortex.service.ISingleThreadedService
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.cortex.util.DbConnectionHelper
@@ -34,7 +34,7 @@ import fr.proline.core.service.msq.QuantifyMasterQuantChannel
  *  Output params :
  *    Boolean for service run status
  */
-class QuantifySC extends AbstractRemoteProcessService with Logging with ISingleThreadedService{
+class QuantifySC extends AbstractRemoteProcessService with LazyLogging with ISingleThreadedService{
 	/* JMS Service identification */
 	val serviceName = "proline/dps/msq/QuantifySC";
 	val serviceVersion = "1.0";   // !!corresponds to V2 in webCore

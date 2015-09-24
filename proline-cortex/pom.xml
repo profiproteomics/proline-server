@@ -1,22 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>fr.proline</groupId>
     <artifactId>ProFI-Pom</artifactId>
-    <version>0.0.6</version> <!-- Snapshot Trunk version -->
+    <version>0.1.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>Proline-Cortex</artifactId>
-  <version>0.0.3-SNAPSHOT</version>
+  <version>0.1.0-SNAPSHOT</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.path>${project.basedir}/src/main/scala/fr/proline/cortex</version.path>
     <core.version>0.5.0-SNAPSHOT</core.version> <!-- Snapshot Trunk version -->
-    <sqlite4java.version>1.0.392</sqlite4java.version>
   </properties>
 
   <dependencies>
@@ -28,8 +26,8 @@
 
     <!-- Logging -->
     <dependency>
-      <groupId>com.typesafe</groupId>
-        <artifactId>scalalogging-slf4j_${scala.version}</artifactId>
+      <groupId>com.typesafe.scala-logging</groupId>
+        <artifactId>scala-logging_${scala.version}</artifactId>
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
     
@@ -57,20 +55,11 @@
 	  <version>2.4.1.Final</version>
     </dependency>
     <dependency>
-    	<groupId>org.hibernate.javax.persistence</groupId>
-    	<artifactId>hibernate-jpa-2.0-api</artifactId>
-    	<version>1.0.1.Final</version>
-    </dependency>
-    <dependency>
 	  <groupId>io.netty</groupId>
       <artifactId>netty-all</artifactId>
       <version>4.0.20.Final</version>
     </dependency>
      <!-- Logger facade -->
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
     <!-- Serialization -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -203,9 +192,7 @@
   </dependencies>
 
   <build>
-    <sourceDirectory>src/main/scala</sourceDirectory>
-    <testSourceDirectory>src/test/scala</testSourceDirectory>
-
+    
     <pluginManagement>
       <plugins>
         <!-- For Eclipse build -->
@@ -228,7 +215,9 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <execute />
+                    <execute>
+                       <runOnIncremental>false</runOnIncremental>
+                     </execute>
                   </action>
                 </pluginExecution>
 
@@ -246,44 +235,6 @@
                        <runOnIncremental>false</runOnIncremental>
                      </execute>
                   </action>
-                   <execution>
-            		<id>copy-dll</id>
-            		<phase>compile</phase>
-            		<goals>
-              			<goal>copy-dependencies</goal>
-            		</goals>
-            		<configuration>
-              			<outputDirectory>${project.build.directory}/lib</outputDirectory>
-              			<includeTypes>dll,exe,so</includeTypes>
-              			<stripVersion>true</stripVersion>
-              			<overWriteReleases>false</overWriteReleases>
-              			<overWriteSnapshots>false</overWriteSnapshots>
-              			<overWriteIfNewer>true</overWriteIfNewer>
-              
-              			<artifactItems>
-
-                			<artifactItem>
-                  				<groupId>com.almworks.sqlite4java</groupId>
-                 				<artifactId>sqlite4java-win32-x64</artifactId>
-                  				<version>${sqlite4java.version}</version>
-                  				<type>dll</type>
-                  				<overWrite>true</overWrite>
-                  				<outputDirectory>${project.build.directory}/lib</outputDirectory>
-                			</artifactItem>
-
-                			<artifactItem>
-                  				<groupId>com.almworks.sqlite4java</groupId>
-                  				<artifactId>libsqlite4java-linux-amd64</artifactId>
-                  				<version>${sqlite4java.version}</version>
-                  				<type>so</type>
-                  				<overWrite>true</overWrite>
-                  				<outputDirectory>${project.build.directory}/lib</outputDirectory>
-                			</artifactItem>
-
-              			</artifactItems>
-            		</configuration>
-                        
-          			</execution>
                 </pluginExecution>
 
               </pluginExecutions>
@@ -294,7 +245,6 @@
         <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.18.1</version> <!-- Latest version checked on 21 january 2015 -->
         <configuration>
           <systemProperties>
             <property>
@@ -365,32 +315,16 @@
       <plugin>
         <groupId>com.google.code.maven-replacer-plugin</groupId>
         <artifactId>replacer</artifactId>
-        <!-- Version inherited from ProFI-Pom -->
-
+        <!-- Version & config inherited from ProFI-Pom -->
         <executions>
           <execution>
+          	<id>scala-version-generation</id>
             <phase>generate-sources</phase>
-              <goals>
-                <goal>replace</goal>
-              </goals>
-           </execution>
-         </executions>
-
-         <configuration>
-           <file>${version.path}/Version.scala.template</file>
-           <outputFile>${version.path}/Version.scala</outputFile>
-           <replacements>
-             <replacement>
-               <token>@moduleName@</token>
-               <value>${project.artifactId}</value>
-             </replacement>
-             <replacement>
-               <token>@version@</token>
-               <value>${project.version}_${maven.build.timestamp}_${user.name}</value>
-             </replacement>
-           </replacements>
-         </configuration>
-
+            <configuration>
+			<skip>false</skip>
+      	</configuration>            
+          </execution>
+        </executions>
       </plugin>
 
       <!-- Phase "compile" Scala compiler -->
@@ -399,25 +333,7 @@
         <artifactId>scala-maven-plugin</artifactId>
         <!-- Version inherited from ProFI-Pom -->
         <configuration>
-          <recompileMode>incremental</recompileMode>
-          <!-- <residentCompilerLimit>1</residentCompilerLimit> -->
-          <args>
-            <arg>-deprecation</arg>
-            <arg>-unchecked</arg>
-            <arg>-P:continuations:enable</arg>
-          </args>
-          <javacArgs>
-            <javacArg>-Xlint:unchecked</javacArg>
-            <javacArg>-Xlint:deprecation</javacArg>
-          </javacArgs>
-          <charset>UTF-8</charset>
-          <compilerPlugins>
-            <compilerPlugin>
-              <groupId>org.scala-lang.plugins</groupId>
-              <artifactId>continuations</artifactId>
-              <version>${scala-library.version}</version>
-            </compilerPlugin>
-          </compilerPlugins>
+        	<charset>UTF-8</charset>
         </configuration>
       </plugin>
 
@@ -452,8 +368,29 @@
             <configuration>
               <includeTypes>so,dll</includeTypes>
               <outputDirectory>${project.build.directory}/lib</outputDirectory>
+              <stripVersion>true</stripVersion>
               <overWriteIfNewer>true</overWriteIfNewer>
-            </configuration>
+          		<artifactItems>
+           			<artifactItem>
+              				<groupId>com.almworks.sqlite4java</groupId>
+               				<artifactId>sqlite4java-win32-x64</artifactId>
+               				<version>${sqlite4java.version}</version>
+               				<type>dll</type>
+               				<overWrite>true</overWrite>
+               				<outputDirectory>${project.build.directory}/lib</outputDirectory>
+             			</artifactItem>
+
+                		<artifactItem>
+                  			<groupId>com.almworks.sqlite4java</groupId>
+                  			<artifactId>libsqlite4java-linux-amd64</artifactId>
+                  			<version>${sqlite4java.version}</version>
+                  			<type>so</type>
+                  			<overWrite>true</overWrite>
+                  			<outputDirectory>${project.build.directory}/lib</outputDirectory>
+                		</artifactItem>
+
+              			</artifactItems>
+            		</configuration>
           </execution>
 
         </executions>

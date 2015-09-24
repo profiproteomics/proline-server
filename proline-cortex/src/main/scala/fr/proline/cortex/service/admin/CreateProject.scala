@@ -1,7 +1,7 @@
 package fr.proline.cortex.service.admin
 
 import fr.proline.cortex.service.AbstractRemoteProcessService
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.cortex.util.DbConnectionHelper
@@ -21,7 +21,7 @@ import fr.proline.admin.service.db.SetupProline
  *  new project Id. 
  *  
  */
-class CreateProject extends AbstractRemoteProcessService with Logging {
+class CreateProject extends AbstractRemoteProcessService with LazyLogging {
 
   /* JMS Service identification */
   override val serviceName = "proline/admin/CreateProject"

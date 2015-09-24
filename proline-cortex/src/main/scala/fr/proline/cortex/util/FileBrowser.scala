@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit
 
 import scala.util.matching.Regex
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 trait FileOrDirAttrs {
   val path: String // file or dir path
@@ -45,7 +45,7 @@ case class DirAttrs(
  * @author David Bouyssie
  *
  */
-object FileBrowser extends Logging {
+object FileBrowser extends LazyLogging {
 
   def getDirectories(localPathname: String, mountPoint: Option[MountPoint], rule: String, maxDepth: Int = 1): Seq[DirAttrs] = {
     require((localPathname != null), "LocalPathname is null")

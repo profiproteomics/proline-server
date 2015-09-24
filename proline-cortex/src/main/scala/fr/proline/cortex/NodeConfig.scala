@@ -5,14 +5,14 @@ import java.util.UUID
 import scala.math.min
 
 import com.typesafe.config.Config
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.StringUtils
 import fr.profi.util.ThreadLogger
 import fr.proline.admin.service.db.SetupProline
 import fr.proline.cortex.Constants.MAX_PORT
 
-object NodeConfig extends Logging {
+object NodeConfig extends LazyLogging {
 
   /* Singleton "Constructor" and fields declaration
    * Set a ThreadLogger to catch initialization errors */

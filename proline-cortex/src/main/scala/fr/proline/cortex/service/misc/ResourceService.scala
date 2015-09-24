@@ -11,7 +11,7 @@ import scala.annotation.elidable.ASSERTION
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.StringUtils
 import fr.proline.cortex.IServiceMonitoringNotifier
@@ -28,7 +28,7 @@ import javax.jms.TextMessage
  * Input param :  file_path : specify the path to the resource to get.
  *
  */
-class ResourceService extends Logging {
+class ResourceService extends LazyLogging {
 
   /* Service Constants */
   val GET_RESOURCE_AS_STREAM_METHOD = "get_resource_as_stream"

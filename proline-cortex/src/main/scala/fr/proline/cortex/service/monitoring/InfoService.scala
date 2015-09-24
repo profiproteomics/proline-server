@@ -7,7 +7,7 @@ import scala.Array.canBuildFrom
 
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.StringUtils.LINE_SEPARATOR
 import fr.proline.cortex.NodeConfig
@@ -21,7 +21,7 @@ import fr.proline.util.version.VersionHelper
  *    Modules Versions for "version" method as a String
  *    and an info string (instance and host IP) an any other method call.
  */
-class InfoService extends IRemoteService with Logging {
+class InfoService extends IRemoteService with LazyLogging {
 
   /* Constants */
   val SHORT_TAB = "  "

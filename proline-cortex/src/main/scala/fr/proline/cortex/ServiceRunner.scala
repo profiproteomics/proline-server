@@ -5,7 +5,7 @@ import scala.collection.mutable
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import Constants.JMS_CORRELATION_ID_KEY
 import Constants.JMS_DESTINATION_KEY
 import Constants.JMS_MESSAGE_ID_KEY
@@ -27,7 +27,7 @@ import javax.jms.Session
 import javax.jms.TextMessage
 import javax.jms.JMSException
 
-object ServiceRunner extends Logging {
+object ServiceRunner extends LazyLogging {
 
   /* Constants */
 
@@ -155,7 +155,7 @@ object ServiceRunner extends Logging {
 /**
  * Builds JMS Consumer to run {{{IRemoteService}}} on given JMS {{{Queue}}}.
  */
-class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotifier: IServiceMonitoringNotifier) extends Runnable with Logging {
+class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotifier: IServiceMonitoringNotifier) extends Runnable with LazyLogging {
 
   import ServiceRunner._
 

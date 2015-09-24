@@ -1,7 +1,7 @@
 package fr.proline.cortex.service.dps.msq
 
 import fr.proline.cortex.service.AbstractRemoteProcessService
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import fr.proline.core.algo.msq.ProfilizerConfig
 import fr.proline.core.dal.BuildExecutionContext
@@ -32,7 +32,7 @@ import fr.proline.cortex.util.MountPointPathConverter
  *  Output params :
  *    Boolean for service run status
  */
-class Quantify  extends AbstractRemoteProcessService with Logging with ISingleThreadedService{
+class Quantify  extends AbstractRemoteProcessService with LazyLogging with ISingleThreadedService{
 	/* JMS Service identification */
 	val serviceName = "proline/dps/msq/Quantify";
 	val serviceVersion = "1.0"; 

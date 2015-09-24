@@ -12,7 +12,7 @@ import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.cortex.util.jsonrpc.ProfiJSONRPC2Response
 import fr.proline.core.orm.util.DataStoreConnectorFactory
 import fr.proline.cortex.util.DbConnectionHelper
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.service.uds.UserUpdator
 import java.lang.Boolean
 import fr.proline.admin.service.db.SetupProline
@@ -49,7 +49,7 @@ import fr.proline.core.service.uds.UserAuthenticator
  *   Output params : 
  *      Boolean for service status. 
  */
-class UserAccount extends IRemoteService with Logging {
+class UserAccount extends IRemoteService with LazyLogging {
 
   final val UDS_AUTH_METHOD = "UDS_HASH"
 

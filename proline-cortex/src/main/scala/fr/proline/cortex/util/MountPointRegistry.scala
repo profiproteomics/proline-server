@@ -8,7 +8,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 import com.typesafe.config.Config
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.FileUtils
 import fr.profi.util.StringUtils
@@ -22,7 +22,7 @@ import fr.proline.admin.service.db.SetupProline
  *
  * Note : this implementation use {{{java.nio.file.Path}}} instead of legacy {{{java.io.File}}} API.
  */
-object MountPointRegistry extends Logging {
+object MountPointRegistry extends LazyLogging {
 
   /* Constants (alway use Constants instead of raw Strings) */
   val MOUNT_POINTS_KEY = "mount_points"

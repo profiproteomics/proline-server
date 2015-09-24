@@ -4,9 +4,9 @@ import org.junit.Assert._
 
 import org.junit.Test
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.StrictLogging
 
-class ProfiJSONRPC2ResponseTest extends Logging {
+class ProfiJSONRPC2ResponseTest extends StrictLogging {
 
   private val MAGIC_NUMBER = 42
 

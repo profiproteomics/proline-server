@@ -1,7 +1,7 @@
 package fr.proline.cortex.service.admin
 
 import fr.proline.cortex.service.AbstractRemoteProcessService
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import scala.collection.mutable.HashMap
 import fr.proline.admin.service.db.SetupProline
@@ -19,7 +19,7 @@ import collection.JavaConversions._
  *   HashMap containing UDSdb connection properties and JMS server information 
  *  
  */
-class GetConnectionTemplate extends AbstractRemoteProcessService with Logging {
+class GetConnectionTemplate extends AbstractRemoteProcessService with LazyLogging {
 
   /* JMS Service identification */
   override val serviceName = "proline/admin/GetConnectionTemplate"

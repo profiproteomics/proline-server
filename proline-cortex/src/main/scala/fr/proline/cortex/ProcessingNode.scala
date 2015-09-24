@@ -11,7 +11,7 @@ import org.hornetq.api.jms.HornetQJMSClient
 import org.hornetq.api.jms.JMSFactoryType
 import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory
 import org.hornetq.core.remoting.impl.netty.TransportConstants
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import Constants.MAX_PORT
 import NodeConfig.ENABLE_IMPORTS
 import NodeConfig.JMS_SERVER_HOST
@@ -51,7 +51,7 @@ import fr.proline.cortex.service.admin.UserAccount
 import fr.proline.cortex.service.admin.CreateProject
 import fr.proline.cortex.service.dps.uds.RegisterRawFile
 
-object ProcessingNode extends Logging {
+object ProcessingNode extends LazyLogging {
 
   /* Constants */
   private val EXECUTOR_SHUTDOWN_TIMEOUT = 30 // 30 seconds
@@ -87,7 +87,7 @@ object ProcessingNode extends Logging {
 
 }
 
-class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends Logging {
+class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogging {
 
   import ProcessingNode._
 

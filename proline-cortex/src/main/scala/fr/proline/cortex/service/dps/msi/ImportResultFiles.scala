@@ -2,7 +2,7 @@ package fr.proline.cortex.service.dps.msi
 
 import fr.proline.cortex.service.AbstractRemoteProcessService
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import scala.util.matching.Regex
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.context.IExecutionContext
@@ -46,7 +46,7 @@ trait IResultFileDescriptor {
  *  Output params
  *    List of ImportedResultFile : path of imported file and Id of created target RS 
  */
-abstract class AbstractImportResultFiles extends AbstractRemoteProcessService with Logging with ISingleThreadedService {
+abstract class AbstractImportResultFiles extends AbstractRemoteProcessService with LazyLogging with ISingleThreadedService {
   /* JMS Service identification */
   val serviceName = "proline/dps/msi/ImportResultFiles"
 

@@ -1,7 +1,7 @@
 package fr.proline.cortex.service.dps.msi
 
 import fr.proline.cortex.service.IRemoteService
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
@@ -24,7 +24,7 @@ import fr.proline.cortex.util.DbConnectionHelper
  *  new project Id.
  *
  */
-class UpdateSpectraParams extends AbstractRemoteProcessService with Logging {
+class UpdateSpectraParams extends AbstractRemoteProcessService with LazyLogging {
 
   /* JMS Service identification */
   val serviceName = "proline/dps/msi/UpdateSpectraParams"

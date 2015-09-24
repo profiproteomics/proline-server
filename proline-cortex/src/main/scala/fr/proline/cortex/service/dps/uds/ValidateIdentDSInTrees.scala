@@ -2,7 +2,7 @@ package fr.proline.cortex.service.dps.uds
 
 import scala.Array.canBuildFrom
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.primitives.toLong
 import fr.proline.cortex.service.AbstractRemoteProcessService
 import fr.proline.cortex.service.dps.msi.ValidateResultSet
@@ -28,7 +28,7 @@ import fr.proline.core.service.uds.IdentificationTreeValidator
  * Output params :
  *   generated ResultSummary ID 
  */
-class ValidateIdentDSInTree extends AbstractRemoteProcessService with Logging {
+class ValidateIdentDSInTree extends AbstractRemoteProcessService with LazyLogging {
 
   /* JMS Service identification */
   val serviceName = "proline/dps/uds/ValidateIdentDSInTree"

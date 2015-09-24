@@ -5,7 +5,7 @@ import java.util.HashMap
 import java.util.UUID
 import scala.Array.canBuildFrom
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.StringUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
@@ -73,7 +73,7 @@ object OutputMode extends Enumeration {
 case class ResultSummaryIdentifier(projectId: Long, rsmId: Long)
 case class RsmIdentifier(projectId: Long, dsId: Long, rsmId: Long)
 
-class ExportResultSummary extends AbstractRemoteProcessService with Logging {
+class ExportResultSummary extends AbstractRemoteProcessService with LazyLogging {
 
   /* JMS Service identification */
   val serviceName = "proline/dps/msi/ExportResultSummary"
@@ -262,7 +262,7 @@ class ExportResultSummary extends AbstractRemoteProcessService with Logging {
   }
 }
 
-class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with Logging {
+class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogging {
 
   /* JMS Service identification */
   val serviceName = "proline/dps/msi/ExportResultSummary"

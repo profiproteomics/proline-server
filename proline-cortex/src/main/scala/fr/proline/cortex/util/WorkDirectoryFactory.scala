@@ -5,11 +5,11 @@ import java.nio.file.Files
 import java.util.Timer
 import java.util.TimerTask
 import java.util.concurrent.TimeUnit
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.ThreadLogger
 import org.apache.commons.io.FileUtils
 
-object WorkDirectoryFactory extends Logging {
+object WorkDirectoryFactory extends LazyLogging {
 
   /**
    * Creates a temporary ProlineWork directory. Old files ( > 24 hours) are purged every hour.
@@ -88,7 +88,7 @@ object WorkDirectoryFactory extends Logging {
 
 }
 
-class TempDirectoryPurgeTask(tempDirectory: File) extends TimerTask with Logging {
+class TempDirectoryPurgeTask(tempDirectory: File) extends TimerTask with LazyLogging {
 
   val PURGE_DELAY = TimeUnit.HOURS.toMillis(24)
 
