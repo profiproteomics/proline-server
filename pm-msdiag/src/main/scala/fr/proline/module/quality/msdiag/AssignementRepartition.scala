@@ -1,10 +1,11 @@
 package fr.proline.module.quality.msdiag
 
-import com.typesafe.scalalogging.slf4j.Logging
+//import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.module.quality.msdiag.msi.MSDiagOutput
 import fr.proline.module.quality.msdiag.msi.MSDiagResultSetManager
 import fr.proline.module.quality.msdiag.msi.MSDiagUtils
 import fr.proline.module.quality.msdiag.msi.MSDiagOutputTypes
+import com.typesafe.scalalogging.LazyLogging
 
 /*
  * This is what it should return 
@@ -12,7 +13,7 @@ import fr.proline.module.quality.msdiag.msi.MSDiagOutputTypes
 |       1903 |     1305 |
  */
 
-object AssignementRepartition extends Logging {
+object AssignementRepartition extends LazyLogging {
 
   def get(rs: MSDiagResultSetManager): MSDiagOutput = {
     

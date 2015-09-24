@@ -1,13 +1,13 @@
 package fr.proline.module.quality.msdiag
 
 import scala.collection.mutable.ArrayBuffer
-import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.module.quality.msdiag.msi.MSDiagUtils
 import fr.proline.module.quality.msdiag.msi.MSDiagOutput
 import fr.proline.module.quality.msdiag.msi.MSDiagOutputTypes
 import fr.proline.module.quality.msdiag.msi.MSDiagResultSetManager
 import fr.proline.core.om.model.msi.PeptideMatch
 import scala.math.ceil
+import com.typesafe.scalalogging.LazyLogging
 
 /*
  *  This is what it should return
@@ -22,7 +22,7 @@ import scala.math.ceil
 | 3201 - 3208 |          6 |             0 |                    1 |                    1 |            0 |
  */
 
-object MatchesPerScanAndScore extends Logging {
+object MatchesPerScanAndScore extends LazyLogging {
 
   def get(rs: MSDiagResultSetManager, scoreWindow: Array[Float], maxRank: Integer, nbScansPerGroup: Int): MSDiagOutput = {
 

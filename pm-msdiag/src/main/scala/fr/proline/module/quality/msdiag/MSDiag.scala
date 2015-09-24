@@ -1,11 +1,11 @@
 package fr.proline.module.quality.msdiag
 
-import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.module.quality.msdiag.msi._
 import fr.proline.context.IExecutionContext
 import scala.collection.mutable.ArrayBuffer
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * @author Alexandre Burel (LSMBO IPHC CNRS)
@@ -35,7 +35,7 @@ import scala.collection.mutable.ArrayBuffer
  *
  */
 
-class MSDiag(val rsId: Long, val parserContext: IExecutionContext) extends Logging {
+class MSDiag(val rsId: Long, val parserContext: IExecutionContext) extends LazyLogging {
   
   // this variable is the only access to the data stored in the databases
   private val rs = new MSDiagResultSetManager(parserContext, rsId)

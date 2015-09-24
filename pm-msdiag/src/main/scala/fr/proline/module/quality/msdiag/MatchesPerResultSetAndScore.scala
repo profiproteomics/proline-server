@@ -1,12 +1,12 @@
 package fr.proline.module.quality.msdiag
 
-import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.module.quality.msdiag.msi.MSDiagOutput
 import fr.proline.module.quality.msdiag.msi.MSDiagResultSetManager
 import fr.proline.module.quality.msdiag.msi.MSDiagUtils
 import fr.proline.module.quality.msdiag.msi.MSDiagOutputTypes
 import fr.proline.core.om.model.msi.PeptideMatch
 import scala.collection.mutable.ArrayBuffer
+import com.typesafe.scalalogging.LazyLogging
 
 /*
  *  This is what it should return
@@ -15,7 +15,7 @@ import scala.collection.mutable.ArrayBuffer
 | Decoy matches  |             0 |                   19 |                    0 |            0 |
  */
 
-object MatchesPerResultSetAndScore extends Logging {
+object MatchesPerResultSetAndScore extends LazyLogging {
 
   def get(rs: MSDiagResultSetManager, scoreWindow: Array[Float], maxRank: Integer): MSDiagOutput = {
     

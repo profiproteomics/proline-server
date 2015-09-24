@@ -3,7 +3,6 @@ package fr.proline.module.quality.msdiag
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
@@ -13,9 +12,10 @@ import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.module.quality.msdiag.msi.MSDiagOutput
 import fr.proline.repository.DriverType
+import com.typesafe.scalalogging.StrictLogging
 
 @Test
-class MSDiagTest extends AbstractMultipleDBTestCase with Logging {
+class MSDiagTest extends AbstractMultipleDBTestCase with StrictLogging {
 
   // Define the interface to be implemented
   val driverType = DriverType.H2

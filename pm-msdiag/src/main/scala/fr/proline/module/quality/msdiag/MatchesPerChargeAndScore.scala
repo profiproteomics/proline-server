@@ -1,6 +1,6 @@
 package fr.proline.module.quality.msdiag
 
-import com.typesafe.scalalogging.slf4j.Logging
+//import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.module.quality.msdiag.msi.MSDiagOutput
 import fr.proline.module.quality.msdiag.msi.MSDiagResultSetManager
 import fr.proline.module.quality.msdiag.msi.MSDiagUtils
@@ -10,6 +10,7 @@ import fr.proline.core.om.model.msi.MsQuery
 import scala.collection.mutable.ArrayBuffer
 import scala.Int
 import fr.proline.module.quality.msdiag.msi.MSDiagUtils
+import com.typesafe.scalalogging.LazyLogging
 
 /*
  *  This is what it should return
@@ -19,7 +20,7 @@ import fr.proline.module.quality.msdiag.msi.MSDiagUtils
 |      3 |        194 |             0 |                   46 |                   16 |            0 |
  */
 
-object MatchesPerChargeAndScore extends Logging {
+object MatchesPerChargeAndScore extends LazyLogging {
   
   private var rs: MSDiagResultSetManager = null
   

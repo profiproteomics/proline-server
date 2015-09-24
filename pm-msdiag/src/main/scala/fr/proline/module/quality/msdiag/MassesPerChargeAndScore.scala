@@ -1,14 +1,15 @@
 package fr.proline.module.quality.msdiag
 
-import com.typesafe.scalalogging.slf4j.Logging
+//import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.module.quality.msdiag.msi.MSDiagOutput
 import fr.proline.module.quality.msdiag.msi.MSDiagResultSetManager
 import fr.proline.module.quality.msdiag.msi.MSDiagUtils
 import fr.proline.module.quality.msdiag.msi.MSDiagOutputTypes
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.Ms2Query
+import com.typesafe.scalalogging.LazyLogging
 
-object MassesPerChargeAndScore extends Logging {
+object MassesPerChargeAndScore extends LazyLogging {
 
   def get(rs: MSDiagResultSetManager, scoreWindow: Array[Float], maxRank: Integer): MSDiagOutput = {
 

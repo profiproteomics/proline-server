@@ -2,7 +2,6 @@ package fr.proline.module.quality.msdiag.msi
 
 import scala.Array.canBuildFrom
 import scala.Array.fallbackCanBuildFrom
-import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.model.msi.MsQuery
 import fr.proline.core.om.model.msi.Ms2Query
@@ -12,8 +11,9 @@ import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.om.provider.msi.impl.SQLMsQueryProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLSpectrumProvider
+import com.typesafe.scalalogging.LazyLogging
 
-class MSDiagResultSetManager(val parserContext: IExecutionContext, val rsId: Long) extends Logging {
+class MSDiagResultSetManager(val parserContext: IExecutionContext, val rsId: Long) extends LazyLogging {
   
   private val msQueryProvider = new SQLMsQueryProvider(parserContext.getMSIDbConnectionContext)
   private val spectrumProvider = new SQLSpectrumProvider(parserContext.getMSIDbConnectionContext)

@@ -1,11 +1,12 @@
 package fr.proline.module.quality.msdiag
 
-import com.typesafe.scalalogging.slf4j.Logging
+//import com.typesafe.scalalogging.slf4j.Logging
 import fr.proline.module.quality.msdiag.msi.MSDiagOutput
 import fr.proline.module.quality.msdiag.msi.MSDiagResultSetManager
 import fr.proline.module.quality.msdiag.msi.MSDiagUtils
 import fr.proline.module.quality.msdiag.msi.MSDiagOutputTypes
 import fr.proline.core.om.model.msi.PeptideMatch
+import com.typesafe.scalalogging.LazyLogging
 
 /*
  * This is what it should return 
@@ -15,7 +16,7 @@ import fr.proline.core.om.model.msi.PeptideMatch
 |      3 | 837.416687 | 3157.566681 | 1773.5517001666665 | 1810.419022 |
  */
 
-object MassesPerCharge extends Logging {
+object MassesPerCharge extends LazyLogging {
 
   def get(rs: MSDiagResultSetManager, maxRank: Integer): MSDiagOutput = {
     

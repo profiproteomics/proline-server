@@ -1,7 +1,6 @@
 package fr.proline.module.quality.msdiag.service
 
 import scala.Array.canBuildFrom
-import com.typesafe.scalalogging.slf4j.Logging
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
@@ -9,13 +8,14 @@ import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.module.quality.msdiag.MSDiag
+import com.typesafe.scalalogging.LazyLogging
 
 class MSDiagReportGenerator(
   executionContext: IExecutionContext,
   resultSetId: Long,
   //settings: Option[java.util.Map[String,Object]]
   settings: Option[Map[String,Any]] // msdiag settings 
-  ) extends IService with Logging {
+  ) extends IService with LazyLogging {
 
    var resultHashMapJson : String = ""
   
