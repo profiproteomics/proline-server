@@ -1,7 +1,7 @@
 package fr.proline.module.parser.mzidentml
 
 import java.io.File
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi.IResultFile
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IResultFileProvider
@@ -11,7 +11,7 @@ object MzIdResultFileProvider {
   final val fileType: String = "mzidentml.mzid"
 }
 
-class MzIdResultFileProvider extends IResultFileProvider with Logging { // with IResultFileVerifier
+class MzIdResultFileProvider extends IResultFileProvider with LazyLogging { // with IResultFileVerifier
 
   val fileType: String = MzIdResultFileProvider.fileType
 

@@ -6,7 +6,7 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.cv._
 import fr.profi.obo.PsiMs
@@ -27,7 +27,7 @@ import uk.ac.ebi.jmzidml.xml.io.MzIdentMLUnmarshaller
 class MzIdResultFile(
   val fileLocation: File,
   val parserContext: ProviderDecoratedExecutionContext
-) extends IResultFile with Logging {
+) extends IResultFile with LazyLogging {
   
   private val ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
   

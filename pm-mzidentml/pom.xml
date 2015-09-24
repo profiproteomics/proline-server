@@ -5,7 +5,7 @@
   <parent>
     <artifactId>ProFI-Pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.0.6</version>  <!-- Snapshot Trunk version -->
+    <version>0.1.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>PM-MzIdentML</artifactId>
@@ -16,10 +16,10 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>0.4.0</core.version>  <!-- Snapshot Trunk version -->
+    <core.version>0.5.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
   </properties>
 	<scm>
-	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MzIdentML/trunk</connection>
+	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MzIdentML/branches/0.3.0.a_Java8_Scala2.11 </connection>
 	</scm>
 
 
@@ -34,8 +34,8 @@
 
     <!-- Logging -->
     <dependency>
-      <groupId>com.typesafe</groupId>
-      <artifactId>scalalogging-slf4j_2.10</artifactId>
+      <groupId>com.typesafe.scala-logging</groupId>
+      <artifactId>scala-logging_${scala.version}</artifactId>
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
 
@@ -43,7 +43,7 @@
     <dependency>
       <groupId>uk.ac.ebi.jmzidml</groupId>
       <artifactId>jmzidentml</artifactId>
-      <version>1.1.9</version>
+      <version>1.2.2</version>
 
        <exclusions>
          <exclusion>
@@ -72,24 +72,10 @@
 
     <!-- Override jmzidentml / xxindex dependency without com.springsource prefix -->
     <!-- Use SLF4J instead of Apache common-loggings -->
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
-    </dependency>
 
     <!-- If log4j is needed, add log4j-over-slf4j dependency -->
 
-    <dependency>
-      <groupId>antlr</groupId>
-      <artifactId>antlr</artifactId>
-      <version>2.7.7</version>
-    </dependency>
 
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>1.4</version>
-    </dependency>
 
     <!-- Proline -->
     <dependency>
@@ -154,8 +140,7 @@
 
       <plugin>
         <groupId>net.alchim31.maven</groupId>
-        <artifactId>scala-maven-plugin</artifactId>
-        <version>3.1.6</version>
+        <artifactId>scala-maven-plugin</artifactId>        
       </plugin>
 
       <plugin>

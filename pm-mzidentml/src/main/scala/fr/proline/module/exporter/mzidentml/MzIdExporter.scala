@@ -10,7 +10,7 @@ import javax.xml.transform.sax.SAXSource
 import javax.xml.parsers.SAXParserFactory
 import scala.collection.mutable.{ArrayBuffer,HashMap}
 import org.xml.sax.InputSource
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import uk.ac.ebi.jmzidml.model.mzidml.{ CvParam => _, Enzyme => MzIdEnzyme, Peptide => MzIdPeptide, UserParam => _, _ }
 import uk.ac.ebi.jmzidml.xml.io.MzIdentMLMarshaller
 import uk.ac.ebi.jmzidml.xml.jaxb.marshaller.MarshallerFactory
@@ -98,7 +98,7 @@ class MzIdExporter(
   unimodIdByPtmId: Map[Long, Long],
   spectrumNumberByIdOpt: Option[Map[Long, Int]] = None,
   executionContextOpt : Option[IExecutionContext] = None
-) extends ParamMaker with Logging {
+) extends ParamMaker with LazyLogging {
     
   def this(rsmId: Long, executionContext : IExecutionContext) {
      this(MzIdExporter._loadResultSummary(rsmId, executionContext) , MzIdExporter._getUnimodIdByPtmId(executionContext) , None, Some(executionContext) )
