@@ -1,26 +1,21 @@
 package fr.proline.module.exporter.dataset
 
-
 import java.nio.file.Files
-import scala.collection.mutable.ArrayBuffer
-import org.junit._
-import org.junit.Assert._
-import java.util.ArrayList
+
 import org.apache.commons.io.FileUtils
-import com.typesafe.scalalogging.slf4j.Logging
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+
 import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.ContextFactory
-import fr.proline.core.om.provider.msi.impl._
 import fr.proline.core.dal.AbstractMultipleDBTestCase
+import fr.proline.core.dal.ContextFactory
 import fr.proline.module.exporter.commons.ViewSetExporter
-import fr.proline.repository.DriverType
-import scala.io.Source
-import java.io.File
-import fr.proline.core.orm.uds.Dataset
 import fr.proline.module.exporter.dataset.view.BuildDatasetViewSet
+import fr.proline.repository.DriverType
 
 
-class ViewSetExporterTest extends AbstractMultipleDBTestCase with Logging {
+class ViewSetExporterTest extends AbstractMultipleDBTestCase  {
 
   // Define some vars
   val driverType = DriverType.H2

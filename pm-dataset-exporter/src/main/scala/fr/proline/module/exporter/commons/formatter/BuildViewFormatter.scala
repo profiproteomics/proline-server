@@ -9,8 +9,8 @@ object BuildViewFormatter {
   def apply( template: IViewTemplate ): IViewFormatter = {
     
     val t = template match {
-      case scalateTpl: ScalateTemplate => new ScalateFormatter( scalateTpl )
-      case scalastiTpl: ScalastiTemplate => new ScalastiFormatter( scalastiTpl )
+//      case scalateTpl: ScalateTemplate => new ScalateFormatter( scalateTpl )
+//      case scalastiTpl: ScalastiTemplate => new ScalastiFormatter( scalastiTpl )
       case sheetTpl: IWorksheetTemplate => new SpreadsheetFormatter( sheetTpl )
       case textTpl: ITextTemplate => new TextFormatter( textTpl )
       case _ => throw new Exception("unknown template")

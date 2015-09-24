@@ -1,6 +1,6 @@
 package fr.proline.module.exporter.pridexml
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
@@ -15,7 +15,7 @@ class PrideExporterService (
   execCtx: IExecutionContext,
   resultSummaryId: Long,
   filePath: String ,
-  extraDataMap: Map[String, Object]) extends IService with Logging {
+  extraDataMap: Map[String, Object]) extends IService with LazyLogging {
 
   def runService(): Boolean = {
 

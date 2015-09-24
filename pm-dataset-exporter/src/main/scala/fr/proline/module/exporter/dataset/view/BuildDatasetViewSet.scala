@@ -2,7 +2,7 @@ package fr.proline.module.exporter.dataset.view
 
 import scala.collection.mutable.ArrayBuffer
 import fr.profi.jdbc.easy._
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.model.msi.ResultSummary
@@ -38,7 +38,7 @@ import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
 import fr.proline.core.om.model.msq.RatioDefinition
 import fr.proline.core.om.model.msi.Protein
 
-object BuildDatasetViewSet extends Logging {
+object BuildDatasetViewSet extends LazyLogging {
 
   def apply(ds: IdentDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate, exportConfig: ExportConfig): DatasetViewSet = {
 

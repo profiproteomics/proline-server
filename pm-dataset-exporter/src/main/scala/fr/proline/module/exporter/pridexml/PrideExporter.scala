@@ -7,7 +7,7 @@ import java.nio.ByteOrder
 import scala.Array.canBuildFrom
 import scala.annotation.migration
 import scala.collection.mutable.HashMap
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.bytes.doublesToBytes
 import fr.profi.util.serialization.CustomDoubleJacksonSerializer
 import fr.profi.util.serialization.ProfiJSMSerialization
@@ -72,7 +72,7 @@ object PrideExporter {
 class PrideExporter(
   rsm: ResultSummary,
   unimodIdByPtmId: Map[Long, Long],
-  execCtx: IExecutionContext) extends Logging {
+  execCtx: IExecutionContext) extends LazyLogging {
 
   // inner object def
   object CustomSerializer extends ProfiJSMSerialization with CustomDoubleJacksonSerializer

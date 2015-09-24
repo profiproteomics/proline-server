@@ -1,21 +1,16 @@
 package fr.proline.module.exporter.msq
 
-import com.typesafe.scalalogging.slf4j.Logging
-import org.junit.Before
 import org.junit.After
+import org.junit.Before
 import org.junit.Test
-import org.apache.commons.io.FileUtils
-import java.nio.file.Files
-import fr.proline.repository.DriverType
+
 import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.ContextFactory
 import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.module.exporter.msq.view.BuildQuantitationViewSet
-import fr.proline.module.exporter.msq.template.BasicMasterQuantProteinSetsAsXLSX
-import fr.proline.module.exporter.commons.ViewSetExporter
+import fr.proline.core.dal.ContextFactory
+import fr.proline.repository.DriverType
 
 
-class ViewQuantExporterTest extends AbstractMultipleDBTestCase with Logging {
+class ViewQuantExporterTest extends AbstractMultipleDBTestCase  {
 
   // Define some vars
   val driverType = DriverType.H2

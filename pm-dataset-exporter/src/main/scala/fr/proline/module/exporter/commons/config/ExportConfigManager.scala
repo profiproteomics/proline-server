@@ -1,6 +1,6 @@
 package fr.proline.module.exporter.commons.config
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.serialization._
 import scala.collection.mutable.ArrayBuffer
 import java.text.DecimalFormat
@@ -9,7 +9,7 @@ import java.text.DecimalFormat
  * read the configuration file (json) and build the configuration parameters
  * export the default possible configuration file
  */
-object ExportConfigManager extends Logging {
+object ExportConfigManager extends LazyLogging {
   // read a config file and build the  corresponding ExportConfig
   def readConfig(jsonConfig: String): ExportConfig = {
     //logger.debug("BuildCongif export "+jsonConfig);

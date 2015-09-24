@@ -1,11 +1,13 @@
 package fr.proline.module.exporter.commons.config
 
-import com.typesafe.scalalogging.slf4j.Logging
-import org.junit.Assert.assertTrue
-import org.junit.Test
 import scala.io.Source
 
-class ExportConfigManagerTest  extends  Logging{
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+import com.typesafe.scalalogging.LazyLogging
+
+class ExportConfigManagerTest  extends LazyLogging{
   
 	@Test
 	def testReadConfig() {

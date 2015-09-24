@@ -10,7 +10,7 @@ import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.om.model.msq.RatioDefinition
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import java.lang.StringBuilder
 
 
@@ -79,7 +79,7 @@ class MasterQuantPeptideViewFields (qcIds: Array[Long], ratioDefs: Array[RatioDe
 
 }
 
-class MasterQuantPeptideView( val quantiDS: QuantiDataSet ) extends IFixedDatasetView with Logging {
+class MasterQuantPeptideView( val quantiDS: QuantiDataSet ) extends IFixedDatasetView with LazyLogging {
   
   
   val fields  = new MasterQuantPeptideViewFields(quantiDS.qcIds, quantiDS.ratioDefs, quantiDS.nameByQchId)

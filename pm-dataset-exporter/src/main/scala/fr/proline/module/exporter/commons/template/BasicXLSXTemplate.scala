@@ -10,11 +10,11 @@ import fr.proline.module.exporter.api.view.IViewFieldEnumeration
 import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.ss.usermodel.CellStyle
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 class BasicXLSXTemplate(
   val selectedFields: Option[Seq[String]] = None
-) extends IWorksheetTemplate with Logging {
+) extends IWorksheetTemplate with LazyLogging {
 
   val fileExtension: String = "xlsx"
 

@@ -2,7 +2,7 @@ package fr.proline.module.exporter.msi.view
 
 import scala.collection.mutable.ArrayBuffer
 import fr.profi.jdbc.easy._
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.model.msi.ResultSummary
@@ -27,7 +27,7 @@ import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.orm.msi.MsiSearch
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 
-object BuildResultSummaryViewSet extends Logging {
+object BuildResultSummaryViewSet extends LazyLogging {
 
   def apply(ds: IdentDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate, exportConfig :ExportConfig): ResultSummaryViewSet = {
 

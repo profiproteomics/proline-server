@@ -14,11 +14,11 @@ import fr.proline.module.exporter.api.view.IFormLikeView
 import scala.collection.immutable.ListMap
 import fr.proline.module.exporter.api.view.IFixedDatasetView
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.module.exporter.commons.config.ExportConfigManager
 
 
-class ImportAndValidationPropsView (val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val titleSep: String ) extends IFixedDatasetView with Logging{
+class ImportAndValidationPropsView (val identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val titleSep: String ) extends IFixedDatasetView with LazyLogging{
   
   var viewName = "import and validation"
   val childResultSummarys = identDS.childsResultSummarys

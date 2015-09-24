@@ -7,7 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
@@ -23,7 +23,7 @@ import fr.proline.core.service.msi.ResultSetValidator
 import fr.proline.module.fragment_match.service.SpectrumMatchesGenerator
 import fr.proline.repository.DriverType
 
-object PrideExporterTest extends AbstractEmptyDatastoreTestCase with Logging {
+object PrideExporterTest extends AbstractEmptyDatastoreTestCase {
 
   val driverType = DriverType.H2
   val useJPA = false
@@ -42,7 +42,7 @@ object PrideExporterTest extends AbstractEmptyDatastoreTestCase with Logging {
 
 }
 
-class PrideExporterTest extends Logging {
+class PrideExporterTest extends LazyLogging {
 
   @Test
   def testExport() {

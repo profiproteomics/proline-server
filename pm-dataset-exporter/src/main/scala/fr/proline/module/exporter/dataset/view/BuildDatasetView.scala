@@ -8,7 +8,7 @@ import fr.proline.module.exporter.api.view.IDataView
 import fr.proline.module.exporter.api.view.IViewTypeEnumeration
 import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.model.msi.ProteinMatch
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.module.exporter.api.view.IFixedDatasetView
 import fr.proline.module.exporter.commons.config.ExportConfig
 import fr.proline.module.exporter.commons.config.ExportConfigConstant
@@ -28,7 +28,7 @@ class IdentDataSet(
   var resultSummary: ResultSummary,
   var childsResultSummarys: Array[ResultSummary],
   var childsResultSets: Array[ResultSet], 
-  var bioSequenceByBioSeqId: Map[Long, Double]) extends Logging {
+  var bioSequenceByBioSeqId: Map[Long, Double]) extends LayzLogging {
 
   // Count the number of protein sets and proteins matches related to a given peptide match
   val validProtSetIdSetByPepMatchId = new HashMap[Long, HashSet[Long]]()

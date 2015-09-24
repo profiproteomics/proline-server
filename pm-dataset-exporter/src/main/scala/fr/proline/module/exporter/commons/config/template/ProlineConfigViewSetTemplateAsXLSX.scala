@@ -6,13 +6,13 @@ import fr.proline.module.exporter.commons.template.BasicXLSXTemplate
 import fr.proline.module.exporter.commons.template.InfoXLSXTemplate
 import fr.proline.module.exporter.api.template.IViewTemplate
 import fr.proline.module.exporter.api.view.IViewTypeEnumeration
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.module.exporter.commons.config.ExportConfig
 import fr.proline.module.exporter.commons.config.ExportConfigConstant
 import fr.proline.module.exporter.commons.config.ExportConfigSheet
 import fr.proline.module.exporter.commons.config.view.DatasetViewTypes
 
-class ProlineConfigViewSetTemplateAsXLSX(config: ExportConfig) extends IViewSetTemplate with Logging {
+class ProlineConfigViewSetTemplateAsXLSX(config: ExportConfig) extends IViewSetTemplate with LazyLogging {
   val templatedViewTypes: Seq[ViewTypeWithTemplate] = buildTemplate(config)
 
   def buildTemplate(config: ExportConfig): Array[ViewTypeWithTemplate] = {

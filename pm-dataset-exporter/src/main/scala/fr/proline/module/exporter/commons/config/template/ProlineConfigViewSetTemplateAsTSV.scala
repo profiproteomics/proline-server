@@ -1,7 +1,7 @@
 package fr.proline.module.exporter.commons.config.template
 
 import fr.proline.module.exporter.api.template.IViewSetTemplate
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.module.exporter.commons.config.ExportConfig
 import fr.proline.module.exporter.api.template.ViewTypeWithTemplate
 import fr.proline.module.exporter.commons.template.TSVTemplate
@@ -11,7 +11,7 @@ import fr.proline.module.exporter.api.template.IViewTemplate
 import fr.proline.module.exporter.api.view.IViewTypeEnumeration
 import fr.proline.module.exporter.commons.config.view.DatasetViewTypes
 
-class ProlineConfigViewSetTemplateAsTSV(config: ExportConfig) extends IViewSetTemplate with Logging {
+class ProlineConfigViewSetTemplateAsTSV(config: ExportConfig) extends IViewSetTemplate with LazyLogging {
   val templatedViewTypes: Seq[ViewTypeWithTemplate] = buildTemplate(config)
 
   def buildTemplate(config: ExportConfig): Array[ViewTypeWithTemplate] = {

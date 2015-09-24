@@ -1,22 +1,20 @@
 package fr.proline.module.exporter.pridexml
 
-import fr.profi.util.serialization._
-import org.junit.Test
-import fr.proline.core.om.model.msi.SpectrumMatch
-import fr.profi.util.serialization.ProfiJSMSerialization
-import com.typesafe.scalalogging.slf4j.Logging
-import fr.proline.core.om.model.msi.SpectrumMatch
-import fr.proline.core.om.model.msi.FragmentMatch
-import org.junit.Ignore
 import org.junit.Assert
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import org.junit.Test
+
+import com.typesafe.scalalogging.LazyLogging
+
+import fr.profi.util.serialization.CustomDoubleJacksonSerializer
+import fr.profi.util.serialization.ProfiJSMSerialization
+import fr.proline.core.om.model.msi.FragmentMatch
+import fr.proline.core.om.model.msi.SpectrumMatch
 import fr.proline.core.om.model.msi.TheoreticalFragmentSeries
 
-class SpectrumMatchTest extends Logging {
+class SpectrumMatchTest extends LazyLogging {
 
-  
-   object CustomSerializer extends ProfiJSMSerialization with CustomDoubleJacksonSerializer 
-   
+  object CustomSerializer extends ProfiJSMSerialization with CustomDoubleJacksonSerializer
+
   @Test
   def testSpectrumMatchDeserialize() {
     val jsonStr = """{"frag_table":[{"frag_series":"y0++","masses":[0.0,434.268553324962,390.752539104962,334.210507104962,277.668475104962,249.15774323496197,0.0,0.0,0.0,0.0]},{"frag_series":"b","masses":[102.054954966812,189.086983406812,302.171047406812,415.25511140681203,472.27657514681204,573.324253646812,686.4083176468121,743.429781386812,840.482545266812,0.0]},
@@ -44,22 +42,21 @@ class SpectrumMatchTest extends Logging {
       {"label":"y(8)++","moz":399.98601,"calculated_moz":399.757821446812,"intensity":793300.0},
       {"label":"b0(3)","moz":284.26385,"calculated_moz":284.160482723112,"intensity":884500.0},
       {"label":"b0(7)","moz":668.44017,"calculated_moz":668.3977529631121,"intensity":226200.0}]}"""
-    
-       
-      val spectrumMatch = CustomSerializer.deserialize[SpectrumMatch](jsonStr)
-      Assert.assertNotNull(spectrumMatch)
-    
+
+    val spectrumMatch = CustomSerializer.deserialize[SpectrumMatch](jsonStr)
+    Assert.assertNotNull(spectrumMatch)
+
   }
-  
+
   @Test
-  def testSpectrumMatchSerialize() {    
-          val fm = new FragmentMatch("b0(7)", None, 668.6, 668.0, 9999, None)
-          val spectrumMatch = new SpectrumMatch()
-          spectrumMatch.fragMatches = Array(fm)
-          val tfs = new TheoreticalFragmentSeries("y0++", Array(12.0,13.0562,1257.235689, 9999.00000001))
-          spectrumMatch.fragTable = Array(tfs)
-    	  logger.info(CustomSerializer.serialize(spectrumMatch))
-    
+  def testSpectrumMatchSerialize() {
+    val fm = new FragmentMatch("b0(7)", None, 668.6, 668.0, 9999, None)
+    val spectrumMatch = new SpectrumMatch()
+    spectrumMatch.fragMatches = Array(fm)
+    val tfs = new TheoreticalFragmentSeries("y0++", Array(12.0, 13.0562, 1257.235689, 9999.00000001))
+    spectrumMatch.fragTable = Array(tfs)
+    logger.info(CustomSerializer.serialize(spectrumMatch))
+
   }
 
 }

@@ -12,10 +12,10 @@ import java.text.DecimalFormat
 import scala.collection.immutable.ListMap
 import fr.proline.core.om.model.msq.MasterQuantProteinSet
 import scala.collection.mutable.ArrayBuffer
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import java.util.NoSuchElementException
 
-abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView with Logging {
+abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView with LazyLogging {
   val identDS: IdentDataSet
   val sheetConfig: ExportConfigSheet
   val dateFormat: SimpleDateFormat
