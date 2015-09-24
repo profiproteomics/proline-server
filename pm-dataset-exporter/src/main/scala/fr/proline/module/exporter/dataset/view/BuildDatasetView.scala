@@ -29,7 +29,7 @@ class IdentDataSet(
   var resultSummary: ResultSummary,
   var childsResultSummarys: Array[ResultSummary],
   var childsResultSets: Array[ResultSet], 
-  var bioSequenceByBioSeqId: Map[Long, Double]) extends LayzLogging {
+  var bioSequenceByBioSeqId: Map[Long, Double]) extends LazyLogging {
 
   // Count the number of protein sets and proteins matches related to a given peptide match
   val validProtSetIdSetByPepMatchId = new HashMap[Long, HashSet[Long]]()
