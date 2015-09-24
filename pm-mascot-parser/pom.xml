@@ -4,7 +4,7 @@
   <parent>
     <artifactId>ProFI-Pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.0.6</version>  <!-- Snapshot Trunk version -->
+    <version>0.1.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>PM-MascotParser</artifactId>
@@ -16,7 +16,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>0.4.0</core.version>  <!-- Snapshot Trunk version -->
+    <core.version>0.5.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
     <version.path>${basedir}/src/main/scala/fr/proline/module/parser/mascot</version.path>
   </properties>
   <scm>
@@ -35,8 +35,8 @@
 
     <!-- Logging -->
     <dependency>
-      <groupId>com.typesafe</groupId>
-      <artifactId>scalalogging-slf4j_2.10</artifactId>
+      <groupId>com.typesafe.scala-logging</groupId>
+      <artifactId>scala-logging_${scala.version}</artifactId>
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
 
@@ -44,7 +44,7 @@
     <dependency>
       <groupId>fr.proline.unimod</groupId>
       <artifactId>UnimodUnmarshaller</artifactId>
-      <version>0.6.0</version>
+      <version>0.7.0-SNAPSHOT</version>
     </dependency>
 
     <!-- Mascot Parser native libraries (for all OSes, loaded at runtime) 
@@ -52,7 +52,7 @@
     <dependency>
       <groupId>matrixscience</groupId>
       <artifactId>MSParser-native-libraries-2.4.00</artifactId>
-      <version>0.0.6</version>
+      <version>0.2.0-SNAPSHOT</version>
     </dependency>
 
     <!-- Proline -->
@@ -74,7 +74,7 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>PM-FragmentMatchGenerator</artifactId>
-      <version>0.2.0</version>  <!-- Snapshot Trunk version -->
+      <version>0.3.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
     </dependency>
     <!-- Tests -->
     <dependency>
@@ -164,10 +164,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.15</version>
-        <configuration>
-          <skipTests>false</skipTests>
-        </configuration>
+        <!-- Version inherited from ProFI-Pom -->        
       </plugin>
 
       <plugin>
@@ -179,31 +176,16 @@
       <plugin>
         <groupId>com.google.code.maven-replacer-plugin</groupId>
         <artifactId>replacer</artifactId>
-
+        <!-- Version & config inherited from ProFI-Pom -->
         <executions>
           <execution>
+			<id>scala-version-generation</id>
             <phase>generate-sources</phase>
-            <goals>
-              <goal>replace</goal>
-            </goals>
+            <configuration>
+			  <skip>false</skip>
+      	    </configuration>                        
           </execution>
         </executions>
-
-        <configuration>
-          <file>${version.path}/Version.scala.template</file>
-          <outputFile>${version.path}/Version.scala</outputFile>
-          <replacements>
-            <replacement>
-              <token>@moduleName@</token>
-              <value>${project.artifactId}</value>
-            </replacement>
-            <replacement>
-              <token>@version@</token>
-              <value>${project.version}_${maven.build.timestamp}_${user.name}</value>
-            </replacement>
-          </replacements>
-        </configuration>
-
       </plugin>
 
     </plugins>

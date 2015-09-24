@@ -3,7 +3,7 @@ package fr.proline.core.service.msi
 import java.sql.{ Connection, SQLException }
 import org.junit.Ignore
 import org.junit.Assert.assertTrue
-import com.typesafe.scalalogging.slf4j.Logging
+
 import fr.proline.context.{ BasicExecutionContext, DatabaseConnectionContext, IExecutionContext }
 import fr.proline.core.dal.ContextFactory
 import fr.proline.core.dal.ProlineEzDBC
@@ -16,7 +16,7 @@ import javax.persistence.EntityManager
 import java.io.File
 
 @Ignore
-trait AbstractRFImporterTestCase extends AbstractMultipleDBTestCase with Logging {
+trait AbstractRFImporterTestCase extends AbstractMultipleDBTestCase   {
 
   protected val driverType: DriverType
   protected var _datFileName: String = "/F047876.dat"

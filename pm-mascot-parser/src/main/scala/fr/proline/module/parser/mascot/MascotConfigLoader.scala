@@ -1,6 +1,6 @@
 package fr.proline.module.parser.mascot
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import matrix_science.msparser.ms_enzymefile
 import matrix_science.msparser.ms_errors
@@ -58,7 +58,7 @@ object MascotConfigLoader {
   }
 }
 
-trait IMascotConfig extends Logging {
+trait IMascotConfig extends LazyLogging  {
   
   val enzymesFile: ms_enzymefile
   val fragmentationRulesFile: ms_fragrulesfile

@@ -11,7 +11,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.om.model.msi.PeptideMatch
@@ -26,7 +26,7 @@ import fr.proline.core.om.provider.msi.ProteinFakeProvider
 import fr.proline.core.om.provider.msi.SeqDbFakeProvider
 
 @Test
-class MascotParserTest extends Logging { // }extends DatabaseTestCase {
+class MascotParserTest extends LazyLogging { // }extends DatabaseTestCase {
 
   var ecoli_datFileName: String = "/dat_samples/GRE_F068213_M2.4_TD_EColi.dat"
 

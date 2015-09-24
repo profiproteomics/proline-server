@@ -3,7 +3,7 @@ package fr.proline.module.parser.mascot
 import org.junit.Before
 import org.junit.After
 import org.junit.Test
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import java.io.File
 import org.junit.Assert
 
@@ -12,7 +12,7 @@ import org.junit.Assert
  *
  */
 @Test
-class MascotPTMDefiitionTest extends Logging {
+class MascotPTMDefiitionTest extends LazyLogging {
 
 	@Before
   def init() {

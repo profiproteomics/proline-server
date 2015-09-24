@@ -4,7 +4,7 @@ import java.io.BufferedReader
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileReader
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging 
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IResultFileProvider
@@ -21,7 +21,7 @@ object MascotResultFileProviderType {
   final val fileType: String = "mascot.dat"
 }
 
-class MascotResultFileProvider extends IResultFileProvider with IResultFileVerifier with Logging {
+class MascotResultFileProvider extends IResultFileProvider with IResultFileVerifier with LazyLogging  {
 
   final val mascotMultipartBoundary: String = "--gc0p4Jq0M2Yt08jU534c0p"
   final val mascotUnimodContentTypeName: String = "name=\"unimod\""

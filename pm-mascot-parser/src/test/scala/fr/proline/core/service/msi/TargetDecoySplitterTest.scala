@@ -6,7 +6,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.scalatest.junit.JUnitSuite
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.BasicExecutionContext
 import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter
 import fr.proline.core.om.model.msi.PeptideMatch
@@ -22,7 +22,7 @@ import fr.proline.core.om.provider.msi.ProteinFakeProvider
 import fr.proline.core.om.provider.msi.PeptideFakeProvider
 import org.junit.Ignore
 @Test
-class TargetDecoySplitterTest extends JUnitSuite with Logging { 
+class TargetDecoySplitterTest extends JUnitSuite with LazyLogging { 
 
   private var _datFileName: String = "/dat_samples/STR_F136482_CTD.dat"
   private var absoluteDatFileNameSet = false

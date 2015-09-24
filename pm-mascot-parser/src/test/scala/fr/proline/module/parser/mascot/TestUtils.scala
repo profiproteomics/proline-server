@@ -5,13 +5,13 @@ import java.util.Date
 
 import org.junit.Ignore
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.profi.util.system.OSInfo
 
 @Ignore
-object TestUtils extends Logging {
+object TestUtils extends LazyLogging {
 
   private val LATIN_1 = "ISO-8859-1"
 

@@ -4,7 +4,7 @@ import java.io.File
 import org.junit.{ After, AfterClass }
 import org.junit.{ Before, BeforeClass, Test }
 import org.junit.Assert.{ assertNotNull, assertTrue }
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.repository.DriverType
 import fr.profi.util.StringUtils
@@ -12,7 +12,7 @@ import org.junit.Ignore
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.provider.msi.IResultSetProvider
 
-object RFImporterSQLiteTest extends Logging {
+object RFImporterSQLiteTest extends LazyLogging {
 
   // TODO: retrieve this value from the properties
   /* On Linux servers, the lock file name contains ":uds_test?mode=memory&cache=shared" suffix */

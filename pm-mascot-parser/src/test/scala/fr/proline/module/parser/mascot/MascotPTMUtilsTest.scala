@@ -6,14 +6,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.core.om.provider.msi.EmptyPTMProvider
 import fr.proline.core.om.provider.msi.PTMFakeProvider
 
 @Test
-class MascotPTMUtilsTest extends Logging {
+class MascotPTMUtilsTest extends LazyLogging {
 
 
   @Before

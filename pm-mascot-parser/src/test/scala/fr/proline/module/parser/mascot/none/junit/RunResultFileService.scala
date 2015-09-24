@@ -1,7 +1,7 @@
 package fr.proline.module.parser.mascot.none.junit
 
 import java.io.File
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.provider.msi.impl.ORMPTMProvider
 import fr.proline.core.om.provider.msi.impl.ORMPeptideProvider
 import fr.proline.core.om.provider.msi.impl.ORMProteinProvider
@@ -11,7 +11,7 @@ import fr.proline.module.parser.mascot.MascotParseParams
 import fr.proline.core.orm.util.DataStoreConnectorFactory
 import fr.proline.core.dal.ContextFactory
 
-object RunResultFileService extends Logging {
+object RunResultFileService extends LazyLogging {
 
   private var _datFileName: String = "/F047876.dat"
   private var absoluteDatFileNameSet = false

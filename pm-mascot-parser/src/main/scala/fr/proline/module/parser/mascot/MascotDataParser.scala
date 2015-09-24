@@ -3,7 +3,7 @@ package fr.proline.module.parser.mascot
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ArrayBuilder
 import scala.collection.mutable.HashMap
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.core.om.builder.PtmDefinitionBuilder
 import fr.proline.core.om.model.msi._
@@ -32,7 +32,7 @@ class MascotDataParser(
   val searchSettings: SearchSettings,
   val msQueryByInitialId: Map[Int, MsQuery],
   val parserContext: ProviderDecoratedExecutionContext,
-  val isDecoy: Boolean) extends Logging {
+  val isDecoy: Boolean) extends LazyLogging {
 
   private var pepByUniqueKey: HashMap[String, Peptide] = null
   private var pepToPeptideMatches: HashMap[Peptide, ArrayBuffer[PeptideMatch]] = null

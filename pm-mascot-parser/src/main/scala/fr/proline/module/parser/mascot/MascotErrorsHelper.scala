@@ -1,6 +1,6 @@
 package fr.proline.module.parser.mascot
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging 
 
 import matrix_science.msparser.ms_errors
 import matrix_science.msparser.ms_errs
@@ -9,7 +9,7 @@ import matrix_science.msparser.msparserConstants
 
 case class MascotException(errorString:String, errorNumber: Int = -1 ) extends Exception(errorString)
 
-object MascotErrorsHelper extends Logging {
+object MascotErrorsHelper extends LazyLogging  {
   
   def checkMascotErrors( mascotErrorContainer: ms_errors, msg: String ) {
     if ( !mascotErrorContainer.isValid ) {

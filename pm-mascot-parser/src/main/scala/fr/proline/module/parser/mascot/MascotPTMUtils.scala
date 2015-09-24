@@ -3,7 +3,7 @@ package fr.proline.module.parser.mascot
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.util.matching.Regex
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging 
 
 import fr.profi.util.regex.RegexUtils._
 import fr.proline.core.om.builder.PtmDefinitionBuilder
@@ -18,7 +18,7 @@ import fr.proline.core.om.provider.msi.IPTMProvider
 // que ces recherches sont faites dans avec IPTMProvider qui est passe en parametre, donc susceptible de changer
 // d'un appel a l'autre. Cela peut mener a des incoherences.
 
-object MascotPTMUtils extends Logging {
+object MascotPTMUtils extends LazyLogging  {
 
   val accessedPtms = new ArrayBuffer[PtmDefinition]
   val ptmDefsByMascotModName = new HashMap[String, Array[PtmDefinition]]
@@ -76,7 +76,7 @@ object MascotPTMUtils extends Logging {
       case (residue, location) =>
 
         val resChar = if (residue != None) residue.get else '\0'
-        val foundPtms = accessedPtms.filter { p => p.names == modName && p.residue == resChar && p.location == location }
+        val foundPtms = accessedPtms.filter { p => p.names.equals(modName) && p.residue == resChar && p.location == location }
 
         var nextPtmDef = Option.empty[PtmDefinition]
 

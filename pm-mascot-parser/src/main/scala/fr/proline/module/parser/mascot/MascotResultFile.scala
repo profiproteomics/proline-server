@@ -6,7 +6,7 @@ import java.net.URLDecoder
 import scala.Array.canBuildFrom
 import scala.collection.mutable.{ HashMap, ArrayBuffer }
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging 
 
 import matrix_science.msparser.{ ms_searchparams, ms_peptidesummary, ms_mascotresults, ms_mascotresfile, ms_inputquery }
 
@@ -46,7 +46,7 @@ class MascotResultFile(
   val fileLocation: File,
   val importProperties: Map[String, Any], // TODO: use the MascotImportProperties class instead ???
   val parserContext: ProviderDecoratedExecutionContext
-) extends IResultFile with Logging {
+) extends IResultFile with LazyLogging  {
 
   val LOG_SPECTRA_COUNT = 4000 // Print a log for each created spectrum
 

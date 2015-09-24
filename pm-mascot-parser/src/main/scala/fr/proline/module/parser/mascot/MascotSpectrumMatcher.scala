@@ -10,7 +10,7 @@ import scala.util.control.Breaks.breakable
 
 import org.apache.commons.lang3.StringUtils
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging 
 
 import fr.proline.core.om.model.msi.FragmentMatch
 import fr.proline.core.om.model.msi.FragmentMatchType
@@ -44,7 +44,7 @@ trait LoggingFake {
 
 case class Peak(moz: Double, intensity: Float)
 
-class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMascotConfig, ptmHelper: MascotPTMHelper) extends Logging {
+class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMascotConfig, ptmHelper: MascotPTMHelper) extends LazyLogging  {
 
   val FREE_MEMORY = true // TODO: remove me when the memory leaks have been solved
   val mascotSearchParams = mascotResFile.params

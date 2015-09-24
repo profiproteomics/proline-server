@@ -5,7 +5,7 @@ import scala.io.Source
 import scala.collection.mutable.ArrayBuffer
 import fr.profi.util.io._
 import fr.profi.util.regex.RegexUtils._
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging 
 
 import fr.proline.module.parser.mascot.MascotDataParser.LATIN_1_CHARSET
 
@@ -13,7 +13,7 @@ import fr.proline.module.parser.mascot.MascotDataParser.LATIN_1_CHARSET
  * @author David Bouyssie
  *
  */
-object MascotEnzymeParser extends Logging {
+object MascotEnzymeParser extends LazyLogging  {
 
   def getEnzymeDefinitions(fileLocation: File): Iterable[EnzymeDefinition] = {
     require((fileLocation != null) && fileLocation.isFile, "Invalid fileLocation")

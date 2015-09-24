@@ -11,7 +11,7 @@
 //import org.junit.Before
 //import org.junit.Test
 //
-//import com.typesafe.scalalogging.slf4j.Logging
+//import com.typesafe.scalalogging.LazyLogging
 //
 //import fr.proline.context.BasicExecutionContext
 //import fr.proline.core.dal.AbstractMultipleDBTestCase
@@ -30,7 +30,7 @@
 //import matrix_science.msparser.ms_fragmentationrules
 //
 ////@Test
-//class SpectrumMatcherTest extends AbstractMultipleDBTestCase with Logging {
+//class SpectrumMatcherTest extends AbstractMultipleDBTestCase with LazyLogging {
 //
 //  val driverType = DriverType.H2
 //

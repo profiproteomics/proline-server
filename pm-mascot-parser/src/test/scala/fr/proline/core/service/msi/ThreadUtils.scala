@@ -4,13 +4,13 @@ import scala.collection.JavaConversions.mapAsScalaMap
 
 import org.junit.Ignore
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.StringUtils.LINE_SEPARATOR
 import javax.swing.SwingUtilities
 
 @Ignore
-object ThreadUtils extends Logging {
+object ThreadUtils extends LazyLogging {
 
   def traceAllThreads() {
     val stackTrace = Thread.getAllStackTraces
