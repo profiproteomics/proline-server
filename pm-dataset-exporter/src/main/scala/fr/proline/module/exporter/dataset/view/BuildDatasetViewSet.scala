@@ -262,9 +262,10 @@ object BuildDatasetViewSet extends LazyLogging {
               // get the name
               val qcNameWork = new JDBCWork() {
                 override def execute(con: Connection) {
-                  val getQCName = "SELECT ds.name FROM data_set ds, quant_channel qc WHERE qc.id = ? AND qc.ident_result_summary_id = ds.result_summary_id"
+                  val getQCName = "SELECT ds.name FROM data_set ds, quant_channel qc WHERE qc.id = ? AND qc.ident_result_summary_id = ds.result_summary_id AND ds.project_id = ? "
                   val pStmt = con.prepareStatement(getQCName)
                   pStmt.setLong(1, qcId)
+                  pStmt.setLong(2, projectId)
                   val sqlResultSet = pStmt.executeQuery()
                   while (sqlResultSet.next) { //Should be One ! 
                     val nameQC = sqlResultSet.getString("name")
