@@ -19,10 +19,10 @@ import javax.xml.parsers._
 
 import java.io._
 import scala.collection.mutable.ArrayBuffer
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 class XTandemEnzymeVerifier ( val parserContext: ProviderDecoratedExecutionContext
-                              ) extends DefaultHandler with Logging {
+                              ) extends DefaultHandler with LazyLogging {
 
 //  var isEnzymesDefinedInDB : Boolean = true
 

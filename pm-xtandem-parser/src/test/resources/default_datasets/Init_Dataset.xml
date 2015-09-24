@@ -7,6 +7,6 @@
   <SCORING ID="4" SEARCH_ENGINE="xtandem" NAME="hyperscore"/>
   <PEAKLIST_SOFTWARE ID="1"  VERSION="4.3.2" NAME="Distiller"  />
 
-  <OBJECT_TREE_SCHEMA IS_BINARY_MODE="1" NAME="peptide_match.spectrum_match" TYPE="MessagePack" VERSION="0.1" SCHEMA="" />
+  <OBJECT_TREE_SCHEMA IS_BINARY_MODE="1" NAME="peptide_match.spectrum_match" TYPE="MessagePack" VERSION="0.1" SCHEMA="spectrum_match" />
 
 </dataset>

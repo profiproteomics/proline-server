@@ -11,13 +11,13 @@ import java.io.File
 import fr.proline.core.om.model.msi.IResultFile
 import fr.proline.core.om.provider.msi.{IResultFileVerifier, IResultFileProvider}
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 object XtandemResultFileProviderType {
     final val fileType: String = "xtandem.xml"
 }
 
-class XtandemResultFileProvider extends IResultFileProvider with Logging {
+class XtandemResultFileProvider extends IResultFileProvider with LazyLogging {
 
   var parserContext: ProviderDecoratedExecutionContext = _
   val fileType: String = XtandemResultFileProviderType.fileType

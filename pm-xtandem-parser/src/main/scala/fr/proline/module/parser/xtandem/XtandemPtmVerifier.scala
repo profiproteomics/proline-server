@@ -18,10 +18,10 @@ import javax.xml.parsers._
 
 import java.io._
 import scala.collection.mutable.ArrayBuffer
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 class XtandemPtmVerifier( val parserContext: ProviderDecoratedExecutionContext
-                          ) extends DefaultHandler with Logging {
+                          ) extends DefaultHandler with LazyLogging {
 
 //  var isPTMsDefinedInDB : Boolean = true
 

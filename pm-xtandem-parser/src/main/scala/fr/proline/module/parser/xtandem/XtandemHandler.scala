@@ -16,9 +16,9 @@ import javax.xml.parsers._
 
 import java.io._
 import scala.collection.mutable.ArrayBuffer
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
-class XtandemHandler extends DefaultHandler with Logging {
+class XtandemHandler extends DefaultHandler with LazyLogging {
 	// Management of the parser
 	var displayTree = false	// Display tree structure of xml file in console
 	// markup

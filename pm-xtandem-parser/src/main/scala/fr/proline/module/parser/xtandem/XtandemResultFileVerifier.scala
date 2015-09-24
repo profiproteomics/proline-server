@@ -19,9 +19,9 @@ import javax.xml.parsers._
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.Enzyme
 import fr.proline.core.om.provider.msi.IResultFileVerifier
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
-class XtandemResultFileVerifier extends IResultFileVerifier with Logging {
+class XtandemResultFileVerifier extends IResultFileVerifier with LazyLogging {
 
   var parserContext: ProviderDecoratedExecutionContext = _
   

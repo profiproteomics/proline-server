@@ -22,10 +22,10 @@ import javax.xml.parsers._
 
 import java.io._
 import scala.collection.mutable.ArrayBuffer
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 class XtandemPreParsing(  val xtandemFile : File 
-                          ) extends DefaultHandler with Logging {
+                          ) extends DefaultHandler with LazyLogging {
 
 //  var isMarkUpTestOK : Boolean = false
 //  var areNeededMarkupPresent : Boolean = false

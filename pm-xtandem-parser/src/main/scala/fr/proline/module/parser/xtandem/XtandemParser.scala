@@ -25,7 +25,7 @@ import scala.collection.mutable.{ArrayBuffer, HashMap}
 import java.io._
 import java.util.Date
 import java.io.ByteArrayOutputStream
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 //This class allows to separate file path, name and extension
 class Filename(str: String, sep: Char, ext: Char) {
@@ -57,7 +57,7 @@ class Filename(str: String, sep: Char, ext: Char) {
 
 class XtandemParser(  val xtandemFile : File, 
                       val parserContext: ProviderDecoratedExecutionContext
-                      ) extends DefaultHandler with IResultFile with Logging {
+                      ) extends DefaultHandler with IResultFile with LazyLogging {
 
   val fileLocation: File = xtandemFile
   // Inherited methods
