@@ -22,6 +22,7 @@ import fr.proline.core.om.model.msq.ExperimentalDesign
 import fr.proline.core.om.model.msq.RatioDefinition
 import fr.proline.module.exporter.commons.config.view.DatasetViewTypes
 import fr.proline.core.om.model.msi.Protein
+import com.typesafe.scalalogging.LazyLogging
 
 class IdentDataSet(
   var projectName: String,
