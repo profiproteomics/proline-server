@@ -1,10 +1,7 @@
 package fr.proline.module.seq.service;
 
-import java.math.BigInteger;
-import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,13 +15,14 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
-import org.hibernate.hql.internal.ast.tree.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import fr.profi.util.StringUtils;
 import fr.proline.core.orm.msi.ProteinMatch;
-import fr.proline.core.orm.msi.ProteinSetProteinMatchItem;
 import fr.proline.core.orm.msi.ResultSummary;
 import fr.proline.core.orm.msi.SeqDatabase;
 import fr.proline.core.orm.msi.SequenceMatchPK;
@@ -33,15 +31,8 @@ import fr.proline.module.seq.DatabaseAccess;
 import fr.proline.module.seq.dto.BioSequenceWrapper;
 import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
 import fr.proline.module.seq.dto.SEDbInstanceWrapper;
-import fr.proline.repository.DatabaseConnectorFactory;
-import fr.proline.repository.DatabaseUpgrader;
 import fr.proline.repository.IDataStoreConnectorFactory;
 import fr.proline.repository.IDatabaseConnector;
-import fr.proline.repository.ProlineDatabaseType;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 
 public class ProjectHandler {
