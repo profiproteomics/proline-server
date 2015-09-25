@@ -471,7 +471,7 @@ public class ProjectHandler {
 										//int querySize = coveredSeqLengthByProtMatchList.keySet().size();
 										//call the function loop_merge to execute for example 1000 update in one command : loop_merge(proteinmatch_id,coverage_value,Rsm_id) 
 										//										if(nbTreatedPMInBatch==querySize || nbTreatedPMInBatch==peptideMatchBatchSize || nbPeptideMatchTreatedInCurrentRSM==querySize)
-										if(  nbPeptideMatchTreatedInCurrentRSM == peptideMatchBatchSize	)
+										if(  nbPeptideMatchTreatedInCurrentRSM >= peptideMatchBatchSize	)
 										{ // then flush
 											updateQuery+=" updatepspmitem("+proteinmatchid+","+calculateSequenceCoverage(biosequencelentgh, sequencesmatcheslength)+","+psId+","+rsmId+"); ";
 											insertQuery+=" upsertmw("+biosequenceId+",'aa','"+bioSequence+"',"+biosequencelentgh+","+biosequenceMass+","+biosequencePi+",'',''); ";
