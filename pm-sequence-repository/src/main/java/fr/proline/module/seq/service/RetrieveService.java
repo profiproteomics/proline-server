@@ -67,9 +67,12 @@ public final class RetrieveService {
 			} else if (args[0].startsWith("f")) {
 				force_update = true;
 				LOG.debug(" force mode: will compute even if already computed");
-				if(args[0].substring(1, 2).equals("p")) {
-					projectId = Long.parseLong(args[0].substring(2));
-					LOG.debug(" is going to process project " + projectId);
+				if(args[0].length()>1) 
+				{
+					if(args[0].substring(1, 2).equals("p")) {
+						projectId = Long.parseLong(args[0].substring(2));
+						LOG.debug(" is going to process project " + projectId);
+					}
 				}
 			}
 			else {
