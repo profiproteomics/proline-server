@@ -17,6 +17,7 @@ import fr.proline.core.service.uds.UserUpdator
 import java.lang.Boolean
 import fr.proline.admin.service.db.SetupProline
 import fr.proline.core.service.uds.UserAuthenticator
+import fr.profi.util.security.EncryptionManager
 
 
 /**
@@ -43,7 +44,7 @@ import fr.proline.core.service.uds.UserAuthenticator
  *   Input params :
  *      "login" : existing User login
  *      "password_hash" : encrypted user password
- *      "need_db_pwd" : specify if database password should be retrieve to caller 
+ *      "return_db_password" : specify if database password should be retrieve to caller 
  *      "public_key" : The public key to use for encryption of returned database password
  *  
  *   Output params : 
@@ -151,7 +152,7 @@ class UserAccount extends IRemoteService with LazyLogging {
     val authMethod = if (SetupProline.getConfigParams.hasPath("authentication") == false) UDS_AUTH_METHOD
     else SetupProline.getConfigParams.getConfig("authentication").getString("method").toUpperCase()
 
-    val needPgPaswd = if (paramsRetriever.hasParam("need_db_pwd")) paramsRetriever.getBoolean("need_db_pwd") else false
+    val needPgPaswd = if (paramsRetriever.hasParam("return_db_password")) paramsRetriever.getBoolean("return_db_password") else false
 
     if (needPgPaswd && !paramsRetriever.hasParam("public_key")) {
       throw new RuntimeException("Aunthentication failed : public key should be specified.")
@@ -161,7 +162,7 @@ class UserAccount extends IRemoteService with LazyLogging {
       throw new RuntimeException("Aunthentication failed : Invalid authentication method specified.")
     }
 
-    var result = false
+    var serviceResult : Object = null
 
     val udsCtxt = new DatabaseConnectionContext(DbConnectionHelper.getIDataStoreConnectorFactory.getUdsDbConnector())
     try {
@@ -170,10 +171,21 @@ class UserAccount extends IRemoteService with LazyLogging {
       val userPassword = paramsRetriever.getString("password_hash")
       val authenticator = new UserAuthenticator(udsCtxt, userLogin, userPassword)
       authenticator.run()
-      result = authenticator.getAuthenticateResult
+      val result = authenticator.getAuthenticateResult
       if (!result) {
         throw new RuntimeException(" Authentication Error : " + authenticator.getAuthenticateResultMessage)
+      } else if (needPgPaswd) {
+        val pubKey = paramsRetriever.getString("public_key")
+        if (SetupProline.getConfigParams.hasPath("auth-config") == false ) {
+              throw new RuntimeException(" Authentication Error : No database password configured ")
+        } else {
+              val password = SetupProline.getConfigParams.getConfig("auth-config").getString("password")
+              serviceResult = EncryptionManager.encrypt(password, pubKey)
+        }                 
+      } else {
+        serviceResult = Boolean.TRUE
       }
+    
     } finally {
       try {
         udsCtxt.close()
@@ -181,6 +193,6 @@ class UserAccount extends IRemoteService with LazyLogging {
         case exClose: Exception => logger.error("Error closing UDS Context", exClose)
       }
     }
-    result.asInstanceOf[Object]
+    serviceResult
   }
 }

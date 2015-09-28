@@ -35,6 +35,7 @@ class CreateProject extends AbstractRemoteProcessService with LazyLogging {
 
   override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
 
+    require((paramsRetriever != null), "no parameter specified")
     require(paramsRetriever.hasParam("name") && paramsRetriever.hasParam("owner_id"), "Project name and owner requiered")
 
     val description = if (paramsRetriever.hasParam("description")) paramsRetriever.getString("description") else ""

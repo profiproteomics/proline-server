@@ -112,6 +112,9 @@ class MergeResultSets extends IRemoteService with LazyLogging {
 
   /* Define the doMergeResultSetProcess method */
   def doMergeResultSetProcess(paramsRetriever: NamedParamsRetriever): Object = {
+
+    require((paramsRetriever != null), "no parameter specified")
+    
     val projectId = paramsRetriever.getLong("project_id")
     val resultSetIds = paramsRetriever.getList("result_set_ids").toArray.map { rf => deserialize[Long](serialize(rf)) }
 

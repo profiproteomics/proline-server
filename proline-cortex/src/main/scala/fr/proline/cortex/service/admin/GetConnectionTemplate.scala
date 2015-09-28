@@ -16,7 +16,7 @@ import collection.JavaConversions._
  *  NONE 
  *  
  * Output params : 
- *   HashMap containing UDSdb connection properties and JMS server information 
+ *   HashMap containing UDSdb connection properties // and JMS server information 
  *  
  */
 class GetConnectionTemplate extends AbstractRemoteProcessService with LazyLogging {
@@ -33,23 +33,23 @@ class GetConnectionTemplate extends AbstractRemoteProcessService with LazyLoggin
     val connection = new HashMap[Object, Object]()
     connection ++= (prolineConf.udsDBConfig.dbConnProperties - "javax.persistence.jdbc.password")
 
-    if (SetupProline.getConfigParams.hasPath("jms-config.host")) {
-      val jmsHost = SetupProline.getConfigParams.getConfig("jms-config").getString("host")
-      if (!jmsHost.trim().isEmpty())
-        connection += "jms.server.host" -> SetupProline.getConfigParams.getConfig("jms-config").getString("host")
-    }
-
-    if (SetupProline.getConfigParams.hasPath("jms-config.port")) {
-      try {
-        connection += "jms.server.port" -> new Integer(SetupProline.getConfigParams.getConfig("jms-config").getInt("port"))
-      } catch {
-        case e: Exception => {
-          logger.trace("Invalid specifed port. ")
-          //Ignore port
-        }
-      }
-
-    }
+//    if (SetupProline.getConfigParams.hasPath("jms-config.host")) {
+//      val jmsHost = SetupProline.getConfigParams.getConfig("jms-config").getString("host")
+//      if (!jmsHost.trim().isEmpty())
+//        connection += "jms.server.host" -> SetupProline.getConfigParams.getConfig("jms-config").getString("host")
+//    }
+//
+//    if (SetupProline.getConfigParams.hasPath("jms-config.port")) {
+//      try {
+//        connection += "jms.server.port" -> new Integer(SetupProline.getConfigParams.getConfig("jms-config").getInt("port"))
+//      } catch {
+//        case e: Exception => {
+//          logger.trace("Invalid specifed port. ")
+//          //Ignore port
+//        }
+//      }
+//
+//    }
 
     connection
   }

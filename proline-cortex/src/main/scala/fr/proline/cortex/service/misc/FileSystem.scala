@@ -73,7 +73,9 @@ class FileSystem extends IRemoteService with LazyLogging {
 
       case "retrieve_mount_points_by_type" => {
         val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(req)
-
+             
+        require((paramsRetriever != null), "no parameter specified")
+      
         val directoryType = paramsRetriever.getString(DIRECTORY_TYPE_PARAM_NAME)
         require(!StringUtils.isEmpty(directoryType), "Invalid \"" + DIRECTORY_TYPE_PARAM_NAME + "\" parameter")
 
@@ -85,7 +87,9 @@ class FileSystem extends IRemoteService with LazyLogging {
 
       case "retrieve_mount_points_by_label" => {
         val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(req)
-
+      
+        require((paramsRetriever != null), "no parameter specified")
+      
         val label = paramsRetriever.getString(LABEL_PARAM_NAME)
         require(!StringUtils.isEmpty(label), "Invalid \"" + LABEL_PARAM_NAME + "\" parameter")
 
@@ -107,8 +111,10 @@ class FileSystem extends IRemoteService with LazyLogging {
 
   private def retrieveDirectoryContent(req: JSONRPC2Request): JSONRPC2Response = {
     val requestId = req.getID
+          
     val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(req)
-
+    require((paramsRetriever != null), "no parameter specified")
+      
     val labelOrPath = paramsRetriever.getString(LABEL_PATH_PARAM_NAME)
     require(!StringUtils.isEmpty(labelOrPath), "Invalid \"" + LABEL_PATH_PARAM_NAME + "\" parameter")
 
