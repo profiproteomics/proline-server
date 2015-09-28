@@ -8,6 +8,7 @@ import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.om.model.msi.InstrumentConfig
+import fr.proline.core.om.model.msi.Peptide
 
 class PeptideSpectrumMatcherMascot(
   val spectraByIds: Map[Long, Spectrum],
@@ -110,73 +111,53 @@ class PeptideSpectrumMatcherMascot(
       // sort the last bin
       allPeaksBinned(allPeaksBinned.size -1) = allPeaksBinned.last.sortBy(p => (p.intensity, -p.moz)).reverse
       var rank = ArrayBuffer.fill[Int](allPeaksBinned.size)(0)
-      while (usedPeaks2.length < usedPeaksCount) {
+      
+      //VDS Bug fix for #13371. To move into Provider ?!
+      val calculatedMass = if(peptideMatch.peptide.calculatedMass > 0) peptideMatch.peptide.calculatedMass else Peptide.calcMass(peptideMatch.peptide.sequence, peptideMatch.peptide.ptms)
+      var foundAtLeastOnePeaks = true
+      while (usedPeaks2.length < usedPeaksCount &&foundAtLeastOnePeaks ) {
+        foundAtLeastOnePeaks = false
+                
         for (i <- 0 to (allPeaksBinned.length -1)) {
-          while (rank(i) < allPeaksBinned(i).length && allPeaksBinned(i)(rank(i)).moz >= peptideMatch.peptide.calculatedMass) {
+//          logger.info("  !!!!!!  pepMatch "+peptideMatch.id+" used peak count ="+usedPeaksCount+ "for i "+i+ " rank "+rank(i)+" allPeaksBinned lenght "+ allPeaksBinned(i).length)
+          while (rank(i) < allPeaksBinned(i).length && allPeaksBinned(i)(rank(i)).moz >= calculatedMass) {
         	  rank(i) += 1            
           }
-          if (rank(i) < allPeaksBinned(i).length && allPeaksBinned(i)(rank(i)).moz < peptideMatch.peptide.calculatedMass) {
+          if (rank(i) < allPeaksBinned(i).length && allPeaksBinned(i)(rank(i)).moz < calculatedMass) {
             usedPeaks2 += allPeaksBinned(i)(rank(i))
-//            if ((rank(i) +1) < allPeaksBinned(i).length &&
-//                allPeaksBinned(i)(rank(i)+1).moz < peptideMatch.peptide.calculatedMass &&
-//                (allPeaksBinned(i)(rank(i)+1).intensity - allPeaksBinned(i)(rank(i)).intensity).abs < MathUtils.EPSILON_FLOAT) {
-//              rank(i) += 1
-//              usedPeaks2 += allPeaksBinned(i)(rank(i))
-//            }
+            foundAtLeastOnePeaks = true;
           }
           rank(i) += 1
-        }
-      }
+        } //End go through allPeaksBinned
+      } //End while go up to usedPeaks2.length 
 
+      if(!foundAtLeastOnePeaks && usedPeaks2.length < usedPeaksCount){
+        val sb : StringBuilder = new StringBuilder("id : "+peptideMatch.id)
+        if(peptideMatch.msQuery != null)
+          sb.append( " msQuery initial ID "+peptideMatch.msQuery.initialId)
+        if(peptideMatch.peptide != null){
+          sb.append( " pep seq "+peptideMatch.peptide.sequence+" - "+peptideMatch.peptide.readablePtmString)
+          sb.append( " pep calc Mass db "+peptideMatch.peptide.calculatedMass+" new calc mass"+calculatedMass)
+        }
+        
+        logger.warn(" **** Found only "+usedPeaks2.length+" of "+usedPeaksCount+" peaks for peptide "+ sb.toString())
+      }
+      
       
       for (i <- 0 to (allPeaksBinned.length -1)) {
-          while (rank(i) < allPeaksBinned(i).length && allPeaksBinned(i)(rank(i)).moz >= peptideMatch.peptide.calculatedMass) {
+          while (rank(i) < allPeaksBinned(i).length && allPeaksBinned(i)(rank(i)).moz >= calculatedMass) {
         	  rank(i) += 1            
           }
-          if (rank(i) < allPeaksBinned(i).length && allPeaksBinned(i)(rank(i)).moz < peptideMatch.peptide.calculatedMass && (allPeaksBinned(i)(rank(i)-1).intensity - allPeaksBinned(i)(rank(i)).intensity).abs < MathUtils.EPSILON_FLOAT) {
+          if (rank(i) < allPeaksBinned(i).length && allPeaksBinned(i)(rank(i)).moz < calculatedMass && (allPeaksBinned(i)(rank(i)-1).intensity - allPeaksBinned(i)(rank(i)).intensity).abs < MathUtils.EPSILON_FLOAT) {
               usedPeaks2 += allPeaksBinned(i)(rank(i))
           }
       }
 
-//      usedPeaks += Peak(0.0, 0f)
       usedPeaks ++= usedPeaks2.sortBy(_.moz)
-//      usedPeaks += Peak(Double.MaxValue, 0f)
-//
-//    
-//    // Define some vars
-//    var prevPeak: Peak = null
-//    var j = 0
-//
-//    // Iterate over matching peaks
-//    for (i <- 0 until usedPeaks.length) {
-//      val peak = usedPeaks(i)
-//      var intThresh = peak.intensity
-//
-//      // TODO: explain this computation
-//      if ((i > 0) && (i < (usedPeaks.length - 1)) && (prevPeak.intensity < peak.intensity)) {
-//        intThresh = prevPeak.intensity
-//      }
-//
-//      while ((j < allPeaksSorted.length) && (allPeaksSorted(j).moz < peak.moz)) {
-//        val newPeak = allPeaksSorted(j)
-//        if (newPeak.intensity >= intThresh) {
-//          usedPeaks += newPeak
-//        }
-//        j += 1
-//      }
-//      j += 1
-//
-//      prevPeak = peak
-//    }
       
-      } else {
-      // Fill usedPeaks with firstSortedPeaks data  
-//      usedPeaks += Peak(0.0, 0f)
+    } else {
       usedPeaks ++= allPeaksSorted
-//      usedPeaks += Peak(Double.MaxValue, 0f)
     }
-    //removes marker peaks at moz 0.0 and Double.MaxValue
-//    usedPeaks.filter(p => (p.moz > 0.0 && p.moz < Double.MaxValue))
     usedPeaks.toArray
   }
 
