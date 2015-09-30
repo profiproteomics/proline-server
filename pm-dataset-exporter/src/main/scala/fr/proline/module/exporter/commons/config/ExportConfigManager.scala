@@ -54,7 +54,7 @@ object ExportConfigManager extends LazyLogging {
     logger.debug("getAllConfigurationForIdentificationExport ");
     var config: ExportConfig = ExportConfig.getAllForIdentificationExport()
     var jsonStr = ExportConfig.toJSON(config)
-    logger.debug("... result: " + jsonStr);
+  //  logger.debug("... result: " + jsonStr);
     return jsonStr
   }
 
@@ -63,7 +63,7 @@ object ExportConfigManager extends LazyLogging {
     logger.debug("getAllConfigurationForSCExport ");
     var config: ExportConfig = ExportConfig.getAllForSCExport()
     var jsonStr = ExportConfig.toJSON(config)
-    logger.debug("... result: " + jsonStr);
+  //  logger.debug("... result: " + jsonStr);
     return jsonStr
   }
 
@@ -72,7 +72,7 @@ object ExportConfigManager extends LazyLogging {
     logger.debug("getAllConfigurationForXICExport ");
     var config: ExportConfig = ExportConfig.getAllForXICExport()
     var jsonStr = ExportConfig.toJSON(config)
-    logger.debug("... result: " + jsonStr);
+   // logger.debug("... result: " + jsonStr);
     return jsonStr
   }
 
