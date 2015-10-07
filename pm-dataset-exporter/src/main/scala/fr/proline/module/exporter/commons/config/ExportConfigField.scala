@@ -158,6 +158,7 @@ object ExportConfigField {
       new ExportConfigField(ExportConfigConstant.FIELD_PSM_PEPTIDE_ID, "peptide_id"),
       new ExportConfigField(ExportConfigConstant.FIELD_PSM_SEQUENCE, "sequence"),
       new ExportConfigField(ExportConfigConstant.FIELD_PSM_MODIFICATIONS, "modifications"),
+      new ExportConfigField(ExportConfigConstant.FIELD_PSM_ID, "psm_id"),
       new ExportConfigField(ExportConfigConstant.FIELD_PSM_SCORE, "psm_score"),
       new ExportConfigField(ExportConfigConstant.FIELD_PSM_CALCULATED_MASS, "calculated_mass"),
       new ExportConfigField(ExportConfigConstant.FIELD_PSM_CHARGE, "charge"),

@@ -198,7 +198,12 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
       val bestQPep = pepSetQuantiBuildingCtx.masterQuantPeptide.getBestQuantPeptide
       elutionTime = if (bestQPep.elutionTime.isNaN()) "" else ExportConfigManager.format(dcf4, bestQPep.elutionTime) 
     }
-
+    
+    // psmId 
+    var pepMatchId: Any = "";
+    if (pepMatch != null){
+      pepMatchId = pepMatch.id;
+    }
     var exportMap: ListMap[String, Any] = ListMap()
     val listFields: Array[ExportConfigField] = sheetConfig.fields
     for (f <- listFields) {
@@ -268,6 +273,9 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
         }
         case ExportConfigConstant.FIELD_PSM_MODIFICATIONS => {
           exportMap += (fields.addField(f.title) -> peptide.readablePtmString)
+        }
+        case ExportConfigConstant.FIELD_PSM_ID => {
+          exportMap += (fields.addField(f.title) -> pepMatchId)
         }
         case ExportConfigConstant.FIELD_PSM_SCORE => {
           exportMap += (fields.addField(f.title) -> ExportConfigManager.format(decimalFormat, pepMatch.score))
