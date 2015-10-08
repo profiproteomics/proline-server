@@ -97,17 +97,19 @@ public class ProjectHandler {
 
 		final IDataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();
 		final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId);
-
+		final IDatabaseConnector udsDbConnector = connectorFactory.getUdsDbConnector();
+					
 		if (msiDbConnector == null) {
 			LOG.warn("Project #{} has NO associated MSI Db", projectId);
 		} else {
 			EntityManager msiEM = null;
-
+			EntityManager udsEM = null;
 			try {
 
 				final EntityManagerFactory emf = msiDbConnector.getEntityManagerFactory();
 				msiEM = emf.createEntityManager();
-
+				final EntityManagerFactory em_uds = udsDbConnector.getEntityManagerFactory();	
+				udsEM = em_uds.createEntityManager();	
 				final Map<Long, SEDbInstanceWrapper> seDbInstances = retrieveAllSeqDatabases(msiEM);
 
 				if ((seDbInstances == null) || seDbInstances.isEmpty()) {
@@ -115,12 +117,7 @@ public class ProjectHandler {
 				} else 
 				{
 					// check if any rsm has not been validated within this project
-					final IDatabaseConnector udsDbConnector = connectorFactory.getUdsDbConnector();
-					final IDatabaseConnector dbConnector = connectorFactory.getMsiDbConnector(projectId);
-					EntityManager udsEM = null;
-					msiEM = emf.createEntityManager();
-					final EntityManagerFactory em = udsDbConnector.getEntityManagerFactory();	
-					udsEM = em.createEntityManager();
+					
 					final Query udsQuery = udsEM.createQuery(LIST_RSM);
 					udsQuery.setParameter("projectId",projectId);
 					final List<Long> rsmIds = udsQuery.getResultList();
@@ -219,6 +216,8 @@ public class ProjectHandler {
 					try {
 						LOG.debug(" CLOSE MSI Db EntityManager for project "+projectId);
 						msiEM.close();
+						udsEM.close();
+						
 					} catch (Exception exClose) {
 						LOG.error("Error closing MSI Db EntityManager", exClose);
 					}
@@ -398,7 +397,7 @@ public class ProjectHandler {
 						rsms.setParameter("rsmId", rsmId);
 						String properties = rsms.getResultList().get(0).getSerializedProperties();
 						JsonParser parser = new JsonParser();
-						//Gson gson = new Gson();
+						
 						JsonObject array = parser.parse(properties).getAsJsonObject();
 
 						//test if the RSM is already calculated
@@ -558,11 +557,16 @@ public class ProjectHandler {
 						con.close();
 						msiEM.close();
 						udsEM.close();
+						
+						
+					
 					} catch (Exception exClose) {
 						LOG.error("Error closing MSI Db EntityManager", exClose);
 					}
 				}
 			}
+			
+
 		}
 		
 	}
