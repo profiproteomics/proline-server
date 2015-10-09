@@ -1,206 +1,224 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-  <modelVersion>4.0.0</modelVersion>
+	<modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <artifactId>ProFI-Pom</artifactId>
-    <groupId>fr.proline</groupId>
-    <version>0.1.0-SNAPSHOT</version>
-  </parent>
+	<parent>
+		<artifactId>ProFI-Pom</artifactId>
+		<groupId>fr.proline</groupId>
+		<version>0.1.0-SNAPSHOT</version>
+	</parent>
 
-  <artifactId>PM-SequenceRepository</artifactId>
-  <version>0.3.0-SNAPSHOT</version>
+	<artifactId>PM-SequenceRepository</artifactId>
+	<version>0.3.0-SNAPSHOT</version>
 
-  <name>PM-SequenceRepository</name>
+	<name>PM-SequenceRepository</name>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>0.5.0-SNAPSHOT</core.version>
-  </properties>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<core.version>0.5.0-SNAPSHOT</core.version>
+	</properties>
 	<scm>
-	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-SequenceRepository/trunk</connection>
+		<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-SequenceRepository/trunk</connection>
 	</scm>
 
 
-  <dependencies>
-  
-    <dependency>
-      <groupId>fr.proline</groupId>
-      <artifactId>Proline-ORM</artifactId>
-      <version>${core.version}</version>
-    </dependency>
+	<dependencies>
 
-    <!-- BioJava 3.0.8 used to calculate Peptide mass and pI -->
-    <dependency>
-      <groupId>org.biojava</groupId>
-      <artifactId>biojava3-core</artifactId>
-      <version>3.0.8</version>
-    </dependency>
+		<dependency>
+			<groupId>fr.proline</groupId>
+			<artifactId>Proline-ORM</artifactId>
+			<version>${core.version}</version>
+             <exclusions>
+                   <exclusion>
+                          <artifactId>slf4j-simple</artifactId>
+                          <groupId>org.slf4j</groupId>
+                   </exclusion>
+             </exclusions>
+		</dependency>
 
-     <dependency>
-      <groupId>org.biojava</groupId>
-      <artifactId>biojava3-aa-prop</artifactId>
-      <version>3.0.8</version>
-    </dependency>
+		<!-- BioJava 3.0.8 used to calculate Peptide mass and pI -->
+		<dependency>
+			<groupId>org.biojava</groupId>
+			<artifactId>biojava3-core</artifactId>
+			<version>3.0.8</version>
+		</dependency>
 
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
-      <!-- <scope>test</scope> -->
-    </dependency>
+		<dependency>
+			<groupId>org.biojava</groupId>
+			<artifactId>biojava3-aa-prop</artifactId>
+			<version>3.0.8</version>
+		</dependency>
 
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <!-- <scope>test</scope> -->
-    </dependency>
-    <!-- Tests -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
 
-    <dependency>
-    	<groupId>com.google.code.gson</groupId>
-    	<artifactId>gson</artifactId>
-    	<version>2.3.1</version>
-    </dependency>
-  </dependencies>
 
-  <build>
+              <dependency> 
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>  
+            <!-- Version inherited from ProFI-Pom -->
+        </dependency>  
+        
+              <dependency>
+                     <groupId>ch.qos.logback</groupId>
+                     <artifactId>logback-core</artifactId>
+                     <!-- <scope>test</scope> -->
+              </dependency>
 
-    <pluginManagement>
-      <plugins>
-        <!-- For Eclipse build : maven-jar-plugin goal copy-dependencies -->
-        <plugin>
-          <groupId>org.eclipse.m2e</groupId>
-          <artifactId>lifecycle-mapping</artifactId>
-          <version>1.0.0</version>
-          <configuration>
-            <lifecycleMappingMetadata>
-              <pluginExecutions>
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-dependency-plugin</artifactId>
-                    <versionRange>[2.8,)</versionRange>
-                    <goals>
-                      <goal>copy-dependencies</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <execute />
-                  </action>
-                </pluginExecution>
-              </pluginExecutions>
-            </lifecycleMappingMetadata>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
+              <dependency>
+                     <groupId>ch.qos.logback</groupId>
+                     <artifactId>logback-classic</artifactId>
+                     <!-- <scope>test</scope> -->
+              </dependency>
 
-    <plugins>
+    
+		<!-- Tests -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
 
-      <plugin>
-        <!-- Exclude configuration from Jar archive. Added in config/ output sub-directory by maven-assembly-plugin -->
-        <artifactId>maven-jar-plugin</artifactId>
-        <!-- Version inherited from ProFI-Pom -->
-        <configuration>
-          <excludes>
-            <exclude>**/logback.xml</exclude>
-            <exclude>**/*.properties</exclude>
-          </excludes>
-        </configuration>
-      </plugin>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.3.1</version>
+		</dependency>
+	</dependencies>
 
-      <plugin>
-        <!-- Copy all dependencies in lib/ output sub-directory -->
-        <artifactId>maven-dependency-plugin</artifactId>
-        <!-- Version inherited from ProFI-Pom -->
-        <executions>
+	<build>
 
-          <execution>
-            <id>copy-dependencies</id>
-            <phase>package</phase>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}/lib</outputDirectory>
-              <includeTypes>jar</includeTypes>
-              <overWriteReleases>false</overWriteReleases>
-              <overWriteSnapshots>false</overWriteSnapshots>
-              <overWriteIfNewer>true</overWriteIfNewer>
-            </configuration>
-          </execution>
+		<pluginManagement>
+			<plugins>
+				<!-- For Eclipse build : maven-jar-plugin goal copy-dependencies -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.apache.maven.plugins</groupId>
+										<artifactId>maven-dependency-plugin</artifactId>
+										<versionRange>[2.8,)</versionRange>
+										<goals>
+											<goal>copy-dependencies</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<execute />
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 
-        </executions>
-      </plugin>
+		<plugins>
 
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <!-- Version inherited from ProFI-Pom -->
-        <configuration>
-          <descriptors>
-            <descriptor>src/main/assembly/assembly.xml</descriptor>
-          </descriptors>
-        </configuration>
-      </plugin>
-      <plugin>
+			<plugin>
+				<!-- Exclude configuration from Jar archive. Added in config/ output 
+					sub-directory by maven-assembly-plugin -->
+				<artifactId>maven-jar-plugin</artifactId>
+				<!-- Version inherited from ProFI-Pom -->
+				<configuration>
+					<excludes>
+						<exclude>**/logback.xml</exclude>
+						<exclude>**/*.properties</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
 
-                           <groupId>org.apache.maven.plugins</groupId>
+			<plugin>
+				<!-- Copy all dependencies in lib/ output sub-directory -->
+				<artifactId>maven-dependency-plugin</artifactId>
+				<!-- Version inherited from ProFI-Pom -->
+				<executions>
 
-                           <artifactId>maven-resources-plugin</artifactId>
+					<execution>
+						<id>copy-dependencies</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+							<includeTypes>jar</includeTypes>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>false</overWriteSnapshots>
+							<overWriteIfNewer>true</overWriteIfNewer>
+						</configuration>
+					</execution>
 
-                           <configuration>
+				</executions>
+			</plugin>
 
-                                  <encoding>UTF-8</encoding>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<!-- Version inherited from ProFI-Pom -->
+				<configuration>
+					<descriptors>
+						<descriptor>src/main/assembly/assembly.xml</descriptor>
+					</descriptors>
+				</configuration>
+			</plugin>
+			<plugin>
 
-                           </configuration>
+				<groupId>org.apache.maven.plugins</groupId>
 
-                           <executions>
+				<artifactId>maven-resources-plugin</artifactId>
 
-                                  <execution>
+				<configuration>
 
-                                        <id>copy-scripts</id>
+					<encoding>UTF-8</encoding>
 
-                                        <phase>validate</phase>
+				</configuration>
 
-                                        <goals>
+				<executions>
 
-                                               <goal>copy-resources</goal>
+					<execution>
 
-                                        </goals>
+						<id>copy-scripts</id>
 
-                                        <configuration>
+						<phase>validate</phase>
 
-                                               <encoding>UTF-8</encoding>
+						<goals>
 
-                                               <outputDirectory>${project.build.directory}</outputDirectory>
+							<goal>copy-resources</goal>
 
-                                               <resources>
+						</goals>
 
-                                                      <resource>
+						<configuration>
 
-                                                            <directory>scripts</directory>
+							<encoding>UTF-8</encoding>
 
-                                                            <filtering>true</filtering>
+							<outputDirectory>${project.build.directory}</outputDirectory>
 
-                                                      </resource>
+							<resources>
 
-                                               </resources>
+								<resource>
 
-                                        </configuration>
+									<directory>scripts</directory>
 
-                                  </execution>
+									<filtering>true</filtering>
 
-                           </executions>
+								</resource>
 
-                    </plugin>
+							</resources>
 
-    </plugins>
-  </build>
+						</configuration>
+
+					</execution>
+
+				</executions>
+
+			</plugin>
+
+		</plugins>
+	</build>
 
 </project>
