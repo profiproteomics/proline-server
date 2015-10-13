@@ -257,7 +257,7 @@ object BuildDatasetViewSet extends LazyLogging {
               resultBuilder += qChIdByRsmId(toLong(r.nextAny)) -> r.nextString
               ()
             }
-            if (resultBuilder.result().size == 0) {
+           // if (resultBuilder.result().size == 0) {
               for (qcId <- qcIds){
               // get the name
               val qcNameWork = new JDBCWork() {
@@ -278,7 +278,7 @@ object BuildDatasetViewSet extends LazyLogging {
                 
                  //resultBuilder += qcId -> (""+qcId)
               }
-            }
+           // }
             
             resultBuilder.result
 
