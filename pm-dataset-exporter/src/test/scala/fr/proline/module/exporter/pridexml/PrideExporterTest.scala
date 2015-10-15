@@ -1,14 +1,11 @@
 package fr.proline.module.exporter.pridexml
 
 import java.io.File
-
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
 import fr.proline.core.algo.msi.filtering.pepmatch.RankPSMFilter
@@ -22,6 +19,7 @@ import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.service.msi.ResultSetValidator
 import fr.proline.module.fragment_match.service.SpectrumMatchesGenerator
 import fr.proline.repository.DriverType
+import org.junit.Assert
 
 object PrideExporterTest extends AbstractEmptyDatastoreTestCase {
 
@@ -55,12 +53,17 @@ class PrideExporterTest extends LazyLogging {
       extraParams += ("protocol_description" -> "<Protocol> \n  <ProtocolName>PRTNAME</ProtocolName> \n    <ProtocolSteps> \n <StepDescription> \n <cvParam cvLabel=\"PRIDE\" accession=\"PRIDE:0000024\" name=\"Enzyme digestion\" value=\"0\" /> \n </StepDescription> \n    </ProtocolSteps>\n </Protocol>\n")
       extraParams += ("sample_name" -> "My SAMPLE")
       extraParams += ("sample_desc" -> "the sample comment")
+      extraParams += ("contact_name" -> "John Doo")
+      extraParams += ("contact_institution" -> "Proline")
       val exporter = new PrideExporterService(PrideExporterTest.executionContext, rsm.id, f.getAbsolutePath(), extraParams.result)
       exporter.runService()
       assertTrue(f.exists())
       f.delete()
     } catch {
-      case e: Exception => logger.error("error", e)
+      case e: Exception => {
+        logger.error("error", e)
+        Assert.fail(e.getMessage)
+      }
     }
   }
 
