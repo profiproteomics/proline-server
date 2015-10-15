@@ -194,7 +194,7 @@ class PrideExporter(
     val marshaller = PrideExporter.marshaller
 
     //export experimentalData
-    exportExperimentalData(filePath, extraDataMap)
+    exportExperimentalData(filePath,  marshaller, extraDataMap)
 
     exportMzData(filePath, marshaller, extraDataMap)
 
@@ -244,7 +244,7 @@ class PrideExporter(
    * Export to specified file header and experiments information such as project name and protocol description
    * if defined in extraDataMap (entry protocol_description).
    */
-  protected def exportExperimentalData(filePath: String, extraDataMap: Map[String, Object]) {
+  protected def exportExperimentalData(filePath: String, marshaller: PrideXmlMarshaller, extraDataMap: Map[String, Object]) {
    
 
     val title : String = if(extraDataMap.get("exp_title").isDefined) {extraDataMap("exp_title").toString() } else rs.name
@@ -258,7 +258,7 @@ class PrideExporter(
 	    // XML header
 	    writer.write("""<?xml version="1.0" encoding="utf-8" ?>""")
 	    writer.write('\n')
-	    writer.write("<" + PrideSchemaConstants.EXP_COLL_NODE + " " + PrideSchemaConstants.SCHEMA_VERSION_ATTR + "=" + PrideSchemaConstants.PRIDE_SCHEMA_VERSION + ">")
+	    writer.write("<" + PrideSchemaConstants.EXP_COLL_NODE + " " + PrideSchemaConstants.SCHEMA_VERSION_ATTR + "= \"" + PrideSchemaConstants.PRIDE_SCHEMA_VERSION + "\" >")
 	    writer.write('\n')
 	    writer.write("<" + PrideSchemaConstants.EXP_NODE + ">")
 	    writer.write('\n')
@@ -284,6 +284,10 @@ class PrideExporter(
     			 steps.getStepDescription().get(0).getCvParam().add(0,CvParam(nextEntry))
     		 })
 	      }
+	      protocol.setProtocolSteps(steps)
+	      marshaller.marshall(protocol, writer)
+                 
+         
 	    } else {
 	      val protocolSample = 
 	        <Protocol>
@@ -431,6 +435,8 @@ class PrideExporter(
     if (!spectrum.precursorIntensity.isNaN())
       ionSelection.getCvParam().add(CvParam(PrideSchemaConstants.MS_CV_INTENSITY_ACC, PrideSchemaConstants.MS_CV_INTENSITY_NAME, PrideSchemaConstants.MS_CV_NAME, spectrum.precursorIntensity.toString))
     precursor.setIonSelection(ionSelection)
+     val activation = new Param();
+    precursor.setActivation(activation)
     precursor.setSpectrum(PrideModelUtils.createSpectrum(0))
     
     val precursorList = new PrecursorList()
