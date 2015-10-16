@@ -60,8 +60,6 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessService wi
 
   private def buildParserContext(executionContext: IExecutionContext): ProviderDecoratedExecutionContext = {
 
-    //import fake._
-
     // Register some providers
     val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
     //parserContext.putProvider(classOf[IPeptideProvider], PeptideFakeProvider)
@@ -198,10 +196,6 @@ class ImportResultFilesDecoyRegExp extends AbstractImportResultFiles {
   }
 }
 
-class ImportResultFilesprotMatchDecoyRule extends AbstractImportResultFiles {
-  /* JMS Service identification */
-  val serviceVersion = "2.0"
-  override val defaultVersion = false
 
   /*
    * format :  The type of the file to be imported (for instance 'mascot.dat', 'omssa.omx').
@@ -209,14 +203,20 @@ class ImportResultFilesprotMatchDecoyRule extends AbstractImportResultFiles {
    * protMatchDecoyRuleId : The id of the rule to be used to detect decoy protein matches.
    * peaklistId : The id of the software which has been used to generate the peaklist.
    */
-  case class ResultFileDescriptor(format: String, path: String, peaklistId: Option[Long] = None, protMatchDecoyRuleId: Option[Long] = None) extends IResultFileDescriptor
+  case class ResultFileDescriptorRuleId(format: String, path: String, peaklistId: Option[Long] = None, protMatchDecoyRuleId: Option[Long] = None) extends IResultFileDescriptor
+
+  
+class ImportResultFilesprotMatchDecoyRule extends AbstractImportResultFiles {
+  /* JMS Service identification */
+  val serviceVersion = "2.0"
+  override val defaultVersion = false
 
   protected def parseResultFileDescriptor(rfDescObj: Object): IResultFileDescriptor = {
-    deserialize[ResultFileDescriptor](serialize(rfDescObj))
+    deserialize[ResultFileDescriptorRuleId](serialize(rfDescObj))
   }
 
   protected def getProtMatchDecoyRegex(resultFileDescriptor: IResultFileDescriptor, decoyRegexById: Map[Long, Regex]): Option[Regex] = {
-    val decoyRuleIdOpt = resultFileDescriptor.asInstanceOf[ResultFileDescriptor].protMatchDecoyRuleId
+    val decoyRuleIdOpt = resultFileDescriptor.asInstanceOf[ResultFileDescriptorRuleId].protMatchDecoyRuleId
     decoyRuleIdOpt.map { decoyRegexById(_) }
   }
 }
