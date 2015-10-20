@@ -126,6 +126,40 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
 //    logger.debug("TEST [" + method + "] OK: parsing is successful")
 //  }
   
+  @Test
+  def testOmssaFileWithFixedPtm {
+    val method = getMethod()
+    logger.debug("TEST [" + method + "] STARTS")
+//    val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_fixedPtm.omx")
+    val omssaOmxFile = parseOmxFile("E040XXX.omx.bz2")
+    val rs = omssaOmxFile.getResultSet(wantDecoy = false)
+//    assertEquals("Carbamidomethyl (C7)", rs.peptides.filter(_.sequence.equals("QLSHQLCVALDK")).head.readablePtmString)
+    /* 
+     * Selected fixed ptms:
+     * Carbamidomethyl : ANYWHERE (C)
+     * Dimethyl        : ANY_N_TERM
+     * Ammonia-loss    : ANY_N_TERM (M)
+     * Methyl          : ANY_C_TERM
+     * Met->Hse        : ANY_C_TERM (M)
+     * Acetyl          : PROT_N_TERM
+     * Met-loss        : PROT_N_TERM (M)
+     * 
+     * Note that Methyl and Dimethyl will be present for every peptide
+     */
+    // R.TINEEQMRQCYVKITK.I has Carbamidomethyl
+    assertEquals("Carbamidomethyl (C10); Methyl (Any C-term); Dimethyl (Any N-term)", rs.peptides.filter(_.sequence.equals("TINEEQMRQCYVKITK")).head.readablePtmString)
+    // R.NQILIFRIM._ has Met-Hse (and should have a PROT_C_TERM ptm if such ptm had been selected before search)
+    assertEquals("Methyl (Any C-term); Dimethyl (Any N-term); Met->Hse (Any C-term)", rs.peptides.filter(_.sequence.equals("NQILIFRIM")).head.readablePtmString)
+    // _.YSRIAPPVTACDAENLTK.D has Carbamidomethyl and Acetyl (it's N-term but does not start with M)
+    assertEquals("Carbamidomethyl (C11); Acetyl (Protein N-term); Methyl (Any C-term); Dimethyl (Any N-term)", rs.peptides.filter(_.sequence.equals("YSRIAPPVTACDAENLTK")).head.readablePtmString)
+    // _.MTTKNLETK.V has Met-loss and Acetyl (it's N-term and starts with M)
+    assertEquals("Met-loss (Protein N-term); Acetyl (Protein N-term); Methyl (Any C-term); Dimethyl (Any N-term)", rs.peptides.filter(_.sequence.equals("MTTKNLETK")).head.readablePtmString)
+    // M.DPRECVCMSGGICMCGDNCK.C has Carbamidomethyl, Acetyl and Met-loss
+    assertEquals("Carbamidomethyl (C5); Carbamidomethyl (C7); Carbamidomethyl (C13); Carbamidomethyl (C15); Carbamidomethyl (C19); Met-loss (Protein N-term); Acetyl (Protein N-term); Methyl (Any C-term); Dimethyl (Any N-term)", rs.peptides.filter(_.sequence.equals("DPRECVCMSGGICMCGDNCK")).head.readablePtmString)
+    logger.debug("ABUptm: "+rs.peptides.filter(_.sequence.equals("DPRECVCMSGGICMCGDNCK")).head.readablePtmString)
+    logger.debug("TEST [" + method + "] OK: parsing is successful")
+  }
+  
   /*
      * main test with a small correct file
      */

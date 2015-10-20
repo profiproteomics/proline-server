@@ -71,6 +71,7 @@ class OmssaReadFile(val omxFile: File,
   val omssaPreloader = new OmssaFilePreloader(omxFile)
   private val currentFileMzScale = omssaPreloader.mozScaleValue
   private val nbSequencesInFastaFile = omssaPreloader.nbSequencesInFastaFile
+  private var allowNtermMethionineCleavage = true
   private var peaklist: Peaklist = null
   def getPeaklist: Peaklist = {
     if(peaklist == null) setPeaklist("")
@@ -328,7 +329,7 @@ class OmssaReadFile(val omxFile: File,
                                   }
                                   MSMZHits.advance()
                                 }
-                              case "MSHits_pepstring" => peptideSequence = MSHits_firstChild.collectDescendantText(false) //.replace("U", "") // the selenocysteine (U) is not recognized by biojava 
+                              case "MSHits_pepstring" => peptideSequence = MSHits_firstChild.collectDescendantText(false)
                               case "MSHits_mass"      => peptideMatchDeltaMoz += MSHits_firstChild.collectDescendantText(false).toFloat
                               case "MSHits_mods" =>
                                 val MSModHit = MSHits_firstChild.childElementCursor().advance()
@@ -370,6 +371,34 @@ class OmssaReadFile(val omxFile: File,
                             MSHits_firstChild.advance()
                           }
                           MSHits.advance()
+                          // check if any fixed ptms may match this peptide
+                          msiSearch.searchSettings.fixedPtmDefs.foreach(ptm => {
+                            PtmLocation.withName(ptm.location) match {
+                              case PtmLocation.ANYWHERE => // fixed ptm on any position 
+                                var index = peptideSequence.indexOf(ptm.residue, 0)
+                                while(index != -1) { // first AA will have position 1
+                                  peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = index+1)
+                                  index = peptideSequence.indexOf(ptm.residue, index+1)
+                                }
+                              case PtmLocation.ANY_N_TERM => // fixed ptm on N-terminal amino acid
+                                if(ptm.residue == '\0') peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = 0)
+                                else if(peptideSequence.startsWith(ptm.residue.toString())) peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = 0)
+                              case PtmLocation.ANY_C_TERM => // fixed ptm on C-terminal amino acid 
+                                if(ptm.residue == '\0') peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = -1)
+                                else if(peptideSequence.endsWith(ptm.residue.toString())) peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = -1)
+                              case PtmLocation.PROT_N_TERM => // if residueBefore is null, then it's protein Nter
+                                if(sequenceMatchResidueBefore == None) {
+                                  if(ptm.residue == '\0') peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = 0)
+                                  else if(peptideSequence.startsWith(ptm.residue.toString())) peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = 0)
+                                } else if(allowNtermMethionineCleavage && sequenceMatchResidueBefore.get == 'M' && (ptm.residue == '\0' || ptm.residue == 'M') && proteinMatchIdToSequenceMatches.filter(_._2.start <= 2).size > 0) {
+                                  // omssa has an option to allow cleavage of methionine if it's protein n-terminal
+                                  // this is why there is no many conditions : option has to be activated and previous AA has to be M and first AA in the protein sequence
+                                  peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = 0)
+                                }
+                              case PtmLocation.PROT_C_TERM => // if residueAfter is null, then it's protein Cter
+                                if(sequenceMatchResidueAfter == None && (ptm.residue == '\0' || peptideSequence.endsWith(ptm.residue.toString()))) peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = -1) 
+                            }
+                          })
                           // create the Peptide object
                           val peptide = this.getOrCreatePeptide(peptideLocatedPtms, peptideSequence, pepProvider)
                           // add properties
@@ -490,6 +519,7 @@ class OmssaReadFile(val omxFile: File,
     val ms1ErrorTolUnit = omssaLoader.toleranceUnit(extract(find("MSSearchSettings_pepppm/value")))
     val inputFileType = omssaLoader.spectrumFileTypes(extract(find("MSSpectrumFileType")).toInt)
     val inputFilePath = parseProperties.get(OmssaParseParams.PEAK_LIST_FILE_PATH).toString
+    allowNtermMethionineCleavage = extract(find("MSSearchSettings_nmethionine/value")).equals("true")
     
     val msmstol = extract(find("MSSearchSettings_msmstol")).toDouble
     val msmstolUnit = omssaLoader.toleranceUnit(extract(find("MSSearchSettings_msmsppm/value")))
