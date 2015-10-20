@@ -163,7 +163,7 @@ public class ProjectHandler {
 							if(force_update) {
 								LOG.warn("force update even though no untreated RSMs in this project");
 							} else {
-								LOG.warn(nbUntreatedRsm + " RSM(s) not yet treated, going to look for accessions...");
+								LOG.warn(nbUntreatedRsm + " RSM(s) not yet treated, looking for accessions...");
 							}
 							long nExpectedAccessions = -1L;
 
