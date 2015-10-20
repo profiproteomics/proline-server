@@ -70,7 +70,10 @@ public class ProjectHandler {
 
 	private static final String UPDATE_QUERY_RSM = "UPDATE result_summary  set serialized_properties=:sr where id=:rsmId";
 
-	private static final String LIST_RSM = "select distinct(dt.resultSummaryId) from Dataset dt where dt.project.id= :projectId and dt.type='IDENTIFICATION' and dt.resultSummaryId IS NOT NULL";
+	//private static final String LIST_RSM = "select distinct(dt.resultSummaryId) from Dataset dt where dt.project.id= :projectId and dt.type='IDENTIFICATION' and dt.resultSummaryId IS NOT NULL";
+	// this specific one for also AGGREGATE data_set type:
+	private static final String LIST_RSM = "select distinct(dt.resultSummaryId) from Dataset dt where dt.project.id= :projectId and dt.type in ('AGGREGATE','IDENTIFICATION')  and dt.resultSummaryId IS NOT NULL";
+
 	private static final String LIST_PS = "select distinct(ps.id) from ProteinSetProteinMatchItem pspm, ProteinSet ps where ps.id = pspm.id.proteinSetId and pspm.resultSummary.id= :rsmId and ps.isValidated = 'true' and pspm.resultSummary.id IS NOT NULL";
 	private static final String LIST_PSM = "select distinct(pspm.proteinMatch.id) from ProteinSetProteinMatchItem pspm, ProteinSet ps where ps.id = pspm.id.proteinSetId and pspm.resultSummary.id= :rsmId and pspm.id.proteinSetId= :psId and ps.isValidated = 'true' and pspm.resultSummary.id IS NOT NULL";
 	private static final String CREATE_UPDATE_FUNCTION = "CREATE OR REPLACE FUNCTION updatepspmitem(the_id integer, the_value real,ps_id integer,rsm_id integer)  RETURNS integer AS $$ \n BEGIN \n  "
@@ -107,6 +110,7 @@ public class ProjectHandler {
 			try {
 
 				final EntityManagerFactory emf = msiDbConnector.getEntityManagerFactory();
+				
 				msiEM = emf.createEntityManager();
 				final EntityManagerFactory em_uds = udsDbConnector.getEntityManagerFactory();	
 				udsEM = em_uds.createEntityManager();	
@@ -120,7 +124,9 @@ public class ProjectHandler {
 					
 					final Query udsQuery = udsEM.createQuery(LIST_RSM);
 					udsQuery.setParameter("projectId",projectId);
+					LOG.warn("looking for list of RSM");
 					final List<Long> rsmIds = udsQuery.getResultList();
+					LOG.warn("...retrieved!");
 					//final Map<Long, SEDbInstanceWrapper> seDbInstances = retrieveAllSeqDatabases(msiEM);
 					int  nbUntreatedRsm=0;
 					if(rsmIds.size()>0){
@@ -133,8 +139,16 @@ public class ProjectHandler {
 							rsms.setParameter("rsmId", rsmId);
 							String properties = rsms.getResultList().get(0).getSerializedProperties();
 							JsonParser parser = new JsonParser();
-							JsonObject array = parser.parse(properties).getAsJsonObject();
+							JsonObject array = null;
+							try {
+								array = parser.parse(properties).getAsJsonObject();	
+							} catch (Exception e) {
+								LOG.warn("error accessing project (absent or incorrect JSON, probably AGGREGATE type <=> dataset rsm): forcing anyway before writing json...");
+								array = parser.parse("{}").getAsJsonObject();
+							}
+							
 							//test if the RSM is already calculated
+							
 							if(!array.has("is_coverage_updated") ){
 								nbUntreatedRsm++;
 							}
@@ -217,12 +231,14 @@ public class ProjectHandler {
 						LOG.debug(" CLOSE MSI Db EntityManager for project "+projectId);
 						msiEM.close();
 						udsEM.close();
-						
+						//msiEM.getEntityManagerFactory().close();
 					} catch (Exception exClose) {
 						LOG.error("Error closing MSI Db EntityManager", exClose);
 					}
 				}
 			}
+			
+		
 		}
 		
 	}
@@ -340,11 +356,11 @@ public class ProjectHandler {
 		final IDataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();
 		final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId);
 		final IDatabaseConnector udsDbConnector = connectorFactory.getUdsDbConnector();
-		final IDatabaseConnector dbConnector = connectorFactory.getMsiDbConnector(projectId);
+		//final IDatabaseConnector dbConnector = connectorFactory.getMsiDbConnector(projectId);
 		//DatabaseUpgrader.upgradeDatabase(dbConnector);
 		Connection con = null;
 		try {
-			con = dbConnector.getDataSource().getConnection();
+			con = msiDbConnector.getDataSource().getConnection();
 		} catch (SQLException e) {
 
 			e.printStackTrace();
@@ -397,9 +413,15 @@ public class ProjectHandler {
 						rsms.setParameter("rsmId", rsmId);
 						String properties = rsms.getResultList().get(0).getSerializedProperties();
 						JsonParser parser = new JsonParser();
+						JsonObject array = null;
+						try {
+							array = parser.parse(properties).getAsJsonObject();	
+						} catch (Exception e) {
+							LOG.warn("error accessing project (due to absent JSON): forcing project work...");
+							array = parser.parse("{}").getAsJsonObject();
+							
+						}
 						
-						JsonObject array = parser.parse(properties).getAsJsonObject();
-
 						//test if the RSM is already calculated
 						if(!array.has("is_coverage_updated") || force_update){ 
 							LOG.info("going to compute rsmId:" + rsmId);
@@ -554,10 +576,8 @@ public class ProjectHandler {
 				if (msiEM != null) {
 					try {
 						con.commit();
-						con.close();
 						msiEM.close();
 						udsEM.close();
-						
 						
 					
 					} catch (Exception exClose) {

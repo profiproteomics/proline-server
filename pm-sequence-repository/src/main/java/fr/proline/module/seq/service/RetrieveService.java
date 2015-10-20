@@ -164,6 +164,7 @@ public final class RetrieveService {
 		final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = new HashMap<>();
 
 		ProjectHandler.fillSEDbIdentifiersBySEDb(projectId, seDbIdentifiers, force_update2);
+		ProjectHandler.fillSEDbIdentifiersBySEDb(projectId, seDbIdentifiers, force_update2); // 2nd run for missing values otherwise
 		ProjectHandler.fillSequenceMatchesByProteinMatch(projectId,force_update2);   
 
 
@@ -183,6 +184,9 @@ public final class RetrieveService {
 
 
 	private static Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> fillSEDbIdentifiersForAllProjects(boolean force_update2 ) {
+		
+		
+		// 
 		Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = null;
 
 		final IDataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();
@@ -212,16 +216,36 @@ public final class RetrieveService {
 		} else {
 			seDbIdentifiers = new HashMap<>();
 
-			for (final Long pId : projectIds) {
-
+			// 1: find sequences to fill
+			//for (final Long pId : projectIds) {
+			int size = projectIds.size();
+			for(int i = size-1; i>=0;i--) {
+				Long pId = projectIds.get(i);
 				if (pId != null) {
-					//LOG.info("going to launch fillSEDIdentifiers");
+
 					ProjectHandler.fillSEDbIdentifiersBySEDb(pId.longValue(), seDbIdentifiers, force_update2);
-					//LOG.info("going to launch fillSequencesMatches...");
-					ProjectHandler.fillSequenceMatchesByProteinMatch(pId.longValue(), force_update2);   
+					ProjectHandler.fillSEDbIdentifiersBySEDb(pId.longValue(), seDbIdentifiers, force_update2); // 2nd run for missing values...
+					
+					DatabaseAccess.getSEQDatabaseConnector(true).close();// 
+					
 				}
 
 			}
+			// 2: compute coverage and MW.
+			//size = projectIds.size();
+			for(int i = size-1; i>=0;i--) {
+				Long pId = projectIds.get(i);
+				if (pId != null) {
+					
+		
+					ProjectHandler.fillSequenceMatchesByProteinMatch(pId.longValue(), force_update2);   
+					
+					DatabaseAccess.getSEQDatabaseConnector(true).close();
+				
+				}
+
+			}
+			
 		}
 		return seDbIdentifiers;
 	}
