@@ -143,7 +143,7 @@ public class ProjectHandler {
 							try {
 								array = parser.parse(properties).getAsJsonObject();	
 							} catch (Exception e) {
-								LOG.warn("error accessing project (absent or incorrect JSON, probably AGGREGATE type <=> dataset rsm): forcing anyway before writing json...");
+								LOG.warn("error accessing project " + projectId + " rsm id:" + rsmId +" (absent or incorrect JSON, probably AGGREGATE type <=> dataset rsm): forcing anyway before writing json...");
 								array = parser.parse("{}").getAsJsonObject();
 							}
 							
