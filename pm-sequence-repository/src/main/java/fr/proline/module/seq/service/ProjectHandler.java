@@ -417,7 +417,7 @@ public class ProjectHandler {
 						try {
 							array = parser.parse(properties).getAsJsonObject();	
 						} catch (Exception e) {
-							LOG.warn("error accessing project (due to absent JSON): forcing project work...");
+							LOG.warn("error accessing project id: " + projectId + " (missing JSON): forcing project work...");
 							array = parser.parse("{}").getAsJsonObject();
 							
 						}
