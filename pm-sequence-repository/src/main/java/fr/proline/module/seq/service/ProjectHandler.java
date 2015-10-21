@@ -439,6 +439,17 @@ public class ProjectHandler {
 				LOG.warn("error accessing project id: " + projectId + " (missing JSON): forcing project work...");
 				array = parser.parse("{}").getAsJsonObject();
 			    }
+			    
+			    // Get SeqMatche For RSM
+			    List<SequenceMatch> seqMatches = SequenceMatchRepository.findSequenceMatchForResultSet(msiEM, rsm.getResultSet().getId());
+			    Map<Long, List<SequenceMatch>> seqMatchesByProteinMatchId = new HashMap<>();
+			    for(SequenceMatch seqMatch : seqMatches){
+				Long pmId =  seqMatch.getId().getProteinMatchId();
+				if(!seqMatchesByProteinMatchId.containsKey(pmId))
+				    seqMatchesByProteinMatchId.put(pmId, new ArrayList<SequenceMatch>());
+				seqMatchesByProteinMatchId.get(pmId).add(seqMatch);
+			    }
+
 
 			    // test if the RSM is already calculated
 			    if (!array.has("is_coverage_updated") || forceUpdate) {
@@ -465,7 +476,7 @@ public class ProjectHandler {
 				    	ProteinMatch currentProtMatch = protSet2ProtMatch.getProteinMatch();
 				    	allProtMatchesAccession.add(currentProtMatch.getAccession());
 				    	protSetMapByProtMatch.put(currentProtMatch, protSet2ProtMatch);
-				    	coveredSeqLengthByProtMatchList.put(currentProtMatch, getSeqCoverageForProteinMatch(msiEM,protSet2ProtMatch.getProteinMatch()));
+				    	coveredSeqLengthByProtMatchList.put(currentProtMatch, getSeqCoverageForProteinMatch(seqMatchesByProteinMatchId,protSet2ProtMatch.getProteinMatch()));
 				    } // end go through match 
 				    
 				    LOG.info("coverage calculated");
@@ -632,11 +643,12 @@ public class ProjectHandler {
 		}
 	}
 
-	private static Integer getSeqCoverageForProteinMatch(EntityManager  em, final ProteinMatch protMatch) {
+	private static Integer getSeqCoverageForProteinMatch(Map<Long, List<SequenceMatch>> seqMatchesByProteinMatchId, final ProteinMatch protMatch) {
 
 		// variables definition
 		HashSet<Integer> coveredAASet = new HashSet<Integer>(); //Set of protein sequence index covered by PeptideMatch	
-		List<SequenceMatch> seqMatches = SequenceMatchRepository.findSequenceMatchForProteinMatch(em, protMatch.getId());
+		List<SequenceMatch> seqMatches = seqMatchesByProteinMatchId.get(protMatch.getId());
+
 		for (SequenceMatch seqMatch : seqMatches) {
 			
 		    SequenceMatchPK seqMatchKey = seqMatch.getId();
@@ -645,7 +657,6 @@ public class ProjectHandler {
 
 		    // use set to remove duplicate indexes
 		    coveredAASet.addAll(getSequencesIndexes(start, stop));
-		    em.detach(seqMatch);
 		}
 		
 		return coveredAASet.size();
