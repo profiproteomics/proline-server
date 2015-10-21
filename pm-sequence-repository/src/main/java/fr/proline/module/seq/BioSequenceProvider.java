@@ -27,104 +27,102 @@ import fr.proline.repository.IDatabaseConnector;
 
 public final class BioSequenceProvider {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BioSequenceProvider.class);
+	private static final Logger LOG = LoggerFactory.getLogger(BioSequenceProvider.class);
 
-    /* Private constructor (Utility class) */
-    private BioSequenceProvider() {
-    }
+	/* Private constructor (Utility class) */
+	private BioSequenceProvider() {
+	}
 
-    public static Map<String, List<BioSequenceWrapper>> findBioSequencesBySEDbIdentValues(
-	    final Collection<String> values) {
-	Map<String, List<BioSequenceWrapper>> result = null;
-     
-	/* Client / Provider side */
-	final IDatabaseConnector seqDb = DatabaseAccess.getSEQDatabaseConnector(false);
-	final EntityManagerFactory emf = seqDb.getEntityManagerFactory();
+	public static Map<String, List<BioSequenceWrapper>> findBioSequencesBySEDbIdentValues(final Collection<String> values) {
+		Map<String, List<BioSequenceWrapper>> result = null;
 
-	EntityManager seqEM = emf.createEntityManager();
+		/* Client / Provider side */
+		final IDatabaseConnector seqDb = DatabaseAccess.getSEQDatabaseConnector(false);
+		final EntityManagerFactory emf = seqDb.getEntityManagerFactory();
 
-	try {
-	    result = findBioSequencesBySEDbIdentValues(seqEM, values);
-	} finally {
+		EntityManager seqEM = emf.createEntityManager();
 
-	    if (seqEM != null) {
 		try {
-		    seqEM.close();
-		} catch (Exception exClose) {
-		    LOG.error("Error closing SEQ Db EntityManager", exClose);
+			result = findBioSequencesBySEDbIdentValues(seqEM, values);
+		} finally {
+
+			if (seqEM != null) {
+				try {
+					seqEM.close();
+				} catch (Exception exClose) {
+					LOG.error("Error closing SEQ Db EntityManager", exClose);
+				}
+			}
 		}
-	    }
+		return result;
 	}
-	return result;
-}
-    public static Map<String, List<BioSequenceWrapper>> findBioSequencesBySEDbIdentValues(
-	    final EntityManager seqEM, final Collection<String> values) {
-	final Map<String, List<BioSequenceWrapper>> result = new HashMap<>();
 
-	final List<SEDbIdentifier> seDbIdentifiers = SEDbIdentifierRepository.findSEDbIdentByValues(seqEM,
-		values);
-	if ((seDbIdentifiers != null) && !seDbIdentifiers.isEmpty()) {
+	public static Map<String, List<BioSequenceWrapper>> findBioSequencesBySEDbIdentValues(final EntityManager seqEM, final Collection<String> values) {
 
-	    for (final SEDbIdentifier seDbIdent : seDbIdentifiers) {
-		final String key = seDbIdent.getValue(); // Should not be null
+		final Map<String, List<BioSequenceWrapper>> result = new HashMap<>();
+		final List<SEDbIdentifier> seDbIdentifiers = SEDbIdentifierRepository.findSEDbIdentByValues(seqEM,values);
+		if ((seDbIdentifiers != null) && !seDbIdentifiers.isEmpty()) {
 
-		List<BioSequenceWrapper> bioSequences = result.get(key);
+			for (final SEDbIdentifier seDbIdent : seDbIdentifiers) {
+				final String key = seDbIdent.getValue();// Should not be null
 
-		if (bioSequences == null) {
-		    bioSequences = new ArrayList<>();
+				List<BioSequenceWrapper> bioSequences = result.get(key);
 
-		    result.put(key, bioSequences);
+				if (bioSequences == null) {
+					bioSequences = new ArrayList<>();
+
+					result.put(key, bioSequences);
+				}
+
+				final BioSequenceWrapper bioSequenceW = buildBioSequenceWrapper(seDbIdent);
+				bioSequences.add(bioSequenceW);
+			}
+
 		}
 
-		final BioSequenceWrapper bioSequenceW = buildBioSequenceWrapper(seDbIdent);
-		bioSequences.add(bioSequenceW);
-	    }
-
+		return result;
 	}
 
-	return result;
-    }
+	private static BioSequenceWrapper buildBioSequenceWrapper(final SEDbIdentifier seDbIdent) {
+		assert(seDbIdent != null) : "buildBioSequenceWrapper() seDbIdent is null";
 
-    private static BioSequenceWrapper buildBioSequenceWrapper(final SEDbIdentifier seDbIdent) {
-	assert (seDbIdent != null) : "buildBioSequenceWrapper() seDbIdent is null";
+		final BioSequence bioSequence = seDbIdent.getBioSequence();// Should not be null
+		final long sequenceId = bioSequence.getId();
+		final String sequence = bioSequence.getSequence();// Should not be null
 
-	final BioSequence bioSequence = seDbIdent.getBioSequence(); // Should not be null
-	final long sequenceId = bioSequence.getId();
-	final String sequence = bioSequence.getSequence(); // Should not be null
+		final SEDbInstance seDbInstance = seDbIdent.getSEDbInstance();// Should not be null
 
-	final SEDbInstance seDbInstance = seDbIdent.getSEDbInstance(); // Should not be null
+		final String seDbRelease = seDbInstance.getRelease();// Should not be null
+		final String sourcePath = seDbInstance.getSourcePath();// Should not be null
 
-	final String seDbRelease = seDbInstance.getRelease(); // Should not be null
-	final String sourcePath = seDbInstance.getSourcePath(); // Should not be null
+		final SEDb seDb = seDbInstance.getSEDb();// Should not be null
+		final String seDbName = seDb.getName();// Should not be null
+		final Alphabet alphabet = seDb.getAlphabet();// Should not be null
 
-	final SEDb seDb = seDbInstance.getSEDb(); // Should not be null
-	final String seDbName = seDb.getName(); // Should not be null
-	final Alphabet alphabet = seDb.getAlphabet(); // Should not be null
+		final SEDbInstanceWrapper seDbInstanceW = new SEDbInstanceWrapper(seDbName, alphabet, sourcePath);
 
-	final SEDbInstanceWrapper seDbInstanceW = new SEDbInstanceWrapper(seDbName, alphabet, sourcePath);
+		RepositoryIdentifierWrapper repositoryIdentValue = null;
 
-	RepositoryIdentifierWrapper repositoryIdentValue = null;
+		final RepositoryIdentifier repositoryIdent = seDbIdent.getRepositoryIdentifier();
 
-	final RepositoryIdentifier repositoryIdent = seDbIdent.getRepositoryIdentifier();
+		if (repositoryIdent != null) {// Can be null
+			repositoryIdentValue = buildRepositoryIdentifierWrapper(repositoryIdent);
+		}
 
-	if (repositoryIdent != null) { // Can be null
-	    repositoryIdentValue = buildRepositoryIdentifierWrapper(repositoryIdent);
+		return new BioSequenceWrapper(sequenceId, sequence, seDbInstanceW, seDbRelease, repositoryIdentValue);
 	}
 
-	return new BioSequenceWrapper(sequenceId, sequence, seDbInstanceW, seDbRelease, repositoryIdentValue);
-    }
+	private static RepositoryIdentifierWrapper buildRepositoryIdentifierWrapper(
+		final RepositoryIdentifier repositoryIdent) {
+		assert(repositoryIdent != null) : "buildRepositoryIdentifierWrapper() repositoryIdent is null";
 
-    private static RepositoryIdentifierWrapper buildRepositoryIdentifierWrapper(
-	    final RepositoryIdentifier repositoryIdent) {
-	assert (repositoryIdent != null) : "buildRepositoryIdentifierWrapper() repositoryIdent is null";
+		final Repository repository = repositoryIdent.getRepository();// Should not be null
+		final String repositoryName = repository.getName();// Should not be null
+		final String repositoryURL = repository.getURL();// Can be null
 
-	final Repository repository = repositoryIdent.getRepository(); // Should not be null
-	final String repositoryName = repository.getName(); // Should not be null
-	final String repositoryURL = repository.getURL(); // Can be null
+		final String repositoryIdentValue = repositoryIdent.getValue();// Should not be null
 
-	final String repositoryIdentValue = repositoryIdent.getValue(); // Should not be null
-
-	return new RepositoryIdentifierWrapper(repositoryName, repositoryURL, repositoryIdentValue);
-    }
+		return new RepositoryIdentifierWrapper(repositoryName, repositoryURL, repositoryIdentValue);
+	}
 
 }

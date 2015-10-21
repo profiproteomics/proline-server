@@ -74,16 +74,14 @@ public class FastaSource implements DataSource {
 	return result;
     }
 
-    public Map<SEDbIdentifierWrapper, String> retrieveSequences(
-	    final Map<String, List<SEDbIdentifierWrapper>> identByValues) {
-	return parseFile(identByValues);
+    public Map<SEDbIdentifierWrapper, String> retrieveSequences(final Map<String, List<SEDbIdentifierWrapper>> identByValues) {
+    	return parseFile(identByValues);
     }
 
     /* Private methods */
-    private Map<SEDbIdentifierWrapper, String> parseFile(
-	    final Map<String, List<SEDbIdentifierWrapper>> identByValues) {
+    private Map<SEDbIdentifierWrapper, String> parseFile(final Map<String, List<SEDbIdentifierWrapper>> identByValues) {
+    	
 	final String fastaAbsolutePathname = m_fastaFile.getAbsolutePath();
-
 	final Map<SEDbIdentifierWrapper, String> foundSequences = new HashMap<>();
 
 	long lineIndex = 0L;
@@ -94,8 +92,7 @@ public class FastaSource implements DataSource {
 	    InputStream is = new FileInputStream(m_fastaFile);
 	    br = new BufferedReader(new InputStreamReader(is, LATIN_1_CHARSET));
 
-	    final Map<String, List<SEDbIdentifierWrapper>> remainingSEDbIdentifiers = new HashMap<>(
-		    identByValues);
+	    final Map<String, List<SEDbIdentifierWrapper>> remainingSEDbIdentifiers = new HashMap<>(identByValues);
 	    final int nIdentValues = remainingSEDbIdentifiers.size();
 
 	    SEDbIdentifierWrapper readingSEDbIdentifier = null;
@@ -110,7 +107,6 @@ public class FastaSource implements DataSource {
 	    }
 
 	    final long start = System.currentTimeMillis();
-
 	    String rawLine = br.readLine();
 
 	    while (rawLine != null) {

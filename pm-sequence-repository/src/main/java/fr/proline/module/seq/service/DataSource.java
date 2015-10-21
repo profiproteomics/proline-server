@@ -10,7 +10,6 @@ public interface DataSource {
 
     public Date getLastModifiedTime();
 
-    public Map<SEDbIdentifierWrapper, String> retrieveSequences(
-	    Map<String, List<SEDbIdentifierWrapper>> identByValues);
+    public Map<SEDbIdentifierWrapper, String> retrieveSequences(Map<String, List<SEDbIdentifierWrapper>> identByValues);
 
 }

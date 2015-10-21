@@ -36,8 +36,7 @@ public class DataSourceBuilder {
 
     }
 
-    public DataSource buildFastaSource(final String fastaFileName, final Pattern seDbIdentPattern,
-	    final Pattern repositoryIdentPattern) {
+    public DataSource buildFastaSource(final String fastaFileName, final Pattern seDbIdentPattern, final Pattern repositoryIdentPattern) {
 
 	if (StringUtils.isEmpty(fastaFileName)) {
 	    throw new IllegalArgumentException("Invalid fastaFileName");
