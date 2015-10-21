@@ -65,18 +65,16 @@ public final class BioSequenceRetriever {
 	private static final Logger LOG = LoggerFactory.getLogger(BioSequenceRetriever.class);
 
 	/**
-	 * Protect reantrancy of public retrieveBioSequences() method (Only one thread at a time).
+	 * Protect re-entrance of public retrieveBioSequences() method (Only one thread at a time).
 	 */
 	private static final Object RUNNING_LOCK = new Object();
 
-	private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(Constants
-			.calculateNThreads());
+	private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(Constants.calculateNThreads());
 
 	private static final DataSourceBuilder DATA_SOURCE_BUILDER = new DataSourceBuilder();
 
 	/* Private constructor (Utility class) */
-	private BioSequenceRetriever() {
-	}
+	private BioSequenceRetriever() {	}
 
 	/**
 	 * Blocks until all given SEDbInstance are searched.
@@ -180,10 +178,8 @@ public final class BioSequenceRetriever {
 		EntityManager seqEM = null;
 
 		try {
-			/* Server / Service side */
 			final IDatabaseConnector seqDb = DatabaseAccess.getSEQDatabaseConnector(true);
 			final EntityManagerFactory emf = seqDb.getEntityManagerFactory();
-
 			seqEM = emf.createEntityManager();
 
 			nHandledSEDbIdents = retrieveBioSequences(seqEM, seDbInstanceW, seDbIdentifiers, true);
@@ -562,8 +558,7 @@ public final class BioSequenceRetriever {
 		return result;
 	}
 
-	private static Map<String, List<SEDbIdentifierWrapper>> buildIdentbyValuesMap(
-		final Set<SEDbIdentifierWrapper> seDbIdentifiers) {
+	private static Map<String, List<SEDbIdentifierWrapper>> buildIdentbyValuesMap(final Set<SEDbIdentifierWrapper> seDbIdentifiers) {
 		assert(seDbIdentifiers != null) : "buildIdentbyValuesMap() seDbIdentifiers Set is null";
 
 		final Map<String, List<SEDbIdentifierWrapper>> result = new HashMap<>();
@@ -597,8 +592,7 @@ public final class BioSequenceRetriever {
 		SEDbInstance result = null;
 
 		/* First try to load by sourcePath */
-		final List<SEDbInstance> foundSEDbInstances = SEDbRepository.findSEDbInstanceByNameAndSourcePath(
-			seqEM, seDbName, sourcePath);
+		final List<SEDbInstance> foundSEDbInstances = SEDbRepository.findSEDbInstanceByNameAndSourcePath(seqEM, seDbName, sourcePath);
 		if (foundSEDbInstances != null) {
 			final int nInstances = foundSEDbInstances.size();
 
@@ -639,6 +633,13 @@ public final class BioSequenceRetriever {
 		return result;
 	}
 
+	/**
+	 * Removes Identifiers already known in the SeqDB from the supplied Map.
+	 * 
+	 * @param seqEM
+	 * @param seDbInstance
+	 * @param identByValues
+	 */
 	private static void removeKnownIdentifiers(
 		final EntityManager seqEM,
 		final SEDbInstance seDbInstance,
@@ -648,8 +649,7 @@ public final class BioSequenceRetriever {
 
 		final Set<String> distinctIndentValues = identByValues.keySet();
 
-		final List<SEDbIdentifier> knownIdents = SEDbIdentifierRepository
-				.findSEDbIdentBySEDbInstanceAndValues(seqEM, seDbInstance, distinctIndentValues);
+		final List<SEDbIdentifier> knownIdents = SEDbIdentifierRepository.findSEDbIdentBySEDbInstanceAndValues(seqEM, seDbInstance, distinctIndentValues);
 
 		int nRemovedIdents = 0;
 
@@ -668,7 +668,7 @@ public final class BioSequenceRetriever {
 
 		if ((nRemovedIdents > 0) && LOG.isDebugEnabled()) {
 			final String sourcePath = seDbInstance.getSourcePath();// Should not be null
-			LOG.debug("Removed {} known identifiers from SEDbInstance [{}]", nRemovedIdents, sourcePath);
+			LOG.debug("{} already known identifiers removed from search list for SEDbInstance [{}]", nRemovedIdents, sourcePath);
 		}
 
 	}

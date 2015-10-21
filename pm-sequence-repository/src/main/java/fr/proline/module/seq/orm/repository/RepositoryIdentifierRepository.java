@@ -13,24 +13,25 @@ import fr.profi.util.StringUtils;
 
 public final class RepositoryIdentifierRepository {
 
-    /* Private constructor (Utility class) */
-    private RepositoryIdentifierRepository() {
-    }
-
-    public static List<RepositoryIdentifier> findRepositoryIdentByRepoNameAndValues(
-	    final EntityManager seqEM, final String repositoryName, final Collection<String> values) {
-
-	JPAUtils.checkEntityManager(seqEM);
-
-	if (StringUtils.isEmpty(repositoryName)) {
-	    throw new IllegalArgumentException("Invalid repositoryName");
+	/* Private constructor (Utility class) */
+	private RepositoryIdentifierRepository() {
 	}
 
-	final TypedQuery<RepositoryIdentifier> query = seqEM.createNamedQuery(
-		"findRepositoryIdentByRepoNameAndValues", RepositoryIdentifier.class);
-	query.setParameter("repositoryName", repositoryName);
+	public static List<RepositoryIdentifier> findRepositoryIdentByRepoNameAndValues(
+		final EntityManager seqEM,
+		final String repositoryName,
+		final Collection<String> values) {
 
-	return JPARepositoryUtils.executeInQueryAsBatch(query, "values", values);
-    }
+		JPAUtils.checkEntityManager(seqEM);
+
+		if (StringUtils.isEmpty(repositoryName)) {
+			throw new IllegalArgumentException("Invalid repositoryName");
+		}
+
+		final TypedQuery<RepositoryIdentifier> query = seqEM.createNamedQuery("findRepositoryIdentByRepoNameAndValues", RepositoryIdentifier.class);
+		query.setParameter("repositoryName", repositoryName);
+
+		return JPARepositoryUtils.executeInQueryAsBatch(query, "values", values);
+	}
 
 }

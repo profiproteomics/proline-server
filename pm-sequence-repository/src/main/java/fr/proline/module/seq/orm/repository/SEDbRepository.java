@@ -58,8 +58,7 @@ public final class SEDbRepository {
 
 	ParsingRule result = null;
 
-	final TypedQuery<ParsingRule> query = seqEM.createNamedQuery("findParsingRuleByName",
-		ParsingRule.class);
+	final TypedQuery<ParsingRule> query = seqEM.createNamedQuery("findParsingRuleByName",ParsingRule.class);
 	query.setParameter("name", name);
 
 	final List<ParsingRule> rules = query.getResultList();

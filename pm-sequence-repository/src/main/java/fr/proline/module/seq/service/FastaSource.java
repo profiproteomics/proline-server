@@ -42,8 +42,7 @@ public class FastaSource implements DataSource {
 
     private final Pattern m_repositoryIdentPattern;
 
-    public FastaSource(final File fastaFile, final Pattern seDbIdentPattern,
-	    final Pattern repositoryIdentPattern) {
+    public FastaSource(final File fastaFile, final Pattern seDbIdentPattern, final Pattern repositoryIdentPattern) {
 
 	if ((fastaFile == null) || !fastaFile.isFile()) {
 	    throw new IllegalArgumentException("Invalid fastaFile");
@@ -102,8 +101,7 @@ public class FastaSource implements DataSource {
 		LOG.debug(
 			"Reading [{}] Searching {} distinct SEDbIdentifier.values with \"{}\" SEDbIdent and {} RepositoryIdent Regex",
 			fastaAbsolutePathname, nIdentValues, m_seDbIdentPattern.pattern(),
-			(m_repositoryIdentPattern == null) ? "NO"
-				: '\"' + m_repositoryIdentPattern.pattern() + '\"');
+			(m_repositoryIdentPattern == null) ? "NO" : '\"' + m_repositoryIdentPattern.pattern() + '\"');
 	    }
 
 	    final long start = System.currentTimeMillis();
@@ -118,9 +116,7 @@ public class FastaSource implements DataSource {
 			/* Fasta header */
 
 			if (readingSEDbIdentifier != null) {
-			    addSequence(readingSEDbIdentifier, sequenceBuilder, foundSequences,
-				    remainingSEDbIdentifiers);
-
+			    addSequence(readingSEDbIdentifier, sequenceBuilder, foundSequences, remainingSEDbIdentifiers);
 			    readingSEDbIdentifier = null; // Reset current readingSeDbIdentifier and sequence
 			    sequenceBuilder = null;
 			}
@@ -131,8 +127,7 @@ public class FastaSource implements DataSource {
 			    break;
 			} else {
 
-			    final SEDbIdentifierWrapper seDbIdentifier = checkHeader(rawLine,
-				    remainingSEDbIdentifiers);
+			    final SEDbIdentifierWrapper seDbIdentifier = checkHeader(rawLine, remainingSEDbIdentifiers);
 			    if (seDbIdentifier != null) {
 				/* Found a seDbIdentifier */
 				readingSEDbIdentifier = seDbIdentifier;
@@ -191,8 +186,8 @@ public class FastaSource implements DataSource {
     private static void addSequence(final SEDbIdentifierWrapper readingSEDbIdentifier,
 	    final StringBuilder sequenceBuilder, final Map<SEDbIdentifierWrapper, String> foundSequences,
 	    final Map<String, List<SEDbIdentifierWrapper>> remainingSEDbIdentifiers) {
+    	
 	final String identValue = readingSEDbIdentifier.getValue();
-
 	String normalizedSequence = sequenceBuilder.toString().toUpperCase();
 
 	/* Remove potential '*' char (translation stop marker) */
