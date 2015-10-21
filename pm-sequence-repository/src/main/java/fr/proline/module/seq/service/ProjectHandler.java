@@ -466,8 +466,6 @@ public class ProjectHandler {
 				
 				for (ProteinSet protSet : protSets)// loop through proteinsets.
 				{
-					long start = System.currentTimeMillis();
-					LOG.info("start next ProteinSet");
 				    coveredSeqLengthByProtMatchList.clear();
 				    Map<ProteinMatch, ProteinSetProteinMatchItem> protSetMapByProtMatch = new HashMap<>();
 				    List<String> allProtMatchesAccession = new ArrayList<>();
@@ -479,10 +477,8 @@ public class ProjectHandler {
 				    	coveredSeqLengthByProtMatchList.put(currentProtMatch, getSeqCoverageForProteinMatch(seqMatchesByProteinMatchId,protSet2ProtMatch.getProteinMatch()));
 				    } // end go through match 
 				    
-				    LOG.info("coverage calculated");
 				    // Get bioSequence for all accessions 				    
 				    Map<String, List<BioSequenceWrapper>> result = BioSequenceProvider.findBioSequencesBySEDbIdentValues(allProtMatchesAccession);
-				    LOG.info("{} bio sequences retrieved", result.size());
 				    			    
 				    // loop into proteins of current protein set.
 				    for (Entry<ProteinMatch, Integer> entry : coveredSeqLengthByProtMatchList.entrySet()) {
@@ -574,7 +570,6 @@ public class ProjectHandler {
 				    	LOG.info("Processed " + psIdcount + " protein sets / " + psIdListSize);
 				    }
 				    psIdcount++;
-				    LOG.info("protein set duration = "+(System.currentTimeMillis() - start));
 				} // end protein sets
 
 //				if ("select ".equals(updateQuery) || "select ".equals(insertQuery) || "select ".equals(updatePmQuery)) {
