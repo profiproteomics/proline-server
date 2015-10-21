@@ -418,6 +418,7 @@ public class ProjectHandler {
 		    if ((seDbInstances == null) || seDbInstances.isEmpty()) {
 			LOG.warn("There is NO SEDbInstance in MSI Project #{}", projectId);
 		    } else {
+				LOG.info("start transaction on project {} for {} rsm", projectId, rsmIds.size());
 			msiEM.getTransaction().begin();
 			// for each RSM in data_set.result_summmary_id
 			for (Long rsmId : rsmIds) {
@@ -487,9 +488,9 @@ public class ProjectHandler {
 
 					List<BioSequenceWrapper> protMatchBioSeqs =  result.get(protMatch.getAccession());
 					if((protMatchBioSeqs == null) || (protMatchBioSeqs.isEmpty()) ){
-					    LOG.warn(" ****  FOUND NO Sequence for protein {}",protMatch.getAccession());
+					    LOG.debug(" ****  FOUND NO Sequence for protein {}",protMatch.getAccession());
 					} else if(protMatchBioSeqs.size() > 1){
-					    LOG.warn(" ****  FOUND MORE THAN 1 Sequence for protein {}. Use first one  ",protMatch.getAccession());
+					    LOG.debug(" ****  FOUND MORE THAN 1 Sequence for protein {}. Use first one  ",protMatch.getAccession());
 					}
 					
 					if((protMatchBioSeqs != null) && (protMatchBioSeqs.size() >= 1)) {
@@ -522,6 +523,7 @@ public class ProjectHandler {
 						msiBioSeq.setId(bioSeq.getSequenceId());
 						msiBioSeq.setLength(bioSeq.getSequence().length());
 						msiBioSeq.setMass(new Double(bioSeq.getMass()).intValue());
+						msiBioSeq.setCrc64("");
 						msiBioSeq.setPi(new Float(bioSeq.getPI()));
 						msiBioSeq.setSequence(bioSeq.getSequence());
 						if(persist)
