@@ -452,9 +452,11 @@ public class ProjectHandler {
 				//String updateQuery = "select ", insertQuery = "select ", updatePmQuery = "select ";
 
 				LOG.info("start processing of " + psIdListSize + " proteinsets.");
-				int biosequencelentgh = 0;
+				
 				for (ProteinSet protSet : protSets)// loop through proteinsets.
 				{
+					long start = System.currentTimeMillis();
+					LOG.info("start next ProteinSet");
 				    coveredSeqLengthByProtMatchList.clear();
 				    Map<ProteinMatch, ProteinSetProteinMatchItem> protSetMapByProtMatch = new HashMap<>();
 				    List<String> allProtMatchesAccession = new ArrayList<>();
@@ -464,10 +466,12 @@ public class ProjectHandler {
 				    	allProtMatchesAccession.add(currentProtMatch.getAccession());
 				    	protSetMapByProtMatch.put(currentProtMatch, protSet2ProtMatch);
 				    	coveredSeqLengthByProtMatchList.put(currentProtMatch, getSeqCoverageForProteinMatch(msiEM,protSet2ProtMatch.getProteinMatch()));
-				    } // end go through match
+				    } // end go through match 
 				    
+				    LOG.info("coverage calculated");
 				    // Get bioSequence for all accessions 				    
 				    Map<String, List<BioSequenceWrapper>> result = BioSequenceProvider.findBioSequencesBySEDbIdentValues(allProtMatchesAccession);
+				    LOG.info("{} bio sequences retrieved", result.size());
 				    			    
 				    // loop into proteins of current protein set.
 				    for (Entry<ProteinMatch, Integer> entry : coveredSeqLengthByProtMatchList.entrySet()) {
@@ -481,9 +485,9 @@ public class ProjectHandler {
 					    LOG.warn(" ****  FOUND MORE THAN 1 Sequence for protein {}. Use first one  ",protMatch.getAccession());
 					}
 					
-					if((protMatchBioSeqs != null) && (protMatchBioSeqs.size() == 1)) {
+					if((protMatchBioSeqs != null) && (protMatchBioSeqs.size() >= 1)) {
 					    BioSequenceWrapper bioSeq =  protMatchBioSeqs.get(0);
-
+					    int biosequencelentgh = bioSeq.getSequence().length();
 					    // to avoid the indeterminate form : /0
 					    if ((biosequencelentgh > 0) && (sequencesmatcheslength < biosequencelentgh)) {
 
@@ -497,8 +501,9 @@ public class ProjectHandler {
 						double coverage = calculateSequenceCoverage(biosequencelentgh, sequencesmatcheslength);
 						ProteinSetProteinMatchItem proSetMap = protSetMapByProtMatch.get(protMatch);
 						proSetMap.setCoverage(new Float(coverage));
-						msiEM.merge(proSetMap);
 						
+						msiEM.merge(proSetMap);
+
 						BioSequence msiBioSeq = msiEM.find(BioSequence.class,bioSeq.getSequenceId());
 						boolean persist = false;
 						if(msiBioSeq == null){
@@ -516,10 +521,10 @@ public class ProjectHandler {
 						    msiEM.persist(msiBioSeq);
 						else
 						    msiEM.merge(msiBioSeq);
-						
+
 						protMatch.setBioSequenceId(bioSeq.getSequenceId());
 						msiEM.merge(protMatch);
-						
+
 //						if (nbPeptideMatchTreatedInCurrentRSM >= peptideMatchBatchSize) {// then flush
 //						    updateQuery += " updatepspmitem(" + proteinmatchid + ","
 //							    + calculateSequenceCoverage(biosequencelentgh, sequencesmatcheslength)
@@ -555,10 +560,10 @@ public class ProjectHandler {
 				    } // end of proteins list of current protein set
 				    
 				    if (psIdcount % 500 == 0) {
-					LOG.info("Processed " + psIdcount + " protein sets / " + psIdListSize);
-
+				    	LOG.info("Processed " + psIdcount + " protein sets / " + psIdListSize);
 				    }
 				    psIdcount++;
+				    LOG.info("protein set duration = "+(System.currentTimeMillis() - start));
 				} // end protein sets
 
 //				if ("select ".equals(updateQuery) || "select ".equals(insertQuery) || "select ".equals(updatePmQuery)) {
@@ -633,12 +638,14 @@ public class ProjectHandler {
 		HashSet<Integer> coveredAASet = new HashSet<Integer>(); //Set of protein sequence index covered by PeptideMatch	
 		List<SequenceMatch> seqMatches = SequenceMatchRepository.findSequenceMatchForProteinMatch(em, protMatch.getId());
 		for (SequenceMatch seqMatch : seqMatches) {
+			
 		    SequenceMatchPK seqMatchKey = seqMatch.getId();
 		    int start = seqMatchKey.getStart();
 		    int stop =  seqMatchKey.getStop();
 
 		    // use set to remove duplicate indexes
 		    coveredAASet.addAll(getSequencesIndexes(start, stop));
+		    em.detach(seqMatch);
 		}
 		
 		return coveredAASet.size();
