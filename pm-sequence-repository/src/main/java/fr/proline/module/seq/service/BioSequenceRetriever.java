@@ -1007,8 +1007,7 @@ public final class BioSequenceRetriever {
 		final String repositoryIdentValue = seDbIdentW.getRepositoryIdentifier();
 
 		if ((repository != null) && (repositoryIdentValue != null)) {
-			final RepositoryIdentifier repositoryIdent = loadOrCreateRepositoryIdentifier(context,
-				repositoryIdentValue);
+			final RepositoryIdentifier repositoryIdent = loadOrCreateRepositoryIdentifier(context,repositoryIdentValue);
 			result.setRepositoryIdentifier(repositoryIdent);
 		}
 
