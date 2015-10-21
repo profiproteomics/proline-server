@@ -47,21 +47,21 @@ public class ProjectHandler {
 	private static final String VALIDATED_PM_COUNT_FOR_RSMS_QUERY = "SELECT COUNT (DISTINCT pm.accession)"
 			+ " FROM fr.proline.core.orm.msi.ProteinMatch pm JOIN pm.proteinSetProteinMatchItems ps"
 			+ " WHERE ((upper(pm.resultSet.type) = 'SEARCH') OR (upper(pm.resultSet.type) = 'USER'))"
-			+ " AND (ps.proteinSet.isValidated = true) AND (ps.proteinSet.resultSummary IN :rsm_ids )";
+			+ " AND (ps.proteinSet.isValidated = true) AND (ps.proteinSet.resultSummary.id IN (:rsm_ids) )";
 
 	private static final String VALIDATED_PM_SDM_FOR_RSMS_QUERY = "SELECT DISTINCT pm.accession, pm.description, sdb.id"
 			+ " FROM fr.proline.core.orm.msi.ProteinMatch pm, fr.proline.core.orm.msi.SeqDatabase sdb, fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMap pmsdb"
 			+ " JOIN pm.proteinSetProteinMatchItems ps"
 			+ " WHERE (pmsdb.id.proteinMatchId = pm.id) AND (pmsdb.id.seqDatabaseId = sdb.id)"
 			+ " AND ((upper(pm.resultSet.type) = 'SEARCH') OR (upper(pm.resultSet.type) = 'USER'))"
-			+ " AND (ps.proteinSet.isValidated = true) AND (ps.proteinSet.resultSummary IN  :rsm_ids)";
+			+ " AND (ps.proteinSet.isValidated = true) AND (ps.proteinSet.resultSummary.id IN  (:rsm_ids))";
 
 	private static final String VALIDATED_PM_FOR_RSMS_QUERY = "SELECT DISTINCT pm.accession, pm.description, ssdm.seqDatabase.id"
 			+ " FROM fr.proline.core.orm.msi.ProteinMatch pm, fr.proline.core.orm.msi.SearchSettingsSeqDatabaseMap ssdm"
 			+ " JOIN pm.proteinSetProteinMatchItems ps"
 			+ " WHERE (pm.resultSet.msiSearch.searchSetting = ssdm.searchSetting)"
 			+ " AND ((upper(pm.resultSet.type) = 'SEARCH') OR (upper(pm.resultSet.type) = 'USER'))"
-			+ " AND (ps.proteinSet.isValidated = true) AND (ps.proteinSet.resultSummary IN  :rsm_ids)";
+			+ " AND (ps.proteinSet.isValidated = true) AND (ps.proteinSet.resultSummary.id IN  (:rsm_ids))";
 
 //	private static final String VALIDATED_ACC_RSM_QUERY = "SELECT pm, sm.id "
 //			+ "FROM ProteinMatch pm, ProteinSet ps, ProteinSetProteinMatchItem pspmm, SequenceMatch sm, PeptideSet pepset, PeptideSetPeptideInstanceItem pepsetinsitem, PeptideInstance pepinst "
@@ -165,7 +165,7 @@ public class ProjectHandler {
 					    if (forceUpdate) {
 						LOG.debug(" Update all RSMs for this project ({})",projectId);
 					    } else {
-						LOG.debug(" Update {} RSM(s) for this project ({})  ");
+						LOG.debug(" Update {} RSM(s) for this project ({})  ", untreatedRsmIds.size(), projectId);
 					    }					
 					}
 					
@@ -460,10 +460,10 @@ public class ProjectHandler {
 				    List<String> allProtMatchesAccession = new ArrayList<>();
 				    
 				    for (ProteinSetProteinMatchItem protSet2ProtMatch : protSet.getProteinSetProteinMatchItems()) {
-					ProteinMatch currentProtMatch = protSet2ProtMatch.getProteinMatch();
-					allProtMatchesAccession.add(currentProtMatch.getAccession());
-					protSetMapByProtMatch.put(currentProtMatch, protSet2ProtMatch);
-					coveredSeqLengthByProtMatchList.put(currentProtMatch, getSeqCoverageForProteinMatch(msiEM,protSet2ProtMatch.getProteinMatch()));
+				    	ProteinMatch currentProtMatch = protSet2ProtMatch.getProteinMatch();
+				    	allProtMatchesAccession.add(currentProtMatch.getAccession());
+				    	protSetMapByProtMatch.put(currentProtMatch, protSet2ProtMatch);
+				    	coveredSeqLengthByProtMatchList.put(currentProtMatch, getSeqCoverageForProteinMatch(msiEM,protSet2ProtMatch.getProteinMatch()));
 				    } // end go through match
 				    
 				    // Get bioSequence for all accessions 				    
@@ -475,11 +475,13 @@ public class ProjectHandler {
 					sequencesmatcheslength = entry.getValue();
 
 					List<BioSequenceWrapper> protMatchBioSeqs =  result.get(protMatch.getAccession());
-					if(protMatchBioSeqs.size() > 1){
-					    LOG.warn(" ****  FOUND MORE THAN 1 Sequence for protein {}. Use first one  "+protMatch.getAccession());
+					if((protMatchBioSeqs == null) || (protMatchBioSeqs.isEmpty()) ){
+					    LOG.warn(" ****  FOUND NO Sequence for protein {}",protMatch.getAccession());
+					} else if(protMatchBioSeqs.size() > 1){
+					    LOG.warn(" ****  FOUND MORE THAN 1 Sequence for protein {}. Use first one  ",protMatch.getAccession());
 					}
 					
-					if(protMatchBioSeqs.size() == 1) {
+					if((protMatchBioSeqs != null) && (protMatchBioSeqs.size() == 1)) {
 					    BioSequenceWrapper bioSeq =  protMatchBioSeqs.get(0);
 
 					    // to avoid the indeterminate form : /0
@@ -549,10 +551,7 @@ public class ProjectHandler {
 
 					    }	
 					    
-					} else {
-					    LOG.warn(" ****  FOUND NO Sequence for protein {}."+protMatch.getAccession());
-					}
-						
+					} 
 				    } // end of proteins list of current protein set
 				    
 				    if (psIdcount % 500 == 0) {
