@@ -132,15 +132,41 @@ public final class RetrieveService {
 
 	public static void retrieveBioSequencesForAllProjects(boolean forceUpdate) {
 		int totalHandledSEDbIdents = 0;
-		LOG.debug("Computing data for ALL projects ");
+		LOG.debug("Retrive Sequences for ALL projects ");
 		final long start = System.currentTimeMillis();
 
-		final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = fillSEDbIdentifiersForAllProjects(forceUpdate);
+		final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = new HashMap<>();
 
+		final IDataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();
+		final IDatabaseConnector udsDbConnector = connectorFactory.getUdsDbConnector();
+		final EntityManagerFactory emf = udsDbConnector.getEntityManagerFactory();
+
+		EntityManager udsEM = emf.createEntityManager();
+		List<Long> projectIds = getAllProjectIds(udsEM);
+
+		if ((projectIds == null) || projectIds.isEmpty()) {
+			LOG.warn("NO MSI Project found");
+		} else {
+			int size = projectIds.size();
+			for(int i = size-1; i>=0;i--) {
+				Long pId = projectIds.get(i);
+				if (pId != null) {
+					ProjectHandler.fillSEDbIdentifiersBySEDb(pId.longValue(), seDbIdentifiers, forceUpdate);
+					DatabaseAccess.getDataStoreConnectorFactory().closeProjectConnectors(pId);
+				}
+			}
+		}
+		
 		if ((seDbIdentifiers == null) || seDbIdentifiers.isEmpty()) {
 			LOG.warn("NO SEDbIdentifier found");
 		} else {
 			totalHandledSEDbIdents = BioSequenceRetriever.retrieveBioSequences(seDbIdentifiers);
+			int size = projectIds.size();
+			for(int i = size-1; i>=0;i--) {
+				Long pId = projectIds.get(i);
+				ProjectHandler.fillSequenceMatchesByProteinMatch(pId.longValue(), forceUpdate); 
+				DatabaseAccess.getDataStoreConnectorFactory().closeProjectConnectors(pId);
+			}
 		}
 
 		final long end = System.currentTimeMillis();
@@ -177,17 +203,9 @@ public final class RetrieveService {
 				projectId, totalHandledSEDbIdents, duration);
 	}
 
-
-	private static Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> fillSEDbIdentifiersForAllProjects(boolean forceUpdate) {
-		
-		Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = null;
-
-		final IDataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();
-		final IDatabaseConnector udsDbConnector = connectorFactory.getUdsDbConnector();
-		final EntityManagerFactory emf = udsDbConnector.getEntityManagerFactory();
+	private static List<Long> getAllProjectIds(EntityManager udsEM) {
 
 		List<Long> projectIds = null;
-		EntityManager udsEM = emf.createEntityManager();
 
 		try {
 			projectIds = ProjectRepository.findAllProjectIds(udsEM);
@@ -201,23 +219,7 @@ public final class RetrieveService {
 			}
 		}
 
-		if ((projectIds == null) || projectIds.isEmpty()) {
-			LOG.warn("NO MSI Project found");
-		} else {
-			seDbIdentifiers = new HashMap<>();
-
-			// 1: find sequences to fill
-			//for (final Long pId : projectIds) {
-			int size = projectIds.size();
-			for(int i = size-1; i>=0;i--) {
-				Long pId = projectIds.get(i);
-				if (pId != null) {
-					ProjectHandler.fillSEDbIdentifiersBySEDb(pId.longValue(), seDbIdentifiers, forceUpdate);
-					ProjectHandler.fillSequenceMatchesByProteinMatch(pId.longValue(), forceUpdate);   
-					DatabaseAccess.getDataStoreConnectorFactory().getMsiDbConnector(pId).close();
-				}
-			}
-		}
-		return seDbIdentifiers;
+		return projectIds;
 	}
+
 }
