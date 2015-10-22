@@ -74,7 +74,8 @@ public final class BioSequenceRetriever {
 	private static final DataSourceBuilder DATA_SOURCE_BUILDER = new DataSourceBuilder();
 
 	/* Private constructor (Utility class) */
-	private BioSequenceRetriever() {	}
+	private BioSequenceRetriever() {
+	}
 
 	/**
 	 * Blocks until all given SEDbInstance are searched.
@@ -86,6 +87,8 @@ public final class BioSequenceRetriever {
 		if ((seDbIdentifiers == null) || seDbIdentifiers.isEmpty()) {
 			throw new IllegalArgumentException("Invalid seDbIdentifiers Map");
 		}
+
+		LOG.info("Retrieve Sequence from {} differents source ", seDbIdentifiers.size());
 
 		int totalHandledSEDbIdents = 0;
 
@@ -150,8 +153,7 @@ public final class BioSequenceRetriever {
 
 			final long duration = end - start;
 
-			LOG.info("Total retrieveBioSequences() execution : {} SEDbIdentifiers handled in {} ms",
-				totalHandledSEDbIdents, duration);
+			LOG.info("Total retrieveBioSequences() execution : {} SEDbIdentifiers handled in {} ms", totalHandledSEDbIdents, duration);
 		} // End of synchronized block on RUNNING_LOCK
 
 		return totalHandledSEDbIdents;
@@ -281,7 +283,7 @@ public final class BioSequenceRetriever {
 				repositoryIdentPattern = Pattern.compile(repositoryIdentRegex, Pattern.CASE_INSENSITIVE);
 			}
 
-			final DataSource fastaSource = DATA_SOURCE_BUILDER.buildFastaSource(fastaFileName,seDbIdentPattern, repositoryIdentPattern);
+			final DataSource fastaSource = DATA_SOURCE_BUILDER.buildFastaSource(fastaFileName, seDbIdentPattern, repositoryIdentPattern);
 
 			if (fastaSource == null) {
 				LOG.warn("NO FastaSource found for [{}]", sourcePath);
@@ -319,7 +321,8 @@ public final class BioSequenceRetriever {
 							final long start = System.currentTimeMillis();
 
 							if (seDbInstance == null) {
-								seDbInstance = loadOrCreateSEDbInstance(seqEM, seDbInstanceW, seDb, release, fastaSource.getLastModifiedTime(), possibleUniprot);
+								seDbInstance = loadOrCreateSEDbInstance(seqEM, seDbInstanceW, seDb, release, fastaSource.getLastModifiedTime(),
+									possibleUniprot);
 							} else {
 								seDbInstance = seqEM.merge(seDbInstance);
 							}
@@ -1007,7 +1010,7 @@ public final class BioSequenceRetriever {
 		final String repositoryIdentValue = seDbIdentW.getRepositoryIdentifier();
 
 		if ((repository != null) && (repositoryIdentValue != null)) {
-			final RepositoryIdentifier repositoryIdent = loadOrCreateRepositoryIdentifier(context,repositoryIdentValue);
+			final RepositoryIdentifier repositoryIdent = loadOrCreateRepositoryIdentifier(context, repositoryIdentValue);
 			result.setRepositoryIdentifier(repositoryIdent);
 		}
 
