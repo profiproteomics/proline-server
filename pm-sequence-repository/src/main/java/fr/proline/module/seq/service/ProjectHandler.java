@@ -412,10 +412,10 @@ public class ProjectHandler {
 					
 					// get the properties of the RSM to test if update needed
 					final ResultSummary rsm = msiEM.find(ResultSummary.class, rsmId);
-					JsonObject array = new JsonObject();
+					JsonParser parser = new JsonParser();//VDS TODO ? Use jackson as for ORM DxxQuant object
+					JsonObject array = parser.parse("{}").getAsJsonObject();
 					if (!forceUpdate) {
-						String properties = rsm.getSerializedProperties();
-						JsonParser parser = new JsonParser();//VDS TODO ? Use jackson as for ORM DxxQuant object 
+						String properties = rsm.getSerializedProperties();						
 						array = null;
 						try {
 							array = parser.parse(properties).getAsJsonObject();
