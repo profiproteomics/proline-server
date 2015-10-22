@@ -19,66 +19,67 @@ import javax.persistence.Table;
 @NamedQuery(name = "findSEDbByName", query = "SELECT sd from fr.proline.module.seq.orm.SEDb sd where sd.name = :name")
 public class SEDb implements Serializable {
 
-    private static final long serialVersionUID = 2L;
+	private static final long serialVersionUID = 2L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    @Column(nullable = false)
-    private String name;
+	@Column(nullable = false)
+	private String name;
 
-    // Length = 3
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private Alphabet alphabet;
+	// Length = 3
+	@Column(nullable = false)
+	@Enumerated(EnumType.STRING)
+	private Alphabet alphabet;
 
-    @ManyToOne
-    @JoinColumn(name = "parsing_rule_id")
-    private ParsingRule parsingRule;
+	@ManyToOne
+	@JoinColumn(name = "parsing_rule_id")
+	private ParsingRule parsingRule;
 
-    @ManyToOne
-    @JoinColumn(name = "repository_id")
-    private Repository repository;
+	@ManyToOne
+	@JoinColumn(name = "repository_id")
+	private Repository repository;
 
-    private void setId(final long pId) {
-	id = pId;
-    }
+	@SuppressWarnings("unused")
+	private void setId(final long pId) {
+		id = pId;
+	}
 
-    public long getId() {
-	return id;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public void setName(final String pName) {
-	name = pName;
-    }
+	public void setName(final String pName) {
+		name = pName;
+	}
 
-    public String getName() {
-	return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setAlphabet(final Alphabet pAlphabet) {
-	alphabet = pAlphabet;
-    }
+	public void setAlphabet(final Alphabet pAlphabet) {
+		alphabet = pAlphabet;
+	}
 
-    public Alphabet getAlphabet() {
-	return alphabet;
-    }
+	public Alphabet getAlphabet() {
+		return alphabet;
+	}
 
-    public void setParsingRule(final ParsingRule pParsingRule) {
-	parsingRule = pParsingRule;
-    }
+	public void setParsingRule(final ParsingRule pParsingRule) {
+		parsingRule = pParsingRule;
+	}
 
-    public ParsingRule getParsingRule() {
-	return parsingRule;
-    }
+	public ParsingRule getParsingRule() {
+		return parsingRule;
+	}
 
-    public void setRepository(final Repository pRepository) {
-	repository = pRepository;
-    }
+	public void setRepository(final Repository pRepository) {
+		repository = pRepository;
+	}
 
-    public Repository getRepository() {
-	return repository;
-    }
+	public Repository getRepository() {
+		return repository;
+	}
 
 }

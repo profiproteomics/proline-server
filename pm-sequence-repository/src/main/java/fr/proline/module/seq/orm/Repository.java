@@ -15,39 +15,39 @@ import javax.persistence.Table;
 @NamedQuery(name = "findRepositoryByName", query = "SELECT repo from fr.proline.module.seq.orm.Repository repo where repo.name = :name")
 public class Repository implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    @Column(nullable = false)
-    private String name;
+	@Column(nullable = false)
+	private String name;
 
-    private String url;
+	private String url;
 
-    public void setId(final long pId) {
-	id = pId;
-    }
+	public void setId(final long pId) {
+		id = pId;
+	}
 
-    public long getId() {
-	return id;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public void setName(final String pName) {
-	name = pName;
-    }
+	public void setName(final String pName) {
+		name = pName;
+	}
 
-    public String getName() {
-	return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setURL(final String pURL) {
-	url = pURL;
-    }
+	public void setURL(final String pURL) {
+		url = pURL;
+	}
 
-    public String getURL() {
-	return url;
-    }
+	public String getURL() {
+		return url;
+	}
 
 }

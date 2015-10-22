@@ -15,44 +15,45 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "repository_identifier")
 @NamedQuery(name = "findRepositoryIdentByRepoNameAndValues", query = "SELECT DISTINCT ri from fr.proline.module.seq.orm.RepositoryIdentifier ri"
-	+ " where (ri.repository.name = :repositoryName) and (ri.value in (:values))")
+		+ " where (ri.repository.name = :repositoryName) and (ri.value in (:values))")
 public class RepositoryIdentifier implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-    @Column(nullable = false)
-    private String value;
+	@Column(nullable = false)
+	private String value;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "repository_id")
-    private Repository repository;
+	@ManyToOne(optional = false)
+	@JoinColumn(name = "repository_id")
+	private Repository repository;
 
-    private void setId(final long pId) {
-	id = pId;
-    }
+	@SuppressWarnings("unused")
+	private void setId(final long pId) {
+		id = pId;
+	}
 
-    public long getId() {
-	return id;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public void setValue(final String pValue) {
-	value = pValue;
-    }
+	public void setValue(final String pValue) {
+		value = pValue;
+	}
 
-    public String getValue() {
-	return value;
-    }
+	public String getValue() {
+		return value;
+	}
 
-    public void setRepository(final Repository pRepository) {
-	this.repository = pRepository;
-    }
+	public void setRepository(final Repository pRepository) {
+		this.repository = pRepository;
+	}
 
-    public Repository getRepository() {
-	return repository;
-    }
+	public Repository getRepository() {
+		return repository;
+	}
 
 }
