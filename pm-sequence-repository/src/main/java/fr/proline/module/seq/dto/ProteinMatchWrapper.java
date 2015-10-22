@@ -2,11 +2,8 @@ package fr.proline.module.seq.dto;
 import java.io.Serializable;
 
 import fr.proline.core.orm.msi.ResultSet;
-import fr.proline.module.seq.orm.Alphabet;
-import fr.proline.module.seq.util.PeptideUtils;
-import fr.profi.util.StringUtils;
 
-public class ProteinmatchWrapper {
+public class ProteinMatchWrapper implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
 	private Long id;
@@ -107,7 +104,7 @@ public class ProteinmatchWrapper {
 	public void setTaxonId(Long taxonId) {
 		this.taxonId = taxonId;
 	}
-	public ProteinmatchWrapper(Long id, String accession) {
+	public ProteinMatchWrapper(Long id, String accession) {
 		super();
 		this.id = id;
 		this.accession = accession;
