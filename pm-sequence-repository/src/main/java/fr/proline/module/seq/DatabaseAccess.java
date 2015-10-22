@@ -36,344 +36,344 @@ import fr.proline.repository.ProlineDatabaseType;
  */
 public final class DatabaseAccess {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DatabaseAccess.class);
+	private static final Logger LOG = LoggerFactory.getLogger(DatabaseAccess.class);
 
-    private static final String SEQ_DB_NAME = "seq_db";
+	private static final String SEQ_DB_NAME = "seq_db";
 
-    private static final Object INITIALIZATION_LOCK = new Object();
+	private static final Object INITIALIZATION_LOCK = new Object();
 
-    /* All mutable fields and their initialization are @GuardedBy("INITIALIZATION_LOCK") */
+	/* All mutable fields and their initialization are @GuardedBy("INITIALIZATION_LOCK") */
 
-    private static IDataStoreConnectorFactory connectorFactory;
+	private static IDataStoreConnectorFactory connectorFactory;
 
-    private static IDatabaseConnector seqDatabaseConnector;
+	private static IDatabaseConnector seqDatabaseConnector;
 
-    /* Private constructor (Utility class) */
-    private DatabaseAccess() {
-    }
-
-    public static IDataStoreConnectorFactory getDataStoreConnectorFactory() {
-	IDataStoreConnectorFactory result = null;
-
-	synchronized (INITIALIZATION_LOCK) {
-
-	    if (connectorFactory == null) {
-		result = DStoreCustomPoolConnectorFactory.getInstance();
-
-		if (!result.isInitialized()) {
-		    /* Initialization holding INITIALIZATION_LOCK */
-		    ServiceConfiguration.forcePropertiesFileReload();
-		    final String udsDbConfigFileName = ServiceConfiguration.getUDSDbConfigurationFileName();
-
-		    if (StringUtils.isEmpty(udsDbConfigFileName)) {
-			throw new IllegalArgumentException("No valid UDS Db Configuration file");
-		    } else {
-			LOG.debug("Initializing DataStoreConnectorFactory from [{}] file",
-			    udsDbConfigFileName);
-			((DStoreCustomPoolConnectorFactory) result).initialize(udsDbConfigFileName, "SequenceRepository");
-		    }
-		}
-		connectorFactory = result;
-	    } else {
-		result = connectorFactory;
-	    }
-
-	} // End of synchronized block on INITIALIZATION_LOCK
-
-	return result;
-    }
-
-    public static IDataStoreConnectorFactory getDataStoreConnectorFactory(final Map<Object, Object> udsDbProperties) {
-	IDataStoreConnectorFactory result = null;
-
-	synchronized (INITIALIZATION_LOCK) {
-
-	    if (connectorFactory == null) {
-		result = DStoreCustomPoolConnectorFactory.getInstance();
-
-		if (!result.isInitialized()) {
-		    /* Initialization holding INITIALIZATION_LOCK */
-
-		    if (udsDbProperties == null || udsDbProperties.isEmpty()) {
-			throw new IllegalArgumentException("No valid UDS Db Properties");
-		    } else {
-			LOG.debug("Initializing DataStoreConnectorFactory from [{}] properties",
-			    udsDbProperties);
-			((DStoreCustomPoolConnectorFactory) result).initialize(udsDbProperties, "SequenceRepository");
-		    }
-		} else {
-		    LOG.warn("DataStoreConnectorFactory was already initialized. Properties [{}] was ignore", udsDbProperties);
-		}
-		connectorFactory = result;
-	    } else {
-		LOG.warn("DataStoreConnectorFactory was already initialized. Properties [{}] was ignore", udsDbProperties);
-		result = connectorFactory;
-	    }
-
-	} // End of synchronized block on INITIALIZATION_LOCK
-
-	return result;
-    }
-
-    /**
-     * Retrieve current SEQ DatabaseConnector instance.
-     * 
-     * @param serviceSide
-     *            <code>true</code> if called by service (lazy initialization of SEQ Database) or <code>false</code> if called by client (provider use)
-     * @return SEQ DatabaseConnector or <code>null</code> if DatabaseConnector cannot be initialized
-     */
-    public static IDatabaseConnector getSEQDatabaseConnector(final boolean serviceSide) {
-	IDatabaseConnector result = null;
-
-	synchronized (INITIALIZATION_LOCK) {
-
-	    if (seqDatabaseConnector == null) {
-		result = createSEQDatabaseConnector(serviceSide, null);
-
-		seqDatabaseConnector = result;
-	    } else {
-		result = seqDatabaseConnector;
-	    }
-
-	} // End of synchronized block on INITIALIZATION_LOCK
-
-	return result;
-    }
-
-    /**
-     * Retrieve current SEQ DatabaseConnector instance.
-     * 
-     * @param serviceSide
-     *            <code>true</code> if called by service (lazy initialization of SEQ Database) or <code>false</code> if called by client (provider use)
-     * @param udsDbProperties
-     *            Properties to use to create UDSConnector
-     * @return SEQ DatabaseConnector or <code>null</code> if DatabaseConnector cannot be initialized
-     */
-    public static IDatabaseConnector getSEQDatabaseConnector(final boolean serviceSide, final Map<Object, Object> udsDbProperties) {
-	IDatabaseConnector result = null;
-
-	synchronized (INITIALIZATION_LOCK) {
-
-	    if (seqDatabaseConnector == null) {
-		result = createSEQDatabaseConnector(serviceSide, udsDbProperties);
-
-		seqDatabaseConnector = result;
-	    } else {
-		result = seqDatabaseConnector;
-	    }
-
-	} // End of synchronized block on INITIALIZATION_LOCK
-
-	return result;
-    }
-
-    /* Called holding INITIALIZATION_LOCK */
-    private static IDatabaseConnector createSEQDatabaseConnector(final boolean serviceSide, final Map<Object, Object> udsDbProperties) {
-	IDatabaseConnector seqDbConnector = null;
-	IDataStoreConnectorFactory dataStoreConnectorFactory = null;
-	if (udsDbProperties != null && !udsDbProperties.isEmpty())
-	    dataStoreConnectorFactory = getDataStoreConnectorFactory(udsDbProperties);
-	else
-	    dataStoreConnectorFactory = getDataStoreConnectorFactory();
-	final IDatabaseConnector udsDbConnector = dataStoreConnectorFactory.getUdsDbConnector();
-	final EntityManagerFactory udsEMF = udsDbConnector.getEntityManagerFactory();
-
-	EntityManager udsEM = udsEMF.createEntityManager();
-
-	try {
-	    /* Try to load SEQ Db Connector */
-	    final ExternalDb seqDb = ExternalDbRepository.findExternalByType(udsEM, ProlineDatabaseType.SEQ);
-
-	    if (seqDb == null) {
-
-		if (serviceSide) {
-		    LOG.info("No ExternalDb for SEQ Db creating a new one");
-		    seqDbConnector = createSEQDatabase(udsDbConnector, udsEM);
-		} else {
-		    throw new RuntimeException("SEQ Db does not exist");
-		}
-
-	    } else {
-		seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
-		    ProlineDatabaseType.SEQ, seqDb.toPropertiesMap(udsDbConnector.getDriverType()));
-	    }
-
-	} finally {
-
-	    if (udsEM != null) {
-		try {
-		    udsEM.close();
-		} catch (Exception exClose) {
-		    LOG.error("Error closing UDS Db EntityManager", exClose);
-		}
-	    }
-
+	/* Private constructor (Utility class) */
+	private DatabaseAccess() {
 	}
 
-	return seqDbConnector;
-    }
+	public static IDataStoreConnectorFactory getDataStoreConnectorFactory() {
+		IDataStoreConnectorFactory result = null;
 
-    /* TODO Do this in Proline-Admin ? */
-    private static IDatabaseConnector createSEQDatabase(
-	final IDatabaseConnector udsDbConnector,
-	final EntityManager udsEM) {
-	ExternalDb seqDb = null;
+		synchronized (INITIALIZATION_LOCK) {
 
-	EntityTransaction udsTransac = null;
-	boolean transacOK = false;
+			if (connectorFactory == null) {
+				result = DStoreCustomPoolConnectorFactory.getInstance();
 
-	try {
-	    udsTransac = udsEM.getTransaction();
-	    udsTransac.begin();
-	    transacOK = false;
+				if (!result.isInitialized()) {
+					/* Initialization holding INITIALIZATION_LOCK */
+					ServiceConfiguration.forcePropertiesFileReload();
+					final String udsDbConfigFileName = ServiceConfiguration.getUDSDbConfigurationFileName();
 
-	    final DriverType udsDriverType = udsDbConnector.getDriverType();
+					if (StringUtils.isEmpty(udsDbConfigFileName)) {
+						throw new IllegalArgumentException("No valid UDS Db Configuration file");
+					} else {
+						LOG.debug("Initializing DataStoreConnectorFactory from [{}] file",
+							udsDbConfigFileName);
+						((DStoreCustomPoolConnectorFactory) result).initialize(udsDbConfigFileName, "SequenceRepository");
+					}
+				}
+				connectorFactory = result;
+			} else {
+				result = connectorFactory;
+			}
 
-	    if (udsDriverType == DriverType.H2) {
-		// RAW ExternalDb creation
-		// TODO create structures required by setConnectionMode (if file or server mode)
-		seqDb = createSEQDb(udsEM, udsDriverType);
-	    } else if (udsDriverType == DriverType.POSTGRESQL) {
-		final boolean success = createPgSEQDatabase(udsDbConnector);
+		} // End of synchronized block on INITIALIZATION_LOCK
 
-		if (success) {
-		    seqDb = createSEQDb(udsEM, udsDriverType);
-		} else {
-		    LOG.error("Unable to create Postgres SEQ Database");
+		return result;
+	}
+
+	public static IDataStoreConnectorFactory getDataStoreConnectorFactory(final Map<Object, Object> udsDbProperties) {
+		IDataStoreConnectorFactory result = null;
+
+		synchronized (INITIALIZATION_LOCK) {
+
+			if (connectorFactory == null) {
+				result = DStoreCustomPoolConnectorFactory.getInstance();
+
+				if (!result.isInitialized()) {
+					/* Initialization holding INITIALIZATION_LOCK */
+
+					if (udsDbProperties == null || udsDbProperties.isEmpty()) {
+						throw new IllegalArgumentException("No valid UDS Db Properties");
+					} else {
+						LOG.debug("Initializing DataStoreConnectorFactory from [{}] properties",
+							udsDbProperties);
+						((DStoreCustomPoolConnectorFactory) result).initialize(udsDbProperties, "SequenceRepository");
+					}
+				} else {
+					LOG.warn("DataStoreConnectorFactory was already initialized. Properties [{}] was ignore", udsDbProperties);
+				}
+				connectorFactory = result;
+			} else {
+				LOG.warn("DataStoreConnectorFactory was already initialized. Properties [{}] was ignore", udsDbProperties);
+				result = connectorFactory;
+			}
+
+		} // End of synchronized block on INITIALIZATION_LOCK
+
+		return result;
+	}
+
+	/**
+	 * Retrieve current SEQ DatabaseConnector instance.
+	 * 
+	 * @param serviceSide
+	 *            <code>true</code> if called by service (lazy initialization of SEQ Database) or <code>false</code> if called by client (provider use)
+	 * @return SEQ DatabaseConnector or <code>null</code> if DatabaseConnector cannot be initialized
+	 */
+	public static IDatabaseConnector getSEQDatabaseConnector(final boolean serviceSide) {
+		IDatabaseConnector result = null;
+
+		synchronized (INITIALIZATION_LOCK) {
+
+			if (seqDatabaseConnector == null) {
+				result = createSEQDatabaseConnector(serviceSide, null);
+
+				seqDatabaseConnector = result;
+			} else {
+				result = seqDatabaseConnector;
+			}
+
+		} // End of synchronized block on INITIALIZATION_LOCK
+
+		return result;
+	}
+
+	/**
+	 * Retrieve current SEQ DatabaseConnector instance.
+	 * 
+	 * @param serviceSide
+	 *            <code>true</code> if called by service (lazy initialization of SEQ Database) or <code>false</code> if called by client (provider use)
+	 * @param udsDbProperties
+	 *            Properties to use to create UDSConnector
+	 * @return SEQ DatabaseConnector or <code>null</code> if DatabaseConnector cannot be initialized
+	 */
+	public static IDatabaseConnector getSEQDatabaseConnector(final boolean serviceSide, final Map<Object, Object> udsDbProperties) {
+		IDatabaseConnector result = null;
+
+		synchronized (INITIALIZATION_LOCK) {
+
+			if (seqDatabaseConnector == null) {
+				result = createSEQDatabaseConnector(serviceSide, udsDbProperties);
+
+				seqDatabaseConnector = result;
+			} else {
+				result = seqDatabaseConnector;
+			}
+
+		} // End of synchronized block on INITIALIZATION_LOCK
+
+		return result;
+	}
+
+	/* Called holding INITIALIZATION_LOCK */
+	private static IDatabaseConnector createSEQDatabaseConnector(final boolean serviceSide, final Map<Object, Object> udsDbProperties) {
+		IDatabaseConnector seqDbConnector = null;
+		IDataStoreConnectorFactory dataStoreConnectorFactory = null;
+		if (udsDbProperties != null && !udsDbProperties.isEmpty())
+			dataStoreConnectorFactory = getDataStoreConnectorFactory(udsDbProperties);
+		else
+			dataStoreConnectorFactory = getDataStoreConnectorFactory();
+		final IDatabaseConnector udsDbConnector = dataStoreConnectorFactory.getUdsDbConnector();
+		final EntityManagerFactory udsEMF = udsDbConnector.getEntityManagerFactory();
+
+		EntityManager udsEM = udsEMF.createEntityManager();
+
+		try {
+			/* Try to load SEQ Db Connector */
+			final ExternalDb seqDb = ExternalDbRepository.findExternalByType(udsEM, ProlineDatabaseType.SEQ);
+
+			if (seqDb == null) {
+
+				if (serviceSide) {
+					LOG.info("No ExternalDb for SEQ Db creating a new one");
+					seqDbConnector = createSEQDatabase(udsDbConnector, udsEM);
+				} else {
+					throw new RuntimeException("SEQ Db does not exist");
+				}
+
+			} else {
+				seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
+					ProlineDatabaseType.SEQ, seqDb.toPropertiesMap(udsDbConnector.getDriverType()));
+			}
+
+		} finally {
+
+			if (udsEM != null) {
+				try {
+					udsEM.close();
+				} catch (Exception exClose) {
+					LOG.error("Error closing UDS Db EntityManager", exClose);
+				}
+			}
+
 		}
 
-	    } else {
-		LOG.error("Unsupported SGBD type {}", udsDriverType);
-	    }
+		return seqDbConnector;
+	}
 
-	    udsTransac.commit();
-	    transacOK = true;
-	} finally {
+	/* TODO Do this in Proline-Admin ? */
+	private static IDatabaseConnector createSEQDatabase(
+		final IDatabaseConnector udsDbConnector,
+		final EntityManager udsEM) {
+		ExternalDb seqDb = null;
 
-	    if ((udsTransac != null) && !transacOK) {
+		EntityTransaction udsTransac = null;
+		boolean transacOK = false;
+
 		try {
-		    udsTransac.rollback();
+			udsTransac = udsEM.getTransaction();
+			udsTransac.begin();
+			transacOK = false;
+
+			final DriverType udsDriverType = udsDbConnector.getDriverType();
+
+			if (udsDriverType == DriverType.H2) {
+				// RAW ExternalDb creation
+				// TODO create structures required by setConnectionMode (if file or server mode)
+				seqDb = createSEQDb(udsEM, udsDriverType);
+			} else if (udsDriverType == DriverType.POSTGRESQL) {
+				final boolean success = createPgSEQDatabase(udsDbConnector);
+
+				if (success) {
+					seqDb = createSEQDb(udsEM, udsDriverType);
+				} else {
+					LOG.error("Unable to create Postgres SEQ Database");
+				}
+
+			} else {
+				LOG.error("Unsupported SGBD type {}", udsDriverType);
+			}
+
+			udsTransac.commit();
+			transacOK = true;
+		} finally {
+
+			if ((udsTransac != null) && !transacOK) {
+				try {
+					udsTransac.rollback();
+				} catch (Exception ex) {
+					LOG.error("Error rollbacking UDS Db EntityManager Transaction", ex);
+				}
+			}
+
+		}
+
+		IDatabaseConnector seqDbConnector = null;
+
+		if (transacOK && (seqDb != null)) {
+			seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
+				ProlineDatabaseType.SEQ, seqDb.toPropertiesMap());
+
+			DatabaseUpgrader.upgradeDatabase(seqDbConnector);
+		}
+
+		return seqDbConnector;
+	}
+
+	private static boolean createPgSEQDatabase(final IDatabaseConnector udsDbConnector) {
+		boolean success = false;
+
+		Connection sqlCon = null;
+
+		try {
+			final DataSource ds = udsDbConnector.getDataSource();
+
+			sqlCon = ds.getConnection();
+
+			final long count = countExistingSEQDb(sqlCon);
+
+			if (count > 0L) {
+				LOG.info("{} already existing", SEQ_DB_NAME);
+
+				success = true;
+			} else {
+				final Statement stmt = sqlCon.createStatement();
+
+				final int result = stmt.executeUpdate("CREATE DATABASE " + SEQ_DB_NAME);
+
+				stmt.close();
+
+				if (result >= 0) {
+					LOG.info("New Postgres {} database created", SEQ_DB_NAME);
+
+					success = true;
+				} else {
+					LOG.error("Error creating Postgres SEQ Database : {}", result);
+				}
+
+			}
+
 		} catch (Exception ex) {
-		    LOG.error("Error rollbacking UDS Db EntityManager Transaction", ex);
+			LOG.error("Error creating Postgres SEQ Database", ex);
+		} finally {
+
+			if (sqlCon != null) {
+				try {
+					sqlCon.close();
+				} catch (SQLException exClose) {
+					success = false;
+					LOG.error("Error closing UDS Db SQL Connection", exClose);
+				}
+			}
+
 		}
-	    }
 
+		return success;
 	}
 
-	IDatabaseConnector seqDbConnector = null;
+	/* Simple clone from PS Db ExternalDb configuration */
+	private static ExternalDb createSEQDb(final EntityManager udsEM, final DriverType udsDriverType) {
+		ExternalDb seqDb = null;
 
-	if (transacOK && (seqDb != null)) {
-	    seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
-		ProlineDatabaseType.SEQ, seqDb.toPropertiesMap());
+		final ExternalDb psDb = ExternalDbRepository.findExternalByType(udsEM, ProlineDatabaseType.PS);
 
-	    DatabaseUpgrader.upgradeDatabase(seqDbConnector);
-	}
-
-	return seqDbConnector;
-    }
-
-    private static boolean createPgSEQDatabase(final IDatabaseConnector udsDbConnector) {
-	boolean success = false;
-
-	Connection sqlCon = null;
-
-	try {
-	    final DataSource ds = udsDbConnector.getDataSource();
-
-	    sqlCon = ds.getConnection();
-
-	    final long count = countExistingSEQDb(sqlCon);
-
-	    if (count > 0L) {
-		LOG.info("{} already existing", SEQ_DB_NAME);
-
-		success = true;
-	    } else {
-		final Statement stmt = sqlCon.createStatement();
-
-		final int result = stmt.executeUpdate("CREATE DATABASE " + SEQ_DB_NAME);
-
-		stmt.close();
-
-		if (result >= 0) {
-		    LOG.info("New Postgres {} database created", SEQ_DB_NAME);
-
-		    success = true;
+		if (psDb == null) {
+			LOG.error("Cannot find template PS ExternalDb");
 		} else {
-		    LOG.error("Error creating Postgres SEQ Database : {}", result);
+			seqDb = new ExternalDb();
+
+			seqDb.setDriverType(udsDriverType);
+			seqDb.setDbName(SEQ_DB_NAME);
+			seqDb.setDbPassword(psDb.getDbPassword());
+			seqDb.setDbUser(psDb.getDbUser());
+			seqDb.setDbVersion(psDb.getDbVersion());
+			seqDb.setHost(psDb.getHost());
+			seqDb.setPort(psDb.getPort());
+			seqDb.setType(ProlineDatabaseType.SEQ);
+			seqDb.setConnectionMode(psDb.getConnectionMode());
+
+			udsEM.persist(seqDb);
+
+			LOG.debug("New SEQ ExternalDb persisted");
 		}
 
-	    }
+		return seqDb;
+	}
 
-	} catch (Exception ex) {
-	    LOG.error("Error creating Postgres SEQ Database", ex);
-	} finally {
+	private static long countExistingSEQDb(final Connection sqlCon) throws SQLException {
+		long result = -1L;
 
-	    if (sqlCon != null) {
-		try {
-		    sqlCon.close();
-		} catch (SQLException exClose) {
-		    success = false;
-		    LOG.error("Error closing UDS Db SQL Connection", exClose);
+		final PreparedStatement stmt = sqlCon
+				.prepareStatement("SELECT COUNT (*) FROM pg_database WHERE UPPER(datname) = ?");
+		stmt.setString(1, SEQ_DB_NAME.toUpperCase());
+
+		final ResultSet rs = stmt.executeQuery();
+
+		if (rs.next()) {
+			final Object obj = rs.getObject(1);
+
+			if (obj instanceof Number) {
+				result = ((Number) obj).longValue();
+			}
+
 		}
-	    }
 
+		stmt.close();// Close ResultSet and Statement
+		// sqlCon is closed in finally block of createPgSEQDatabase()
+
+		return result;
 	}
-
-	return success;
-    }
-
-    /* Simple clone from PS Db ExternalDb configuration */
-    private static ExternalDb createSEQDb(final EntityManager udsEM, final DriverType udsDriverType) {
-	ExternalDb seqDb = null;
-
-	final ExternalDb psDb = ExternalDbRepository.findExternalByType(udsEM, ProlineDatabaseType.PS);
-
-	if (psDb == null) {
-	    LOG.error("Cannot find template PS ExternalDb");
-	} else {
-	    seqDb = new ExternalDb();
-
-	    seqDb.setDriverType(udsDriverType);
-	    seqDb.setDbName(SEQ_DB_NAME);
-	    seqDb.setDbPassword(psDb.getDbPassword());
-	    seqDb.setDbUser(psDb.getDbUser());
-	    seqDb.setDbVersion(psDb.getDbVersion());
-	    seqDb.setHost(psDb.getHost());
-	    seqDb.setPort(psDb.getPort());
-	    seqDb.setType(ProlineDatabaseType.SEQ);
-	    seqDb.setConnectionMode(psDb.getConnectionMode());
-
-	    udsEM.persist(seqDb);
-
-	    LOG.debug("New SEQ ExternalDb persisted");
-	}
-
-	return seqDb;
-    }
-
-    private static long countExistingSEQDb(final Connection sqlCon) throws SQLException {
-	long result = -1L;
-
-	final PreparedStatement stmt = sqlCon
-		.prepareStatement("SELECT COUNT (*) FROM pg_database WHERE UPPER(datname) = ?");
-	stmt.setString(1, SEQ_DB_NAME.toUpperCase());
-
-	final ResultSet rs = stmt.executeQuery();
-
-	if (rs.next()) {
-	    final Object obj = rs.getObject(1);
-
-	    if (obj instanceof Number) {
-		result = ((Number) obj).longValue();
-	    }
-
-	}
-
-	stmt.close();// Close ResultSet and Statement
-	// sqlCon is closed in finally block of createPgSEQDatabase()
-
-	return result;
-    }
 
 }
