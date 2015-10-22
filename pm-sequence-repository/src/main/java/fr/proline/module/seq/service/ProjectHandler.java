@@ -400,6 +400,7 @@ public class ProjectHandler {
 
 			if ((seDbInstances == null) || seDbInstances.isEmpty()) {
 				LOG.warn("There is NO SEDbInstance in MSI Project #{}", projectId);
+				msiTransactionOK = true;
 			} else {
 				LOG.info(" Filling ProteinMatches properties on project {} for {} rsm", projectId, rsmIds.size());
 
@@ -471,14 +472,6 @@ public class ProjectHandler {
 						
 						for (ProteinSet protSet : protSets) {
 							
-
-							
-							
-							
-//							Set<PeptideSetPeptideInstanceItem> pepInts = protSet.getPeptideOverSet().getPeptideSetPeptideInstanceItems();
-//							for(PeptideSetPeptideInstanceItem nextPepInst : pepInts){
-//								peptideIds.add(nextPepInst.getPeptideInstance().getPeptide().getId());
-//							}
 							
 							coveredSeqLengthByProtMatchList.clear();
 							Map<ProteinMatch, ProteinSetProteinMatchItem> protSetMapByProtMatch = new HashMap<>();
@@ -573,14 +566,15 @@ public class ProjectHandler {
 					LOG.info("rsmId: {} successfully/already calculated. Duration : {} ms", rsmId, duration);
 
 				} //End go through RSMs
+				
+				msiEM.getTransaction().commit();
+				msiTransactionOK = true;
 			} //At least One SEdb
 
 			final long endAll = System.currentTimeMillis();
 			final long duration = endAll - startAll;
 			LOG.info("Total: fillProteinMatchesProperties() execution : {} ms ", duration);
 
-			msiEM.getTransaction().commit();
-			msiTransactionOK = true;
 		} catch (Exception ex) {
 			LOG.error("Error accessing MSI Db Project #" + projectId, ex);
 			try {
