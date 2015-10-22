@@ -19,13 +19,13 @@ trait IServiceMonitoringNotifier {
 
   /**
    * {{{content}}} must not be empty.
-   * Only set {{{jmsCorrelationId}}} if it is a direct response to a Request JMS Message, not to notify sevice execution.
+   * Only set {{{jmsCorrelationId}}} if it is a direct response to a Request JMS Message, not to notify service execution.
    */
   def sendNotification(content: String, jmsCorrelationId: String)
 
   /**
    * {{{jsonRPCContent}}} must not be {{{null}}}.
-   * Only set {{{jmsCorrelationId}}} if it is a direct response to a Request JMS Message, not to notify sevice execution.
+   * Only set {{{jmsCorrelationId}}} if it is a direct response to a Request JMS Message, not to notify service execution.
    */
   def sendNotification(jsonRPCContent: JSONRPC2Message, jmsCorrelationId: String) {
     require((jsonRPCContent != null), "JsonRPCContent is null")

@@ -4,18 +4,14 @@ import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-
 import scala.collection.JavaConversions.mutableMapAsJavaMap
 import scala.collection.mutable
-
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.jms.HornetQJMSClient
 import org.hornetq.api.jms.JMSFactoryType
 import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory
 import org.hornetq.core.remoting.impl.netty.TransportConstants
-
 import com.typesafe.scalalogging.LazyLogging
-
 import Constants.MAX_PORT
 import NodeConfig.ENABLE_IMPORTS
 import NodeConfig.JMS_SERVER_HOST
@@ -55,6 +51,7 @@ import javax.jms.Connection
 import javax.jms.ConnectionFactory
 import javax.jms.ExceptionListener
 import javax.jms.JMSException
+import fr.proline.cortex.service.dps.msi.ImportValidateGenerateSM
 
 object ProcessingNode extends LazyLogging {
 
@@ -254,6 +251,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new GetConnectionTemplate())
     ServiceRegistry.addService(new CreateProject())
     ServiceRegistry.addService(new RegisterRawFile())
+    ServiceRegistry.addService(new ImportValidateGenerateSM())
   }
 
   /**
