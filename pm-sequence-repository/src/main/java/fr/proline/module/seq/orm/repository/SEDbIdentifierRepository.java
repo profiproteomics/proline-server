@@ -15,7 +15,8 @@ import fr.profi.util.StringUtils;
 public final class SEDbIdentifierRepository {
 
 	/* Private constructor (utility class) */
-	private SEDbIdentifierRepository() {	}
+	private SEDbIdentifierRepository() {
+	}
 
 	public static List<SEDbIdentifier> findSEDbIdentByValues(final EntityManager seqEM, final Collection<String> values) {
 		JPAUtils.checkEntityManager(seqEM);

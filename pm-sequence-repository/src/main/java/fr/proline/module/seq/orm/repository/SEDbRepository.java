@@ -16,171 +16,176 @@ import fr.profi.util.StringUtils;
 
 public final class SEDbRepository {
 
-    /* Private constructor (Utility class) */
-    private SEDbRepository() {
-    }
-
-    public static SEDb findSEDbByName(final EntityManager seqEM, final String name) {
-
-	JPAUtils.checkEntityManager(seqEM);
-
-	if (StringUtils.isEmpty(name)) {
-	    throw new IllegalArgumentException("Invalid name");
+	/* Private constructor (Utility class) */
+	private SEDbRepository() {
 	}
 
-	SEDb result = null;
+	public static SEDb findSEDbByName(final EntityManager seqEM, final String name) {
 
-	final TypedQuery<SEDb> query = seqEM.createNamedQuery("findSEDbByName", SEDb.class);
-	query.setParameter("name", name);
+		JPAUtils.checkEntityManager(seqEM);
 
-	final List<SEDb> seDbs = query.getResultList();
+		if (StringUtils.isEmpty(name)) {
+			throw new IllegalArgumentException("Invalid name");
+		}
 
-	if ((seDbs != null) && !seDbs.isEmpty()) {
+		SEDb result = null;
 
-	    if (seDbs.size() == 1) {
-		result = seDbs.get(0);
-	    } else {
-		throw new NonUniqueResultException("There are more than one SEDb for given name");
-	    }
+		final TypedQuery<SEDb> query = seqEM.createNamedQuery("findSEDbByName", SEDb.class);
+		query.setParameter("name", name);
 
+		final List<SEDb> seDbs = query.getResultList();
+
+		if ((seDbs != null) && !seDbs.isEmpty()) {
+
+			if (seDbs.size() == 1) {
+				result = seDbs.get(0);
+			} else {
+				throw new NonUniqueResultException("There are more than one SEDb for given name");
+			}
+
+		}
+
+		return result;
 	}
 
-	return result;
-    }
+	public static ParsingRule findParsingRuleByName(final EntityManager seqEM, final String name) {
 
-    public static ParsingRule findParsingRuleByName(final EntityManager seqEM, final String name) {
+		JPAUtils.checkEntityManager(seqEM);
 
-	JPAUtils.checkEntityManager(seqEM);
+		if (StringUtils.isEmpty(name)) {
+			throw new IllegalArgumentException("Invalid name");
+		}
 
-	if (StringUtils.isEmpty(name)) {
-	    throw new IllegalArgumentException("Invalid name");
+		ParsingRule result = null;
+
+		final TypedQuery<ParsingRule> query = seqEM.createNamedQuery("findParsingRuleByName", ParsingRule.class);
+		query.setParameter("name", name);
+
+		final List<ParsingRule> rules = query.getResultList();
+
+		if ((rules != null) && !rules.isEmpty()) {
+
+			if (rules.size() == 1) {
+				result = rules.get(0);
+			} else {
+				throw new NonUniqueResultException("There are more than one ParsingRule for given name");
+			}
+
+		}
+
+		return result;
 	}
 
-	ParsingRule result = null;
+	public static List<SEDbInstance> findSEDbInstanceBySEDbName(
+		final EntityManager seqEM,
+		final String seDbName) {
 
-	final TypedQuery<ParsingRule> query = seqEM.createNamedQuery("findParsingRuleByName",ParsingRule.class);
-	query.setParameter("name", name);
+		JPAUtils.checkEntityManager(seqEM);
 
-	final List<ParsingRule> rules = query.getResultList();
+		if (StringUtils.isEmpty(seDbName)) {
+			throw new IllegalArgumentException("Invalid seDbName");
+		}
 
-	if ((rules != null) && !rules.isEmpty()) {
+		List<SEDbInstance> result = null;
 
-	    if (rules.size() == 1) {
-		result = rules.get(0);
-	    } else {
-		throw new NonUniqueResultException("There are more than one ParsingRule for given name");
-	    }
+		final TypedQuery<SEDbInstance> query = seqEM.createNamedQuery("findSEDbInstanceBySEDbName",
+			SEDbInstance.class);
+		query.setParameter("seDbName", seDbName);
 
+		List<SEDbInstance> seDbInstances = query.getResultList();
+
+		if ((seDbInstances != null) && !seDbInstances.isEmpty()) {
+			/*
+			 * First create a protection copy in an Array (Do not sort List provided by JPA implementation).
+			 * 
+			 * Collections.sort() calls List.toArray() then sorts the array and copy-back array elems to the
+			 * list !
+			 */
+			final SEDbInstance[] sortedInstances = seDbInstances.toArray(new SEDbInstance[seDbInstances
+					.size()]);
+			final SEDbInstanceComparator comparator = new SEDbInstanceComparator();
+
+			Arrays.sort(sortedInstances, comparator);
+
+			result = Arrays.asList(sortedInstances);
+		}
+
+		return result;
 	}
 
-	return result;
-    }
+	public static List<SEDbInstance> findSEDbInstanceByNameAndSourcePath(
+		final EntityManager seqEM,
+		final String seDbName,
+		final String sourcePath) {
 
-    public static List<SEDbInstance> findSEDbInstanceBySEDbName(final EntityManager seqEM,
-	    final String seDbName) {
+		JPAUtils.checkEntityManager(seqEM);
 
-	JPAUtils.checkEntityManager(seqEM);
+		if (StringUtils.isEmpty(seDbName)) {
+			throw new IllegalArgumentException("Invalid seDbName");
+		}
 
-	if (StringUtils.isEmpty(seDbName)) {
-	    throw new IllegalArgumentException("Invalid seDbName");
+		if (StringUtils.isEmpty(sourcePath)) {
+			throw new IllegalArgumentException("Invalid sourcePath");
+		}
+
+		List<SEDbInstance> result = null;
+
+		final TypedQuery<SEDbInstance> query = seqEM.createNamedQuery("findSEDbInstanceByNameAndSourcePath",
+			SEDbInstance.class);
+		query.setParameter("seDbName", seDbName);
+		query.setParameter("sourcePath", sourcePath);
+
+		List<SEDbInstance> seDbInstances = query.getResultList();
+
+		if ((seDbInstances != null) && !seDbInstances.isEmpty()) {
+			/* Same sort as findSEDbInstanceBySEDbName */
+			final SEDbInstance[] sortedInstances = seDbInstances.toArray(new SEDbInstance[seDbInstances
+					.size()]);
+			final SEDbInstanceComparator comparator = new SEDbInstanceComparator();
+
+			Arrays.sort(sortedInstances, comparator);
+
+			result = Arrays.asList(sortedInstances);
+		}
+
+		return result;
 	}
 
-	List<SEDbInstance> result = null;
+	public static SEDbInstance findSEDbInstanceByNameAndRelease(
+		final EntityManager seqEM,
+		final String seDbName,
+		final String release) {
 
-	final TypedQuery<SEDbInstance> query = seqEM.createNamedQuery("findSEDbInstanceBySEDbName",
-		SEDbInstance.class);
-	query.setParameter("seDbName", seDbName);
+		JPAUtils.checkEntityManager(seqEM);
 
-	List<SEDbInstance> seDbInstances = query.getResultList();
+		if (StringUtils.isEmpty(seDbName)) {
+			throw new IllegalArgumentException("Invalid seDbName");
+		}
 
-	if ((seDbInstances != null) && !seDbInstances.isEmpty()) {
-	    /*
-	     * First create a protection copy in an Array (Do not sort List provided by JPA implementation).
-	     * 
-	     * Collections.sort() calls List.toArray() then sorts the array and copy-back array elems to the
-	     * list !
-	     */
-	    final SEDbInstance[] sortedInstances = seDbInstances.toArray(new SEDbInstance[seDbInstances
-		    .size()]);
-	    final SEDbInstanceComparator comparator = new SEDbInstanceComparator();
+		if (StringUtils.isEmpty(release)) {
+			throw new IllegalArgumentException("Invalid release");
+		}
 
-	    Arrays.sort(sortedInstances, comparator);
+		SEDbInstance result = null;
 
-	    result = Arrays.asList(sortedInstances);
+		final TypedQuery<SEDbInstance> query = seqEM.createNamedQuery("findSEDbInstanceByNameAndRelease",
+			SEDbInstance.class);
+		query.setParameter("seDbName", seDbName);
+		query.setParameter("release", release);
+
+		final List<SEDbInstance> seDbInstances = query.getResultList();
+
+		if ((seDbInstances != null) && !seDbInstances.isEmpty()) {
+
+			if (seDbInstances.size() == 1) {
+				result = seDbInstances.get(0);
+			} else {
+				throw new NonUniqueResultException("There are more than one ParsingRule for given name");
+			}
+
+		}
+
+		return result;
 	}
-
-	return result;
-    }
-
-    public static List<SEDbInstance> findSEDbInstanceByNameAndSourcePath(final EntityManager seqEM,
-	    final String seDbName, final String sourcePath) {
-
-	JPAUtils.checkEntityManager(seqEM);
-
-	if (StringUtils.isEmpty(seDbName)) {
-	    throw new IllegalArgumentException("Invalid seDbName");
-	}
-
-	if (StringUtils.isEmpty(sourcePath)) {
-	    throw new IllegalArgumentException("Invalid sourcePath");
-	}
-
-	List<SEDbInstance> result = null;
-
-	final TypedQuery<SEDbInstance> query = seqEM.createNamedQuery("findSEDbInstanceByNameAndSourcePath",
-		SEDbInstance.class);
-	query.setParameter("seDbName", seDbName);
-	query.setParameter("sourcePath", sourcePath);
-
-	List<SEDbInstance> seDbInstances = query.getResultList();
-
-	if ((seDbInstances != null) && !seDbInstances.isEmpty()) {
-	    /* Same sort as findSEDbInstanceBySEDbName */
-	    final SEDbInstance[] sortedInstances = seDbInstances.toArray(new SEDbInstance[seDbInstances
-		    .size()]);
-	    final SEDbInstanceComparator comparator = new SEDbInstanceComparator();
-
-	    Arrays.sort(sortedInstances, comparator);
-
-	    result = Arrays.asList(sortedInstances);
-	}
-
-	return result;
-    }
-
-    public static SEDbInstance findSEDbInstanceByNameAndRelease(final EntityManager seqEM,
-	    final String seDbName, final String release) {
-
-	JPAUtils.checkEntityManager(seqEM);
-
-	if (StringUtils.isEmpty(seDbName)) {
-	    throw new IllegalArgumentException("Invalid seDbName");
-	}
-
-	if (StringUtils.isEmpty(release)) {
-	    throw new IllegalArgumentException("Invalid release");
-	}
-
-	SEDbInstance result = null;
-
-	final TypedQuery<SEDbInstance> query = seqEM.createNamedQuery("findSEDbInstanceByNameAndRelease",
-		SEDbInstance.class);
-	query.setParameter("seDbName", seDbName);
-	query.setParameter("release", release);
-
-	final List<SEDbInstance> seDbInstances = query.getResultList();
-
-	if ((seDbInstances != null) && !seDbInstances.isEmpty()) {
-
-	    if (seDbInstances.size() == 1) {
-		result = seDbInstances.get(0);
-	    } else {
-		throw new NonUniqueResultException("There are more than one ParsingRule for given name");
-	    }
-
-	}
-
-	return result;
-    }
 
 }

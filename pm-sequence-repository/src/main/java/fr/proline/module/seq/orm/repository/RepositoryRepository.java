@@ -12,36 +12,36 @@ import fr.profi.util.StringUtils;
 
 public final class RepositoryRepository {
 
-    /* Private constructor (Utility class) */
-    private RepositoryRepository() {
-    }
-
-    public static Repository findRepositoryByName(final EntityManager seqEM, final String name) {
-
-	JPAUtils.checkEntityManager(seqEM);
-
-	if (StringUtils.isEmpty(name)) {
-	    throw new IllegalArgumentException("Invalid name");
+	/* Private constructor (Utility class) */
+	private RepositoryRepository() {
 	}
 
-	Repository result = null;
+	public static Repository findRepositoryByName(final EntityManager seqEM, final String name) {
 
-	final TypedQuery<Repository> query = seqEM.createNamedQuery("findRepositoryByName", Repository.class);
-	query.setParameter("name", name);
+		JPAUtils.checkEntityManager(seqEM);
 
-	final List<Repository> seDbs = query.getResultList();
+		if (StringUtils.isEmpty(name)) {
+			throw new IllegalArgumentException("Invalid name");
+		}
 
-	if ((seDbs != null) && !seDbs.isEmpty()) {
+		Repository result = null;
 
-	    if (seDbs.size() == 1) {
-		result = seDbs.get(0);
-	    } else {
-		throw new NonUniqueResultException("There are more than one Repository for given name");
-	    }
+		final TypedQuery<Repository> query = seqEM.createNamedQuery("findRepositoryByName", Repository.class);
+		query.setParameter("name", name);
 
+		final List<Repository> seDbs = query.getResultList();
+
+		if ((seDbs != null) && !seDbs.isEmpty()) {
+
+			if (seDbs.size() == 1) {
+				result = seDbs.get(0);
+			} else {
+				throw new NonUniqueResultException("There are more than one Repository for given name");
+			}
+
+		}
+
+		return result;
 	}
-
-	return result;
-    }
 
 }
