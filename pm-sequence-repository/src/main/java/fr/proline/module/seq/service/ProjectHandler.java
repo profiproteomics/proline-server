@@ -21,6 +21,7 @@ import com.google.gson.JsonParser;
 
 import fr.profi.util.StringUtils;
 import fr.proline.core.orm.msi.BioSequence;
+import fr.proline.core.orm.msi.PeptideInstance;
 import fr.proline.core.orm.msi.ProteinMatch;
 import fr.proline.core.orm.msi.ProteinSet;
 import fr.proline.core.orm.msi.ProteinSetProteinMatchItem;
@@ -72,6 +73,15 @@ public class ProjectHandler {
 
 	private static final int EXPECTED_LINE_LENGTH = 3;
 
+	
+	private static final String GET_PEP_INSTANCE_BY_PS_PM_QUERY = "SELECT pi, ps.id "
+			+ "FROM fr.proline.core.orm.msi.PeptideInstance pi, fr.proline.core.orm.msi.PeptideSetPeptideInstanceItem  pspi, "
+			+ " fr.proline.core.orm.msi.ProteinSet ps "
+			+ " WHERE  pspi.resultSummary.id = :rsmId "
+			+ " AND pspi.peptideInstance= pi "
+			+ " AND ps.resultSummary.id = :rsmId AND ps.isValidated=true AND pspi.peptideSet.proteinSet = ps";
+
+	
 	/**
 	 * Find all Search Engine protein identifier in all Search Engine protein databases of a specific MSIdb speficied by it's projectId.
 	 * 
@@ -217,7 +227,7 @@ public class ProjectHandler {
 
 				final long end = System.currentTimeMillis();
 				final long duration = end - start;
-				LOG.info(" Total fillSEDbIdentifiersBySEDb() execution for {} RSM(s) ", untreatedRsmIds.size(), duration);
+				LOG.info(" Total fillSEDbIdentifiersBySEDb() execution for {} RSM(s) : {} ms ", untreatedRsmIds.size(), duration);
 
 			} catch (Exception ex) {
 				LOG.error("Error accessing MSI Db Project #" + projectId, ex);
@@ -399,6 +409,7 @@ public class ProjectHandler {
 				// for each RSM in data_set.result_summmary_id
 				for (Long rsmId : rsmIds) {
 					final long start = System.currentTimeMillis();
+					
 					// get the properties of the RSM to test if update needed
 					final ResultSummary rsm = msiEM.find(ResultSummary.class, rsmId);
 					JsonObject array = new JsonObject();
@@ -416,30 +427,59 @@ public class ProjectHandler {
 						}
 					}
 
-					// Get ALL SeqMatches For current RSM
-					List<SequenceMatch> seqMatches = SequenceMatchRepository.findSequenceMatchForResultSet(msiEM, rsm.getResultSet().getId());
-					Map<Long, List<SequenceMatch>> seqMatchesByProteinMatchId = new HashMap<>();
-					for (SequenceMatch seqMatch : seqMatches) {
-						Long pmId = seqMatch.getId().getProteinMatchId();
-						if (!seqMatchesByProteinMatchId.containsKey(pmId))
-							seqMatchesByProteinMatchId.put(pmId, new ArrayList<SequenceMatch>());
-						seqMatchesByProteinMatchId.get(pmId).add(seqMatch);
-					}
-
 					// test if the RSM is already calculated
 					if (!array.has("is_coverage_updated") || forceUpdate) {
 
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Going to compute rsmId:" + rsmId);
 						}
+						
 
+						// Get ALL SeqMatches For current RSM
+						List<SequenceMatch> seqMatches = SequenceMatchRepository.findSequenceMatchForResultSet(msiEM, rsm.getResultSet().getId());
+						Map<Long, List<SequenceMatch>> seqMatchesByProteinMatchId = new HashMap<>();
+						for (SequenceMatch seqMatch : seqMatches) {
+							Long pmId = seqMatch.getId().getProteinMatchId();
+							if (!seqMatchesByProteinMatchId.containsKey(pmId))
+								seqMatchesByProteinMatchId.put(pmId, new ArrayList<SequenceMatch>());
+							seqMatchesByProteinMatchId.get(pmId).add(seqMatch);
+						}
+												
+						// Get all ProteinSet
 						final Query psQuery = msiEM.createQuery(LIST_PS_FOR_RSM_QUERY);
 						psQuery.setParameter("rsmId", rsmId);
 						final List<ProteinSet> protSets = psQuery.getResultList();
 						int psIdListSize = protSets.size();
 						int psIdcount = 0;
 
+						//Get All Peptide Ids identified
+//						List<Long> peptideIds = new ArrayList<Long>();
+						Map<Long, List<Long>> pepIdsByProtSetId = new HashMap<Long, List<Long>>();
+						final Query getPepInstQuery = msiEM.createQuery(GET_PEP_INSTANCE_BY_PS_PM_QUERY);
+						getPepInstQuery.setParameter("rsmId", rsmId);
+						final List<Object[]> resultPepInsts = getPepInstQuery.getResultList();
+						for(Object[] nextEntry : resultPepInsts){
+							PeptideInstance pi = (PeptideInstance) nextEntry[0];
+							Long psId = (Long) nextEntry[1];
+							if(!pepIdsByProtSetId.containsKey(psId))
+								pepIdsByProtSetId.put(psId, new ArrayList<Long>());
+							pepIdsByProtSetId.get(psId).add(pi.getPeptide().getId());
+							if(rsmId.equals(11) && psId.equals(3713L)){
+								LOG.warn(" FOR psId 3713  add peptide ID "+pi.getPeptide().getId());
+							}
+						}
+						
 						for (ProteinSet protSet : protSets) {
+							
+
+							
+							
+							
+//							Set<PeptideSetPeptideInstanceItem> pepInts = protSet.getPeptideOverSet().getPeptideSetPeptideInstanceItems();
+//							for(PeptideSetPeptideInstanceItem nextPepInst : pepInts){
+//								peptideIds.add(nextPepInst.getPeptideInstance().getPeptide().getId());
+//							}
+							
 							coveredSeqLengthByProtMatchList.clear();
 							Map<ProteinMatch, ProteinSetProteinMatchItem> protSetMapByProtMatch = new HashMap<>();
 							List<String> allProtMatchesAccession = new ArrayList<>();
@@ -450,7 +490,7 @@ public class ProjectHandler {
 								allProtMatchesAccession.add(currentProtMatch.getAccession());
 								protSetMapByProtMatch.put(currentProtMatch, protSet2ProtMatch);
 								coveredSeqLengthByProtMatchList.put(currentProtMatch,
-									getSeqCoverageForProteinMatch(seqMatchesByProteinMatchId, protSet2ProtMatch.getProteinMatch()));
+									getSeqCoverageForProteinMatch(seqMatchesByProteinMatchId, protSet2ProtMatch.getProteinMatch(), pepIdsByProtSetId.get(protSet.getId())));
 							}
 
 							// Get bioSequence for all ProteinMatch  				    
@@ -564,20 +604,21 @@ public class ProjectHandler {
 		}
 	}
 
-	private static Integer getSeqCoverageForProteinMatch(Map<Long, List<SequenceMatch>> seqMatchesByProteinMatchId, final ProteinMatch protMatch) {
+	private static Integer getSeqCoverageForProteinMatch(Map<Long, List<SequenceMatch>> seqMatchesByProteinMatchId, final ProteinMatch protMatch, List<Long> peptideIds) {
 
 		// variables definition
 		HashSet<Integer> coveredAASet = new HashSet<Integer>();//Set of protein sequence index covered by PeptideMatch	
 		List<SequenceMatch> seqMatches = seqMatchesByProteinMatchId.get(protMatch.getId());
 
 		for (SequenceMatch seqMatch : seqMatches) {
-
-			SequenceMatchPK seqMatchKey = seqMatch.getId();
-			int start = seqMatchKey.getStart();
-			int stop = seqMatchKey.getStop();
-
-			// use set to remove duplicate indexes
-			coveredAASet.addAll(getSequencesIndexes(start, stop));
+			Long pepId = seqMatch.getId().getPeptideId();
+			if(peptideIds.contains(pepId)){
+				SequenceMatchPK seqMatchKey = seqMatch.getId();
+				int start = seqMatchKey.getStart();
+				int stop = seqMatchKey.getStop();
+				// use set to remove duplicate indexes
+				coveredAASet.addAll(getSequencesIndexes(start, stop));
+			}
 		}
 
 		return coveredAASet.size();
