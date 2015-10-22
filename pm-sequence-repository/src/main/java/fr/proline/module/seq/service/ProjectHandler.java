@@ -35,6 +35,7 @@ import fr.proline.module.seq.DatabaseAccess;
 import fr.proline.module.seq.dto.BioSequenceWrapper;
 import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
 import fr.proline.module.seq.dto.SEDbInstanceWrapper;
+import fr.proline.module.seq.util.HashUtil;
 import fr.proline.repository.IDataStoreConnectorFactory;
 import fr.proline.repository.IDatabaseConnector; 
 
@@ -523,7 +524,7 @@ public class ProjectHandler {
 						msiBioSeq.setId(bioSeq.getSequenceId());
 						msiBioSeq.setLength(bioSeq.getSequence().length());
 						msiBioSeq.setMass(new Double(bioSeq.getMass()).intValue());
-						msiBioSeq.setCrc64("");
+						msiBioSeq.setCrc64(HashUtil.calculateCRC64(bioSeq.getSequence()));
 						msiBioSeq.setPi(new Float(bioSeq.getPI()));
 						msiBioSeq.setSequence(bioSeq.getSequence());
 						if(persist)
