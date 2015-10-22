@@ -51,9 +51,9 @@ public final class RetrieveService {
 		DatabaseAccess.getSEQDatabaseConnector(true);
 
 		int hourDelay = -1;
-		long projectId = 0; 
-	    boolean forceUpdateParameter = false; 
-		
+		long projectId = 0;
+		boolean forceUpdateParameter = false;
+
 		LOG.debug("number of arguments: " + args.length);
 		LOG.info("Arguments can be either 1 for periodicity (in hours) or p1 for project 1");
 
@@ -61,24 +61,21 @@ public final class RetrieveService {
 
 			String trimmedDelay = "";
 
-			if(args[0].startsWith("p")) { // project id such as p1
+			if (args[0].startsWith("p")) {// project id such as p1
 				projectId = Long.parseLong(args[0].substring(1));
 				LOG.debug(" is going to process project " + projectId);
 			} else if (args[0].startsWith("f")) {
 				forceUpdateParameter = true;
 				LOG.debug(" force mode: will compute even if already computed");
-				if(args[0].length()>1) 
-				{
-					if(args[0].substring(1, 2).equals("p")) {
+				if (args[0].length() > 1) {
+					if (args[0].substring(1, 2).equals("p")) {
 						projectId = Long.parseLong(args[0].substring(2));
 						LOG.debug(" is going to process project " + projectId);
 					}
 				}
+			} else {
+				trimmedDelay = args[0].trim();
 			}
-			else {
-				trimmedDelay = args[0].trim();	
-			}
-
 
 			if (!trimmedDelay.isEmpty()) {
 				try {
@@ -92,7 +89,7 @@ public final class RetrieveService {
 
 		}
 
-		if (hourDelay > 0 ) { 
+		if (hourDelay > 0) {
 			final Timer timer = new Timer("Timer-retrieveBioSequencesForAllProjects");
 			final boolean forceUpdate = forceUpdateParameter;
 			final TimerTask timerTask = new TimerTask() {
@@ -118,11 +115,10 @@ public final class RetrieveService {
 			LOG.info("Running \"retrieve task\" every {} hour(s)", hourDelay);
 		} else {
 			LOG.info("No given hourDelay : Running a single \"retrieve task\"");
-			if(projectId==0) {
+			if (projectId == 0) {
 				retrieveBioSequencesForAllProjects(forceUpdateParameter);
-			}
-			else {
-				retrieveBioSequencesForProject(projectId,forceUpdateParameter);
+			} else {
+				retrieveBioSequencesForProject(projectId, forceUpdateParameter);
 			}
 			BioSequenceRetriever.waitExecutorShutdown();
 			System.out.println("\nMain terminated !");
@@ -132,7 +128,7 @@ public final class RetrieveService {
 
 	public static void retrieveBioSequencesForAllProjects(boolean forceUpdate) {
 		int totalHandledSEDbIdents = 0;
-		LOG.debug("Retrive Sequences for ALL projects ");
+		LOG.info("Start new pass on all projects ");
 		final long start = System.currentTimeMillis();
 
 		final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = new HashMap<>();
@@ -148,7 +144,7 @@ public final class RetrieveService {
 			LOG.warn("NO MSI Project found");
 		} else {
 			int size = projectIds.size();
-			for(int i = size-1; i>=0;i--) {
+			for (int i = size - 1; i >= 0; i--) {
 				Long pId = projectIds.get(i);
 				if (pId != null) {
 					ProjectHandler.fillSEDbIdentifiersBySEDb(pId.longValue(), seDbIdentifiers, forceUpdate);
@@ -156,15 +152,15 @@ public final class RetrieveService {
 				}
 			}
 		}
-		
+
 		if ((seDbIdentifiers == null) || seDbIdentifiers.isEmpty()) {
 			LOG.warn("NO SEDbIdentifier found");
 		} else {
 			totalHandledSEDbIdents = BioSequenceRetriever.retrieveBioSequences(seDbIdentifiers);
 			int size = projectIds.size();
-			for(int i = size-1; i>=0;i--) {
+			for (int i = size - 1; i >= 0; i--) {
 				Long pId = projectIds.get(i);
-				ProjectHandler.fillSequenceMatchesByProteinMatch(pId.longValue(), forceUpdate); 
+				ProjectHandler.fillProteinMatchesProperties(pId.longValue(), forceUpdate);
 				DatabaseAccess.getDataStoreConnectorFactory().closeProjectConnectors(pId);
 			}
 		}
@@ -174,7 +170,6 @@ public final class RetrieveService {
 
 		LOG.info("Total retrieveBioSequencesForAllProjects() execution : {} SEDbIdentifiers handleds in {} ms", totalHandledSEDbIdents, duration);
 	}
-
 
 	public static void retrieveBioSequencesForProject(final long projectId, boolean forceUpdate) {
 
@@ -187,20 +182,19 @@ public final class RetrieveService {
 
 		ProjectHandler.fillSEDbIdentifiersBySEDb(projectId, seDbIdentifiers, forceUpdate);
 
-
 		if (seDbIdentifiers.isEmpty()) {
 			LOG.warn("NO SEDbIdentifier found");
 		} else {
 			totalHandledSEDbIdents = BioSequenceRetriever.retrieveBioSequences(seDbIdentifiers);
 		}
 
-		ProjectHandler.fillSequenceMatchesByProteinMatch(projectId,forceUpdate);   
+		ProjectHandler.fillProteinMatchesProperties(projectId, forceUpdate);
 
 		final long end = System.currentTimeMillis();
 		final long duration = end - start;
 
 		LOG.info("Total retrieveBioSequencesForProject(#{}) execution : {} SEDbIdentifiers handled in {} ms",
-				projectId, totalHandledSEDbIdents, duration);
+			projectId, totalHandledSEDbIdents, duration);
 	}
 
 	private static List<Long> getAllProjectIds(EntityManager udsEM) {
