@@ -140,7 +140,7 @@ public class ProjectHandler {
 							try {
 								array = parser.parse(properties).getAsJsonObject();
 							} catch (Exception e) {
-								LOG.warn("error accessing RSM properties for rsm id:" + rsmId + " in project " + projectId + " forcing retrieve ");
+								LOG.debug("error accessing RSM properties for rsm id:" + rsmId + " in project " + projectId + " forcing retrieve ");
 								array = parser.parse("{}").getAsJsonObject();
 							}
 
