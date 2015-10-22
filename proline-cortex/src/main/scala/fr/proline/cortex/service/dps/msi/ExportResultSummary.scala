@@ -21,6 +21,7 @@ import fr.proline.module.exporter.msi.template.IRMaLikeFullViewSetTemplateAsXLSX
 import fr.proline.module.exporter.msi.template.IRMaLikeViewSetTemplateAsTSV
 import fr.proline.module.exporter.msi.template.IRMaLikeViewSetTemplateAsXLSX
 import fr.proline.module.exporter.msi.template.ProlineViewSetTemplateAsXLSX
+import fr.proline.module.exporter.msi.template.SpectraListAsTSV
 import fr.proline.module.exporter.msi.view.BuildResultSummaryViewSet
 import fr.proline.module.exporter.mzidentml.MzIdExporter
 import fr.proline.module.exporter.pridexml.PrideExporterService
@@ -34,6 +35,7 @@ import fr.proline.core.service.msq.AbundanceUnit
 import fr.proline.module.exporter.dataset.view.BuildDatasetViewSet
 import scala.collection.mutable.ArrayBuffer
 import fr.proline.cortex.util.DbConnectionHelper
+import fr.proline.module.exporter.msi.view.BuildRSMSpectraViewSet
 
 /**
  * Define a JMS Service to :
@@ -63,6 +65,7 @@ object FileFormat extends Enumeration {
   val MZIDENTML = Value("MZIDENTML")
   val TEMPLATED = Value("TEMPLATED")
   val PRIDE = Value("PRIDE")
+  val SPECTRA_LIST = Value("SPECTRA_LIST")
 }
 
 object OutputMode extends Enumeration {
@@ -112,6 +115,7 @@ class ExportResultSummary extends AbstractRemoteProcessService with LazyLogging 
       case FileFormat.MZIDENTML => exportToMzIdentML(rsmIdentifier.get, fileName, fileDirectory, outputParams, extraParams)
       case FileFormat.TEMPLATED => exportToTemplatedFile(rsmIdentifier.get, fileName, fileDirectory, outputParams, extraParams)
       case FileFormat.PRIDE => exportToPrideFile(rsmIdentifier.get, fileName, fileDirectory, outputParams, extraParams)
+      case FileFormat.SPECTRA_LIST => exportToSpectraList(rsmIdentifier.get, fileName, fileDirectory, outputParams, extraParams)
     }
 
   }
@@ -220,6 +224,51 @@ class ExportResultSummary extends AbstractRemoteProcessService with LazyLogging 
     }
 
   }
+  
+    def exportToSpectraList(
+    rsmIdentifier: ResultSummaryIdentifier,
+    fileName: String,
+    fileDir: String,
+    outputFormat: OutputMode.Value,
+    extraParams: Option[Map[String, Any]]): Object = {
+
+    val viewSetTemplate = SpectraListAsTSV
+
+
+    //    val rsmIdentifier = rsmIdentifiers(0)
+
+    var exportLocation = new java.io.File(fileDir)
+    var exportedFiles: Seq[java.io.File] = Seq()
+
+    var executionContext: IExecutionContext = null
+    try {
+      executionContext = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, rsmIdentifier.projectId, true)
+
+      // Export
+      val viewSet = BuildRSMSpectraViewSet(
+        executionContext,
+        rsmIdentifier.projectId,
+        rsmIdentifier.rsmId,
+        viewSetName = fileName,
+        viewSetTemplate = viewSetTemplate)
+      exportedFiles = ViewSetExporter.exportViewSetToDirectory(viewSet, exportLocation)
+    } finally {
+      if (executionContext != null) {
+        executionContext.closeAll()
+      }
+    }
+
+    if (outputFormat == OutputMode.STREAM) {
+      // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
+      val resultMap = new HashMap[String, Object]()
+      resultMap.put("file_paths", exportedFiles.toArray.map(_.getAbsolutePath))
+      resultMap.put(Constants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
+      resultMap
+    } else {
+      exportedFiles.toArray.map(_.getName)
+    }
+
+  }
 
   def exportToPrideFile(
     rsmIdentifier: ResultSummaryIdentifier,
@@ -260,6 +309,9 @@ class ExportResultSummary extends AbstractRemoteProcessService with LazyLogging 
     }
 
   }
+  
+  
+  
 }
 
 class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogging {
@@ -294,7 +346,11 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
     }
     
     val fileFormat = FileFormat.withName(paramsRetriever.getString("file_format"))
-
+   fileFormat match {
+      case FileFormat.MZIDENTML => require(rsmIdentifiers.size ==1, "Could export only one Result into MzIdent")
+      case FileFormat.PRIDE => require(rsmIdentifiers.size ==1, "Could export only one Result into Pride format")
+      case FileFormat.SPECTRA_LIST => require(rsmIdentifiers.size ==1, "Could export only one Result into Spectra List")
+    }
     val fileName = paramsRetriever.getOptString("file_name", null)
     val fileDirectory = this.parseFileDirectory(paramsRetriever)
 
@@ -306,6 +362,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
       case FileFormat.MZIDENTML => exportToMzIdentML(rsmIdentifiers(0), fileName, fileDirectory, outputParams, extraParams)
       case FileFormat.TEMPLATED => exportToTemplatedFile(rsmIdentifiers, fileName, fileDirectory, outputParams, extraParams)
       case FileFormat.PRIDE => exportToPrideFile(rsmIdentifiers(0), fileName, fileDirectory, outputParams, extraParams)
+      case FileFormat.SPECTRA_LIST => exportToSpectraList(rsmIdentifiers(0), fileName, fileDirectory, outputParams, extraParams)
     }
   }
 
@@ -461,6 +518,51 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
     }
     
     
+    if (outputFormat == OutputMode.STREAM) {
+      // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
+      val resultMap = new HashMap[String, Object]()
+      resultMap.put("file_paths", exportedFiles.toArray.map(_.getAbsolutePath))
+      resultMap.put(Constants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
+      resultMap
+    } else {
+      exportedFiles.toArray.map(_.getName)
+    }
+
+  }
+  
+    def exportToSpectraList(
+    rsmIdentifier: RsmIdentifier,
+    fileName: String,
+    fileDir: String,
+    outputFormat: OutputMode.Value,
+    extraParams: Option[Map[String, Any]]): Object = {
+
+    val viewSetTemplate = SpectraListAsTSV
+
+
+    //    val rsmIdentifier = rsmIdentifiers(0)
+
+    var exportLocation = new java.io.File(fileDir)
+    var exportedFiles: Seq[java.io.File] = Seq()
+
+    var executionContext: IExecutionContext = null
+    try {
+      executionContext = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, rsmIdentifier.projectId, true)
+
+      // Export
+      val viewSet = BuildRSMSpectraViewSet(
+        executionContext,
+        rsmIdentifier.projectId,
+        rsmIdentifier.rsmId,
+        viewSetName = fileName,
+        viewSetTemplate = viewSetTemplate)
+      exportedFiles = ViewSetExporter.exportViewSetToDirectory(viewSet, exportLocation)
+    } finally {
+      if (executionContext != null) {
+        executionContext.closeAll()
+      }
+    }
+
     if (outputFormat == OutputMode.STREAM) {
       // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
       val resultMap = new HashMap[String, Object]()
