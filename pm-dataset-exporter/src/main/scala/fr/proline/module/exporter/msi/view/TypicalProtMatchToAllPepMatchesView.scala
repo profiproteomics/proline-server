@@ -14,7 +14,7 @@ object TypicalProtMatchToAllPepMatchesViewFields extends IProtSetToToTypicalProt
 
 // TODO: try to merge this view with ProtSetToBestPepMatchView
 // Maybe ProtSetToBestPepMatchView could inherit from an AbstractAllPepMatchesView ???
-class TypicalProtMatchToAllPepMatchesView( override val identDS: IdentDataSet ) extends AbstractProtSetToTypicalProtMatchView {
+class TypicalProtMatchToAllPepMatchesView( override val identDS: MsiIdentDataSet ) extends AbstractProtSetToTypicalProtMatchView {
    
   override val fields = TypicalProtMatchToAllPepMatchesViewFields
   

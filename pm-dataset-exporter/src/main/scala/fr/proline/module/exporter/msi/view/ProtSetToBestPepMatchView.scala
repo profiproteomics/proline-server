@@ -10,7 +10,7 @@ import fr.proline.module.exporter.api.view.IDatasetView
 import fr.proline.module.exporter.api.view.IViewFieldEnumeration
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
 
-class ProtSetToBestPepMatchView(val identDS: IdentDataSet) extends AbstractPeptideMatchView {
+class ProtSetToBestPepMatchView(val identDS: MsiIdentDataSet) extends AbstractPeptideMatchView {
 
   var viewName = "prot_set_to_best_pep_match"
 

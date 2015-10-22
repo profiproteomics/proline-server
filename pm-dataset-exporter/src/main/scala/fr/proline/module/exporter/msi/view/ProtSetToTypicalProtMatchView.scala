@@ -28,7 +28,7 @@ object ProtSetToToTypicalProtMatchViewFields extends IProtSetToToTypicalProtMatc
 
 abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView {
   
-  val identDS: IdentDataSet
+  val identDS: MsiIdentDataSet
   private val protSetFields = ProtSetToToTypicalProtMatchViewFields
   
   def buildRecord( buildingContext: IRecordBuildingContext ): Map[String,Any] = {
@@ -89,7 +89,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView {
   
 }
 
-class ProtSetToTypicalProtMatchView( val identDS: IdentDataSet ) extends AbstractProtSetToTypicalProtMatchView {
+class ProtSetToTypicalProtMatchView( val identDS: MsiIdentDataSet ) extends AbstractProtSetToTypicalProtMatchView {
   
   var viewName = "prot_set_to_typical_prot_match"
   val fields = ProtSetToToTypicalProtMatchViewFields

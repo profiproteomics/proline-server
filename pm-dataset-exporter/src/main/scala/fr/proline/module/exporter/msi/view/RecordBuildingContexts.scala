@@ -30,6 +30,23 @@ case class ProtMatchBuildingContext(
 
 }
 
+case class SpectrumBuildingContext(
+  protSet: ProteinSet,
+  peptideSet: PeptideSet,
+  peptideMatch: PeptideMatch
+) extends IRecordBuildingContext {
+  
+  var specID = 0L 
+  if(peptideMatch.getMs2Query() != null){
+    specID = peptideMatch.getMs2Query().spectrumId
+  } else{
+    
+  }
+
+}
+
+
+
 case class PepMatchBuildingContext(
   pepMatch: PeptideMatch,
   protMatch: ProteinMatch,

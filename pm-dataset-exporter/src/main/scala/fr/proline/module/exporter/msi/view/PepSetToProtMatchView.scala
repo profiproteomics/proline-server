@@ -17,7 +17,7 @@ object PepSetToProtMatchViewFields extends IViewFieldEnumeration {
 }
 
 // TODO: remove this view ???
-class PepSetToProtMatchView( val identDS: IdentDataSet ) extends IFixedDatasetView {
+class PepSetToProtMatchView( val identDS: MsiIdentDataSet ) extends IFixedDatasetView {
 
   var viewName = "pep_set_to_prot_match"
   val fields = PepSetToProtMatchViewFields

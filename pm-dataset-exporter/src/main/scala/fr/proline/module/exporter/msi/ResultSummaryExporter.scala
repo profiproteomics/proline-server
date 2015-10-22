@@ -4,7 +4,7 @@ import fr.proline.module.exporter.api.template.IViewTemplate
 import fr.proline.module.exporter.api.view.IDataView
 import fr.proline.module.exporter.commons.XDatasetExporter
 import fr.proline.module.exporter.msi.view.BuildResultSummaryView
-import fr.proline.module.exporter.msi.view.IdentDataSet
+import fr.proline.module.exporter.msi.view.MsiIdentDataSet
 import fr.proline.module.exporter.msi.view.ResultSummaryViewTypes
 import fr.proline.module.exporter.commons.config.ExportConfig
 
@@ -15,7 +15,7 @@ class ResultSummaryExporter(
 ) extends XDatasetExporter {
   
   def this(
-    ds: IdentDataSet,
+    ds: MsiIdentDataSet,
     viewType: ResultSummaryViewTypes.Value,
     template: IViewTemplate, 
     exportConfig:ExportConfig

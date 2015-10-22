@@ -122,7 +122,7 @@ abstract class AbstractPeptideMatchView extends AbstractProtSetToTypicalProtMatc
 
 }
 
-class ProtSetToAllPepMatchesView(override val identDS: IdentDataSet) extends AbstractPeptideMatchView {
+class ProtSetToAllPepMatchesView(override val identDS: MsiIdentDataSet) extends AbstractPeptideMatchView {
 
   override var viewName = "all_prot_set_peptide_matches"
 

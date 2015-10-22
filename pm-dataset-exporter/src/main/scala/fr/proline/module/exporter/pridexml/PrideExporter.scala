@@ -48,7 +48,6 @@ import uk.ac.ebi.pride.jaxb.xml.marshaller.PrideXmlMarshallerFactory
 import org.apache.commons.lang3.StringUtils
 import uk.ac.ebi.pride.jaxb.model.FragmentIon
 import fr.proline.core.om.model.msi.FragmentMatch
-import fr.proline.core.om.model.msi.SpectrumMatch
 import uk.ac.ebi.pride.jaxb.model.SampleDescription
 import java.io.IOException
 import uk.ac.ebi.pride.jaxb.model.Protocol
