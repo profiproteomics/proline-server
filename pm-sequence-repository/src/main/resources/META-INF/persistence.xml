@@ -5,7 +5,7 @@
   version="2.0">
 
   <persistence-unit name="seqdb_production" transaction-type="RESOURCE_LOCAL">
-    <provider>org.hibernate.ejb.HibernatePersistence</provider>
+    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
     <class>fr.proline.module.seq.orm.BioSequence</class>
     <class>fr.proline.module.seq.orm.ParsingRule</class>
     <class>fr.proline.module.seq.orm.Repository</class>
