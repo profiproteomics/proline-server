@@ -1,37 +1,42 @@
 package fr.proline.cortex.service.dps.msi
 
-import fr.proline.cortex.service.AbstractRemoteProcessService
+import java.io.File
+import scala.collection.JavaConversions.mapAsScalaMap
+import scala.collection.mutable.ArrayBuffer
+import scala.util.matching.Regex
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-import scala.util.matching.Regex
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.context.IExecutionContext
-import fr.proline.core.om.provider.msi.IProteinProvider
-import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
-import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
-import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.provider.msi.IPeptideProvider
-import scala.collection.JavaConversions.mapAsScalaMap
-import scala.collection.JavaConverters
 import fr.profi.util.serialization.ProfiJson._
-import fr.proline.core.dal.helper.UdsDbHelper
-import fr.proline.cortex.util.MountPointRegistry
-import fr.proline.core.service.msi.ResultFileImporter
-import fr.proline.core.dal.BuildExecutionContext
-import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
-import java.io.File
-import fr.proline.core.om.provider.msi.ProteinFakeProvider
-import fr.proline.core.om.provider.msi.SeqDbFakeProvider
-import fr.proline.cortex.service.ISingleThreadedService
-import fr.proline.cortex.util.DbConnectionHelper
-import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.service.msi.ResultSetValidator
+import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.InferenceMethod
 import fr.proline.core.algo.msi.scoring.PepSetScoring
-import scala.collection.mutable.ArrayBuffer
+import fr.proline.core.dal.BuildExecutionContext
+import fr.proline.core.dal.helper.UdsDbHelper
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.provider.msi.IPTMProvider
+import fr.proline.core.om.provider.msi.IPeptideProvider
+import fr.proline.core.om.provider.msi.IProteinProvider
+import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
+import fr.proline.core.om.provider.msi.ProteinFakeProvider
+import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
+import fr.proline.core.om.provider.msi.SeqDbFakeProvider
+import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
+import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
+import fr.proline.core.orm.uds.Dataset
+import fr.proline.core.orm.uds.Project
+import fr.proline.core.orm.uds.Aggregation.ChildNature
+import fr.proline.core.orm.uds.repository.AggregationRepository
+import fr.proline.core.service.msi.ResultFileImporter
+import fr.proline.core.service.msi.ResultSetValidator
+import fr.proline.cortex.service.AbstractRemoteProcessService
+import fr.proline.cortex.service.ISingleThreadedService
+import fr.proline.cortex.util.DbConnectionHelper
+import fr.proline.cortex.util.MountPointRegistry
 import fr.proline.module.fragment_match.service.SpectrumMatchesGenerator
+import fr.proline.core.orm.uds.IdentificationDataset
+import fr.proline.core.orm.uds.repository.DatasetRepository
 
 
 
@@ -44,7 +49,7 @@ import fr.proline.module.fragment_match.service.SpectrumMatchesGenerator
  *   project_id : The id of the project used for data importation.
  *  Import Specific
  *   use_decoy_regexp: true if result file is formated with decoy strategy RegExp, false if it is formated with the id of the rule to be used. 
- *   result_files : The list of the result files to be imported, as IResultFileDescriptor object
+ *   result_files : The list of the result files to be imported, as IResultFileDescriptor object (format, path, peaklist_id (optionnal)) + protMatchDecoyRuleId or + decoyStrategy
  *   instrument_config_id : id in datastore of the instrument config used for result file acquisition
  *   peaklist_software_id : id in datastore of the software use to generate peaklist
  *   importer_properties : Map of properties for importer, specific to result files format
@@ -157,15 +162,16 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessService with LazyLog
     var resultValidate: ArrayBuffer[java.lang.Long] = new ArrayBuffer[java.lang.Long]
     
     // *** Initialize the providers    
-    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), projectId, false)
+    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), projectId, true)
     var msiDbConnectionContext: DatabaseConnectionContext = null
-    var msiDbTransacOk: Boolean = false
+    var udsbConnectionContext: DatabaseConnectionContext = null
+    var transactionOk: Boolean = false
         
     try {
       val parserCtx = this.buildParserContext(execCtx)
-      val udsDbCtx = execCtx.getUDSDbConnectionContext()
+      val udsbConnectionContext = execCtx.getUDSDbConnectionContext()
 
-      val udsDbHelper = new UdsDbHelper(udsDbCtx)
+      val udsDbHelper = new UdsDbHelper(udsbConnectionContext)
       val decoyRegexById = udsDbHelper.getProteinMatchDecoyRegexById()
 
       val importedRFs = new collection.mutable.ArrayBuffer[ImportedResultFile]
@@ -173,7 +179,8 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessService with LazyLog
          // Begin transaction
       msiDbConnectionContext = execCtx.getMSIDbConnectionContext
       msiDbConnectionContext.beginTransaction() // Start a transaction on MSI Db
-      msiDbTransacOk = false
+      udsbConnectionContext.beginTransaction()
+      transactionOk = false
 
         
       // **** Go through each result File
@@ -216,11 +223,25 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessService with LazyLog
 
         /* Update result */
         resultImport = importedRFs.toArray
-
+        
+        
+        //*** Create Identification Dataset for new RS
+        // Then insert it in the current MSIdb
+        val udsEM = udsbConnectionContext.getEntityManager
+        val project = udsEM.find(classOf[Project], projectId)
+        val ds : IdentificationDataset = new IdentificationDataset()
+        ds.setProject(project)
+        ds.setName(currentRSOPt.get.name)
+        ds.setResultSetId(currentRSId)
+        ds.setChildrenCount(0)
+        val rootDsNames = DatasetRepository.findRootDatasetNamesByProject(udsEM,projectId)
+        val dsNbr = if(rootDsNames == null) 0 else rootDsNames.size()
+        ds.setNumber(dsNbr)
+        
         // **** Validate Result Set
-        val rsValidator = ResultSetValidator(
+        val rsValidator = new ResultSetValidator(
           execContext = execCtx,
-          targetRsId = currentRSId,
+          targetRs = currentRSOPt.get,
           tdAnalyzer = validationParam.tdAnalyzer,
           pepMatchPreFilters = validationParam.pepMatchPreFilters,
           pepMatchValidator = validationParam.pepMatchValidator,
@@ -233,6 +254,10 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessService with LazyLog
         val currentRSMId = rsValidator.validatedTargetRsm.id
         resultValidate += currentRSMId
         
+        //Complete DS info and persist it
+        ds.setResultSummaryId(currentRSMId)
+        udsEM.persist(ds)
+        
         if(generateSpectrumMatches){          
           val spectrumMatchesGenerator = new SpectrumMatchesGenerator(execCtx, currentRSId, Some(currentRSMId), None, gsmForceInsert)
           spectrumMatchesGenerator.runService()
@@ -241,7 +266,8 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessService with LazyLog
       
       // Commit transaction
       msiDbConnectionContext.commitTransaction()
-      msiDbTransacOk = true
+      udsbConnectionContext.commitTransaction()
+      transactionOk = true
       
      } catch {
         case ex: Exception => {
@@ -252,7 +278,7 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessService with LazyLog
 
     } finally 
     {
-      if ((msiDbConnectionContext != null) && !msiDbTransacOk) {
+      if ((msiDbConnectionContext != null) && !transactionOk) {
         try {
           msiDbConnectionContext.rollbackTransaction()
         } catch {
