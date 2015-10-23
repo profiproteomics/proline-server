@@ -11,26 +11,30 @@ import fr.proline.core.om.model.msi.FragmentMatch
 import fr.proline.core.om.model.msi.Peptide
 import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.LazyLogging
+import fr.profi.util.ms.massToMoz
 
 
 /**
  * @author VD225637
  */
 object SpectraListViewFields extends IViewFieldEnumeration {
-  val PREC_MASS = Field("Q3")
+  val PREC_MASS = Field("Q1")
   val PREC_CHARGE = Field("prec_z")
-  val FRAG_MASS = Field("Q1")
+  val FRAG_MASS = Field("Q3")
   val ISOTYPE = Field("isotype")
   val RT = Field("RT_detected")
   val PROT_NAME = Field("uniprot_id")
   val PROT_DESCRIPTION = Field("protein_name")
   val FRAG_INTENSITY = Field("relative_intensity")
+  val PREC_INTENSITY = Field("prec_y")
   val PEP_SEQ = Field("stripped_sequence")
   val PEP_MODIFIED_SEQ = Field("modification_sequence")
   val FRAG_TYPE = Field("frg_type")
   val FRAG_Z = Field("frg_z")
   val FRAG_NBR = Field("frg_nr")
   val SHARED = Field("shared")
+  val CONFIDENCE = Field("confidence")
+  val PROT_INDEX = Field("N")
     
 }
 
@@ -39,7 +43,7 @@ class SpectraListView( val identDS: IdentWithSpectrumDataSet ) extends IFixedDat
     var viewName = "spectrum_list"
     val fields = SpectraListViewFields
  
-    case class MyBuildingContext( proteinset : ProteinSet, typicalProtMatch : ProteinMatch , peptideMatch : PeptideMatch, fragMatch : FragmentMatch , peptide : Peptide) extends IRecordBuildingContext
+    case class MyBuildingContext( proteinset : ProteinSet, typicalProtMatch : ProteinMatch , peptideMatch : PeptideMatch, fragMatch : FragmentMatch , peptide : Peptide, protIndex: Int) extends IRecordBuildingContext
     
     def buildRecord( buildingContext: IRecordBuildingContext ): Map[String,Any] = {
       
@@ -51,23 +55,28 @@ class SpectraListView( val identDS: IdentWithSpectrumDataSet ) extends IFixedDat
       val shared = identDS.sharedPepMatchIds.contains(pepMatch.id)
       val seq = recordContext.peptide.sequence     
       
+      //Calculate precursor mass
+      val precMoz = massToMoz(recordContext.peptide.calculatedMass, pepMatch.charge)
 
        // Build the full record
       Map(
+        fields.PREC_MASS.toString -> precMoz,
         fields.FRAG_MASS.toString -> recordContext.fragMatch.moz,
-        fields.PREC_MASS.toString -> spectrum.precursorMoz,
         fields.RT.toString -> spectrum.firstTime,
         fields.PROT_DESCRIPTION.toString -> recordContext.typicalProtMatch.description,
         fields.ISOTYPE.toString -> "",
         fields.PROT_NAME.toString -> recordContext.typicalProtMatch.accession,
         fields.FRAG_INTENSITY.toString -> recordContext.fragMatch.intensity,
+        fields.PREC_INTENSITY.toString -> spectrum.precursorIntensity,
         fields.PEP_SEQ.toString -> seq,
         fields.PEP_MODIFIED_SEQ.toString -> genertateSeqWithPtms(recordContext.peptide),       
         fields.PREC_CHARGE.toString -> recordContext.peptideMatch.charge,
         fields.FRAG_TYPE.toString -> recordContext.fragMatch.ionSeries,
         fields.FRAG_Z.toString -> recordContext.fragMatch.charge,
         fields.FRAG_NBR.toString -> recordContext.fragMatch.aaPosition,
-        fields.SHARED.toString -> shared
+        fields.SHARED.toString -> shared,
+        fields.CONFIDENCE.toString() -> '1',
+        fields.PROT_INDEX.toString() -> recordContext.protIndex
       ).map(r => r._1.toString -> r._2)
       
     }
@@ -130,7 +139,9 @@ class SpectraListView( val identDS: IdentWithSpectrumDataSet ) extends IFixedDat
     val pepMatchById = rs.getPeptideMatchById()
     val spectrumMatchesByPepMatchID = identDS.spectrumMatchesByPeptMatchId
     
-    for( protSet <- rsm.proteinSets ) {
+    var protIndex = 0
+    val sortedProtSet =rsm.proteinSets.sortBy(_.peptideSet.score).reverse  
+    for( protSet <- sortedProtSet) {
       // Note that we export only protein sets which are loaded with the RSM
       // The result will depend of provider which have been used
      // Typical Protein Match is put first
@@ -144,16 +155,18 @@ class SpectraListView( val identDS: IdentWithSpectrumDataSet ) extends IFixedDat
           }        
       }
             
-      protSet.peptideSet.items.foreach( pepSetItem => {
-          val peptide = pepSetItem.peptideInstance.peptide
-          pepSetItem.peptideInstance.peptideMatchIds.foreach(pepMatchId =>{            
-            val pepMatch = pepMatchById(pepMatchId)
-            val spectrumMatch = spectrumMatchesByPepMatchID(pepMatchId)             
-            if(spectrumMatch != null && !spectrumMatch.fragMatches.isEmpty)
-              spectrumMatch.fragMatches.foreach( fragMatch => {
-                 this.formatRecord(MyBuildingContext(protSet, typicalProtMatch, pepMatch, fragMatch, peptide), recordFormatter)
-               })              
-            })                
+      protIndex+=1
+      protSet.peptideSet.items.foreach(pepSetItem => {
+        val peptide = pepSetItem.peptideInstance.peptide
+        val pepMatchId = pepSetItem.peptideInstance.bestPeptideMatchId
+        //Export only one PSM (best one)           
+        val pepMatch = pepMatchById(pepMatchId)
+        val spectrumMatch = spectrumMatchesByPepMatchID(pepMatchId)
+        if (spectrumMatch != null && !spectrumMatch.fragMatches.isEmpty)
+          spectrumMatch.fragMatches.foreach(fragMatch => {
+            if(fragMatch.ionSeries.size == 1) //Only export y, b ... ion series, not b0, b* etc
+              this.formatRecord(MyBuildingContext(protSet, typicalProtMatch, pepMatch, fragMatch, peptide, protIndex), recordFormatter)
+          })
       })
       
     }
