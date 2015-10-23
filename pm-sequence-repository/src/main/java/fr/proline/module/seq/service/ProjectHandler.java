@@ -127,6 +127,7 @@ public class ProjectHandler {
 					final Query udsQuery = udsEM.createQuery(LIST_RSM_IN_DATASET_ID_QUERY);
 					udsQuery.setParameter("projectId", projectId);
 					final List<Long> rsmIds = udsQuery.getResultList();
+					
 					if (forceUpdate)
 						untreatedRsmIds.addAll(rsmIds);
 					else {
@@ -152,7 +153,7 @@ public class ProjectHandler {
 						} // end rsmIds loop
 					}
 
-					if (untreatedRsmIds.size() > 0 || forceUpdate) {
+					if (untreatedRsmIds.size() > 0) {
 						if (forceUpdate) {
 							LOG.info(" Quering SEDbIdentifiers for all RSMs for this project ({})", projectId);
 						} else {
@@ -574,7 +575,7 @@ public class ProjectHandler {
 
 			final long endAll = System.currentTimeMillis();
 			final long duration = endAll - startAll;
-			LOG.info("Total: fillProteinMatchesProperties() execution : {} ms ", duration);
+			LOG.info("Total: fillProteinMatchesProperties() execution : {} ms for project {} ", duration, projectId);
 
 		} catch (Exception ex) {
 			LOG.error("Error accessing MSI Db Project #" + projectId, ex);
