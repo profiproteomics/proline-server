@@ -428,6 +428,8 @@ public class ProjectHandler {
 						}
 					}
 
+					int psIdcount = 0;
+					
 					// test if the RSM is already calculated
 					if (!array.has("is_coverage_updated") || forceUpdate) {
 
@@ -450,8 +452,7 @@ public class ProjectHandler {
 						final Query psQuery = msiEM.createQuery(LIST_PS_FOR_RSM_QUERY);
 						psQuery.setParameter("rsmId", rsmId);
 						final List<ProteinSet> protSets = psQuery.getResultList();
-						int psIdListSize = protSets.size();
-						int psIdcount = 0;
+						int psIdListSize = protSets.size();						
 
 						//Get All Peptide Ids identified
 //						List<Long> peptideIds = new ArrayList<Long>();
@@ -563,7 +564,7 @@ public class ProjectHandler {
 
 					final long end = System.currentTimeMillis();
 					final long duration = end - start;
-					LOG.info("rsmId: {} successfully/already calculated. Duration : {} ms", rsmId, duration);
+					LOG.info("rsmId: {} successfully/already calculated. Duration : {} ms for {} protein sets ", rsmId, duration, psIdcount);
 
 				} //End go through RSMs
 				

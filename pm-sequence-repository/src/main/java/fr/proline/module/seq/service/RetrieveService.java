@@ -66,7 +66,7 @@ public final class RetrieveService {
 				LOG.debug(" is going to process project " + projectId);
 			} else if (args[0].startsWith("f")) {
 				forceUpdateParameter = true;
-				LOG.debug(" force mode: will compute even if already computed");
+				LOG.info(" force mode: will compute even if already computed");
 				if (args[0].length() > 1) {
 					if (args[0].substring(1, 2).equals("p")) {
 						projectId = Long.parseLong(args[0].substring(2));
