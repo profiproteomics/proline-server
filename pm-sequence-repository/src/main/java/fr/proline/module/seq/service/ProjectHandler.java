@@ -174,10 +174,7 @@ public class ProjectHandler {
 							nExpectedAccessions = ((Number) obj).longValue();
 						}
 
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("MSI Project #{} found {} SEDbInstances and {} validated Accession", projectId, seDbInstances.size(),
-								nExpectedAccessions);
-						}
+					    LOG.info("MSI Project #{} found {} SEDbInstances and {} validated Accession", projectId, seDbInstances.size(),nExpectedAccessions);
 
 						if (nExpectedAccessions > 0L) {
 
