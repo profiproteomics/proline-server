@@ -96,6 +96,8 @@ class MascotDataParser(
     for (q <- 1 to nbrQueries) { // Go through each Query
 
       val query = msQueryByInitialId(q)
+      val queryPepMatches = new ArrayBuffer[(PeptideMatch, Seq[LocatedPtm])]()
+      
       for (k <- 1 to maxRankPerQuery) { // Go through all peptides of each queries
 
         //***** Get  ms_peptide and create / get corresponding Peptide object
@@ -104,7 +106,7 @@ class MascotDataParser(
         // Check that the peptide is not empty
         if (currentMSPep.getAnyMatch()) {
 
-          val parsedPep = getOrCreatePeptide(currentMSPep, ptmProvider, pepProvider)
+          val (parsedPep, varPtms) = getOrCreatePeptide(currentMSPep, ptmProvider, pepProvider)
 
           // --- Retrieve some properties values --- //
 
@@ -152,6 +154,9 @@ class MascotDataParser(
             properties = Some(pepMatchProps),
             resultSetId = rsId
           )
+          if (readableVarMods.length > 0) {
+            queryPepMatches += Tuple2(pepMatch, varPtms)
+          }
           totalNbrPepMatches += 1
 
           // Save PeptideMatch In Peptide->PeptideMatch result Map
@@ -160,6 +165,13 @@ class MascotDataParser(
         }
 
       } // End go through current query Peptide
+      
+      // then compute ptm site probability property
+      val pepMatchesBySequence = queryPepMatches.groupBy { e => e._1.peptide.sequence }
+      for (matches <- pepMatchesBySequence.valuesIterator) {
+        computeRelativeProbabilities(matches)
+      }
+      
     } // End go through Queries
 
     logger.debug("Go through Queries/PSM done")
@@ -393,14 +405,15 @@ class MascotDataParser(
     mascotPeptide: ms_peptide,
     ptmProvider: IPTMProvider,
     pepProvider: IPeptideProvider
-  ): Peptide = {
+  ): (Peptide, Seq[LocatedPtm]) = {
 
     // Disable substitution of ambiguous residues
     val pepSeq = mascotPeptide.getPeptideStr(false)
 
     //--- Create PTMs : from search settings variable and fixed PTM
     val pepVarAndFixedPtm = new ArrayBuffer[LocatedPtm](0)
-    pepVarAndFixedPtm ++= createPeptidePtmFromVarPtm(mascotPeptide, ptmProvider)
+    val pepVarPtm = createPeptidePtmFromVarPtm(mascotPeptide, ptmProvider)
+    pepVarAndFixedPtm ++= pepVarPtm
     pepVarAndFixedPtm ++= createPeptidePtmFromFixedPtm(mascotPeptide)
     val varPtmsAsArray = pepVarAndFixedPtm.toArray[LocatedPtm]
 
@@ -427,7 +440,7 @@ class MascotDataParser(
 
     if (storeInMap) pepByUniqueKey += (uniqueKey -> currentPep.get)
 
-    currentPep.get
+    (currentPep.get, pepVarPtm)
   }
 
   /**
@@ -617,6 +630,33 @@ class MascotDataParser(
     nbrMatches
   }
 
+   private def computeRelativeProbabilities(assignments: Seq[(PeptideMatch, Seq[LocatedPtm])] ) = {
+    val confidences = new HashMap[PeptideMatch, Float]()
+    val summedProb = new HashMap[LocatedPtm, Float]()
+    val _r = (s1:Float, si:Float, md10Prob:Float) => scala.math.pow(10,md10Prob*(s1 - si)).toFloat
+    var sum = 0.0f
+    val s1 = assignments(0)._1.score
+    for ((peptideMatch, varPtms)  <- assignments) {
+      val v = _r( -s1 , -peptideMatch.score , 0.1f )
+      sum += v
+      confidences(peptideMatch) = v
+      for (ptm <- varPtms) {
+        summedProb(ptm) = summedProb.getOrElse(ptm, 0.0f) + v
+      }
+    }
+
+    for ((peptideMatch, varPtms) <- assignments) {
+      val siteProperties = peptideMatch.properties.get.ptmSiteProperties.getOrElse(new PeptideMatchPTMSiteProperties)
+      var probabilities = new HashMap[String, Float]()
+      for (ptm <- varPtms) {
+        probabilities += ptm.toReadableString -> summedProb(ptm) / sum
+      }
+      siteProperties.mascotPtmSiteProperties = Some(new MascotPtmSiteProperties(mascotDeltaScore = Some(confidences(peptideMatch) / sum), siteProbabilities = probabilities.toMap))
+      peptideMatch.properties.get.ptmSiteProperties = Some(siteProperties)
+    }
+
+  }
+   
   case class ProteinWrapper(seqDbId: Int, protAccess: String, wrappedProt: Option[Protein]) {
 
     override def equals(other: Any): Boolean = {
