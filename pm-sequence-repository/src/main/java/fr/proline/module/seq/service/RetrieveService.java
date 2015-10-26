@@ -55,7 +55,7 @@ public final class RetrieveService {
 		boolean forceUpdateParameter = false;
 
 		LOG.debug("number of arguments: " + args.length);
-		LOG.info("Arguments can be either 1 for periodicity (in hours) or p1 for project 1");
+		LOG.info("Arguments can be either 1 for periodicity (in hours) or p1 for project 1, \nor fp1 for forcing project 1.\n Or just f to force recompute all projects.");
 
 		if ((args != null) && (args.length > 0)) {
 
