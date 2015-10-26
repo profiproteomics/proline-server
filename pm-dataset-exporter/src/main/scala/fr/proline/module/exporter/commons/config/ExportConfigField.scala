@@ -178,7 +178,9 @@ object ExportConfigField {
       new ExportConfigField(ExportConfigConstant.FIELD_PSM_START, "start"),
       new ExportConfigField(ExportConfigConstant.FIELD_PSM_END, "end"),
       new ExportConfigField(ExportConfigConstant.FIELD_PSM_RESIDUE_BEFORE, "residue_before"),
-      new ExportConfigField(ExportConfigConstant.FIELD_PSM_RESIDUE_AFTER, "residue_after")
+      new ExportConfigField(ExportConfigConstant.FIELD_PSM_RESIDUE_AFTER, "residue_after"),
+      new ExportConfigField(ExportConfigConstant.FIELD_PSM_PTM_SCORE, "ptm_score"),
+      new ExportConfigField(ExportConfigConstant.FIELD_PSM_PTM_SITES_CONFIDENCE, "ptm_sites_confidence")
     )
     listFields = listFields ++ getAllProteinSetsFieldsArray(false, false, false)
 

@@ -159,6 +159,19 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
     val resBefore = if (pepMatch == null) null else if (seqMatch.residueBefore == '\0') '-' else seqMatch.residueBefore
     val resAfter = if (pepMatch == null) null else if (seqMatch.residueAfter == '\0') '-' else seqMatch.residueAfter
 
+    val (ptm_score, ptm_sites) = {
+    if (pepMatch == null) {
+      ("", "")
+    } else if (pepMatch.properties.isDefined && pepMatch.properties.get.ptmSiteProperties.isDefined) {
+      val siteProperties = pepMatch.properties.get.ptmSiteProperties.get
+      if (siteProperties.mascotPtmSiteProperties.isDefined)  {
+        val mascotPtmSite = siteProperties.mascotPtmSiteProperties.get
+        val score = ExportConfigManager.format(dcf2, mascotPtmSite.mascotDeltaScore.getOrElse(0.0f)).toString
+        val sites = mascotPtmSite.siteProbabilities.map({ case(k,v) => k+" = "+ExportConfigManager.format(dcf2, v) }).mkString(",")
+        (score, sites)
+      } else ("", "")
+    } else ("", "")
+    }
     val dbProtMatchesCount = {
       if (identDS.allProtMatchSetByPepId == null || pepMatch == null) null
       else if (identDS.allProtMatchSetByPepId.get(pepMatch.peptideId).isDefined) {
@@ -336,6 +349,12 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
         }
         case ExportConfigConstant.FIELD_PSM_RESIDUE_AFTER => {
           exportMap += (fields.addField(f.title) -> resAfter)
+        }
+        case ExportConfigConstant.FIELD_PSM_PTM_SCORE => {
+          exportMap += (fields.addField(f.title) -> ptm_score)
+        }
+        case ExportConfigConstant.FIELD_PSM_PTM_SITES_CONFIDENCE => {
+          exportMap += (fields.addField(f.title) -> ptm_sites)
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_STATUS => {
           if (isQuanti && protSetQuantiBuildingCtx.masterQuantProteinSet != null) {

@@ -37,6 +37,8 @@ trait IPeptideMatchViewFields extends IViewFieldEnumeration {
   val END = Field("end")
   val RESIDUE_BEFORE = Field("residue_before")
   val RESIDUE_AFTER = Field("residue_after")
+  val PTM_SCORE = Field("ptm_score")
+  val SITES_CONFIDENCE = Field("ptm_sites_confidence")
 }
 
 object ProtSetToPepMatchViewFields extends IPeptideMatchViewFields {
@@ -70,6 +72,16 @@ abstract class AbstractPeptideMatchView extends AbstractProtSetToTypicalProtMatc
     val pepMatch = allPepMatchesBuildingCtx.pepMatch
     val seqMatch = allPepMatchesBuildingCtx.seqMatch
 
+   val (ptm_score, ptm_sites) = if (pepMatch.properties.isDefined && pepMatch.properties.get.ptmSiteProperties.isDefined) {
+      val siteProperties = pepMatch.properties.get.ptmSiteProperties.get
+      if (siteProperties.mascotPtmSiteProperties.isDefined)  {
+        val mascotPtmSite = siteProperties.mascotPtmSiteProperties.get
+        val score = "%.2f".format(mascotPtmSite.mascotDeltaScore.getOrElse(0.0f))
+        val sites = mascotPtmSite.siteProbabilities.map({ case(k,v) => k+" = "+"%.2f".format(v) }).mkString(",")
+        (score, sites)
+      } else ("", "")
+    } else ("", "")
+    
     val peptide = pepMatch.peptide
     val initialQueryId = Option(pepMatch.msQuery).map(_.initialId).getOrElse(null)
     val experimentalMoz = Option(pepMatch.msQuery).map(_.moz).getOrElse(null)
@@ -110,13 +122,15 @@ abstract class AbstractPeptideMatchView extends AbstractProtSetToTypicalProtMatc
       fields.END.toString -> seqMatch.end,
       fields.RESIDUE_BEFORE.toString -> resBefore,
       fields.RESIDUE_AFTER.toString -> resAfter,
+      fields.PTM_SCORE.toString() -> ptm_score,
+      fields.SITES_CONFIDENCE.toString() -> ptm_sites,      
       fields.PROTEIN_SET_ID.toString -> protSetId,
       fields.ACCESSION.toString -> protMatch.accession,
       fields.DESCRIPTION.toString -> protMatch.description,
       fields.PROTEIN_SET_SCORE.toString -> protSetScore,
       fields.IS_PROTEIN_SET_VALIDATED.toString -> protSetValid
 
-    ).map(r => r._1.toString -> r._2)
+    )
 
   }
 
