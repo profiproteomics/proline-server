@@ -153,7 +153,7 @@ public final class BioSequenceRetriever {
 
 			final long duration = end - start;
 
-			LOG.info("Total retrieveBioSequences() execution : {} SEDbIdentifiers handled in {} ms", totalHandledSEDbIdents, duration);
+			LOG.info("Total retrieveBioSequences() execution : {} SEDbIdentifiers retrieved from sources in {} ms", totalHandledSEDbIdents, duration);
 		} // End of synchronized block on RUNNING_LOCK
 
 		return totalHandledSEDbIdents;

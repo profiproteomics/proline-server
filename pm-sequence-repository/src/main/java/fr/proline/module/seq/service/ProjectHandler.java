@@ -464,9 +464,6 @@ public class ProjectHandler {
 							if(!pepIdsByProtSetId.containsKey(psId))
 								pepIdsByProtSetId.put(psId, new ArrayList<Long>());
 							pepIdsByProtSetId.get(psId).add(pi.getPeptide().getId());
-							if(rsmId.equals(11) && psId.equals(3713L)){
-								LOG.warn(" FOR psId 3713  add peptide ID "+pi.getPeptide().getId());
-							}
 						}
 						
 						for (ProteinSet protSet : protSets) {

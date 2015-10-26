@@ -14,6 +14,10 @@ import javax.persistence.EntityManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+
+import ch.qos.logback.classic.Level;
 import fr.profi.util.ThreadLogger;
 import fr.proline.core.orm.uds.repository.ProjectRepository;
 import fr.proline.module.seq.DatabaseAccess;
@@ -33,8 +37,23 @@ public final class RetrieveService {
 	private static final Logger LOG = LoggerFactory.getLogger(RetrieveService.class);
 
 	private static final long TIMER_BEFORE_DELAY = TimeUnit.SECONDS.toMillis(15L);
+	
+	public static class RetrieveCommand {
+		@Parameter(names = { "-p", "--project" }, description = "the ID of the single project to process")
+		private Integer projectId = 0;
 
+		@Parameter(names = { "-debug" }, description = "set logger level to DEBUG (verbose mode)")
+		private boolean debug = false;
+
+		@Parameter(names = { "-t", "--time" }, description = "the daemon periodicity (in hours)")
+		private Integer hourDelay = -1;
+
+		@Parameter(names = { "-f", "--forceUpdate" }, description = "force update of MSIdb result summaries and biosequences (even if already updated)")
+		private boolean forceUpdate = false;
+	}
+	
 	private RetrieveService() {
+		
 	}
 
 	/**
@@ -47,51 +66,24 @@ public final class RetrieveService {
 
 		Thread.currentThread().setUncaughtExceptionHandler(new ThreadLogger(LOG));
 
+		final RetrieveCommand params = new RetrieveCommand();
+		JCommander command = new JCommander(params, args);
+		
+		command.usage();
+		
+		if (params.debug) {
+			ch.qos.logback.classic.Logger prolineLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("fr.proline");
+			prolineLogger.setLevel(Level.DEBUG);
+			LOG.debug("--- Proline Logger set to DEBUG level ");
+		}
+		
+
 		/* Force initialization of seq_db on service starting */
 		DatabaseAccess.getSEQDatabaseConnector(true);
 
-		int hourDelay = -1;
-		long projectId = 0;
-		boolean forceUpdateParameter = false;
-
-		LOG.debug("number of arguments: " + args.length);
-		LOG.info("Arguments can be either 1 for periodicity (in hours) or p1 for project 1, \nor fp1 for forcing project 1.\n Or just f to force recompute all projects.");
-
-		if ((args != null) && (args.length > 0)) {
-
-			String trimmedDelay = "";
-
-			if (args[0].startsWith("p")) {// project id such as p1
-				projectId = Long.parseLong(args[0].substring(1));
-				LOG.debug(" is going to process project " + projectId);
-			} else if (args[0].startsWith("f")) {
-				forceUpdateParameter = true;
-				LOG.info(" force mode: will compute even if already computed");
-				if (args[0].length() > 1) {
-					if (args[0].substring(1, 2).equals("p")) {
-						projectId = Long.parseLong(args[0].substring(2));
-						LOG.debug(" is going to process project " + projectId);
-					}
-				}
-			} else {
-				trimmedDelay = args[0].trim();
-			}
-
-			if (!trimmedDelay.isEmpty()) {
-				try {
-					hourDelay = Integer.parseInt(trimmedDelay);
-					LOG.debug("\nPeriodicity: " + hourDelay);
-
-				} catch (NumberFormatException nfEx) {
-					LOG.warn("Cannot parse [" + trimmedDelay + "] as Integer value", nfEx);
-				}
-			}
-
-		}
-
-		if (hourDelay > 0) {
+		if (params.hourDelay > 0) {
 			final Timer timer = new Timer("Timer-retrieveBioSequencesForAllProjects");
-			final boolean forceUpdate = forceUpdateParameter;
+			final boolean forceUpdate = params.forceUpdate;
 			final TimerTask timerTask = new TimerTask() {
 
 				public void run() {
@@ -110,15 +102,15 @@ public final class RetrieveService {
 				}
 
 			};
-			timer.scheduleAtFixedRate(timerTask, TIMER_BEFORE_DELAY, TimeUnit.HOURS.toMillis(hourDelay));
+			timer.scheduleAtFixedRate(timerTask, TIMER_BEFORE_DELAY, TimeUnit.HOURS.toMillis(params.hourDelay));
 
-			LOG.info("Running \"retrieve task\" every {} hour(s)", hourDelay);
+			LOG.info("Running \"retrieve task\" every {} hour(s)", params.hourDelay);
 		} else {
 			LOG.info("No given hourDelay : Running a single \"retrieve task\"");
-			if (projectId == 0) {
-				retrieveBioSequencesForAllProjects(forceUpdateParameter);
+			if (params.projectId == 0) {
+				retrieveBioSequencesForAllProjects(params.forceUpdate);
 			} else {
-				retrieveBioSequencesForProject(projectId, forceUpdateParameter);
+				retrieveBioSequencesForProject(params.projectId, params.forceUpdate);
 			}
 			BioSequenceRetriever.waitExecutorShutdown();
 			System.out.println("\nMain terminated !");
