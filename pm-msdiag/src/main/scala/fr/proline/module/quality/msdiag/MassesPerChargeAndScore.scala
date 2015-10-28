@@ -46,7 +46,7 @@ object MassesPerChargeAndScore extends LazyLogging {
     // return output
     new MSDiagOutput(
       matrix = data,
-      outputType = MSDiagOutputTypes.Table,
+      outputType = MSDiagOutputTypes.Box,
 //      cellType = scala.Double.toString,
       cellType = scala.Double.toString,
       description = "Exp. MoZ per charge and score",
