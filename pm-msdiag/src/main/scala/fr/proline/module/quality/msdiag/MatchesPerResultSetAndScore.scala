@@ -59,8 +59,8 @@ object MatchesPerResultSetAndScore extends LazyLogging {
       columnNames = columnNames.toSeq,
       columnTypes= columnTypes.toSeq,
       columnCategories = columnCategories.toSeq,
-      xAxisDescription = "Scores",
-      yAxisDescription = "Resultsets")
+      xAxisDescription = "Resultset type",
+      yAxisDescription = "Number of categorized data")
   }
   
 }
