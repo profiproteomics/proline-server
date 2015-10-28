@@ -421,8 +421,9 @@ public class ProjectHandler {
 						} catch (Exception e) {
 							if (LOG.isDebugEnabled()) {
 								LOG.debug("error accessing project id: " + projectId + " (missing JSON): forcing project work...");
-								array = parser.parse("{}").getAsJsonObject();
+								
 							}
+							array = parser.parse("{}").getAsJsonObject(); // this to avoid error if processing a dataset that has no serialized properties
 						}
 					}
 
