@@ -46,15 +46,14 @@ object MassesPerChargeAndScore extends LazyLogging {
     // return output
     new MSDiagOutput(
       matrix = data,
-      outputType = MSDiagOutputTypes.Box,
-//      cellType = scala.Double.toString,
+      outputType = MSDiagOutputTypes.Box, // MSDiagOutputTypes.Table
       cellType = scala.Double.toString,
       description = "Exp. MoZ per charge and score",
       columnNames = columnNames.toSeq,
       columnTypes = columnTypes.toSeq,
       columnCategories = columnCategories.toSeq,
-      xAxisDescription = "Masses",
-      yAxisDescription = "Charges and scores")
+      xAxisDescription = "Charge and score",
+      yAxisDescription = "MoZ")
   }
 
   private def getRowValues(charge: Int, score: String, matches: Any): Array[Any] = Array(charge, score, getMinMoz(matches), getMaxMoz(matches), getAverageMoz(matches), getMedianMoz(matches))  
