@@ -348,6 +348,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
     val fileFormat = FileFormat.withName(paramsRetriever.getString("file_format"))
    fileFormat match {
       case FileFormat.MZIDENTML => require(rsmIdentifiers.size ==1, "Could export only one Result into MzIdent")
+      case FileFormat.TEMPLATED => require(rsmIdentifiers.size > 0, "Could export at least one Result into Excel format")
       case FileFormat.PRIDE => require(rsmIdentifiers.size ==1, "Could export only one Result into Pride format")
       case FileFormat.SPECTRA_LIST => require(rsmIdentifiers.size ==1, "Could export only one Result into Spectra List")
     }
