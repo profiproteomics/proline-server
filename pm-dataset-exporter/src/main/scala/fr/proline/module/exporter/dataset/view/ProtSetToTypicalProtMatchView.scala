@@ -154,7 +154,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
 
     val peptide = if (pepMatch == null) null else pepMatch.peptide
     val initialQueryId = if (pepMatch == null) null else Option(pepMatch.msQuery).map(_.initialId).getOrElse(null)
-    val experimentalMoz = if (pepMatch == null) null else ExportConfigManager.format(dcf4, (Option(pepMatch.msQuery).map(_.moz).getOrElse(null)))
+    val experimentalMoz = if (pepMatch == null) null else ExportConfigManager.format(dcf6, (Option(pepMatch.msQuery).map(_.moz).getOrElse(null)))
 
     val resBefore = if (pepMatch == null) null else if (seqMatch.residueBefore == '\0') '-' else seqMatch.residueBefore
     val resAfter = if (pepMatch == null) null else if (seqMatch.residueAfter == '\0') '-' else seqMatch.residueAfter
@@ -305,7 +305,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
           exportMap += (fields.addField(f.title) -> ExportConfigManager.format(decimalFormat, pepMatch.score))
         }
         case ExportConfigConstant.FIELD_PSM_CALCULATED_MASS => {
-          exportMap += (fields.addField(f.title) -> ExportConfigManager.format(dcf4, peptide.calculatedMass))
+          exportMap += (fields.addField(f.title) -> ExportConfigManager.format(dcf6, peptide.calculatedMass))
         }
         case ExportConfigConstant.FIELD_PSM_CHARGE => {
           exportMap += (fields.addField(f.title) -> Option(pepMatch.msQuery).map(_.charge).getOrElse(null))
