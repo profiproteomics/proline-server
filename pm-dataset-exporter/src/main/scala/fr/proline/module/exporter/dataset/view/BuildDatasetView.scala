@@ -29,7 +29,8 @@ class IdentDataSet(
   var resultSummary: ResultSummary,
   var childsResultSummarys: Array[ResultSummary],
   var childsResultSets: Array[ResultSet], 
-  var bioSequenceByBioSeqId: Map[Long, Double]) extends LazyLogging {
+  var bioSequenceByBioSeqId: Map[Long, Double], 
+  var spectrumFirstTimeByMsQueryId: Map[Long, Double]) extends LazyLogging {
 
   // Count the number of protein sets and proteins matches related to a given peptide match
   val validProtSetIdSetByPepMatchId = new HashMap[Long, HashSet[Long]]()
@@ -75,6 +76,7 @@ class QuantiDataSet(
   childsResultSummarys: Array[ResultSummary],
   childsResultSets: Array[ResultSet],
   bioSequenceByBioSeqId: Map[Long, Double],
+  spectrumFirstTimeByMsQueryId: Map[Long, Double],
   var masterQuantChannelId: Long,
   var quantRSM: QuantResultSummary,
   var qcIds: Array[Long],
@@ -82,7 +84,7 @@ class QuantiDataSet(
   var ratioDefs: Array[RatioDefinition],
   var nameByQchId: Map[Long, String],
   var protMatchStatusByIdPepMatchByQCId: Map[Long, Map[Long, String]],
-  var protMatchPeptideNumberByPepMatchIdByQCId: Map[Long, Map[Long, Int]]) extends IdentDataSet(projectName, resultSummary, childsResultSummarys, childsResultSets, bioSequenceByBioSeqId)
+  var protMatchPeptideNumberByPepMatchIdByQCId: Map[Long, Map[Long, Int]]) extends IdentDataSet(projectName, resultSummary, childsResultSummarys, childsResultSets, bioSequenceByBioSeqId, spectrumFirstTimeByMsQueryId)
 
 object BuildDatasetView {
 

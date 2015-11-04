@@ -212,10 +212,18 @@ object BuildDatasetViewSet extends LazyLogging {
       bioSeqByBioSequenceId = getBioSequence(proteinIdByProtMatchId, executionContext)
     }
     
+    var msQueryIdByPeptideMatchId : Map[Long, Long] = Map()
+    for ((peptideMatchId, peptideMatch) <- rsm.resultSet.get.getPeptideMatchById()) {
+      if (peptideMatch != null && peptideMatch.msQuery != null){
+        msQueryIdByPeptideMatchId += peptideMatchId -> peptideMatch.msQuery.id
+      }
+    }
+    var spectrumFirstTimeByMsQueryId: Map[Long, Double] =getSpectrumData(msQueryIdByPeptideMatchId, executionContext)
+    
     
 
     logger.debug("build IdentDataSet")
-    var identDs: IdentDataSet = new IdentDataSet(projectName, rsm, childsResultSummarys.toArray, childsResultSets.toArray, bioSeqByBioSequenceId)
+    var identDs: IdentDataSet = new IdentDataSet(projectName, rsm, childsResultSummarys.toArray, childsResultSets.toArray, bioSeqByBioSequenceId, spectrumFirstTimeByMsQueryId)
 
     // identRs
     if (dsId > 0) {
@@ -372,7 +380,7 @@ object BuildDatasetViewSet extends LazyLogging {
           protMatchPeptideNumberByPepMatchIdByQCId += qcId -> protMatchPeptideNumberByPepMatchId
         })
 
-        identDs = new QuantiDataSet(projectName, rsm, childsResultSummarys.toArray, childsResultSets.toArray, bioSeqByBioSequenceId, masterQuantChannelId, quantRSM, qcIds, expDesign, ratioDefs, nameByQchId, protMatchStatusByIdPepMatchByQCId, protMatchPeptideNumberByPepMatchIdByQCId)
+        identDs = new QuantiDataSet(projectName, rsm, childsResultSummarys.toArray, childsResultSets.toArray, bioSeqByBioSequenceId, spectrumFirstTimeByMsQueryId, masterQuantChannelId, quantRSM, qcIds, expDesign, ratioDefs, nameByQchId, protMatchStatusByIdPepMatchByQCId, protMatchPeptideNumberByPepMatchIdByQCId)
       } // end masterQuantIds not null
     }
 
@@ -460,6 +468,28 @@ object BuildDatasetViewSet extends LazyLogging {
     }
     execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
     bioSeqByBioSequenceId
+  }
+  
+  private def getSpectrumData(msQueryIdByPeptideMatchId: Map[Long, Long], execContext: IExecutionContext): Map[Long, Double] = {
+    var spectrumBySpectrumId: Map[Long, Double] = Map()
+    var ids: String = msQueryIdByPeptideMatchId.values.toList.mkString(",")
+    
+    val jdbcWork = new JDBCWork() {
+
+      override def execute(con: Connection) {
+
+        val stmt = con.prepareStatement("select msq.id, s.first_time from spectrum s, ms_query msq where msq.id IN ("+ids+") AND msq.spectrum_id = s.id ")
+        val sqlSpectra = stmt.executeQuery()
+        while (sqlSpectra.next) {
+          var msQueryId = sqlSpectra.getLong("id")
+          var firstTime = sqlSpectra.getDouble("first_time")
+          spectrumBySpectrumId += msQueryId -> firstTime
+        }
+        stmt.close()
+      } // End of jdbcWork anonymous inner class
+    }
+    execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
+    spectrumBySpectrumId
   }
 
 }

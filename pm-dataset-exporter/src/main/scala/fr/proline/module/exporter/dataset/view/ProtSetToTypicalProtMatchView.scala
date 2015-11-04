@@ -181,6 +181,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
     }
     
     val bioSequenceByBioSeqId = identDS.bioSequenceByBioSeqId
+    val spectrumFirstTimeByMsQueryId = identDS.spectrumFirstTimeByMsQueryId;
     
     // MW 
     var mass: Double = 0.0
@@ -188,6 +189,16 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
       mass = bioSequenceByBioSeqId.get(protMatch.getProteinId).get
     }
     //Option(protMatch.protein).flatMap(_.map(_.mass)).getOrElse(0))
+    
+    // retentionTime
+    var retentionTime: Any = "-";
+    if (pepMatch != null && pepMatch.msQuery != null){
+      val msQueryId= pepMatch.msQuery.id
+      if (spectrumFirstTimeByMsQueryId.contains(msQueryId)){
+        var firstTime = spectrumFirstTimeByMsQueryId.get(msQueryId).get
+        retentionTime = ExportConfigManager.format(dcf4, firstTime)
+      }
+    }
 
     // score
     var score: Double = protSet.peptideSet.score
@@ -306,7 +317,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
           exportMap += (fields.addField(f.title) -> ExportConfigManager.format(dcf6, pepMatch.deltaMoz))
         }
         case ExportConfigConstant.FIELD_PSM_RT => {
-          exportMap += (fields.addField(f.title) -> "-")
+          exportMap += (fields.addField(f.title) -> retentionTime)
         }
         case ExportConfigConstant.FIELD_PSM_PEPTIDE_LENGTH => {
           exportMap += (fields.addField(f.title) -> peptide.sequence.length)
