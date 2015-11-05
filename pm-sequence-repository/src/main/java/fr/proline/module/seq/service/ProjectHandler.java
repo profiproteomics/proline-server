@@ -65,7 +65,6 @@ public class ProjectHandler {
 			+ " AND ((upper(pm.resultSet.type) = 'SEARCH') OR (upper(pm.resultSet.type) = 'USER'))"
 			+ " AND (ps.proteinSet.isValidated = true) AND (ps.proteinSet.resultSummary.id IN  (:rsm_ids))";
 
-	private static final String UPDATE_QUERY_RSM = "UPDATE result_summary  set serialized_properties=:sr where id=:rsmId";
 
 	private static final String LIST_RSM_IN_DATASET_ID_QUERY = "SELECT DISTINCT(dt.resultSummaryId) FROM Dataset dt WHERE dt.project.id= :projectId AND dt.type IN ('AGGREGATE','IDENTIFICATION') AND dt.resultSummaryId IS NOT NULL";
 
@@ -400,14 +399,16 @@ public class ProjectHandler {
 				LOG.warn("There is NO SEDbInstance in MSI Project #{}", projectId);
 				msiTransactionOK = true;
 			} else {
-				LOG.info(" Filling ProteinMatches properties on project {} for {} rsm", projectId, rsmIds.size());
+				LOG.info(" Filling ProteinMatches properties on project {}. Found a total of {} rsm", projectId, rsmIds.size());
 
-				msiEM.getTransaction().begin();
 				int coveredSequenceLength;
 
 				// for each RSM in data_set.result_summmary_id
 				for (Long rsmId : rsmIds) {
 					final long start = System.currentTimeMillis();
+					//Start Transaction for each RSM
+					msiTransactionOK = false;
+					msiEM.getTransaction().begin();
 					
 					// get the properties of the RSM to test if update needed
 					final ResultSummary rsm = msiEM.find(ResultSummary.class, rsmId);
@@ -420,8 +421,7 @@ public class ProjectHandler {
 							array = parser.parse(properties).getAsJsonObject();
 						} catch (Exception e) {
 							if (LOG.isDebugEnabled()) {
-								LOG.debug("error accessing project id: " + projectId + " (missing JSON): forcing project work...");
-								
+								LOG.debug("error accessing project id: " + projectId + " (missing JSON): forcing project work...");								
 							}
 							array = parser.parse("{}").getAsJsonObject(); // this to avoid error if processing a dataset that has no serialized properties
 						}
@@ -486,8 +486,8 @@ public class ProjectHandler {
 							// Get bioSequence for all ProteinMatch  				    
 							Map<String, List<BioSequenceWrapper>> result = BioSequenceProvider.findBioSequencesBySEDbIdentValues(allProtMatchesAccession);
 
-							// loop into proteins of current protein set.
-							for (Entry<ProteinMatch, Integer> entry : coveredSeqLengthByProtMatchList.entrySet()) {
+//							// loop into proteins of current protein set.
+							for (Entry<ProteinMatch, Integer> entry : coveredSeqLengthByProtMatchList.entrySet()) {								
 								ProteinMatch protMatch = entry.getKey();
 								coveredSequenceLength = entry.getValue();
 
@@ -516,23 +516,37 @@ public class ProjectHandler {
 
 										// Save BioSequence
 										BioSequence msiBioSeq = msiEM.find(BioSequence.class, bioSeq.getSequenceId());
-										boolean persist = false;
 										if (msiBioSeq == null) {
 											msiBioSeq = new BioSequence();
-											persist = true;
-										}
-
-										msiBioSeq.setAlphabet(Alphabet.AA);
-										msiBioSeq.setId(bioSeq.getSequenceId());
-										msiBioSeq.setLength(bioSeq.getSequence().length());
-										msiBioSeq.setMass(new Double(bioSeq.getMass()).intValue());
-										msiBioSeq.setCrc64(HashUtil.calculateCRC64(bioSeq.getSequence()));
-										msiBioSeq.setPi(new Float(bioSeq.getPI()));
-										msiBioSeq.setSequence(bioSeq.getSequence());
-										if (persist)
+											msiBioSeq.setAlphabet(Alphabet.AA);
+											msiBioSeq.setId(bioSeq.getSequenceId());
+											msiBioSeq.setLength(bioSeq.getSequence().length());
+											msiBioSeq.setMass(new Double(bioSeq.getMass()).intValue());
+											msiBioSeq.setCrc64(HashUtil.calculateCRC64(bioSeq.getSequence()));
+											msiBioSeq.setPi(new Float(bioSeq.getPI()));
+											msiBioSeq.setSequence(bioSeq.getSequence());											
 											msiEM.persist(msiBioSeq);
-										else
-											msiEM.merge(msiBioSeq);
+										} else {
+											boolean foundMissMatch = false;
+											StringBuffer sb = new StringBuffer(" Followinf properties don't match with current biosequence with id  ");
+											sb.append(bioSeq.getSequenceId());
+											if(msiBioSeq.getLength() != bioSeq.getSequence().length() ){
+												foundMissMatch = true;
+												sb.append(" sequence length;");
+											}
+												
+											if( msiBioSeq.getMass() != new Double(bioSeq.getMass()).intValue()){
+												foundMissMatch = true;
+												sb.append(" sequence mass;");
+											}
+											
+											if(! msiBioSeq.getSequence().equals(bioSeq.getSequence())){
+												foundMissMatch = true;
+												sb.append(" sequence;");
+											}
+											if(foundMissMatch)
+												LOG.warn(sb.toString());
+										}
 
 										// Save link between ProteinMatch and BioSeq
 										protMatch.setBioSequenceId(bioSeq.getSequenceId());
@@ -549,14 +563,15 @@ public class ProjectHandler {
 
 						//Save RSM Property
 						if (!array.has("is_coverage_updated")) {
+							LOG.debug(" Saving coverage_updated property for rsm {}.",rsmId);
 							array.addProperty("is_coverage_updated", true);
-							final Query updateQueryprop = msiEM.createNativeQuery(UPDATE_QUERY_RSM);
-							updateQueryprop.setParameter("sr", array.toString());
-							updateQueryprop.setParameter("rsmId", rsmId);
-							updateQueryprop.executeUpdate();
+							rsm.setSerializedProperties(array.toString());
+							msiEM.merge(rsm);
 						}
-
 					}
+					msiEM.getTransaction().commit();
+					msiTransactionOK = true;				
+					msiEM.clear();
 
 					final long end = System.currentTimeMillis();
 					final long duration = end - start;
@@ -564,7 +579,6 @@ public class ProjectHandler {
 
 				} //End go through RSMs
 				
-				msiEM.getTransaction().commit();
 				msiTransactionOK = true;
 			} //At least One SEdb
 
