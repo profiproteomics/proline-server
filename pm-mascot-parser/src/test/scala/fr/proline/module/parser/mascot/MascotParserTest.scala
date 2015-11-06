@@ -24,6 +24,7 @@ import fr.proline.repository.util.DatabaseTestCase
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.om.provider.msi.ProteinFakeProvider
 import fr.proline.core.om.provider.msi.SeqDbFakeProvider
+import junit.framework.Assert
 
 @Test
 class MascotParserTest extends LazyLogging { // }extends DatabaseTestCase {
@@ -86,6 +87,11 @@ class MascotParserTest extends LazyLogging { // }extends DatabaseTestCase {
         assertTrue(protMatch.score > 0)
         assertTrue(protMatch.peptideMatchesCount > 0)
       })
+      
+       mascotDatFile.eachSpectrum( spectrum => { 
+         assertTrue(spectrum.firstTime > 0) 
+         assertTrue(spectrum.lastTime > 0)
+       })
 
     } finally {
       executionContext.closeAll()
