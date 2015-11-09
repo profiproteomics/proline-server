@@ -44,22 +44,6 @@
                   </action>
                 </pluginExecution>
 
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-dependency-plugin</artifactId>
-                    <versionRange>[2.8,)</versionRange>
-                    <goals>
-                      <goal>copy-dependencies</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <execute>
-                       <runOnIncremental>false</runOnIncremental>
-                     </execute>
-                  </action>
-                </pluginExecution>
-
               </pluginExecutions>
             </lifecycleMappingMetadata>
           </configuration>
@@ -81,34 +65,7 @@
         	<charset>UTF-8</charset>
         </configuration>
       </plugin>
-
-      <!-- Phase "package" Copy Jar and native dependencies to lib/ directory -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <!-- Version inherited from ProFI-Pom -->
-
-        <executions>
-
-          <execution>
-            <id>copy-dependencies</id>
-            <phase>package</phase>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <includeTypes>jar</includeTypes>
-              <outputDirectory>${project.build.directory}/lib</outputDirectory>
-              <overWriteIfNewer>true</overWriteIfNewer>
-            </configuration>
-          </execution>
-
- 
-        </executions>
-
-      </plugin>
-
-
+     
     </plugins>
   </build>
 
