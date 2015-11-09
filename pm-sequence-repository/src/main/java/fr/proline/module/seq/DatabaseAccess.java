@@ -52,28 +52,35 @@ public final class DatabaseAccess {
 	private DatabaseAccess() {
 	}
 
+	public static void initDataStoreConnectorFactory() {
+		synchronized (INITIALIZATION_LOCK) {
+			IDataStoreConnectorFactory result = DStoreCustomPoolConnectorFactory.getInstance();
+
+			if (!result.isInitialized()) {
+				/* Initialization holding INITIALIZATION_LOCK */
+				ServiceConfiguration.forcePropertiesFileReload();
+				final String udsDbConfigFileName = ServiceConfiguration.getUDSDbConfigurationFileName();
+
+				if (StringUtils.isEmpty(udsDbConfigFileName)) {
+					throw new IllegalArgumentException("No valid UDS Db Configuration file");
+				} else {
+					LOG.debug("Initializing DataStoreConnectorFactory from [{}] file",
+						udsDbConfigFileName);
+					((DStoreCustomPoolConnectorFactory) result).initialize(udsDbConfigFileName, "SequenceRepository");
+				}
+			}
+			connectorFactory = result;
+		}
+	}
+	
 	public static IDataStoreConnectorFactory getDataStoreConnectorFactory() {
 		IDataStoreConnectorFactory result = null;
 
 		synchronized (INITIALIZATION_LOCK) {
 
 			if (connectorFactory == null) {
-				result = DStoreCustomPoolConnectorFactory.getInstance();
-
-				if (!result.isInitialized()) {
-					/* Initialization holding INITIALIZATION_LOCK */
-					ServiceConfiguration.forcePropertiesFileReload();
-					final String udsDbConfigFileName = ServiceConfiguration.getUDSDbConfigurationFileName();
-
-					if (StringUtils.isEmpty(udsDbConfigFileName)) {
-						throw new IllegalArgumentException("No valid UDS Db Configuration file");
-					} else {
-						LOG.debug("Initializing DataStoreConnectorFactory from [{}] file",
-							udsDbConfigFileName);
-						((DStoreCustomPoolConnectorFactory) result).initialize(udsDbConfigFileName, "SequenceRepository");
-					}
-				}
-				connectorFactory = result;
+				/* Initialization holding INITIALIZATION_LOCK */
+				initDataStoreConnectorFactory();
 			} else {
 				result = connectorFactory;
 			}
@@ -83,7 +90,7 @@ public final class DatabaseAccess {
 		return result;
 	}
 
-	public static IDataStoreConnectorFactory getDataStoreConnectorFactory(final Map<Object, Object> udsDbProperties) {
+	private static IDataStoreConnectorFactory getDataStoreConnectorFactory(final Map<Object, Object> udsDbProperties) {
 		IDataStoreConnectorFactory result = null;
 
 		synchronized (INITIALIZATION_LOCK) {
@@ -118,17 +125,17 @@ public final class DatabaseAccess {
 	/**
 	 * Retrieve current SEQ DatabaseConnector instance.
 	 * 
-	 * @param serviceSide
+	 * @param allowCreateDB
 	 *            <code>true</code> if called by service (lazy initialization of SEQ Database) or <code>false</code> if called by client (provider use)
 	 * @return SEQ DatabaseConnector or <code>null</code> if DatabaseConnector cannot be initialized
 	 */
-	public static IDatabaseConnector getSEQDatabaseConnector(final boolean serviceSide) {
+	public static IDatabaseConnector getSEQDatabaseConnector(final boolean allowCreateDB) {
 		IDatabaseConnector result = null;
 
 		synchronized (INITIALIZATION_LOCK) {
 
 			if (seqDatabaseConnector == null) {
-				result = createSEQDatabaseConnector(serviceSide, null);
+				result = createSEQDatabaseConnector(allowCreateDB, null);
 
 				seqDatabaseConnector = result;
 			} else {
@@ -143,19 +150,19 @@ public final class DatabaseAccess {
 	/**
 	 * Retrieve current SEQ DatabaseConnector instance.
 	 * 
-	 * @param serviceSide
+	 * @param allowCreateDB
 	 *            <code>true</code> if called by service (lazy initialization of SEQ Database) or <code>false</code> if called by client (provider use)
 	 * @param udsDbProperties
 	 *            Properties to use to create UDSConnector
 	 * @return SEQ DatabaseConnector or <code>null</code> if DatabaseConnector cannot be initialized
 	 */
-	public static IDatabaseConnector getSEQDatabaseConnector(final boolean serviceSide, final Map<Object, Object> udsDbProperties) {
+	public static IDatabaseConnector getSEQDatabaseConnector(final boolean allowCreateDB, final Map<Object, Object> udsDbProperties) {
 		IDatabaseConnector result = null;
 
 		synchronized (INITIALIZATION_LOCK) {
 
 			if (seqDatabaseConnector == null) {
-				result = createSEQDatabaseConnector(serviceSide, udsDbProperties);
+				result = createSEQDatabaseConnector(allowCreateDB, udsDbProperties);
 
 				seqDatabaseConnector = result;
 			} else {
@@ -168,7 +175,7 @@ public final class DatabaseAccess {
 	}
 
 	/* Called holding INITIALIZATION_LOCK */
-	private static IDatabaseConnector createSEQDatabaseConnector(final boolean serviceSide, final Map<Object, Object> udsDbProperties) {
+	private static IDatabaseConnector createSEQDatabaseConnector(final boolean allowCreateDB, final Map<Object, Object> udsDbProperties) {
 		IDatabaseConnector seqDbConnector = null;
 		IDataStoreConnectorFactory dataStoreConnectorFactory = null;
 		if (udsDbProperties != null && !udsDbProperties.isEmpty())
@@ -186,7 +193,7 @@ public final class DatabaseAccess {
 
 			if (seqDb == null) {
 
-				if (serviceSide) {
+				if (allowCreateDB) {
 					LOG.info("No ExternalDb for SEQ Db creating a new one");
 					seqDbConnector = createSEQDatabase(udsDbConnector, udsEM);
 				} else {
