@@ -1,5 +1,6 @@
 package fr.proline.module.seq.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -139,7 +140,7 @@ public final class RetrieveService {
 			for (int i = size - 1; i >= 0; i--) {
 				Long pId = projectIds.get(i);
 				if (pId != null) {
-					ProjectHandler.fillSEDbIdentifiersBySEDb(pId.longValue(), seDbIdentifiers, forceUpdate);
+					ProjectHandler.fillSEDbIdentifiersBySEDb(pId.longValue(), seDbIdentifiers, null, forceUpdate);
 					DatabaseAccess.getDataStoreConnectorFactory().closeProjectConnectors(pId);
 				}
 			}
@@ -152,7 +153,7 @@ public final class RetrieveService {
 			int size = projectIds.size();
 			for (int i = size - 1; i >= 0; i--) {
 				Long pId = projectIds.get(i);
-				ProjectHandler.fillProteinMatchesProperties(pId.longValue(), forceUpdate);
+				ProjectHandler.fillProteinMatchesProperties(pId.longValue(), null, forceUpdate);
 				DatabaseAccess.getDataStoreConnectorFactory().closeProjectConnectors(pId);
 			}
 		}
@@ -171,8 +172,9 @@ public final class RetrieveService {
 
 		final long start = System.currentTimeMillis();
 		final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = new HashMap<>();
-
-		ProjectHandler.fillSEDbIdentifiersBySEDb(projectId, seDbIdentifiers, forceUpdate);
+		ArrayList<Long> rsmIds = new ArrayList<Long>();
+		rsmIds.add(783l);
+		ProjectHandler.fillSEDbIdentifiersBySEDb(projectId, seDbIdentifiers, rsmIds, forceUpdate);
 
 		if (seDbIdentifiers.isEmpty()) {
 			LOG.warn("NO SEDbIdentifier found");
@@ -180,7 +182,7 @@ public final class RetrieveService {
 			totalHandledSEDbIdents = BioSequenceRetriever.retrieveBioSequences(seDbIdentifiers);
 		}
 
-		ProjectHandler.fillProteinMatchesProperties(projectId, forceUpdate);
+		ProjectHandler.fillProteinMatchesProperties(projectId, rsmIds, forceUpdate);
 
 		final long end = System.currentTimeMillis();
 		final long duration = end - start;
@@ -189,6 +191,32 @@ public final class RetrieveService {
 			projectId, totalHandledSEDbIdents, duration);
 	}
 
+	public static void retrieveBioSequencesForRsms(final long projectId, List<Long> rsmIds, boolean forceUpdate) {
+
+		LOG.debug("retrieveBioSequencesForRsms running ");
+
+		int totalHandledSEDbIdents = 0;
+
+		final long start = System.currentTimeMillis();
+		final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = new HashMap<>();
+
+		ProjectHandler.fillSEDbIdentifiersBySEDb(projectId, seDbIdentifiers, rsmIds, forceUpdate);
+
+		if (seDbIdentifiers.isEmpty()) {
+			LOG.warn("NO SEDbIdentifier found");
+		} else {
+			totalHandledSEDbIdents = BioSequenceRetriever.retrieveBioSequences(seDbIdentifiers);
+		}
+
+		ProjectHandler.fillProteinMatchesProperties(projectId, rsmIds, forceUpdate);
+
+		final long end = System.currentTimeMillis();
+		final long duration = end - start;
+
+		LOG.info("Total retrieveBioSequencesForRsms in Project(#{}) execution : {} SEDbIdentifiers handled in {} ms",
+			projectId, totalHandledSEDbIdents, duration);
+	}
+	
 	private static List<Long> getAllProjectIds(EntityManager udsEM) {
 
 		List<Long> projectIds = null;
