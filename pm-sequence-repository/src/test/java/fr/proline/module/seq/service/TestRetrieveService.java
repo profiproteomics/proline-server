@@ -1,8 +1,6 @@
 package fr.proline.module.seq.service;
 
-import org.apache.commons.logging.Log;
 import org.junit.Ignore;
-import org.junit.Test;
 
 /**
  * Manual test : requires PostgreSQL connection.
