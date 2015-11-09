@@ -1,10 +1,6 @@
 package fr.proline.module.seq.util;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
-
-import fr.proline.module.seq.util.HashUtil;
 
 public class HashTest {
 
