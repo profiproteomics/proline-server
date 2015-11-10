@@ -1,6 +1,5 @@
 package fr.proline.module.seq.service;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -172,9 +171,7 @@ public final class RetrieveService {
 
 		final long start = System.currentTimeMillis();
 		final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = new HashMap<>();
-		ArrayList<Long> rsmIds = new ArrayList<Long>();
-		rsmIds.add(783l);
-		ProjectHandler.fillSEDbIdentifiersBySEDb(projectId, seDbIdentifiers, rsmIds, forceUpdate);
+		ProjectHandler.fillSEDbIdentifiersBySEDb(projectId, seDbIdentifiers, null, forceUpdate);
 
 		if (seDbIdentifiers.isEmpty()) {
 			LOG.warn("NO SEDbIdentifier found");
@@ -182,7 +179,7 @@ public final class RetrieveService {
 			totalHandledSEDbIdents = BioSequenceRetriever.retrieveBioSequences(seDbIdentifiers);
 		}
 
-		ProjectHandler.fillProteinMatchesProperties(projectId, rsmIds, forceUpdate);
+		ProjectHandler.fillProteinMatchesProperties(projectId, null, forceUpdate);
 
 		final long end = System.currentTimeMillis();
 		final long duration = end - start;
