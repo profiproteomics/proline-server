@@ -429,20 +429,19 @@ public class ProjectHandler {
 					
 					// get the properties of the RSM to test if update needed
 					final ResultSummary rsm = msiEM.find(ResultSummary.class, rsmId);
-					JsonParser parser = new JsonParser();//VDS TODO ? Use jackson as for ORM DxxQuant object
-					JsonObject array = parser.parse("{}").getAsJsonObject();
-					if (!forceUpdate) {
-						String properties = rsm.getSerializedProperties();						
-						array = null;
-						try {
-							array = parser.parse(properties).getAsJsonObject();
-						} catch (Exception e) {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("error accessing project id: " + projectId + " (missing JSON): forcing project work...");								
-							}
-							array = parser.parse("{}").getAsJsonObject(); // this to avoid error if processing a dataset that has no serialized properties
-						}
-					}
+					String properties = rsm.getSerializedProperties();
+					JsonParser parser = new JsonParser(); //VDS TODO ? Use jackson as for ORM DxxQuant object 
+					JsonObject array = null;
+					try {
+						array = parser.parse(properties).getAsJsonObject();
+				    } catch (Exception e) {
+				    	if (LOG.isDebugEnabled()) {
+				    		LOG.debug("error accessing project id: " + projectId + " (missing JSON): forcing project work...");								
+				    	}
+				    	array = parser.parse("{}").getAsJsonObject(); // this to avoid error if processing a dataset that has no serialized properties
+				    }
+					   
+					
 
 					int psIdcount = 0;
 					
