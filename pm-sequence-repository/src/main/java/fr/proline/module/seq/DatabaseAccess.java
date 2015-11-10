@@ -81,9 +81,9 @@ public final class DatabaseAccess {
 			if (connectorFactory == null) {
 				/* Initialization holding INITIALIZATION_LOCK */
 				initDataStoreConnectorFactory();
-			} else {
-				result = connectorFactory;
-			}
+			} 
+			result = connectorFactory;
+			
 
 		} // End of synchronized block on INITIALIZATION_LOCK
 
