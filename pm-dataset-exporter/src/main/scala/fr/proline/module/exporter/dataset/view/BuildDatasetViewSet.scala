@@ -472,23 +472,25 @@ object BuildDatasetViewSet extends LazyLogging {
   
   private def getSpectrumData(msQueryIdByPeptideMatchId: Map[Long, Long], execContext: IExecutionContext): Map[Long, Double] = {
     var spectrumBySpectrumId: Map[Long, Double] = Map()
-    var ids: String = msQueryIdByPeptideMatchId.values.toList.mkString(",")
-    
-    val jdbcWork = new JDBCWork() {
+    if (msQueryIdByPeptideMatchId.values.toList.length > 0){
+      var ids: String = msQueryIdByPeptideMatchId.values.toList.mkString(",")
 
-      override def execute(con: Connection) {
+      val jdbcWork = new JDBCWork() {
 
-        val stmt = con.prepareStatement("select msq.id, s.first_time from spectrum s, ms_query msq where msq.id IN ("+ids+") AND msq.spectrum_id = s.id ")
-        val sqlSpectra = stmt.executeQuery()
-        while (sqlSpectra.next) {
-          var msQueryId = sqlSpectra.getLong("id")
-          var firstTime = sqlSpectra.getDouble("first_time")
-          spectrumBySpectrumId += msQueryId -> firstTime
-        }
-        stmt.close()
-      } // End of jdbcWork anonymous inner class
+        override def execute(con: Connection) {
+
+          val stmt = con.prepareStatement("select msq.id, s.first_time from spectrum s, ms_query msq where msq.id IN (" + ids + ") AND msq.spectrum_id = s.id ")
+          val sqlSpectra = stmt.executeQuery()
+          while (sqlSpectra.next) {
+            var msQueryId = sqlSpectra.getLong("id")
+            var firstTime = sqlSpectra.getDouble("first_time")
+            spectrumBySpectrumId += msQueryId -> firstTime
+          }
+          stmt.close()
+        } // End of jdbcWork anonymous inner class
+      }
+      execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
     }
-    execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
     spectrumBySpectrumId
   }
 
