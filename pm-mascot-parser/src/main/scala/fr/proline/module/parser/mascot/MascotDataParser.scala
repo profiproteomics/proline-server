@@ -630,29 +630,45 @@ class MascotDataParser(
     nbrMatches
   }
 
-   private def computeRelativeProbabilities(assignments: Seq[(PeptideMatch, Seq[LocatedPtm])] ) = {
-    val confidences = new HashMap[PeptideMatch, Float]()
-    val summedProb = new HashMap[LocatedPtm, Float]()
-    val _r = (s1:Float, si:Float, md10Prob:Float) => scala.math.pow(10,md10Prob*(s1 - si)).toFloat
-    var sum = 0.0f
-    val s1 = assignments(0)._1.score
-    for ((peptideMatch, varPtms)  <- assignments) {
-      val v = _r( -s1 , -peptideMatch.score , 0.1f )
-      sum += v
-      confidences(peptideMatch) = v
+  private def computeRelativeProbabilities(assignments: Seq[(PeptideMatch, Seq[LocatedPtm])], md10Prob: Float = 0.1f) = {
+
+    val confidenceByPepMatch = new HashMap[PeptideMatch, Float]()
+    val confidenceSumBySite = new HashMap[LocatedPtm, Float]()
+    val calcConfidence = (s1: Float, si: Float) => scala.math.pow(10, md10Prob * (s1 - si)).toFloat
+
+    var peptideMatchesConfidenceSum = 0.0f
+    val firstRankPepMatchScore = assignments(0)._1.score
+
+    for ((peptideMatch, varPtms) <- assignments) {
+
+      // DBO: why compute the minus values => it could be done in the calcConfidence function
+      val confidence = calcConfidence(-firstRankPepMatchScore, -peptideMatch.score)
+
+      // Update peptide match confidence
+      confidenceByPepMatch(peptideMatch) = confidence
+
+      // Update total confidence for all peptide matches
+      peptideMatchesConfidenceSum += confidence
+
+      // Update confidence value of each PTM site
       for (ptm <- varPtms) {
-        summedProb(ptm) = summedProb.getOrElse(ptm, 0.0f) + v
+        confidenceSumBySite(ptm) = confidenceSumBySite.getOrElse(ptm, 0.0f) + confidence
       }
     }
 
-    for ((peptideMatch, varPtms) <- assignments) {
-      val siteProperties = peptideMatch.properties.get.ptmSiteProperties.getOrElse(new PeptideMatchPTMSiteProperties)
-      var probabilities = new HashMap[String, Float]()
+    for ((pepMatch, varPtms) <- assignments) {
+
+      val mascotDeltaScore = confidenceByPepMatch(pepMatch) / peptideMatchesConfidenceSum
+
+      val probabilityByPtmString = Map.newBuilder[String, Float]
       for (ptm <- varPtms) {
-        probabilities += ptm.toReadableString -> summedProb(ptm) / sum
+        probabilityByPtmString += ptm.toReadableString -> confidenceSumBySite(ptm) / peptideMatchesConfidenceSum
       }
-      siteProperties.mascotPtmSiteProperties = Some(new MascotPtmSiteProperties(mascotDeltaScore = Some(confidences(peptideMatch) / sum), siteProbabilities = probabilities.toMap))
-      peptideMatch.properties.get.ptmSiteProperties = Some(siteProperties)
+
+      // Update peptide match PTM site properties
+      val ptmSiteProperties = pepMatch.properties.get.ptmSiteProperties.getOrElse(PeptideMatchPtmSiteProperties())
+      ptmSiteProperties.setMascotDeltaScore(Some(mascotDeltaScore))
+      ptmSiteProperties.setMascotProbabilityBySite(probabilityByPtmString.result)
     }
 
   }
