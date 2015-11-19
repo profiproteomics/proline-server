@@ -71,15 +71,19 @@ abstract class AbstractPeptideMatchView extends AbstractProtSetToTypicalProtMatc
 
     val pepMatch = allPepMatchesBuildingCtx.pepMatch
     val seqMatch = allPepMatchesBuildingCtx.seqMatch
+    val pepMatchPropsOpt = pepMatch.properties
+    
+    // If defined pepMatchPropsOpt and ptmSiteProperties
+    val (ptmScore, ptmSites) = if (pepMatchPropsOpt.isDefined && pepMatchPropsOpt.get.getPtmSiteProperties.isDefined) {
+      val ptmSiteProperties = pepMatchPropsOpt.get.getPtmSiteProperties.get
+      
+      val score = "%.2f".format(ptmSiteProperties.getMascotDeltaScore.getOrElse(0.0f))
+      val sites = ptmSiteProperties.getMascotProbabilityBySite.map { case (k, v) => 
+        k + " = " + "%.2f".format(v)
+      }
+      
+      (score, sites.mkString(","))
 
-   val (ptm_score, ptm_sites) = if (pepMatch.properties.isDefined && pepMatch.properties.get.ptmSiteProperties.isDefined) {
-      val siteProperties = pepMatch.properties.get.ptmSiteProperties.get
-      if (siteProperties.mascotPtmSiteProperties.isDefined)  {
-        val mascotPtmSite = siteProperties.mascotPtmSiteProperties.get
-        val score = "%.2f".format(mascotPtmSite.mascotDeltaScore.getOrElse(0.0f))
-        val sites = mascotPtmSite.siteProbabilities.map({ case(k,v) => k+" = "+"%.2f".format(v) }).mkString(",")
-        (score, sites)
-      } else ("", "")
     } else ("", "")
     
     val peptide = pepMatch.peptide
@@ -122,8 +126,8 @@ abstract class AbstractPeptideMatchView extends AbstractProtSetToTypicalProtMatc
       fields.END.toString -> seqMatch.end,
       fields.RESIDUE_BEFORE.toString -> resBefore,
       fields.RESIDUE_AFTER.toString -> resAfter,
-      fields.PTM_SCORE.toString() -> ptm_score,
-      fields.SITES_CONFIDENCE.toString() -> ptm_sites,      
+      fields.PTM_SCORE.toString() -> ptmScore,
+      fields.SITES_CONFIDENCE.toString() -> ptmSites,      
       fields.PROTEIN_SET_ID.toString -> protSetId,
       fields.ACCESSION.toString -> protMatch.accession,
       fields.DESCRIPTION.toString -> protMatch.description,

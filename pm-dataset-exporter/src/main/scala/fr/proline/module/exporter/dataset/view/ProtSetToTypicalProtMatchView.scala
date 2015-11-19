@@ -159,19 +159,23 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
     val resBefore = if (pepMatch == null) null else if (seqMatch.residueBefore == '\0') '-' else seqMatch.residueBefore
     val resAfter = if (pepMatch == null) null else if (seqMatch.residueAfter == '\0') '-' else seqMatch.residueAfter
 
-    val (ptm_score, ptm_sites) = {
-    if (pepMatch == null) {
-      ("", "")
-    } else if (pepMatch.properties.isDefined && pepMatch.properties.get.ptmSiteProperties.isDefined) {
-      val siteProperties = pepMatch.properties.get.ptmSiteProperties.get
-      if (siteProperties.mascotPtmSiteProperties.isDefined)  {
-        val mascotPtmSite = siteProperties.mascotPtmSiteProperties.get
-        val score = ExportConfigManager.format(dcf2, mascotPtmSite.mascotDeltaScore.getOrElse(0.0f)).toString
-        val sites = mascotPtmSite.siteProbabilities.map({ case(k,v) => k+" = "+ExportConfigManager.format(dcf2, v) }).mkString(",")
-        (score, sites)
+    val (ptmScore, ptmSites) = if (pepMatch == null ) ("", "")
+    else {
+      val pepMatchPropsOpt = pepMatch.properties
+      
+      // If defined pepMatchPropsOpt and ptmSiteProperties
+      if (pepMatchPropsOpt.isDefined && pepMatchPropsOpt.get.getPtmSiteProperties.isDefined) {
+        val ptmSiteProperties = pepMatchPropsOpt.get.getPtmSiteProperties.get
+        
+        val score = ptmSiteProperties.getMascotDeltaScore.getOrElse(0.0f)
+        val sites = ptmSiteProperties.getMascotProbabilityBySite.map { case(k,v) => 
+          k+" = "+ExportConfigManager.format(dcf2, v)
+        }
+          
+        ( ExportConfigManager.format(dcf2,score).toString, sites.mkString(",") )
       } else ("", "")
-    } else ("", "")
     }
+    
     val dbProtMatchesCount = {
       if (identDS.allProtMatchSetByPepId == null || pepMatch == null) null
       else if (identDS.allProtMatchSetByPepId.get(pepMatch.peptideId).isDefined) {
@@ -362,10 +366,10 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
           exportMap += (fields.addField(f.title) -> resAfter)
         }
         case ExportConfigConstant.FIELD_PSM_PTM_SCORE => {
-          exportMap += (fields.addField(f.title) -> ptm_score)
+          exportMap += (fields.addField(f.title) -> ptmScore)
         }
         case ExportConfigConstant.FIELD_PSM_PTM_SITES_CONFIDENCE => {
-          exportMap += (fields.addField(f.title) -> ptm_sites)
+          exportMap += (fields.addField(f.title) -> ptmSites)
         }
         case ExportConfigConstant.FIELD_PROTEIN_SETS_QUANTI_STATUS => {
           if (isQuanti && protSetQuantiBuildingCtx.masterQuantProteinSet != null) {
