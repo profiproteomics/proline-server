@@ -669,6 +669,7 @@ class MascotDataParser(
       val ptmSiteProperties = pepMatch.properties.get.ptmSiteProperties.getOrElse(PeptideMatchPtmSiteProperties())
       ptmSiteProperties.setMascotDeltaScore(Some(mascotDeltaScore))
       ptmSiteProperties.setMascotProbabilityBySite(probabilityByPtmString.result)
+      pepMatch.properties.get.ptmSiteProperties = Some(ptmSiteProperties)
     }
 
   }
