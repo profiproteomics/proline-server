@@ -572,7 +572,9 @@ class MascotResultFile(
 
           peaksAsStr.foreach { peakAsStr =>
             val values = peakAsStr.split(":")
-            peaks += Tuple2(values(0).toDouble, values(1).toFloat)
+            if( values.isEmpty == false ) {
+              peaks += (values(0).toDouble -> values(1).toFloat)
+            }
           }
 
           // Sort peaks by moz and build moz and intensity lists
@@ -581,7 +583,9 @@ class MascotResultFile(
             intensityList += peak._2
           }
 
-        } else {
+        }
+        
+        if (mozList.isEmpty) {
           logger.debug("Spectrum of query#" + initialId + " is empty")
         }
 
