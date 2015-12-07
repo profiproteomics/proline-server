@@ -1,20 +1,18 @@
 package fr.proline.cortex.service.misc
 
 import java.io.File
-
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.StringUtils
-import fr.proline.cortex.service.IRemoteService
 import fr.proline.cortex.util.FileBrowser
 import fr.proline.cortex.util.MountPoint
 import fr.proline.cortex.util.MountPointRegistry
 import fr.proline.cortex.util.WorkDirectoryRegistry
-import fr.proline.cortex.util.jsonrpc.JSONRPC2Utils
-import fr.proline.cortex.util.jsonrpc.ProfiJSONRPC2Response
+import fr.proline.jms.service.api.IRemoteService
+import fr.proline.jms.util.jsonrpc.JSONRPC2Utils
+import fr.proline.jms.util.jsonrpc.ProfiJSONRPC2Response
 
 /**
  * Define JMS Service to get information on Proline Server FileSystem.
