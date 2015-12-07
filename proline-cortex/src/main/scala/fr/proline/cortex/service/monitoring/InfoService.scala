@@ -2,18 +2,15 @@ package fr.proline.cortex.service.monitoring
 
 import java.net.NetworkInterface
 import java.util.UUID
-
 import scala.Array.canBuildFrom
-
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.StringUtils.LINE_SEPARATOR
-import fr.proline.cortex.NodeConfig
-import fr.proline.cortex.ServiceRegistry
-import fr.proline.cortex.service.IRemoteService
 import fr.proline.util.version.VersionHelper
+import fr.proline.jms.util.NodeConfig
+import fr.proline.jms.ServiceRegistry
+import fr.proline.jms.service.api.IRemoteService
 
 /**
  * Simple "info" Service :

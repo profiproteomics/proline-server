@@ -4,12 +4,12 @@ import scala.Array.canBuildFrom
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.primitives.toLong
-import fr.proline.cortex.service.AbstractRemoteProcessService
 import fr.proline.cortex.service.dps.msi.ValidateResultSet
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.core.service.uds.IdentificationTreeValidator
+import fr.proline.jms.service.api.AbstractRemoteProcessService
 
 /**
  *  Define JMS Service which validates all RS associated to Identification dataset of specific DS hierarchy, and creates appropriates ResultSummaries. 

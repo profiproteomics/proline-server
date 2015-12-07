@@ -1,6 +1,5 @@
 package fr.proline.cortex.service.dps.uds
 
-import fr.proline.cortex.service.AbstractRemoteProcessService
 import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import fr.proline.core.orm.uds.RawFile
@@ -8,6 +7,7 @@ import fr.proline.cortex.util.MountPointRegistry
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.core.orm.uds.Run
+import fr.proline.jms.service.api.AbstractRemoteProcessService
 
 /**
  *  Define JMS Service wich allows to register a raw file in UDS database

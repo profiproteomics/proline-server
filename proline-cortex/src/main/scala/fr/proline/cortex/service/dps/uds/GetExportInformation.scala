@@ -11,8 +11,8 @@ import fr.proline.core.service.msq.QuantMethodType
 import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.core.orm.uds.{ Dataset => UdsDataset }
 import fr.proline.core.service.msq.AbundanceUnit
-import fr.proline.cortex.service.AbstractRemoteProcessService
 import fr.proline.cortex.util.DbConnectionHelper
+import fr.proline.jms.service.api.AbstractRemoteProcessService
 
 /**
  * Define a JMS Service to :

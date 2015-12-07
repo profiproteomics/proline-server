@@ -1,6 +1,6 @@
 package fr.proline.cortex.service.monitoring
 
-import fr.proline.cortex.service.ISingleThreadedService
+import fr.proline.jms.service.api.ISingleThreadedService
 
 class SingleThreadedInfoService extends InfoService with ISingleThreadedService {
   
