@@ -189,6 +189,11 @@
     	<artifactId>Proline-Databases</artifactId>
     	<version>${core.version}</version>
     </dependency>
+    <dependency>
+    	<groupId>fr.proline</groupId>
+    	<artifactId>Proline-Node</artifactId>
+    	<version>0.0.1-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 
   <build>
