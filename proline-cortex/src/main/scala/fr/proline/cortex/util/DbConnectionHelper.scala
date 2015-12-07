@@ -4,9 +4,9 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.proline.admin.service.db.SetupProline
 import fr.proline.core.orm.util.DataStoreConnectorFactory
 import fr.proline.repository.IDataStoreConnectorFactory
-import fr.proline.cortex.NodeConfig
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.BuildExecutionContext
+import fr.proline.jms.util.NodeConfig
 
 object DbConnectionHelper extends LazyLogging {
 
