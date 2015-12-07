@@ -35,34 +35,59 @@ object SpectraListViewFields extends IViewFieldEnumeration {
   val SHARED = Field("shared")
   val CONFIDENCE = Field("confidence")
   val PROT_INDEX = Field("N")
+  val RT_SOURCE = Field("RT Source")
     
 }
 
 class SpectraListView( val identDS: IdentWithSpectrumDataSet ) extends IFixedDatasetView with LazyLogging {
   
+    val rtByPepId = new HashMap[Long,(Float,String)]
     var viewName = "spectrum_list"
-    val fields = SpectraListViewFields
- 
+    val fields = SpectraListViewFields 
+    val isQuantiData = identDS.masterQuantPepByPepId.isDefined
+    val masterQuantPepByPepId = identDS.masterQuantPepByPepId.get
+    val spectrumByPepMatchID = identDS.spectrumByPepMatchId
+    
     case class MyBuildingContext( proteinset : ProteinSet, typicalProtMatch : ProteinMatch , peptideMatch : PeptideMatch, fragMatch : FragmentMatch , peptide : Peptide, protIndex: Int) extends IRecordBuildingContext
     
     def buildRecord( buildingContext: IRecordBuildingContext ): Map[String,Any] = {
       
-      val recordContext : MyBuildingContext = buildingContext.asInstanceOf[MyBuildingContext]
-      val spectrumByPepMatchID = identDS.spectrumByPepMatchId
+      val recordContext : MyBuildingContext = buildingContext.asInstanceOf[MyBuildingContext]      
       val protSet = recordContext.proteinset
       val pepMatch = recordContext.peptideMatch
       val spectrum = spectrumByPepMatchID(pepMatch.id)
       val shared = identDS.sharedPepMatchIds.contains(pepMatch.id)
       val seq = recordContext.peptide.sequence     
+      val pepId = recordContext.peptide.id
       
       //Calculate precursor mass
       val precMoz = massToMoz(recordContext.peptide.calculatedMass, pepMatch.charge)
 
+      //Get RT information
+      var rt : Float = Float.NaN;
+      var sourceRT = "";
+
+    if (rtByPepId.contains(pepId)) {
+      rt = rtByPepId(pepId)._1
+      sourceRT = rtByPepId(pepId)._2
+    } else {
+      if (isQuantiData && masterQuantPepByPepId.contains(pepId)) {
+        rt = masterQuantPepByPepId(pepId).getBestQuantPeptide.elutionTime / 60 // Export in minutes
+        sourceRT = "Apex elution time"
+      } else {
+        if (isQuantiData)
+          logger.warn("*** *** Did not found MasterQuantPep for peptide : " + pepId)
+        rt = spectrum.firstTime
+        sourceRT = "MS/MS elution time"
+      }
+      rtByPepId += (pepId -> (rt, sourceRT))
+    }
+      
        // Build the full record
       Map(
         fields.PREC_MASS.toString -> precMoz,
         fields.FRAG_MASS.toString -> recordContext.fragMatch.moz,
-        fields.RT.toString -> spectrum.firstTime,
+        fields.RT.toString -> rt,
         fields.PROT_DESCRIPTION.toString -> recordContext.typicalProtMatch.description,
         fields.ISOTYPE.toString -> "",
         fields.PROT_NAME.toString -> recordContext.typicalProtMatch.accession,
@@ -76,7 +101,8 @@ class SpectraListView( val identDS: IdentWithSpectrumDataSet ) extends IFixedDat
         fields.FRAG_NBR.toString -> recordContext.fragMatch.aaPosition,
         fields.SHARED.toString -> shared,
         fields.CONFIDENCE.toString() -> '1',
-        fields.PROT_INDEX.toString() -> recordContext.protIndex
+        fields.PROT_INDEX.toString() -> recordContext.protIndex,
+        fields.RT_SOURCE.toString() -> sourceRT
       ).map(r => r._1.toString -> r._2)
       
     }

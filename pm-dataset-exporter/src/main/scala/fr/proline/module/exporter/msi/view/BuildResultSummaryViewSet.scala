@@ -1,12 +1,9 @@
 package fr.proline.module.exporter.msi.view
 
 import java.sql.Connection
-
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.CustomDoubleJacksonSerializer
 import fr.profi.util.serialization.ProfiJSMSerialization
@@ -33,6 +30,9 @@ import fr.proline.module.exporter.commons.config.ExportConfig
 import fr.proline.module.exporter.commons.config.template.ProlineConfigViewSetTemplateAsTSV
 import fr.proline.module.exporter.commons.config.template.ProlineConfigViewSetTemplateAsXLSX
 import fr.proline.repository.util.JDBCWork
+import fr.proline.core.om.provider.msq.impl.SQLMasterQuantPeptideIonProvider
+import fr.proline.core.om.model.msq.MasterQuantPeptideIon
+import fr.proline.core.om.provider.msq.impl.SQLMasterQuantPeptideProvider
 
 object BuildResultSummaryViewSet extends LazyLogging {
 
@@ -234,7 +234,8 @@ object BuildRSMSpectraViewSet extends LazyLogging {
       tmpRsm.resultSet = rsProvider.getResultSet(tmpRsm.getResultSetId)
       tmpRsm
     }
-
+    
+    
     //************* Load PepMatch Info
     //Get All pepMatchId for spectrum search
     val validatedPepMatchIds =  new ArrayBuffer[Long]
@@ -249,7 +250,16 @@ object BuildRSMSpectraViewSet extends LazyLogging {
     
     val validatedPepMatchIdsSet = validatedPepMatchIds.toSet
     val pepMatchesAsStr = validatedPepMatchIdsSet.mkString(",")
-
+    
+    //************* Load MasterQuantPep Info
+    val isQuantiRSM = rsm.resultSet.get.isQuantified //RS should always be set !
+    val mqPepByPepId = if(isQuantiRSM) {
+      val masterQuantPepProvider = new SQLMasterQuantPeptideProvider(msiSQLCtx, psSQLCtx)
+      val rsmMQPeptides = masterQuantPepProvider.getQuantResultSummariesMQPeptides(Seq(rsm.id))    
+      val allMqPepsByPepId =  rsmMQPeptides.groupBy(mqPep => if(mqPep.getPeptideId.isDefined) mqPep.getPeptideId.get else -1l)
+      Some(allMqPepsByPepId.map(entry => entry._1 -> entry._2.head))
+     } else None
+    
     //************* Load Spectrum Info 
     val spectrumProvider = new SQLSpectrumProvider(msiSQLCtx)
     val spectrumIdByPepMatchId = {
@@ -290,7 +300,7 @@ object BuildRSMSpectraViewSet extends LazyLogging {
     if(spectrumMatchesByPeptMatchId.size != validatedPepMatchIdsSet.size)
       logger.warn(" *** Some spectrum Matches are missing for RSM "+rsm.id+" !!!!")
       
-    return apply(IdentWithSpectrumDataSet( rsm, sharedPepMatchIds.toSet.toArray, spectrumByPepMathID, spectrumMatchesByPeptMatchId ), viewSetName, viewSetTemplate, null)
+    return apply(IdentWithSpectrumDataSet( rsm, sharedPepMatchIds.toSet.toArray, spectrumByPepMathID, spectrumMatchesByPeptMatchId, mqPepByPepId ), viewSetName, viewSetTemplate, null)
 
   }
      

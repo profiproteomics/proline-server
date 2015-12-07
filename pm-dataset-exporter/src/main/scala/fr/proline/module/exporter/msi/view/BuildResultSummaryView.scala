@@ -2,7 +2,6 @@ package fr.proline.module.exporter.msi.view
 
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
-
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi.SpectrumMatch
 import fr.proline.core.om.model.msi.ProteinMatch
@@ -12,6 +11,7 @@ import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.module.exporter.api.view.IDataView
 import fr.proline.module.exporter.api.view.IFixedDatasetView
 import fr.proline.module.exporter.api.view.IViewTypeEnumeration
+import fr.proline.core.om.model.msq.MasterQuantPeptide
 
 case class MsiIdentDataSet (
   projectName: String,
@@ -83,7 +83,8 @@ case class IdentWithSpectrumDataSet (
   resultSummary: ResultSummary,
   sharedPepMatchIds : Array[Long],
   spectrumByPepMatchId : Map[Long, Spectrum],
-  spectrumMatchesByPeptMatchId : HashMap[Long, SpectrumMatch]
+  spectrumMatchesByPeptMatchId : HashMap[Long, SpectrumMatch],
+  masterQuantPepByPepId :  Option[Map[Long, MasterQuantPeptide]]
 )
 
 object BuildRSMSpectraView {
