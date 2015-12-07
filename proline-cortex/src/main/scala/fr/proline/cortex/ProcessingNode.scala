@@ -12,13 +12,6 @@ import org.hornetq.api.jms.JMSFactoryType
 import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory
 import org.hornetq.core.remoting.impl.netty.TransportConstants
 import com.typesafe.scalalogging.LazyLogging
-import Constants.MAX_PORT
-import NodeConfig.ENABLE_IMPORTS
-import NodeConfig.JMS_SERVER_HOST
-import NodeConfig.JMS_SERVER_PORT
-import NodeConfig.PROLINE_SERVICE_REQUEST_QUEUE_NAME
-import NodeConfig.SERVICE_THREAD_POOL_SIZE
-import ProcessingNode.EXECUTOR_SHUTDOWN_TIMEOUT
 import fr.profi.util.StringUtils
 import fr.profi.util.ThreadLogger
 import fr.proline.cortex.service.admin.CreateProject
@@ -33,6 +26,7 @@ import fr.proline.cortex.service.dps.msi.GenerateMSDiagReport
 import fr.proline.cortex.service.dps.msi.GenerateSpectrumMatches
 import fr.proline.cortex.service.dps.msi.ImportResultFilesDecoyRegExp
 import fr.proline.cortex.service.dps.msi.ImportResultFilesprotMatchDecoyRule
+import fr.proline.cortex.service.dps.msi.ImportValidateGenerateSM
 import fr.proline.cortex.service.dps.msi.MergeResultSets
 import fr.proline.cortex.service.dps.msi.UpdateSpectraParams
 import fr.proline.cortex.service.dps.msi.ValidateResultSet
@@ -47,11 +41,17 @@ import fr.proline.cortex.service.monitoring.SingleThreadedInfoService
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.MountPointRegistry
 import fr.proline.cortex.util.WorkDirectoryRegistry
+import fr.proline.jms.ServiceRegistry
+import fr.proline.jms.ServiceRunner
+import fr.proline.jms.SingleThreadedServiceRunner
+import fr.proline.jms.util.Constants
+import fr.proline.jms.util.MonitoringTopicPublisherRunner
+import fr.proline.jms.util.NodeConfig
 import javax.jms.Connection
 import javax.jms.ConnectionFactory
 import javax.jms.ExceptionListener
 import javax.jms.JMSException
-import fr.proline.cortex.service.dps.msi.ImportValidateGenerateSM
+import fr.proline.cortex.service.misc.WaitService
 
 object ProcessingNode extends LazyLogging {
 
@@ -61,7 +61,7 @@ object ProcessingNode extends LazyLogging {
   def main(args: Array[String]) {
     Thread.currentThread.setUncaughtExceptionHandler(new ThreadLogger(logger.underlying.getName))
 
-    val server = new ProcessingNode(JMS_SERVER_HOST, JMS_SERVER_PORT)
+    val server = new ProcessingNode(NodeConfig.getJMSServerHost, NodeConfig.getJMSServerPort)
     addShutdownHook(server)
 
     /* Start JMS Consumers */
@@ -96,7 +96,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
   /* Constructor checks */
   require(!StringUtils.isEmpty(jmsServerHost), "Invalid JMS Server Host name or address")
 
-  require(((0 < jmsServerPort) && (jmsServerPort <= MAX_PORT)), "Invalid JMS Server port")
+  require(((0 < jmsServerPort) && (jmsServerPort <= Constants.MAX_PORT)), "Invalid JMS Server port")
 
   private val m_lock = new Object()
 
@@ -118,7 +118,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
       try {
         // Step 1. Directly instantiate the JMS Queue object.
-        val serviceRequestQueue = HornetQJMSClient.createQueue(PROLINE_SERVICE_REQUEST_QUEUE_NAME)
+        val serviceRequestQueue = HornetQJMSClient.createQueue(NodeConfig.PROLINE_SERVICE_REQUEST_QUEUE_NAME)
 
         logger.debug("JMS Queue : " + serviceRequestQueue)
 
@@ -172,9 +172,9 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         }
 
         /* Add Parallelizable SeviceRunner */
-        logger.debug("Starting " + SERVICE_THREAD_POOL_SIZE + " Parallelizable ServiceRunners")
+        logger.debug("Starting " + NodeConfig.SERVICE_THREAD_POOL_SIZE + " Parallelizable ServiceRunners")
 
-        for (i <- 1 to SERVICE_THREAD_POOL_SIZE) {
+        for (i <- 1 to NodeConfig.SERVICE_THREAD_POOL_SIZE) {
           val parallelizableSeviceRunner = new ServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier)
           m_executor.submit(parallelizableSeviceRunner)
         }
@@ -221,7 +221,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     // TODO Remove after test
     ServiceRegistry.addService(new SingleThreadedInfoService())
 
-    if (ENABLE_IMPORTS) {
+    if (NodeConfig.ENABLE_IMPORTS) {
       ServiceRegistry.addService(new FileSystem())
       logger.info("This node HANDLE Result Files Import")
     } else {
@@ -252,6 +252,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new CreateProject())
     ServiceRegistry.addService(new RegisterRawFile())
     ServiceRegistry.addService(new ImportValidateGenerateSM())
+    ServiceRegistry.addService(new WaitService())
   }
 
   /**
