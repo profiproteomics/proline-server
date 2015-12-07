@@ -1,6 +1,6 @@
 package fr.proline.cortex.service.dps.msq
 
-import fr.proline.cortex.service.AbstractRemoteProcessService
+
 import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import fr.proline.core.algo.msq.ProfilizerConfig
@@ -14,8 +14,9 @@ import fr.proline.core.om.provider.lcms.impl.SQLRunProvider
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.lcms.IRunProvider
 import fr.proline.core.service.uds.Quantifier
-import fr.proline.cortex.service.ISingleThreadedService
 import fr.proline.cortex.util.MountPointPathConverter
+import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.jms.service.api.ISingleThreadedService
 
 
 /**

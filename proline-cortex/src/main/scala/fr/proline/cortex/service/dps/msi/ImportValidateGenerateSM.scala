@@ -30,13 +30,13 @@ import fr.proline.core.orm.uds.Aggregation.ChildNature
 import fr.proline.core.orm.uds.repository.AggregationRepository
 import fr.proline.core.service.msi.ResultFileImporter
 import fr.proline.core.service.msi.ResultSetValidator
-import fr.proline.cortex.service.AbstractRemoteProcessService
-import fr.proline.cortex.service.ISingleThreadedService
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.MountPointRegistry
 import fr.proline.module.fragment_match.service.SpectrumMatchesGenerator
 import fr.proline.core.orm.uds.IdentificationDataset
 import fr.proline.core.orm.uds.repository.DatasetRepository
+import fr.proline.jms.service.api.ISingleThreadedService
+import fr.proline.jms.service.api.AbstractRemoteProcessService
 
 
 

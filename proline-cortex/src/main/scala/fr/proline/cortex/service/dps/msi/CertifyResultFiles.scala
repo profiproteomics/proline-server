@@ -12,7 +12,6 @@ import fr.proline.core.om.provider.msi.ProteinFakeProvider
 import fr.proline.core.om.provider.msi.SeqDbFakeProvider
 import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.cortex.service.AbstractRemoteProcessService
 import fr.profi.util.serialization.ProfiJson._
 import fr.proline.core.service.msi.ResultFileCertifier
 import fr.proline.cortex.util.MountPointRegistry
@@ -22,6 +21,7 @@ import java.io.File
 import fr.proline.core.dal.BuildExecutionContext
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.cortex.util.DbConnectionHelper
+import fr.proline.jms.service.api.AbstractRemoteProcessService
 
 /**
  *  Define JMS Service to :

@@ -7,8 +7,8 @@ import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.core.algo.msi.TypicalProteinChooserRule
 import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.core.service.msi.RSMTypicalProteinChooser
-import fr.proline.cortex.service.AbstractRemoteProcessService
 import fr.proline.cortex.util.DbConnectionHelper
+import fr.proline.jms.service.api.AbstractRemoteProcessService
 
 /**
  *  Define JMS Service wich allows to select the ProteinSets typical protein using regexp based rules (on protien accession or description). 

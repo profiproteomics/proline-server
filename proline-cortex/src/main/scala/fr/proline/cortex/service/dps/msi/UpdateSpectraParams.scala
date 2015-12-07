@@ -1,15 +1,14 @@
 package fr.proline.cortex.service.dps.msi
 
-import fr.proline.cortex.service.IRemoteService
 import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
-import fr.proline.cortex.service.AbstractRemoteProcessService
 import fr.profi.util.serialization.ProfiJson._
 import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.core.service.msi.SpectraParamsUpdater
 import fr.proline.cortex.util.DbConnectionHelper
+import fr.proline.jms.service.api.AbstractRemoteProcessService
 
 /**
  *  Define JMS Service wich allows to update scan, cycle and time information of spectra belonging to specified peaklists.

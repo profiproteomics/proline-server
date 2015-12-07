@@ -5,12 +5,11 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.core.dal.BuildExecutionContext
-import fr.proline.cortex.service.AbstractRemoteProcessService
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.profi.util.primitives._
-
 import fr.proline.module.quality.msdiag._
 import fr.proline.module.quality.msdiag.service.MSDiagReportGenerator
+import fr.proline.jms.service.api.AbstractRemoteProcessService
 
 /**
  *  Define JMS Service which generates MSDiag report

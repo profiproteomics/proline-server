@@ -1,6 +1,6 @@
 package fr.proline.cortex.service.dps.msq
 
-import fr.proline.cortex.service.AbstractRemoteProcessService
+
 import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import fr.profi.util.serialization.ProfiJson._
@@ -8,6 +8,7 @@ import fr.proline.core.algo.msq.ProfilizerConfig
 import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.core.service.msq.QuantProfilesComputer
+import fr.proline.jms.service.api.AbstractRemoteProcessService
 
 
 /**

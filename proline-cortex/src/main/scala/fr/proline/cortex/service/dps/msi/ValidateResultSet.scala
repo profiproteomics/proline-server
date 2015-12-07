@@ -1,12 +1,11 @@
 package fr.proline.cortex.service.dps.msi
 
 import scala.Array.canBuildFrom
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
+
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.DatabaseConnectionContext
@@ -30,11 +29,8 @@ import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.core.service.msi.ResultSetValidator
 import fr.proline.core.service.msi.ValidationConfig
-import fr.proline.cortex.service.IRemoteService
-import fr.proline.cortex.util.jsonrpc.JSONRPC2Utils
-import fr.proline.cortex.util.jsonrpc.ProfiJSONRPC2Response
-import fr.proline.cortex.service.AbstractRemoteProcessService
 import fr.proline.cortex.util.DbConnectionHelper
+import fr.proline.jms.service.api.AbstractRemoteProcessService
 
 case class FilterConfig(
   parameter: String,

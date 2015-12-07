@@ -4,8 +4,6 @@ package fr.proline.cortex.service.dps.msq
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.universe.typeOf
-import fr.proline.cortex.service.AbstractRemoteProcessService
-import fr.proline.cortex.service.ISingleThreadedService
 import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import fr.proline.core.dal.BuildExecutionContext
@@ -17,6 +15,8 @@ import fr.proline.core.service.uds.CreateSCQuantitation
 import fr.proline.core.orm.uds.Dataset
 import fr.proline.core.algo.msq.SpectralCountConfig
 import fr.proline.core.service.msq.QuantifyMasterQuantChannel
+import fr.proline.jms.service.api.ISingleThreadedService
+import fr.proline.jms.service.api.AbstractRemoteProcessService
 
 /**
  *  Define JMS Service which allows to compute spectral count for proteins of result summaries associated to experimental design's QuantChannel.

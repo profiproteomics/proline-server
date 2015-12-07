@@ -1,6 +1,5 @@
 package fr.proline.cortex.service.dps.msi
 
-import fr.proline.cortex.service.AbstractRemoteProcessService
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
 import scala.util.matching.Regex
@@ -22,8 +21,9 @@ import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import java.io.File
 import fr.proline.core.om.provider.msi.ProteinFakeProvider
 import fr.proline.core.om.provider.msi.SeqDbFakeProvider
-import fr.proline.cortex.service.ISingleThreadedService
 import fr.proline.cortex.util.DbConnectionHelper
+import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.jms.service.api.ISingleThreadedService
 
 trait IResultFileDescriptor {
 

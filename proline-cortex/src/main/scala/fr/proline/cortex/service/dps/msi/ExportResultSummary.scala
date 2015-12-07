@@ -4,6 +4,7 @@ import java.io.File
 import java.util.HashMap
 import java.util.UUID
 import scala.Array.canBuildFrom
+import scala.collection.mutable.ArrayBuffer
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.StringUtils
@@ -11,31 +12,30 @@ import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.BuildExecutionContext
-import fr.proline.cortex.Constants
-import fr.proline.cortex.NodeConfig
-import fr.proline.cortex.service.AbstractRemoteProcessService
+import fr.proline.core.orm.uds.{ Dataset => UdsDataset }
+import fr.proline.core.orm.uds.Dataset.DatasetType
+import fr.proline.core.orm.uds.QuantitationMethod
+import fr.proline.core.service.msq.AbundanceUnit
+import fr.proline.core.service.msq.QuantMethodType
+import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.WorkDirectoryFactory
+import fr.proline.jms.util.Constants
+import fr.proline.jms.util.NodeConfig
 import fr.proline.module.exporter.commons.ViewSetExporter
+import fr.proline.module.exporter.commons.config.ExportConfigConstant
+import fr.proline.module.exporter.commons.config.ExportConfigManager
+import fr.proline.module.exporter.dataset.view.BuildDatasetViewSet
 import fr.proline.module.exporter.msi.template.AllPSMViewSetTemplateAsXLSX
 import fr.proline.module.exporter.msi.template.IRMaLikeFullViewSetTemplateAsXLSX
 import fr.proline.module.exporter.msi.template.IRMaLikeViewSetTemplateAsTSV
 import fr.proline.module.exporter.msi.template.IRMaLikeViewSetTemplateAsXLSX
 import fr.proline.module.exporter.msi.template.ProlineViewSetTemplateAsXLSX
 import fr.proline.module.exporter.msi.template.SpectraListAsTSV
+import fr.proline.module.exporter.msi.view.BuildRSMSpectraViewSet
 import fr.proline.module.exporter.msi.view.BuildResultSummaryViewSet
 import fr.proline.module.exporter.mzidentml.MzIdExporter
 import fr.proline.module.exporter.pridexml.PrideExporterService
-import fr.proline.module.exporter.commons.config.ExportConfigConstant
-import fr.proline.core.orm.uds.Dataset.DatasetType
-import fr.proline.core.orm.uds.QuantitationMethod
-import fr.proline.core.orm.uds.{ Dataset => UdsDataset }
-import fr.proline.module.exporter.commons.config.ExportConfigManager
-import fr.proline.core.service.msq.QuantMethodType
-import fr.proline.core.service.msq.AbundanceUnit
-import fr.proline.module.exporter.dataset.view.BuildDatasetViewSet
-import scala.collection.mutable.ArrayBuffer
-import fr.proline.cortex.util.DbConnectionHelper
-import fr.proline.module.exporter.msi.view.BuildRSMSpectraViewSet
+import fr.proline.jms.service.api.AbstractRemoteProcessService
 
 /**
  * Define a JMS Service to :
