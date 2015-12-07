@@ -33,11 +33,12 @@ class PrideExporterService (
 
     val msiDbHelper = new MsiDbHelper(msiSQLCtx)
 
+    //VDS : Not used !
     // TODO: use peaklist_relation instead ?
-    val msiIds = msiDbHelper.getResultSetsMsiSearchIds(Array(rsm.getResultSetId))
-    val pklIds = DoJDBCReturningWork.withEzDBC(msiSQLCtx, { msiEzDBC =>
-      msiEzDBC.selectLongs("SELECT peaklist_id FROM msi_search WHERE id IN (" + msiIds.mkString(",") + ")")
-    })
+//    val msiIds = msiDbHelper.getResultSetsMsiSearchIds(Array(rsm.getResultSetId))
+    //    val pklIds = DoJDBCReturningWork.withEzDBC(msiSQLCtx, { msiEzDBC =>
+//      msiEzDBC.selectLongs("SELECT peaklist_id FROM msi_search WHERE id IN (" + msiIds.mkString(",") + ")")
+//    })
     
     val exporter = new PrideExporter(rsm, unimodIdByPtmId, execCtx)
     exporter.exportResultSummary(filePath, extraDataMap)
