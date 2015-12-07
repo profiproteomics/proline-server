@@ -1,11 +1,11 @@
 package fr.proline.cortex.service.admin
 
-import fr.proline.cortex.service.AbstractRemoteProcessService
 import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import scala.collection.mutable.HashMap
 import fr.proline.admin.service.db.SetupProline
 import collection.JavaConversions._
+import fr.proline.jms.service.api.AbstractRemoteProcessService
 
 
 /**

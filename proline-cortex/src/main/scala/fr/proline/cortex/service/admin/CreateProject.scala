@@ -1,12 +1,12 @@
 package fr.proline.cortex.service.admin
 
-import fr.proline.cortex.service.AbstractRemoteProcessService
-import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.cortex.util.DbConnectionHelper
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.admin.service.db.CreateProjectDBs
 import fr.proline.admin.service.db.SetupProline
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.cortex.util.DbConnectionHelper
+import fr.proline.jms.service.api.AbstractRemoteProcessService
 
 /**
  * JMS Service to create a new Project in current Proline DataStore. 

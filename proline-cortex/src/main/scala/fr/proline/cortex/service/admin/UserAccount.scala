@@ -1,24 +1,21 @@
 package fr.proline.cortex.service.admin
 
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
-import fr.proline.cortex.service.IRemoteService
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
+import java.lang.Boolean
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
-import fr.proline.cortex.util.jsonrpc.JSONRPC2Utils
+import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
+import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
+import com.typesafe.scalalogging.LazyLogging
+import fr.profi.util.security.EncryptionManager
+import fr.proline.admin.service.db.SetupProline
 import fr.proline.admin.service.user.CreateUser
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.dal.BuildExecutionContext
-import fr.proline.cortex.util.jsonrpc.ProfiJSONRPC2Response
-import fr.proline.core.orm.util.DataStoreConnectorFactory
-import fr.proline.cortex.util.DbConnectionHelper
-import com.typesafe.scalalogging.LazyLogging
-import fr.proline.core.service.uds.UserUpdator
-import java.lang.Boolean
-import fr.proline.admin.service.db.SetupProline
 import fr.proline.core.service.uds.UserAuthenticator
-import fr.profi.util.security.EncryptionManager
-
+import fr.proline.core.service.uds.UserUpdator
+import fr.proline.cortex.util.DbConnectionHelper
+import fr.proline.jms.service.api.IRemoteService
+import fr.proline.jms.util.jsonrpc.JSONRPC2Utils
+import fr.proline.jms.util.jsonrpc.ProfiJSONRPC2Response
 
 /**
  * JMS Service to manage UserAccount. 
