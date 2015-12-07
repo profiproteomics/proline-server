@@ -51,7 +51,7 @@ import javax.jms.Connection
 import javax.jms.ConnectionFactory
 import javax.jms.ExceptionListener
 import javax.jms.JMSException
-import fr.proline.cortex.service.misc.WaitService
+//import fr.proline.cortex.service.misc.WaitService
 
 object ProcessingNode extends LazyLogging {
 
@@ -252,8 +252,8 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new CreateProject())
     ServiceRegistry.addService(new RegisterRawFile())
     ServiceRegistry.addService(new ImportValidateGenerateSM())
-    ServiceRegistry.addService(new WaitService())
-  }
+//    ServiceRegistry.addService(new WaitService())
+ }
 
   /**
    * Gracefully closes JMS Connection and stops the Executor running Consumers receive loop.
