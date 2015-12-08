@@ -572,7 +572,7 @@ class MascotResultFile(
 
           peaksAsStr.foreach { peakAsStr =>
             val values = peakAsStr.split(":")
-            if( values.isEmpty == false ) {
+            if( values.length >= 2 ) {
               peaks += (values(0).toDouble -> values(1).toFloat)
             }
           }
