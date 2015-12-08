@@ -168,11 +168,15 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView w
         val ptmSiteProperties = pepMatchPropsOpt.get.getPtmSiteProperties.get
         
         val score = ptmSiteProperties.getMascotDeltaScore.getOrElse(0.0f)
-        val sites = ptmSiteProperties.getMascotProbabilityBySite.map { case(k,v) => 
-          k+" = "+ExportConfigManager.format(dcf2, v)
+        var sitesEx = "";
+        if (ptmSiteProperties.getMascotProbabilityBySite != null){
+          val sites = ptmSiteProperties.getMascotProbabilityBySite.map { case(k,v) => 
+            k+" = "+ExportConfigManager.format(dcf2, v)
+          }
+          sitesEx = sites.mkString(",") 
         }
           
-        ( ExportConfigManager.format(dcf2,score).toString, sites.mkString(",") )
+        ( ExportConfigManager.format(dcf2,score).toString, sitesEx )
       } else ("", "")
     }
     
