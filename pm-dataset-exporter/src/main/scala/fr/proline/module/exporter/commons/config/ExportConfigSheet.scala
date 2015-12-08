@@ -106,7 +106,7 @@ object ExportConfigSheet {
   def getAllMasterQuantPeptideIon(): ExportConfigSheet = {
     val sheet: ExportConfigSheet = new ExportConfigSheet(
       ExportConfigConstant.SHEET_MASTER_QUANT_PEPTIDE_ION,
-      "peptide ion from protein sets",
+      "peptide ions from protein sets",
       ExportConfigConstant.PRESENTATION_SHEET_COLUMNS,
       ExportConfigField.getAllMasterQuantPeptideIon()
     )
