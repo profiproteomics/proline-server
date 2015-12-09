@@ -8,6 +8,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import org.junit.After
 import org.junit.Assert
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -146,18 +147,23 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
      * 
      * Note that Methyl and Dimethyl will be present for every peptide
      */
-    // R.TINEEQMRQCYVKITK.I has Carbamidomethyl
-    assertEquals("Carbamidomethyl (C10); Methyl (Any C-term); Dimethyl (Any N-term)", rs.peptides.filter(_.sequence.equals("TINEEQMRQCYVKITK")).head.readablePtmString)
-    // R.NQILIFRIM._ has Met-Hse (and should have a PROT_C_TERM ptm if such ptm had been selected before search)
-    assertEquals("Methyl (Any C-term); Dimethyl (Any N-term); Met->Hse (Any C-term)", rs.peptides.filter(_.sequence.equals("NQILIFRIM")).head.readablePtmString)
-    // _.YSRIAPPVTACDAENLTK.D has Carbamidomethyl and Acetyl (it's N-term but does not start with M)
-    assertEquals("Carbamidomethyl (C11); Acetyl (Protein N-term); Methyl (Any C-term); Dimethyl (Any N-term)", rs.peptides.filter(_.sequence.equals("YSRIAPPVTACDAENLTK")).head.readablePtmString)
-    // _.MTTKNLETK.V has Met-loss and Acetyl (it's N-term and starts with M)
-    assertEquals("Met-loss (Protein N-term); Acetyl (Protein N-term); Methyl (Any C-term); Dimethyl (Any N-term)", rs.peptides.filter(_.sequence.equals("MTTKNLETK")).head.readablePtmString)
-    // M.DPRECVCMSGGICMCGDNCK.C has Carbamidomethyl, Acetyl and Met-loss
-    assertEquals("Carbamidomethyl (C5); Carbamidomethyl (C7); Carbamidomethyl (C13); Carbamidomethyl (C15); Carbamidomethyl (C19); Met-loss (Protein N-term); Acetyl (Protein N-term); Methyl (Any C-term); Dimethyl (Any N-term)", rs.peptides.filter(_.sequence.equals("DPRECVCMSGGICMCGDNCK")).head.readablePtmString)
-    logger.debug("ABUptm: "+rs.peptides.filter(_.sequence.equals("DPRECVCMSGGICMCGDNCK")).head.readablePtmString)
+    assertTrue(compareReadablePtmString(rs.peptides.filter(_.sequence.equals("TINEEQMRQCYVKITK")).head.readablePtmString, Array("Carbamidomethyl (C10)", "Methyl (Any C-term)", "Dimethyl (Any N-term)")))
+    assertTrue(compareReadablePtmString(rs.peptides.filter(_.sequence.equals("NQILIFRIM")).head.readablePtmString, Array("Methyl (Any C-term)", "Dimethyl (Any N-term)", "Met->Hse (Any C-term)")))
+    assertTrue(compareReadablePtmString(rs.peptides.filter(_.sequence.equals("YSRIAPPVTACDAENLTK")).head.readablePtmString, Array("Carbamidomethyl (C11)", "Acetyl (Protein N-term)", "Methyl (Any C-term)", "Dimethyl (Any N-term)")))
+    assertTrue(compareReadablePtmString(rs.peptides.filter(_.sequence.equals("MTTKNLETK")).head.readablePtmString, Array("Met-loss (Protein N-term)", "Acetyl (Protein N-term)", "Methyl (Any C-term)", "Dimethyl (Any N-term)")))
+    assertTrue(compareReadablePtmString(rs.peptides.filter(_.sequence.equals("DPRECVCMSGGICMCGDNCK")).head.readablePtmString, Array("Carbamidomethyl (C5)", "Carbamidomethyl (C7)", "Carbamidomethyl (C13)", "Carbamidomethyl (C15)", "Carbamidomethyl (C19)", "Met-loss (Protein N-term)", "Acetyl (Protein N-term)", "Methyl (Any C-term)", "Dimethyl (Any N-term)")))
     logger.debug("TEST [" + method + "] OK: parsing is successful")
+  }
+  
+  private def compareReadablePtmString(readablePtmString: String, ptms: Array[String]): Boolean = {
+    if(readablePtmString.equals(ptms.mkString(") ")))
+      true
+    else {
+      if(readablePtmString.split("; ").sorted.mkString.equals(ptms.sorted.mkString)) {
+        logger.warn("ReadablePtmString matches the expected readablePtmString but PTMs are sorted differently")
+        true
+      } else false
+    }
   }
   
   /*
