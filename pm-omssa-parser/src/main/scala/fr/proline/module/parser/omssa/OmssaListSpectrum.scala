@@ -78,7 +78,7 @@ class OmssaListSpectrum(omxFile: File, peaklistId: Long, instrumentConfig: Instr
                             }
                           case "MSSpectrum_iscale" => 
                             scale = MSSpectrum_children.collectDescendantText(false).toFloat
-                          case "MSSpectrum_ids" => spectrumTitle = MSSpectrum_children.childElementCursor().advance().collectDescendantText(false).replace('\\', '/')
+                          case "MSSpectrum_ids" => spectrumTitle = MSSpectrum_children.childElementCursor().advance().collectDescendantText(false).replace("\\\"", "\"").replace('\\', '/')
                           case _ =>
                         }
                         MSSpectrum_children.advance()
