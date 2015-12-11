@@ -8,14 +8,17 @@
     </encoder>
   </appender>
 
-  <appender name="fileAppender" class="ch.qos.logback.core.FileAppender">
+  <appender name="RollingfileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <append>true</append>
-    <file>logs/proline-cortex_log.txt</file>
 
-    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-      <level>INFO</level>
-    </filter>
-
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>logs/proline_cortex_log.%d{yyyy-MM-dd}.txt</fileNamePattern>
+    </rollingPolicy>
+    
+    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+      <maxFileSize>50MB</maxFileSize>
+    </triggeringPolicy>
+    
     <encoder>
       <!-- TTCCLayout -->
       <pattern>%date{dd MMM yyyy HH:mm:ss.SSS} [%thread] %-5level %logger{36} %mdc - %msg%n</pattern>
@@ -49,8 +52,7 @@
 
   <root level="WARN">
     <appender-ref ref="STDOUT" />
-    <appender-ref ref="fileAppender" />
-    <appender-ref ref="RollingAppender" />
+    <appender-ref ref="RollingfileAppender" />
   </root>
 
 </configuration>
