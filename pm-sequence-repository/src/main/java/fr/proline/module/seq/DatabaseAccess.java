@@ -72,7 +72,7 @@ public final class DatabaseAccess {
 			connectorFactory = result;
 		}
 	}
-	
+
 	public static IDataStoreConnectorFactory getDataStoreConnectorFactory() {
 		IDataStoreConnectorFactory result = null;
 
@@ -81,9 +81,8 @@ public final class DatabaseAccess {
 			if (connectorFactory == null) {
 				/* Initialization holding INITIALIZATION_LOCK */
 				initDataStoreConnectorFactory();
-			} 
+			}
 			result = connectorFactory;
-			
 
 		} // End of synchronized block on INITIALIZATION_LOCK
 

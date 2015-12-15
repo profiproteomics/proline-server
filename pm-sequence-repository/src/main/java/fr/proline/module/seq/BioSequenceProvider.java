@@ -60,7 +60,7 @@ public final class BioSequenceProvider {
 	public static Map<String, List<BioSequenceWrapper>> findBioSequencesBySEDbIdentValues(final EntityManager seqEM, final Collection<String> values) {
 
 		final Map<String, List<BioSequenceWrapper>> result = new HashMap<>();
-		final List<SEDbIdentifier> seDbIdentifiers = SEDbIdentifierRepository.findSEDbIdentByValues(seqEM,values);
+		final List<SEDbIdentifier> seDbIdentifiers = SEDbIdentifierRepository.findSEDbIdentByValues(seqEM, values);
 		if ((seDbIdentifiers != null) && !seDbIdentifiers.isEmpty()) {
 
 			for (final SEDbIdentifier seDbIdent : seDbIdentifiers) {
@@ -84,7 +84,7 @@ public final class BioSequenceProvider {
 	}
 
 	private static BioSequenceWrapper buildBioSequenceWrapper(final SEDbIdentifier seDbIdent) {
-		assert(seDbIdent != null) : "buildBioSequenceWrapper() seDbIdent is null";
+		assert (seDbIdent != null) : "buildBioSequenceWrapper() seDbIdent is null";
 
 		final BioSequence bioSequence = seDbIdent.getBioSequence();// Should not be null
 		final long sequenceId = bioSequence.getId();
@@ -114,7 +114,7 @@ public final class BioSequenceProvider {
 
 	private static RepositoryIdentifierWrapper buildRepositoryIdentifierWrapper(
 		final RepositoryIdentifier repositoryIdent) {
-		assert(repositoryIdent != null) : "buildRepositoryIdentifierWrapper() repositoryIdent is null";
+		assert (repositoryIdent != null) : "buildRepositoryIdentifierWrapper() repositoryIdent is null";
 
 		final Repository repository = repositoryIdent.getRepository();// Should not be null
 		final String repositoryName = repository.getName();// Should not be null
