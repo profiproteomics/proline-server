@@ -36,8 +36,8 @@ public class RunNode {
 
 	private static Integer EXECUTOR_SHUTDOWN_TIMEOUT = 30; // 30 seconds
 	private static final Logger LOG = LoggerFactory.getLogger(RunNode.class);
-	private static final Object m_lock = new Object();	
-	
+	private static final Object m_lock = new Object();
+
 	private String m_jmsServerHost = null;
 	private Integer m_jmsServerPort = null;
 
@@ -112,7 +112,7 @@ public class RunNode {
 
 				/* Force initialization of seq_db on service starting */
 				DatabaseAccess.getSEQDatabaseConnector(true);
-				
+
 				initServices();
 
 				/* Create Executor */
@@ -121,8 +121,9 @@ public class RunNode {
 				MonitoringTopicPublisherRunner serviceMonitoringNotifier = new MonitoringTopicPublisherRunner(m_connection);
 				m_executor.submit(serviceMonitoringNotifier);
 
-				/* Add SingleThreadedServiceRunner */				
-				Set<String> handledSingleThreadedServiceNames =(Set<String>) JavaConversions.setAsJavaSet(ServiceRegistry.getSingleThreadedServices().keySet());
+				/* Add SingleThreadedServiceRunner */
+				Set<String> handledSingleThreadedServiceNames = (Set<String>) JavaConversions
+						.setAsJavaSet(ServiceRegistry.getSingleThreadedServices().keySet());
 
 				for (String serviceName : handledSingleThreadedServiceNames) {
 					SingleThreadedServiceRunner singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection,
@@ -176,44 +177,44 @@ public class RunNode {
 				LOG.debug("Closing JMS Connection");
 
 				try {
-		          m_connection.close();
-		          LOG.info("JMS Connection closed");
-		        } catch (JMSException  exClose) {
-		        	LOG.error("Error closing JMS Connection", exClose);		        
-		        }	
+					m_connection.close();
+					LOG.info("JMS Connection closed");
+				} catch (JMSException exClose) {
+					LOG.error("Error closing JMS Connection", exClose);
+				}
 			}
 
 			if (m_executor != null) {
 				LOG.debug("Stopping JMS Consumers Executor");
 				m_executor.shutdown();
 
-		        LOG.debug("Waiting " + EXECUTOR_SHUTDOWN_TIMEOUT + " seconds for Executor termination...");
+				LOG.debug("Waiting " + EXECUTOR_SHUTDOWN_TIMEOUT + " seconds for Executor termination...");
 
-		        try {
+				try {
 
-		          if (m_executor.awaitTermination(EXECUTOR_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
-		        	  LOG.info("JMS Consumers Executor terminated");
+					if (m_executor.awaitTermination(EXECUTOR_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
+						LOG.info("JMS Consumers Executor terminated");
 
-		          } else {
-		            List<Runnable> remainingRunnables = m_executor.shutdownNow();
-	            		LOG.info("JMS Consumers Executor terminated remain " + remainingRunnables.size() + " never commenced Runnable(s)");
-		          }
+					} else {
+						List<Runnable> remainingRunnables = m_executor.shutdownNow();
+						LOG.info("JMS Consumers Executor terminated remain " + remainingRunnables.size() + " never commenced Runnable(s)");
+					}
 
-		        } catch (InterruptedException intEx){
-		        	LOG.warn("ExecutorService.awaitTermination() interrupted", intEx);
-		        }
+				} catch (InterruptedException intEx) {
+					LOG.warn("ExecutorService.awaitTermination() interrupted", intEx);
+				}
 
-		      }
+			}
 
-		      LOG.info("JMS Consumers stopped");
-			
+			LOG.info("JMS Consumers stopped");
+
 		}
 	}
-	
-	 private  void initServices() {
 
-		    /* Parallelizable Service */
-//		    ServiceRegistry.addService(new InfoService()) // Monitoring
-		    ServiceRegistry.addService(new RetrieveBioSeqForRSMs());
-	 }
+	private void initServices() {
+
+		/* Parallelizable Service */
+		//		    ServiceRegistry.addService(new InfoService()) // Monitoring
+		ServiceRegistry.addService(new RetrieveBioSeqForRSMs());
+	}
 }
