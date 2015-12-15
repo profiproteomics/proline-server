@@ -11,17 +11,18 @@ import fr.proline.repository.util.JPAUtils;
 
 public final class BioSequenceRepository {
 
-    /* Private constructor (utility class) */
-    private BioSequenceRepository() {
-    }
+	/* Private constructor (utility class) */
+	private BioSequenceRepository() {
+	}
 
-    public static List<BioSequence> findBioSequenceByHashes(final EntityManager seqEM,
-	    final Collection<String> hashes) {
+	public static List<BioSequence> findBioSequenceByHashes(
+		final EntityManager seqEM,
+		final Collection<String> hashes) {
 
-	JPAUtils.checkEntityManager(seqEM);
+		JPAUtils.checkEntityManager(seqEM);
 
-	return JPARepositoryUtils.executeInQueryAsBatch(
-		seqEM.createNamedQuery("findBioSequenceByHashes", BioSequence.class), "hashes", hashes);
-    }
+		return JPARepositoryUtils.executeInQueryAsBatch(
+			seqEM.createNamedQuery("findBioSequenceByHashes", BioSequence.class), "hashes", hashes);
+	}
 
 }
