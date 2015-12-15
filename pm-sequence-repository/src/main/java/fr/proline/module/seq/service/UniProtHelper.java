@@ -57,7 +57,7 @@ public final class UniProtHelper {
 	}
 
 	private static boolean isStandardUniProtName(final String fastaFileName) {
-		assert(!StringUtils.isEmpty(fastaFileName)) : "isStandardUniProtName() invalid fastaFileName";
+		assert (!StringUtils.isEmpty(fastaFileName)) : "isStandardUniProtName() invalid fastaFileName";
 
 		final String normalizedName = fastaFileName.toUpperCase();
 
@@ -67,8 +67,8 @@ public final class UniProtHelper {
 	}
 
 	private static boolean find(final String fastaFileName, final String regex) {
-		assert(!StringUtils.isEmpty(fastaFileName)) : "find() invalid fastaFileName";
-		assert(regex != null) : "find() regex is null";
+		assert (!StringUtils.isEmpty(fastaFileName)) : "find() invalid fastaFileName";
+		assert (regex != null) : "find() regex is null";
 
 		boolean result = false;
 

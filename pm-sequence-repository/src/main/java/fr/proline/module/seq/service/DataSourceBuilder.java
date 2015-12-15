@@ -117,7 +117,7 @@ public class DataSourceBuilder {
 	}
 
 	private static File retrieveLatest(final List<File> files) {
-		assert(files != null) : "retrieveLatest() files List is null";
+		assert (files != null) : "retrieveLatest() files List is null";
 
 		File latest = null;
 

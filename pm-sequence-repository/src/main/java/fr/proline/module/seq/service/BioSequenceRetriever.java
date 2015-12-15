@@ -175,7 +175,7 @@ public final class BioSequenceRetriever {
 	/* Private methods */
 	private static int retrieveBioSequences(final SEDbInstanceWrapper seDbInstanceW, final Set<SEDbIdentifierWrapper> seDbIdentifiers) {
 
-		assert(seDbInstanceW != null) : "retrieveBioSequences() seDbInstanceW is null";
+		assert (seDbInstanceW != null) : "retrieveBioSequences() seDbInstanceW is null";
 		int nHandledSEDbIdents = 0;
 		EntityManager seqEM = null;
 
@@ -208,7 +208,7 @@ public final class BioSequenceRetriever {
 		final SEDbInstanceWrapper seDbInstanceW,
 		final Set<SEDbIdentifierWrapper> seDbIdentifiers,
 		final boolean doRecurse) {
-		assert(seDbInstanceW != null) : "retrieveBioSequences() seDbInstanceW is null";
+		assert (seDbInstanceW != null) : "retrieveBioSequences() seDbInstanceW is null";
 
 		int nHandledSEDbIdents = 0;
 
@@ -458,8 +458,8 @@ public final class BioSequenceRetriever {
 	}
 
 	private static String parseReleaseVersion(final String fastaFileName, final Pattern releasePattern) {
-		assert(fastaFileName != null) : "parseReleaseVersion() fastaFileName is null";
-		assert(releasePattern != null) : "parseReleaseVersion() releasePattern is null";
+		assert (fastaFileName != null) : "parseReleaseVersion() fastaFileName is null";
+		assert (releasePattern != null) : "parseReleaseVersion() releasePattern is null";
 
 		String result = null;
 
@@ -488,7 +488,7 @@ public final class BioSequenceRetriever {
 		final String fastaFileName,
 		final String release,
 		final String parsingRuleReleaseRegex) {
-		assert(fastaFileName != null) : "selectBestFile() fastaFileName is null";
+		assert (fastaFileName != null) : "selectBestFile() fastaFileName is null";
 
 		File result = null;
 
@@ -562,7 +562,7 @@ public final class BioSequenceRetriever {
 	}
 
 	private static Map<String, List<SEDbIdentifierWrapper>> buildIdentbyValuesMap(final Set<SEDbIdentifierWrapper> seDbIdentifiers) {
-		assert(seDbIdentifiers != null) : "buildIdentbyValuesMap() seDbIdentifiers Set is null";
+		assert (seDbIdentifiers != null) : "buildIdentbyValuesMap() seDbIdentifiers Set is null";
 
 		final Map<String, List<SEDbIdentifierWrapper>> result = new HashMap<>();
 
@@ -587,7 +587,7 @@ public final class BioSequenceRetriever {
 		final EntityManager seqEM,
 		final SEDbInstanceWrapper seDbInstanceW,
 		final String fastaFileName) {
-		assert(seDbInstanceW != null) : "loadSEDbInstance() seDbInstanceW is null";
+		assert (seDbInstanceW != null) : "loadSEDbInstance() seDbInstanceW is null";
 
 		final String seDbName = seDbInstanceW.getName();
 		final String sourcePath = seDbInstanceW.getSourcePath();
@@ -647,8 +647,8 @@ public final class BioSequenceRetriever {
 		final EntityManager seqEM,
 		final SEDbInstance seDbInstance,
 		final Map<String, List<SEDbIdentifierWrapper>> identByValues) {
-		assert(seDbInstance != null) : "removeKnownIdentifiers() seDbInstance is null";
-		assert((identByValues != null) && !identByValues.isEmpty()) : "removeKnownIdentifiers() invalid identByValues";
+		assert (seDbInstance != null) : "removeKnownIdentifiers() seDbInstance is null";
+		assert ((identByValues != null) && !identByValues.isEmpty()) : "removeKnownIdentifiers() invalid identByValues";
 
 		final Set<String> distinctIndentValues = identByValues.keySet();
 
@@ -684,8 +684,8 @@ public final class BioSequenceRetriever {
 		final String release,
 		final Date lastModifiedTime,
 		final boolean possibleUniprot) {
-		assert(seDbInstanceW != null) : "loadOrCreateSEDbInstance() seDbInstanceW is null";
-		assert(lastModifiedTime != null) : "loadOrCreateSEDbInstance() lastModifiedTime is null";
+		assert (seDbInstanceW != null) : "loadOrCreateSEDbInstance() seDbInstanceW is null";
+		assert (lastModifiedTime != null) : "loadOrCreateSEDbInstance() lastModifiedTime is null";
 
 		String seDbRelease = null;
 
@@ -741,7 +741,7 @@ public final class BioSequenceRetriever {
 		final EntityManager seqEM,
 		final String seDbName,
 		final boolean possibleUniprot) {
-		assert(!StringUtils.isEmpty(seDbName)) : "loadOrCreateSEDb() invalid seDbName";
+		assert (!StringUtils.isEmpty(seDbName)) : "loadOrCreateSEDb() invalid seDbName";
 
 		SEDb result = SEDbRepository.findSEDbByName(seqEM, seDbName);
 
@@ -807,7 +807,7 @@ public final class BioSequenceRetriever {
 		final EntityManager seqEM,
 		final String seDbName,
 		final Map<SEDbIdentifierWrapper, String> foundSequences) {
-		assert(foundSequences != null) : "loadExistingSEDbIdentifiers() foundSequences Map is null";
+		assert (foundSequences != null) : "loadExistingSEDbIdentifiers() foundSequences Map is null";
 
 		final Map<String, List<SEDbIdentifier>> result = new HashMap<>();// Multimap
 
@@ -848,7 +848,7 @@ public final class BioSequenceRetriever {
 	private static Map<String, BioSequence> loadExistingBioSequences(
 		final EntityManager seqEM,
 		final Map<SEDbIdentifierWrapper, String> foundSequences) {
-		assert(foundSequences != null) : "loadExistingBioSequences() foundSequences Map is null";
+		assert (foundSequences != null) : "loadExistingBioSequences() foundSequences Map is null";
 
 		final Map<String, BioSequence> result = new HashMap<>();
 
@@ -882,7 +882,7 @@ public final class BioSequenceRetriever {
 		final EntityManager seqEM,
 		final String repositoryName,
 		final Map<SEDbIdentifierWrapper, String> foundSequences) {
-		assert(foundSequences != null) : "loadExistingRepositoryIdentifiers() foundSequences Map is null";
+		assert (foundSequences != null) : "loadExistingRepositoryIdentifiers() foundSequences Map is null";
 
 		final Map<String, RepositoryIdentifier> result = new HashMap<>();
 
@@ -920,9 +920,9 @@ public final class BioSequenceRetriever {
 		final SeqContext context,
 		final SEDbIdentifierWrapper seDbIdentW,
 		final String sequence) {
-		assert(context != null) : "handleSEDbIdentifier() context is null";
-		assert(seDbIdentW != null) : "handleSEDbIdentifier() seDbIdentW is null";
-		assert(sequence != null) : "handleSEDbIdentifier() sequence is null";
+		assert (context != null) : "handleSEDbIdentifier() context is null";
+		assert (seDbIdentW != null) : "handleSEDbIdentifier() seDbIdentW is null";
+		assert (sequence != null) : "handleSEDbIdentifier() sequence is null";
 
 		boolean seDbIdentModified = false;
 
@@ -992,9 +992,9 @@ public final class BioSequenceRetriever {
 		final SeqContext context,
 		final SEDbIdentifierWrapper seDbIdentW,
 		final String sequence) {
-		assert(context != null) : "persistNewSEDbIdentifier() context is null";
-		assert(seDbIdentW != null) : "persistNewSEDbIdentifier() seDbIdentW is null";
-		assert(sequence != null) : "persistNewSEDbIdentifier() sequence is null";
+		assert (context != null) : "persistNewSEDbIdentifier() context is null";
+		assert (seDbIdentW != null) : "persistNewSEDbIdentifier() seDbIdentW is null";
+		assert (sequence != null) : "persistNewSEDbIdentifier() sequence is null";
 
 		final SEDbIdentifier result = new SEDbIdentifier();
 		result.setValue(seDbIdentW.getValue());
@@ -1021,8 +1021,8 @@ public final class BioSequenceRetriever {
 
 	/* Must be called holding SEQ_DB_WRITE_LOCK */
 	private static BioSequence loadOrCreateBioSequence(final SeqContext context, final String sequence) {
-		assert(context != null) : "loadOrCreateBioSequence() context is null";
-		assert(sequence != null) : "loadOrCreateBioSequence() sequence is null";
+		assert (context != null) : "loadOrCreateBioSequence() context is null";
+		assert (sequence != null) : "loadOrCreateBioSequence() sequence is null";
 
 		final String hash = HashUtil.calculateSHA256(sequence);
 
@@ -1048,8 +1048,8 @@ public final class BioSequenceRetriever {
 	private static RepositoryIdentifier loadOrCreateRepositoryIdentifier(
 		final SeqContext context,
 		final String value) {
-		assert(context != null) : "loadOrCreateRepositoryIdentifier() context is null";
-		assert(value != null) : "loadOrCreateRepositoryIdentifier() value is null";
+		assert (context != null) : "loadOrCreateRepositoryIdentifier() context is null";
+		assert (value != null) : "loadOrCreateRepositoryIdentifier() value is null";
 
 		final Map<String, RepositoryIdentifier> existingRepositoryIdents = context
 				.getExistingRepositoryIdents();
@@ -1086,9 +1086,9 @@ public final class BioSequenceRetriever {
 		final SeqContext context,
 		final SEDbIdentifier seDbIdentifier,
 		final SEDbIdentifierWrapper seDbIdentW) {
-		assert(context != null) : "updateRepositoryIdentifier() context is null";
-		assert(seDbIdentifier != null) : "updateRepositoryIdentifier() seDbIdentifier is null";
-		assert(seDbIdentW != null) : "updateRepositoryIdentifier() seDbIdentW is null";
+		assert (context != null) : "updateRepositoryIdentifier() context is null";
+		assert (seDbIdentifier != null) : "updateRepositoryIdentifier() seDbIdentifier is null";
+		assert (seDbIdentW != null) : "updateRepositoryIdentifier() seDbIdentW is null";
 
 		final String repositoryIdentValue = seDbIdentW.getRepositoryIdentifier();
 

@@ -37,7 +37,7 @@ public final class RetrieveService {
 	private static final Logger LOG = LoggerFactory.getLogger(RetrieveService.class);
 
 	private static final long TIMER_BEFORE_DELAY = TimeUnit.SECONDS.toMillis(15L);
-	
+
 	public static class RetrieveCommand {
 		@Parameter(names = { "-p", "--project" }, description = "the ID of the single project to process")
 		private Integer projectId = 0;
@@ -51,9 +51,9 @@ public final class RetrieveService {
 		@Parameter(names = { "-f", "--forceUpdate" }, description = "force update of MSIdb result summaries and biosequences (even if already updated)")
 		private boolean forceUpdate = false;
 	}
-	
+
 	private RetrieveService() {
-		
+
 	}
 
 	/**
@@ -68,15 +68,14 @@ public final class RetrieveService {
 
 		final RetrieveCommand params = new RetrieveCommand();
 		JCommander command = new JCommander(params, args);
-		
+
 		command.usage();
-		
+
 		if (params.debug) {
 			ch.qos.logback.classic.Logger prolineLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("fr.proline");
 			prolineLogger.setLevel(Level.DEBUG);
 			LOG.debug("--- Proline Logger set to DEBUG level ");
 		}
-		
 
 		/* Force initialization of seq_db on service starting */
 		DatabaseAccess.getSEQDatabaseConnector(true);
@@ -213,7 +212,7 @@ public final class RetrieveService {
 		LOG.info("Total retrieveBioSequencesForRsms in Project(#{}) execution : {} SEDbIdentifiers handled in {} ms",
 			projectId, totalHandledSEDbIdents, duration);
 	}
-	
+
 	private static List<Long> getAllProjectIds(EntityManager udsEM) {
 
 		List<Long> projectIds = null;

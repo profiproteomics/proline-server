@@ -175,8 +175,8 @@ public class FastaPathsScanner {
 		final File file,
 		final ConcurrentMap<File, Boolean> traversedDirs,
 		final Map<String, List<File>> foundFastaFiles) {
-		assert(file != null) : "scan() file is null";
-		assert(traversedDirs != null) : "scan() traversedDirs Map is null";
+		assert (file != null) : "scan() file is null";
+		assert (traversedDirs != null) : "scan() traversedDirs Map is null";
 
 		final String absolutePathname = file.getAbsolutePath();
 
@@ -217,8 +217,8 @@ public class FastaPathsScanner {
 	}
 
 	private void handleFile(final File file, final Map<String, List<File>> foundFastaFiles) {
-		assert((file != null) && file.isFile()) : "handleFile() invalid file";
-		assert(foundFastaFiles != null) : "handleFile() foundFastaFiles Map is null";
+		assert ((file != null) && file.isFile()) : "handleFile() invalid file";
+		assert (foundFastaFiles != null) : "handleFile() foundFastaFiles Map is null";
 
 		final String fileName = file.getName();
 
