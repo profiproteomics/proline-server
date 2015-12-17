@@ -136,7 +136,7 @@ class OmssaReadFile(val omxFile: File,
                           case "MSSpectrum_number"      => spectrumId = MSSpectrum_children.collectDescendantText(false).toInt
                           case "MSSpectrum_charge"      => precursorCharge = MSSpectrum_children.childElementCursor().advance().collectDescendantText(false).toInt
                           case "MSSpectrum_precursormz" => precursorMz = MSSpectrum_children.collectDescendantText(false).toDouble / 1000
-                          case "MSSpectrum_ids"         => spectrumTitle = MSSpectrum_children.childElementCursor().advance().collectDescendantText(false).replace('\\', '/')
+                          case "MSSpectrum_ids"         => spectrumTitle = MSSpectrum_children.childElementCursor().advance().collectDescendantText(false).replace("\\\"", "\"").replace('\\', '/')
                           case _                        => // there is more information about the spectrum that is not treated (it takes too much memory and it is useless in the resultset, the full set is loaded in eachSpectrum)
                         }
                         MSSpectrum_children.advance()
@@ -553,7 +553,7 @@ class OmssaReadFile(val omxFile: File,
     }
 
     val allChargeStates = new ArrayBuffer[String]()
-    for (i <- minMsChargeState until maxMsChargeState) allChargeStates += i.toString()
+    for (i <- minMsChargeState to maxMsChargeState) allChargeStates += i.toString()
     var chargeStates = ""
     if (allChargeStates.size > 0) chargeStates = allChargeStates.reduceLeft(_ + ", " + _)
     var strTaxonomies = ""
