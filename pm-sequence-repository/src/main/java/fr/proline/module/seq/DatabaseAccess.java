@@ -15,10 +15,10 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.profi.util.StringUtils;
 import fr.proline.core.orm.uds.ExternalDb;
 import fr.proline.core.orm.uds.repository.ExternalDbRepository;
 import fr.proline.core.orm.util.DStoreCustomPoolConnectorFactory;
+import fr.proline.module.seq.config.DBProlineConfig;
 import fr.proline.repository.DatabaseConnectorFactory;
 import fr.proline.repository.DatabaseUpgrader;
 import fr.proline.repository.DriverType;
@@ -58,15 +58,15 @@ public final class DatabaseAccess {
 
 			if (!result.isInitialized()) {
 				/* Initialization holding INITIALIZATION_LOCK */
-				ServiceConfiguration.forcePropertiesFileReload();
-				final String udsDbConfigFileName = ServiceConfiguration.getUDSDbConfigurationFileName();
+				DBProlineConfig.forcePropertiesFileReload();
+				final Map<Object, Object> udsDbConfigProperties = DBProlineConfig.getInstance().getUDSProperties();
 
-				if (StringUtils.isEmpty(udsDbConfigFileName)) {
-					throw new IllegalArgumentException("No valid UDS Db Configuration file");
+				if (udsDbConfigProperties.isEmpty()) {
+					throw new IllegalArgumentException("No valid UDS Db Properties");
 				} else {
-					LOG.debug("Initializing DataStoreConnectorFactory from [{}] file",
-						udsDbConfigFileName);
-					((DStoreCustomPoolConnectorFactory) result).initialize(udsDbConfigFileName, "SequenceRepository");
+					LOG.debug("Initializing DataStoreConnectorFactory using properties [{}] ",
+						udsDbConfigProperties);
+					((DStoreCustomPoolConnectorFactory) result).initialize(udsDbConfigProperties, "SequenceRepository");
 				}
 			}
 			connectorFactory = result;
