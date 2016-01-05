@@ -2,13 +2,13 @@
 <configuration>
   <contextName>Proline Sequence Repository</contextName>
 
-<!--
+
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
       <pattern>%-5level: [%thread] +%-4relative ms  %date{dd MMM yyyy - HH:mm:ss.SSS} %logger{36} - %msg%n</pattern>
     </encoder>
   </appender>
--->
+
 
   <appender name="fileAppender" class="ch.qos.logback.core.FileAppender">
     <append>true</append>
@@ -43,10 +43,10 @@
 
   </appender>
 
-  <logger name="fr.proline" level="INFO" />
+  <logger name="fr.proline" level="DEBUG" />
 
   <root level="WARN">
-    <!-- <appender-ref ref="STDOUT" /> -->
+    <appender-ref ref="STDOUT" /> 
     <appender-ref ref="debugFileAppender" />
     <appender-ref ref="fileAppender" />
   </root>
