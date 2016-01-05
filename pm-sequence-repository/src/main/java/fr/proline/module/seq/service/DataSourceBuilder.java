@@ -10,8 +10,8 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.proline.module.seq.ServiceConfiguration;
 import fr.profi.util.StringUtils;
+import fr.proline.module.seq.config.SeqRepoConfig;
 
 /**
  * Builds DataSource from <em>sourcePath</em>.
@@ -91,15 +91,15 @@ public class DataSourceBuilder {
 		return result;
 	}
 
-	private Map<String, List<File>> getFastaFiles() {
+	protected Map<String, List<File>> getFastaFiles() {
 		Map<String, List<File>> fastaFiles = null;
 
 		synchronized (m_foundFastaFilesLock) {
 
 			if (m_foundFastaFiles == null) {
-				final String[] localFASTAPaths = ServiceConfiguration.getLocalFASTAPaths();
+				final List<String> localFASTAPaths = SeqRepoConfig.getInstance().getFastaDirectories();
 
-				if ((localFASTAPaths != null) && (localFASTAPaths.length > 0)) {
+				if ((localFASTAPaths != null) && (!localFASTAPaths.isEmpty())) {
 					fastaFiles = FastaPathsScanner.scanPaths(new FastaPathsScanner(), localFASTAPaths);
 
 					m_foundFastaFiles = fastaFiles;// Cache scanned files Map

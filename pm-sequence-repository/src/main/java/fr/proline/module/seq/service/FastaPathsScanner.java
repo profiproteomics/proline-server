@@ -33,18 +33,18 @@ public class FastaPathsScanner {
 	 *            List of abstract paths to scan. Must not be <code>null</code> or empty and must contains valid path names (existing regular files or
 	 *            directories). If an abstract path is a directory it will be scanned recursively.
 	 */
-	public static Map<String, List<File>> scanPaths(final FastaPathsScanner scanner, final String[] paths) {
+	public static Map<String, List<File>> scanPaths(final FastaPathsScanner scanner, final List<String> paths) {
 
 		if (scanner == null) {
 			throw new IllegalArgumentException("Scanner is null");
 		}
 
-		if ((paths == null) || (paths.length == 0)) {
+		if ( (paths == null) || (paths.isEmpty())) {
 			throw new IllegalArgumentException("Invalid paths array");
 		}
 
 		/* Check each given path */
-		final List<File> filePaths = new ArrayList<>(paths.length);
+		final List<File> filePaths = new ArrayList<>(paths.size());
 
 		for (final String pathname : paths) {
 
@@ -163,13 +163,9 @@ public class FastaPathsScanner {
 	 * 
 	 * @param file
 	 *            Abstract file to scan : if it denotes a directory, elements are scanned recursively. Must not be <code>null</code>.
-	 * @param skippedDirs
-	 *            List of regex <code>Pattern</code> matching directory names to skip while processing paths.
 	 * @param traversedDirs
 	 *            Map of already traversed directories to avoid loop in presence of symbolic links. Must not be <code>null</code>.
-	 * @param data
-	 *            Internal data : can be used by client <code>handleFile</code> method implementation. Note : client method has responsibility to handle locking
-	 *            and synchronization on <code>data</code> object.
+	 * 
 	 */
 	private void scan(
 		final File file,
