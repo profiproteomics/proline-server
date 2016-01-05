@@ -3,6 +3,7 @@ package fr.proline.module.seq.service;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -16,8 +17,10 @@ public class ScannerTest {
 
 	@Test
 	public void testScanPaths() {
+		List<String> fastaPath = new ArrayList<>();
+		fastaPath.add(FASTA_FILE_PATH);
 		final Map<String, List<File>> foundFastaFiles = FastaPathsScanner.scanPaths(new FastaPathsScanner(),
-			new String[] { FASTA_FILE_PATH, });
+			fastaPath);
 		assertNotNull("FoundFastaFiles Map", foundFastaFiles);
 	}
 }
