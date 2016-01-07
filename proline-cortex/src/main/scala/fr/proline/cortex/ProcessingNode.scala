@@ -30,6 +30,7 @@ import fr.proline.cortex.service.dps.msi.ImportValidateGenerateSM
 import fr.proline.cortex.service.dps.msi.MergeResultSets
 import fr.proline.cortex.service.dps.msi.UpdateSpectraParams
 import fr.proline.cortex.service.dps.msi.ValidateResultSet
+import fr.proline.cortex.service.dps.msi.DeleteOrphanData
 import fr.proline.cortex.service.dps.msq.ComputeQuantProfiles
 import fr.proline.cortex.service.dps.msq.Quantify
 import fr.proline.cortex.service.dps.msq.QuantifySC
@@ -252,6 +253,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new CreateProject())
     ServiceRegistry.addService(new RegisterRawFile())
     ServiceRegistry.addService(new ImportValidateGenerateSM())
+    //ServiceRegistry.addService(new DeleteOrphanData())
 //    ServiceRegistry.addService(new WaitService())
  }
 
