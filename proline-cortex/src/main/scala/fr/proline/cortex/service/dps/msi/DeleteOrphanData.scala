@@ -16,8 +16,8 @@ import fr.proline.core.service.msi.OrphanDataDeleter
  * 
  *  Input params :
  *  project_id : The id of the project the rsm/rs will be searched in
- *  result_set_ids : The list of the result set to removed
- *  result_summary_ids : The list of the result summary  to removed
+ *  result_set_ids : The list of the result set to be removed
+ *  result_summary_ids : The list of the result summary  to be removed
  *
  * Output params :
  *  Boolean for service run status
