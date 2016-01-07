@@ -32,11 +32,6 @@ public class SEDb implements Serializable {
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private Alphabet alphabet;
-//
-	//VDS : TODO Use map, may have many Parsing Rule ... or save last one ?! 
-//	@ManyToOne
-//	@JoinColumn(name = "parsing_rule_id")
-//	private ParsingRule parsingRule;
 
 	@ManyToOne
 	@JoinColumn(name = "repository_id")
@@ -67,13 +62,6 @@ public class SEDb implements Serializable {
 		return alphabet;
 	}
 
-//	public void setParsingRule(final ParsingRule pParsingRule) {
-//		parsingRule = pParsingRule;
-//	}
-//
-//	public ParsingRule getParsingRule() {
-//		return parsingRule;
-//	}
 
 	public void setRepository(final Repository pRepository) {
 		repository = pRepository;

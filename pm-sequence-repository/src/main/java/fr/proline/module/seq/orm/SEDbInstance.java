@@ -45,6 +45,11 @@ public class SEDbInstance implements Serializable {
 	@JoinColumn(name = "se_db_id")
 	private SEDb seDb;
 
+	//VDS : TODO Use map, may have many Parsing Rule ? ... Actually save last one ! 
+	@ManyToOne
+	@JoinColumn(name = "parsing_rule_id")
+	private ParsingRule parsingRule;
+	
 	@SuppressWarnings("unused")
 	private void setId(final long pId) {
 		id = pId;
@@ -68,6 +73,14 @@ public class SEDbInstance implements Serializable {
 
 	public String getSourcePath() {
 		return sourcePath;
+	}
+
+	public void setParsingRule(final ParsingRule pParsingRule) {
+		parsingRule = pParsingRule;
+	}
+
+	public ParsingRule getParsingRule() {
+		return parsingRule;
 	}
 
 	public void setSourceLastModifiedTime(final Timestamp timestamp) {
