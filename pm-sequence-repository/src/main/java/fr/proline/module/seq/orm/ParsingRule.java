@@ -7,10 +7,12 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "parsing_rule")
+@NamedQuery(name = "findParsingRuleByName", query = "SELECT pr from fr.proline.module.seq.orm.ParsingRule pr where pr.name = :name")
 public class ParsingRule implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -22,14 +24,13 @@ public class ParsingRule implements Serializable {
 	@Column(nullable = false)
 	private String name;
 
-	@Column(name = "release_identifier")
-	private String releaseRegEx;
+	private String release;
 
 	@Column(name = "se_db_identifier", nullable = false)
-	private String seDbNameRegEx;
+	private String seDbIdentifier;
 
 	@Column(name = "repository_identifier")
-	private String repositoryNameRegEx;
+	private String repositoryIdentifier;
 
 	@Column(name = "repo_id_from_se_id")
 	private String repoIdFromSEId;
@@ -51,28 +52,28 @@ public class ParsingRule implements Serializable {
 		return name;
 	}
 
-	public void setReleaseRegEx(final String pRelease) {
-		releaseRegEx = pRelease;
+	public void setRelease(final String pRelease) {
+		release = pRelease;
 	}
 
-	public String getReleaseRegEx() {
-		return releaseRegEx;
+	public String getRelease() {
+		return release;
 	}
 
-	public void setSEDbNameRegEx(final String pSEDbIdentifier) {
-		seDbNameRegEx = pSEDbIdentifier;
+	public void setSEDbIdentifier(final String pSEDbIdentifier) {
+		seDbIdentifier = pSEDbIdentifier;
 	}
 
-	public String getSEDbNameRegEx() {
-		return seDbNameRegEx;
+	public String getSEDbIdentifier() {
+		return seDbIdentifier;
 	}
 
-	public void setRepositoryNameRegEx(final String pRepositoryIdent) {
-		repositoryNameRegEx = pRepositoryIdent;
+	public void setRepositoryIdentifier(final String pRepositoryIdent) {
+		repositoryIdentifier = pRepositoryIdent;
 	}
 
-	public String getRepositoryNameRegEx() {
-		return repositoryNameRegEx;
+	public String getRepositoryIdentifier() {
+		return repositoryIdentifier;
 	}
 
 	public void setRepoIdFromSEId(final String pRepoIdFromSeId) {

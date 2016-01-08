@@ -203,9 +203,6 @@ public final class DatabaseAccess {
 				seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
 					ProlineDatabaseType.SEQ, seqDb.toPropertiesMap(udsDbConnector.getDriverType()));
 			}
-			
-			//Upgrade seqDB if necessary
-			DatabaseUpgrader.upgradeDatabase(seqDbConnector);
 
 		} finally {
 
@@ -273,7 +270,9 @@ public final class DatabaseAccess {
 
 		if (transacOK && (seqDb != null)) {
 			seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
-				ProlineDatabaseType.SEQ, seqDb.toPropertiesMap());			
+				ProlineDatabaseType.SEQ, seqDb.toPropertiesMap());
+
+			DatabaseUpgrader.upgradeDatabase(seqDbConnector);
 		}
 
 		return seqDbConnector;
