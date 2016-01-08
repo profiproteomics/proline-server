@@ -17,7 +17,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.persistence.EntityManager;
@@ -39,7 +38,6 @@ import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
 import fr.proline.module.seq.dto.SEDbInstanceWrapper;
 import fr.proline.module.seq.orm.Alphabet;
 import fr.proline.module.seq.orm.BioSequence;
-import fr.proline.module.seq.orm.ParsingRule;
 import fr.proline.module.seq.orm.Repository;
 import fr.proline.module.seq.orm.RepositoryIdentifier;
 import fr.proline.module.seq.orm.SEDb;
@@ -51,6 +49,7 @@ import fr.proline.module.seq.orm.repository.RepositoryIdentifierRepository;
 import fr.proline.module.seq.orm.repository.SEDbIdentifierRepository;
 import fr.proline.module.seq.orm.repository.SEDbRepository;
 import fr.proline.module.seq.util.HashUtil;
+import fr.proline.module.seq.util.RegExUtil;
 import fr.proline.repository.IDatabaseConnector;
 
 public final class BioSequenceRetriever {
@@ -228,31 +227,30 @@ public final class BioSequenceRetriever {
 		if (!identByValues.isEmpty()) {
 			
 //			String repositoryIdentRegex = null; //VD TODO How to manage it !! 
-
-
-			/* Retrieve or guess Parsing rules */
 			String parsingRuleReleaseRegex = null;
 			String seDbIdentRegex = null; 
 			ParsingRuleEntry parsingRule = ParsingRuleEntry.getParsingRuleEntry(fastaFileName);
-			ParsingRule ormParsingRule = new ParsingRule();
 			if(parsingRule != null){
 				parsingRuleReleaseRegex = parsingRule.getFastaReleaseRegEx();
 				seDbIdentRegex = parsingRule.getProteinAccRegEx();
-				ormParsingRule.setName(parsingRule.getName());
-				LOG.debug("Sequence source [{}] will be parsed using Protein Accession Regex {} ", sourcePath, seDbIdentRegex);			
-			} else {
-				seDbIdentRegex = SeqRepoConfig.getInstance().getDefaultProtAccRegEx();				
-				ormParsingRule.setName("default definition");
-				LOG.debug("Sequence source [{}] will be parsed with Default Protein Accession Regex {} ", sourcePath, seDbIdentRegex);
 			}
-								
-			ormParsingRule.setSEDbNameRegEx(seDbIdentRegex);
-			ormParsingRule.setReleaseRegEx(parsingRuleReleaseRegex);
-
-			final String release = parseReleaseVersion(fastaFileName, parsingRuleReleaseRegex, seDbInstance);					
-			Pattern seDbIdentPattern = Pattern.compile(seDbIdentRegex, Pattern.CASE_INSENSITIVE);
 			
+
+			/* Retrieve or guess Parsing rules */
+			final String release = parseReleaseVersion(fastaFileName, parsingRuleReleaseRegex, seDbInstance);
+			
+			Pattern seDbIdentPattern = null;
+			if (seDbIdentRegex == null) {
+				LOG.debug("Sequence source [{}] will be parsed with Default Protein Accession Regex", sourcePath);
+				String defaultRegEx = SeqRepoConfig.getInstance().getDefaultProtAccRegEx();
+				seDbIdentPattern = Pattern.compile(defaultRegEx, Pattern.CASE_INSENSITIVE);					
+			} else {
+				LOG.debug("Sequence source [{}] will be parsed using Protein Accession Regex {} ", fastaFileName, seDbIdentRegex);
+				seDbIdentPattern = Pattern.compile(seDbIdentRegex, Pattern.CASE_INSENSITIVE);
+			}
+
 			Pattern repositoryIdentPattern = null;
+//
 //			if (repositoryIdentRegex != null) {
 //				repositoryIdentPattern = Pattern.compile(repositoryIdentRegex, Pattern.CASE_INSENSITIVE);
 //			}
@@ -295,18 +293,8 @@ public final class BioSequenceRetriever {
 							final long start = System.currentTimeMillis();
 
 							if (seDbInstance == null) {
-								seDbInstance = loadOrCreateSEDbInstance(seqEM, seDbInstanceW, release, fastaSource.getLastModifiedTime(), ormParsingRule);								
+								seDbInstance = loadOrCreateSEDbInstance(seqEM, seDbInstanceW, null, release, fastaSource.getLastModifiedTime());
 							} else {
-								ParsingRule existingPR = seDbInstance.getParsingRule();
-								if(existingPR == null){ // persist new one
-									seqEM.persist(ormParsingRule);		
-									existingPR = seqEM.merge(ormParsingRule);
-								} else {
-									existingPR.setName(ormParsingRule.getName());
-									existingPR.setReleaseRegEx(ormParsingRule.getReleaseRegEx());
-									existingPR.setSEDbNameRegEx(ormParsingRule.getSEDbNameRegEx());
-								}
-								seDbInstance.setParsingRule(existingPR);
 								seDbInstance = seqEM.merge(seDbInstance);
 							}
 
@@ -394,13 +382,10 @@ public final class BioSequenceRetriever {
 		final SEDbInstance seDbInstance) {
 		String release = null;
 
-		Pattern releasePattern = null;
-		if(parsingRuleReleaseRegex != null)
-			releasePattern = Pattern.compile(parsingRuleReleaseRegex, Pattern.CASE_INSENSITIVE);			
-		if (releasePattern != null) {
-			release = parseReleaseVersion(fastaFileName, releasePattern);
-		}
 
+		if(parsingRuleReleaseRegex != null)			
+			release = RegExUtil.parseReleaseVersion(fastaFileName, parsingRuleReleaseRegex);
+		
 		if (release == null) {
 
 			if (seDbInstance != null) {
@@ -425,28 +410,6 @@ public final class BioSequenceRetriever {
 	
 
 
-	private static String parseReleaseVersion(final String fastaFileName, final Pattern releasePattern) {
-		assert (fastaFileName != null) : "parseReleaseVersion() fastaFileName is null";
-		assert (releasePattern != null) : "parseReleaseVersion() releasePattern is null";
-
-		String result = null;
-
-		final Matcher matcher = releasePattern.matcher(fastaFileName);
-
-		if (matcher.find()) {
-
-			if (matcher.groupCount() < 1) {
-				throw new IllegalArgumentException("Invalid Release version Regex");
-			}
-
-			result = matcher.group(1).trim();
-		} else {
-			LOG.warn("Cannot parse fastaFileName [{}] with \"{}\" Regex", fastaFileName,
-				releasePattern.pattern());
-		}
-
-		return result;
-	}
 
 	/**
 	 * Try to select an existing FASTA file just after expected SEDbInstance release.
@@ -472,20 +435,16 @@ public final class BioSequenceRetriever {
 					if ((fastaFiles != null) && !fastaFiles.isEmpty()) {
 						final NavigableMap<String, File> sortedFiles = new TreeMap<>();
 
-						Pattern releasePattern = null;
-						if(parsingRuleReleaseRegex != null)
-							releasePattern = Pattern.compile(parsingRuleReleaseRegex, Pattern.CASE_INSENSITIVE);			
-		
 						for (final File f : fastaFiles) {
 							final long lastModifiedTime = f.lastModified();
 
 							String fRelease = null;
 
-							if (releasePattern != null) {
-								fRelease = parseReleaseVersion(f.getName(), releasePattern);
+							if (parsingRuleReleaseRegex != null) {
+								fRelease = RegExUtil.parseReleaseVersion(f.getName(), parsingRuleReleaseRegex);
 							}
 
-							if (StringUtils.isEmpty(fRelease)) {
+							if (fRelease == null || StringUtils.isEmpty(fRelease)) {
 								fRelease = DateUtils.formatReleaseDate(new Date(lastModifiedTime));
 							}
 
@@ -583,16 +542,11 @@ public final class BioSequenceRetriever {
 			String parsingRuleReleaseRegex = null;
 			ParsingRuleEntry pre = ParsingRuleEntry.getParsingRuleEntry(fastaFileName);
 			if(pre != null) {
-				parsingRuleReleaseRegex = pre.getFastaReleaseRegEx();  
-				Pattern releasePattern = Pattern.compile(parsingRuleReleaseRegex, Pattern.CASE_INSENSITIVE);			
-				
-    			if (releasePattern != null) {
-    
-    				final String release = parseReleaseVersion(fastaFileName, releasePattern);
-    				if (!StringUtils.isEmpty(release)) {
-    					result = SEDbRepository.findSEDbInstanceByNameAndRelease(seqEM, seDbName, release);
-    				}    
-    			}
+				parsingRuleReleaseRegex = pre.getFastaReleaseRegEx();      
+				final String release = RegExUtil.parseReleaseVersion(fastaFileName, parsingRuleReleaseRegex);
+				if (release != null && !StringUtils.isEmpty(release)) {
+					result = SEDbRepository.findSEDbInstanceByNameAndRelease(seqEM, seDbName, release);
+				}
 			}
 		}
 
@@ -644,10 +598,10 @@ public final class BioSequenceRetriever {
 	/* Must be called holding SEQ_DB_WRITE_LOCK */
 	private static SEDbInstance loadOrCreateSEDbInstance(
 		final EntityManager seqEM,
-		final SEDbInstanceWrapper seDbInstanceW,		
+		final SEDbInstanceWrapper seDbInstanceW,
+		final SEDb seDb,
 		final String release,
-		final Date lastModifiedTime,
-		final ParsingRule ormParsingRule) {
+		final Date lastModifiedTime) {
 		assert (seDbInstanceW != null) : "loadOrCreateSEDbInstance() seDbInstanceW is null";
 		assert (lastModifiedTime != null) : "loadOrCreateSEDbInstance() lastModifiedTime is null";
 
@@ -669,14 +623,20 @@ public final class BioSequenceRetriever {
 			result.setSourcePath(seDbInstanceW.getSourcePath());
 			result.setSourceLastModifiedTime(new Timestamp(lastModifiedTime.getTime()));
 
-			SEDb seDb = loadOrCreateSEDb(seqEM, seDbName);
-			result.setSEDb(seDb);
-			result.setParsingRule(ormParsingRule);
-			seqEM.persist(ormParsingRule);
+			SEDb newSEDb = null;
+
+			if (seDb == null) {
+				newSEDb = loadOrCreateSEDb(seqEM, seDbName);
+			} else {
+				newSEDb = seqEM.merge(seDb);
+			}
+
+			result.setSEDb(newSEDb);
+
 			seqEM.persist(result);
 
 			/* Check number of SEDbInstances and order */
-			final String retrievedSEDbName = seDb.getName();// Should not be null
+			final String retrievedSEDbName = newSEDb.getName();// Should not be null
 
 			final List<SEDbInstance> seDbInstances = SEDbRepository.findSEDbInstanceBySEDbName(seqEM,
 				retrievedSEDbName);
@@ -689,20 +649,6 @@ public final class BioSequenceRetriever {
 
 			}
 
-		} else {
-			
-			ParsingRule existingPR = result.getParsingRule();
-			if(existingPR == null){ // persist new one
-				seqEM.persist(ormParsingRule);		
-				existingPR = seqEM.merge(ormParsingRule);
-			} else {
-				existingPR.setName(ormParsingRule.getName());
-				existingPR.setReleaseRegEx(ormParsingRule.getReleaseRegEx());
-				existingPR.setSEDbNameRegEx(ormParsingRule.getSEDbNameRegEx());
-			}
-			result.setParsingRule(existingPR);
-
-			seqEM.merge(result);			
 		}
 
 		return result;
@@ -714,8 +660,6 @@ public final class BioSequenceRetriever {
 		final String seDbName) {
 		assert (!StringUtils.isEmpty(seDbName)) : "loadOrCreateSEDb() invalid seDbName";
 
-		//VD TODO: save or merge ParsingRule !!
-		
 		SEDb result = SEDbRepository.findSEDbByName(seqEM, seDbName);
 
 		if (result == null) {
