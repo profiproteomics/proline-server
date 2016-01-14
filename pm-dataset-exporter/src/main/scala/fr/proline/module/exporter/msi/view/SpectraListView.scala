@@ -45,7 +45,7 @@ class SpectraListView( val identDS: IdentWithSpectrumDataSet ) extends IFixedDat
     var viewName = "spectrum_list"
     val fields = SpectraListViewFields 
     val isQuantiData = identDS.masterQuantPepByPepId.isDefined
-    val masterQuantPepByPepId = identDS.masterQuantPepByPepId.get
+    val masterQuantPepByPepId = identDS.masterQuantPepByPepId
     val spectrumByPepMatchID = identDS.spectrumByPepMatchId
     
     case class MyBuildingContext( proteinset : ProteinSet, typicalProtMatch : ProteinMatch , peptideMatch : PeptideMatch, fragMatch : FragmentMatch , peptide : Peptide, protIndex: Int) extends IRecordBuildingContext
@@ -71,8 +71,8 @@ class SpectraListView( val identDS: IdentWithSpectrumDataSet ) extends IFixedDat
       rt = rtByPepId(pepId)._1
       sourceRT = rtByPepId(pepId)._2
     } else {
-      if (isQuantiData && masterQuantPepByPepId.contains(pepId)) {
-        rt = masterQuantPepByPepId(pepId).getBestQuantPeptide.elutionTime / 60 // Export in minutes
+      if (isQuantiData && masterQuantPepByPepId.get.contains(pepId)) {
+        rt = masterQuantPepByPepId.get(pepId).getBestQuantPeptide.elutionTime / 60 // Export in minutes
         sourceRT = "Apex elution time"
       } else {
         if (isQuantiData)
