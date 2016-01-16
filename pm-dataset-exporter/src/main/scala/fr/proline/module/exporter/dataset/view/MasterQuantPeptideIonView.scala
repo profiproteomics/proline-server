@@ -54,13 +54,13 @@ class MasterQuantPeptideIonView ( val identDS: IdentDataSet, val sheetConfig : E
           )
           if (isQuanti){
             var masterQuantPeptide: MasterQuantPeptide = null
-            for (mqPepSet <- quantiDS.quantRSM.masterQuantPeptides) {
+            for (mqPep <- quantiDS.quantRSM.masterQuantPeptides) {
               var pepId:  Long = -1
-              if( mqPepSet.peptideInstance.isDefined) {
-            	  	pepId = mqPepSet.peptideInstance.get.peptide.id
+              if( mqPep.peptideInstance.isDefined) {
+            	  	pepId = mqPep.peptideInstance.get.peptide.id
               }
               if (pepId == pepMatchById(pepMatchId).peptide.id) {
-            	  masterQuantPeptide = mqPepSet
+            	  masterQuantPeptide = mqPep
               }
             }
             var masterQuantPeptideIon: MasterQuantPeptideIon = null
