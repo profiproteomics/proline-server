@@ -417,6 +417,6 @@
   </build>
 
   <scm>
-  	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Cortex/trunk</connection>
+  	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Cortex/branches/0.1.0-RCandidates</connection>
   </scm>
 </project>
