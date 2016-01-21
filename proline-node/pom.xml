@@ -107,6 +107,6 @@
    	</dependency>
    </dependencies>
    <scm>
-   	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Node/trunk</connection>
+   	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Node/branches/0.0.1-RCandidates</connection>
    </scm>
 </project>
