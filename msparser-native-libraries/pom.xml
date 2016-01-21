@@ -18,7 +18,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <scm>
-	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Common-Libs/MSParser-native-libraries/trunk</connection>
+	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Common-Libs/MSParser-native-libraries/branches/0.3.0-RCandidates</connection>
   </scm>
   <dependencies>
 
