@@ -18,7 +18,7 @@
     <core.version>0.5.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
   </properties>
 	<scm>
-	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-FragmentMatchGenerator/trunk</connection>
+	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-FragmentMatchGenerator/branches/0.3.0-RCandidates</connection>
 	</scm>
   <dependencies>
 
