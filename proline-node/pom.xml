@@ -106,4 +106,7 @@
    		<artifactId>junit</artifactId>
    	</dependency>
    </dependencies>
+   <scm>
+   	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Node/trunk</connection>
+   </scm>
 </project>
