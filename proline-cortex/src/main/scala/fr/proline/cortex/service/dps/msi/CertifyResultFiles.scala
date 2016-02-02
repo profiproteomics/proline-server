@@ -78,19 +78,19 @@ class CertifyResultFiles extends AbstractRemoteProcessService with LazyLogging {
         }
       ))
 
-      for (format <- filesByFormat.keys) {
-
-        // Instantiate the appropriate result file provider and register it
-        val rfProviderOpt = ResultFileProviderRegistry.get(format)
-        if (rfProviderOpt.isEmpty) throw new Exception("unsupported result file type: " + format)
-        val rfProvider = rfProviderOpt.get
-      }
+//      for (format <- filesByFormat.keys) {
+//
+//        // Instantiate the appropriate result file provider and register it
+//        val rfProviderOpt = ResultFileProviderRegistry.get(format)
+//        if (rfProviderOpt.isEmpty) throw new Exception("unsupported result file type: " + format)
+//        val rfProvider = rfProviderOpt.get
+//      }
 
       var certifyResult: Boolean = false
       val errorMessage = new StringBuilder()
 
       try {
-        // Instantiate the ResultFileImporter service
+        // Instantiate the ResultFileCertifier service
         val rsCertifier = new ResultFileCertifier(
           executionContext = parserCtx,
           resultIdentFilesByFormat = filesByFormat,
