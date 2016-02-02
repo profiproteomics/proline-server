@@ -253,7 +253,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new CreateProject())
     ServiceRegistry.addService(new RegisterRawFile())
     ServiceRegistry.addService(new ImportValidateGenerateSM())
-    //ServiceRegistry.addService(new DeleteOrphanData())
+    ServiceRegistry.addService(new DeleteOrphanData())
 //    ServiceRegistry.addService(new WaitService())
  }
 
