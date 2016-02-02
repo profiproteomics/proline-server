@@ -37,6 +37,8 @@ import fr.proline.core.orm.uds.IdentificationDataset
 import fr.proline.core.orm.uds.repository.DatasetRepository
 import fr.proline.jms.service.api.ISingleThreadedService
 import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.core.service.msi.ResultFileCertifier
+import fr.profi.util.StringUtils
 
 
 
@@ -166,6 +168,7 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessService with LazyLog
     var msiDbConnectionContext: DatabaseConnectionContext = null
     var udsbConnectionContext: DatabaseConnectionContext = null
     var transactionOk: Boolean = false
+   var certifyResult: Boolean = false
         
     try {
       val parserCtx = this.buildParserContext(execCtx)
@@ -182,6 +185,29 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessService with LazyLog
       udsbConnectionContext.beginTransaction()
       transactionOk = false
 
+      //TODO Certify !! 
+       val filesByFormat = resultFiles.groupBy(_.format).mapValues(_.map(rf =>
+        {
+          val localPathname = MountPointRegistry.replacePossibleLabel(rf.path, Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname
+
+          new File(localPathname)
+        }
+      ))
+
+     
+      val errorMessage = new StringBuilder()
+      
+      // Instantiate the ResultFileCertifier service
+       val rsCertifier = new ResultFileCertifier(
+          executionContext = parserCtx,
+          resultIdentFilesByFormat = filesByFormat,
+          importProperties = importerProperties
+        )
+
+        rsCertifier.run()
+
+        certifyResult = true
+            
         
       // **** Go through each result File
       for (resultFile <- resultFiles) {
@@ -217,13 +243,14 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessService with LazyLog
 
         val currentRSId =rsImporter.getTargetResultSetId 
         val currentRSOPt =  rsImporter.getTargetResultSetOpt
+        val currentRS = currentRSOPt.get
         importedRF.targetResultSetId = currentRSId
         importedRF.targetResultSetOpt = currentRSOPt
         importedRFs += importedRF
 
         /* Update result */
         resultImport = importedRFs.toArray
-        
+        val dsName = if(currentRS.msiSearch.isDefined){ currentRS.msiSearch.get.resultFileName } else { currentRS.name } 
         
         //*** Create Identification Dataset for new RS
         // Then insert it in the current MSIdb
@@ -231,7 +258,7 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessService with LazyLog
         val project = udsEM.find(classOf[Project], projectId)
         val ds : IdentificationDataset = new IdentificationDataset()
         ds.setProject(project)
-        ds.setName(currentRSOPt.get.name)
+        ds.setName(dsName)
         ds.setResultSetId(currentRSId)
         ds.setChildrenCount(0)
         val rootDsNames = DatasetRepository.findRootDatasetNamesByProject(udsEM,projectId)
@@ -241,7 +268,7 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessService with LazyLog
         // **** Validate Result Set
         val rsValidator = new ResultSetValidator(
           execContext = execCtx,
-          targetRs = currentRSOPt.get,
+          targetRs = currentRS,
           tdAnalyzer = validationParam.tdAnalyzer,
           pepMatchPreFilters = validationParam.pepMatchPreFilters,
           pepMatchValidator = validationParam.pepMatchValidator,
@@ -271,8 +298,18 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessService with LazyLog
       
      } catch {
         case ex: Exception => {
-          logger.error("Error running Spectrum Matches Generator", ex);
-          val msg = if (ex.getCause() != null) { "Error running Spectrum Matches Generator " + ex.getCause().getMessage() } else { "Error running Spectrum Matches Generator " + ex.getMessage() };
+          var msg : String = ""
+          if(!certifyResult ){ // Certify Not finished
+            logger.error("Error certifying ResultFiles in <Import Validate and Spectrum Matches Generator>", ex);
+            val errorMessage = new StringBuilder()
+            errorMessage.append("Error certifying ResultFiles").append(" : ").append(ex)            
+            errorMessage.append(StringUtils.LINE_SEPARATOR)
+            errorMessage.append(ex.getStackTrace)
+            msg = errorMessage.toString()
+          } else {
+            logger.error("Error running Import Validate and Spectrum Matches Generator", ex);
+            msg = if (ex.getCause() != null) { "Error running Spectrum Matches Generator " + ex.getCause().getMessage() } else { "Error running Spectrum Matches Generator " + ex.getMessage() };
+          }
           throw new Exception(msg)
         }
 
