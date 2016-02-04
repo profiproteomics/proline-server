@@ -61,26 +61,30 @@ class ProtSetToBestPepMatchView(
           val pepMatchOpt = pepMatchById.get(seqMatch.bestPeptideMatchId)
           val peptideId = seqMatch.getPeptideId
 
-          if (pepMatchOpt.isDefined && validPepMatchIdSet.contains(pepMatchOpt.get.id)) {
-            val mqPepOpt = quantDs.mqPepByPepId.get(peptideId)
+          if (pepMatchOpt.isDefined && validPepMatchIdSet.contains(pepMatchOpt.get.id)) {            
             
-            val buildingContext = if (!isQuantDs || mqPepOpt.isEmpty) {
-              new PepMatchBuildingContext(
-                pepMatch = pepMatchOpt.get,
-                protMatch = reprProtMatch,
-                seqMatch = seqMatchByPepId(peptideId),
-                protMatchBuildingCtx = Some(protMatchBuildingCtx)
-              )
-            } else {
+            val pepMatchBuildingCtx = new PepMatchBuildingContext(
+              pepMatch = pepMatchOpt.get,
+              protMatch = reprProtMatch,
+              seqMatch = seqMatchByPepId(peptideId),
+              protMatchBuildingCtx = Some(protMatchBuildingCtx)
+            )
+            
+            val buildingContext = if (!isQuantDs) pepMatchBuildingCtx
+            else {
+              val mqPepOpt = quantDs.mqPepByPepId.get(peptideId)
               
-              new MasterQuantPeptideBuildingContext(
-                pepMatch = pepMatchOpt.get,
-                protMatch = reprProtMatch,
-                seqMatch = seqMatchByPepId(peptideId),
-                protMatchBuildingCtx = Some(protMatchBuildingCtx),
-                mqPepOpt.get,
-                groupSetupNumber = groupSetupNumber
-              )
+              if(mqPepOpt.isEmpty) pepMatchBuildingCtx
+              else {
+                new MasterQuantPeptideBuildingContext(
+                  pepMatch = pepMatchOpt.get,
+                  protMatch = reprProtMatch,
+                  seqMatch = seqMatchByPepId(peptideId),
+                  protMatchBuildingCtx = Some(protMatchBuildingCtx),
+                  mqPepOpt.get,
+                  groupSetupNumber = groupSetupNumber
+                )
+              }
             }
             
             // Format this peptide match with protein set information

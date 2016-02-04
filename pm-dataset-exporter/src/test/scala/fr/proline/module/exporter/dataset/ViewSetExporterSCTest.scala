@@ -59,7 +59,7 @@ class ViewSetExporterSCTest extends AbstractMultipleDBTestCase {
       executionContext,
       projectId,
       datasetId,
-      targetRSMId,      
+      targetRSMId,
       fileName,
       configStr
     )

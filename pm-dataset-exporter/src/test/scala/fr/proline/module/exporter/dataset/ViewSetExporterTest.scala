@@ -58,7 +58,7 @@ class ViewSetExporterTest extends AbstractMultipleDBTestCase  {
     val viewSet = BuildDatasetViewSet(
       executionContext,
       projectId,
-      -1,
+      0,
       targetRSMId,      
       fileName,
       configStr

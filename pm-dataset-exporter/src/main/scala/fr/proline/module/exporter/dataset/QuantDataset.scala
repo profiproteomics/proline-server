@@ -1,15 +1,17 @@
 package fr.proline.module.exporter.dataset
 
+import scala.collection.JavaConversions._
 import scala.collection.mutable.LongMap
 import fr.profi.util.collection._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
+import fr.proline.core.orm.uds.{ MasterQuantitationChannel => UdsMasterQuantChannel }
 
 class QuantDataset(
   override val projectName: String,
   val quantRSM: LazyQuantResultSummary,
-  val expDesign: ExperimentalDesign,
-  val masterQuantChannel: MasterQuantChannel,
+  val expDesign: Option[ExperimentalDesign],
+  val masterQuantChannel: UdsMasterQuantChannel,
   val groupSetupNumber: Int,
   override val loadChildResultSummaries: () => Array[LazyResultSummary],
   override val loadBioSequences: () => Array[BioSequence],
@@ -22,13 +24,13 @@ class QuantDataset(
 ) extends IdentDataset(projectName,quantRSM.lazyResultSummary,loadChildResultSummaries,loadBioSequences,loadSpectraDescriptors) {
   
   //lazy val identRsmById = childRsmById
-  lazy val identRsmByQcId = masterQuantChannel.quantChannels.toLongMap { qc =>
-    qc.id -> childRsmById(qc.identResultSummaryId)
+  lazy val identRsmByQcId = masterQuantChannel.getQuantitationChannels.toList.toLongMap { qc =>
+    qc.getId -> childRsmById(qc.getIdentResultSummaryId)
   }
   
-  lazy val masterQuantChannelId: Long = masterQuantChannel.id
-  lazy val qcIds: Array[Long] = masterQuantChannel.quantChannels.map(_.id)
-  lazy val ratioDefs: Array[RatioDefinition] = expDesign.groupSetupByNumber(groupSetupNumber).ratioDefinitions
+  lazy val masterQuantChannelId: Long = masterQuantChannel.getId
+  lazy val qcIds: Array[Long] = masterQuantChannel.getQuantitationChannels().map(_.getId).toArray
+  lazy val ratioDefs: Option[Array[RatioDefinition]] = expDesign.map( _.groupSetupByNumber(groupSetupNumber).ratioDefinitions )
   
   // TODO: check this is correct
   /*lazy val mqPepByPepMatchId: LongMap[MasterQuantPeptide] = {

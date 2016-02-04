@@ -47,11 +47,12 @@ class ProtSetToAllPepMatchesView(
           reprProtMatch
         )
 
-        for (pepInst <- protSet.peptideSet.getPeptideInstances) {
+        // FIXME: why pepInst.peptideMatches should be null ???
+        for (pepInst <- protSet.peptideSet.getPeptideInstances; if pepInst.peptideMatches != null) {
 
           val peptideId = pepInst.peptide.id
           val allPepMatches = pepInst.peptideMatches
-          val mqPepOpt = quantDs.mqPepByPepId.get(peptideId)
+          val mqPepOpt = Option(quantDs).flatMap( _.mqPepByPepId.get(peptideId) )
 
           if (!isQuantDs || mqPepOpt.isEmpty) {
 

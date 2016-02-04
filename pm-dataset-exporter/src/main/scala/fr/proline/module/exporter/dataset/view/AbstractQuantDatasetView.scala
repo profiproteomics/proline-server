@@ -61,7 +61,7 @@ trait AbstractQuantDatasetView extends AbstractIdentDatasetView {
             fieldsTitles += mkQcFieldTitle(fieldTitle, qcId)
           }
         } else if (givenProfilizerFieldSet.contains(fieldId)) {
-          for (r <- ratioDefs) {
+          for (r <- ratioDefs.get) {
             fieldsTitles += mkRatioTitle(fieldTitle, r)
           }
         } else {
@@ -88,7 +88,8 @@ trait AbstractQuantDatasetView extends AbstractIdentDatasetView {
     val quantEntityBuildingCtx = buildingContext.asInstanceOf[IMasterQuantEntityBuildingContext]
     
     val qComponentMap = quantEntityBuildingCtx.getQuantComponentMap()
-    val ratiosWithDefOpt = quantEntityBuildingCtx.getRatios.map( _.zip(ratioDefs) )
+    val ratiosWithDefOpt = if(ratioDefs.isEmpty) None
+    else quantEntityBuildingCtx.getRatios.map( _.zip(ratioDefs.get) )
     
     val recordBuilder = Map.newBuilder[String,Any]
     recordBuilder ++= identDatasetRecord

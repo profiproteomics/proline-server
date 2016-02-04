@@ -1,5 +1,6 @@
 package fr.proline.module.exporter.dataset.view
 
+import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
 
@@ -59,6 +60,7 @@ object BuildDatasetViewSet extends LazyLogging {
     viewSetName: String,
     exportConfigStr: String
   ): ViewSet = {
+    println(dsId)
 
     val exportConfig = ExportConfigManager.readConfig(exportConfigStr)
     
@@ -101,7 +103,7 @@ object BuildDatasetViewSet extends LazyLogging {
     this.apply(
       executionContext,
       projectId,
-      dsId = -1,
+      dsId = 0,
       rsmId,
       loadSubsets,
       loadFullResultSet,
@@ -122,6 +124,7 @@ object BuildDatasetViewSet extends LazyLogging {
     viewSetTemplate: IViewSetTemplate,
     exportConfig: ExportConfig
   ): ViewSet = {
+    println(dsId)
     
     val udsDbCtx = executionContext.getUDSDbConnectionContext()
     val psDbCtx = executionContext.getPSDbConnectionContext()
@@ -198,26 +201,31 @@ object BuildDatasetViewSet extends LazyLogging {
       // Load the experimental design
       val expDesignProvider = new SQLExperimentalDesignProvider(udsDbCtx)
       val expDesignOpt = expDesignProvider.getExperimentalDesign(dsId)
-      require( expDesignOpt.isDefined, "can't load the experimental design of the dataset with id=" + dsId)
+      /*require( expDesignOpt.isDefined, "can't load the experimental design of the dataset with id=" + dsId)
       val expDesign = expDesignOpt.get
       
       val masterQcOpt = expDesign.masterQuantChannels.find(_.id == masterQuantChannelId)
       require(masterQcOpt.isDefined, "undefined master quant channel with id=" + masterQuantChannelId)
       
       val masterQc = masterQcOpt.get
-
-      // Get entity manager
-      //val udsEM = executionContext.getUDSDbConnectionContext().getEntityManager()
       
-      // Retrieve the master quant channel
-      //val udsMasterQuantChannel = udsEM.find(classOf[fr.proline.core.orm.uds.MasterQuantitationChannel], masterQuantChannelId)
-      //require(udsMasterQuantChannel != null, "undefined master quant channel with id=" + masterQuantChannelId)
-
       val quantRsmId = masterQc.quantResultSummaryId.get
       val quantChannels = masterQc.quantChannels
-      val qcIds = quantChannels.map(_.id)
-      val identRsmIds = masterQc.quantChannels.map(_.identResultSummaryId)
+      val identRsmIds = quantChannels.map(_.identResultSummaryId)
       val qcIdByIdentRsmId = quantChannels.toLongMap(qc => qc.identResultSummaryId -> qc.id)
+      */
+
+      // Get entity manager
+      val udsEM = executionContext.getUDSDbConnectionContext().getEntityManager()
+      
+      // Retrieve the master quant channel
+      val udsMasterQc = udsEM.find(classOf[fr.proline.core.orm.uds.MasterQuantitationChannel], masterQuantChannelId)
+      require(udsMasterQc != null, "undefined master quant channel with id=" + masterQuantChannelId)
+
+      val quantRsmId = udsMasterQc.getQuantResultSummaryId
+      val udsQuantChannels = udsMasterQc.getQuantitationChannels
+      val identRsmIds = udsQuantChannels.map(_.getIdentResultSummaryId).toArray
+      val qcIdByIdentRsmId = udsQuantChannels.toList.toLongMap(qc => qc.getIdentResultSummaryId -> qc.getId)
       
       // Load the quant RSM
       logger.debug(s"Loading quant result summary #$rsmId...")
@@ -292,8 +300,8 @@ object BuildDatasetViewSet extends LazyLogging {
       val quantDs = new QuantDataset(
         projectName,
         lazyQuantRSM,
-        expDesign,
-        masterQc,
+        expDesignOpt,
+        udsMasterQc,
         groupSetupNumber,
         identResultSummariesLoader,
         this._buildBioSequenceLoader(msiDbCtx, lazyQuantRSM.lazyResultSummary),
