@@ -668,7 +668,7 @@ class MascotDataParser(
       // Update peptide match PTM site properties
       val ptmSiteProperties = pepMatch.properties.get.ptmSiteProperties.getOrElse(PeptideMatchPtmSiteProperties())
       ptmSiteProperties.setMascotDeltaScore(Some(mascotDeltaScore))
-      ptmSiteProperties.setMascotProbabilityBySite(probabilityByPtmString.result)
+      ptmSiteProperties.setMascotProbabilityBySite(Some(probabilityByPtmString.result))
       pepMatch.properties.get.ptmSiteProperties = Some(ptmSiteProperties)
     }
 
