@@ -79,8 +79,8 @@ abstract class AbstractPeptideMatchView extends AbstractProtSetToTypicalProtMatc
       
       val score = "%.2f".format(ptmSiteProperties.getMascotDeltaScore.getOrElse(0.0f))
       var sitesEx = "";
-      if (ptmSiteProperties.getMascotProbabilityBySite != null){
-        val sites = ptmSiteProperties.getMascotProbabilityBySite.map { case (k, v) => 
+      if (ptmSiteProperties.getMascotProbabilityBySite.isDefined){
+        val sites = ptmSiteProperties.getMascotProbabilityBySite.get.map { case (k, v) => 
           k + " = " + "%.2f".format(v)
         }
         sitesEx = sites.mkString(",") 

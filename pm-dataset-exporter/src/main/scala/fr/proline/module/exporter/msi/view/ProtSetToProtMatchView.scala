@@ -21,7 +21,7 @@ object ProtSetToProtMatchViewFields extends IViewFieldEnumeration {
   val SPECIFIC_PEPTIDE_MATCHES_COUNT = Field("#specific_peptide_matches")
 }
 
-class ProtSetToProtMatchView( val identDS: MsiIdentDataSet ) extends IFixedDatasetView {
+class ProtSetToProtMatchView( val identDS: MsiIdentDataSet ) extends IFixedTableView {
 
   var viewName = "prot_set_to_prot_match"
   val fields = ProtSetToProtMatchViewFields

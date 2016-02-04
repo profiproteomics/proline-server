@@ -1,20 +1,22 @@
 package fr.proline.module.exporter.commons.config.view
 
 import fr.proline.module.exporter.api.view.IViewFieldEnumeration
-import fr.proline.module.exporter.commons.config.ExportConfigField
+import fr.proline.module.exporter.commons.config.CustomFieldConfig
 import fr.proline.module.exporter.commons.config.ExportConfigSheet
 import fr.proline.module.exporter.commons.config.ExportConfigConstant
 
 /**
- * generates a ViewFieldEnumeration based on a configuration of a sheet
+ * Generates a ViewFieldEnumeration based on an iterable of field titles
  */
-class SheetViewFieldsConfig(fields: Array[String]) extends IViewFieldEnumeration {
-  for (f <- fields) {
-    Field(f)
+class CustomViewFields(titles: Iterable[String]) extends IViewFieldEnumeration {
+  
+  for (title <- titles) {
+    Field(title)
   }
 
+  // TODO: remove me
   def addField(title: String): String = {
-    return Field(title).toString()
-
+    Field(title).toString()
   }
+  
 }

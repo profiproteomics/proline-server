@@ -1,80 +1,92 @@
 package fr.proline.module.exporter.dataset.view
 
 import scala.collection.mutable.ArrayBuffer
-import fr.profi.jdbc.easy._
+import scala.collection.mutable.LongMap
+
 import com.typesafe.scalalogging.LazyLogging
+
+import fr.profi.jdbc.easy._
+import fr.profi.util.collection._
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
-import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.om.provider.msi.impl._
-import fr.proline.core.dal.tables.SelectQueryBuilder1
-import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.tables.uds.UdsDbProjectTable
-import fr.proline.module.exporter.api.template._
-import fr.proline.module.exporter.api.template.ViewWithTemplate
-import fr.proline.module.exporter.api.view.IDatasetView
 import fr.proline.core.dal.DoJDBCReturningWork
-import java.sql.Connection
-import fr.proline.repository.util.JDBCWork
-import fr.proline.module.exporter.commons.config.ExportConfig
-import fr.proline.module.exporter.commons.config.template.ProlineConfigViewSetTemplateAsXLSX
-import fr.proline.module.exporter.commons.config.ExportConfigManager
-import fr.proline.module.exporter.commons.config.ExportConfigConstant
-import fr.proline.module.exporter.commons.config.template.ProlineConfigViewSetTemplateAsTSV
-import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.orm.msi.MsiSearch
-import fr.proline.core.om.provider.msi.IResultSummaryProvider
+import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.helper.UdsDbHelper
+import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.SelectQueryBuilder3
-import fr.proline.core.dal.tables.uds.UdsDbQuantChannelTable
+import fr.proline.core.dal.tables.msi.MsiDbMsiSearchTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
-import fr.proline.core.dal.tables.msi.MsiDbMsiSearchTable
-import fr.profi.util.primitives.toLong
+import fr.proline.core.dal.tables.uds.UdsDbProjectTable
+import fr.proline.core.om.model.msi.LazyResultSummary
+import fr.proline.core.om.model.msi.Ms2Query
+import fr.proline.core.om.provider.msi.impl._
 import fr.proline.core.om.provider.msq.impl.SQLExperimentalDesignProvider
-import fr.proline.core.om.provider.msq.impl.SQLQuantResultSummaryProvider
-import fr.proline.core.om.model.msq.RatioDefinition
-import fr.proline.core.om.model.msi.Protein
+import fr.proline.core.om.provider.msq.impl.SQLLazyQuantResultSummaryProvider
+import fr.proline.module.exporter.api.template._
+import fr.proline.module.exporter.api.template.ViewWithTemplate
+import fr.proline.module.exporter.commons.config._
+import fr.proline.module.exporter.commons.view.ViewSet
+import fr.proline.module.exporter.dataset._
+import fr.proline.module.exporter.dataset.template._
 
 object BuildDatasetViewSet extends LazyLogging {
 
-  def apply(ds: IdentDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate, exportConfig: ExportConfig): DatasetViewSet = {
+  def apply(ds: IdentDataset, viewSetName: String, viewSetTemplate: IViewSetTemplate, exportConfig: ExportConfig): ViewSet = {
 
     val templatedViews = viewSetTemplate.templatedViewTypes.map { templatedViewType =>
-      val viewWithTpl = ViewWithTemplate(BuildDatasetView(ds, templatedViewType.viewType, exportConfig), templatedViewType.template)
-      if (templatedViewType.viewName.isDefined) viewWithTpl.dataView.viewName = templatedViewType.viewName.get
+      
+      val dsView = BuildDatasetView(ds, templatedViewType.viewType, exportConfig)
+      val viewWithTpl = ViewWithTemplate(dsView, templatedViewType.template)
+      
+      if(templatedViewType.viewName.isDefined) {
+        viewWithTpl.dataView.viewName = templatedViewType.viewName.get
+      }
 
       viewWithTpl
     }
 
-    new DatasetViewSet(viewSetName, templatedViews, exportConfig)
+    new ViewSet(viewSetName, viewSetTemplate, templatedViews, exportConfig)
   }
 
-  // build template from the  config
+  // Build template from the config
   def apply(
     executionContext: IExecutionContext,
     projectId: Long,
     dsId: Long,
     rsmId: Long,
     viewSetName: String,
-    exportConfigStr: String): DatasetViewSet = {
+    exportConfigStr: String
+  ): ViewSet = {
 
-    val exportConfig: ExportConfig = ExportConfigManager.readConfig(exportConfigStr)
-    val checkTitle : Boolean = ExportConfigManager.checkTitle(exportConfig)
-    if (!checkTitle){
-        val msg = " Some titles in the configuration file for export are incorrect! " 
-        logger.warn(msg)
-        throw new Exception(msg)
-    }
-    val loadFullResultSet: Boolean = exportConfig.dataExport.allProteinSet
-    val loadSubsets: Boolean = true // TODO moved in the config export param?
+    val exportConfig = ExportConfigManager.readConfig(exportConfigStr)
+    
+    /*require(
+      ExportConfigManager.checkTitle(exportConfig),
+      "Some titles in the configuration file for export are incorrect !"
+    )*/
+
+    val loadFullResultSet = exportConfig.dataExport.allProteinSet
+    val loadSubsets = true // TODO moved in the config export param ?
 
     // Build the template
-    var viewSetTemplate: IViewSetTemplate = if (exportConfig.format == ExportConfigConstant.FORMAT_XLSX) new ProlineConfigViewSetTemplateAsXLSX(exportConfig) else new ProlineConfigViewSetTemplateAsTSV(exportConfig)
+    val viewSetTemplate = if (exportConfig.format == ExportConfigConstant.FORMAT_XLSX) 
+      new DatasetTemplateAsXLSX(exportConfig)
+    else 
+      new DatasetTemplateAsTSV(exportConfig)
 
-    return apply(executionContext, projectId, dsId, rsmId, loadSubsets, loadFullResultSet, viewSetName, viewSetTemplate, exportConfig)
+    this.apply(
+      executionContext,
+      projectId,
+      dsId,
+      rsmId,
+      loadSubsets,
+      loadFullResultSet,
+      viewSetName,
+      viewSetTemplate,
+      exportConfig
+    )
   }
 
   def apply(
@@ -84,8 +96,19 @@ object BuildDatasetViewSet extends LazyLogging {
     loadSubsets: Boolean,
     loadFullResultSet: Boolean,
     viewSetName: String,
-    viewSetTemplate: IViewSetTemplate): DatasetViewSet = {
-    return apply(executionContext, projectId, -1, rsmId, loadSubsets, loadFullResultSet, viewSetName, viewSetTemplate, null)
+    viewSetTemplate: IViewSetTemplate
+  ): ViewSet = {
+    this.apply(
+      executionContext,
+      projectId,
+      dsId = -1,
+      rsmId,
+      loadSubsets,
+      loadFullResultSet,
+      viewSetName,
+      viewSetTemplate,
+      exportConfig = null
+    )
   }
 
   def apply(
@@ -97,14 +120,17 @@ object BuildDatasetViewSet extends LazyLogging {
     loadFullResultSet: Boolean,
     viewSetName: String,
     viewSetTemplate: IViewSetTemplate,
-    exportConfig: ExportConfig): DatasetViewSet = {
-
-    val udsSQLCtx = executionContext.getUDSDbConnectionContext()
-    val psSQLCtx = executionContext.getPSDbConnectionContext()
-    val msiSQLCtx = executionContext.getMSIDbConnectionContext()
+    exportConfig: ExportConfig
+  ): ViewSet = {
+    
+    val udsDbCtx = executionContext.getUDSDbConnectionContext()
+    val psDbCtx = executionContext.getPSDbConnectionContext()
+    val msiDbCtx = executionContext.getMSIDbConnectionContext()
+    val msiDbHelper = new MsiDbHelper(msiDbCtx)
+    val lazyRsmProvider = new SQLLazyResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
 
     // Retrieve the project name
-    val projectName = DoJDBCReturningWork.withEzDBC(udsSQLCtx, { udsEzDBC =>
+    val projectName = DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
 
       val sqlQuery = new SelectQueryBuilder1(UdsDbProjectTable).mkSelectQuery { (t, c) =>
         List(t.NAME) -> "WHERE id = ?"
@@ -113,363 +139,291 @@ object BuildDatasetViewSet extends LazyLogging {
       udsEzDBC.selectString(sqlQuery, projectId)
     })
 
-    // Load the RSM
-    logger.debug("load RSM")
-    val rsmProvider = new SQLResultSummaryProvider(msiSQLCtx, psSQLCtx, udsSQLCtx)
+    // If dsId > 0 it seems to mean that we are loading a quantitative dataset => DBO: why ?
+    if (dsId == 0) {
+      
+      // Load the RSM
+      logger.debug(s"Loading result summary #$rsmId...")
+      val lazyRsmOpt = lazyRsmProvider.getLazyResultSummary(
+        rsmId,
+        loadFullResultSet = loadFullResultSet,
+        linkPeptideSets = loadSubsets,
+        linkResultSetEntities = true
+      )
+      require( lazyRsmOpt.isDefined, "can't load the result summary with id="+rsmId)
+      
+      val lazyRsm = lazyRsmOpt.get
+  
+      // Load child result summaries (merge)
+      val childResultSummariesLoader = () => {
+        logger.debug("Loading child result summaries (merge)...")
+        
+        // TODO: add children ids to the RsmDescriptor
+        val childRsmIds = msiDbHelper.getResultSummaryChildrenIds(rsmId)
+        val childResultSummaries = lazyRsmProvider.getLazyResultSummaries(
+          childRsmIds,
+          loadFullResultSet = loadFullResultSet,
+          linkPeptideSets = loadSubsets,
+          linkResultSetEntities = true
+        )
+        
+        childResultSummaries
+      }
+      
+      logger.debug("Build IdentDataSet")
+      
+      val identDs = new IdentDataset(
+        projectName,
+        lazyRsm,
+        childResultSummariesLoader,
+        this._buildBioSequenceLoader(msiDbCtx, lazyRsm),
+        this._buildSpectraLoader(msiDbCtx, lazyRsm)
+      )
+      
+      this.apply(identDs, viewSetName, viewSetTemplate, exportConfig)
 
-    val rsm = if (loadFullResultSet == false) rsmProvider.getResultSummary(rsmId, true).get
-    else {
-      val tmpRsm = rsmProvider.getResultSummary(rsmId, false).get
-      val rsProvider = new SQLResultSetProvider(msiSQLCtx, psSQLCtx, udsSQLCtx)
-      tmpRsm.resultSet = rsProvider.getResultSet(tmpRsm.getResultSetId)
-      tmpRsm
-    }
-    
-    //
-    // Load all Subsets of Protein Sets
-    //
-    if (loadSubsets) {
-    	logger.debug("Load all Subsets")
-      // Instantiate additional providers
-      val pepProvider = new SQLPeptideProvider(executionContext.getPSDbConnectionContext())
-      val pepInstProvider = new SQLPeptideInstanceProvider(executionContext.getMSIDbConnectionContext, pepProvider)
-      val pepSetProvider = new SQLPeptideSetProvider(executionContext.getMSIDbConnectionContext, pepInstProvider)
+    } else {
+      
+      // TODO: handle other group setups
+      val groupSetupNumber = 1
+      
+      // Retrieve masterQuantChannelId
+      val udsDbHelper = new UdsDbHelper(udsDbCtx)
+      val masterQcIds = udsDbHelper.getMasterQuantChannelIdsForQuantId(dsId)
+      require(masterQcIds.isEmpty == false, "can't retrieve master quant channels for quantitation id=" + dsId)
 
-      // Retrieve all subsets ids
-      val allSubsetIds = new ArrayBuffer[Long]
-      rsm.peptideSets.map { peptideSet =>
-        val strictSubsetIds = Option(peptideSet.strictSubsetIds).getOrElse(Array())
-        val subsumableSubsetIds = Option(peptideSet.subsumableSubsetIds).getOrElse(Array())
-        allSubsetIds ++= strictSubsetIds ++ subsumableSubsetIds
+      // FIXME: how to deal with other MQC ids
+      val masterQuantChannelId = masterQcIds.head
+
+      // Load the experimental design
+      val expDesignProvider = new SQLExperimentalDesignProvider(udsDbCtx)
+      val expDesignOpt = expDesignProvider.getExperimentalDesign(dsId)
+      require( expDesignOpt.isDefined, "can't load the experimental design of the dataset with id=" + dsId)
+      val expDesign = expDesignOpt.get
+      
+      val masterQcOpt = expDesign.masterQuantChannels.find(_.id == masterQuantChannelId)
+      require(masterQcOpt.isDefined, "undefined master quant channel with id=" + masterQuantChannelId)
+      
+      val masterQc = masterQcOpt.get
+
+      // Get entity manager
+      //val udsEM = executionContext.getUDSDbConnectionContext().getEntityManager()
+      
+      // Retrieve the master quant channel
+      //val udsMasterQuantChannel = udsEM.find(classOf[fr.proline.core.orm.uds.MasterQuantitationChannel], masterQuantChannelId)
+      //require(udsMasterQuantChannel != null, "undefined master quant channel with id=" + masterQuantChannelId)
+
+      val quantRsmId = masterQc.quantResultSummaryId.get
+      val quantChannels = masterQc.quantChannels
+      val qcIds = quantChannels.map(_.id)
+      val identRsmIds = masterQc.quantChannels.map(_.identResultSummaryId)
+      val qcIdByIdentRsmId = quantChannels.toLongMap(qc => qc.identResultSummaryId -> qc.id)
+      
+      // Load the quant RSM
+      logger.debug(s"Loading quant result summary #$rsmId...")
+      
+      val quantRsmProvider = new SQLLazyQuantResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
+      val lazyQuantRSM = quantRsmProvider.getLazyQuantResultSummaries(
+        dsId,
+        Seq(quantRsmId),
+        loadFullResultSet = loadFullResultSet,
+        linkPeptideSets = loadSubsets,
+        linkResultSetEntities = true
+      ).head
+
+      // Create a lazy loader of ident RSMs
+      val identResultSummariesLoader = () => {
+        logger.debug("Loading ident result summaries (quantitation)...")
+        lazyRsmProvider.getLazyResultSummaries(
+          identRsmIds,
+          loadFullResultSet = false,
+          linkPeptideSets = false, // TODO: set to true ?
+          linkResultSetEntities = false // TODO: set to true ?
+        )
       }
 
-      // Load all subsets
-      val allSubsets = pepSetProvider.getPeptideSets(allSubsetIds.distinct)
-      val subsetById = allSubsets.map(ps => ps.id -> ps).toMap
-      rsm.peptideSets.map { peptideSet =>
-        if (peptideSet.strictSubsetIds != null && peptideSet.strictSubsets == null) {
-          peptideSet.strictSubsets = Some(peptideSet.strictSubsetIds.map(subsetById(_)))
-        }
-        if (peptideSet.subsumableSubsetIds != null && peptideSet.subsumableSubsets == null) {
-          peptideSet.subsumableSubsets = Some(peptideSet.subsumableSubsetIds.map(subsetById(_)))
-        }
-      }
-    }
+      // TODO: update and use the QuantChannel name in the UDSdb
+      val qcNameById = {
 
-    logger.debug("load childs resultSummary (merge)")
-    // load childs resultSummary (merge)
-    var childsResultSummarys: ArrayBuffer[ResultSummary] = new ArrayBuffer[ResultSummary]()
-    val providerRsm: IResultSummaryProvider = getResultSummaryProvider(executionContext)
-    var leavesRsmIds: Seq[Long] = getRsmLeafChildsID(rsm.id, executionContext)
-    leavesRsmIds.foreach(rsmID => {
-      val resultSummaryRS = providerRsm.getResultSummary(rsmID, true)
-      if (resultSummaryRS.isDefined) {
-        val resultSummaryLeaf: ResultSummary = resultSummaryRS.get
-        childsResultSummarys += resultSummaryLeaf
-      } else {
-        val msg = " !!! Unable to get leave search result with id " + rsmID
-        logger.warn(msg)
-        throw new Exception(msg)
-      }
-    })
+        DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
 
-    // load childs resultSets (merge)
-    logger.debug("load childs resultSets (merge)")
-    var childsResultSets: ArrayBuffer[ResultSet] = new ArrayBuffer[ResultSet]()
-    if (rsm.resultSet.isDefined) {
-      val providerContext = ProviderDecoratedExecutionContext(executionContext)
-      val provider: IResultSetProvider = new SQLResultSetProvider(msiSQLCtx, psSQLCtx, udsSQLCtx)
-      val rs = rsm.resultSet.get
-      var leavesRsIds: Seq[Long] = getLeafChildsID(rs.id, executionContext)
-      leavesRsIds.foreach(rsID => {
-        val resultRS = provider.getResultSet(rsID)
-        if (resultRS.isDefined) {
-          val resultSetLeaf: ResultSet = resultRS.get
-          childsResultSets += resultSetLeaf
-        } else {
-          val msg = " !!! Unable to get leave search result with id " + rsID
-          logger.warn(msg)
-          throw new Exception(msg)
-        }
-      })
-    }
-    
-    // BioSequence
-    logger.debug("load bioseq")
-    var proteinIdByProtMatchId: Map[Long, Long] = Map()
-    var loadBioSeq: Boolean = false
-    for ((protMatchId, protMatch) <- rsm.resultSet.get.getProteinMatchById()) {
-      if (protMatch != null && protMatch.getProteinId > 0) {
-        val bioSeqId: Long = protMatch.getProteinId
-        proteinIdByProtMatchId += protMatchId -> protMatch.getProteinId
-        loadBioSeq = true
-        //val mass: Double = getBioSequence(bioSeqId, executionContext)
-        //bioSeqByBioSequenceId += protMatch.getProteinId -> mass
-      }
-    }
-    var bioSeqByBioSequenceId: Map[Long, Double] = Map()
-    if (loadBioSeq){
-      bioSeqByBioSequenceId = getBioSequence(proteinIdByProtMatchId, executionContext)
-    }
-    
-    var msQueryIdByPeptideMatchId : Map[Long, Long] = Map()
-    for ((peptideMatchId, peptideMatch) <- rsm.resultSet.get.getPeptideMatchById()) {
-      if (peptideMatch != null && peptideMatch.msQuery != null){
-        msQueryIdByPeptideMatchId += peptideMatchId -> peptideMatch.msQuery.id
-      }
-    }
-    var spectrumFirstTimeByMsQueryId: Map[Long, Double] =getSpectrumData(msQueryIdByPeptideMatchId, executionContext)
-    
-    
-
-    logger.debug("build IdentDataSet")
-    var identDs: IdentDataSet = new IdentDataSet(projectName, rsm, childsResultSummarys.toArray, childsResultSets.toArray, bioSeqByBioSequenceId, spectrumFirstTimeByMsQueryId)
-
-    // identRs
-    if (dsId > 0) {
-      // retrieve masterQuantChannelId
-      val udsDbHelper = new UdsDbHelper(udsSQLCtx)
-      val masterQuantIds = udsDbHelper.getMasterQuantChannelIdsForQuantId(dsId)
-      if (masterQuantIds != null && masterQuantIds.length > 0) {
-    	logger.debug("load masterQuantIds")
-        val masterQuantChannelId = masterQuantIds(0);
-        val quantRsmId = udsDbHelper.getMasterQuantChannelQuantRsmId(masterQuantChannelId)
-        val qcIds = udsDbHelper.getQuantChannelIds(masterQuantChannelId)
-
-        lazy val nameByQchId: Map[Long, String] = {
-
-          val qChIdByRsmId: Map[Long, Long] = {
-            DoJDBCReturningWork.withEzDBC(udsSQLCtx, { ezDBC =>
-
-              val rsmIdForquantChannelQuery = new SelectQueryBuilder1(UdsDbQuantChannelTable).mkSelectQuery(
-                (t1, c1) => List(t1.IDENT_RESULT_SUMMARY_ID, t1.ID) ->
-                  " WHERE " ~ t1.ID ~ " IN(" ~ qcIds.mkString(",") ~ ")")
-
-              ezDBC.select(rsmIdForquantChannelQuery) { r =>
-                toLong(r.nextAny) -> toLong(r.nextAny)
-              } toMap
-
-            })
+          val sqlQuery = new SelectQueryBuilder3(MsiDbResultSetTable, MsiDbResultSummaryTable, MsiDbMsiSearchTable).mkSelectQuery { (t1, c1, t2, c2, t3, c3) =>
+            List(t2.ID, t3.RESULT_FILE_NAME) ->
+              " WHERE " ~ t2.ID ~ " IN (" ~ identRsmIds.mkString(",") ~ ") " ~
+              "AND " ~ t1.ID ~ "=" ~ t2.RESULT_SET_ID ~ " AND " ~ t3.ID ~ " = " ~ t1.MSI_SEARCH_ID
           }
 
-          DoJDBCReturningWork.withEzDBC(msiSQLCtx, { ezDBC =>
-
-            val rsNameForRsmIdQuery = new SelectQueryBuilder3(MsiDbResultSetTable, MsiDbResultSummaryTable, MsiDbMsiSearchTable).mkSelectQuery(
-              (t1, c1, t2, c2, t3, c3) => List(t2.ID, t3.RESULT_FILE_NAME) ->
-                " WHERE " ~ t2.ID ~ " IN(" ~ qChIdByRsmId.keys.mkString(",") ~ ") " ~
-                "AND " ~ t1.ID ~ "=" ~ t2.RESULT_SET_ID ~ " AND " ~ t3.ID ~ " = " ~ t1.MSI_SEARCH_ID)
-
-            val resultBuilder = Map.newBuilder[Long, String]
-            ezDBC.selectAndProcess(rsNameForRsmIdQuery) { r =>
-
-              resultBuilder += qChIdByRsmId(toLong(r.nextAny)) -> r.nextString
-              ()
-            }
-           // if (resultBuilder.result().size == 0) {
-              for (qcId <- qcIds){
-              // get the name
-              val qcNameWork = new JDBCWork() {
-                override def execute(con: Connection) {
-                  val getQCName = "SELECT ds.name FROM data_set ds, quant_channel qc WHERE qc.id = ? AND qc.ident_result_summary_id = ds.result_summary_id AND ds.project_id = ? "
-                  val pStmt = con.prepareStatement(getQCName)
-                  pStmt.setLong(1, qcId)
-                  pStmt.setLong(2, projectId)
-                  val sqlResultSet = pStmt.executeQuery()
-                  while (sqlResultSet.next) { //Should be One ! 
-                    val nameQC = sqlResultSet.getString("name")
-                    resultBuilder += qcId -> nameQC
-                  }
-                  pStmt.close()
-                }
-              }
-              udsSQLCtx.doWork(qcNameWork, false)
-                
-                 //resultBuilder += qcId -> (""+qcId)
-              }
-           // }
-            
-            resultBuilder.result
-
-          })
-        }
-
-        // quant RSM
-        val quantRSM = {
-          val quantRsmProvider = new SQLQuantResultSummaryProvider(msiSQLCtx, psSQLCtx, udsSQLCtx)
-          quantRsmProvider.getQuantResultSummary(quantRsmId.get, qcIds, true).get
-        }
-        
-        val expDesignProvider = new SQLExperimentalDesignProvider(udsSQLCtx)
-        val expDesign = if (expDesignProvider.getExperimentalDesign(dsId).isDefined) expDesignProvider.getExperimentalDesign(dsId).get else null
-        var ratioDefs: Array[RatioDefinition] = null
-        //TODO: retrieve the right value
-        val groupSetupNumber = 1
-        if (expDesign != null && expDesign.groupSetupByNumber != null && expDesign.groupSetupByNumber.contains(groupSetupNumber) && expDesign.groupSetupByNumber(groupSetupNumber) != null) {
-          ratioDefs = expDesign.groupSetupByNumber(groupSetupNumber).ratioDefinitions
-        }
-        var protMatchStatusByIdPepMatchByQCId: Map[Long, Map[Long, String]] = Map()
-        var protMatchPeptideNumberByPepMatchIdByQCId: Map[Long, Map[Long, Int]] = Map()
-        var rsmIdByQChId: Map[Long, Long] = Map()
-        childsResultSummarys = new ArrayBuffer[ResultSummary]()
-        //iterate over qc Id
-        qcIds.foreach(qcId => {
-          var protMatchStatusByIdPepMatch: Map[Long, String] = Map()
-          var protMatchPeptideNumberByPepMatchId: Map[Long, Int] = Map()
-          // get the rsmId
-          val rsmIdQCWork = new JDBCWork() {
+          val longMap = new LongMap[String]()
+          ezDBC.selectAndProcess(sqlQuery) { r =>
+            longMap += qcIdByIdentRsmId(r.nextLong) -> r.nextString
+            ()
+          }
+          /*
+       // if (resultBuilder.result().size == 0) {
+          for (qcId <- qcIds){
+          // get the name
+          val qcNameWork = new JDBCWork() {
             override def execute(con: Connection) {
-              val getRSMQCQuery = "SELECT  ident_result_summary_id from quant_channel WHERE id = ?"
-              val pStmt = con.prepareStatement(getRSMQCQuery)
+              val getQCName = "SELECT ds.name FROM data_set ds, quant_channel qc WHERE qc.id = ? AND qc.ident_result_summary_id = ds.result_summary_id AND ds.project_id = ? "
+              val pStmt = con.prepareStatement(getQCName)
               pStmt.setLong(1, qcId)
+              pStmt.setLong(2, projectId)
               val sqlResultSet = pStmt.executeQuery()
               while (sqlResultSet.next) { //Should be One ! 
-                val idfRsmQC = sqlResultSet.getLong("ident_result_summary_id")
-                rsmIdByQChId += qcId -> idfRsmQC
+                val nameQC = sqlResultSet.getString("name")
+                resultBuilder += qcId -> nameQC
               }
               pStmt.close()
             }
           }
-          udsSQLCtx.doWork(rsmIdQCWork, false)
-          // replace childResultSummarys
-          childsResultSummarys += providerRsm.getResultSummary(rsmIdByQChId.get(qcId).get, true).get
-          //Read Prot Status and Nbr Peptides from DBs
-          val protStatJdbcWork = new JDBCWork() {
-            override def execute(con: Connection) {
-              //---- Read Prot Status
+          udsDbCtx.doWork(qcNameWork, false)
+            
+             //resultBuilder += qcId -> (""+qcId)
+          }
+       // }
+          */
 
-              val getProtStatus = "SELECT protein_set_id, protein_match_id, is_in_subset, representative_protein_match_id FROM protein_set_protein_match_item, protein_set " +
-                " WHERE protein_set.id = protein_set_protein_match_item.protein_set_id " +
-                " AND protein_set_protein_match_item.result_summary_id = ? "
-              val pStmt = con.prepareStatement(getProtStatus)
-              pStmt.setLong(1, rsmIdByQChId.get(qcId).get)
-
-              val sqlResultSet = pStmt.executeQuery()
-              while (sqlResultSet.next) {
-                val isInSubset = sqlResultSet.getBoolean("is_in_subset")
-                val protSetTypID = sqlResultSet.getLong("representative_protein_match_id")
-                val protMatchId = sqlResultSet.getLong("protein_match_id")
-                val protSetId = sqlResultSet.getLong("protein_set_id")
-                var protMatchStatus: String = null
-                if (isInSubset) {
-                  protMatchStatus = "Subset"
-                } else if (protSetTypID.equals(protMatchId)) { //is the typical 
-                  protMatchStatus = "Typical"
-                } else
-                  protMatchStatus = "Sameset"
-                protMatchStatusByIdPepMatch += protMatchId -> protMatchStatus
-              }
-              pStmt.close()
-
-              //---- Read Prot Status
-              val getPepCount = "SELECT peptide_count, protein_match_id FROM peptide_set_protein_match_map pspmm, peptide_set " +
-                "WHERE  pspmm.result_summary_id = ?  AND peptide_set.id = pspmm.peptide_set_id"
-              val pStmt2 = con.prepareStatement(getPepCount)
-              pStmt2.setLong(1, rsmIdByQChId.get(qcId).get)
-              val sqlResultSet2 = pStmt2.executeQuery()
-              while (sqlResultSet2.next) {
-                val protMatchPepNbr = sqlResultSet2.getInt("peptide_count")
-                val protMatchId = sqlResultSet2.getLong("protein_match_id")
-                protMatchPeptideNumberByPepMatchId += protMatchId -> protMatchPepNbr
-              }
-              pStmt2.close()
-            }
-          } // End of jdbcWork anonymous inner class    
-          msiSQLCtx.doWork(protStatJdbcWork, false)
-
-          protMatchStatusByIdPepMatchByQCId += qcId -> protMatchStatusByIdPepMatch
-          protMatchPeptideNumberByPepMatchIdByQCId += qcId -> protMatchPeptideNumberByPepMatchId
+          longMap
         })
+      }
+      
+      logger.debug("Build QuantDataSet")
 
-        identDs = new QuantiDataSet(projectName, rsm, childsResultSummarys.toArray, childsResultSets.toArray, bioSeqByBioSequenceId, spectrumFirstTimeByMsQueryId, masterQuantChannelId, quantRSM, qcIds, expDesign, ratioDefs, nameByQchId, protMatchStatusByIdPepMatchByQCId, protMatchPeptideNumberByPepMatchIdByQCId)
-      } // end masterQuantIds not null
+      val quantDs = new QuantDataset(
+        projectName,
+        lazyQuantRSM,
+        expDesign,
+        masterQc,
+        groupSetupNumber,
+        identResultSummariesLoader,
+        this._buildBioSequenceLoader(msiDbCtx, lazyQuantRSM.lazyResultSummary),
+        this._buildSpectraLoader(msiDbCtx, lazyQuantRSM.lazyResultSummary),
+        qcNameById
+      )
+
+      this.apply(quantDs, viewSetName, viewSetTemplate, exportConfig)
     }
+    
 
-    return apply(identDs, viewSetName, viewSetTemplate, exportConfig)
+    
+    // Load the experimental design
+    /*val expDesignProvider = new SQLExperimentalDesignProvider(udsDbCtx)
+    val expDesignOpt = expDesignProvider.getExperimentalDesign(dsId)
+    require( expDesignOpt.isDefined, "can't load the experimental design of the dataset with id=" + dsId)
+    val expDesign = expDesignOpt.get*/
+    
+    // TODO: handle other group setups
+    //val ratioDefs = expDesign.groupSetups.head.ratioDefinitions
+    
+    /*val protMatchStatusByIdPepMatchByQCId: Map[Long, Map[Long, String]] = Map()
+    val protMatchPeptideNumberByPepMatchIdByQCId: Map[Long, Map[Long, Int]] = Map()
+    
+    // Iterate over quant channels
+    for (qcId <- qcIds) {
+      val protMatchStatusByIdPepMatch: Map[Long, String] = Map()
+      val protMatchPeptideNumberByPepMatchId: Map[Long, Int] = Map()
+      
+      //Read Prot Status and Nbr Peptides from DBs
+      val protStatJdbcWork = new JDBCWork() {
+        override def execute(con: Connection) {
+          //---- Read Prot Status
 
-  }
+          val getProtStatus = "SELECT protein_set_id, protein_match_id, is_in_subset, representative_protein_match_id FROM protein_set_protein_match_item, protein_set " +
+            " WHERE protein_set.id = protein_set_protein_match_item.protein_set_id " +
+            " AND protein_set_protein_match_item.result_summary_id = ? "
+          val pStmt = con.prepareStatement(getProtStatus)
+          pStmt.setLong(1, rsmIdByQChId.get(qcId).get)
 
-  private def getLeafChildsID(rsId: Long, execContext: IExecutionContext): Seq[Long] = {
-    var allRSIds = Seq.newBuilder[Long]
+          val sqlResultSet = pStmt.executeQuery()
+          while (sqlResultSet.next) {
+            val isInSubset = sqlResultSet.getBoolean("is_in_subset")
+            val protSetTypID = sqlResultSet.getLong("representative_protein_match_id")
+            val protMatchId = sqlResultSet.getLong("protein_match_id")
+            val protSetId = sqlResultSet.getLong("protein_set_id")
+            var protMatchStatus: String = null
+            if (isInSubset) {
+              protMatchStatus = "Subset"
+            } else if (protSetTypID.equals(protMatchId)) { //is the typical 
+              protMatchStatus = "Representative"
+            } else
+              protMatchStatus = "Sameset"
+            protMatchStatusByIdPepMatch += protMatchId -> protMatchStatus
+          }
+          pStmt.close()
 
-    val jdbcWork = new JDBCWork() {
-
-      override def execute(con: Connection) {
-
-        val stmt = con.prepareStatement("select child_result_set_id from result_set_relation where result_set_relation.parent_result_set_id = ?")
-        stmt.setLong(1, rsId)
-        val sqlResultSet = stmt.executeQuery()
-        var childDefined = false
-        while (sqlResultSet.next) {
-          childDefined = true
-          val nextChildId = sqlResultSet.getInt(1)
-          allRSIds ++= getLeafChildsID(nextChildId, execContext)
+          //---- Read Prot Status
+          val getPepCount = "SELECT peptide_count, protein_match_id FROM peptide_set_protein_match_map pspmm, peptide_set " +
+            "WHERE  pspmm.result_summary_id = ?  AND peptide_set.id = pspmm.peptide_set_id"
+          val pStmt2 = con.prepareStatement(getPepCount)
+          pStmt2.setLong(1, rsmIdByQChId.get(qcId).get)
+          val sqlResultSet2 = pStmt2.executeQuery()
+          while (sqlResultSet2.next) {
+            val protMatchPepNbr = sqlResultSet2.getInt("peptide_count")
+            val protMatchId = sqlResultSet2.getLong("protein_match_id")
+            protMatchPeptideNumberByPepMatchId += protMatchId -> protMatchPepNbr
+          }
+          pStmt2.close()
         }
-        if (!childDefined)
-          allRSIds += rsId
-        stmt.close()
       } // End of jdbcWork anonymous inner class
-    }
-    execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
+      msiSQLCtx.doWork(protStatJdbcWork, false)
 
-    allRSIds.result
+      protMatchStatusByIdPepMatchByQCId += qcId -> protMatchStatusByIdPepMatch
+      protMatchPeptideNumberByPepMatchIdByQCId += qcId -> protMatchPeptideNumberByPepMatchId
+    }*/
+
+ 
   }
 
-  private def getRsmLeafChildsID(rsmId: Long, execContext: IExecutionContext): Seq[Long] = {
-    var allRSMIds = Seq.newBuilder[Long]
-
-    val jdbcWork = new JDBCWork() {
-
-      override def execute(con: Connection) {
-
-        val stmt = con.prepareStatement("select child_result_summary_id from result_summary_relation where result_summary_relation.parent_result_summary_id = ?")
-        stmt.setLong(1, rsmId)
-        val sqlResultSummary = stmt.executeQuery()
-        var childDefined = false
-        while (sqlResultSummary.next) {
-          childDefined = true
-          val nextChildId = sqlResultSummary.getInt(1)
-          allRSMIds ++= getRsmLeafChildsID(nextChildId, execContext)
+  private def _buildBioSequenceLoader(msiDbCtx: DatabaseConnectionContext, lazyRsm: LazyResultSummary) = {
+    () => {
+      logger.debug("Loading biological sequences...")
+      
+      val bioSeqProvider = new SQLBioSequenceProvider(msiDbCtx)
+      
+      val protMatches = lazyRsm.lazyResultSet.proteinMatches
+      val protIds = new ArrayBuffer[Long](protMatches.length)
+  
+      for (protMatch <- protMatches) {
+        val protId = protMatch.getProteinId
+        if (protId > 0) {
+          protIds += protId
         }
-        if (!childDefined)
-          allRSMIds += rsmId
-        stmt.close()
-      } // End of jdbcWork anonymous inner class
+      }
+      
+      bioSeqProvider.getBioSequences(protIds, loadSequence = false)
     }
-    execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
-
-    allRSMIds.result
-  }
-
-  private def getResultSummaryProvider(execContext: IExecutionContext): IResultSummaryProvider = {
-
-    new SQLResultSummaryProvider(execContext.getMSIDbConnectionContext,
-      execContext.getPSDbConnectionContext,
-      execContext.getUDSDbConnectionContext)
   }
   
-  private def getBioSequence(proteinIdByProtMatchId: Map[Long, Long], execContext: IExecutionContext): Map[Long, Double] = {
-    
-    var bioSeqByBioSequenceId: Map[Long, Double] = Map()
-    var ids: String = proteinIdByProtMatchId.values.toList.mkString(",")
-    
-    val jdbcWork = new JDBCWork() {
-
-      override def execute(con: Connection) {
-
-        val stmt = con.prepareStatement("select id, mass from bio_sequence where id IN ("+ids+") ")
-        val sqlBioSeq = stmt.executeQuery()
-        while (sqlBioSeq.next) {
-          var proteinId = sqlBioSeq.getLong("id")
-          var mass = sqlBioSeq.getDouble("mass")
-          bioSeqByBioSequenceId += proteinId -> mass
+  private def _buildSpectraLoader(msiDbCtx: DatabaseConnectionContext, lazyRsm: LazyResultSummary) = {
+    () => {
+      logger.debug("Loading spectra descriptors...")
+      
+      val spectrumProvider = new SQLSpectrumProvider(msiDbCtx)
+      
+      /*var msQueryIdByPeptideMatchId : Map[Long, Long] = Map()
+      for ((peptideMatchId, peptideMatch) <- rsm.resultSet.get.getPeptideMatchById()) {
+        if (peptideMatch != null && peptideMatch.msQuery != null){
+          msQueryIdByPeptideMatchId += peptideMatchId -> peptideMatch.msQuery.id
         }
-        stmt.close()
-      } // End of jdbcWork anonymous inner class
+      }
+      var spectrumFirstTimeByMsQueryId: Map[Long, Double] =getSpectrumData(msQueryIdByPeptideMatchId, executionContext)
+      */
+      
+      val peptideMatches = lazyRsm.lazyResultSet.peptideMatches
+      val spectraIds = new ArrayBuffer[Long](peptideMatches.length)
+      for( peptideMatch <- peptideMatches) {
+        if( peptideMatch.msQuery != null ) {
+          peptideMatch.msQuery match {
+            case ms2Query: Ms2Query => spectraIds += ms2Query.spectrumId
+          }
+        }
+      }
+      
+      spectrumProvider.getSpectra(spectraIds, loadPeaks = false)
     }
-    execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
-    bioSeqByBioSequenceId
   }
   
+  /*
   private def getSpectrumData(msQueryIdByPeptideMatchId: Map[Long, Long], execContext: IExecutionContext): Map[Long, Double] = {
     var spectrumBySpectrumId: Map[Long, Double] = Map()
     if (msQueryIdByPeptideMatchId.values.toList.length > 0){
@@ -492,6 +446,6 @@ object BuildDatasetViewSet extends LazyLogging {
       execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
     }
     spectrumBySpectrumId
-  }
+  }*/
 
 }

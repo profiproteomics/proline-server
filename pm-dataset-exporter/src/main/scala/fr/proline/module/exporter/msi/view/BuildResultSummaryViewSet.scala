@@ -1,42 +1,39 @@
 package fr.proline.module.exporter.msi.view
 
 import java.sql.Connection
+
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+
 import com.typesafe.scalalogging.LazyLogging
+
 import fr.profi.jdbc.easy._
 import fr.profi.util.serialization.CustomDoubleJacksonSerializer
 import fr.profi.util.serialization.ProfiJSMSerialization
-import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.DoJDBCWork
+import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.SelectQueryBuilder2
-import fr.proline.core.dal.tables.SelectQueryBuilder.any2ClauseAdd
 import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
 import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchObjectTreeMapTable
 import fr.proline.core.dal.tables.uds.UdsDbProjectTable
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msi.SpectrumMatch
-import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 import fr.proline.core.om.provider.msi.impl._
+import fr.proline.core.om.provider.msq.impl.SQLMasterQuantPeptideProvider
 import fr.proline.module.exporter.api.template._
 import fr.proline.module.exporter.api.template.ViewWithTemplate
-import fr.proline.module.exporter.api.view.IDatasetView
 import fr.proline.module.exporter.commons.config.ExportConfig
-import fr.proline.module.exporter.commons.config.template.ProlineConfigViewSetTemplateAsTSV
-import fr.proline.module.exporter.commons.config.template.ProlineConfigViewSetTemplateAsXLSX
+import fr.proline.module.exporter.commons.view.ViewSet
 import fr.proline.repository.util.JDBCWork
-import fr.proline.core.om.provider.msq.impl.SQLMasterQuantPeptideIonProvider
-import fr.proline.core.om.model.msq.MasterQuantPeptideIon
-import fr.proline.core.om.provider.msq.impl.SQLMasterQuantPeptideProvider
 
 object BuildResultSummaryViewSet extends LazyLogging {
 
-  def apply(ds: MsiIdentDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate, exportConfig: ExportConfig): ResultSummaryViewSet = {
+  def apply(ds: MsiIdentDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate, exportConfig: ExportConfig): ViewSet = {
 
     val templatedViews = viewSetTemplate.templatedViewTypes.map { templatedViewType =>
       val viewWithTpl = ViewWithTemplate(BuildResultSummaryView(ds, templatedViewType.viewType), templatedViewType.template)
@@ -45,7 +42,7 @@ object BuildResultSummaryViewSet extends LazyLogging {
       viewWithTpl
     }
 
-    new ResultSummaryViewSet(viewSetName, templatedViews, exportConfig)
+    new ViewSet(viewSetName, viewSetTemplate, templatedViews, exportConfig)
   }
 
   def apply(
@@ -55,7 +52,8 @@ object BuildResultSummaryViewSet extends LazyLogging {
     loadSubsets: Boolean,
     loadFullResultSet: Boolean,
     viewSetName: String,
-    viewSetTemplate: IViewSetTemplate): ResultSummaryViewSet = {
+    viewSetTemplate: IViewSetTemplate
+  ): ViewSet = {
     return apply(executionContext, projectId, rsmId, loadSubsets, loadFullResultSet, viewSetName, viewSetTemplate, null)
   }
 
@@ -67,7 +65,8 @@ object BuildResultSummaryViewSet extends LazyLogging {
     loadFullResultSet: Boolean,
     viewSetName: String,
     viewSetTemplate: IViewSetTemplate,
-    exportConfig: ExportConfig): ResultSummaryViewSet = {
+    exportConfig: ExportConfig
+  ): ViewSet = {
 
     val udsSQLCtx = executionContext.getUDSDbConnectionContext()
     val psSQLCtx = executionContext.getPSDbConnectionContext()
@@ -200,7 +199,7 @@ object BuildRSMSpectraViewSet extends LazyLogging {
 
   object CustomSerializer extends ProfiJSMSerialization with CustomDoubleJacksonSerializer
 
-  def apply(ds: IdentWithSpectrumDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate, exportConfig: ExportConfig): RSMSpectraViewSet = {
+  def apply(ds: IdentWithSpectrumDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate, exportConfig: ExportConfig): ViewSet = {
 
     val templatedViews = viewSetTemplate.templatedViewTypes.map { templatedViewType =>
       val viewWithTpl = ViewWithTemplate(BuildRSMSpectraView(ds, templatedViewType.viewType), templatedViewType.template)
@@ -209,7 +208,7 @@ object BuildRSMSpectraViewSet extends LazyLogging {
       viewWithTpl
     }
 
-    new RSMSpectraViewSet(viewSetName, templatedViews, exportConfig)
+    new ViewSet(viewSetName, viewSetTemplate, templatedViews, exportConfig)
   }
 
   def apply(
@@ -217,7 +216,8 @@ object BuildRSMSpectraViewSet extends LazyLogging {
     projectId: Long,
     rsmId: Long,
     viewSetName: String,
-    viewSetTemplate: IViewSetTemplate): RSMSpectraViewSet = {
+    viewSetTemplate: IViewSetTemplate
+  ): ViewSet = {
 
     val loadFullResultSet = false //See if needed ! 
 

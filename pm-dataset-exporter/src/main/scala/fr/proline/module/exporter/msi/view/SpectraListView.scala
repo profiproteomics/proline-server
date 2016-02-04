@@ -1,7 +1,7 @@
 package fr.proline.module.exporter.msi.view
 
-import fr.proline.module.exporter.api.view.IFixedDatasetView
-import fr.proline.module.exporter.dataset.view.IdentDataSet
+import fr.proline.module.exporter.api.view.IFixedTableView
+import fr.proline.module.exporter.dataset.IdentDataset
 import fr.proline.module.exporter.api.view._
 import fr.proline.core.om.model.msi.MSISearch
 import fr.proline.core.om.model.msi.ProteinSet
@@ -39,7 +39,7 @@ object SpectraListViewFields extends IViewFieldEnumeration {
     
 }
 
-class SpectraListView( val identDS: IdentWithSpectrumDataSet ) extends IFixedDatasetView with LazyLogging {
+class SpectraListView( val identDS: IdentWithSpectrumDataSet ) extends IFixedTableView with LazyLogging {
   
     val rtByPepId = new HashMap[Long,(Float,String)]
     var viewName = "spectrum_list"

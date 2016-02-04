@@ -19,11 +19,11 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import fr.proline.module.exporter.commons.config.ExportConfig
 import fr.proline.module.exporter.commons.config.ExportConfigManager
-
+import fr.proline.module.exporter.commons.view.ViewSet
 
 object BuildQuantitationViewSet {
 
-  def apply(ds: QuantiDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate, exportConfig : ExportConfig): QuantitationViewSet = {
+  def apply(ds: QuantiDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate, exportConfig : ExportConfig): ViewSet = {
 
     val templatedViews = viewSetTemplate.templatedViewTypes.map { templatedViewType =>
       val viewWithTpl = ViewWithTemplate(BuildQuantitationView(ds, templatedViewType.viewType, exportConfig), templatedViewType.template)
@@ -32,7 +32,7 @@ object BuildQuantitationViewSet {
       viewWithTpl
     }
 
-    new QuantitationViewSet(viewSetName, templatedViews, exportConfig)
+    new ViewSet(viewSetName, viewSetTemplate, templatedViews, exportConfig)
   }
   
   def apply(
@@ -43,8 +43,7 @@ object BuildQuantitationViewSet {
     expDesign: ExperimentalDesign,
     viewSetName: String,
     viewSetTemplate: IViewSetTemplate
-    
-  ): QuantitationViewSet = {
+  ): ViewSet = {
     
     return apply(executionContext,projectId,quantDSId , masterQuantChannelId, expDesign, viewSetName, viewSetTemplate, null )
   }
@@ -58,8 +57,7 @@ object BuildQuantitationViewSet {
     expDesign: ExperimentalDesign,
     viewSetName: String,
     exportConfigStr: String
-    
-  ): QuantitationViewSet = {
+  ): ViewSet = {
     val exportConfig : ExportConfig = ExportConfigManager.readConfig(exportConfigStr)
     return apply(executionContext,projectId,quantDSId , masterQuantChannelId, expDesign, viewSetName, null, exportConfig )
   }
@@ -74,8 +72,7 @@ object BuildQuantitationViewSet {
     viewSetName: String,
     viewSetTemplate: IViewSetTemplate, 
     exportConfig : ExportConfig
-    
-  ): QuantitationViewSet = {
+  ): ViewSet = {
 
     val udsSQLCtx = executionContext.getUDSDbConnectionContext()
     val psSQLCtx = executionContext.getPSDbConnectionContext()

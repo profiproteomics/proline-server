@@ -1,16 +1,16 @@
 package fr.proline.module.exporter.api.view
 
-import fr.proline.module.exporter.commons.XDatasetExporter
-import fr.proline.module.exporter.api.IDatasetExporter
-import fr.proline.module.exporter.api.template.IViewTemplate
+import fr.proline.module.exporter.api.formatter.IViewFormatter
+import fr.proline.module.exporter.api.template.IViewSetTemplate
 import fr.proline.module.exporter.api.template.ViewWithTemplate
 import fr.proline.module.exporter.commons.config.ExportConfig
+import fr.proline.module.exporter.commons.formatter.BuildViewFormatter
 
 trait IViewSet {
   
   var viewSetName: String
+  val viewSetTemplate: IViewSetTemplate
   val templatedViews: Seq[ViewWithTemplate]
-  val exportConfig : ExportConfig
+  val exportConfig: ExportConfig
   
-  def exporters: Seq[IDatasetExporter]
 }

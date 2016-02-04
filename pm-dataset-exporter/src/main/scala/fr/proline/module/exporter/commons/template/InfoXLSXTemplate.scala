@@ -1,40 +1,28 @@
 package fr.proline.module.exporter.commons.template
 
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.Font
 import org.apache.poi.ss.usermodel.IndexedColors
-import org.apache.poi.ss.usermodel.WorkbookFactory
-import org.apache.poi.xssf.usermodel.XSSFWorkbook
 
 import fr.proline.module.exporter.api.view.IDataView
-import fr.proline.module.exporter.api.view.IViewFieldEnumeration
+import fr.proline.module.exporter.commons.context.WorkbookContext
 
+// TODO: rename to VerticalXLSXTemplate
 class InfoXLSXTemplate(
   val selectedFields: Option[Seq[String]] = None
 ) extends IWorksheetTemplate {
   
-  val fileExtension: String = "xlsx"
-  
-  def newWorkbook( workbookLocation: File ) {    
-    val fileOut = new FileOutputStream(workbookLocation)
-    val wb = new XSSFWorkbook()
-    wb.write(fileOut)
-    fileOut.close()
-  }
-  
-  def newWorksheet( view: IDataView, workbookLocation: File ) {
+  val fileExtension = FileExtensionEnum.XLSX
+
+  def newWorksheet(view: IDataView, workbookCreationContext: WorkbookContext) {
     
     val selectedFieldsOrFields: Seq[String] = {
       if( selectedFields.isDefined ) selectedFields.get
       else view.getFieldsNames
     }
     
-    // Open workbook
-    val wb = WorkbookFactory.create( new FileInputStream(workbookLocation) )
+    // Retrieve workbook
+    val wb = workbookCreationContext.workbook.get
     
     // Create worksheet
     val sheet = wb.createSheet(view.viewName)
@@ -71,7 +59,7 @@ class InfoXLSXTemplate(
     dataCellStyleRow2.setFillPattern(CellStyle.SOLID_FOREGROUND)
     
     // create an array to control width of columns
-    val colSizeMap = scala.collection.mutable.Map[Int,Int]()
+    val colSizeMap = scala.collection.mutable.LongMap[Int]()
     
     // Add header to the worksheet as the first column
     var( colIdx, rowIdx ) = ( 0, 0 )
@@ -118,32 +106,16 @@ class InfoXLSXTemplate(
           cell.setCellStyle(dataCellStyleRow2)
         }
         
-        val value = record.get(field).flatMap( Option(_) ).getOrElse("")
+        val colSize = this.setCellValue(cell, record, field)
 
-        // TODO: manage Date, timestamp...
-        var l = 12 // default column size
-        value match {
-          case d: Double => cell.setCellValue(d)
-          case num: Number => cell.setCellValue(num.doubleValue)
-          case s: String => {
-            cell.setCellValue(s)
-            l = s.length()
-          }
-          case a: Any => {
-            cell.setCellValue(a.toString)
-            l = a.toString.length()
-          }
-        }
-
-        val size = colSizeMap.get(colIdx)
-        if (size.isDefined) {
-          if (l > colSizeMap(colIdx)) {
-            colSizeMap(colIdx) = l
+        val sizeOpt = colSizeMap.get(colIdx)
+        if (sizeOpt.isDefined) {
+          if (colSize > sizeOpt.get) {
+            colSizeMap(colIdx) = colSize
           }
         } else {
-          colSizeMap(colIdx) = l
+          colSizeMap(colIdx) = colSize
         }
-        
         
         rowIdx += 1
       }
@@ -152,15 +124,9 @@ class InfoXLSXTemplate(
     
     // size the columns
     for ((col, nbCharacters) <- colSizeMap) {
-      sheet.setColumnWidth(col, (nbCharacters*256+256).min(255*256))  // the unit is 1/256 char, highest value is 255*256 
+      sheet.setColumnWidth(col.toInt, (nbCharacters*256+256).min(255*256))  // the unit is 1/256 char, highest value is 255*256 
     }
-    
-    // Write result to the file
-    val fileOut = new FileOutputStream(workbookLocation)
-    wb.write(fileOut)
-    
-    // Close the file    
-    fileOut.close()    
+
   }
 
 }

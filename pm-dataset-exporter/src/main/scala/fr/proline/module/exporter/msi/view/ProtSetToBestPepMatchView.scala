@@ -6,7 +6,7 @@ import fr.proline.context.IExecutionContext
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.module.exporter.api.template.IViewTemplate
-import fr.proline.module.exporter.api.view.IDatasetView
+import fr.proline.module.exporter.api.view.ITableLikeView
 import fr.proline.module.exporter.api.view.IViewFieldEnumeration
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
 

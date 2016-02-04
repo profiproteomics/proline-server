@@ -79,7 +79,7 @@ class MasterQuantPeptideViewFields (qcIds: Array[Long], ratioDefs: Array[RatioDe
 
 }
 
-class MasterQuantPeptideView( val quantiDS: QuantiDataSet ) extends IFixedDatasetView with LazyLogging {
+class MasterQuantPeptideView( val quantiDS: QuantiDataSet ) extends IFixedTableView with LazyLogging {
   
   
   val fields  = new MasterQuantPeptideViewFields(quantiDS.qcIds, quantiDS.ratioDefs, quantiDS.nameByQchId)

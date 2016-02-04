@@ -3,20 +3,17 @@ package fr.proline.module.exporter.commons.config
 import fr.profi.util.serialization._
 
 /**
- * represents the export file configuration. It has global parameters and different ExportSheetConfig
+ * Represents the export file configuration.
+ * It has global parameters and different ExportSheetConfig
  */
-
 case class ExportConfig(
-  var format: String, // cf FORMAT_XLSX or FORMAT_TSV
-  var decimalSeparator: Char,
-  var dateFormat: String,
-  var titleSeparator: String,
-  var dataExport: ExportConfigData,
-  var sheets: Array[ExportConfigSheet] // sorted by positions
+  val format: String = ExportConfigConstant.FORMAT_XLSX, // cf FORMAT_XLSX or FORMAT_TSV
+  val decimalSeparator: Char = ExportConfigConstant.DECIMAL_SEPARATOR_DOT,
+  val dateFormat: String = ExportConfigConstant.DATE_FORMAT_HOUR,
+  val titleSeparator: String = ExportConfigConstant.SEPARATOR_INCREMENTAL_TITLE_UNDERSCORE,
+  val dataExport: ExportConfigData = ExportConfigData.getDefaultConfig(),
+  val sheets: Array[ExportConfigSheet] = Array() // sorted by positions
   ) {
-  // Plain constructor
-  def this() = this(ExportConfigConstant.FORMAT_XLSX, ExportConfigConstant.DECIMAL_SEPARATOR_DOT, ExportConfigConstant.DATE_FORMAT_HOUR,
-    ExportConfigConstant.SEPARATOR_INCREMENTAL_TITLE_UNDERSCORE, new ExportConfigData(), Array.empty[ExportConfigSheet])
 
   val formatValues: Array[String] = ExportConfigConstant.FORMAT_VALUES
   val decimalSeparatorValues: Array[String] = ExportConfigConstant.DECIMAL_SPEARATOR_VALUES
@@ -32,85 +29,74 @@ object ExportConfig {
 
   // build object  from  JSON 
   def fromJSON(jsonConfig: String): ExportConfig = {
-    val config: ExportConfig = CustomSerializer.deserialize[ExportConfig](jsonConfig)
-    return config
+    CustomSerializer.deserialize[ExportConfig](jsonConfig)
   }
 
   // write object to JSON String
-  def toJSON(conf: ExportConfig): String = {
-    return CustomSerializer.serialize(conf)
-  }
+  def toJSON(conf: ExportConfig): String = CustomSerializer.serialize(conf)
 
   // get all config for identification export
   def getAllForIdentificationExport(): ExportConfig = {
-    var informationSheet: ExportConfigSheet = ExportConfigSheet.getAllInformationSheet()
-    var importSheet: ExportConfigSheet = ExportConfigSheet.getAllImportSheet()
-    var proteinSetSheet: ExportConfigSheet = ExportConfigSheet.getAllProteinSetSheet(false, false)
-    var bestPSMSheet: ExportConfigSheet = ExportConfigSheet.getAllBestPSMSheet(false, false)
-    var proteinMatchSheet: ExportConfigSheet = ExportConfigSheet.getAllProteinMatchSheet()
-    var allPSMSheet: ExportConfigSheet = ExportConfigSheet.getAllAllPSMSheet(false, false)
-    var statSheet: ExportConfigSheet = ExportConfigSheet.getAllStatSheet()
-    var sheetsList: Array[ExportConfigSheet] = Array(informationSheet, importSheet, proteinSetSheet, bestPSMSheet, proteinMatchSheet, allPSMSheet, statSheet)
-    var conf: ExportConfig = new ExportConfig(
-      ExportConfigConstant.FORMAT_XLSX,
-      ExportConfigConstant.DECIMAL_SEPARATOR_DOT,
-      ExportConfigConstant.DATE_FORMAT_HOUR,
-      ExportConfigConstant.SEPARATOR_INCREMENTAL_TITLE_UNDERSCORE,
-      ExportConfigData.getAllConfig(),
-      sheetsList
+    ExportConfig(
+      sheets = Array(
+        ExportConfigSheet.getAllInformationSheet(),
+        ExportConfigSheet.getAllImportSheet(),
+        ExportConfigSheet.getAllProteinSetSheet(fromXIC = false, fromSC = false),
+        ExportConfigSheet.getAllBestPSMSheet(fromXIC = false, fromSC = false),
+        ExportConfigSheet.getAllProteinMatchSheet(),
+        ExportConfigSheet.getAllAllPSMSheet(fromXIC = false, fromSC = false),
+        ExportConfigSheet.getAllStatSheet()
+      )
     )
-
-    return conf
   }
 
   // get all config for SC export
   def getAllForSCExport(): ExportConfig = {
-    var informationSheet: ExportConfigSheet = ExportConfigSheet.getAllInformationSheet()
-    var importSheet: ExportConfigSheet = ExportConfigSheet.getAllImportSheet()
-    var proteinSetSheet: ExportConfigSheet = ExportConfigSheet.getAllProteinSetSheet(false, true)
-    var bestPSMSheet: ExportConfigSheet = ExportConfigSheet.getAllBestPSMSheet(false, true)
+    
+    val bestPSMSheet = ExportConfigSheet.getAllBestPSMSheet(fromXIC = false, fromSC = true)
     bestPSMSheet.defaultDisplayed = false
-    var proteinMatchSheet: ExportConfigSheet = ExportConfigSheet.getAllProteinMatchSheet()
-    var allPSMSheet: ExportConfigSheet = ExportConfigSheet.getAllAllPSMSheet(false, true)
-    //allPSMSheet.defaultDisplayed = false
-    var statSheet: ExportConfigSheet = ExportConfigSheet.getAllStatSheet()
+    
+    val statSheet = ExportConfigSheet.getAllStatSheet()
     statSheet.defaultDisplayed = false
-    var sheetsList: Array[ExportConfigSheet] = Array(informationSheet, importSheet, proteinSetSheet, bestPSMSheet, proteinMatchSheet, allPSMSheet, statSheet)
-    var conf: ExportConfig = new ExportConfig(
-      ExportConfigConstant.FORMAT_XLSX,
-      ExportConfigConstant.DECIMAL_SEPARATOR_DOT,
-      ExportConfigConstant.DATE_FORMAT_HOUR,
-      ExportConfigConstant.SEPARATOR_INCREMENTAL_TITLE_UNDERSCORE,
-      ExportConfigData.getAllConfig(),
-      sheetsList
+    
+    ExportConfig(
+      sheets = Array(
+        ExportConfigSheet.getAllInformationSheet(),
+        ExportConfigSheet.getAllImportSheet(),
+        ExportConfigSheet.getAllProteinSetSheet(fromXIC = false, fromSC =true),
+        bestPSMSheet,
+        ExportConfigSheet.getAllProteinMatchSheet(),
+        ExportConfigSheet.getAllAllPSMSheet(fromXIC = false, fromSC =true),
+        statSheet
+      )
     )
-
-    return conf
   }
 
   // get all config for XIC export
   def getAllForXICExport(): ExportConfig = {
-    var informationSheet: ExportConfigSheet = ExportConfigSheet.getAllInformationSheet()
-    var importSheet: ExportConfigSheet = ExportConfigSheet.getAllImportSheet()
-    var proteinSetSheet: ExportConfigSheet = ExportConfigSheet.getAllProteinSetSheet(true, false)
-    var bestPSMSheet: ExportConfigSheet = ExportConfigSheet.getAllBestPSMSheet(false, true)
+    
+    // DBO: why fromXIC == false here ???
+    val bestPSMSheet = ExportConfigSheet.getAllBestPSMSheet(fromXIC = false, fromSC = true)
     bestPSMSheet.defaultDisplayed = false
-    var proteinMatchSheet: ExportConfigSheet = ExportConfigSheet.getAllProteinMatchSheet()
+    
+    val proteinMatchSheet = ExportConfigSheet.getAllProteinMatchSheet()
     proteinMatchSheet.defaultDisplayed = false
-    var allPSMSheet: ExportConfigSheet = ExportConfigSheet.getAllAllPSMSheet(true, false)
-    var masterQuantPeptideIon: ExportConfigSheet = ExportConfigSheet.getAllMasterQuantPeptideIon()
-    var statSheet: ExportConfigSheet = ExportConfigSheet.getAllStatSheet()
+    
+    val statSheet = ExportConfigSheet.getAllStatSheet()
     statSheet.defaultDisplayed = false
-    var sheetsList: Array[ExportConfigSheet] = Array(informationSheet, importSheet, proteinSetSheet, bestPSMSheet, proteinMatchSheet, allPSMSheet, masterQuantPeptideIon, statSheet)
-    var conf: ExportConfig = new ExportConfig(
-      ExportConfigConstant.FORMAT_XLSX,
-      ExportConfigConstant.DECIMAL_SEPARATOR_DOT,
-      ExportConfigConstant.DATE_FORMAT_HOUR,
-      ExportConfigConstant.SEPARATOR_INCREMENTAL_TITLE_UNDERSCORE,
-      ExportConfigData.getAllConfig(),
-      sheetsList
+    
+    ExportConfig(
+      sheets = Array(
+        ExportConfigSheet.getAllInformationSheet(),
+        ExportConfigSheet.getAllImportSheet(),
+        ExportConfigSheet.getAllProteinSetSheet(fromXIC = true, fromSC = false),
+        bestPSMSheet,
+        proteinMatchSheet,
+        ExportConfigSheet.getAllAllPSMSheet(fromXIC = true, fromSC = false),
+        ExportConfigSheet.getAllMasterQuantPeptideIon(),
+        statSheet
+      )
     )
 
-    return conf
   }
 }

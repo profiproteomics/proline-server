@@ -26,7 +26,7 @@ trait IProtSetToToTypicalProtMatchViewFields extends IViewFieldEnumeration {
 
 object ProtSetToToTypicalProtMatchViewFields extends IProtSetToToTypicalProtMatchViewFields
 
-abstract class AbstractProtSetToTypicalProtMatchView extends IFixedDatasetView {
+abstract class AbstractProtSetToTypicalProtMatchView extends IFixedTableView {
   
   val identDS: MsiIdentDataSet
   private val protSetFields = ProtSetToToTypicalProtMatchViewFields

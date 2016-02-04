@@ -123,7 +123,7 @@ class MasterQuantPeptideIonsViewFields (qcIds: Array[Long], ratioDefs: Array[Rat
 
 }
 
-class MasterQuantPeptideIonsView( val quantiDS: QuantiDataSet ) extends IFixedDatasetView {
+class MasterQuantPeptideIonsView( val quantiDS: QuantiDataSet ) extends IFixedTableView {
   
   
   val fields = new MasterQuantPeptideIonsViewFields(quantiDS.qcIds, quantiDS.ratioDefs, quantiDS.nameByQchId)

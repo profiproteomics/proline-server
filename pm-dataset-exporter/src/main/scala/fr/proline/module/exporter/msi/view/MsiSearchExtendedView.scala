@@ -39,7 +39,7 @@ object MsiSearchExtendedViewFields extends IViewFieldEnumeration {
   // option C13 is missing => we need to import this information ?
 }
 
-class MsiSearchExtendedView( val identDS: MsiIdentDataSet ) extends IFixedDatasetView {
+class MsiSearchExtendedView( val identDS: MsiIdentDataSet ) extends IFixedTableView {
   
   val rsm = identDS.resultSummary
   var viewName = "msi_search"

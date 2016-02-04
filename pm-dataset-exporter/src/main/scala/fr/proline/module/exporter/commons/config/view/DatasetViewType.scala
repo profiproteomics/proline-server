@@ -2,7 +2,7 @@ package fr.proline.module.exporter.commons.config.view
 
 import fr.proline.module.exporter.api.view.IViewTypeEnumeration
 
-object DatasetViewTypes extends IViewTypeEnumeration {
+object DatasetViewType extends IViewTypeEnumeration {
   val MSI_SEARCH_EXTENDED = Value("MSI_SEARCH_EXTENDED")
   val IMPORT_AND_VALIDATION_PROPS = Value("IMPORT_AND_VALIDATION_PROPS")
   val STATISTICS = Value("STATISTICS")

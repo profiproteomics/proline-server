@@ -1,14 +1,14 @@
 package fr.proline.module.exporter.msi.template
 
-import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.module.exporter.api.template._
+import fr.proline.module.exporter.commons.template.AbstractViewSetXLSXTemplate
 import fr.proline.module.exporter.commons.template.BasicXLSXTemplate
 import fr.proline.module.exporter.commons.template.InfoXLSXTemplate
-import fr.proline.module.exporter.msi.view.ProtSetToPepMatchViewFields
 import fr.proline.module.exporter.msi.view.MsiSearchExtendedViewFields
-import fr.proline.module.exporter.msi.view.ResultSummaryViewTypes
+import fr.proline.module.exporter.msi.view.ProtSetToPepMatchViewFields
+import fr.proline.module.exporter.msi.view.ResultSummaryViewType
 
-object ProlineViewSetTemplateAsXLSX extends IViewSetTemplate {
+object ProlineViewSetTemplateAsXLSX extends AbstractViewSetXLSXTemplate {
 
   // Create a generic XLSX template for views
   private val basicXlsxTemplate = new BasicXLSXTemplate()
@@ -95,16 +95,16 @@ object ProlineViewSetTemplateAsXLSX extends IViewSetTemplate {
   )
   
   val templatedViewTypes: Seq[ViewTypeWithTemplate] = Seq(
-    ViewTypeWithTemplate( ResultSummaryViewTypes.MSI_SEARCH_EXTENDED, infoXlsxTemplate, viewName = Some("search settings") ),
-    ViewTypeWithTemplate( ResultSummaryViewTypes.MSI_SEARCH_EXTENDED, datasetsXlsxTemplate, viewName = Some("datasets") ),
+    ViewTypeWithTemplate( ResultSummaryViewType.MSI_SEARCH_EXTENDED, infoXlsxTemplate, viewName = Some("search settings") ),
+    ViewTypeWithTemplate( ResultSummaryViewType.MSI_SEARCH_EXTENDED, datasetsXlsxTemplate, viewName = Some("datasets") ),
     // TODO: implement a new kind of view for this template
-    ViewTypeWithTemplate( ResultSummaryViewTypes.IMPORT_AND_VALIDATION_PROPS, verticalXlsxTemplate, viewName = Some("filters") ),
+    ViewTypeWithTemplate( ResultSummaryViewType.IMPORT_AND_VALIDATION_PROPS, verticalXlsxTemplate, viewName = Some("filters") ),
     // TODO: implement a new kind of view for this template
-    ViewTypeWithTemplate( ResultSummaryViewTypes.STATISTICS, verticalXlsxTemplate, viewName = Some("stats") ),
-    ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_TYPICAL_PROT_MATCH, basicXlsxTemplate, viewName = Some("protein sets") ),
-    ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_PROT_MATCH, basicXlsxTemplate, viewName = Some("protein matches") ),
-    ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_BEST_PEPTIDE_MATCH, bestPepMatchesXlsxTemplate, viewName = Some("peptides") ),
-    ViewTypeWithTemplate( ResultSummaryViewTypes.PROT_SET_TO_ALL_PEPTIDE_MATCHES, basicXlsxTemplate, viewName = Some("psm") )
+    ViewTypeWithTemplate( ResultSummaryViewType.STATISTICS, verticalXlsxTemplate, viewName = Some("stats") ),
+    ViewTypeWithTemplate( ResultSummaryViewType.PROT_SET_TO_TYPICAL_PROT_MATCH, basicXlsxTemplate, viewName = Some("protein sets") ),
+    ViewTypeWithTemplate( ResultSummaryViewType.PROT_SET_TO_PROT_MATCH, basicXlsxTemplate, viewName = Some("protein matches") ),
+    ViewTypeWithTemplate( ResultSummaryViewType.PROT_SET_TO_BEST_PEPTIDE_MATCH, bestPepMatchesXlsxTemplate, viewName = Some("peptides") ),
+    ViewTypeWithTemplate( ResultSummaryViewType.PROT_SET_TO_ALL_PEPTIDE_MATCHES, basicXlsxTemplate, viewName = Some("psm") )
   )
   
 }

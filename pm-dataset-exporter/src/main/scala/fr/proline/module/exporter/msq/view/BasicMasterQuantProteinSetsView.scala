@@ -40,7 +40,7 @@ class BasicMasterQuantProteinSetsViewFields (qcIds: Array[Long], nameByQchId:  M
 }
 
 
-class BasicMasterQuantProteinSetsView (val quantiDS: QuantiDataSet ) extends IFixedDatasetView {
+class BasicMasterQuantProteinSetsView (val quantiDS: QuantiDataSet ) extends IFixedTableView {
   var viewName = "exportQuantProteinSets"
   val fields  = new BasicMasterQuantProteinSetsViewFields(quantiDS.qcIds, quantiDS.nameByQchId)
   

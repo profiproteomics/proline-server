@@ -22,7 +22,7 @@ object StatisticsFields extends IViewFieldEnumeration {
   
   val PROTEIN_SETS_COUNT = Field("#protein_sets")
   val SINGLE_SPECIFIC_SEQ_PROTEIN_SETS_COUNT = Field("#protein_sets_with_single_specific_peptide")
-  val MULITPLE_SPECIFIC_SEQ_PROTEIN_SETS_COUNT = Field("#protein_sets_with_multiple_specific_peptides")
+  val MULTIPLE_SPECIFIC_SEQ_PROTEIN_SETS_COUNT = Field("#protein_sets_with_multiple_specific_peptides")
   
   // TODO: retrieve nb peptides par modifications
   
@@ -88,7 +88,7 @@ class StatisticsView( val rsm: ResultSummary ) extends IFormLikeView {
       fields.UNMODIFIED_PEPTIDES_COUNT -> unmodPepCount,
       fields.PROTEIN_SETS_COUNT -> protSetCount,
       fields.SINGLE_SPECIFIC_SEQ_PROTEIN_SETS_COUNT -> singleSpeSeqProtSetCount,
-      fields.MULITPLE_SPECIFIC_SEQ_PROTEIN_SETS_COUNT -> multiSpeSeqsProtSetCount
+      fields.MULTIPLE_SPECIFIC_SEQ_PROTEIN_SETS_COUNT -> multiSpeSeqsProtSetCount
     ).map( r => r._1.toString -> r._2)
     
   }

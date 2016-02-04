@@ -1,141 +1,76 @@
 package fr.proline.module.exporter.dataset.view
 
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.HashSet
-import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.module.exporter.api.view.IDataView
-import fr.proline.module.exporter.api.view.IViewTypeEnumeration
-import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.om.model.msi.ProteinMatch
-import com.typesafe.scalalogging.LazyLogging
-import fr.proline.module.exporter.api.view.IFixedDatasetView
-import fr.proline.module.exporter.commons.config.ExportConfig
-import fr.proline.module.exporter.commons.config.ExportConfigConstant
-import fr.proline.module.exporter.commons.config.ExportConfigSheet
-import java.text.SimpleDateFormat
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
-import scala.collection.immutable.ListMap
-import fr.proline.core.om.model.msq.QuantResultSummary
-import fr.proline.core.om.model.msq.ExperimentalDesign
-import fr.proline.core.om.model.msq.RatioDefinition
-import fr.proline.module.exporter.commons.config.view.DatasetViewTypes
-import fr.proline.core.om.model.msi.Protein
-import com.typesafe.scalalogging.LazyLogging
+import java.text.SimpleDateFormat
 
-class IdentDataSet(
-  var projectName: String,
-  var resultSummary: ResultSummary,
-  var childsResultSummarys: Array[ResultSummary],
-  var childsResultSets: Array[ResultSet], 
-  var bioSequenceByBioSeqId: Map[Long, Double], 
-  var spectrumFirstTimeByMsQueryId: Map[Long, Double]) extends LazyLogging {
-
-  // Count the number of protein sets and proteins matches related to a given peptide match
-  val validProtSetIdSetByPepMatchId = new HashMap[Long, HashSet[Long]]()
-  val validProtMatchIdSetByPepMatchId = new HashMap[Long, HashSet[Long]]()
-
-  // Init Maps 
-  resultSummary.proteinSets.filter(_.isValidated).foreach(protSet => {
-
-    protSet.peptideSet.getPeptideMatchIds.foreach(validProtSetIdSetByPepMatchId.getOrElseUpdate(_, new HashSet[Long]) += protSet.id)
-
-    val protMatchIdByPepSet = protSet.getAllProteinMatchesIdByPeptideSet
-    protMatchIdByPepSet.foreach(entry => {
-      val pepSet = entry._1
-      for (
-        prMId <- entry._2;
-        pepMatchId <- pepSet.getPeptideMatchIds
-      ) {
-        validProtMatchIdSetByPepMatchId.getOrElseUpdate(pepMatchId, new HashSet[Long]) += prMId
-      }
-    })
-  })
-
-  lazy val pepMatchById = resultSummary.resultSet.get.getPeptideMatchById
-
-  //   Create list of all ProtMatches for pepMatches (validated or not) 
-  lazy val allProtMatchSetByPepId = {
-    val resultBuilder = new HashMap[Long, HashSet[ProteinMatch]]
-    for (protMatch <- resultSummary.resultSet.get.proteinMatches) {
-      if (protMatch.sequenceMatches != null) {
-        protMatch.sequenceMatches.foreach(seqMatch => {
-          val pepId = seqMatch.getPeptideId
-          resultBuilder.getOrElseUpdate(seqMatch.getPeptideId, new HashSet[ProteinMatch]) += protMatch
-        }) //end go throudh protMatch sequenceMatches 
-      }
-    } //End go through ProtMarches
-    resultBuilder
-  }
-}
-
-class QuantiDataSet(
-  projectName: String,
-  resultSummary: ResultSummary,
-  childsResultSummarys: Array[ResultSummary],
-  childsResultSets: Array[ResultSet],
-  bioSequenceByBioSeqId: Map[Long, Double],
-  spectrumFirstTimeByMsQueryId: Map[Long, Double],
-  var masterQuantChannelId: Long,
-  var quantRSM: QuantResultSummary,
-  var qcIds: Array[Long],
-  var expDesign: ExperimentalDesign,
-  var ratioDefs: Array[RatioDefinition],
-  var nameByQchId: Map[Long, String],
-  var protMatchStatusByIdPepMatchByQCId: Map[Long, Map[Long, String]],
-  var protMatchPeptideNumberByPepMatchIdByQCId: Map[Long, Map[Long, Int]]) extends IdentDataSet(projectName, resultSummary, childsResultSummarys, childsResultSets, bioSequenceByBioSeqId, spectrumFirstTimeByMsQueryId)
+import fr.proline.module.exporter.api.view.IDataView
+import fr.proline.module.exporter.api.view.IViewTypeEnumeration
+import fr.proline.module.exporter.commons.config.ExportConfig
+import fr.proline.module.exporter.commons.config.ExportConfigConstant
+import fr.proline.module.exporter.commons.config.view.DatasetViewType
+import fr.proline.module.exporter.commons.view.SmartDecimalFormat
+import fr.proline.module.exporter.dataset.IdentDataset
 
 object BuildDatasetView {
 
-  private def _builders(exportConfig: ExportConfig): Map[IViewTypeEnumeration#Value, IdentDataSet => IDataView] = {
-    var buildMap: ListMap[IViewTypeEnumeration#Value, IdentDataSet => IDataView] = ListMap()
+  private def _builders(exportConfig: ExportConfig): Map[IViewTypeEnumeration#Value, IdentDataset => IDataView] = {
+    
+    val mapBuilder = Map.newBuilder[IViewTypeEnumeration#Value, IdentDataset => IDataView]
 
-    val dateFormat: SimpleDateFormat = new SimpleDateFormat(exportConfig.dateFormat)
-    val decimalFormat: DecimalFormat = new DecimalFormat()
-    var decSep: DecimalFormatSymbols = new DecimalFormatSymbols()
+    val dateFormat = new SimpleDateFormat(exportConfig.dateFormat)
+    val decimalFormat = new DecimalFormat()
+    val decSep = new DecimalFormatSymbols()
     decSep.setDecimalSeparator(exportConfig.decimalSeparator)
     decimalFormat.setDecimalFormatSymbols(decSep)
     decimalFormat.setGroupingUsed(false)
-    val titleSep: String = if (exportConfig.titleSeparator == null)  ExportConfigConstant.SEPARATOR_INCREMENTAL_TITLE_UNDERSCORE else exportConfig.titleSeparator
-    val exportAllProteinSet: Boolean = exportConfig.dataExport.allProteinSet
-    val exportBestProfile: Boolean = exportConfig.dataExport.bestProfile
+    
+    val smartDecimalFormat = new SmartDecimalFormat( decimalFormat )
+    
+    val titleSep = if (exportConfig.titleSeparator == null) ExportConfigConstant.SEPARATOR_INCREMENTAL_TITLE_UNDERSCORE else exportConfig.titleSeparator
+    val exportAllProteinSet = exportConfig.dataExport.allProteinSet
+    val exportBestProfile = exportConfig.dataExport.bestProfile
+    
     for (sheet <- exportConfig.sheets) {
+      
       sheet.id match {
         case ExportConfigConstant.SHEET_INFORMATION => {
-          buildMap += (DatasetViewTypes.MSI_SEARCH_EXTENDED -> { ds: IdentDataSet => new MsiSearchExtendedView(ds, sheet, dateFormat, decimalFormat) })
+          mapBuilder += (DatasetViewType.MSI_SEARCH_EXTENDED -> { ds: IdentDataset => new MsiSearchExtendedView(ds, sheet, dateFormat, smartDecimalFormat) })
         }
         case ExportConfigConstant.SHEET_IMPORT => {
-          buildMap += (DatasetViewTypes.IMPORT_AND_VALIDATION_PROPS -> { ds: IdentDataSet => new ImportAndValidationPropsView(ds, sheet, dateFormat, decimalFormat, titleSep) })
+          mapBuilder += (DatasetViewType.IMPORT_AND_VALIDATION_PROPS -> { ds: IdentDataset => new ImportAndValidationPropsView(ds, sheet, dateFormat, smartDecimalFormat, titleSep) })
         }
         case ExportConfigConstant.SHEET_PROTEIN_SETS => {
-          buildMap += (DatasetViewTypes.PROT_SET_TO_TYPICAL_PROT_MATCH -> { ds: IdentDataSet => new ProtSetToTypicalProtMatchView(ds, sheet, dateFormat, decimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
+          mapBuilder += (DatasetViewType.PROT_SET_TO_TYPICAL_PROT_MATCH -> { ds: IdentDataset => new ProtSetToTypicalProtMatchView(ds, sheet, dateFormat, smartDecimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
         }
         case ExportConfigConstant.SHEET_BEST_PSM => {
-          buildMap += (DatasetViewTypes.PROT_SET_TO_BEST_PEPTIDE_MATCH -> { ds: IdentDataSet => new ProtSetToBestPepMatchView(ds, sheet, dateFormat, decimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
+          mapBuilder += (DatasetViewType.PROT_SET_TO_BEST_PEPTIDE_MATCH -> { ds: IdentDataset => new ProtSetToBestPepMatchView(ds, sheet, dateFormat, smartDecimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
         }
         case ExportConfigConstant.SHEET_PROTEIN_MATCH => {
-          buildMap += (DatasetViewTypes.PROT_SET_TO_PROT_MATCH -> { ds: IdentDataSet => new ProtSetToProtMatchView(ds, sheet, dateFormat, decimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
+          mapBuilder += (DatasetViewType.PROT_SET_TO_PROT_MATCH -> { ds: IdentDataset => new ProtSetToProtMatchView(ds, sheet, dateFormat, smartDecimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
         }
         case ExportConfigConstant.SHEET_ALL_PSM => {
-          buildMap += (DatasetViewTypes.PROT_SET_TO_ALL_PEPTIDE_MATCHES -> { ds: IdentDataSet => new ProtSetToAllPepMatchesView(ds, sheet, dateFormat, decimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
+          mapBuilder += (DatasetViewType.PROT_SET_TO_ALL_PEPTIDE_MATCHES -> { ds: IdentDataset => new ProtSetToAllPepMatchesView(ds, sheet, dateFormat, smartDecimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
         }
         case ExportConfigConstant.SHEET_MASTER_QUANT_PEPTIDE_ION => {
-          buildMap += (DatasetViewTypes.MASTER_QUANT_PEPTIDE_ION -> { ds: IdentDataSet => new MasterQuantPeptideIonView(ds, sheet, dateFormat, decimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
+          mapBuilder += (DatasetViewType.MASTER_QUANT_PEPTIDE_ION -> { ds: IdentDataset => new MasterQuantPeptideIonView(ds, sheet, dateFormat, smartDecimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
         }
         case ExportConfigConstant.SHEET_STAT => {
-          buildMap += (DatasetViewTypes.STATISTICS -> { ds: IdentDataSet => new StatisticsView(ds.resultSummary, sheet, dateFormat, decimalFormat) })
+          mapBuilder += (DatasetViewType.STATISTICS -> { ds: IdentDataset => new StatisticsView(ds.resultSummary, sheet, dateFormat, decimalFormat) })
         }
-        case other => {
-
-        }
+        case _ => throw new Exception("invalid sheet")
       }
     }
-    return buildMap
+    
+    mapBuilder.result
   }
 
-  def apply(identDS: IdentDataSet, viewType: IViewTypeEnumeration#Value, exportConfig: ExportConfig): IDataView = {
-    _builders(exportConfig)(viewType)(identDS)
+  def apply(identDS: IdentDataset, viewType: IViewTypeEnumeration#Value, exportConfig: ExportConfig): IDataView = {
+    val a= _builders(exportConfig)(viewType)
+    a(identDS)
   }
+  
+  //implicit def abstractDs2IdentDs( abstractDs: AbstractDataset ): IdentDataset = abstractDs.asInstanceOf[IdentDataset]
+  //implicit def abstractDs2QuantDs( abstractDs: AbstractDataset ): QuantDataset = abstractDs.asInstanceOf[QuantDataset]
 
 }

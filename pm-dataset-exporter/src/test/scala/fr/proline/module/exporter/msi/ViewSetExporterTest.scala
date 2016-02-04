@@ -10,7 +10,7 @@ import org.junit.Test
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.dal.ContextFactory
-import fr.proline.module.exporter.commons.ViewSetExporter
+import fr.proline.module.exporter.ViewSetExporter
 import fr.proline.module.exporter.msi.template.ProlineViewSetTemplateAsXLSX
 import fr.proline.module.exporter.msi.view.BuildResultSummaryViewSet
 import fr.proline.repository.DriverType

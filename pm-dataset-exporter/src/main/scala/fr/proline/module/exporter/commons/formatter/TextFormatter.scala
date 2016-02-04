@@ -1,14 +1,20 @@
 package fr.proline.module.exporter.commons.formatter
 
-import java.io.OutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.io.PrintWriter
-import fr.proline.module.exporter.api.view.IDataView
-import fr.proline.module.exporter.commons.template.ITextTemplate
+
 import fr.proline.module.exporter.api.formatter.IViewFormatter
+import fr.proline.module.exporter.api.view.IDataView
+import fr.proline.module.exporter.commons.context.DirectoryContext
+import fr.proline.module.exporter.commons.template.ITextTemplate
 
 class TextFormatter(
-  val template: ITextTemplate
+  val template: ITextTemplate,
+  val viewSetCreationContext: DirectoryContext
 ) extends IViewFormatter {
+  
+  val outputType = ViewFormatterType.TEXT
   
   // Defines some values
   //protected val locale = java.util.Locale.ENGLISH 
@@ -34,9 +40,25 @@ class TextFormatter(
     }
   }
   
-  def formatView( view: IDataView, os: OutputStream ) {
+  def formatView(view: IDataView): File = {
+
+    /*val outputFile = if (location.isFile) { // isFile => exist && is a normal File
+      location
+    } else {
+      viewSetCreationContext.getViewLocation(location, view)
+    }*/
+    val outputDir = viewSetCreationContext.viewSetLocation.get    
+    val outputFile = viewSetCreationContext.getViewLocation(outputDir, view)
     
-    val writer = new PrintWriter( os )
+    _formatView(view, outputFile)
+    
+    outputFile
+  }
+
+  protected def _formatView(view: IDataView, outputFile: File): Unit = {
+    
+    val fos = new FileOutputStream(outputFile)
+    val writer = new PrintWriter( fos )
     val helper = new ViewToTextHelper( view )
     
     // Print the header
@@ -48,9 +70,8 @@ class TextFormatter(
       writer.println( helper.mkRow(record) )
       writer.flush()
     })
-
+    
+    fos.close()
   }
-  
-
 
 }

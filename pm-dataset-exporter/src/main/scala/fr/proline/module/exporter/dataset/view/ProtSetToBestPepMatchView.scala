@@ -1,93 +1,93 @@
 package fr.proline.module.exporter.dataset.view
 
-
-
-import java.text.DecimalFormat
-import fr.proline.module.exporter.commons.config.view.SheetViewFieldsConfig
 import java.text.SimpleDateFormat
+
+import fr.profi.util.collection._
 import fr.proline.module.exporter.commons.config.ExportConfigSheet
-import fr.proline.module.exporter.api.view.IFixedDatasetView
-import scala.collection.immutable.ListMap
-import fr.proline.module.exporter.commons.config.ExportConfigField
-import fr.proline.module.exporter.api.view.IRecordBuildingContext
-import fr.proline.module.exporter.commons.config.ExportConfigConstant
-import fr.proline.core.om.model.msq.MasterQuantPeptide
-import fr.proline.core.om.model.msi.SequenceMatch
+import fr.proline.module.exporter.commons.view.SmartDecimalFormat
+import fr.proline.module.exporter.dataset.IdentDataset
 
+class ProtSetToBestPepMatchView(
+  val identDS: IdentDataset,
+  val sheetConfig: ExportConfigSheet,
+  val dateFormat: SimpleDateFormat,
+  val decimalFormat: SmartDecimalFormat,
+  val titleSep: String,
+  val exportAllProteinSet: Boolean,
+  val exportBestProfile: Boolean
+) extends AbstractProtSetToMQPepView {
 
-class ProtSetToBestPepMatchView (val  identDS: IdentDataSet, val sheetConfig : ExportConfigSheet, val dateFormat : SimpleDateFormat, val decimalFormat: DecimalFormat, val titleSep: String,   val exportAllProteinSet: Boolean,  val exportBestProfile: Boolean  ) 
-extends AbstractProtSetToTypicalProtMatchView  {
-    override var viewName = "prot_set_to_best_pep_match"
-     
-    override def onEachRecord(recordFormatter: Map[String, Any] => Unit) {
+  var viewName = "prot_set_to_best_pep_match"
+  
+  /*override def buildRecord( buildingContext: IRecordBuildingContext ): Map[String,Any] = {
+    
+    val buildingCtx = buildingContext.asInstanceOf[PepMatchBuildingContext]
+    val protMatchRecord = super.buildRecord(buildingCtx.protMatchBuildingCtx.get)
+    
+    protMatchRecord
+  }*/
+
+  override def onEachRecord(recordFormatter: Map[String, Any] => Unit) {
 
     val rsm = identDS.resultSummary
-    val rs = rsm.resultSet.get
-    val protMatchById = rs.getProteinMatchById
-    val pepMatchById = rs.getPeptideMatchById
+    val rs = rsm.lazyResultSet
+    val protMatchById = rs.proteinMatchById
+    val pepMatchById = rs.peptideMatchById
 
     // Keep track of peptide matches which are exported in the next loop
     val exportedPepMatchIds = new collection.mutable.HashSet[Long]
 
     // Iterate over RSM protein sets
     for (protSet <- rsm.proteinSets) {
-       if (exportAllProteinSet || protSet.isValidated){ // filter on validated proteinSet
-      // Note that we export only protein matches which are loaded with the RSM
-      // The result will depend of provider which have been used
+      if (exportAllProteinSet || protSet.isValidated) { // filter on validated proteinSet
+        // Note that we export only protein matches which are loaded with the RSM
+        // The result will depend of provider which have been used
 
-      // Typical Protein Match is put first
-      val typicalProtMatchId = protSet.getRepresentativeProteinMatchId
+        // Typical Protein Match is put first
+        val reprProtMatch = protSet.getRepresentativeProteinMatch().getOrElse(protSet.samesetProteinMatches.get.head)
+        val seqMatchByPepId = reprProtMatch.sequenceMatches.toLongMap { seqMatch =>
+          (seqMatch.getPeptideId -> seqMatch)
+        }
 
-      val typicalProtMatch = if (typicalProtMatchId != 0) {
-        protMatchById(typicalProtMatchId)
-      } else {
-        protMatchById(protSet.getSameSetProteinMatchIds.head)
-      }
+        val protMatchBuildingCtx = new ProtMatchBuildingContext(
+          protSet,
+          protSet.peptideSet,
+          reprProtMatch
+        )
 
-      val seqMatchByPepId: Map[Long, SequenceMatch] = typicalProtMatch.sequenceMatches.map { seqMatch => (seqMatch.getPeptideId -> seqMatch) }toMap
+        val validPepMatchIdSet = protSet.peptideSet.getPeptideInstances.flatMap(_.getPeptideMatchIds).toSet
 
-      val protMatchBuildingCtx = new ProtMatchBuildingContext(
-        protSet,
-        protSet.peptideSet,
-        typicalProtMatch
-      )
-      
-       val validPepMatchIdSet = protSet.peptideSet.getPeptideInstances.map { _.getPeptideMatchIds }.flatten.toSet
-      typicalProtMatch.sequenceMatches.foreach { seqMatch =>
-        val pepMatchOpt = pepMatchById.get(seqMatch.bestPeptideMatchId)
+        for (seqMatch <- reprProtMatch.sequenceMatches) {
+          val pepMatchOpt = pepMatchById.get(seqMatch.bestPeptideMatchId)
+          val peptideId = seqMatch.getPeptideId
 
-      if (pepMatchOpt.isDefined && validPepMatchIdSet.contains(pepMatchOpt.get.id)) {
-          var buildingContext = new PepMatchBuildingContext(
-            pepMatch = pepMatchOpt.get,
-            protMatch = typicalProtMatch,
-            seqMatch = seqMatchByPepId(pepMatchOpt.get.peptideId),
-            protMatchBuildingCtx = Some(protMatchBuildingCtx)
-          )
-          if (isQuanti){
-            var masterQuantPeptide: MasterQuantPeptide = null
-            for (mqPepSet <- quantiDS.quantRSM.masterQuantPeptides) {
-              var pepId:  Long = -1
-              if( mqPepSet.peptideInstance.isDefined) {
-            	  	pepId = mqPepSet.peptideInstance.get.peptide.id
-              }
-              if (pepId == pepMatchOpt.get.peptide.id) {
-            	  masterQuantPeptide = mqPepSet
-              }
-            }
-              buildingContext = new PepMatchQuantiBuildingContext(
+          if (pepMatchOpt.isDefined && validPepMatchIdSet.contains(pepMatchOpt.get.id)) {
+            val mqPepOpt = quantDs.mqPepByPepId.get(peptideId)
+            
+            val buildingContext = if (!isQuantDs || mqPepOpt.isEmpty) {
+              new PepMatchBuildingContext(
                 pepMatch = pepMatchOpt.get,
-                protMatch = typicalProtMatch,
-                seqMatch = seqMatchByPepId(pepMatchOpt.get.peptideId),
-                protMatchBuildingCtx = Some(protMatchBuildingCtx), 
-                masterQuantPeptide
-                )
+                protMatch = reprProtMatch,
+                seqMatch = seqMatchByPepId(peptideId),
+                protMatchBuildingCtx = Some(protMatchBuildingCtx)
+              )
+            } else {
+              
+              new MasterQuantPeptideBuildingContext(
+                pepMatch = pepMatchOpt.get,
+                protMatch = reprProtMatch,
+                seqMatch = seqMatchByPepId(peptideId),
+                protMatchBuildingCtx = Some(protMatchBuildingCtx),
+                mqPepOpt.get,
+                groupSetupNumber = groupSetupNumber
+              )
+            }
+            
+            // Format this peptide match with protein set information
+            this.formatRecord(buildingContext, recordFormatter)
           }
-          // Format this peptide match with protein set information
-          this.formatRecord(buildingContext, recordFormatter)
-
         }
       }
-    }
     }
 
   }
