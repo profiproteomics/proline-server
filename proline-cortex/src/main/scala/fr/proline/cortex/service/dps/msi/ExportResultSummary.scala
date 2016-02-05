@@ -21,7 +21,7 @@ import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.WorkDirectoryFactory
 import fr.proline.jms.util.Constants
 import fr.proline.jms.util.NodeConfig
-import fr.proline.module.exporter.commons.ViewSetExporter
+import fr.proline.module.exporter.ViewSetExporter
 import fr.proline.module.exporter.commons.config.ExportConfigConstant
 import fr.proline.module.exporter.commons.config.ExportConfigManager
 import fr.proline.module.exporter.dataset.view.BuildDatasetViewSet
