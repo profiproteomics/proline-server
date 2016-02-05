@@ -21,11 +21,18 @@ class MasterQuantPeptideIonView(
   
   var viewName = "master_quant_peptide_ion"
   
+  // Override getQcFieldSet in order to generate QuantChannel based columns for field FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME
+  override protected def getQcFieldSet() = {
+    val superQcFieldSet = super.getQcFieldSet()
+    superQcFieldSet + FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME
+  }
+  
   protected val mqPepIonFieldSet = Set(
     FIELD_MASTER_QUANT_PEPTIDE_ION_ID,
     FIELD_MASTER_QUANT_PEPTIDE_ION_CHARGE,
     FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME,
-    FIELD_MASTER_QUANT_PEPTIDE_ION_FEATURE_ID
+    FIELD_MASTER_QUANT_PEPTIDE_ION_FEATURE_ID,
+    FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME
   )
   
   protected val mqPepIonFieldsConfigs = sheetConfig.fields.filter( f => mqPepIonFieldSet.contains(f.id) )
@@ -42,6 +49,7 @@ class MasterQuantPeptideIonView(
     val mqPepBuildingCtx = buildingContext.asInstanceOf[MasterQuantPeptideIonBuildingContext]
     
     val mqPepIon = mqPepBuildingCtx.masterQuantPeptideIon
+    val qPepIonMap = mqPepIon.quantPeptideIonMap
 
     val recordBuilder = Map.newBuilder[String,Any]
     recordBuilder ++= pepMatchRecord
@@ -51,10 +59,16 @@ class MasterQuantPeptideIonView(
         case FIELD_MASTER_QUANT_PEPTIDE_ION_ID => mqPepIon.id
         case FIELD_MASTER_QUANT_PEPTIDE_ION_CHARGE => mqPepIon.charge
         case FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME => dcf2.format(mqPepIon.elutionTime / 60)
+        case FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME => {
+          for (qcId <- quantDs.qcIds; qPepIon <- qPepIonMap.get(qcId) ) {
+            recordBuilder += mkQcFieldTitle("elution_time", qcId) -> dcf2.format(mqPepIon.elutionTime / 60)
+          }
+          null
+        }
         case FIELD_MASTER_QUANT_PEPTIDE_ION_FEATURE_ID => mqPepIon.lcmsMasterFeatureId.get
       }
       
-      recordBuilder += fieldConfig.title -> fieldValue
+      if( fieldValue != null ) recordBuilder += fieldConfig.title -> fieldValue
     }
     
     recordBuilder.result()

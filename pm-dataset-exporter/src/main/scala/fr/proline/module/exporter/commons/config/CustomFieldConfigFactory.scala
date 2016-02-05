@@ -173,7 +173,7 @@ object CustomFieldConfigFactory {
 
     if (fromXIC || fromSC) {
       val fieldMasterQuantPeptideId: CustomFieldConfig = CustomFieldConfig(FIELD_PSM_QUANTI_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id")
-      val fieldQuantiElutionTime: CustomFieldConfig = CustomFieldConfig(FIELD_PSM_QUANTI_ELUTION_TIME, "elution_time")
+      val fieldQuantiElutionTime: CustomFieldConfig = CustomFieldConfig(FIELD_PSM_QUANTI_ELUTION_TIME, "master_elution_time")
       val fieldQuantiSelectionLevel: CustomFieldConfig = CustomFieldConfig(FIELD_PSM_QUANTI_SELECTION_LEVEL, "master_quant_selection_level")
       val fieldRawAbundance: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_QUANTI_RAW_ABUNDANCE, if (fromXIC) "raw_abundance" else "Specific SC")
       val fieldAbundance: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE, "abundance")
@@ -217,8 +217,9 @@ object CustomFieldConfigFactory {
     
     val customMqPepIonFields = Array(
       CustomFieldConfig(FIELD_PSM_QUANTI_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id"),
-      CustomFieldConfig(FIELD_PSM_QUANTI_ELUTION_TIME, "elution_time"),
+      CustomFieldConfig(FIELD_PSM_QUANTI_ELUTION_TIME, "master_elution_time"),
       CustomFieldConfig(FIELD_PSM_QUANTI_SELECTION_LEVEL, "master_quant_selection_level"),
+      CustomFieldConfig(FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME, "elution_time"),
       CustomFieldConfig(FIELD_PROTEIN_SETS_QUANTI_RAW_ABUNDANCE, "raw_abundance"),
       CustomFieldConfig(FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE, "abundance"),
       CustomFieldConfig(FIELD_PROTEIN_SETS_QUANTI_PSM_COUNT, "psm_count"),
