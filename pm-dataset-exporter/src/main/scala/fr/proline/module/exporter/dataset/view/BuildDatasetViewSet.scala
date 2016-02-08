@@ -143,7 +143,7 @@ object BuildDatasetViewSet extends LazyLogging {
     })
 
     // If dsId > 0 it seems to mean that we are loading a quantitative dataset => DBO: why ?
-    if (dsId == 0) {
+    if (dsId <= 0) {
       
       // Load the RSM
       logger.debug(s"Loading result summary #$rsmId...")
