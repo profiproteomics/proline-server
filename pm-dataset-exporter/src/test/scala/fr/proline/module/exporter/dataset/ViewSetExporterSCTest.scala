@@ -1,18 +1,17 @@
 package fr.proline.module.exporter.dataset
 
 import java.nio.file.Files
-
 import org.apache.commons.io.FileUtils
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.dal.ContextFactory
 import fr.proline.module.exporter.ViewSetExporter
 import fr.proline.module.exporter.dataset.view.BuildDatasetViewSet
 import fr.proline.repository.DriverType
+import fr.proline.module.exporter.commons.config.ExportConfigConstant
 
 
 class ViewSetExporterSCTest extends AbstractMultipleDBTestCase {
@@ -61,6 +60,7 @@ class ViewSetExporterSCTest extends AbstractMultipleDBTestCase {
       datasetId,
       targetRSMId,
       fileName,
+      ExportConfigConstant.MODE_QUANT_SC,
       configStr
     )
     

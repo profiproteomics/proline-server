@@ -58,9 +58,9 @@ object BuildDatasetViewSet extends LazyLogging {
     dsId: Long,
     rsmId: Long,
     viewSetName: String,
+    mode: String,
     exportConfigStr: String
   ): ViewSet = {
-    println(dsId)
 
     val exportConfig = ExportConfigManager.readConfig(exportConfigStr)
     
@@ -87,6 +87,7 @@ object BuildDatasetViewSet extends LazyLogging {
       loadFullResultSet,
       viewSetName,
       viewSetTemplate,
+      mode,
       exportConfig
     )
   }
@@ -98,7 +99,8 @@ object BuildDatasetViewSet extends LazyLogging {
     loadSubsets: Boolean,
     loadFullResultSet: Boolean,
     viewSetName: String,
-    viewSetTemplate: IViewSetTemplate
+    viewSetTemplate: IViewSetTemplate,
+    mode: String
   ): ViewSet = {
     this.apply(
       executionContext,
@@ -109,6 +111,7 @@ object BuildDatasetViewSet extends LazyLogging {
       loadFullResultSet,
       viewSetName,
       viewSetTemplate,
+      mode,
       exportConfig = null
     )
   }
@@ -122,6 +125,7 @@ object BuildDatasetViewSet extends LazyLogging {
     loadFullResultSet: Boolean,
     viewSetName: String,
     viewSetTemplate: IViewSetTemplate,
+    mode: String,
     exportConfig: ExportConfig
   ): ViewSet = {
     println(dsId)
@@ -142,8 +146,8 @@ object BuildDatasetViewSet extends LazyLogging {
       udsEzDBC.selectString(sqlQuery, projectId)
     })
 
-    // If dsId > 0 it seems to mean that we are loading a quantitative dataset => DBO: why ?
-    if (dsId <= 0) {
+    
+    if (mode == ExportConfigConstant.MODE_IDENT) {
       
       // Load the RSM
       logger.debug(s"Loading result summary #$rsmId...")
