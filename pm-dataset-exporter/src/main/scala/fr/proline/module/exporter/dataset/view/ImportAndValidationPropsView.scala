@@ -98,15 +98,13 @@ class ImportAndValidationPropsView(
         if (rsProps.getMascotImportProperties.isDefined) { // MASCOT
           val rsMascotProps = rsProps.getMascotImportProperties.get
   
-          val importPropByKey = ProfiJson.getObjectMapper().convertValue(rsMascotProps, classOf[Map[String, Option[Float]]])
+          val importPropByKey = ProfiJson.getObjectMapper().convertValue(rsMascotProps, classOf[Map[String, Any]])
           val sortedKeys = importPropByKey.keys.toList.sorted
           for (key <- sortedKeys) {
-            val valueOpt = importPropByKey(key)
+            val value = importPropByKey(key)
+            val keyAsStr = key.split("_").map(_.capitalize).mkString(" ")
             
-            if (valueOpt.isDefined) {
-              val keyAsStr = key.split("_").map(_.capitalize).mkString(" ")
-              importParamsBuffer += s"Mascot ${keyAsStr}: ${valueOpt.get}"
-            }
+            importParamsBuffer += s"Mascot ${keyAsStr}: ${value}"
           }
   
         } else if (rsProps.getOmssaImportProperties.isDefined) { // OMSSA
