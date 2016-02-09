@@ -36,6 +36,7 @@ import fr.proline.module.exporter.msi.view.BuildResultSummaryViewSet
 import fr.proline.module.exporter.mzidentml.MzIdExporter
 import fr.proline.module.exporter.pridexml.PrideExporterService
 import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.cortex.service.dps.uds.DatasetUtil
 
 /**
  * Define a JMS Service to :
@@ -450,39 +451,16 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
     //    require(rsmIdentifiers.length == 1, "can only export one RSM at a time for this file format")
     require(extraParams.isDefined, "some extra parameters must be provided")
 
+    var mode: String = DatasetUtil.getExportMode(rsmIdentifiers(0).projectId, rsmIdentifiers(0).dsId)
     var exportConfigStr : String = null
+    
     if (extraParams != null && extraParams.isDefined && extraParams.get.contains("config")){
         exportConfigStr = extraParams.get("config").asInstanceOf[String]
-        //logger.debug("export with config "+exportConfigStr)
         logger.debug("exporting...")
-        //require(StringUtils.isNotEmpty(exportConfigStr), "the export configuration must be provided")
-    }else{// default conf if not filled -- all dataset have same type, so the config is based on the first
-      var mode: String = ExportConfigConstant.MODE_IDENT
-      val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), rsmIdentifiers(0).projectId, true) 
-      try {
-        val udsDbCtx = execCtx.getUDSDbConnectionContext()
-        val udsEM = udsDbCtx.getEntityManager()
-        val udsDs = udsEM.find(classOf[UdsDataset], rsmIdentifiers(0).dsId)
-        if (udsDs != null) {
-          val dsType: DatasetType = udsDs.getType()
-          if (dsType == DatasetType.QUANTITATION) {
-            mode = ExportConfigConstant.MODE_QUANT_XIC
-            val dsMethod: QuantitationMethod = udsDs.getMethod()
-            val quantMethodType = dsMethod.getType
-            val abundanceUnit = dsMethod.getAbundanceUnit
-            if (quantMethodType == QuantMethodType.LABEL_FREE.toString() && abundanceUnit == AbundanceUnit.SPECTRAL_COUNTS.toString()) {
-              mode = ExportConfigConstant.MODE_QUANT_SC
-            }
-          }
-        }
-      } finally {
-        if (execCtx != null) {
-        execCtx.closeAll()
-        }
-      }
+    }else{
+      // default conf if not filled -- all dataset have same type, so the config is based on the first
       exportConfigStr = ExportConfigManager.getDefaultConfiguration(mode)
     }
-    //    val rsmIdentifier = rsmIdentifiers(0)
 
     var exportLocation = new java.io.File(fileDir)
     var exportedFiles: ArrayBuffer[java.io.File] = new ArrayBuffer()
@@ -504,6 +482,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
           dsId = rsmIdentifier.dsId,
           rsmId = rsmIdentifier.rsmId,
           viewSetName = fileDatasetName,
+          mode = mode,
           exportConfigStr = exportConfigStr)
 
         exFiles = ViewSetExporter.exportViewSetToDirectory(viewSet, exportLocation)

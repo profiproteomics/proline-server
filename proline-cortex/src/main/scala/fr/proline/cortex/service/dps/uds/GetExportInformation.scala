@@ -28,23 +28,10 @@ import fr.proline.jms.service.api.AbstractRemoteProcessService
  *
  */
 
-class GetExportInformation extends AbstractRemoteProcessService with LazyLogging {
-  /* JMS Service identification */
-  val serviceName = "proline/dps/uds/GetExportInformation"
-  val serviceVersion = "1.0"
-  override val defaultVersion = true
+object DatasetUtil {
 
-  /* Define the concrete doProcess method */
-  override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
-    require((paramsRetriever != null), "No Parameters specified")
-
-    val projectId = paramsRetriever.getLong("project_id")
-    val datasetId = paramsRetriever.getLong("dataset_id")
-    val extraParamsAsOptStr = Option(paramsRetriever.getOptMap("extra_params", true, null)).map(serialize(_))
-    val extraParams = extraParamsAsOptStr.map(deserialize[Map[String, Object]](_))
-
-    var mode: String = ExportConfigConstant.MODE_IDENT
-    if (projectId > 0) {
+  def getExportMode(projectId: Long, datasetId: Long) : String = {
+      var mode: String = ExportConfigConstant.MODE_IDENT
       val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), projectId, true)
       try {
         val udsDbCtx = execCtx.getUDSDbConnectionContext()
@@ -67,6 +54,28 @@ class GetExportInformation extends AbstractRemoteProcessService with LazyLogging
           execCtx.closeAll()
         }
       }
+     mode
+  }
+}
+
+class GetExportInformation extends AbstractRemoteProcessService with LazyLogging {
+  /* JMS Service identification */
+  val serviceName = "proline/dps/uds/GetExportInformation"
+  val serviceVersion = "1.0"
+  override val defaultVersion = true
+
+  /* Define the concrete doProcess method */
+  override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
+    require((paramsRetriever != null), "No Parameters specified")
+
+    val projectId = paramsRetriever.getLong("project_id")
+    val datasetId = paramsRetriever.getLong("dataset_id")
+    val extraParamsAsOptStr = Option(paramsRetriever.getOptMap("extra_params", true, null)).map(serialize(_))
+    val extraParams = extraParamsAsOptStr.map(deserialize[Map[String, Object]](_))
+
+    var mode: String = ExportConfigConstant.MODE_IDENT
+    if (projectId > 0) {
+      mode = DatasetUtil.getExportMode(projectId, datasetId)
     } else {
       if (extraParams.get("export_mode") != null) {
         mode = extraParams.get("export_mode").asInstanceOf[String]
