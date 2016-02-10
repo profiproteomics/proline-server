@@ -16,6 +16,7 @@ import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.IRemoteService
 import fr.proline.jms.util.jsonrpc.JSONRPC2Utils
 import fr.proline.jms.util.jsonrpc.ProfiJSONRPC2Response
+import fr.proline.core.algo.msi.AdditionMode
 
 /**
  * Merge specified result sets (or result summaries) into one new result set (or new result summary).
@@ -88,7 +89,8 @@ class MergeResultSets extends IRemoteService with LazyLogging {
       val rsmMerger = new ResultSummaryMerger(
         execCtx = execCtx,
         resultSummaryIds = Some(resultSummaryIds),
-        resultSummaries = None
+        resultSummaries = None,
+        aggregationMode = None
       )
       rsmMerger.run()
 
@@ -126,7 +128,128 @@ class MergeResultSets extends IRemoteService with LazyLogging {
       val rsMerger = new ResultSetMerger(
         execCtx = execCtx,
         resultSetIds = Some(resultSetIds),
-        resultSets = None
+        resultSets = None,
+        aggregationMode = None
+      )
+
+      rsMerger.run
+
+      logger.info("ResultSet merger done")
+
+      result = rsMerger.mergedResultSet.id
+
+    } finally {
+      try {
+        execCtx.closeAll()
+      } catch {
+        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
+      }
+    }
+
+    result
+  }
+
+}
+
+class MergeResultSetsV2_0 extends IRemoteService with LazyLogging {
+
+  /* JMS Service identification */
+  val serviceName = "proline/dps/msi/MergeResults"
+  val serviceVersion = "2.0"
+  override val defaultVersion = false
+
+  override def service(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
+
+    require((req != null), "Req is null")
+
+    val requestId = req.getID
+    val methodName = req.getMethod
+
+    /* Method dispatch */
+    methodName match {
+
+      case "merge_result_sets" => {
+        val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(req)
+        val result = doMergeResultSetProcess(paramsRetriever) // Call service
+        return new ProfiJSONRPC2Response(result, requestId)
+      }
+
+      case "merge_result_summaries" => {
+        val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(req)
+        val result = doMergeResultSummariesProcess(paramsRetriever) // Call service
+        return new ProfiJSONRPC2Response(result, requestId)
+      }
+
+      // Method name not supported
+      case _ => return new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, requestId)
+    }
+
+    new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, requestId)
+  }
+
+  case class RSMMergeResult(var targetResultSummaryId: Long = -1L, var targetResultSetId: Long = -1L)
+
+  /* Define the doMergeResultSummariesProcess method */
+  def doMergeResultSummariesProcess(paramsRetriever: NamedParamsRetriever): Object = {
+    
+    require((paramsRetriever != null), "no parameter specified")
+    
+    val projectId = paramsRetriever.getLong("project_id")
+    val resultSummaryIds = paramsRetriever.getList("result_summary_ids").toArray.map { rf => deserialize[Long](serialize(rf)) }
+    val aggregationMode = Option(paramsRetriever.getOptString("aggregation_mode", true, null)).map(AdditionMode.withName(_))
+    
+    var result: RSMMergeResult = new RSMMergeResult()
+    var msiDbConnectionContext: DatabaseConnectionContext = null
+    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), projectId, false)
+
+    try {
+      logger.info("ResultSummary merger service will start")
+
+      val rsmMerger = new ResultSummaryMerger(
+        execCtx = execCtx,
+        resultSummaryIds = Some(resultSummaryIds),
+        resultSummaries = None, 
+        aggregationMode = aggregationMode
+      )
+      rsmMerger.run()
+
+      logger.info("ResultSet merger done")
+
+      result.targetResultSummaryId = rsmMerger.mergedResultSummary.id
+      result.targetResultSetId = rsmMerger.mergedResultSummary.getResultSetId
+
+    } finally {
+      try {
+        execCtx.closeAll()
+      } catch {
+        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
+      }
+    }
+
+    result
+  }
+
+  /* Define the doMergeResultSetProcess method */
+  def doMergeResultSetProcess(paramsRetriever: NamedParamsRetriever): Object = {
+
+    require((paramsRetriever != null), "no parameter specified")
+    
+    val projectId = paramsRetriever.getLong("project_id")
+    val resultSetIds = paramsRetriever.getList("result_set_ids").toArray.map { rf => deserialize[Long](serialize(rf)) }
+    val aggregationMode = Option(paramsRetriever.getOptString("aggregation_mode", true, null)).map(AdditionMode.withName(_))
+
+    var result: java.lang.Long = -1L
+    var msiDbConnectionContext: DatabaseConnectionContext = null
+    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), projectId, false)
+
+    try {
+      logger.info("ResultSet merger service will start")
+
+      val rsMerger = new ResultSetMerger(
+        execCtx = execCtx,
+        resultSetIds = Some(resultSetIds),
+        resultSets = None, 
+        aggregationMode = aggregationMode
       )
 
       rsMerger.run

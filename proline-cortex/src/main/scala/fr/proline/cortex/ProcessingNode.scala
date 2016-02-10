@@ -52,6 +52,7 @@ import javax.jms.Connection
 import javax.jms.ConnectionFactory
 import javax.jms.ExceptionListener
 import javax.jms.JMSException
+import fr.proline.cortex.service.dps.msi.MergeResultSetsV2_0
 //import fr.proline.cortex.service.misc.WaitService
 
 object ProcessingNode extends LazyLogging {
@@ -235,6 +236,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new ValidateResultSet())
     ServiceRegistry.addService(new UpdateSpectraParams())
     ServiceRegistry.addService(new MergeResultSets())
+    ServiceRegistry.addService(new MergeResultSetsV2_0())
     ServiceRegistry.addService(new ImportResultFilesDecoyRegExp())
     ServiceRegistry.addService(new ImportResultFilesprotMatchDecoyRule())
     ServiceRegistry.addService(new ChangeTypicalProteinMatch())
