@@ -19,7 +19,7 @@ class IdentDataset(
   val resultSummary: LazyResultSummary,
   val loadChildResultSummaries: () => Array[LazyResultSummary],
   val loadBioSequences: () => Array[BioSequence],
-  val loadSpectraDescriptors: () => Array[Spectrum]
+  val loadSpectraDescriptors: (Array[Long]) => Array[Spectrum]
 ) extends LazyLogging {
   
   // Count the number of protein sets and proteins matches related to a given peptide match
@@ -51,7 +51,7 @@ class IdentDataset(
     
     for (protMatch <- resultSummary.lazyResultSet.proteinMatches) {
       
-      if (protMatch.sequenceMatches != null) {        
+      if (protMatch.sequenceMatches != null) {
         protMatch.sequenceMatches.foreach { seqMatch => 
           protMatchSetByPepId.getOrElseUpdate(seqMatch.getPeptideId, new HashSet[ProteinMatch]) += protMatch
         }
@@ -63,10 +63,17 @@ class IdentDataset(
   }
   
   lazy val childResultSummaries: Array[LazyResultSummary] = loadChildResultSummaries()
-  lazy val childRsmById = childResultSummaries.mapByLong(_.id)
-  lazy val childResultSets: Array[LazyResultSet] = childResultSummaries.map(_.lazyResultSet)
-  lazy val bioSequenceById: LongMap[BioSequence] = loadBioSequences().mapByLong(_.id)
-  lazy val spectraDescriptorById: LongMap[Spectrum] = loadSpectraDescriptors().mapByLong(_.id)
+  
+  lazy val allResultSummaries: Array[LazyResultSummary] = Array(resultSummary) ++ childResultSummaries
+  lazy val allResultSets: Array[LazyResultSet] = allResultSummaries.map(_.lazyResultSet)
+  lazy val allMsiSearches: Array[MSISearch] = allResultSets.withFilter(_.msiSearch.isDefined).map(_.msiSearch.get)
+    /*{
+    val lazyRs = resultSummary.lazyResultSet
+    val msiSearchOpt = lazyRs.msiSearch
+    if(msiSearchOpt.isDefined) Array(msiSearchOpt.get) else childResultSets.map(_.msiSearch.get)
+  }*/
+  lazy val allPeaklistsIds: Array[Long] = allMsiSearches.map(_.peakList.id)
+  lazy val spectraDescriptorById: LongMap[Spectrum] = loadSpectraDescriptors(allPeaklistsIds).mapByLong(_.id)
   lazy val spectrumDescriptorByMsQueryId = {
     val ms2QueryIdSpecIdPairs = for(
       peptideMatch <- resultSummary.lazyResultSet.peptideMatches;
@@ -78,6 +85,7 @@ class IdentDataset(
     
     ms2QueryIdSpecIdPairs.toMap
   }
+  lazy val bioSequenceById: LongMap[BioSequence] = loadBioSequences().mapByLong(_.id)
   
   private val protMatchStatusMapByLazyRsm = new HashMap[LazyResultSummary,LongMap[ProteinMatchStatus.Value]]
   

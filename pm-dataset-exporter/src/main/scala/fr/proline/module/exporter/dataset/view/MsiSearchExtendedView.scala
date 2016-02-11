@@ -19,16 +19,15 @@ class MsiSearchExtendedView(
   val decimalFormat: SmartDecimalFormat
 ) extends IFixedTableView {
   
-  val rsm = identDS.resultSummary
   var viewName = "msi_search"
   val fieldsTitles = sheetConfig.fields.map(_.title)
   val fields = new CustomViewFields(fieldsTitles)
-  val childResultSets = identDS.childResultSets
   
-  case class MyBuildingContext( msiSearch: MSISearch ) extends IRecordBuildingContext
+  case class MyBuildingContext( resultSet: LazyResultSet, msiSearch: MSISearch ) extends IRecordBuildingContext
   def buildRecord( buildingContext: IRecordBuildingContext ): Map[String,Any] = {
     
     val myBuildingContext = buildingContext.asInstanceOf[MyBuildingContext]
+    val resultSet = myBuildingContext.resultSet
     val msiSearch = myBuildingContext.msiSearch
     val pkl = msiSearch.peakList
     val searchSettings = msiSearch.searchSettings
@@ -55,7 +54,7 @@ class MsiSearchExtendedView(
     for (fieldConfig <- sheetConfig.fields) {
       val fieldValue: Any = fieldConfig.id match {
         case FIELD_INFORMATION_PROJECT_NAME                  => identDS.projectName
-        case FIELD_INFORMATION_RESULT_SET_NAME               => rsm.lazyResultSet.descriptor.name
+        case FIELD_INFORMATION_RESULT_SET_NAME               => resultSet.descriptor.name
         case FIELD_INFORMATION_SEARCH_TITLE                  => msiSearch.title
         case FIELD_INFORMATION_SEARCH_DATE                   => dateFormat.format(msiSearch.date)
         case FIELD_INFORMATION_RAW_FILE_NAME                 => Option(pkl.rawFileIdentifier).getOrElse("")
@@ -92,29 +91,31 @@ class MsiSearchExtendedView(
   
   def onEachRecord( recordFormatter: Map[String,Any] => Unit ) {
     
-    val rs = rsm.lazyResultSet
+    for( rs <- identDS.allResultSets if rs.msiSearch.isDefined ) {
+      this.formatRecord(MyBuildingContext(rs, rs.msiSearch.get), recordFormatter)
+    }
     
-    /*if( rs.childMsiSearches.isEmpty ) {
-      for( msiSearch <- rs.msiSearch if msiSearch != null ) {
-        this.formatRecord(MyBuildingContext(msiSearch), recordFormatter)
-      }
+    /*val rs = identDS.resultSummary.lazyResultSet
+    
+    if( rs.msiSearch.isDefined ) {
+      this.formatRecord(MyBuildingContext(rs, rs.msiSearch.get), recordFormatter)
     } else {
-      for( msiSearch <- rs.childMsiSearches ) {
-        this.formatRecord(MyBuildingContext(msiSearch), recordFormatter)
+      for( childRs <- identDS.childResultSets if childRs.msiSearch.isDefined ) {
+        this.formatRecord(MyBuildingContext(childRs, childRs.msiSearch.get), recordFormatter)
       }
-    }*/  // rs is in the child childRs list
+    }*/ // rs is in the child childRs list ;  DBO: what does this mean ???
 
-    for (childRs <- childResultSets) {
+    /*for (childRs <- identDS.childResultSets) {
     	if (childRs.childMsiSearches.isEmpty) {
     		for (msiSearch <- childRs.msiSearch if msiSearch != null) {
-    			this.formatRecord(MyBuildingContext(msiSearch), recordFormatter)
+    			this.formatRecord(MyBuildingContext(childRs,msiSearch), recordFormatter)
     		}
     	} else {
     		for (msiSearch <- childRs.childMsiSearches) {
-    			this.formatRecord(MyBuildingContext(msiSearch), recordFormatter)
+    			this.formatRecord(MyBuildingContext(childRs,msiSearch), recordFormatter)
     		}
     	}
-    }
+    }*/
 
   }
 

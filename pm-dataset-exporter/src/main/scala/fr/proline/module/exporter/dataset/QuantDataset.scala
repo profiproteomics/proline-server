@@ -15,7 +15,7 @@ class QuantDataset(
   val groupSetupNumber: Int,
   override val loadChildResultSummaries: () => Array[LazyResultSummary],
   override val loadBioSequences: () => Array[BioSequence],
-  override val loadSpectraDescriptors: () => Array[Spectrum],
+  override val loadSpectraDescriptors: (Array[Long]) => Array[Spectrum],
   
   val qcNameById: LongMap[String] // TODO: update and use the QuantChannel name in the UDSdb
   //val protMatchStatusByIdPepMatchByQCId: Map[Long, Map[Long, String]],
@@ -23,9 +23,9 @@ class QuantDataset(
   
 ) extends IdentDataset(projectName,quantRSM.lazyResultSummary,loadChildResultSummaries,loadBioSequences,loadSpectraDescriptors) {
   
-  //lazy val identRsmById = childRsmById
+  lazy val identRsmById = childResultSummaries.mapByLong(_.id)
   lazy val identRsmByQcId = masterQuantChannel.getQuantitationChannels.toList.toLongMap { qc =>
-    qc.getId -> childRsmById(qc.getIdentResultSummaryId)
+    qc.getId -> identRsmById(qc.getIdentResultSummaryId)
   }
   
   lazy val masterQuantChannelId: Long = masterQuantChannel.getId

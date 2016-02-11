@@ -128,7 +128,6 @@ object BuildDatasetViewSet extends LazyLogging {
     mode: String,
     exportConfig: ExportConfig
   ): ViewSet = {
-    println(dsId)
     
     val udsDbCtx = executionContext.getUDSDbConnectionContext()
     val psDbCtx = executionContext.getPSDbConnectionContext()
@@ -184,7 +183,7 @@ object BuildDatasetViewSet extends LazyLogging {
         lazyRsm,
         childResultSummariesLoader,
         this._buildBioSequenceLoader(msiDbCtx, lazyRsm),
-        this._buildSpectraLoader(msiDbCtx, lazyRsm)
+        this._buildSpectraLoader(msiDbCtx)
       )
       
       this.apply(identDs, viewSetName, viewSetTemplate, exportConfig)
@@ -270,30 +269,6 @@ object BuildDatasetViewSet extends LazyLogging {
             longMap += qcIdByIdentRsmId(r.nextLong) -> r.nextString
             ()
           }
-          /*
-       // if (resultBuilder.result().size == 0) {
-          for (qcId <- qcIds){
-          // get the name
-          val qcNameWork = new JDBCWork() {
-            override def execute(con: Connection) {
-              val getQCName = "SELECT ds.name FROM data_set ds, quant_channel qc WHERE qc.id = ? AND qc.ident_result_summary_id = ds.result_summary_id AND ds.project_id = ? "
-              val pStmt = con.prepareStatement(getQCName)
-              pStmt.setLong(1, qcId)
-              pStmt.setLong(2, projectId)
-              val sqlResultSet = pStmt.executeQuery()
-              while (sqlResultSet.next) { //Should be One ! 
-                val nameQC = sqlResultSet.getString("name")
-                resultBuilder += qcId -> nameQC
-              }
-              pStmt.close()
-            }
-          }
-          udsDbCtx.doWork(qcNameWork, false)
-            
-             //resultBuilder += qcId -> (""+qcId)
-          }
-       // }
-          */
 
           longMap
         })
@@ -309,80 +284,12 @@ object BuildDatasetViewSet extends LazyLogging {
         groupSetupNumber,
         identResultSummariesLoader,
         this._buildBioSequenceLoader(msiDbCtx, lazyQuantRSM.lazyResultSummary),
-        this._buildSpectraLoader(msiDbCtx, lazyQuantRSM.lazyResultSummary),
+        this._buildSpectraLoader(msiDbCtx),
         qcNameById
       )
 
       this.apply(quantDs, viewSetName, viewSetTemplate, exportConfig)
     }
-    
-
-    
-    // Load the experimental design
-    /*val expDesignProvider = new SQLExperimentalDesignProvider(udsDbCtx)
-    val expDesignOpt = expDesignProvider.getExperimentalDesign(dsId)
-    require( expDesignOpt.isDefined, "can't load the experimental design of the dataset with id=" + dsId)
-    val expDesign = expDesignOpt.get*/
-    
-    // TODO: handle other group setups
-    //val ratioDefs = expDesign.groupSetups.head.ratioDefinitions
-    
-    /*val protMatchStatusByIdPepMatchByQCId: Map[Long, Map[Long, String]] = Map()
-    val protMatchPeptideNumberByPepMatchIdByQCId: Map[Long, Map[Long, Int]] = Map()
-    
-    // Iterate over quant channels
-    for (qcId <- qcIds) {
-      val protMatchStatusByIdPepMatch: Map[Long, String] = Map()
-      val protMatchPeptideNumberByPepMatchId: Map[Long, Int] = Map()
-      
-      //Read Prot Status and Nbr Peptides from DBs
-      val protStatJdbcWork = new JDBCWork() {
-        override def execute(con: Connection) {
-          //---- Read Prot Status
-
-          val getProtStatus = "SELECT protein_set_id, protein_match_id, is_in_subset, representative_protein_match_id FROM protein_set_protein_match_item, protein_set " +
-            " WHERE protein_set.id = protein_set_protein_match_item.protein_set_id " +
-            " AND protein_set_protein_match_item.result_summary_id = ? "
-          val pStmt = con.prepareStatement(getProtStatus)
-          pStmt.setLong(1, rsmIdByQChId.get(qcId).get)
-
-          val sqlResultSet = pStmt.executeQuery()
-          while (sqlResultSet.next) {
-            val isInSubset = sqlResultSet.getBoolean("is_in_subset")
-            val protSetTypID = sqlResultSet.getLong("representative_protein_match_id")
-            val protMatchId = sqlResultSet.getLong("protein_match_id")
-            val protSetId = sqlResultSet.getLong("protein_set_id")
-            var protMatchStatus: String = null
-            if (isInSubset) {
-              protMatchStatus = "Subset"
-            } else if (protSetTypID.equals(protMatchId)) { //is the typical 
-              protMatchStatus = "Representative"
-            } else
-              protMatchStatus = "Sameset"
-            protMatchStatusByIdPepMatch += protMatchId -> protMatchStatus
-          }
-          pStmt.close()
-
-          //---- Read Prot Status
-          val getPepCount = "SELECT peptide_count, protein_match_id FROM peptide_set_protein_match_map pspmm, peptide_set " +
-            "WHERE  pspmm.result_summary_id = ?  AND peptide_set.id = pspmm.peptide_set_id"
-          val pStmt2 = con.prepareStatement(getPepCount)
-          pStmt2.setLong(1, rsmIdByQChId.get(qcId).get)
-          val sqlResultSet2 = pStmt2.executeQuery()
-          while (sqlResultSet2.next) {
-            val protMatchPepNbr = sqlResultSet2.getInt("peptide_count")
-            val protMatchId = sqlResultSet2.getLong("protein_match_id")
-            protMatchPeptideNumberByPepMatchId += protMatchId -> protMatchPepNbr
-          }
-          pStmt2.close()
-        }
-      } // End of jdbcWork anonymous inner class
-      msiSQLCtx.doWork(protStatJdbcWork, false)
-
-      protMatchStatusByIdPepMatchByQCId += qcId -> protMatchStatusByIdPepMatch
-      protMatchPeptideNumberByPepMatchIdByQCId += qcId -> protMatchPeptideNumberByPepMatchId
-    }*/
-
  
   }
 
@@ -406,22 +313,15 @@ object BuildDatasetViewSet extends LazyLogging {
     }
   }
   
-  private def _buildSpectraLoader(msiDbCtx: DatabaseConnectionContext, lazyRsm: LazyResultSummary) = {
-    () => {
+  private def _buildSpectraLoader(msiDbCtx: DatabaseConnectionContext) = {
+    (peaklistIds: Array[Long]) => {
       logger.debug("Loading spectra descriptors...")
       
       val spectrumProvider = new SQLSpectrumProvider(msiDbCtx)
       
-      /*var msQueryIdByPeptideMatchId : Map[Long, Long] = Map()
-      for ((peptideMatchId, peptideMatch) <- rsm.resultSet.get.getPeptideMatchById()) {
-        if (peptideMatch != null && peptideMatch.msQuery != null){
-          msQueryIdByPeptideMatchId += peptideMatchId -> peptideMatch.msQuery.id
-        }
-      }
-      var spectrumFirstTimeByMsQueryId: Map[Long, Double] =getSpectrumData(msQueryIdByPeptideMatchId, executionContext)
-      */
+      spectrumProvider.getPeaklistsSpectra(peaklistIds, loadPeaks = false)
       
-      val peptideMatches = lazyRsm.lazyResultSet.peptideMatches
+      /*val peptideMatches = lazyRsm.lazyResultSet.peptideMatches
       val spectraIds = new ArrayBuffer[Long](peptideMatches.length)
       for( peptideMatch <- peptideMatches) {
         if( peptideMatch.msQuery != null ) {
@@ -431,33 +331,8 @@ object BuildDatasetViewSet extends LazyLogging {
         }
       }
       
-      spectrumProvider.getSpectra(spectraIds, loadPeaks = false)
+      spectrumProvider.getSpectra(spectraIds, loadPeaks = false)*/
     }
   }
-  
-  /*
-  private def getSpectrumData(msQueryIdByPeptideMatchId: Map[Long, Long], execContext: IExecutionContext): Map[Long, Double] = {
-    var spectrumBySpectrumId: Map[Long, Double] = Map()
-    if (msQueryIdByPeptideMatchId.values.toList.length > 0){
-      var ids: String = msQueryIdByPeptideMatchId.values.toList.mkString(",")
-
-      val jdbcWork = new JDBCWork() {
-
-        override def execute(con: Connection) {
-
-          val stmt = con.prepareStatement("select msq.id, s.first_time from spectrum s, ms_query msq where msq.id IN (" + ids + ") AND msq.spectrum_id = s.id ")
-          val sqlSpectra = stmt.executeQuery()
-          while (sqlSpectra.next) {
-            var msQueryId = sqlSpectra.getLong("id")
-            var firstTime = sqlSpectra.getDouble("first_time")
-            spectrumBySpectrumId += msQueryId -> firstTime
-          }
-          stmt.close()
-        } // End of jdbcWork anonymous inner class
-      }
-      execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
-    }
-    spectrumBySpectrumId
-  }*/
 
 }

@@ -1,11 +1,9 @@
 package fr.proline.module.exporter.dataset.view
 
 import java.text.SimpleDateFormat
-
 import scala.collection.mutable.ArrayBuffer
-
 import com.typesafe.scalalogging.LazyLogging
-
+import fr.profi.util.StringUtils
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.om.model.msi._
 import fr.proline.module.exporter.api.view.IFixedTableView
@@ -25,7 +23,6 @@ class ImportAndValidationPropsView(
 ) extends IFixedTableView with LazyLogging {
 
   var viewName = "import and validation"
-  val childResultSummaries = identDS.childResultSummaries
   
   val fields = {
     
@@ -34,8 +31,8 @@ class ImportAndValidationPropsView(
     var protFiltersCount = 0
   
     for (
-      childRsm <- childResultSummaries;
-      props <- childRsm.descriptor.properties;
+      rsm <- identDS.allResultSummaries;
+      props <- rsm.descriptor.properties;
       valProps <- props.getValidationProperties
     ) {
       val validationParams = valProps.getParams
@@ -78,7 +75,9 @@ class ImportAndValidationPropsView(
     val rsm = myBuildingContext.rsm
     val rs = rsm.lazyResultSet
 
-    val fileName = rs.msiSearch.map( _.resultFileName ).getOrElse("")    
+    // FIXME: merged result sets should be named with the name of corresponding dataset
+    val fileNameOrRsName = rs.msiSearch.map( _.resultFileName ).getOrElse( rs.descriptor.name )
+    val fileName = if( StringUtils.isEmpty(fileNameOrRsName) ) "DATASET" else fileNameOrRsName
     logger.debug("Import and validation of file named " + fileName)
     
     // *** Get import Parameters
@@ -194,8 +193,8 @@ class ImportAndValidationPropsView(
   }
 
   def onEachRecord(recordFormatter: Map[String, Any] => Unit) {
-    for (childRsm <- childResultSummaries) {
-      this.formatRecord(MyBuildingContext(childRsm), recordFormatter)
+    for (rsm <- identDS.allResultSummaries) {
+      this.formatRecord(MyBuildingContext(rsm), recordFormatter)
     }
   }
   
