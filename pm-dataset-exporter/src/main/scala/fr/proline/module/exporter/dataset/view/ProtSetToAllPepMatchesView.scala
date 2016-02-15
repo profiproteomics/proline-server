@@ -37,7 +37,7 @@ class ProtSetToAllPepMatchesView(
 
         // Representatiive Protein Match is put first
         val reprProtMatch = protSet.getRepresentativeProteinMatch.getOrElse(protSet.samesetProteinMatches.get.head)
-        val seqMatchByPepId = reprProtMatch.sequenceMatches.toLongMap { seqMatch =>
+        val seqMatchByPepId = reprProtMatch.sequenceMatches.toLongMapWith { seqMatch =>
           (seqMatch.getPeptideId -> seqMatch)
         }
 

@@ -24,7 +24,7 @@ class QuantDataset(
 ) extends IdentDataset(projectName,quantRSM.lazyResultSummary,loadChildResultSummaries,loadBioSequences,loadSpectraDescriptors) {
   
   lazy val identRsmById = childResultSummaries.mapByLong(_.id)
-  lazy val identRsmByQcId = masterQuantChannel.getQuantitationChannels.toList.toLongMap { qc =>
+  lazy val identRsmByQcId = masterQuantChannel.getQuantitationChannels.toList.toLongMapWith { qc =>
     qc.getId -> identRsmById(qc.getIdentResultSummaryId)
   }
   
@@ -62,7 +62,7 @@ class QuantDataset(
   }
   
   lazy val mqProtSetByProtSetId: LongMap[MasterQuantProteinSet] = {
-    quantRSM.masterQuantProteinSets.toLongMap { mqProtSet => mqProtSet.proteinSet.id -> mqProtSet }
+    quantRSM.masterQuantProteinSets.toLongMapWith { mqProtSet => mqProtSet.proteinSet.id -> mqProtSet }
   }
   
   //lazy val mqPepIonsByMqPepId = quantRSM.masterQuantPeptideIons.groupByLong( _.masterQuantPeptideId )

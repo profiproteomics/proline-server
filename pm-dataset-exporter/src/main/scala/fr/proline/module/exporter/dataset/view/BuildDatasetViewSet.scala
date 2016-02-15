@@ -228,7 +228,7 @@ object BuildDatasetViewSet extends LazyLogging {
       val quantRsmId = udsMasterQc.getQuantResultSummaryId
       val udsQuantChannels = udsMasterQc.getQuantitationChannels
       val identRsmIds = udsQuantChannels.map(_.getIdentResultSummaryId).toArray
-      val qcIdByIdentRsmId = udsQuantChannels.toList.toLongMap(qc => qc.getIdentResultSummaryId -> qc.getId)
+      val qcIdByIdentRsmId = udsQuantChannels.toList.toLongMapWith(qc => qc.getIdentResultSummaryId -> qc.getId)
       
       // Load the quant RSM
       logger.debug(s"Loading quant result summary #$rsmId...")
