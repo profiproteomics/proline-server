@@ -267,12 +267,12 @@ public final class DatabaseAccess {
 		}
 
 		IDatabaseConnector seqDbConnector = null;
-
+        boolean cheksumrepair=true;
 		if (transacOK && (seqDb != null)) {
 			seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
 				ProlineDatabaseType.SEQ, seqDb.toPropertiesMap());
 
-			DatabaseUpgrader.upgradeDatabase(seqDbConnector);
+			DatabaseUpgrader.upgradeDatabase(seqDbConnector,cheksumrepair);
 		}
 
 		return seqDbConnector;
