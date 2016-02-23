@@ -1,41 +1,39 @@
 package fr.proline.module.fragment_match
 
+import scala.collection.mutable.ArrayBuffer
+
 import org.junit.After
+import org.junit.Assert
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
+
 import com.typesafe.scalalogging.StrictLogging
+
+import fr.profi.util.serialization.CustomDoubleJacksonSerializer
+import fr.profi.util.serialization.ProfiJSMSerialization
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.BuildDbConnectionContext
+import fr.proline.core.dal.BuildMsiDbConnectionContext
+import fr.proline.core.dal.BuildUdsDbConnectionContext
+import fr.proline.core.dal.helper.MsiDbHelper
+import fr.proline.core.om.model.msi.Instrument
+import fr.proline.core.om.model.msi.InstrumentConfig
+import fr.proline.core.om.model.msi.MSISearch
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.core.om.provider.msi.IResultSetProvider
+import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider
 import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
+import fr.proline.core.om.provider.msi.impl.SQLPeptideMatchProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
-import fr.proline.repository.DriverType
-import scala.collection.mutable.ArrayBuffer
-import fr.proline.repository.util.JDBCWork
-import java.sql.Connection
-import fr.profi.util.serialization.ProfiJSMSerialization
-import fr.profi.util.serialization.CustomDoubleJacksonSerializer
-import fr.proline.core.om.model.msi.SpectrumMatch
-import fr.proline.core.om.provider.msi.impl.SQLPeptideMatchProvider
 import fr.proline.core.om.provider.msi.impl.SQLSpectrumProvider
-import fr.proline.core.om.model.msi.InstrumentConfig
-import fr.proline.core.om.model.msi.FragmentMatch
-import fr.proline.core.om.model.msi.TheoreticalFragmentSeries
-import fr.proline.core.om.model.msi.Instrument
-import fr.proline.core.om.model.msi.FragmentationRule
-import org.junit.Assert
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.om.model.msi.MSISearch
-import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider
+import fr.proline.repository.DriverType
 
 class PeptideSpectrumMatcherTest extends AbstractMultipleDBTestCase with StrictLogging {
 
@@ -76,10 +74,10 @@ class PeptideSpectrumMatcherTest extends AbstractMultipleDBTestCase with StrictL
   }
 
   def buildSQLContext() = {
-    val udsDbCtx = ContextFactory.buildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
-    val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
-    val msiDbCtx = ContextFactory.buildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
+    val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
+    val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
+    val psDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
+    val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
     val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
     val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 

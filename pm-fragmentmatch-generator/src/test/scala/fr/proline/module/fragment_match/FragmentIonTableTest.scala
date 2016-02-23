@@ -12,7 +12,7 @@ import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.TheoreticalFragmentSeries
@@ -24,6 +24,9 @@ import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.repository.DriverType
+import fr.proline.core.dal.BuildUdsDbConnectionContext
+import fr.proline.core.dal.BuildDbConnectionContext
+import fr.proline.core.dal.BuildMsiDbConnectionContext
 
 class FragmentIonTableTest extends AbstractMultipleDBTestCase with StrictLogging {
 
@@ -72,10 +75,10 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with StrictLogging
   }
 
   def buildSQLContext() = {
-    val udsDbCtx = ContextFactory.buildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
-    val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
-    val msiDbCtx = ContextFactory.buildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
+    val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
+    val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
+    val psDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
+    val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
     val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
     val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
