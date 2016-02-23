@@ -19,12 +19,13 @@ import org.slf4j.LoggerFactory;
 
 import fr.proline.module.seq.config.ParsingRuleEntry;
 import fr.proline.module.seq.config.SeqRepoConfig;
+import fr.proline.module.seq.util.RegExUtil;
 
 public class ListMatchingRules {
 
 	List<String> m_fastaDirs;
 	private static final Logger LOG = LoggerFactory.getLogger(ListMatchingRules.class);
-	
+    
 	public static void main(final String[] args) {
 
 		DataSourceBuilder dsBuilder = new DataSourceBuilder();
@@ -41,6 +42,8 @@ public class ListMatchingRules {
 			Pattern m_seDbIdentPattern = null;
 			if (rule != null) {
 				LOG.info(" Using rule \"{}\" for \"{}\" ", rule.getProteinAccRegEx(), fastaName);
+				String releaseRegEx = rule.getFastaReleaseRegEx();
+				LOG.info("   Release (using rule \"{}\") = \"{}\" ", releaseRegEx, RegExUtil.parseReleaseVersion(fastaName, releaseRegEx));
 				m_seDbIdentPattern = Pattern.compile(rule.getProteinAccRegEx(), Pattern.CASE_INSENSITIVE);
 			} else {
 				LOG.info(" Using default rule \"{}\" for fasta \"{}\" ", SeqRepoConfig.getInstance().getDefaultProtAccRegEx(), fastaName);
