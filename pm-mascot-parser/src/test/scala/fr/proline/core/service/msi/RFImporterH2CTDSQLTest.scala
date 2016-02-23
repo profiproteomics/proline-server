@@ -1,16 +1,17 @@
 package fr.proline.core.service.msi
 
 import java.io.File
-import org.junit.{After,AfterClass, Assert, Test, Before,BeforeClass}
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
-import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.core.om.storer.msi.impl.StorerContext
-import fr.proline.repository.DriverType
-import fr.proline.context.IExecutionContext
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
-import fr.proline.core.dal.ContextFactory
+
+import org.junit.After
+import org.junit.Assert
+import org.junit.Before
 import org.junit.Ignore
+import org.junit.Test
+
+import fr.proline.context.IExecutionContext
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.provider.msi.IResultSetProvider
+import fr.proline.repository.DriverType
 
 @Test
 class RFImporterH2CTDSQLTest extends AbstractRFImporterTestCase {
