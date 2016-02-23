@@ -428,17 +428,17 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
 }
 
-class SingleThreadedServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotifier: MonitoringTopicPublisherRunner, serviceName: String)
+class SingleThreadedServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotifier: MonitoringTopicPublisherRunner, serviceIdent : String, useThreadIdent : Boolean = false)
   extends ServiceRunner(queue, connection, serviceMonitoringNotifier) {
 
   import ServiceRunner._
 
   /* Constructor checks */
-  require(!StringUtils.isEmpty(serviceName), "Invalid serviceName")
+  require(!StringUtils.isEmpty(serviceIdent), "Invalid single thread service identification ")
 
   val handledServices = retrieveHandledServices()
 
-  require(((handledServices != null) && !handledServices.isEmpty), "No SingleThreadedServices for name [" + serviceName + ']')
+  require(((handledServices != null) && !handledServices.isEmpty), "No SingleThreadedServices for  [" + serviceIdent + ']')
 
   protected override def buildSelectorString(): String = {
     /* NON-Parallelizable ServiceRunner */
@@ -447,8 +447,10 @@ class SingleThreadedServiceRunner(queue: Queue, connection: Connection, serviceM
 
   /* Private methods */
   private def retrieveHandledServices(): List[IRemoteService] = {
-    val singleThreadedServicesPerName = ServiceRegistry.getSingleThreadedServices
-    singleThreadedServicesPerName.getOrElse(serviceName, null)
+    val singleThreadedServicesPerName = if(useThreadIdent) { ServiceRegistry.getSingleThreadedServicesByThreadIdent() } 
+                                            else { ServiceRegistry.getSingleThreadedServices()   }
+    
+    singleThreadedServicesPerName.getOrElse(serviceIdent, null)
   }
 
 }
