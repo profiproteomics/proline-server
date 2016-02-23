@@ -33,4 +33,11 @@ trait IRemoteService {
 
 }
 
-trait ISingleThreadedService extends IRemoteService
+trait ISingleThreadedService extends IRemoteService {
+  
+  /**
+   * Unique name identifying a Thread which could be share between multiple services  
+   */
+  val singleThreadIdent : String 
+
+}

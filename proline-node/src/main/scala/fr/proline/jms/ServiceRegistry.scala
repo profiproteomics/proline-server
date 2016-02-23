@@ -146,5 +146,44 @@ object ServiceRegistry {
     /* Return an immutable Map of (String, immutable List) */
     (mutableMap.mapValues(svcs => svcs.toList)).toMap
   }
+  
+def getSingleThreadedServicesByThreadIdent(): Map[String, List[IRemoteService]] = {
+    val mutableMap = mutable.Map.empty[String, ArrayBuffer[IRemoteService]]
+
+    m_servicesPerName.synchronized {
+
+      for (entry <- m_servicesPerName) {
+        val servicesList = entry._2
+
+        if ((servicesList != null) && !servicesList.isEmpty) {
+          for (service <- servicesList) {
+
+            if (service.isInstanceOf[ISingleThreadedService]) {
+              val optionalList = mutableMap.get(service.asInstanceOf[ISingleThreadedService].singleThreadIdent)
+
+              val servicesList = if (optionalList.isDefined) {
+                optionalList.get
+              } else {
+                val newList = ArrayBuffer.empty[IRemoteService]
+                mutableMap.put(service.asInstanceOf[ISingleThreadedService].singleThreadIdent, newList)
+                newList
+              }
+
+              /* Version consistency already checked by addService() */
+
+              servicesList += service
+            }
+
+          } // End loop for each service
+
+        } // End if (servicesList is not empty)
+
+      } // End loop for each entry
+
+    } // End of synchronized block on m_servicesPerName
+
+    /* Return an immutable Map of (String, immutable List) */
+    (mutableMap.mapValues(svcs => svcs.toList)).toMap
+  }
 
 }
