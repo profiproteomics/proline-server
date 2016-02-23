@@ -73,7 +73,7 @@ public class SeqRepoConfig {
     		//Read Parsing Rules
     		List<ParsingRuleEntry> parsingRules = new ArrayList<>();
     		if (!getSeqRepoConfig().hasPath(PARSING_RULES_KEY)) {
-    			throw new RuntimeException("No Parsing rules specidied");
+    			throw new RuntimeException("No Parsing rules specified");
     		}
     		ConfigList parsingRulesDef = getSeqRepoConfig().getList(PARSING_RULES_KEY);
     		for(ConfigValue nextEntry : parsingRulesDef){
