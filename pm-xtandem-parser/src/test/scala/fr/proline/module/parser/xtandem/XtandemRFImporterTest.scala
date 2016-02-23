@@ -1,19 +1,21 @@
 package fr.proline.module.parser.xtandem
 
-import org.junit.Test
-import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.repository.DriverType
-import org.junit.Before
-import org.junit.Assert._
-import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.core.dal.ContextFactory
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
-import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
-import fr.proline.core.service.msi.ResultFileImporter
 import java.io.File
+
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+
+import fr.proline.core.dal.AbstractMultipleDBTestCase
+import fr.proline.core.dal.BuildExecutionContext
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.provider.msi.IPTMProvider
+import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
+import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
+import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
+import fr.proline.core.service.msi.ResultFileImporter
+import fr.proline.repository.DriverType
 
 @Test
 class XtandemRFImporterTest extends AbstractMultipleDBTestCase {
@@ -41,7 +43,7 @@ class XtandemRFImporterTest extends AbstractMultipleDBTestCase {
   }
 
   def buildJPAContext() = {
-    val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
+    val executionContext = BuildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
     val rsProvider = new ORMResultSetProvider(executionContext.getMSIDbConnectionContext, executionContext.getPSDbConnectionContext, executionContext.getPDIDbConnectionContext)
     parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
     parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(executionContext.getPSDbConnectionContext()))

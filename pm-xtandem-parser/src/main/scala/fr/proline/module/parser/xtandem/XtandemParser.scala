@@ -14,7 +14,6 @@ import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.repository.DriverType
-import fr.proline.core.dal.ContextFactory
 import fr.proline.context.BasicExecutionContext
 import fr.proline.core.om.provider.msi.impl.{ ORMResultSetProvider, SQLPTMProvider, SQLResultSetProvider }
 import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider

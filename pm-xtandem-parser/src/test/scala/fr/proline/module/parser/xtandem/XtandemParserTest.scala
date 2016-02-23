@@ -13,28 +13,25 @@ import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.repository.DriverType
-import fr.proline.core.dal.ContextFactory
 import fr.proline.context.BasicExecutionContext
-import fr.proline.core.om.provider.msi.impl.{ ORMResultSetProvider, SQLPTMProvider, SQLResultSetProvider }  // getPTMDefinition
-import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider  //getEnzyme
+import fr.proline.core.om.provider.msi.impl.{ ORMResultSetProvider, SQLPTMProvider, SQLResultSetProvider }
+import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider
 import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
-
-//Test
 import org.junit.Before
 import org.junit.After
 import org.junit.Test
 import org.junit.Assert._
-
-//Parser
 import org.xml.sax._
 import org.xml.sax.helpers._
 import javax.xml.parsers._
-
 import scala.collection.mutable.ArrayBuffer
 import java.io._
 import java.util.Date
 import java.io.ByteArrayOutputStream
+import fr.proline.core.dal.BuildUdsDbConnectionContext
+import fr.proline.core.dal.BuildDbConnectionContext
+import fr.proline.core.dal.BuildMsiDbConnectionContext
 
 class XTandemParserTest extends AbstractMultipleDBTestCase {
   val driverType = DriverType.H2
@@ -58,10 +55,10 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     udsDBTestCase.loadDataSet("/default_datasets/UDS_Simple_Dataset.xml")
     logger.info("UDS db succesfully initialized")
 
-    val udsDbCtx = ContextFactory.buildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, true) // default: false
-    val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true) // default: true
-    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, true) // default: false
-    val msiDbCtx = ContextFactory.buildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), true) // default: false
+    val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, true) // default: false
+    val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true) // default: true
+    val psDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, true) // default: false
+    val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), true) // default: false
 
     val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
 
