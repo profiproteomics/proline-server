@@ -49,7 +49,8 @@ trait IResultFileDescriptor {
 abstract class AbstractImportResultFiles extends AbstractRemoteProcessService with LazyLogging with ISingleThreadedService {
   /* JMS Service identification */
   val serviceName = "proline/dps/msi/ImportResultFiles"
-
+  val singleThreadIdent= "ImportThread"
+  
   case class ImportedResultFile(path: String, var targetResultSetId: Long = -1L)
 
 
@@ -182,11 +183,11 @@ case class ResultFileDescriptorsDecoyRegExp (format: String, path: String, decoy
 
   
 class ImportResultFilesDecoyRegExp extends AbstractImportResultFiles {
+  
   /* JMS Service identification */
   val serviceVersion = "1.0"
   override val defaultVersion = true
-
-
+  
   protected def parseResultFileDescriptor(rfDescObj: Object): IResultFileDescriptor = {
     deserialize[ResultFileDescriptorsDecoyRegExp](serialize(rfDescObj))
   }

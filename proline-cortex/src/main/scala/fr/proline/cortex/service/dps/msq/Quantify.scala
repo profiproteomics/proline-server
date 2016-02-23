@@ -23,8 +23,8 @@ import fr.proline.jms.service.api.ISingleThreadedService
  *  Define JMS Service which allows to creates a new quantitation and perform the corresponding data analysis.
  *
  *  Input params :
- *    name : The quantitation name.
- *    description: TThe quantitation description.
+ *    name : Name of the quantitation dataset that will be created for this quantitation.
+ *    description: Description of the quantitation dataset that will be created for this quantitation.
  *    project_id: The id of the project the quantitation will be created in
  *    method_id: The id of the quantitative method to be used.
  *    experimental_design: The experimental design related to this quantitation.
@@ -37,6 +37,7 @@ class Quantify  extends AbstractRemoteProcessService with LazyLogging with ISing
 	/* JMS Service identification */
 	val serviceName = "proline/dps/msq/Quantify";
 	val serviceVersion = "1.0"; 
+	val singleThreadIdent = "quantifyThread"
 	override val defaultVersion = true; 
 	
 	override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
@@ -71,6 +72,89 @@ class Quantify  extends AbstractRemoteProcessService with LazyLogging with ISing
 					  methodId = paramsRetriever.getLong("method_id"),
 					  experimentalDesign = expDesign,
 					  quantConfigAsMap = quantConfigAsMap
+					  );
+			  quantifier.run();
+      
+			  quantiId = quantifier.getQuantitationId;
+				
+			} catch {
+				case ex: Exception => {
+					result = false;
+					logger.error("Error running Quantify", ex);
+					val msg = if (ex.getCause() != null) { "Error running Quantify " + ex.getCause().getMessage() } else { "Error running Quantify " + ex.getMessage() };
+					throw new Exception(msg)
+				}
+			} finally {
+				try {
+					execCtx.closeAll();
+				} catch {
+					case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
+				}
+			}
+
+			return quantiId;
+	}
+}
+
+/**
+ *  Define JMS Service which allows to creates a new quantitation and perform the corresponding data analysis.
+ *
+ *  Input params :
+ *    name : Name of the quantitation dataset that will be created for this quantitation.
+ *    description: Description of the quantitation dataset that will be created for this quantitation.
+ *    project_id: The id of the project the quantitation will be created in
+ *    ref_rsm_id: The id of the reference result summary used for this spectral counting computation.
+ *    ref_ds_id: The id of the reference dataset used for this spectral counting computation.
+ *    method_id: The id of the quantitative method to be used.
+ *    experimental_design: The experimental design related to this quantitation.
+ *    quantitation_config: The parameters to use in order to perform a specific quantitative method (see quantitative methods documentation).
+ *
+ *  Output params :
+ *    Boolean for service run status
+ */
+class QuantifyV2_0  extends AbstractRemoteProcessService with LazyLogging with ISingleThreadedService{
+	/* JMS Service identification */
+	val serviceName = "proline/dps/msq/Quantify";
+	val serviceVersion = "2.0"; 
+	val singleThreadIdent = "quantifyThread"
+	override val defaultVersion = false; 
+	
+	override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
+
+			require((paramsRetriever != null), "no parameter specified");
+
+			val projectId = paramsRetriever.getLong("project_id");
+			val expDesign = deserialize[ExperimentalDesign](serialize(paramsRetriever.getMap("experimental_design")));
+			val refRSMIdParam = paramsRetriever.getLong("ref_rsm_id");
+			val refDSIdParam = paramsRetriever.getLong("ref_ds_id")
+			val quantConfigAsMap = paramsRetriever.getMap("quantitation_config")
+    
+			
+			val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, projectId, true); // Use JPA context
+			
+			// Register SQLRunProvider 
+			val scanSeqProvider = new SQLScanSequenceProvider(execCtx.getLCMSDbConnectionContext());
+			val lcMsRunProvider = new SQLRunProvider(
+					execCtx.getUDSDbConnectionContext(),
+					Some(scanSeqProvider),
+					Some(MountPointPathConverter)
+					);
+			val providerContext = ProviderDecoratedExecutionContext(execCtx) // Use Object factory
+			providerContext.putProvider(classOf[IRunProvider],lcMsRunProvider )
+    
+			var result : java.lang.Boolean = true;
+			var quantiId: java.lang.Long = -1;
+			try {
+			  val quantifier = new Quantifier(
+					  executionContext = providerContext,
+					  name = paramsRetriever.getString("name"),
+					  description = paramsRetriever.getString("description"),
+					  projectId = projectId,
+					  methodId = paramsRetriever.getLong("method_id"),
+					  experimentalDesign = expDesign,
+					  quantConfigAsMap = quantConfigAsMap,
+					  refRSMIdOp = Some(refRSMIdParam),
+					  refDSIdOp = Some(refDSIdParam)					  
 					  );
 			  quantifier.run();
       

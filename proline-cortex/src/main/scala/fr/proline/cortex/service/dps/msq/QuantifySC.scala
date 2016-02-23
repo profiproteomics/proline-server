@@ -38,6 +38,7 @@ class QuantifySC extends AbstractRemoteProcessService with LazyLogging with ISin
 	/* JMS Service identification */
 	val serviceName = "proline/dps/msq/QuantifySC";
 	val serviceVersion = "1.0";   // !!corresponds to V2 in webCore
+	val singleThreadIdent = "quantifySCThread"
 	override val defaultVersion = true; 
 	
 	override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
