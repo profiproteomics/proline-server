@@ -5,8 +5,7 @@ import org.junit.Ignore
 import org.junit.Assert.assertTrue
 
 import fr.proline.context.{ BasicExecutionContext, DatabaseConnectionContext, IExecutionContext }
-import fr.proline.core.dal.ContextFactory
-import fr.proline.core.dal.ProlineEzDBC
+import fr.proline.core.dal._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.{ IPTMProvider, IPeptideProvider }
 import fr.proline.core.om.provider.msi.impl.{ ORMResultSetProvider, SQLPTMProvider, SQLPeptideProvider, SQLResultSetProvider }
@@ -56,10 +55,10 @@ trait AbstractRFImporterTestCase extends AbstractMultipleDBTestCase   {
   }
 
   def buildSQLContext() = {
-    val udsDbCtx = ContextFactory.buildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
-    val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
-    val msiDbCtx = ContextFactory.buildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
+    val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
+    val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
+    val psDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
+    val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
 
     val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
 
@@ -74,12 +73,12 @@ trait AbstractRFImporterTestCase extends AbstractMultipleDBTestCase   {
   }
 
   def buildSQLContextForJPA() = {
-    val udsDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
-    val pdiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
-    val msiDbCtx = ContextFactory.buildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(2), false)
+    val udsDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
+    val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
+    val psDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
+    val msiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(2), false)
 
-    val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
+    val executionContext = BuildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
     val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
     parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx))
@@ -91,7 +90,7 @@ trait AbstractRFImporterTestCase extends AbstractMultipleDBTestCase   {
   }
 
   def buildJPAContext() = {
-    val executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
+    val executionContext = BuildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
     val rsProvider = new ORMResultSetProvider(executionContext.getMSIDbConnectionContext, executionContext.getPSDbConnectionContext, executionContext.getPDIDbConnectionContext)
 
     (executionContext, rsProvider)
