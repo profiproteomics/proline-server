@@ -2,7 +2,6 @@ package fr.proline.module.seq.jms;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -24,13 +23,11 @@ import org.slf4j.LoggerFactory;
 import fr.profi.util.ThreadLogger;
 import fr.proline.jms.ServiceRegistry;
 import fr.proline.jms.ServiceRunner;
-import fr.proline.jms.SingleThreadedServiceRunner;
 import fr.proline.jms.util.Constants;
 import fr.proline.jms.util.MonitoringTopicPublisherRunner;
 import fr.proline.jms.util.NodeConfig;
 import fr.proline.module.seq.DatabaseAccess;
 import fr.proline.module.seq.jms.service.RetrieveBioSeqForRSMs;
-import scala.collection.JavaConversions;
 
 public class RunNode {
 
@@ -120,16 +117,17 @@ public class RunNode {
 
 				MonitoringTopicPublisherRunner serviceMonitoringNotifier = new MonitoringTopicPublisherRunner(m_connection);
 				m_executor.submit(serviceMonitoringNotifier);
-
-				/* Add SingleThreadedServiceRunner */
-				Set<String> handledSingleThreadedServiceNames = (Set<String>) JavaConversions
-						.setAsJavaSet(ServiceRegistry.getSingleThreadedServices().keySet());
-
-				for (String serviceName : handledSingleThreadedServiceNames) {
-					SingleThreadedServiceRunner singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection,
-							serviceMonitoringNotifier, serviceName);
-					m_executor.submit(singleThreadedServiceRunner);
-				}
+				//NO Single Thread SERVICES
+//
+//				/* Add SingleThreadedServiceRunner */
+//				Set<String> handledSingleThreadedServiceNames = (Set<String>) JavaConversions
+//						.setAsJavaSet(ServiceRegistry.getSingleThreadedServices().keySet());
+//
+//				for (String serviceName : handledSingleThreadedServiceNames) {					
+//					SingleThreadedServiceRunner singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection,
+//							serviceMonitoringNotifier, serviceName,false );
+//					m_executor.submit(singleThreadedServiceRunner);
+//				}
 
 				/* Add Parallelizable SeviceRunner */
 				LOG.debug("Starting " + NodeConfig.SERVICE_THREAD_POOL_SIZE() + " Parallelizable ServiceRunners");
