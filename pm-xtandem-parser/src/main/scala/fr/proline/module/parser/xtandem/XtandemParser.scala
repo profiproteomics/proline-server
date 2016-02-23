@@ -64,10 +64,10 @@ class XtandemParser(  val xtandemFile : File,
   val msLevel: Int = 2
   var msQueriesList : ArrayBuffer[MsQuery] =  new ArrayBuffer[MsQuery]
   var msQueries = msQueriesList.toArray
-  val hasDecoyResultSet: Boolean = searchSettingIsDecoy 
   val hasMs2Peaklist: Boolean = true
   
   private var searchSettingIsDecoy: Boolean = false
+  val hasDecoyResultSet: Boolean = searchSettingIsDecoy
   private var ms2Query: Ms2Query = null
   private var msiSearchForResultSet : MSISearch = null
   private var spectrumList : ArrayBuffer[Spectrum] = new ArrayBuffer[Spectrum]
