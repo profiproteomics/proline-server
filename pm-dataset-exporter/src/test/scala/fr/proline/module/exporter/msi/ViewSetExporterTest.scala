@@ -9,7 +9,7 @@ import org.junit.Test
 
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.module.exporter.ViewSetExporter
 import fr.proline.module.exporter.msi.template.ProlineViewSetTemplateAsXLSX
 import fr.proline.module.exporter.msi.view.BuildResultSummaryViewSet
@@ -46,7 +46,7 @@ class ViewSetExporterTest extends AbstractMultipleDBTestCase  {
 
     logger.info("PDI, PS, MSI and UDS dbs successfully initialized !")
 
-    executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
+    executionContext = BuildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
   }
 
   @After

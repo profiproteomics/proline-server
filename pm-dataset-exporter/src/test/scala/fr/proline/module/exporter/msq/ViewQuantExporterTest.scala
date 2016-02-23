@@ -6,7 +6,7 @@ import org.junit.Test
 
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.core.dal.ContextFactory
+import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.repository.DriverType
 
 
@@ -34,7 +34,7 @@ class ViewQuantExporterTest extends AbstractMultipleDBTestCase  {
 
     logger.info("PDI  dbs successfully initialized !")
 
-    executionContext = ContextFactory.buildExecutionContext(dsConnectorFactoryForTest, projectId, true) // Full JPA
+    executionContext = BuildExecutionContext(dsConnectorFactoryForTest, projectId, true) // Full JPA
   }
   
   @After
