@@ -126,8 +126,7 @@ public class RunNode {
 						.setAsJavaSet(ServiceRegistry.getSingleThreadedServices().keySet());
 
 				for (String serviceName : handledSingleThreadedServiceNames) {
-					SingleThreadedServiceRunner singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection,
-							serviceMonitoringNotifier, serviceName);
+					SingleThreadedServiceRunner singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier, serviceName, false);
 					m_executor.submit(singleThreadedServiceRunner);
 				}
 
