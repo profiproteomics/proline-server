@@ -126,9 +126,8 @@ public final class RetrieveService {
 
 		final IDataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();
 		final IDatabaseConnector udsDbConnector = connectorFactory.getUdsDbConnector();
-		final EntityManagerFactory emf = udsDbConnector.getEntityManagerFactory();
 
-		EntityManager udsEM = emf.createEntityManager();
+		EntityManager udsEM = udsDbConnector.createEntityManager();
 		List<Long> projectIds = getAllProjectIds(udsEM);
 
 		if ((projectIds == null) || projectIds.isEmpty()) {
@@ -158,7 +157,7 @@ public final class RetrieveService {
 
 		final long end = System.currentTimeMillis();
 		final long duration = end - start;
-
+		udsEM.close();
 		LOG.info("Total retrieveBioSequencesForAllProjects() execution : {} SEDbIdentifiers handleds in {} ms", totalHandledSEDbIdents, duration);
 	}
 

@@ -38,9 +38,8 @@ public final class BioSequenceProvider {
 
 		/* Client / Provider side */
 		final IDatabaseConnector seqDb = DatabaseAccess.getSEQDatabaseConnector(false);
-		final EntityManagerFactory emf = seqDb.getEntityManagerFactory();
 
-		EntityManager seqEM = emf.createEntityManager();
+		EntityManager seqEM = seqDb.createEntityManager();
 
 		try {
 			result = findBioSequencesBySEDbIdentValues(seqEM, values);

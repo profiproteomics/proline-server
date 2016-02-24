@@ -182,9 +182,8 @@ public final class DatabaseAccess {
 		else
 			dataStoreConnectorFactory = getDataStoreConnectorFactory();
 		final IDatabaseConnector udsDbConnector = dataStoreConnectorFactory.getUdsDbConnector();
-		final EntityManagerFactory udsEMF = udsDbConnector.getEntityManagerFactory();
 
-		EntityManager udsEM = udsEMF.createEntityManager();
+		EntityManager udsEM = udsDbConnector.createEntityManager();
 
 		try {
 			/* Try to load SEQ Db Connector */

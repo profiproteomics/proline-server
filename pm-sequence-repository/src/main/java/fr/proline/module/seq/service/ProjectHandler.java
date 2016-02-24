@@ -9,7 +9,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
@@ -112,10 +111,8 @@ public class ProjectHandler {
 			final long start = System.currentTimeMillis();
 			try {
 
-				final EntityManagerFactory emf = msiDbConnector.getEntityManagerFactory();
-				msiEM = emf.createEntityManager();
-				final EntityManagerFactory em_uds = udsDbConnector.getEntityManagerFactory();
-				udsEM = em_uds.createEntityManager();
+				msiEM = msiDbConnector.createEntityManager();
+				udsEM = udsDbConnector.createEntityManager();
 				final Map<Long, SEDbInstanceWrapper> seDbInstances = retrieveAllSeqDatabases(msiEM);
 				final List<Long> untreatedRsmIds = new ArrayList<Long>();
 
@@ -392,10 +389,8 @@ public class ProjectHandler {
 
 		try {
 			final long startAll = System.currentTimeMillis();
-			final EntityManagerFactory emf = msiDbConnector.getEntityManagerFactory();
-			msiEM = emf.createEntityManager();
-			final EntityManagerFactory em = udsDbConnector.getEntityManagerFactory();
-			udsEM = em.createEntityManager();
+			msiEM = msiDbConnector.createEntityManager();
+			udsEM = udsDbConnector.createEntityManager();
 
 			// get the list of RSM
 			// get the list of RSM

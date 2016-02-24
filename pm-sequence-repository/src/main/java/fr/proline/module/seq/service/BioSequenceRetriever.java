@@ -180,8 +180,7 @@ public final class BioSequenceRetriever {
 
 		try {
 			final IDatabaseConnector seqDb = DatabaseAccess.getSEQDatabaseConnector(true);
-			final EntityManagerFactory emf = seqDb.getEntityManagerFactory();
-			seqEM = emf.createEntityManager();
+			seqEM = seqDb.createEntityManager();
 
 			nHandledSEDbIdents = retrieveBioSequences(seqEM, seDbInstanceW, seDbIdentifiers, true);
 		} catch (Throwable t) {
