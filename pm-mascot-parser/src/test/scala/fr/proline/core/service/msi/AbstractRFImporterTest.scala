@@ -135,7 +135,7 @@ trait AbstractRFImporterTestCase extends AbstractMultipleDBTestCase   {
   protected def getPeptideMatchCount(): Long = {
     var result: Long = 0
 
-    val msiEM = dsConnectorFactoryForTest.getMsiDbConnector(1).getEntityManagerFactory.createEntityManager()
+    val msiEM = dsConnectorFactoryForTest.getMsiDbConnector(1).createEntityManager()
 
     try {
       val query = msiEM.createQuery("select count(distinct pm) from fr.proline.core.orm.msi.PeptideMatch pm")
