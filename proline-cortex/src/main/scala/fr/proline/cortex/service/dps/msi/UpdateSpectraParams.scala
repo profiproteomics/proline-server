@@ -39,7 +39,7 @@ class UpdateSpectraParams extends AbstractRemoteProcessService with LazyLogging 
     val peaklistIds = paramsRetriever.getList("peaklist_ids").toArray.map { rf => deserialize[Long](serialize(rf)) }
     val specTitleRuleId = paramsRetriever.getLong("spec_title_rule_id")
 
-    val execCtx = DbConnectionHelper.createSQLExecutionContext(projectId) 
+    val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId) 
 
     var updatedSpectraCount: Integer = 0
     try {
@@ -90,7 +90,7 @@ class UpdateSpectraParamsForRS extends AbstractRemoteProcessService with LazyLog
     val peaklistSoftwareId = paramsRetriever.getLong("peaklist_software_id")
     val peaklistIdsBuilder = Seq.newBuilder[Long]
     var specTitleParsingRuleId : Long = -1l
-    val execCtx =  DbConnectionHelper.createSQLExecutionContext(projectId) 
+    val execCtx =  DbConnectionHelper.createJPAExecutionContext(projectId) 
 
     var updatedSpectraCount: Integer = 0
     try {
