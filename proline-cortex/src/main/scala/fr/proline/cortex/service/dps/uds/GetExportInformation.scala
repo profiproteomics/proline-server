@@ -1,18 +1,19 @@
 package fr.proline.cortex.service.dps.uds
 
-import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
-import fr.profi.util.serialization.ProfiJson._
-import fr.proline.module.exporter.commons.config.ExportConfigConstant
-import fr.proline.module.exporter.commons.config.ExportConfigManager
-import fr.proline.core.orm.uds.QuantitationMethod
+import com.typesafe.scalalogging.LazyLogging
+
+import fr.profi.util.serialization.ProfiJson.deserialize
+import fr.profi.util.serialization.ProfiJson.serialize
+import fr.proline.core.orm.uds.Dataset
 import fr.proline.core.orm.uds.Dataset.DatasetType
-import fr.proline.core.service.msq.QuantMethodType
-import fr.proline.core.dal.BuildExecutionContext
-import fr.proline.core.orm.uds.{ Dataset => UdsDataset }
+import fr.proline.core.orm.uds.QuantitationMethod
 import fr.proline.core.service.msq.AbundanceUnit
+import fr.proline.core.service.msq.QuantMethodType
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.module.exporter.commons.config.ExportConfigConstant
+import fr.proline.module.exporter.commons.config.ExportConfigManager
 
 /**
  * Define a JMS Service to :
@@ -32,11 +33,11 @@ object DatasetUtil {
 
   def getExportMode(projectId: Long, datasetId: Long) : String = {
       var mode: String = ExportConfigConstant.MODE_IDENT
-      val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), projectId, true)
+      val execCtx =  DbConnectionHelper.createJPAExecutionContext(projectId) 
       try {
         val udsDbCtx = execCtx.getUDSDbConnectionContext()
         val udsEM = udsDbCtx.getEntityManager()
-        val udsDs = udsEM.find(classOf[UdsDataset], datasetId)
+        val udsDs = udsEM.find(classOf[Dataset], datasetId)
         if (udsDs != null) {
           val dsType: DatasetType = udsDs.getType()
           if (dsType == DatasetType.QUANTITATION) {

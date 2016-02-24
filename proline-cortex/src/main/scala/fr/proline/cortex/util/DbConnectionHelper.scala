@@ -1,12 +1,15 @@
 package fr.proline.cortex.util
 
 import com.typesafe.scalalogging.LazyLogging
+
 import fr.proline.admin.service.db.SetupProline
-import fr.proline.core.orm.util.DataStoreConnectorFactory
-import fr.proline.repository.IDataStoreConnectorFactory
 import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.BuildExecutionContext
+import fr.proline.core.dal.BuildLazyExecutionContext
+import fr.proline.core.orm.util.DataStoreConnectorFactory
 import fr.proline.jms.util.NodeConfig
+import fr.proline.repository.IDataStoreConnectorFactory
+import fr.proline.repository.IDatabaseConnector
+import fr.proline.repository.ProlineDatabaseType
 
 object DbConnectionHelper extends LazyLogging {
 
@@ -34,8 +37,32 @@ object DbConnectionHelper extends LazyLogging {
     m_dsConnectorFactory
   }
 
-  def createJPAExecutionContext(projectID: Long): IExecutionContext = {
-    BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, projectID, true)
+  def createJPAExecutionContext(projectID: Long): IExecutionContext = {    
+      createExecutionContext(projectID, true)
+  }
+  
+  def createSQLExecutionContext(projectID: Long): IExecutionContext = {
+    createExecutionContext(projectID, false)
+  }
+
+  private def createExecutionContext(projectID: Long, useJPA: Boolean) : IExecutionContext = {    
+    val onConnectionContextClose = { dbConnector: IDatabaseConnector =>
+
+      if (dbConnector.getOpenEntityManagerCount == 0) {
+        val dbType = dbConnector.getProlineDatabaseType
+
+        if (dbType == ProlineDatabaseType.LCMS) {
+          logger.info(s"Closing database connector for LCMSdb with project id=$projectID (EntityManagerCount equals zero)")
+          m_dsConnectorFactory.closeLcMsDbConnector(projectID)
+        } else if (dbType == ProlineDatabaseType.MSI) {
+          logger.info(s"Closing database connector for MSIdb with project id=$projectID (EntityManagerCount equals zero)")
+          m_dsConnectorFactory.closeMsiDbConnector(projectID)
+        }
+      }
+
+    }
+
+    BuildLazyExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, projectID, useJPA, Some(onConnectionContextClose))
   }
 
 }

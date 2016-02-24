@@ -1,22 +1,21 @@
 package fr.proline.cortex.service.dps.msq
 
+import scala.collection.JavaConversions.asScalaBuffer
 
-import scala.collection.JavaConversions._
-import scala.collection.mutable.ArrayBuffer
-import scala.reflect.runtime.universe.typeOf
-import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
-import fr.proline.core.dal.BuildExecutionContext
-import fr.proline.cortex.util.DbConnectionHelper
-import fr.profi.util.serialization.ProfiJson._
-import fr.profi.util.primitives._
-import fr.proline.core.om.model.msq.ExperimentalDesign2
-import fr.proline.core.service.uds.CreateSCQuantitation
-import fr.proline.core.orm.uds.Dataset
+import com.typesafe.scalalogging.LazyLogging
+
+import fr.profi.util.primitives.toLong
+import fr.profi.util.serialization.ProfiJson.deserialize
+import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.core.algo.msq.SpectralCountConfig
+import fr.proline.core.om.model.msq.ExperimentalDesign2
+import fr.proline.core.orm.uds.Dataset
 import fr.proline.core.service.msq.QuantifyMasterQuantChannel
-import fr.proline.jms.service.api.ISingleThreadedService
+import fr.proline.core.service.uds.CreateSCQuantitation
+import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.jms.service.api.ISingleThreadedService
 
 /**
  *  Define JMS Service which allows to compute spectral count for proteins of result summaries associated to experimental design's QuantChannel.
@@ -50,7 +49,7 @@ class QuantifySC extends AbstractRemoteProcessService with LazyLogging with ISin
 			val refDSId = paramsRetriever.getLong("ref_ds_id")
 			val pepRedRSMIds : Seq[Long] = if(paramsRetriever.hasParam("peptide_ref_rsm_ids") ) paramsRetriever.getList("peptide_ref_rsm_ids").toSeq.map(toLong(_)) else Seq.empty[Long]
     
-			val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, projectId, true); // Use JPA context
+			val execCtx =  DbConnectionHelper.createJPAExecutionContext(projectId) ; // Use JPA context
 			val udsDbCtx = execCtx.getUDSDbConnectionContext();
 			val udsEM = udsDbCtx.getEntityManager();
 			

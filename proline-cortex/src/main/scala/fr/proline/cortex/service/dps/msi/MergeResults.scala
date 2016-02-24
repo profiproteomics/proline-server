@@ -1,22 +1,23 @@
 package fr.proline.cortex.service.dps.msi
 
 import scala.Array.canBuildFrom
+
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
+
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.dal.BuildExecutionContext
+import fr.proline.core.algo.msi.AdditionMode
 import fr.proline.core.service.msi.ResultSetMerger
 import fr.proline.core.service.msi.ResultSummaryMerger
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.IRemoteService
 import fr.proline.jms.util.jsonrpc.JSONRPC2Utils
 import fr.proline.jms.util.jsonrpc.ProfiJSONRPC2Response
-import fr.proline.core.algo.msi.AdditionMode
 
 /**
  * Merge specified result sets (or result summaries) into one new result set (or new result summary).
@@ -81,7 +82,7 @@ class MergeResultSets extends IRemoteService with LazyLogging {
 
     var result: RSMMergeResult = new RSMMergeResult()
     var msiDbConnectionContext: DatabaseConnectionContext = null
-    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), projectId, false)
+    val execCtx = DbConnectionHelper.createSQLExecutionContext(projectId) 
 
     try {
       logger.info("ResultSummary merger service will start")
@@ -120,7 +121,7 @@ class MergeResultSets extends IRemoteService with LazyLogging {
 
     var result: java.lang.Long = -1L
     var msiDbConnectionContext: DatabaseConnectionContext = null
-    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), projectId, false)
+    val execCtx =  DbConnectionHelper.createSQLExecutionContext(projectId) 
 
     try {
       logger.info("ResultSet merger service will start")
@@ -200,7 +201,7 @@ class MergeResultSetsV2_0 extends IRemoteService with LazyLogging {
     
     var result: RSMMergeResult = new RSMMergeResult()
     var msiDbConnectionContext: DatabaseConnectionContext = null
-    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), projectId, false)
+    val execCtx = DbConnectionHelper.createSQLExecutionContext(projectId) 
 
     try {
       logger.info("ResultSummary merger service will start")
@@ -240,7 +241,7 @@ class MergeResultSetsV2_0 extends IRemoteService with LazyLogging {
 
     var result: java.lang.Long = -1L
     var msiDbConnectionContext: DatabaseConnectionContext = null
-    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), projectId, false)
+    val execCtx =  DbConnectionHelper.createSQLExecutionContext(projectId) 
 
     try {
       logger.info("ResultSet merger service will start")

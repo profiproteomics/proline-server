@@ -2,10 +2,10 @@ package fr.proline.cortex.service.dps.msi
 
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
+
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.core.algo.msi.TypicalProteinChooserRule
-import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.core.service.msi.RSMTypicalProteinChooser
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.AbstractRemoteProcessService
@@ -62,7 +62,7 @@ class ChangeTypicalProteinMatch extends AbstractRemoteProcessService with LazyLo
 	msgLogBuilder.append("]")
     logger.info(msgLogBuilder.result)
     
-    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, projectId, true) // Use JPA context
+    val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId)  // Use JPA context
     val typProtChooser = new RSMTypicalProteinChooser(execCtx, resultSummaryId, allRulesBuilder.result)
 
     var result : java.lang.Boolean = true

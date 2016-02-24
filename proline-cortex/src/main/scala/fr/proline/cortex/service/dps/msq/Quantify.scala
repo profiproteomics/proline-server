@@ -1,19 +1,17 @@
 package fr.proline.cortex.service.dps.msq
 
-
-import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
-import fr.proline.core.algo.msq.ProfilizerConfig
-import fr.proline.core.dal.BuildExecutionContext
-import fr.proline.cortex.util.DbConnectionHelper
+import com.typesafe.scalalogging.LazyLogging
+
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.core.om.model.msq.ExperimentalDesign
-import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
-import fr.proline.core.om.provider.lcms.impl.SQLRunProvider
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.lcms.IRunProvider
+import fr.proline.core.om.provider.lcms.impl.SQLRunProvider
+import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
 import fr.proline.core.service.uds.Quantifier
+import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.MountPointPathConverter
 import fr.proline.jms.service.api.AbstractRemoteProcessService
 import fr.proline.jms.service.api.ISingleThreadedService
@@ -49,7 +47,7 @@ class Quantify  extends AbstractRemoteProcessService with LazyLogging with ISing
 			val quantConfigAsMap = paramsRetriever.getMap("quantitation_config")
     
 			
-			val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, projectId, true); // Use JPA context
+			val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId)  // Use JPA context
 			
 			// Register SQLRunProvider 
 			val scanSeqProvider = new SQLScanSequenceProvider(execCtx.getLCMSDbConnectionContext());
@@ -130,7 +128,7 @@ class QuantifyV2_0  extends AbstractRemoteProcessService with LazyLogging with I
 			val quantConfigAsMap = paramsRetriever.getMap("quantitation_config")
     
 			
-			val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, projectId, true); // Use JPA context
+			val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId) ; // Use JPA context
 			
 			// Register SQLRunProvider 
 			val scanSeqProvider = new SQLScanSequenceProvider(execCtx.getLCMSDbConnectionContext());

@@ -2,14 +2,12 @@ package fr.proline.cortex.service.dps.msi
 
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
+
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
-import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.cortex.util.DbConnectionHelper
-import fr.profi.util.primitives._
-import fr.proline.module.quality.msdiag._
-import fr.proline.module.quality.msdiag.service.MSDiagReportGenerator
 import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.module.quality.msdiag.service.MSDiagReportGenerator
 
 /**
  *  Define JMS Service which generates MSDiag report
@@ -39,7 +37,7 @@ class GenerateMSDiagReport extends AbstractRemoteProcessService with LazyLogging
 			val msdiagSettingsAsOptStr = Option(paramsRetriever.getOptMap("msdiag_settings", true, null)).map(serialize(_));
 			val msdiagSettings = msdiagSettingsAsOptStr.map(deserialize[Map[String, Any]](_))
     
-			val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, projectId, true); // Use JPA context
+			val execCtx =  DbConnectionHelper.createJPAExecutionContext(projectId); // Use JPA context
 			
 			logger.debug("GenerateMSDiagReport WS: going to launch MSDiag generator");
 

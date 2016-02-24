@@ -1,27 +1,30 @@
 package fr.proline.cortex.service.dps.msi
 
+import java.io.File
+
+import scala.collection.JavaConversions.mapAsScalaMap
+import scala.util.matching.Regex
+
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-import scala.util.matching.Regex
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+
+import fr.profi.util.serialization.ProfiJson.deserialize
+import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.IExecutionContext
-import fr.proline.core.om.provider.msi.IProteinProvider
-import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
-import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
-import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
+import fr.proline.core.dal.helper.UdsDbHelper
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
-import scala.collection.JavaConversions.mapAsScalaMap
-import fr.profi.util.serialization.ProfiJson._
-import fr.proline.core.dal.helper.UdsDbHelper
-import fr.proline.cortex.util.MountPointRegistry
-import fr.proline.core.service.msi.ResultFileImporter
-import fr.proline.core.dal.BuildExecutionContext
-import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
-import java.io.File
+import fr.proline.core.om.provider.msi.IProteinProvider
+import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
 import fr.proline.core.om.provider.msi.ProteinFakeProvider
+import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import fr.proline.core.om.provider.msi.SeqDbFakeProvider
+import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
+import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
+import fr.proline.core.service.msi.ResultFileImporter
 import fr.proline.cortex.util.DbConnectionHelper
+import fr.proline.cortex.util.MountPointRegistry
 import fr.proline.jms.service.api.AbstractRemoteProcessService
 import fr.proline.jms.service.api.ISingleThreadedService
 
@@ -107,7 +110,7 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessService wi
     var result: Array[ImportedResultFile] = null
 
     // Initialize the providers    
-    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), projectId, false)
+    val execCtx = DbConnectionHelper.createSQLExecutionContext(projectId)
 
     try {
       val parserCtx = this.buildParserContext(execCtx)

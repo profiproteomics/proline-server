@@ -1,7 +1,15 @@
 package fr.proline.cortex.service.dps.msi
 
+import java.io.File
+
 import scala.collection.JavaConversions.mapAsScalaMap
+
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
+import com.typesafe.scalalogging.LazyLogging
+
+import fr.profi.util.StringUtils
+import fr.profi.util.serialization.ProfiJson.deserialize
+import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
@@ -12,15 +20,9 @@ import fr.proline.core.om.provider.msi.ProteinFakeProvider
 import fr.proline.core.om.provider.msi.SeqDbFakeProvider
 import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.profi.util.serialization.ProfiJson._
 import fr.proline.core.service.msi.ResultFileCertifier
-import fr.proline.cortex.util.MountPointRegistry
-import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
-import fr.profi.util.StringUtils
-import java.io.File
-import fr.proline.core.dal.BuildExecutionContext
-import com.typesafe.scalalogging.LazyLogging
 import fr.proline.cortex.util.DbConnectionHelper
+import fr.proline.cortex.util.MountPointRegistry
 import fr.proline.jms.service.api.AbstractRemoteProcessService
 
 /**
@@ -65,7 +67,7 @@ class CertifyResultFiles extends AbstractRemoteProcessService with LazyLogging {
     } toMap
 
     // Initialize the providers    
-    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, projectId, true) // Use JPA context
+    val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId) // Use JPA context
 
     try {
       val parserCtx = buildParserContext(execCtx)

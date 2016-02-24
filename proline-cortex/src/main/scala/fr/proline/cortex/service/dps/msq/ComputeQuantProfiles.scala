@@ -1,13 +1,13 @@
 package fr.proline.cortex.service.dps.msq
 
-
-import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
-import fr.profi.util.serialization.ProfiJson._
+import com.typesafe.scalalogging.LazyLogging
+
+import fr.profi.util.serialization.ProfiJson.deserialize
+import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.core.algo.msq.ProfilizerConfig
-import fr.proline.core.dal.BuildExecutionContext
-import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.core.service.msq.QuantProfilesComputer
+import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.AbstractRemoteProcessService
 
 
@@ -39,7 +39,7 @@ class ComputeQuantProfiles  extends AbstractRemoteProcessService with LazyLoggin
 			val quantProfilesConfig = deserialize[ProfilizerConfig](quantConfAsStr);
 			logger.debug("ComputeQuantProfiles with following config: " + serialize(quantProfilesConfig))
     
-			val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, projectId, true); // Use JPA context
+			val execCtx =  DbConnectionHelper.createJPAExecutionContext(projectId) ; // Use JPA context
 			
 			
 			var result : java.lang.Boolean = true;

@@ -1,15 +1,14 @@
 package fr.proline.cortex.service.dps.msi
 
-
-
-import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
-import fr.proline.jms.service.api.AbstractRemoteProcessService
-import fr.proline.cortex.util.DbConnectionHelper
-import fr.proline.core.dal.BuildExecutionContext
+import com.typesafe.scalalogging.LazyLogging
+
+import fr.profi.util.serialization.ProfiJson.deserialize
+import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.DatabaseConnectionContext
-import fr.profi.util.serialization.ProfiJson._
 import fr.proline.core.service.msi.OrphanDataDeleter
+import fr.proline.cortex.util.DbConnectionHelper
+import fr.proline.jms.service.api.AbstractRemoteProcessService
 
 /**
  * Define JMS Service to remove orphan data into the MSI database: rsm and rs data
@@ -39,7 +38,7 @@ class DeleteOrphanData extends AbstractRemoteProcessService with LazyLogging  {
     val resultSummaryIds = paramsRetriever.getList("result_summary_ids").toArray.map { rf => deserialize[Long](serialize(rf)) }
     val resultSetIds = paramsRetriever.getList("result_set_ids").toArray.map { rf => deserialize[Long](serialize(rf)) }
     
-    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, projectId, true); // Use JPA context
+    val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId)  // Use JPA context
     var msiDbConnectionContext: DatabaseConnectionContext = null;
     
     try {

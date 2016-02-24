@@ -2,15 +2,14 @@ package fr.proline.cortex.service.dps.msi
 
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
+
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
-import fr.proline.core.dal.BuildExecutionContext
-import fr.proline.cortex.util.DbConnectionHelper
-import fr.profi.util.primitives._
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.service.msi.RSMProteinSetFilterer
 import fr.proline.core.algo.msi.filtering.IProteinSetFilter
 import fr.proline.core.algo.msi.validation.BuildProteinSetFilter
+import fr.proline.core.service.msi.RSMProteinSetFilterer
+import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.AbstractRemoteProcessService
 
 /**
@@ -39,7 +38,8 @@ class FilterRSMProteinSets extends AbstractRemoteProcessService with LazyLogging
 			val projectId = paramsRetriever.getLong("project_id");
 			val resultSummaryId = paramsRetriever.getLong("result_summary_id");
 			
-			val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, projectId, true); // Use JPA context
+			val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId)
+
 			var msiDbConnectionContext: DatabaseConnectionContext = null;
 			var msiDbTransacOk: Boolean = false;
     

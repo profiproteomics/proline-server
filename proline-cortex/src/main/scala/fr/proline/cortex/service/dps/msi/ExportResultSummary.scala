@@ -3,26 +3,24 @@ package fr.proline.cortex.service.dps.msi
 import java.io.File
 import java.util.HashMap
 import java.util.UUID
+
 import scala.Array.canBuildFrom
 import scala.collection.mutable.ArrayBuffer
+
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
+
 import fr.profi.util.StringUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.BuildExecutionContext
-import fr.proline.core.orm.uds.{ Dataset => UdsDataset }
-import fr.proline.core.orm.uds.Dataset.DatasetType
-import fr.proline.core.orm.uds.QuantitationMethod
-import fr.proline.core.service.msq.AbundanceUnit
-import fr.proline.core.service.msq.QuantMethodType
+import fr.proline.cortex.service.dps.uds.DatasetUtil
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.WorkDirectoryFactory
+import fr.proline.jms.service.api.AbstractRemoteProcessService
 import fr.proline.jms.util.Constants
 import fr.proline.jms.util.NodeConfig
 import fr.proline.module.exporter.ViewSetExporter
-import fr.proline.module.exporter.commons.config.ExportConfigConstant
 import fr.proline.module.exporter.commons.config.ExportConfigManager
 import fr.proline.module.exporter.dataset.view.BuildDatasetViewSet
 import fr.proline.module.exporter.msi.template.AllPSMViewSetTemplateAsXLSX
@@ -35,8 +33,6 @@ import fr.proline.module.exporter.msi.view.BuildRSMSpectraViewSet
 import fr.proline.module.exporter.msi.view.BuildResultSummaryViewSet
 import fr.proline.module.exporter.mzidentml.MzIdExporter
 import fr.proline.module.exporter.pridexml.PrideExporterService
-import fr.proline.jms.service.api.AbstractRemoteProcessService
-import fr.proline.cortex.service.dps.uds.DatasetUtil
 
 /**
  * Define a JMS Service to :
@@ -152,7 +148,7 @@ class ExportResultSummary extends AbstractRemoteProcessService with LazyLogging 
 
     //    val rsmIdentifier = rsmIdentifiers(0)
     var filePath = ""
-    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, rsmIdentifier.projectId, false)
+    val execCtx = DbConnectionHelper.createSQLExecutionContext(rsmIdentifier.projectId)
 
     try {
 
@@ -196,7 +192,7 @@ class ExportResultSummary extends AbstractRemoteProcessService with LazyLogging 
 
     var executionContext: IExecutionContext = null
     try {
-      executionContext = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, rsmIdentifier.projectId, true)
+      executionContext = DbConnectionHelper.createJPAExecutionContext(rsmIdentifier.projectId)  
 
       // Export
       val viewSet = BuildResultSummaryViewSet(
@@ -243,7 +239,7 @@ class ExportResultSummary extends AbstractRemoteProcessService with LazyLogging 
 
     var executionContext: IExecutionContext = null
     try {
-      executionContext = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, rsmIdentifier.projectId, true)
+      executionContext = DbConnectionHelper.createJPAExecutionContext(rsmIdentifier.projectId)
 
       // Export
       val viewSet = BuildRSMSpectraViewSet(
@@ -285,7 +281,7 @@ class ExportResultSummary extends AbstractRemoteProcessService with LazyLogging 
     var executionContext: IExecutionContext = null
 
     try {
-      executionContext = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), rsmIdentifier.projectId, false)
+      executionContext = DbConnectionHelper.createSQLExecutionContext(rsmIdentifier.projectId)
 
       val extraParameters: Map[String, Object] = if (extraParams.isDefined) extraParams.get else Map.empty
       // Export
@@ -379,8 +375,8 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
 
     //    val rsmIdentifier = rsmIdentifiers(0)
     var filePath = ""
-    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), rsmIdentifier.projectId, false)
-
+    val execCtx = DbConnectionHelper.createSQLExecutionContext(rsmIdentifier.projectId)
+    
     try {
 
       val exporter = new MzIdExporter(rsmIdentifier.rsmId, execCtx)
@@ -414,8 +410,8 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
     var executionContext: IExecutionContext = null
 
     try {
-      executionContext = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), rsmIdentifier.projectId, false)
-
+      executionContext = DbConnectionHelper.createSQLExecutionContext(rsmIdentifier.projectId)
+      
       val extraParameters: Map[String, Object] = if (extraParams.isDefined) extraParams.get else Map.empty
       // Export
 
@@ -468,8 +464,8 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
     for (rsmIdentifier <- rsmIdentifiers) {
       var executionContext: IExecutionContext = null
       try {
-        executionContext =  BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), rsmIdentifier.projectId, true)
-        
+        executionContext =  DbConnectionHelper.createJPAExecutionContext(rsmIdentifier.projectId)
+                
        var fileDatasetName = fileName
        if (StringUtils.isEmpty(fileName)) {
          fileDatasetName = "DatasetSummaryExport-"+rsmIdentifier.dsId+"_" + UUID.randomUUID().toString
@@ -527,7 +523,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
 
     var executionContext: IExecutionContext = null
     try {
-      executionContext = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, rsmIdentifier.projectId, true)
+      executionContext = DbConnectionHelper.createJPAExecutionContext(rsmIdentifier.projectId)
 
       // Export
       val viewSet = BuildRSMSpectraViewSet(

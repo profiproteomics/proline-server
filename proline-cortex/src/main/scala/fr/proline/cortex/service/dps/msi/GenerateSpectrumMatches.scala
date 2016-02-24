@@ -2,13 +2,11 @@ package fr.proline.cortex.service.dps.msi
 
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-import fr.profi.util.serialization.ProfiJson.deserialize
-import fr.profi.util.serialization.ProfiJson.serialize
-import fr.proline.core.dal.BuildExecutionContext
+
+import fr.profi.util.primitives.toLong
 import fr.proline.cortex.util.DbConnectionHelper
-import fr.profi.util.primitives._
-import fr.proline.module.fragment_match.service.SpectrumMatchesGenerator
 import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.module.fragment_match.service.SpectrumMatchesGenerator
 
 /**
  *  Define JMS Service which allows to generate spectrum matches
@@ -39,7 +37,7 @@ class GenerateSpectrumMatches extends AbstractRemoteProcessService with LazyLogg
 			val resultSetId = paramsRetriever.getLong("result_set_id");
 			val resultSummaryId = if (paramsRetriever.hasParam("result_summary_id")) Some(paramsRetriever.getLong("result_summary_id")) else None;
 			val peptideMatchIds = Option(paramsRetriever.getOptList("peptide_match_ids", null)).map { _.toArray.map(toLong(_)) };
-			val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, projectId, true); // Use JPA context
+			val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId); // Use JPA context
 			val forceInsert = paramsRetriever.getOptBoolean("force_insert", false);
 
 			val spectrumMatchesGenerator = new SpectrumMatchesGenerator(execCtx, resultSetId, resultSummaryId, peptideMatchIds, forceInsert);

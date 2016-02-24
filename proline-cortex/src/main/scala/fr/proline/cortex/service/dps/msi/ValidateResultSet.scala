@@ -26,7 +26,6 @@ import fr.proline.core.algo.msi.validation.IProteinSetValidator
 import fr.proline.core.algo.msi.validation.ITargetDecoyAnalyzer
 import fr.proline.core.algo.msi.validation.ProtSetValidationMethods
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
-import fr.proline.core.dal.BuildExecutionContext
 import fr.proline.core.service.msi.ResultSetValidator
 import fr.proline.core.service.msi.ValidationConfig
 import fr.proline.cortex.util.DbConnectionHelper
@@ -196,7 +195,7 @@ class ValidateResultSet extends AbstractRemoteProcessService with LazyLogging {
     var msiDbConnectionContext: DatabaseConnectionContext = null
     var msiDbTransacOk: Boolean = false
 
-    val execCtx = BuildExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory(), projectId, false)
+    val execCtx =  DbConnectionHelper.createSQLExecutionContext(projectId) 
 
     try {
       val validationConfig = ValidateResultSet.parseValidationConfig(paramsRetriever)
