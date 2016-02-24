@@ -31,7 +31,7 @@ object MascotParseParams extends Enumeration {
   val SUBSET_THRESHOLD = Value("subset.threshold")
   val PROTEIN_CUTOFF_PVALUE = Value("protein.cutoff.pvalue")
   val MASCOT_VERSION = Value("mascot.version")
-  val MASCOT_SERVER_URL = Value("mascot.server.url")
+//  val MASCOT_SERVER_URL = Value("mascot.server.url")
 }
 
 /**
@@ -321,6 +321,7 @@ class MascotResultFile(
     if (!hasDecoyResultSet && wantDecoy) return None
 
     case object MascotResFlags {
+      val NoGroup = ms_mascotresults.MSRES_NOFLAG
       val Group = ms_mascotresults.MSRES_GROUP_PROTEINS
       val Subsets = ms_mascotresults.MSRES_SHOW_SUBSETS
       val MudPIT = ms_mascotresults.MSRES_MUDPIT_PROTEIN_SCORE
