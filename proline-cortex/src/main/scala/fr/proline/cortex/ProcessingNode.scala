@@ -52,6 +52,8 @@ import javax.jms.Connection
 import javax.jms.ConnectionFactory
 import javax.jms.ExceptionListener
 import javax.jms.JMSException
+import fr.proline.jms.SingleThreadedServiceRunner
+import scala.collection.mutable.HashMap
 //import fr.proline.cortex.service.misc.WaitService
 
 object ProcessingNode extends LazyLogging {
@@ -106,6 +108,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
   private var m_executor: ExecutorService = null
 
+  
   /**
    * Starts JMS Connection and Executor running Consumers receive loop.
    */
@@ -165,10 +168,11 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         m_executor.submit(serviceMonitoringNotifier)
 
         /* Add SingleThreadedServiceRunner */
-        val handledSingleThreadedServiceNames = ServiceRegistry.getSingleThreadedServices.keySet
+//        val handledSingleThreadedServiceNames = ServiceRegistry.getSingleThreadedServices.keySet
+        val handledSingleThreadedServiceIdents = ServiceRegistry.getSingleThreadedServicesByThreadIdent().keySet
 
-        for (serviceName <- handledSingleThreadedServiceNames) {
-          val singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier, serviceName)
+        for (threadIdent <- handledSingleThreadedServiceIdents) {
+          val singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier, threadIdent, true)
           m_executor.submit(singleThreadedServiceRunner)
         }
 
@@ -197,7 +201,6 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
   }
 
   private def initFileSystem() {
-    // TODO Is proline-config/data-directory still used by Proline for any other purpose than h2 ?
 
     /* Register input directories from MountPointRegistry */
     val mountPoints = MountPointRegistry.retrieveAllMountPoints(true)
@@ -223,7 +226,9 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new SingleThreadedInfoService())
 
     if (NodeConfig.ENABLE_IMPORTS) {
-      ServiceRegistry.addService(new FileSystem())
+      ServiceRegistry.addService(new ImportResultFilesDecoyRegExp())
+      ServiceRegistry.addService(new ImportResultFilesprotMatchDecoyRule())
+      ServiceRegistry.addService(new ImportValidateGenerateSM())
       logger.info("This node HANDLE Result Files Import")
     } else {
       logger.info("This node do NOT handle Result Files Import")
@@ -231,12 +236,10 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
     /* Parallelizable Service */
     ServiceRegistry.addService(new InfoService()) // Monitoring
-
+    ServiceRegistry.addService(new FileSystem())
     ServiceRegistry.addService(new ValidateResultSet())
     ServiceRegistry.addService(new UpdateSpectraParams())
     ServiceRegistry.addService(new MergeResultSets())
-    ServiceRegistry.addService(new ImportResultFilesDecoyRegExp())
-    ServiceRegistry.addService(new ImportResultFilesprotMatchDecoyRule())
     ServiceRegistry.addService(new ChangeTypicalProteinMatch())
     ServiceRegistry.addService(new CertifyResultFiles())
     ServiceRegistry.addService(new ExportResultSummary())
@@ -252,7 +255,6 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new GetConnectionTemplate())
     ServiceRegistry.addService(new CreateProject())
     ServiceRegistry.addService(new RegisterRawFile())
-    ServiceRegistry.addService(new ImportValidateGenerateSM())
     ServiceRegistry.addService(new DeleteOrphanData())
 //    ServiceRegistry.addService(new WaitService())
  }

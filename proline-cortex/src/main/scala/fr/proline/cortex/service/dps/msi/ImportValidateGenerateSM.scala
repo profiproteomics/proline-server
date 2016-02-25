@@ -72,6 +72,7 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessService with LazyLog
   
   /* JMS Service identification */
   val serviceName = "proline/dps/msi/ImportValidateGenerateSM"
+  val singleThreadIdent= "ImportThread"
   val serviceVersion = "1.0"
   override val defaultVersion = true
   
@@ -250,7 +251,14 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessService with LazyLog
 
         /* Update result */
         resultImport = importedRFs.toArray
-        val dsName = if(currentRS.msiSearch.isDefined){ currentRS.msiSearch.get.resultFileName } else { currentRS.name } 
+        val dsName = if(currentRS.msiSearch.isDefined){ 
+          var name = currentRS.msiSearch.get.resultFileName
+          val indexOfDot = name.lastIndexOf('.');
+            if (indexOfDot != -1) {
+                name = name.substring(0, indexOfDot);
+            }
+          name
+        } else { currentRS.name } 
         
         //*** Create Identification Dataset for new RS
         // Then insert it in the current MSIdb

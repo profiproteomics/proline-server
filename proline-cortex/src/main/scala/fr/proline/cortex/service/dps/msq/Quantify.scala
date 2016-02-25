@@ -23,8 +23,8 @@ import fr.proline.jms.service.api.ISingleThreadedService
  *  Define JMS Service which allows to creates a new quantitation and perform the corresponding data analysis.
  *
  *  Input params :
- *    name : The quantitation name.
- *    description: TThe quantitation description.
+ *    name : Name of the quantitation dataset that will be created for this quantitation.
+ *    description: Description of the quantitation dataset that will be created for this quantitation.
  *    project_id: The id of the project the quantitation will be created in
  *    method_id: The id of the quantitative method to be used.
  *    experimental_design: The experimental design related to this quantitation.
@@ -37,6 +37,7 @@ class Quantify  extends AbstractRemoteProcessService with LazyLogging with ISing
 	/* JMS Service identification */
 	val serviceName = "proline/dps/msq/Quantify";
 	val serviceVersion = "1.0"; 
+	val singleThreadIdent = "quantifyThread"
 	override val defaultVersion = true; 
 	
 	override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
