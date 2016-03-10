@@ -3,13 +3,10 @@ package fr.proline.cortex.service.dps.msi
 import java.io.File
 import java.util.HashMap
 import java.util.UUID
-
 import scala.Array.canBuildFrom
 import scala.collection.mutable.ArrayBuffer
-
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.StringUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
@@ -18,7 +15,6 @@ import fr.proline.cortex.service.dps.uds.DatasetUtil
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.WorkDirectoryFactory
 import fr.proline.jms.service.api.AbstractRemoteProcessService
-import fr.proline.jms.util.Constants
 import fr.proline.jms.util.NodeConfig
 import fr.proline.module.exporter.ViewSetExporter
 import fr.proline.module.exporter.commons.config.ExportConfigManager
@@ -33,6 +29,7 @@ import fr.proline.module.exporter.msi.view.BuildRSMSpectraViewSet
 import fr.proline.module.exporter.msi.view.BuildResultSummaryViewSet
 import fr.proline.module.exporter.mzidentml.MzIdExporter
 import fr.proline.module.exporter.pridexml.PrideExporterService
+import fr.proline.jms.util.JMSConstants
 
 /**
  * Define a JMS Service to :
@@ -214,7 +211,7 @@ class ExportResultSummary extends AbstractRemoteProcessService with LazyLogging 
       // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
       val resultMap = new HashMap[String, Object]()
       resultMap.put("file_paths", exportedFiles.toArray.map(_.getAbsolutePath))
-      resultMap.put(Constants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
+      resultMap.put(JMSConstants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
       resultMap
     } else {
       exportedFiles.toArray.map(_.getName)
@@ -259,7 +256,7 @@ class ExportResultSummary extends AbstractRemoteProcessService with LazyLogging 
       // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
       val resultMap = new HashMap[String, Object]()
       resultMap.put("file_paths", exportedFiles.toArray.map(_.getAbsolutePath))
-      resultMap.put(Constants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
+      resultMap.put(JMSConstants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
       resultMap
     } else {
       exportedFiles.toArray.map(_.getName)
@@ -299,7 +296,7 @@ class ExportResultSummary extends AbstractRemoteProcessService with LazyLogging 
       // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
       val resultMap = new HashMap[String, Object]()
       resultMap.put("file_paths", Seq(filePath))
-      resultMap.put(Constants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
+      resultMap.put(JMSConstants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
       resultMap
     } else {
       Seq(filePath)
@@ -428,7 +425,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
       // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
       val resultMap = new HashMap[String, Object]()
       resultMap.put("file_paths", Seq(filePath))
-      resultMap.put(Constants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
+      resultMap.put(JMSConstants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
       resultMap
     } else {
       Seq(filePath)
@@ -498,7 +495,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
       // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
       val resultMap = new HashMap[String, Object]()
       resultMap.put("file_paths", exportedFiles.toArray.map(_.getAbsolutePath))
-      resultMap.put(Constants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
+      resultMap.put(JMSConstants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
       resultMap
     } else {
       exportedFiles.toArray.map(_.getName)
@@ -543,7 +540,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
       // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
       val resultMap = new HashMap[String, Object]()
       resultMap.put("file_paths", exportedFiles.toArray.map(_.getAbsolutePath))
-      resultMap.put(Constants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
+      resultMap.put(JMSConstants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
       resultMap
     } else {
       exportedFiles.toArray.map(_.getName)
