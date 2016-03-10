@@ -145,7 +145,8 @@ class UpdateSpectraParamsForRS extends AbstractRemoteProcessService with LazyLog
         case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
       }
     }
-
+    if(updatedSpectraCount == 0)
+        updatedSpectraCount = -1
     updatedSpectraCount
   }
 }
