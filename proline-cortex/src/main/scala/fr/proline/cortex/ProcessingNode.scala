@@ -45,7 +45,7 @@ import fr.proline.cortex.util.WorkDirectoryRegistry
 import fr.proline.jms.ServiceRegistry
 import fr.proline.jms.ServiceRunner
 import fr.proline.jms.SingleThreadedServiceRunner
-import fr.proline.jms.util.Constants
+import fr.proline.jms.util.JMSConstants
 import fr.proline.jms.util.MonitoringTopicPublisherRunner
 import fr.proline.jms.util.NodeConfig
 import javax.jms.Connection
@@ -57,6 +57,7 @@ import fr.proline.cortex.service.dps.msi.MergeResultSetsV2_0
 import fr.proline.jms.SingleThreadedServiceRunner
 import scala.collection.mutable.HashMap
 import fr.proline.cortex.service.dps.msi.UpdateSpectraParamsForRS
+import fr.proline.jms.util.ExpiredMessageConsumer
 //import fr.proline.cortex.service.misc.WaitService
 
 object ProcessingNode extends LazyLogging {
@@ -102,7 +103,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
   /* Constructor checks */
   require(!StringUtils.isEmpty(jmsServerHost), "Invalid JMS Server Host name or address")
 
-  require(((0 < jmsServerPort) && (jmsServerPort <= Constants.MAX_PORT)), "Invalid JMS Server port")
+  require(((0 < jmsServerPort) && (jmsServerPort <= JMSConstants.MAX_PORT)), "Invalid JMS Server port")
 
   private val m_lock = new Object()
 
@@ -128,6 +129,8 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         val serviceRequestQueue = HornetQJMSClient.createQueue(NodeConfig.PROLINE_SERVICE_REQUEST_QUEUE_NAME)
 
         logger.debug("JMS Queue : " + serviceRequestQueue)
+        val expiredRequestQueue = HornetQJMSClient.createQueue(NodeConfig.PROLINE_EXPIRED_MESSAGE_QUEUE_NAME)
+        
 
         // Step 2. Instantiate the TransportConfiguration object which contains the knowledge of what transport to use,
         // The server port etc.
@@ -140,8 +143,9 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
           connectionParams)
 
         // Step 3 Directly instantiate the JMS ConnectionFactory object using that TransportConfiguration
-        val cf = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF, transportConfiguration).asInstanceOf[ConnectionFactory]
-
+        val cf = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF, transportConfiguration) //.asInstanceOf[ConnectionFactory]
+       cf.setConsumerWindowSize(0);
+        
         // Step 4.Create a JMS Connection
         m_connection = cf.createConnection()
 
@@ -174,11 +178,20 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 //        val handledSingleThreadedServiceNames = ServiceRegistry.getSingleThreadedServices.keySet
         val handledSingleThreadedServiceIdents = ServiceRegistry.getSingleThreadedServicesByThreadIdent().keySet
 
+        var nbrSingleThreads = 0 
         for (threadIdent <- handledSingleThreadedServiceIdents) {
           val singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier, threadIdent, true)
           m_executor.submit(singleThreadedServiceRunner)
+            nbrSingleThreads +=  1 
         }
 
+        //Start Expired Message Listener
+        val expiredMessageConsumer = new ExpiredMessageConsumer(expiredRequestQueue, m_connection, serviceMonitoringNotifier)        
+        m_executor.submit(expiredMessageConsumer)
+        nbrSingleThreads +=  1 
+        
+        logger.debug(nbrSingleThreads +" Single Thread ServiceRunners started")
+       
         /* Add Parallelizable SeviceRunner */
         logger.debug("Starting " + NodeConfig.SERVICE_THREAD_POOL_SIZE + " Parallelizable ServiceRunners")
 
@@ -262,7 +275,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new DeleteOrphanData())
     ServiceRegistry.addService(new QuantifyV2_0())
     ServiceRegistry.addService(new UpdateSpectraParamsForRS())
-    
+        
 //    ServiceRegistry.addService(new WaitService())
  }
 
