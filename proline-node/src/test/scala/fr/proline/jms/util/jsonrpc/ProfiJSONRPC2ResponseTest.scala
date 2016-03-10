@@ -36,6 +36,25 @@ class ProfiJSONRPC2ResponseTest extends StrictLogging {
     assertTrue("Second response contains " + MAGIC_NUMBER + " Integer", str2.contains(Integer.toString(MAGIC_NUMBER)))
     assertTrue("Second response contains \"toto\"", str2.contains("\"toto\""))
     assertTrue("Second response contains \"tata\"", str2.contains("\"tata\""))
+    
+    
   }
 
+  
+   @Test
+  def testNullProfiResponse() {
+     
+    var updatedSpectraCount2 = 0
+    var updatedSpectraCount: Integer = 0
+    val response = new ProfiJSONRPC2Response(updatedSpectraCount, "1")
+
+    val str1 = response.toJSONString()
+    logger.debug(str1)
+
+    assertTrue("First response contains \"1\"", str1.contains("\"1\""))
+//    assertTrue("Response contains result ", str1.contains("result"))
+    
+    
+    
+  }
 }

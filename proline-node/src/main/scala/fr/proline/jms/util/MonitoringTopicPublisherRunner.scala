@@ -50,7 +50,7 @@ class MonitoringTopicPublisherRunner(connection: Connection) extends IServiceMon
       currentThread.setUncaughtExceptionHandler(new ThreadLogger(logger.underlying.getName))
     }
 
-    val prolineNotificationTopic = HornetQJMSClient.createTopic(Constants.SERVICE_MONITORING_NOTIFICATION_TOPIC_NAME)
+    val prolineNotificationTopic = HornetQJMSClient.createTopic(JMSConstants.SERVICE_MONITORING_NOTIFICATION_TOPIC_NAME)
 
     logger.debug("JMS Topic : " + prolineNotificationTopic)
 
@@ -79,7 +79,7 @@ class MonitoringTopicPublisherRunner(connection: Connection) extends IServiceMon
           }
 
           /* Alway set nodeId Property on broadcast messages */
-          message.setStringProperty(Constants.PROLINE_NODE_ID_KEY, nodeId)
+          message.setStringProperty(JMSConstants.PROLINE_NODE_ID_KEY, nodeId)
 
           message.setText(topicMessage.content)
 

@@ -62,9 +62,10 @@ object NodeConfig extends LazyLogging {
 
   private val m_jmsServerPort = m_jmsConfig.getInt(JMS_SERVER_PORT_KEY)
   def getJMSServerPort = m_jmsServerPort
-  require(((0 < getJMSServerPort) && (getJMSServerPort <= Constants.MAX_PORT)), "Invalid \"" + JMS_SERVER_PORT_KEY + "\" value")
+  require(((0 < getJMSServerPort) && (getJMSServerPort <= JMSConstants.MAX_PORT)), "Invalid \"" + JMS_SERVER_PORT_KEY + "\" value")
 
   /* JMS Queue name */
+  val PROLINE_EXPIRED_MESSAGE_QUEUE_NAME = "ExpiryQueue"
   val PROLINE_SERVICE_REQUEST_QUEUE_NAME = retrieveQueueName(m_jmsConfig)
 
   val SERVICE_THREAD_POOL_SIZE = retrieveThreadPoolSize(m_jmsConfig)
