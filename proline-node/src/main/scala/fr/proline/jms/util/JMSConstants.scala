@@ -1,11 +1,12 @@
 package fr.proline.jms.util
 
-object Constants {
+object JMSConstants {
 
   val MAX_PORT = 65535
 
+  
   /* Monitoring Topic names */
-  val SERVICE_MONITORING_NOTIFICATION_TOPIC_NAME = "ProlineServiceMonitoringNotificationTopic"
+  val SERVICE_MONITORING_NOTIFICATION_TOPIC_NAME = "ProlineServiceMonitoringNotificationTopic" 
 
   /* JMS Standard header Property keys (JMS_ ) */
   val JMS_MESSAGE_ID_KEY = "JMSMessageID"
@@ -19,4 +20,10 @@ object Constants {
   val PROLINE_SERVICE_NAME_KEY = "Proline_ServiceName"
   val PROLINE_SERVICE_VERSION_KEY = "Proline_ServiceVersion"
 
-}
+    /* JSON RPC Error codes */
+  val MESSAGE_ERROR_CODE = -32001
+  val SERVICE_ERROR_CODE = -32002
+  val EXPIRED_MSG_ERROR_CODE = -32003
+  
+} 
+

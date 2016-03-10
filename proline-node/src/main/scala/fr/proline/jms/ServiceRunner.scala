@@ -12,7 +12,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.jms.util.IServiceMonitoringNotifier
 import fr.proline.jms.util.MonitoringTopicPublisherRunner
-import fr.proline.jms.util.Constants
+import fr.proline.jms.util.JMSConstants
 import fr.proline.jms.util.NodeConfig
 import fr.profi.util.StringUtils
 import fr.profi.util.ThreadLogger
@@ -31,9 +31,7 @@ object ServiceRunner extends LazyLogging {
 
   /* Constants */
 
-  /* JSON RPC Error codes */
-  val MESSAGE_ERROR = -32001
-  val SERVICE_ERROR_CODE = -32002
+
 
   /* Static methods */
   def buildJSONRPC2Error(code: Int, baseErrorMessage: String, t: Throwable = null): JSONRPC2Error = {
@@ -58,9 +56,9 @@ object ServiceRunner extends LazyLogging {
     
     if (parallelizableRunner) {
       /* Add ResourceService handling for this Node */
-      buff.append("((").append(Constants.PROLINE_SERVICE_NAME_KEY)
+      buff.append("((").append(JMSConstants.PROLINE_SERVICE_NAME_KEY)
       buff.append(" = \'").append(ServiceRegistry.resourceService.serviceName).append("\') AND (")
-      buff.append(Constants.PROLINE_NODE_ID_KEY)
+      buff.append(JMSConstants.PROLINE_NODE_ID_KEY)
       buff.append(" = \'").append(NodeConfig.NODE_ID).append("\'))")
 
       first = false
@@ -83,16 +81,16 @@ object ServiceRunner extends LazyLogging {
         buff.append(" OR ")
       }
 
-      buff.append("((").append(Constants.PROLINE_SERVICE_NAME_KEY)
+      buff.append("((").append(JMSConstants.PROLINE_SERVICE_NAME_KEY)
       buff.append(" = \'").append(service.serviceName).append("\') AND (")
-      buff.append(Constants.PROLINE_SERVICE_VERSION_KEY)
+      buff.append(JMSConstants.PROLINE_SERVICE_VERSION_KEY)
       buff.append(" = \'").append(service.serviceVersion).append("\'))")
 
       if (service.defaultVersion) {
         buff.append(" OR ")
-        buff.append("((").append(Constants.PROLINE_SERVICE_NAME_KEY)
+        buff.append("((").append(JMSConstants.PROLINE_SERVICE_NAME_KEY)
         buff.append(" = \'").append(service.serviceName).append("\') AND (")
-        buff.append(Constants.PROLINE_SERVICE_VERSION_KEY)
+        buff.append(JMSConstants.PROLINE_SERVICE_VERSION_KEY)
         buff.append(" IS NULL))")
       }
 
@@ -108,22 +106,22 @@ object ServiceRunner extends LazyLogging {
 
     /* Add some Standard JMS header proprties */
     val jmsMessageId = message.getJMSMessageID
-    mutableMap.put(Constants.JMS_MESSAGE_ID_KEY, jmsMessageId) // Should not be null on message Reception
+    mutableMap.put(JMSConstants.JMS_MESSAGE_ID_KEY, jmsMessageId) // Should not be null on message Reception
 
     val jmsCorrelationId = message.getJMSCorrelationID
     if (jmsCorrelationId != null) {
-      mutableMap.put(Constants.JMS_CORRELATION_ID_KEY, jmsCorrelationId)
+      mutableMap.put(JMSConstants.JMS_CORRELATION_ID_KEY, jmsCorrelationId)
     }
 
     val jmsTimestamp = message.getJMSTimestamp
-    mutableMap.put(Constants.JMS_TIMESTAMP_KEY, jmsTimestamp) // Long primitive
+    mutableMap.put(JMSConstants.JMS_TIMESTAMP_KEY, jmsTimestamp) // Long primitive
 
     val jmsDestination = message.getJMSDestination
-    mutableMap.put(Constants.JMS_DESTINATION_KEY, jmsDestination) // Should not be null on message Reception
+    mutableMap.put(JMSConstants.JMS_DESTINATION_KEY, jmsDestination) // Should not be null on message Reception
 
     val jmsReplyTo = message.getJMSReplyTo
     if (jmsReplyTo != null) {
-      mutableMap.put(Constants.JMS_REPLY_TO_KEY, jmsReplyTo)
+      mutableMap.put(JMSConstants.JMS_REPLY_TO_KEY, jmsReplyTo)
     }
 
     /* Add all other JMS properties (Provider and Proline specific) */
@@ -208,8 +206,8 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
           if (message == null) {
             goOn = false
             logger.info("Consumer Connection is closed : exiting receive loop")
-          } else if (resourceService.serviceName.equals(message.getStringProperty(Constants.PROLINE_SERVICE_NAME_KEY)) &&
-            nodeId.equals(message.getStringProperty(Constants.PROLINE_NODE_ID_KEY))) {
+          } else if (resourceService.serviceName.equals(message.getStringProperty(JMSConstants.PROLINE_SERVICE_NAME_KEY)) &&
+            nodeId.equals(message.getStringProperty(JMSConstants.PROLINE_NODE_ID_KEY))) {
             /* Special ResourceService handling */
             resourceService.handleMessage(session, message, replyProducer, serviceMonitoringNotifier)
           } else {
@@ -277,15 +275,15 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
         jsonResponse.setID(jsonRequestId)
 
-        serviceName = message.getStringProperty(Constants.PROLINE_SERVICE_NAME_KEY)
-        val serviceVersion = message.getStringProperty(Constants.PROLINE_SERVICE_VERSION_KEY)
+        serviceName = message.getStringProperty(JMSConstants.PROLINE_SERVICE_NAME_KEY)
+        val serviceVersion = message.getStringProperty(JMSConstants.PROLINE_SERVICE_VERSION_KEY)
 
         if (StringUtils.isEmpty(serviceName)) {
           /* Cannot occur if 'selectorString' is a valid filter for JMS Messages */
-          val errorMessage = "Invalid \"" + Constants.PROLINE_SERVICE_NAME_KEY + "\" property"
+          val errorMessage = "Invalid \"" + JMSConstants.PROLINE_SERVICE_NAME_KEY + "\" property"
           logger.warn(errorMessage)
 
-          jsonResponse.setError(buildJSONRPC2Error(MESSAGE_ERROR, errorMessage))
+          jsonResponse.setError(buildJSONRPC2Error(JMSConstants.MESSAGE_ERROR_CODE, errorMessage))
         } else {
           val optionalServiceInstance = getServiceInstance(serviceName, serviceVersion)
 
@@ -296,7 +294,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
           } else {
             /* Cannot occur if 'selectorString' is a valid filter for JMS Messages */
             val errorMessageBuilder = new StringBuilder()
-            errorMessageBuilder.append("Unknown \"").append(Constants.PROLINE_SERVICE_NAME_KEY).append("\" [")
+            errorMessageBuilder.append("Unknown \"").append(JMSConstants.PROLINE_SERVICE_NAME_KEY).append("\" [")
             errorMessageBuilder.append(serviceName).append("]  for ")
 
             if (StringUtils.isEmpty(serviceVersion)) {
@@ -308,7 +306,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
             val errorMessage = errorMessageBuilder.toString
             logger.warn(errorMessage)
 
-            jsonResponse.setError(buildJSONRPC2Error(MESSAGE_ERROR, errorMessage))
+            jsonResponse.setError(buildJSONRPC2Error(JMSConstants.MESSAGE_ERROR_CODE, errorMessage))
           } // End if (serviceName map a valid ServiceInstance)
 
         } // End if (serviceName property is valid)
@@ -317,7 +315,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
         val errorMessage = "Invalid Request JMS Message type"
         logger.warn(errorMessage)
 
-        jsonResponse.setError(buildJSONRPC2Error(MESSAGE_ERROR, errorMessage))
+        jsonResponse.setError(buildJSONRPC2Error(JMSConstants.MESSAGE_ERROR_CODE, errorMessage))
       } // End if (JMS Message is a TextMessage)
 
     } catch {
@@ -327,7 +325,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
         val errorMessage = "Error handling Request JMS Message [" + jmsMessageId + ']'
         logger.error(errorMessage, t)
 
-        jsonResponse = new JSONRPC2Response(buildJSONRPC2Error(MESSAGE_ERROR, errorMessage, t), jsonRequestId)
+        jsonResponse = new JSONRPC2Response(buildJSONRPC2Error(JMSConstants.MESSAGE_ERROR_CODE, errorMessage, t), jsonRequestId)
       }
 
     } finally {
@@ -384,7 +382,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
       val errorMessage = "Thread interrupted before calling Service [" + serviceName + ']'
       logger.warn(errorMessage)
 
-      new JSONRPC2Response(buildJSONRPC2Error(SERVICE_ERROR_CODE, errorMessage), jsonRequestId)
+      new JSONRPC2Response(buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, errorMessage), jsonRequestId)
     } else {
 
       try {
@@ -393,7 +391,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
         /* Notify */
         var jmsMessageId: String = null
 
-        val value = jmsMessageContext.getOrElse(Constants.JMS_MESSAGE_ID_KEY, null)
+        val value = jmsMessageContext.getOrElse(JMSConstants.JMS_MESSAGE_ID_KEY, null)
         if (value.isInstanceOf[String]) {
           jmsMessageId = value.asInstanceOf[String]
         }
@@ -409,7 +407,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
           val errorMessage = "Thread interrupted running Service [" + serviceName + ']'
           logger.warn(errorMessage, intEx)
 
-          new JSONRPC2Response(buildJSONRPC2Error(SERVICE_ERROR_CODE, errorMessage, intEx), jsonRequestId)
+          new JSONRPC2Response(buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, errorMessage, intEx), jsonRequestId)
         }
 
         /* Catch all Throwables */
@@ -417,7 +415,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
           val errorMessage = "Error calling Service [" + serviceName + ']'
           logger.error(errorMessage, t)
 
-          new JSONRPC2Response(buildJSONRPC2Error(SERVICE_ERROR_CODE, errorMessage, t), jsonRequestId)
+          new JSONRPC2Response(buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, errorMessage, t), jsonRequestId)
         }
 
       }
@@ -454,3 +452,4 @@ class SingleThreadedServiceRunner(queue: Queue, connection: Connection, serviceM
   }
 
 }
+
