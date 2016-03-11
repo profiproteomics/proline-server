@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 import fr.profi.util.ThreadLogger;
 import fr.proline.jms.ServiceRegistry;
 import fr.proline.jms.ServiceRunner;
-import fr.proline.jms.util.Constants;
+import fr.proline.jms.util.JMSConstants;
 import fr.proline.jms.util.MonitoringTopicPublisherRunner;
 import fr.proline.jms.util.NodeConfig;
 import fr.proline.module.seq.DatabaseAccess;
@@ -44,7 +44,7 @@ public class RunNode {
 
 	public RunNode(String jmsHost, Integer jmsPort) {
 		assert jmsHost != null : "Invalid JMS Server Host name or address";
-		assert ((0 < jmsPort) && (jmsPort <= Constants.MAX_PORT())) : "Invalid JMS Server port";
+		assert ((0 < jmsPort) && (jmsPort <= JMSConstants.MAX_PORT())) : "Invalid JMS Server port";
 		m_jmsServerHost = jmsHost;
 		m_jmsServerPort = jmsPort;
 
