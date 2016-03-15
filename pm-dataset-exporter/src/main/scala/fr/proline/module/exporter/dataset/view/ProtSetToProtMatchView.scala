@@ -34,7 +34,7 @@ class ProtSetToProtMatchView(
     val protMatchRecord = super.buildRecord(buildingCtx)
     
     val protSet = buildingCtx.protSet
-    val pepSet = protSet.peptideSet
+    val pepSet = buildingCtx.peptideSet
     val protMatch = buildingCtx.protMatch
     
     val recordBuilder = Map.newBuilder[String,Any]
@@ -79,7 +79,7 @@ class ProtSetToProtMatchView(
           if (protMatchId != reprProtMatchId)
             this.formatRecord(new ProtMatchBuildingContext(protSet, protSet.peptideSet, protMatch), recordFormatter)
         }
-
+        
         // Sort strict subsets by descending score
         val strictSubsetsSortedByDescScore = protSet.peptideSet.strictSubsets.get.sortWith(_.score > _.score)
 
@@ -91,6 +91,7 @@ class ProtSetToProtMatchView(
           // Retrieve the protein match
           protMatch <- protMatchById.get(protMatchId)
         ) {
+          println(peptideSet.isSubset)
           this.formatRecord(new ProtMatchBuildingContext(protSet, peptideSet, protMatch), recordFormatter)
         }
       }
