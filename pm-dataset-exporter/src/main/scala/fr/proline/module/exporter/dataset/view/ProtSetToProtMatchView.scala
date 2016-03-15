@@ -91,7 +91,6 @@ class ProtSetToProtMatchView(
           // Retrieve the protein match
           protMatch <- protMatchById.get(protMatchId)
         ) {
-          println(peptideSet.isSubset)
           this.formatRecord(new ProtMatchBuildingContext(protSet, peptideSet, protMatch), recordFormatter)
         }
       }
