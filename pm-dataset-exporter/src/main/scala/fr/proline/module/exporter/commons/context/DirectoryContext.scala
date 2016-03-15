@@ -12,20 +12,23 @@ class DirectoryContext(val fileExtension: IFileExtensionEnumeration#Value) exten
   def getViewSetLocation(viewDir: File, viewSetName: String): File = {
     require((viewDir != null) && viewDir.isDirectory, "viewDir must be a directory")
 
-    viewDir.getAbsoluteFile
+    // Create a name for this view set
+    new File( viewDir.getAbsolutePath + '/' + viewSetName )
   }
   
   def getViewLocation(viewDir: File, view: IDataView): File = {
     require((viewDir != null) && viewDir.isDirectory, "viewDir must be a directory")
 
-    // Create a unique name for this view
-    val fileBaseName = view.viewName + '_' + new java.util.Date().getTime() + '.' + fileExtension
-    new File(viewDir, fileBaseName)
+    // Create a name for this view
+    new File(viewDir, view.viewName + '.' + fileExtension)
   }
 
   // Nothing to open here
-  protected def openOutputResources(viewDir: File, viewSetName: String) {    
+  protected def openOutputResources(viewDir: File, viewSetName: String) {
     val location = getViewSetLocation(viewDir, viewSetName)
+    
+    // Create view set directory if doesn't exist
+    location.mkdir()
 
     // Set view set location
     viewSetLocation = Some(location)
