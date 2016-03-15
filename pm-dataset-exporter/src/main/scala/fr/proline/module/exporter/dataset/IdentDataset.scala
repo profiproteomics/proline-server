@@ -79,8 +79,9 @@ class IdentDataset(
       peptideMatch <- resultSummary.lazyResultSet.peptideMatches;
       if peptideMatch.msQuery != null && peptideMatch.msQuery.isInstanceOf[Ms2Query]
     ) yield {
-      val spectrumId = peptideMatch.getMs2Query().spectrumId
-      spectrumId -> spectraDescriptorById(spectrumId)
+      val ms2Query = peptideMatch.getMs2Query()
+      val spectrumId = ms2Query.spectrumId
+      ms2Query.id -> spectraDescriptorById(spectrumId)
     }
     
     ms2QueryIdSpecIdPairs.toMap
@@ -112,6 +113,9 @@ class IdentDataset(
           protMatchStatusById += subsetId -> ProteinMatchStatus.SUBSET
         }
       }
+      
+      // Cache the built status mapping
+      protMatchStatusMapByLazyRsm.put(lazyRsm, protMatchStatusById)
     
       protMatchStatusById
     }
@@ -124,9 +128,14 @@ class IdentDataset(
   def getIdentifiedProteinMatchByAc( lazyRsm: LazyResultSummary, protMatchAc: String ): Option[ProteinMatch] = {
     val protMatchAcMappingOpt = protMatchAcMappingByLazyRsm.get(lazyRsm)
     
-    val protMatchAcMapping = if( protMatchAcMappingOpt.isDefined) protMatchAcMappingOpt.get
+    val protMatchAcMapping = if(protMatchAcMappingOpt.isDefined) protMatchAcMappingOpt.get
     else {
-      lazyRsm.lazyResultSet.proteinMatches.map( pm => pm.accession -> pm ).toMap
+      val newProtMatchAcMapping = lazyRsm.lazyResultSet.proteinMatches.map( pm => pm.accession -> pm ).toMap
+      
+      // Cache the built AC mapping
+      protMatchAcMappingByLazyRsm.put(lazyRsm, newProtMatchAcMapping)
+      
+      newProtMatchAcMapping
     }
     
     protMatchAcMapping.get(protMatchAc)

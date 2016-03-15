@@ -46,8 +46,8 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
     val peptide = pepMatch.peptide
     val msQueryOpt = Option(pepMatch.getMs2Query)
     
-    // retentionTime
-    val spectrumDescriptorByMsQueryId = identDS.spectraDescriptorById
+    // Retrieve retention time mapping
+    val spectrumDescriptorByMsQueryId = identDS.spectrumDescriptorByMsQueryId
     
     val retentionTimeOpt = if (msQueryOpt.isEmpty) None
     else {
