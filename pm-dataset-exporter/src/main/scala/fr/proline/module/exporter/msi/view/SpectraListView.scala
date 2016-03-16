@@ -185,12 +185,12 @@ class SpectraListView( val identDS: IdentWithSpectrumDataSet ) extends IFixedTab
       protSet.peptideSet.items.foreach(pepSetItem => {
         val peptide = pepSetItem.peptideInstance.peptide
         val pepMatchId = pepSetItem.peptideInstance.bestPeptideMatchId
-        //Export only one PSM (best one)           
+        //Export only one PSM (best one)
         val pepMatch = pepMatchById(pepMatchId)
         val spectrumMatch = spectrumMatchesByPepMatchID(pepMatchId)
         if (spectrumMatch != null && !spectrumMatch.fragMatches.isEmpty)
           spectrumMatch.fragMatches.foreach(fragMatch => {
-            if(fragMatch.ionSeries.size == 1) //Only export y, b ... ion series, not b0, b* etc
+            if(fragMatch.ionSeries.toString.length == 1) //Only export y, b ... ion series, not b0, b* etc
               this.formatRecord(MyBuildingContext(protSet, typicalProtMatch, pepMatch, fragMatch, peptide, protIndex), recordFormatter)
           })
       })

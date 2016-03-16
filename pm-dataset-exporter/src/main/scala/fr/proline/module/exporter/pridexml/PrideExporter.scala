@@ -594,7 +594,7 @@ class PrideExporter(
 
       val serie = fragMatch.ionSeries
     	  
-	  val (cvIonAcc, cvIonName)  = FragmentMatchMapper.getPrideCVforIonSerie(serie)
+	  val (cvIonAcc, cvIonName)  = FragmentMatchMapper.getPrideCVforIonSerie(serie.toString)
       fragmentIon.getCvParam().add(CvParam(cvIonAcc, cvIonName, fragMatch.aaPosition.toString))           
       fragmentIon.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_PROD_ION_MASS_ERR_ACC, PrideSchemaConstants.PRIDE_CV_PROD_ION_MASS_ERR_NAME,(fragMatch.calculatedMoz-fragMatch.moz).toString))
       
