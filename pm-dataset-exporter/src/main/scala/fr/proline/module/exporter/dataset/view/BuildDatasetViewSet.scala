@@ -3,10 +3,9 @@ package fr.proline.module.exporter.dataset.view
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.jdbc.easy._
+import fr.profi.util.StringUtils
 import fr.profi.util.collection._
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
@@ -204,7 +203,7 @@ object BuildDatasetViewSet extends LazyLogging {
       // Load the experimental design
       val expDesignProvider = new SQLExperimentalDesignProvider(udsDbCtx)
       val expDesignOpt = expDesignProvider.getExperimentalDesign(dsId)
-      /*require( expDesignOpt.isDefined, "can't load the experimental design of the dataset with id=" + dsId)
+      require( expDesignOpt.isDefined, "can't load the experimental design of the dataset with id=" + dsId)
       val expDesign = expDesignOpt.get
       
       val masterQcOpt = expDesign.masterQuantChannels.find(_.id == masterQuantChannelId)
@@ -215,11 +214,10 @@ object BuildDatasetViewSet extends LazyLogging {
       val quantRsmId = masterQc.quantResultSummaryId.get
       val quantChannels = masterQc.quantChannels
       val identRsmIds = quantChannels.map(_.identResultSummaryId)
-      val qcIdByIdentRsmId = quantChannels.toLongMap(qc => qc.identResultSummaryId -> qc.id)
-      */
+      val qcIdByIdentRsmId = quantChannels.toLongMapWith(qc => qc.identResultSummaryId -> qc.id)
 
       // Get entity manager
-      val udsEM = executionContext.getUDSDbConnectionContext().getEntityManager()
+      /*val udsEM = executionContext.getUDSDbConnectionContext().getEntityManager()
       
       // Retrieve the master quant channel
       val udsMasterQc = udsEM.find(classOf[fr.proline.core.orm.uds.MasterQuantitationChannel], masterQuantChannelId)
@@ -228,7 +226,7 @@ object BuildDatasetViewSet extends LazyLogging {
       val quantRsmId = udsMasterQc.getQuantResultSummaryId
       val udsQuantChannels = udsMasterQc.getQuantitationChannels
       val identRsmIds = udsQuantChannels.map(_.getIdentResultSummaryId).toArray
-      val qcIdByIdentRsmId = udsQuantChannels.toList.toLongMapWith(qc => qc.getIdentResultSummaryId -> qc.getId)
+      val qcIdByIdentRsmId = udsQuantChannels.toList.toLongMapWith(qc => qc.getIdentResultSummaryId -> qc.getId)*/
       
       // Load the quant RSM
       logger.debug(s"Loading quant result summary #$rsmId...")
@@ -252,26 +250,35 @@ object BuildDatasetViewSet extends LazyLogging {
           linkResultSetEntities = false // TODO: set to true ?
         )
       }
-
-      // TODO: update and use the QuantChannel name in the UDSdb
-      val qcNameById = {
-
-        DoJDBCReturningWork.withEzDBC(msiDbCtx, { ezDBC =>
-
-          val sqlQuery = new SelectQueryBuilder3(MsiDbResultSetTable, MsiDbResultSummaryTable, MsiDbMsiSearchTable).mkSelectQuery { (t1, c1, t2, c2, t3, c3) =>
-            List(t2.ID, t3.RESULT_FILE_NAME) ->
-              " WHERE " ~ t2.ID ~ " IN (" ~ identRsmIds.mkString(",") ~ ") " ~
-              "AND " ~ t1.ID ~ "=" ~ t2.RESULT_SET_ID ~ " AND " ~ t3.ID ~ " = " ~ t1.MSI_SEARCH_ID
+      
+      var qcNameById = quantChannels.toLongMapWith(qc => qc.id -> qc.name)
+      val qcNames = qcNameById.values.toList
+      val definedQcNames = qcNames.filter(StringUtils.isNotEmpty(_))
+      
+      // Check if we have retrieved defined names
+      if(qcNames.length != definedQcNames.length) {
+        logger.warn("Some quantitation channels are not named, we will use the result file names instead")
+        
+        // Set QC names as the result file name
+        qcNameById = {
+  
+          DoJDBCReturningWork.withEzDBC(msiDbCtx) { ezDBC =>
+  
+            val sqlQuery = new SelectQueryBuilder3(MsiDbResultSetTable, MsiDbResultSummaryTable, MsiDbMsiSearchTable).mkSelectQuery { (t1, c1, t2, c2, t3, c3) =>
+              List(t2.ID, t3.RESULT_FILE_NAME) ->
+                "WHERE " ~ t2.ID ~ " IN (" ~ identRsmIds.mkString(",") ~ ") " ~
+                "AND " ~ t1.ID ~ "=" ~ t2.RESULT_SET_ID ~ " AND " ~ t3.ID ~ " = " ~ t1.MSI_SEARCH_ID
+            }
+  
+            val longMap = new LongMap[String]()
+            ezDBC.selectAndProcess(sqlQuery) { r =>
+              longMap += qcIdByIdentRsmId(r.nextLong) -> r.nextString
+              ()
+            }
+  
+            longMap
           }
-
-          val longMap = new LongMap[String]()
-          ezDBC.selectAndProcess(sqlQuery) { r =>
-            longMap += qcIdByIdentRsmId(r.nextLong) -> r.nextString
-            ()
-          }
-
-          longMap
-        })
+        }
       }
       
       logger.debug("Build QuantDataSet")
@@ -280,7 +287,7 @@ object BuildDatasetViewSet extends LazyLogging {
         projectName,
         lazyQuantRSM,
         expDesignOpt,
-        udsMasterQc,
+        masterQc,
         groupSetupNumber,
         identResultSummariesLoader,
         this._buildBioSequenceLoader(msiDbCtx, lazyQuantRSM.lazyResultSummary),

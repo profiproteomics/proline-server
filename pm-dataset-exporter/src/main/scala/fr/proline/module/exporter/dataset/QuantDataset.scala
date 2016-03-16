@@ -11,7 +11,7 @@ class QuantDataset(
   override val projectName: String,
   val quantRSM: LazyQuantResultSummary,
   val expDesign: Option[ExperimentalDesign],
-  val masterQuantChannel: UdsMasterQuantChannel,
+  val masterQuantChannel: MasterQuantChannel,
   val groupSetupNumber: Int,
   override val loadChildResultSummaries: () => Array[LazyResultSummary],
   override val loadBioSequences: () => Array[BioSequence],
@@ -24,12 +24,12 @@ class QuantDataset(
 ) extends IdentDataset(projectName,quantRSM.lazyResultSummary,loadChildResultSummaries,loadBioSequences,loadSpectraDescriptors) {
   
   lazy val identRsmById = childResultSummaries.mapByLong(_.id)
-  lazy val identRsmByQcId = masterQuantChannel.getQuantitationChannels.toList.toLongMapWith { qc =>
-    qc.getId -> identRsmById(qc.getIdentResultSummaryId)
+  lazy val identRsmByQcId = masterQuantChannel.quantChannels.toLongMapWith { qc =>
+    qc.id -> identRsmById(qc.identResultSummaryId)
   }
   
-  lazy val masterQuantChannelId: Long = masterQuantChannel.getId
-  lazy val qcIds: Array[Long] = masterQuantChannel.getQuantitationChannels().map(_.getId).toArray
+  lazy val masterQuantChannelId: Long = masterQuantChannel.id
+  lazy val qcIds: Array[Long] = masterQuantChannel.quantChannels.map(_.id).toArray
   lazy val ratioDefs: Option[Array[RatioDefinition]] = expDesign.map( _.groupSetupByNumber(groupSetupNumber).ratioDefinitions )
   
   // TODO: check this is correct
