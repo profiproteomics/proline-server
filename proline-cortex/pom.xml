@@ -5,16 +5,16 @@
   <parent>
     <groupId>fr.proline</groupId>
     <artifactId>ProFI-Pom</artifactId>
-    <version>0.1.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+    <version>0.1.0</version> <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>Proline-Cortex</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.1.0</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.path>${project.basedir}/src/main/scala/fr/proline/cortex</version.path>
-    <core.version>0.5.0-SNAPSHOT</core.version> <!-- Snapshot Trunk version -->
+    <core.version>0.5.0</core.version> <!-- Snapshot Trunk version -->
   </properties>
 
   <dependencies>
@@ -84,12 +84,12 @@
     <dependency>
        <groupId>fr.proline.util</groupId>
        <artifactId>ProFI-Commons-Java</artifactId>
-       <version>0.2.0-SNAPSHOT</version> 
+       <version>0.2.0</version> 
     </dependency>
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Scala</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>0.3.0</version>
     </dependency>
 
     <!-- Proline-Core Service layer -->
@@ -103,34 +103,34 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-Admin</artifactId>
-      <version>0.3.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+      <version>0.3.0</version>  <!-- Snapshot Trunk version -->
     </dependency>
     
     <!--  MSDiag -->
 	<dependency>
     	<groupId>fr.proline</groupId>
      	<artifactId>PM-MSDiag</artifactId>
-	  	<version>0.3.0-SNAPSHOT</version>
+	  	<version>0.3.0</version>
 	</dependency>
 	
 	<dependency>
       <groupId>fr.proline</groupId>
       <artifactId>PM-MascotParser</artifactId>
-      <version>0.3.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+      <version>0.3.0</version>  <!-- Snapshot Trunk version -->
       <scope>runtime</scope>
     </dependency>
 
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>PM-OmssaParser</artifactId>
-      <version>0.3.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+      <version>0.3.0</version>  <!-- Snapshot Trunk version -->
       <scope>runtime</scope>
     </dependency>
     
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>PM-XtandemParser</artifactId>
-      <version>0.2.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+      <version>0.2.0</version>  <!-- Snapshot Trunk version -->
       <scope>runtime</scope>
     </dependency>
     
@@ -156,17 +156,17 @@
     <dependency>
     	<groupId>fr.proline</groupId>
     	<artifactId>PM-DatasetExporter</artifactId>
-    	<version>0.3.0-SNAPSHOT</version>
+    	<version>0.3.0</version>
     </dependency>
     <dependency>
     	<groupId>fr.proline</groupId>
     	<artifactId>PM-MzIdentML</artifactId>
-    	<version>0.3.0-SNAPSHOT</version>
+    	<version>0.3.0</version>
     </dependency>
     <dependency>
     	<groupId>fr.proline</groupId>
      	<artifactId>PM-FragmentMatchGenerator</artifactId>
-     	<version>0.3.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+     	<version>0.3.0</version>  <!-- Snapshot Trunk version -->
      </dependency>
      
     <dependency>
@@ -192,7 +192,7 @@
     <dependency>
     	<groupId>fr.proline</groupId>
     	<artifactId>Proline-Node</artifactId>
-    	<version>0.0.1-SNAPSHOT</version>
+    	<version>0.0.1</version>
     </dependency>
   </dependencies>
 
@@ -417,6 +417,6 @@
   </build>
 
   <scm>
-  	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Cortex/branches/0.1.0-RCandidates</connection>
+  	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Cortex/tags/0.1.0</connection>
   </scm>
 </project>
