@@ -18,7 +18,7 @@ class ViewSetExporterTest extends AbstractMultipleDBTestCase  {
 
   // Define some vars
   val driverType = DriverType.H2
-  val fileName = "STR_F063442_F122817_MergedRSMs"
+  val fileName = "STR_F063442_F122817_MergedRSMs_SC"
   val projectId = 1
   val targetRSMId: Long = 33 // 2 to have info data
 
