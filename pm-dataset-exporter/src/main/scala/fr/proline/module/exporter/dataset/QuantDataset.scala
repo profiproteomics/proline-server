@@ -30,7 +30,10 @@ class QuantDataset(
   
   lazy val masterQuantChannelId: Long = masterQuantChannel.id
   lazy val qcIds: Array[Long] = masterQuantChannel.quantChannels.map(_.id).toArray
-  lazy val ratioDefs: Option[Array[RatioDefinition]] = expDesign.map( _.groupSetupByNumber(groupSetupNumber).ratioDefinitions )
+  // TODO: find a better way to discriminate between XIC and SC expDesign
+  lazy val ratioDefs: Option[Array[RatioDefinition]] = {
+    expDesign.flatMap( _.groupSetupByNumber.get(groupSetupNumber).map(_.ratioDefinitions) )
+  }
   
   // TODO: check this is correct
   /*lazy val mqPepByPepMatchId: LongMap[MasterQuantPeptide] = {
