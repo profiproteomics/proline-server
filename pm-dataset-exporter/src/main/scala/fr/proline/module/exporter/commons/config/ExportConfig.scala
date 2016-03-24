@@ -12,7 +12,8 @@ case class ExportConfig(
   val dateFormat: String = ExportConfigConstant.DATE_FORMAT_HOUR,
   val titleSeparator: String = ExportConfigConstant.SEPARATOR_INCREMENTAL_TITLE_UNDERSCORE,
   val dataExport: ExportConfigData = ExportConfigData.getDefaultConfig(),
-  val sheets: Array[ExportConfigSheet] = Array() // sorted by positions
+  val sheets: Array[ExportConfigSheet] = Array(), // sorted by positions
+  val modificationFormat: String = ExportConfigConstant.MODIFICATION_FORMAT_FIRST_THREE_LETTERS
   ) {
 
   val formatValues: Array[String] = ExportConfigConstant.FORMAT_VALUES
@@ -20,6 +21,7 @@ case class ExportConfig(
   val dateFormatValues: Array[String] = ExportConfigConstant.DATE_FORMAT_VALUES
   val titleSeparatorValues: Array[String] = ExportConfigConstant.SEPARATOR_INCREMENTAL_TITLE_VALUES
   val sheetPresentationValues: Array[String] = ExportConfigConstant.PRESENTATION_SHEET_VALUES
+  val modificationFormatValues: Array[String] = ExportConfigConstant.MODIFICATION_FORMAT_VALUES
 
 }
 

@@ -202,7 +202,7 @@ object BuildRSMSpectraViewSet extends LazyLogging {
   def apply(ds: IdentWithSpectrumDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate, exportConfig: ExportConfig): ViewSet = {
 
     val templatedViews = viewSetTemplate.templatedViewTypes.map { templatedViewType =>
-      val viewWithTpl = ViewWithTemplate(BuildRSMSpectraView(ds, templatedViewType.viewType), templatedViewType.template)
+      val viewWithTpl = ViewWithTemplate(BuildRSMSpectraView(ds, templatedViewType.viewType, exportConfig), templatedViewType.template)
       if (templatedViewType.viewName.isDefined) viewWithTpl.dataView.viewName = templatedViewType.viewName.get
 
       viewWithTpl

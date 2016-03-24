@@ -12,6 +12,8 @@ import fr.proline.core.om.model.msi.Peptide
 import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.ms.massToMoz
+import fr.proline.module.exporter.commons.config.ExportConfig
+import fr.proline.module.exporter.commons.config.ExportConfigConstant
 
 
 /**
@@ -39,7 +41,7 @@ object SpectraListViewFields extends IViewFieldEnumeration {
     
 }
 
-class SpectraListView( val identDS: IdentWithSpectrumDataSet ) extends IFixedTableView with LazyLogging {
+class SpectraListView( val identDS: IdentWithSpectrumDataSet, exportConfig: ExportConfig ) extends IFixedTableView with LazyLogging {
   
     val rtByPepId = new HashMap[Long,(Float,String)]
     var viewName = "spectrum_list"
@@ -112,32 +114,34 @@ class SpectraListView( val identDS: IdentWithSpectrumDataSet ) extends IFixedTab
         return peptide.sequence
         
       val seq = peptide.sequence
-      val readablePTM = peptide.readablePtmString
-      val ptms = readablePTM.trim.split(";")
       val ptmByLoc : HashMap[Int, String] = new HashMap()
       val seqWithPtmBuilder = new StringBuilder()
-      ptms.foreach( ptm => {
-            if(!ptm.isEmpty()) {
-              val locIndex = ptm.indexOf("(")+1
-              val locEndIndex = ptm.indexOf(")")
-              val ptmString = ptm.substring(0,locIndex-1).trim()
-              val locStr = ptm.substring(locIndex,locEndIndex)
-  
-              var location = -2
-              if( locStr matches """.+N-term""" ) {
-                location = 0
-              } else if( locStr matches """.+C-term"""  ){ 
-                location = -1
-              } else {
-                try {
-                  location = locStr.substring(1, locStr.size).toInt // skip AA
-                }catch {
-                  case e: NumberFormatException => location = -2
-                }
-              }
-              ptmByLoc += (location->ptmString.substring(0,3))
-            }
-      })
+      
+      try {
+        exportConfig.modificationFormat match {
+//          case ExportConfigConstant.MODIFICATION_FORMAT_FULLNAME => // not sure this case is really useful...
+//            peptide.ptms.foreach(ptm => {
+//              ptmByLoc += (ptm.seqPosition -> ptm.definition.names.shortName)
+//            })
+          case ExportConfigConstant.MODIFICATION_FORMAT_ROUNDED_MONOMASS => 
+            peptide.ptms.foreach(ptm => {
+              ptmByLoc += (ptm.seqPosition -> (if(ptm.monoMass > 0) "+" else "").+(math.round(ptm.monoMass).toString))
+            })
+          case ExportConfigConstant.MODIFICATION_FORMAT_FIRST_THREE_LETTERS => 
+            peptide.ptms.foreach(ptm => {
+              ptmByLoc += (ptm.seqPosition -> ptm.toReadableString().substring(0, 3))
+            })
+        }
+      } catch {
+        /*
+         *  A NullPointerException is raised when no exportConfig is given
+         *  In this case, use a default behavior
+         */
+        case e: NullPointerException => 
+          peptide.ptms.foreach(ptm => {
+            ptmByLoc += (ptm.seqPosition -> ptm.toReadableString().substring(0, 3))
+          })
+      }
       
       val sortedKey = ptmByLoc.keySet.toSeq.sorted
       var lastIndex = 0
@@ -152,7 +156,7 @@ class SpectraListView( val identDS: IdentWithSpectrumDataSet ) extends IFixedTab
         seqWithPtmBuilder.append(seq.substring(lastIndex, seq.size))
       if(ptmByLoc.contains(-1)){ //Add Cterm modif
           seqWithPtmBuilder.append("[").append(ptmByLoc(-1)).append("]")
-      }     
+      }
      seqWithPtmBuilder.toString()
     }
     

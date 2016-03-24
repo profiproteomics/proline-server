@@ -12,6 +12,7 @@ import fr.proline.module.exporter.api.view.IDataView
 import fr.proline.module.exporter.api.view.IFixedTableView
 import fr.proline.module.exporter.api.view.IViewTypeEnumeration
 import fr.proline.core.om.model.msq.MasterQuantPeptide
+import fr.proline.module.exporter.commons.config.ExportConfig
 
 case class MsiIdentDataSet (
   projectName: String,
@@ -88,13 +89,12 @@ case class IdentWithSpectrumDataSet (
 )
 
 object BuildRSMSpectraView {
-  
-  private def _builders: Map[IViewTypeEnumeration#Value, IdentWithSpectrumDataSet => IDataView ] = Map( 
-    RSMSpectraViewType.SPECTRA_LIST -> { ds: IdentWithSpectrumDataSet => new SpectraListView(ds) }        
-  )
 
-  def apply( identDS: IdentWithSpectrumDataSet, viewType: IViewTypeEnumeration#Value ): IDataView = {
-    _builders(viewType)(identDS)
+  private def _builders(exportConfig: ExportConfig): Map[IViewTypeEnumeration#Value, IdentWithSpectrumDataSet => IDataView ] = Map( 
+    RSMSpectraViewType.SPECTRA_LIST -> { ds: IdentWithSpectrumDataSet => new SpectraListView(ds, exportConfig) }        
+  )
+  def apply( identDS: IdentWithSpectrumDataSet, viewType: IViewTypeEnumeration#Value, exportConfig: ExportConfig ): IDataView = {
+    _builders(exportConfig)(viewType)(identDS)
   }
   
   

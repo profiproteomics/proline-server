@@ -34,6 +34,12 @@ object ExportConfigConstant {
   val DECIMAL_SEPARATOR_DOT: Char = '.'
   val DECIMAL_SPEARATOR_VALUES: Array[String] = Array(".", ",")
 
+  // Format
+  val MODIFICATION_FORMAT_ROUNDED_MONOMASS = "monomass"
+//  val MODIFICATION_FORMAT_FULLNAME = "fullname"
+  val MODIFICATION_FORMAT_FIRST_THREE_LETTERS = "first_three_letters"
+  val MODIFICATION_FORMAT_VALUES: Array[String] = Array(MODIFICATION_FORMAT_ROUNDED_MONOMASS, /*MODIFICATION_FORMAT_FULLNAME,*/ MODIFICATION_FORMAT_FIRST_THREE_LETTERS)
+  
   // Information sheet
   val SHEET_INFORMATION = "information"
 
