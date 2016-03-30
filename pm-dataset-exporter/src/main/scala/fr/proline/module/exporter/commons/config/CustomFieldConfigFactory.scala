@@ -239,18 +239,22 @@ object CustomFieldConfigFactory {
   // get all fields for stat sheet
   def getAllStatFieldsArray(): Array[CustomFieldConfig] = {
     var listFields: Array[CustomFieldConfig] = Array(
-      CustomFieldConfig(FIELD_STAT_NB_PROTEIN_SETS, "#protein_sets"),
       CustomFieldConfig(FIELD_STAT_PSM_VALIDATION, "psm_validation"),
       CustomFieldConfig(FIELD_STAT_NB_TOTAL_PRECURSORS, "#total_precursors"),
-      CustomFieldConfig(FIELD_STAT_NB_PROTEIN_SETS_SINGLE_SPECIFIC_PEPTIDE, "#protein_sets_with_single_specific_peptide"),
-      CustomFieldConfig(FIELD_STAT_NB_MODIFIED_PEPTIDES, "#modified_peptides"),
-      CustomFieldConfig(FIELD_STAT_NB_Z3_PRECURSORS, "#z3_precursors"),
-      CustomFieldConfig(FIELD_STAT_NB_UNMODIFIED_PEPTIDES, "#unmodified_peptides"),
-      CustomFieldConfig(FIELD_STAT_NB_PROTEIN_SETS_MULTI_SPECIFIC_PEPTIDE, "#protein_sets_with_multiple_specific_peptides"),
       CustomFieldConfig(FIELD_STAT_NB_Z2_PRECURSORS, "#z2_precursors"),
+      CustomFieldConfig(FIELD_STAT_NB_Z3_PRECURSORS, "#z3_precursors"),
+      CustomFieldConfig(FIELD_STAT_NB_Z4PLUS_PRECURSORS, "#z4+_precursors"),
       CustomFieldConfig(FIELD_STAT_NB_PEPTIDES, "#peptides"),
-      CustomFieldConfig(FIELD_STAT_NB_DISTINCT_SEQ, "#distinct_sequences"),
-      CustomFieldConfig(FIELD_STAT_PROT_VALIDATION, "prot_validation")
+      CustomFieldConfig(FIELD_STAT_NB_MODIFIED_PEPTIDES, "#modified_peptides"),
+      CustomFieldConfig(FIELD_STAT_NB_UNMODIFIED_PEPTIDES, "#unmodified_peptides"),
+      CustomFieldConfig(FIELD_STAT_NB_DISTINCT_SEQS, "#distinct_peptide_sequences"),
+      CustomFieldConfig(FIELD_STAT_PROT_VALIDATION, "prot_validation"),
+      CustomFieldConfig(FIELD_STAT_NB_PROTEIN_SETS, "#protein_sets"),
+      CustomFieldConfig(FIELD_STAT_NB_VALIDATED_PROT_SETS, "#valid_protein_sets"),
+      CustomFieldConfig(FIELD_STAT_NB_VALIDATED_PROT_SETS_SINGLE_PEPTIDE, "#valid_protein_sets_with_single_peptide"),
+      CustomFieldConfig(FIELD_STAT_NB_VALIDATED_PROT_SETS_MULTI_PEPTIDES, "#valid_protein_sets_with_multiple_peptides"),
+      CustomFieldConfig(FIELD_STAT_NB_VALIDATED_PROT_SETS_SINGLE_SPE_PEP_SEQUENCE, "#valid_prot_sets_with_single_specific_pep_sequence"),
+      CustomFieldConfig(FIELD_STAT_NB_VALIDATED_PROT_SETS_MULTI_SPE_PEP_SEQUENCES, "#valid_prot_sets_with_multiple_specific_pep_sequences")
     )
 
     return listFields
