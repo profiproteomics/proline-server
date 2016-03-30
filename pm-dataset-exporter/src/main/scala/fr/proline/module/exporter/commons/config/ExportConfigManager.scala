@@ -12,87 +12,84 @@ object ExportConfigManager extends LazyLogging {
   // read a config file and build the  corresponding ExportConfig
   def readConfig(jsonConfig: String): ExportConfig = {
     //logger.debug("BuildCongif export "+jsonConfig);
-    logger.debug("BuildCongif export ")
+    logger.debug("Parsing jsonConfig...")
     
     ExportConfig.fromJSON(jsonConfig)
   }
 
-  // check that all titles in a sheet are different -- returns true if ok
-  /*def checkTitle2(config: ExportConfig): Boolean = {
-    for (s <- config.sheets) {
-      var i: Int = 0
-      for (f <- s.fields) {
-        if (f.title == null || f.title.trim().equals("")) {
-          logger.info("The sheet " + s.id + " contains an empty title")
-          return false
-        }
-        if (s.containsTitle(f.title, i)) {
-          logger.info("The sheet " + s.id + " contains already the field " + f.title)
-          return false
-        }
-        i = i + 1
-      }
-    }
-    return true
-  }*/
-
   // returns the json string corresponding to the given mode
-  def getAllConfigurationExport(mode: String): String = {
-    logger.debug("getAllConfigurationExport ")
+  def getFullExportConfigAsJson(mode: String): String = {
+    logger.debug("getFullExportConfigAsJson")
     
     if (mode == MODE_QUANT_SC)
-      getAllConfigurationForSCExport()
+      getFullConfigForSCExport()
     else if (mode == MODE_QUANT_XIC)
-      getAllConfigurationForXICExport()
+      getFullConfigForXicExport()
     else
-      getAllConfigurationForIdentificationExport()
+      getFullConfigForIdentificationExport()
+  }
+  
+  // returns the ExportConfig corresponding to the given mode
+  def getFullExportConfig(mode: String): ExportConfig = {
+    logger.debug("getFullExportConfig")
+    
+    if (mode == MODE_QUANT_SC)
+      ExportConfig.getSCExportFullConfig()
+    else if (mode == MODE_QUANT_XIC)
+      ExportConfig.getXicExportFullConfig()
+    else
+      ExportConfig.getIdentificationFullExportConfig()
   }
 
   // returns a json string with all  configuration for identification export
-  def getAllConfigurationForIdentificationExport(): String = {
-    logger.debug("getAllConfigurationForIdentificationExport ")
-    ExportConfig.toJSON(ExportConfig.getAllForIdentificationExport())
+  def getFullConfigForIdentificationExport(): String = {
+    logger.debug("getFullConfigForIdentificationExport")
+    ExportConfig.toJSON(ExportConfig.getIdentificationFullExportConfig())
   }
 
   // returns a json string with all configuration for SC export
-  def getAllConfigurationForSCExport(): String = {
-    logger.debug("getAllConfigurationForSCExport ")
-    ExportConfig.toJSON(ExportConfig.getAllForSCExport())
+  def getFullConfigForSCExport(): String = {
+    logger.debug("getFullConfigForSCExport")
+    ExportConfig.toJSON(ExportConfig.getSCExportFullConfig())
   }
 
   // returns a json string with all configuration for XIC export
-  def getAllConfigurationForXICExport(): String = {
-    logger.debug("getAllConfigurationForXICExport ")
-    ExportConfig.toJSON(ExportConfig.getAllForXICExport())
+  def getFullConfigForXicExport(): String = {
+    logger.debug("getFullConfigForXicExport")
+    ExportConfig.toJSON(ExportConfig.getXicExportFullConfig())
   }
 
   // for a given json with all configuration for a dataset, returns the corresponding default json string  
-  def getDefaultConfiguration(mode: String): String = {
-    logger.debug("getDefaultConfiguration ");
+  def getDefaultExportConfig(mode: String): ExportConfig = {
+    logger.debug("getDefaultExportConfig")
     
-    val allConfig: String = getAllConfigurationExport(mode)
-    
-    // reserialize : 
-    // TODO: DBO => why reserialize ???
-    val allConfigObj = ExportConfigManager.readConfig(allConfig)
+    val fullConfig = getFullExportConfig(mode)
     
     // build the default config from this object
     val exportConfigData = ExportConfigData(
-      allProteinSet = allConfigObj.dataExport.allProteinSet,
-      bestProfile = allConfigObj.dataExport.bestProfile
+      allProteinSet = fullConfig.dataExport.allProteinSet,
+      bestProfile = fullConfig.dataExport.bestProfile
     )
-    val displayedSheetsAndFields = allConfigObj.sheets.withFilter(_.defaultDisplayed).map(_.copyWithDisplayedFields())
+    val defaultSheetsAndFields = fullConfig.sheets.withFilter(_.defaultDisplayed).map(_.copyWithDefaultFields())
     
     val confObj = ExportConfig(
-      format = allConfigObj.format,
-      decimalSeparator = allConfigObj.decimalSeparator,
-      dateFormat = allConfigObj.dateFormat,
+      format = fullConfig.format,
+      decimalSeparator = fullConfig.decimalSeparator,
+      dateFormat = fullConfig.dateFormat,
       dataExport = exportConfigData,
-      sheets = displayedSheetsAndFields
+      sheets = defaultSheetsAndFields
     )
       
+    confObj
+  }
+  
+  def getDefaultExportConfigAsJson(mode: String): String = {
+    logger.debug("getDefaultExportConfigAsJson")
+    
+    val defaultConfig = getDefaultExportConfig(mode)
+
     // to JSON
-    ExportConfig.toJSON(confObj)
+    ExportConfig.toJSON(defaultConfig)
   }
 
 

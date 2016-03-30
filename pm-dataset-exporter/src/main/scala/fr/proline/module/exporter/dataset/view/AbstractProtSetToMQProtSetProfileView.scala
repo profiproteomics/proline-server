@@ -8,8 +8,8 @@ import fr.proline.module.exporter.commons.config.ExportConfigConstant._
 abstract class AbstractProtSetToMQProtSetProfileView extends AbstractProtSetToTypicalProtMatchView with AbstractQuantDatasetView {
   
   protected val mqProtSetProfileFieldSet = Set(
-    FIELD_PROTEIN_SETS_QUANTI_STATUS,
-    FIELD_PROTEIN_SETS_QUANTI_PEPTIDE_NUMBER
+    FIELD_PROTEIN_SETS_QUANT_STATUS,
+    FIELD_PROTEIN_SETS_QUANT_PEPTIDE_NUMBER
   )
   
   // Override getQcFieldSet in order to generate QuantChannel based columns for fields defined by mqProtSetProfileFieldSet
@@ -58,7 +58,7 @@ abstract class AbstractProtSetToMQProtSetProfileView extends AbstractProtSetToTy
     for (fieldConfig <- mqProtSetProfileFieldsConfigs) {
       
       fieldConfig.id match {
-        case FIELD_PROTEIN_SETS_QUANTI_STATUS => {
+        case FIELD_PROTEIN_SETS_QUANT_STATUS => {
           for( qcId <- qcIds ) {
             val identRsm = quantDs.identRsmByQcId(qcId)
             val protMatchOpt = getProteinMatch(qcId, identRsm)
@@ -72,7 +72,7 @@ abstract class AbstractProtSetToMQProtSetProfileView extends AbstractProtSetToTy
             }
           }
         }
-        case FIELD_PROTEIN_SETS_QUANTI_PEPTIDE_NUMBER => {
+        case FIELD_PROTEIN_SETS_QUANT_PEPTIDE_NUMBER => {
           for( qcId <- qcIds ) {
             val identRsm = quantDs.identRsmByQcId(qcId)
             val protMatchOpt = getProteinMatch(qcId, identRsm)

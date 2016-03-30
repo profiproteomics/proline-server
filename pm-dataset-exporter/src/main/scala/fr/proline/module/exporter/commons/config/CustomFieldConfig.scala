@@ -5,10 +5,6 @@ package fr.proline.module.exporter.commons.config
  */
 case class CustomFieldConfig(
   val id: String,
-  val title: String
-) {
-  // Plain constructor
-  def this() = this("", "")
-  var defaultDisplayed: Boolean = true
-}
-
+  val title: String,
+  val defaultDisplayed: Boolean = true
+)

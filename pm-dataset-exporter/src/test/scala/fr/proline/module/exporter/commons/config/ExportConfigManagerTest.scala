@@ -26,7 +26,7 @@ class ExportConfigManagerTest  extends LazyLogging{
 	@Test
 	def testGetAllConfigurationForIdentificationExport() {
 	  try {
-	    val configStr = ExportConfigManager.getAllConfigurationForIdentificationExport();
+	    val configStr = ExportConfigManager.getFullConfigForIdentificationExport()
 	    //  reserialize check the conf
 	    val config = ExportConfigManager.readConfig(configStr)
 	    assertTrue("All Ident export nbSheets" , config.sheets.length == 7)
@@ -40,7 +40,7 @@ class ExportConfigManagerTest  extends LazyLogging{
 	@Test
 	def testGetAllConfigurationForSCExport() {
 	  try {
-	    val configStr = ExportConfigManager.getAllConfigurationForSCExport();
+	    val configStr = ExportConfigManager.getFullConfigForSCExport()
 	    //  reserialize check the conf
 	    val config = ExportConfigManager.readConfig(configStr)
 	    assertTrue("All SC export nbSheets" , config.sheets.length == 7)
@@ -54,7 +54,7 @@ class ExportConfigManagerTest  extends LazyLogging{
 	@Test
 	def testGetAllConfigurationForXICExport() {
 	  try {
-	    val configStr = ExportConfigManager.getAllConfigurationForXICExport();
+	    val configStr = ExportConfigManager.getFullConfigForXicExport()
 	    //  reserialize check the conf
 	    val config = ExportConfigManager.readConfig(configStr)
 	    assertTrue("All XIC export nbSheets" , config.sheets.length == 8)
@@ -68,17 +68,17 @@ class ExportConfigManagerTest  extends LazyLogging{
 	def testGetDefaultConfiguration(){
 	  try{
 	    // identification
-	    val defaultIdentConf = ExportConfigManager.getDefaultConfiguration(ExportConfigConstant.MODE_IDENT)
+	    val defaultIdentConf = ExportConfigManager.getDefaultExportConfigAsJson(ExportConfigConstant.MODE_IDENT)
 	    // reserialize to check
 	    val defaultIdentConfObj = ExportConfigManager.readConfig(defaultIdentConf)
 	    assertTrue("Default Configuration for Identification ", defaultIdentConfObj.sheets.length == 6)
 	    // SC
-	    val defaultSCConf = ExportConfigManager.getDefaultConfiguration(ExportConfigConstant.MODE_QUANT_SC)
+	    val defaultSCConf = ExportConfigManager.getDefaultExportConfigAsJson(ExportConfigConstant.MODE_QUANT_SC)
 	    // reserialize to check
 	    val defaultSCConfObj = ExportConfigManager.readConfig(defaultSCConf)
 	    assertTrue("Default Configuration for SC ", defaultSCConfObj.sheets.length == 4)
 	    //XIC
-	    val defaultXICConf = ExportConfigManager.getDefaultConfiguration(ExportConfigConstant.MODE_QUANT_XIC)
+	    val defaultXICConf = ExportConfigManager.getDefaultExportConfigAsJson(ExportConfigConstant.MODE_QUANT_XIC)
 	    // reserialize to check
 	    val defaultXICConfObj = ExportConfigManager.readConfig(defaultXICConf)
 	    assertTrue("Default Configuration for XIC ", defaultXICConfObj.sheets.length == 3)
@@ -90,7 +90,7 @@ class ExportConfigManagerTest  extends LazyLogging{
 	@Test
 	def testCheckTitleIdent(){
 	 try {
-	     val configStr = ExportConfigManager.getAllConfigurationForIdentificationExport()
+	     val configStr = ExportConfigManager.getFullConfigForIdentificationExport()
 	    //  reserialize check the conf
 	    val config = ExportConfigManager.readConfig(configStr)
 	    //val check: Boolean = ExportConfigManager.checkTitle(config)
@@ -103,7 +103,7 @@ class ExportConfigManagerTest  extends LazyLogging{
 	@Test
 	def testCheckTitleSC(){
 	 try {
-	     val configStr = ExportConfigManager.getAllConfigurationForSCExport()
+	     val configStr = ExportConfigManager.getFullConfigForSCExport()
 	    //  reserialize check the conf
 	    val config = ExportConfigManager.readConfig(configStr)
 	    //val check: Boolean = ExportConfigManager.checkTitle(config)
@@ -116,7 +116,7 @@ class ExportConfigManagerTest  extends LazyLogging{
 	@Test
 	def testCheckTitleXIC(){
 	 try {
-	     val configStr = ExportConfigManager.getAllConfigurationForXICExport()
+	     val configStr = ExportConfigManager.getFullConfigForXicExport()
 	    //  reserialize check the conf
 	    val config = ExportConfigManager.readConfig(configStr)
 	    //val check: Boolean = ExportConfigManager.checkTitle(config)

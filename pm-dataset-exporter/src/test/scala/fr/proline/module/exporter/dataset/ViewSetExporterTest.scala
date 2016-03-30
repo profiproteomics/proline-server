@@ -12,7 +12,7 @@ import fr.proline.module.exporter.ViewSetExporter
 import fr.proline.module.exporter.dataset.view.BuildDatasetViewSet
 import fr.proline.repository.DriverType
 import fr.proline.module.exporter.commons.config.ExportConfigConstant
-
+import fr.proline.module.exporter.commons.config.ExportConfigManager
 
 class ViewSetExporterTest extends AbstractMultipleDBTestCase  {
 
@@ -61,7 +61,7 @@ class ViewSetExporterTest extends AbstractMultipleDBTestCase  {
       targetRSMId,      
       fileName,
       ExportConfigConstant.MODE_IDENT,
-      configStr
+      ExportConfigManager.readConfig(configStr)
     )
     
     // Create TEMP dir

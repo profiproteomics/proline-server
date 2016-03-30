@@ -6,9 +6,9 @@ import fr.proline.module.exporter.commons.config.ExportConfigConstant._
 abstract class AbstractProtSetToMQPepView extends AbstractProtSetToPepMatchView with AbstractQuantDatasetView {
   
   protected val mqPepFieldSet = Set(
-    FIELD_PSM_QUANTI_MASTER_QUANT_PEPTIDE_ID,
-    FIELD_PSM_QUANTI_ELUTION_TIME,
-    FIELD_PSM_QUANTI_SELECTION_LEVEL
+    FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID,
+    FIELD_PSM_QUANT_ELUTION_TIME,
+    FIELD_PSM_QUANT_SELECTION_LEVEL
   )
   
   protected val mqPepFieldsConfigs = sheetConfig.fields.filter( f => mqPepFieldSet.contains(f.id) )
@@ -32,9 +32,9 @@ abstract class AbstractProtSetToMQPepView extends AbstractProtSetToPepMatchView 
 
     for (fieldConfig <- mqPepFieldsConfigs) {
       val fieldValue: Any = fieldConfig.id match {
-        case FIELD_PSM_QUANTI_MASTER_QUANT_PEPTIDE_ID => mqPep.id
-        case FIELD_PSM_QUANTI_ELUTION_TIME => dcf2.format(bestQPep.elutionTime / 60)
-        case FIELD_PSM_QUANTI_SELECTION_LEVEL => mqPep.selectionLevel
+        case FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID => mqPep.id
+        case FIELD_PSM_QUANT_ELUTION_TIME => dcf2.format(bestQPep.elutionTime / 60)
+        case FIELD_PSM_QUANT_SELECTION_LEVEL => mqPep.selectionLevel
       }
       
       recordBuilder += fieldConfig.title -> fieldValue

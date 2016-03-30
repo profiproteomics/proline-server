@@ -27,15 +27,15 @@ trait AbstractQuantDatasetView extends AbstractIdentDatasetView {
   protected val groupSetupNumber = 1
   
   protected val qcFieldSet = Set(
-    FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE,
-    FIELD_PROTEIN_SETS_QUANTI_RAW_ABUNDANCE,
-    FIELD_PROTEIN_SETS_QUANTI_PSM_COUNT
+    FIELD_PROTEIN_SETS_QUANT_ABUNDANCE,
+    FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE,
+    FIELD_PROTEIN_SETS_QUANT_PSM_COUNT
   )
   protected val profilizerFieldSet = Set(
-    FIELD_PROTEIN_SETS_XIC_PROFILIZER_RATIO,
-    FIELD_PROTEIN_SETS_XIC_PROFILIZER_TTEST_PVALUE,
-    FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZTEST_PVALUE,
-    FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZSCORE
+    FIELD_PROFILIZER_RATIO,
+    FIELD_PROFILIZER_TTEST_PVALUE,
+    FIELD_PROFILIZER_ZTEST_PVALUE,
+    FIELD_PROFILIZER_ZSCORE
   )
   
   // Define two methods which may be overridden my classes using this trait
@@ -116,25 +116,25 @@ trait AbstractQuantDatasetView extends AbstractIdentDatasetView {
     for (fieldConfig <- quantEntityFieldsConfigs) {
 
       fieldConfig.id match {
-        case FIELD_PROTEIN_SETS_QUANTI_RAW_ABUNDANCE => {
+        case FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE => {
           addQuantComponentsProperty(fieldConfig, q => dcf2.format(q.rawAbundance) )
         }
-        case FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE => {
+        case FIELD_PROTEIN_SETS_QUANT_ABUNDANCE => {
           addQuantComponentsProperty(fieldConfig, q => dcf2.format(q.abundance) )
         }
-        case FIELD_PROTEIN_SETS_QUANTI_PSM_COUNT => {
+        case FIELD_PROTEIN_SETS_QUANT_PSM_COUNT => {
           addQuantComponentsProperty(fieldConfig, _.peptideMatchesCount)
         }
-        case FIELD_PROTEIN_SETS_XIC_PROFILIZER_RATIO => {
+        case FIELD_PROFILIZER_RATIO => {
           addRatiosProperty(fieldConfig, r => Some(dcf2.format(r.ratioValue)) )
         }
-        case FIELD_PROTEIN_SETS_XIC_PROFILIZER_TTEST_PVALUE => {
+        case FIELD_PROFILIZER_TTEST_PVALUE => {
           addRatiosProperty(fieldConfig, _.getTTestPValue().map(dcf6.format(_)) )
         }
-        case FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZTEST_PVALUE => {
+        case FIELD_PROFILIZER_ZTEST_PVALUE => {
           addRatiosProperty(fieldConfig, _.getZTestPValue().map(dcf6.format(_)) )
         }
-        case FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZSCORE => {
+        case FIELD_PROFILIZER_ZSCORE => {
           addRatiosProperty(fieldConfig, _.getZScore().map(dcf2.format(_)) )
         }
       }

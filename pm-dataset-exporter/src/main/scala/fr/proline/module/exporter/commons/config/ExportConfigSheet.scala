@@ -8,7 +8,7 @@ case class ExportConfigSheet(
   val title: String = "",
   val presentation: String = ExportConfigConstant.PRESENTATION_SHEET_COLUMNS,
   val fields: Array[CustomFieldConfig] = Array(), // sorted by positions
-  var defaultDisplayed: Boolean = true
+  val defaultDisplayed: Boolean = true
 ) {
   private val fieldTitles = fields.map(_.title)
   //private val fieldTitleSet = fieldTitles.toSet
@@ -30,91 +30,110 @@ case class ExportConfigSheet(
     return false
   }*/
   
-  def copyWithDisplayedFields() = this.copy( fields = fields.filter(_.defaultDisplayed) )
+  def copyWithDefaultFields() = this.copy( fields = fields.filter(_.defaultDisplayed) )
 
 }
 
 object ExportConfigSheet {
 
-  // get all config for information sheet
-  def getAllInformationSheet(): ExportConfigSheet = {
+  // get full config for information sheet
+  def getInformationSheetExportConfig(): ExportConfigSheet = {
     ExportConfigSheet(
       id = ExportConfigConstant.SHEET_INFORMATION,
-      title = "search settings and infos",
+      title = "Search settings and infos",
       presentation = ExportConfigConstant.PRESENTATION_SHEET_ROWS,
-      fields = CustomFieldConfigFactory.getAllInformationFieldsArray()
+      fields = CustomFieldConfigFactory.getInformationSheetFields()
     )
   }
 
-  // get all for import sheet
-  def getAllImportSheet(): ExportConfigSheet = {
+  // get full config for import sheet
+  def getImportSheetExportConfig(): ExportConfigSheet = {
     ExportConfigSheet(
       id = ExportConfigConstant.SHEET_IMPORT,
-      title = "import and filters",
+      title = "Import and filters",
       presentation = ExportConfigConstant.PRESENTATION_SHEET_ROWS,
-      fields = CustomFieldConfigFactory.getAllImportFieldsArray()
+      fields = CustomFieldConfigFactory.getImportSheetFields()
     )
   }
 
-  // get all for proteinSet sheet
-  def getAllProteinSetSheet(fromXIC: Boolean, fromSC: Boolean): ExportConfigSheet = {
+  // get full config for proteinSet sheet
+  def getProteinSetsSheetExportConfig(
+    fromXIC: Boolean,
+    fromSC: Boolean,
+    title: String = "Protein sets"
+  ): ExportConfigSheet = {
     ExportConfigSheet(
       id = ExportConfigConstant.SHEET_PROTEIN_SETS,
-      title = "protein sets",
+      title = title,
       presentation = ExportConfigConstant.PRESENTATION_SHEET_COLUMNS,
-      fields = CustomFieldConfigFactory.getAllProteinSetsFieldsArray(true, fromXIC, fromSC)
+      fields = CustomFieldConfigFactory.getProteinSetsSheetFields(true, fromXIC, fromSC)
     )
   }
 
-  // get all for best PSM sheet
-  def getAllBestPSMSheet(fromXIC: Boolean, fromSC: Boolean): ExportConfigSheet = {
+  // get full config for best PSMs sheet
+  def getBestPeptideMatchesSheetExportConfig(
+    fromXIC: Boolean,
+    fromSC: Boolean,
+    defaultDisplayed: Boolean = true
+  ): ExportConfigSheet = {
     ExportConfigSheet(
       id = ExportConfigConstant.SHEET_BEST_PSM,
-      title = "best PSM from protein sets",
+      title = "Best PSM from protein sets",
       presentation = ExportConfigConstant.PRESENTATION_SHEET_COLUMNS,
-      fields = CustomFieldConfigFactory.getAllBestPSMFieldsArray(fromXIC, fromSC)
+      fields = CustomFieldConfigFactory.getBestPeptideMatchesSheetFields(fromXIC, fromSC),
+      defaultDisplayed = defaultDisplayed
     )
   }
 
-  // get all for protein match sheet
-  def getAllProteinMatchSheet(): ExportConfigSheet = {
+  // get full config for protein match sheet
+  def getProteinMatchesSheetExportConfig(defaultDisplayed: Boolean = true): ExportConfigSheet = {
     ExportConfigSheet(
       id = ExportConfigConstant.SHEET_PROTEIN_MATCH,
-      title = "protein matches in protein set",
+      title = "Protein matches in protein sets",
       presentation = ExportConfigConstant.PRESENTATION_SHEET_COLUMNS,
-      fields = CustomFieldConfigFactory.getAllProteinMatchFieldsArray()
+      fields = CustomFieldConfigFactory.getProteinMatchesSheetFields(),
+      defaultDisplayed = defaultDisplayed
     )
   }
 
-  // get all for all psm sheet
-  def getAllAllPSMSheet(fromXIC: Boolean, fromSC: Boolean): ExportConfigSheet = {
+  // get full config for all psm sheet
+  def getPeptideMatchesSheetExportConfig(
+    fromXIC: Boolean,
+    fromSC: Boolean,
+    title: String = "All PSMs from protein sets"
+  ): ExportConfigSheet = {
     ExportConfigSheet(
       id = ExportConfigConstant.SHEET_ALL_PSM,
-      title = "all PSMs from protein sets",
+      title = title,
       presentation = ExportConfigConstant.PRESENTATION_SHEET_COLUMNS,
-      fields = CustomFieldConfigFactory.getAllPSMFieldsArray(fromXIC, fromSC),
+      fields = CustomFieldConfigFactory.getPeptideMatchesSheetFields(fromXIC, fromSC),
       defaultDisplayed = false
     )
   }
+  
+  def getMasterQuantPeptidesSheetExportConfig(): ExportConfigSheet = {
+    this.getPeptideMatchesSheetExportConfig(fromXIC = true, fromSC = false, title = "Peptides from protein sets")
+  }
 
-  // get all for masterQuantPeptideIon
-  def getAllMasterQuantPeptideIon(): ExportConfigSheet = {
+  // get full config for masterQuantPeptideIon
+  def getMasterQuantPepIonsSheetSheetExportConfig(): ExportConfigSheet = {
     ExportConfigSheet(
       id = ExportConfigConstant.SHEET_MASTER_QUANT_PEPTIDE_ION,
-      title = "peptide ions from protein sets",
+      title = "Quantified peptide ions",
       presentation = ExportConfigConstant.PRESENTATION_SHEET_COLUMNS,
-      fields = CustomFieldConfigFactory.getAllMasterQuantPeptideIon(),
+      fields = CustomFieldConfigFactory.getMasterQuantPepIonSheetFields(),
       defaultDisplayed = false
     )
   }
 
-  // get all for stat sheet
-  def getAllStatSheet(): ExportConfigSheet = {
+  // get full config for stat sheet
+  def getStatisticsSheetExportConfig(defaultDisplayed: Boolean = true): ExportConfigSheet = {
     ExportConfigSheet(
       id = ExportConfigConstant.SHEET_STAT,
-      title = "statistics",
+      title = "Dataset statistics",
       presentation = ExportConfigConstant.PRESENTATION_SHEET_ROWS,
-      fields = CustomFieldConfigFactory.getAllStatFieldsArray()
+      fields = CustomFieldConfigFactory.getStatisticsSheetFields(),
+      defaultDisplayed
     )
   }
 

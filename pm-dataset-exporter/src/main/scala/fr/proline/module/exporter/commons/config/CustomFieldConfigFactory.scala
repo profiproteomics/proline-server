@@ -6,8 +6,8 @@ import ExportConfigConstant._
 object CustomFieldConfigFactory {
 
   // get all fields for information sheet
-  def getAllInformationFieldsArray(): Array[CustomFieldConfig] = {
-    var listFields: Array[CustomFieldConfig] = Array(
+  def getInformationSheetFields(): Array[CustomFieldConfig] = {
+    Array(
       CustomFieldConfig(FIELD_INFORMATION_PROJECT_NAME, "project_name"),
       CustomFieldConfig(FIELD_INFORMATION_RESULT_SET_NAME, "result_set_name"),
       CustomFieldConfig(FIELD_INFORMATION_SEARCH_TITLE, "search_title"),
@@ -26,7 +26,7 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_INFORMATION_INSTRUMENT_CONFIG, "instrument_config"),
       CustomFieldConfig(FIELD_INFORMATION_DATABASE_NAMES, "database_names"),
       CustomFieldConfig(FIELD_INFORMATION_DATABASE_RELEASES, "database_releases"),
-      CustomFieldConfig(FIELD_INFORMATION_DATABASE_SEQ_COUNT, "database_sequence_count"),
+      CustomFieldConfig(FIELD_INFORMATION_DATABASE_SEQUENCES_COUNT, "database_sequences_count"),
       CustomFieldConfig(FIELD_INFORMATION_TAXONOMY, "taxonomy"),
       CustomFieldConfig(FIELD_INFORMATION_ENZYMES, "enzymes"),
       CustomFieldConfig(FIELD_INFORMATION_MAX_MISSED_CLEAVAGES, "max_missed_cleavages"),
@@ -37,13 +37,11 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_INFORMATION_FRAGMENT_MASS_ERROR_TOLERANCE, "fragment_mass_error_tolerance"),
       CustomFieldConfig(FIELD_INFORMATION_IS_DECOY, "is_decoy")
     )
-
-    return listFields
   }
 
   // get all fields for import sheet
-  def getAllImportFieldsArray(): Array[CustomFieldConfig] = {
-    var listFields: Array[CustomFieldConfig] = Array(
+  def getImportSheetFields(): Array[CustomFieldConfig] = {
+    Array(
       CustomFieldConfig(FIELD_INFORMATION_RESULT_FILE_NAME, "result_file_name"),
       CustomFieldConfig(FIELD_IMPORT_PARAMS, "import_params"),
       CustomFieldConfig(FIELD_IMPORT_PSM_FILTER_EXPECTED_FDR, "psm_filter_expected_fdr"),
@@ -51,76 +49,54 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_IMPORT_PROT_FILTER_EXPECTED_FDR, "prot_filter_expected_fdr"),
       CustomFieldConfig(FIELD_IMPORT_PROT_FILTER, "import_prot_filter") // incremental
     )
-
-    return listFields
   }
 
   // get all fields for protein sets sheet
-  def getAllProteinSetsFieldsArray(fromProtein: Boolean, fromXIC: Boolean, fromSC: Boolean): Array[CustomFieldConfig] = {
-    val fieldId: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_ID, "protein_set_id")
-    val fieldAcc: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_ACCESSION, "accession")
-    val fieldDesc: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_DESCRIPTION, "description")
-    val fieldScore: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_SCORE, "protein_set_score")
-    val fieldIsVal: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_IS_VALIDATED, "is_validated")
-    val fieldSelLevel: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_SELECTION_LEVEL, "selection_level")
-    val fieldNbSameset: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SAMESET_PROTEIN_MATCHES, "#sameset_protein_matches")
-    val fieldNbSubset: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SUBSET_PROTEIN_MATCHES, "#subset_protein_matches")
-    val fieldCoverage: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_COVERAGE, "coverage")
-    val fieldMw: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_MW, "MW")
-    val fieldNbSeq: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SEQUENCES, "#sequences")
-    val fieldNbSpecSeq: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_SEQUENCES, "#specific_sequences")
-    val fieldNbPep: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_NB_PEPTIDES, "#peptides")
-    val fieldNbSpecPep: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDES, "#specific_peptides")
-    val fieldNbPepMatch: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_NB_PEPTIDE_MATCHES, "#peptide_matches")
-    val fieldNbSpecPepMatch: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDE_MATCHES, "#specific_peptide_matches")
+  def getProteinSetsSheetFields(fromProtein: Boolean, fromXIC: Boolean, fromSC: Boolean): Array[CustomFieldConfig] = {
 
-    fieldSelLevel.defaultDisplayed = fromXIC || fromSC
-    fieldNbSameset.defaultDisplayed = fromProtein
-    fieldNbSubset.defaultDisplayed = fromProtein
-    fieldCoverage.defaultDisplayed = fromProtein
-    fieldMw.defaultDisplayed = fromProtein
-    fieldNbSeq.defaultDisplayed = fromProtein
-    fieldNbSpecSeq.defaultDisplayed = fromProtein
-    fieldNbPep.defaultDisplayed = fromProtein
-    fieldNbSpecPep.defaultDisplayed = fromProtein
-    fieldNbPepMatch.defaultDisplayed = fromProtein
-    fieldNbSpecPepMatch.defaultDisplayed = fromProtein
-
-    var listFields: ArrayBuffer[CustomFieldConfig] = ArrayBuffer(
-      fieldId, fieldAcc, fieldDesc, fieldScore, fieldIsVal, fieldSelLevel,
-      fieldNbSameset, fieldNbSubset, fieldCoverage, fieldMw, fieldNbSeq, fieldNbSpecSeq, fieldNbPep, fieldNbSpecPep, fieldNbPepMatch, fieldNbSpecPepMatch
+    val fieldsBuffer = ArrayBuffer(
+      CustomFieldConfig(FIELD_PROTEIN_SETS_ID, "protein_set_id"),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_ACCESSION, "accession"),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_DESCRIPTION, "description"),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_SCORE, "protein_set_score"),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_IS_VALIDATED, "is_validated"),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_SELECTION_LEVEL, "selection_level", defaultDisplayed = fromXIC || fromSC),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SAMESET_PROTEIN_MATCHES, "#sameset_protein_matches", defaultDisplayed = fromProtein),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SUBSET_PROTEIN_MATCHES, "#subset_protein_matches", defaultDisplayed = fromProtein),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_COVERAGE, "coverage", defaultDisplayed = fromProtein),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_MW, "MW", defaultDisplayed = fromProtein),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SEQUENCES, "#sequences", defaultDisplayed = fromProtein),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_SEQUENCES, "#specific_sequences", defaultDisplayed = fromProtein),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_PEPTIDES, "#peptides", defaultDisplayed = fromProtein),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDES, "#specific_peptides", defaultDisplayed = fromProtein),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_PEPTIDE_MATCHES, "#peptide_matches", defaultDisplayed = fromProtein),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDE_MATCHES, "#specific_peptide_matches", defaultDisplayed = fromProtein)
     )
 
     if (fromXIC || fromSC) {
-      val fieldRawAbundance: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_QUANTI_RAW_ABUNDANCE, if (fromXIC) "raw_abundance" else "Specific SC")
-      val fieldAbundance: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE, if (fromXIC) "abundance" else "Weighted SC")
-      val fieldPsmCount: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_QUANTI_PSM_COUNT, if (fromXIC) "psm_count" else "Basic SC")
-      val fieldStatus: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_QUANTI_STATUS, "status")
-      val fieldPeptideNumber: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_QUANTI_PEPTIDE_NUMBER, "peptide_number")
-      fieldStatus.defaultDisplayed = fromSC
-      fieldPeptideNumber.defaultDisplayed = fromSC
-      listFields += fieldStatus
-      listFields += fieldPeptideNumber
-      listFields += fieldPsmCount
-      listFields += fieldRawAbundance
-      listFields += fieldAbundance
+      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_STATUS, "status", defaultDisplayed = fromSC)
+      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PEPTIDE_NUMBER, "peptide_number", defaultDisplayed = fromSC)
+      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PSM_COUNT, if (fromXIC) "psm_count" else "Basic SC")
+      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE, if (fromXIC) "raw_abundance" else "Specific SC")
+      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_ABUNDANCE, if (fromXIC) "abundance" else "Weighted SC")
     }
+    
     if (fromXIC) {
-      val fieldRatio: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_XIC_PROFILIZER_RATIO, "ratio")
-      val fieldTTest: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_XIC_PROFILIZER_TTEST_PVALUE, "t-test")
-      val fieldZTest: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZTEST_PVALUE, "z-test")
-      val fieldZScore: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZSCORE, "z-score")
-      listFields += fieldRatio
-      listFields += fieldTTest
-      listFields += fieldZTest
-      listFields += fieldZScore
+      this._appendProfilizerFields(fieldsBuffer)
     }
 
-    return listFields.toArray
+    return fieldsBuffer.toArray
+  }
+  
+  private def _appendProfilizerFields( fieldsBuffer: ArrayBuffer[CustomFieldConfig] ) {
+    fieldsBuffer += CustomFieldConfig(FIELD_PROFILIZER_RATIO, "ratio")
+    fieldsBuffer += CustomFieldConfig(FIELD_PROFILIZER_TTEST_PVALUE, "t-test")
+    fieldsBuffer += CustomFieldConfig(FIELD_PROFILIZER_ZTEST_PVALUE, "z-test")
+    fieldsBuffer += CustomFieldConfig(FIELD_PROFILIZER_ZSCORE, "z-score")
   }
 
   // get all fields for protein match sheet
-  def getAllProteinMatchFieldsArray(): Array[CustomFieldConfig] = {
+  def getProteinMatchesSheetFields(): Array[CustomFieldConfig] = {
     Array(
       CustomFieldConfig(FIELD_PROTEIN_SETS_ID, "protein_set_id"),
       CustomFieldConfig(FIELD_PROTEIN_SETS_ACCESSION, "accession"),
@@ -140,8 +116,9 @@ object CustomFieldConfigFactory {
   }
 
   // get all fields for Best PSM sheet
-  def getAllBestPSMFieldsArray(fromXIC: Boolean, fromSC: Boolean): Array[CustomFieldConfig] = {
-    var listFields: ArrayBuffer[CustomFieldConfig] = ArrayBuffer(
+  def getPeptideMatchesSheetFields(fromXIC: Boolean, fromSC: Boolean): Array[CustomFieldConfig] = {
+    
+    val fieldsBuffer = ArrayBuffer(
       CustomFieldConfig(FIELD_PSM_PEPTIDE_ID, "peptide_id"),
       CustomFieldConfig(FIELD_PSM_SEQUENCE, "sequence"),
       CustomFieldConfig(FIELD_PSM_MODIFICATIONS, "modifications"),
@@ -169,76 +146,65 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_PSM_PTM_SCORE, "ptm_score"),
       CustomFieldConfig(FIELD_PSM_PTM_SITES_CONFIDENCE, "ptm_sites_confidence")
     )
-    listFields = listFields ++ getAllProteinSetsFieldsArray(false, false, false)
+    
+    fieldsBuffer ++= getProteinSetsSheetFields(false, false, false)
 
     if (fromXIC || fromSC) {
-      val fieldMasterQuantPeptideId: CustomFieldConfig = CustomFieldConfig(FIELD_PSM_QUANTI_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id")
-      val fieldQuantiElutionTime: CustomFieldConfig = CustomFieldConfig(FIELD_PSM_QUANTI_ELUTION_TIME, "master_elution_time")
-      val fieldQuantiSelectionLevel: CustomFieldConfig = CustomFieldConfig(FIELD_PSM_QUANTI_SELECTION_LEVEL, "master_quant_selection_level")
-      val fieldRawAbundance: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_QUANTI_RAW_ABUNDANCE, if (fromXIC) "raw_abundance" else "Specific SC")
-      val fieldAbundance: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE, "abundance")
-      val fieldPsmCount: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_QUANTI_PSM_COUNT, if (fromXIC) "psm_count" else "Basic SC")
-      fieldAbundance.defaultDisplayed = fromXIC
-      listFields += fieldMasterQuantPeptideId
-      listFields += fieldQuantiElutionTime
-      listFields += fieldQuantiSelectionLevel
-      listFields += fieldPsmCount
-      listFields += fieldRawAbundance
-      listFields += fieldAbundance
+      fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id")
+      fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_ELUTION_TIME, "master_elution_time")
+      fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_SELECTION_LEVEL, "master_quant_selection_level")
+      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PSM_COUNT, if (fromXIC) "psm_count" else "Basic SC")
+      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE, if (fromXIC) "raw_abundance" else "Specific SC")
+      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_ABUNDANCE, if (fromXIC) "abundance" else "Weighted SC")
     }
+    
     if (fromXIC) {
-      val fieldRatio: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_XIC_PROFILIZER_RATIO, "ratio")
-      val fieldTTest: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_XIC_PROFILIZER_TTEST_PVALUE, "t-test")
-      val fieldZTest: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZTEST_PVALUE, "z-test")
-      val fieldZScore: CustomFieldConfig = CustomFieldConfig(FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZSCORE, "z-score")
-      listFields += fieldRatio
-      listFields += fieldTTest
-      listFields += fieldZTest
-      listFields += fieldZScore
+      this._appendProfilizerFields(fieldsBuffer)
     }
-    return listFields.toArray
+    
+    fieldsBuffer.toArray
   }
 
   // get all fields for all PSM sheet
-  def getAllPSMFieldsArray(fromXIC: Boolean, fromSC: Boolean): Array[CustomFieldConfig] = {
-    return getAllBestPSMFieldsArray(fromXIC, fromSC)
+  def getBestPeptideMatchesSheetFields(fromXIC: Boolean, fromSC: Boolean): Array[CustomFieldConfig] = {
+    getPeptideMatchesSheetFields(fromXIC, fromSC)
   }
 
   // get all fields for masterQuantPeptideIon
-  def getAllMasterQuantPeptideIon(): Array[CustomFieldConfig] = {
+  def getMasterQuantPepIonSheetFields(): Array[CustomFieldConfig] = {
     
-    val customPeptideFields = Array(
+    val fieldsBuffer = ArrayBuffer(
       CustomFieldConfig(FIELD_PSM_PEPTIDE_ID, "peptide_id"),
       CustomFieldConfig(FIELD_PSM_SEQUENCE, "sequence"),
-      CustomFieldConfig(FIELD_PSM_MODIFICATIONS, "modifications")
-    )
-    
-    val customProtSetFields = getAllProteinSetsFieldsArray(false, false, false)
-    
-    val customMqPepIonFields = Array(
-      CustomFieldConfig(FIELD_PSM_QUANTI_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id"),
-      CustomFieldConfig(FIELD_PSM_QUANTI_ELUTION_TIME, "master_elution_time"),
-      CustomFieldConfig(FIELD_PSM_QUANTI_SELECTION_LEVEL, "master_quant_selection_level"),
-      CustomFieldConfig(FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME, "elution_time"),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_QUANTI_RAW_ABUNDANCE, "raw_abundance"),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE, "abundance"),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_QUANTI_PSM_COUNT, "psm_count"),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_XIC_PROFILIZER_RATIO, "ratio"),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_XIC_PROFILIZER_TTEST_PVALUE, "t-test"),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZTEST_PVALUE, "z-test"),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZSCORE, "z-score"),
+      CustomFieldConfig(FIELD_PSM_MODIFICATIONS, "modifications"),
+      CustomFieldConfig(FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id"),
+      CustomFieldConfig(FIELD_PSM_QUANT_ELUTION_TIME, "master_elution_time"),
+      CustomFieldConfig(FIELD_PSM_QUANT_SELECTION_LEVEL, "master_quant_selection_level"),
       CustomFieldConfig(FIELD_MASTER_QUANT_PEPTIDE_ION_ID, "master_quant_peptide_ion_id"),
       CustomFieldConfig(FIELD_MASTER_QUANT_PEPTIDE_ION_CHARGE, "master_quant_peptide_ion_charge"),
       CustomFieldConfig(FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME, "master_quant_peptide_ion_elution_time"),
       CustomFieldConfig(FIELD_MASTER_QUANT_PEPTIDE_ION_FEATURE_ID, "master_quant_peptide_ion_feature_id")
     )
     
-    customPeptideFields ++ customProtSetFields ++ customMqPepIonFields
+    fieldsBuffer ++= getProteinSetsSheetFields(false, false, false)
+    
+    fieldsBuffer ++= Array(
+      CustomFieldConfig(FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME, "elution_time"),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE, "raw_abundance"),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_ABUNDANCE, "abundance"),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PSM_COUNT, "psm_count"),
+      CustomFieldConfig(FIELD_PROFILIZER_RATIO, "ratio"),
+      CustomFieldConfig(FIELD_PROFILIZER_TTEST_PVALUE, "t-test"),
+      CustomFieldConfig(FIELD_PROFILIZER_ZTEST_PVALUE, "z-test"),
+      CustomFieldConfig(FIELD_PROFILIZER_ZSCORE, "z-score")
+    )
+    
+    fieldsBuffer.toArray
   }
 
   // get all fields for stat sheet
-  def getAllStatFieldsArray(): Array[CustomFieldConfig] = {
-    var listFields: Array[CustomFieldConfig] = Array(
+  def getStatisticsSheetFields(): Array[CustomFieldConfig] = {
+    Array(
       CustomFieldConfig(FIELD_STAT_PSM_VALIDATION, "psm_validation"),
       CustomFieldConfig(FIELD_STAT_NB_TOTAL_PSMS, "#total_psms"),
       CustomFieldConfig(FIELD_STAT_NB_TOTAL_PRECURSORS, "#total_precursors"),
@@ -257,8 +223,6 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_STAT_NB_VALIDATED_PROT_SETS_SINGLE_SPE_PEP_SEQUENCE, "#valid_prot_sets_with_single_specific_pep_sequence"),
       CustomFieldConfig(FIELD_STAT_NB_VALIDATED_PROT_SETS_MULTI_SPE_PEP_SEQUENCES, "#valid_prot_sets_with_multiple_specific_pep_sequences")
     )
-
-    return listFields
   }
 
 }

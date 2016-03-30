@@ -58,10 +58,10 @@ object BuildDatasetViewSet extends LazyLogging {
     rsmId: Long,
     viewSetName: String,
     mode: String,
-    exportConfigStr: String
+    exportConfig: ExportConfig
   ): ViewSet = {
 
-    val exportConfig = ExportConfigManager.readConfig(exportConfigStr)
+    //val exportConfig = ExportConfigManager.readConfig(exportConfigStr)
     
     /*require(
       ExportConfigManager.checkTitle(exportConfig),

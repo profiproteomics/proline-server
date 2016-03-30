@@ -61,7 +61,7 @@ object ExportConfigConstant {
   val FIELD_INFORMATION_INSTRUMENT_CONFIG = "information_instrument_config"
   val FIELD_INFORMATION_DATABASE_NAMES = "information_database_names"
   val FIELD_INFORMATION_DATABASE_RELEASES = "information_database_releases"
-  val FIELD_INFORMATION_DATABASE_SEQ_COUNT = "information_database_seq_counts"
+  val FIELD_INFORMATION_DATABASE_SEQUENCES_COUNT = "information_database_sequences_count"
   val FIELD_INFORMATION_TAXONOMY = "information_taxonomy"
   val FIELD_INFORMATION_ENZYMES = "information_enzymes"
   val FIELD_INFORMATION_MAX_MISSED_CLEAVAGES = "information_max_missed_cleavages"
@@ -101,15 +101,11 @@ object ExportConfigConstant {
   val FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDE_MATCHES = "protein_sets_nb_specific_peptide_matches"
   val FIELD_PROTEIN_SETS_SELECTION_LEVEL = "protein_sets_selection_level"
 
-  val FIELD_PROTEIN_SETS_QUANTI_STATUS = "protein_sets_status" //incremental
-  val FIELD_PROTEIN_SETS_QUANTI_PEPTIDE_NUMBER = "protein_sets_qc_peptide_number" //incremental
-  val FIELD_PROTEIN_SETS_QUANTI_RAW_ABUNDANCE = "raw_abundance" //incremental // SC Specific 
-  val FIELD_PROTEIN_SETS_QUANTI_ABUNDANCE = "abundance" // incremental // SC Weighted
-  val FIELD_PROTEIN_SETS_QUANTI_PSM_COUNT = "psm_count" // incremental  // SC Basic
-  val FIELD_PROTEIN_SETS_XIC_PROFILIZER_RATIO = "ratio" // incremental
-  val FIELD_PROTEIN_SETS_XIC_PROFILIZER_TTEST_PVALUE = "t-test_pvalue" // incremental
-  val FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZTEST_PVALUE = "z-test_pvalue" // incremental
-  val FIELD_PROTEIN_SETS_XIC_PROFILIZER_ZSCORE = "z-score" // incremental
+  val FIELD_PROTEIN_SETS_QUANT_STATUS = "protein_sets_status" //incremental
+  val FIELD_PROTEIN_SETS_QUANT_PEPTIDE_NUMBER = "protein_sets_qc_peptide_number" //incremental
+  val FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE = "raw_abundance" //incremental // SC Specific 
+  val FIELD_PROTEIN_SETS_QUANT_ABUNDANCE = "abundance" // incremental // SC Weighted
+  val FIELD_PROTEIN_SETS_QUANT_PSM_COUNT = "psm_count" // incremental  // SC Basic
 
   // Best psm sheet
   val SHEET_BEST_PSM = "best_psm"
@@ -152,9 +148,9 @@ object ExportConfigConstant {
   val FIELD_PSM_PTM_SCORE = "psm_ptm_score"
   val FIELD_PSM_PTM_SITES_CONFIDENCE = "psm_ptm_sites_confidence"
 
-  val FIELD_PSM_QUANTI_MASTER_QUANT_PEPTIDE_ID = "psm_master_quant_peptide_id"
-  val FIELD_PSM_QUANTI_ELUTION_TIME = "psm_quanti_elution_time"
-  val FIELD_PSM_QUANTI_SELECTION_LEVEL = "psm_quanti_selection_level"
+  val FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID = "psm_master_quant_peptide_id"
+  val FIELD_PSM_QUANT_ELUTION_TIME = "psm_quant_elution_time"
+  val FIELD_PSM_QUANT_SELECTION_LEVEL = "psm_quant_selection_level"
 
   // MasterQuantPeptideIon sheet  
   val SHEET_MASTER_QUANT_PEPTIDE_ION = "master_quant_peptide_ion"
@@ -163,6 +159,12 @@ object ExportConfigConstant {
   val FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME = "master_quant_peptide_ion_elution_time"
   val FIELD_MASTER_QUANT_PEPTIDE_ION_CHARGE = "master_quant_peptide_ion_charge"
   val FIELD_MASTER_QUANT_PEPTIDE_ION_FEATURE_ID = "master_quant_peptide_ion_feature_id"
+  
+  // Some properties shared between quantitation sheets
+  val FIELD_PROFILIZER_RATIO = "ratio" // incremental
+  val FIELD_PROFILIZER_TTEST_PVALUE = "t-test_pvalue" // incremental
+  val FIELD_PROFILIZER_ZTEST_PVALUE = "z-test_pvalue" // incremental
+  val FIELD_PROFILIZER_ZSCORE = "z-score" // incremental
 
   // Statistics sheet
   val SHEET_STAT = "stat"

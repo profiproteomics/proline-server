@@ -38,67 +38,51 @@ object ExportConfig {
   def toJSON(conf: ExportConfig): String = CustomSerializer.serialize(conf)
 
   // get all config for identification export
-  def getAllForIdentificationExport(): ExportConfig = {
+  def getIdentificationFullExportConfig(): ExportConfig = {
+    val( fromXIC, fromSC ) = (false, false)
     ExportConfig(
       sheets = Array(
-        ExportConfigSheet.getAllInformationSheet(),
-        ExportConfigSheet.getAllImportSheet(),
-        ExportConfigSheet.getAllProteinSetSheet(fromXIC = false, fromSC = false),
-        ExportConfigSheet.getAllBestPSMSheet(fromXIC = false, fromSC = false),
-        ExportConfigSheet.getAllProteinMatchSheet(),
-        ExportConfigSheet.getAllAllPSMSheet(fromXIC = false, fromSC = false),
-        ExportConfigSheet.getAllStatSheet()
+        ExportConfigSheet.getInformationSheetExportConfig(),
+        ExportConfigSheet.getImportSheetExportConfig(),
+        ExportConfigSheet.getProteinSetsSheetExportConfig( fromXIC, fromSC),
+        ExportConfigSheet.getProteinMatchesSheetExportConfig(),
+        ExportConfigSheet.getBestPeptideMatchesSheetExportConfig(fromXIC, fromSC),
+        ExportConfigSheet.getPeptideMatchesSheetExportConfig(fromXIC, fromSC),
+        ExportConfigSheet.getStatisticsSheetExportConfig()
       )
     )
   }
 
   // get all config for SC export
-  def getAllForSCExport(): ExportConfig = {
-    
-    val bestPSMSheet = ExportConfigSheet.getAllBestPSMSheet(fromXIC = false, fromSC = true)
-    bestPSMSheet.defaultDisplayed = false
-    
-    val statSheet = ExportConfigSheet.getAllStatSheet()
-    statSheet.defaultDisplayed = false
-    
+  def getSCExportFullConfig(): ExportConfig = {
+    val( fromXIC, fromSC ) = (false, true)
     ExportConfig(
       sheets = Array(
-        ExportConfigSheet.getAllInformationSheet(),
-        ExportConfigSheet.getAllImportSheet(),
-        ExportConfigSheet.getAllProteinSetSheet(fromXIC = false, fromSC =true),
-        bestPSMSheet,
-        ExportConfigSheet.getAllProteinMatchSheet(),
-        ExportConfigSheet.getAllAllPSMSheet(fromXIC = false, fromSC =true),
-        statSheet
+        ExportConfigSheet.getInformationSheetExportConfig(),
+        ExportConfigSheet.getImportSheetExportConfig(),
+        ExportConfigSheet.getProteinSetsSheetExportConfig(fromXIC, fromSC),
+        ExportConfigSheet.getProteinMatchesSheetExportConfig(),
+        ExportConfigSheet.getBestPeptideMatchesSheetExportConfig(fromXIC, fromSC, defaultDisplayed = false),
+        ExportConfigSheet.getPeptideMatchesSheetExportConfig(fromXIC, fromSC),
+        ExportConfigSheet.getStatisticsSheetExportConfig(defaultDisplayed = false)
       )
     )
   }
 
   // get all config for XIC export
-  def getAllForXICExport(): ExportConfig = {
-    
-    // DBO: why fromXIC == false here ???
-    val bestPSMSheet = ExportConfigSheet.getAllBestPSMSheet(fromXIC = false, fromSC = true)
-    bestPSMSheet.defaultDisplayed = false
-    
-    val proteinMatchSheet = ExportConfigSheet.getAllProteinMatchSheet()
-    proteinMatchSheet.defaultDisplayed = false
-    
-    val statSheet = ExportConfigSheet.getAllStatSheet()
-    statSheet.defaultDisplayed = false
-    
+  def getXicExportFullConfig(): ExportConfig = {
+    val( fromXIC, fromSC ) = (true, false)
     ExportConfig(
       sheets = Array(
-        ExportConfigSheet.getAllInformationSheet(),
-        ExportConfigSheet.getAllImportSheet(),
-        ExportConfigSheet.getAllProteinSetSheet(fromXIC = true, fromSC = false),
-        bestPSMSheet,
-        proteinMatchSheet,
-        ExportConfigSheet.getAllAllPSMSheet(fromXIC = true, fromSC = false),
-        ExportConfigSheet.getAllMasterQuantPeptideIon(),
-        statSheet
+        ExportConfigSheet.getInformationSheetExportConfig(),
+        ExportConfigSheet.getImportSheetExportConfig(),
+        ExportConfigSheet.getProteinSetsSheetExportConfig(fromXIC, fromSC),
+        ExportConfigSheet.getProteinMatchesSheetExportConfig(defaultDisplayed = false),
+        //ExportConfigSheet.getBestPeptideMatchesSheetExportConfig(fromXIC, fromSC, defaultDisplayed = false),
+        ExportConfigSheet.getMasterQuantPeptidesSheetExportConfig(),
+        ExportConfigSheet.getMasterQuantPepIonsSheetSheetExportConfig(),
+        ExportConfigSheet.getStatisticsSheetExportConfig(defaultDisplayed = false)
       )
     )
-
   }
 }

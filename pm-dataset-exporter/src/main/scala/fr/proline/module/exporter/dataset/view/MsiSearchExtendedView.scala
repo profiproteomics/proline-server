@@ -71,7 +71,7 @@ class MsiSearchExtendedView(
         case FIELD_INFORMATION_INSTRUMENT_CONFIG             => searchSettings.instrumentConfig.name
         case FIELD_INFORMATION_DATABASE_NAMES                => databasesNames.mkString("; ")
         case FIELD_INFORMATION_DATABASE_RELEASES             => releaseDates.mkString("; ")
-        case FIELD_INFORMATION_DATABASE_SEQ_COUNT            => databasesSeqCounts.mkString("; ")
+        case FIELD_INFORMATION_DATABASE_SEQUENCES_COUNT      => databasesSeqCounts.mkString("; ")
         case FIELD_INFORMATION_TAXONOMY                      => searchSettings.taxonomy
         case FIELD_INFORMATION_ENZYMES                       => searchSettings.usedEnzymes.map(_.name).mkString(", ")
         case FIELD_INFORMATION_MAX_MISSED_CLEAVAGES          => searchSettings.maxMissedCleavages
