@@ -172,7 +172,7 @@ object BuildDatasetViewSet extends LazyLogging {
           linkResultSetEntities = true
         )
         
-        childResultSummaries
+        childResultSummaries.sortBy(_.lazyResultSet.msiSearch.get.resultFileName)
       }
       
       logger.debug("Build IdentDataSet")
