@@ -240,6 +240,7 @@ object CustomFieldConfigFactory {
   def getAllStatFieldsArray(): Array[CustomFieldConfig] = {
     var listFields: Array[CustomFieldConfig] = Array(
       CustomFieldConfig(FIELD_STAT_PSM_VALIDATION, "psm_validation"),
+      CustomFieldConfig(FIELD_STAT_NB_TOTAL_PSMS, "#total_psms"),
       CustomFieldConfig(FIELD_STAT_NB_TOTAL_PRECURSORS, "#total_precursors"),
       CustomFieldConfig(FIELD_STAT_NB_Z2_PRECURSORS, "#z2_precursors"),
       CustomFieldConfig(FIELD_STAT_NB_Z3_PRECURSORS, "#z3_precursors"),
