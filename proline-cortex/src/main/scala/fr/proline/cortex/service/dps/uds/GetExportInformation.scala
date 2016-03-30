@@ -83,8 +83,7 @@ class GetExportInformation extends AbstractRemoteProcessService with LazyLogging
       }
     }
 
-    return ExportConfigManager.getAllConfigurationExport(mode)
-
+    ExportConfigManager.getFullExportConfigAsJson(mode)
   }
 
 }

@@ -17,6 +17,7 @@ import fr.proline.cortex.util.WorkDirectoryFactory
 import fr.proline.jms.service.api.AbstractRemoteProcessService
 import fr.proline.jms.util.NodeConfig
 import fr.proline.module.exporter.ViewSetExporter
+import fr.proline.module.exporter.commons.config.ExportConfig
 import fr.proline.module.exporter.commons.config.ExportConfigManager
 import fr.proline.module.exporter.dataset.view.BuildDatasetViewSet
 import fr.proline.module.exporter.msi.template.AllPSMViewSetTemplateAsXLSX
@@ -445,14 +446,14 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
     require(extraParams.isDefined, "some extra parameters must be provided")
 
     var mode: String = DatasetUtil.getExportMode(rsmIdentifiers(0).projectId, rsmIdentifiers(0).dsId)
-    var exportConfigStr : String = null
+    var exportConfig: ExportConfig = null
     
     if (extraParams != null && extraParams.isDefined && extraParams.get.contains("config")){
-        exportConfigStr = extraParams.get("config").asInstanceOf[String]
+        exportConfig = ExportConfigManager.readConfig(extraParams.get("config").asInstanceOf[String])
         logger.debug("exporting...")
     }else{
       // default conf if not filled -- all dataset have same type, so the config is based on the first
-      exportConfigStr = ExportConfigManager.getDefaultConfiguration(mode)
+      exportConfig = ExportConfigManager.getDefaultExportConfig(mode)
     }
 
     var exportLocation = new java.io.File(fileDir)
@@ -476,7 +477,8 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
           rsmId = rsmIdentifier.rsmId,
           viewSetName = fileDatasetName,
           mode = mode,
-          exportConfigStr = exportConfigStr)
+          exportConfig = exportConfig
+        )
 
         exFiles = ViewSetExporter.exportViewSetToDirectory(viewSet, exportLocation)
         for(f <- exFiles){
