@@ -23,14 +23,18 @@ class IdentDataset(
 ) extends LazyLogging {
   
   // Count the number of protein sets and proteins matches related to a given peptide match
-  val validProtSetIdSetByPepMatchId = new HashMap[Long, HashSet[Long]]()
-  val validProtMatchIdSetByPepMatchId = new HashMap[Long, HashSet[Long]]()
+  val validProtSetIdSetByPepMatchId = new LongMap[HashSet[Long]]()
+  val validSamesetProtMatchIdSetByPepMatchId = new LongMap[HashSet[Long]]()
+  val validProtMatchIdSetByPepMatchId = new LongMap[HashSet[Long]]()
   
-  // Init Maps 
+  // Init Maps
   resultSummary.proteinSets.withFilter(_.isValidated).foreach { protSet =>
+    
+    val samesetProtMatchIdSet = protSet.getSameSetProteinMatchIds.toSet
 
     protSet.peptideSet.getPeptideMatchIds.foreach { pepMatchId =>
       validProtSetIdSetByPepMatchId.getOrElseUpdate(pepMatchId, new HashSet[Long]) += protSet.id
+      validSamesetProtMatchIdSetByPepMatchId.getOrElseUpdate(pepMatchId, new HashSet[Long]) ++= samesetProtMatchIdSet
       validProtMatchIdSetByPepMatchId.getOrElseUpdate(pepMatchId, new HashSet[Long])
     }
 
@@ -46,8 +50,8 @@ class IdentDataset(
   lazy val peptideMatchById: LongMap[PeptideMatch] = resultSummary.lazyResultSet.peptideMatches.mapByLong(_.id)
 
   // Create a map of all ProtMatches for pepMatches (validated or not) 
-  lazy val allProtMatchSetByPepId: HashMap[Long, HashSet[ProteinMatch]] = {
-    val protMatchSetByPepId = new HashMap[Long, HashSet[ProteinMatch]]
+  lazy val allProtMatchSetByPepId: LongMap[HashSet[ProteinMatch]] = {
+    val protMatchSetByPepId = new LongMap[HashSet[ProteinMatch]]
     
     for (protMatch <- resultSummary.lazyResultSet.proteinMatches) {
       

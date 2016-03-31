@@ -37,6 +37,7 @@ class ProtMatchBuildingContext(
 
 class PepMatchBuildingContext(
   var pepMatch: PeptideMatch,
+  var isInSubset: Boolean,
   var protMatch: ProteinMatch,
   var seqMatch: SequenceMatch,
   var protMatchBuildingCtx: Option[ProtMatchBuildingContext] = None
@@ -73,6 +74,7 @@ class MasterQuantPeptideBuildingContext(
   val groupSetupNumber: Int
 ) extends PepMatchBuildingContext(
   pepMatch,
+  false, // isSubset
   protMatch,
   seqMatch,
   protMatchBuildingCtx

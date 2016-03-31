@@ -136,16 +136,17 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_PSM_CD_PRETTY_RANK, "cd_pretty_rank"),
       CustomFieldConfig(FIELD_PSM_FRAGMENT_MATCHES_COUNT, "fragment_matches_count"),
       CustomFieldConfig(FIELD_PSM_SPECTRUM_TITLE, "spectrum_title"),
-      CustomFieldConfig(FIELD_PSM_NB_PROTEIN_SETS, "#protein_sets"),
-      CustomFieldConfig(FIELD_PSM_NB_PROTEIN_MATCHES, "#protein_matches"),
-      CustomFieldConfig(FIELD_PSM_NB_DATABANK_PROTEIN_MATCHES, "#databank_protein_matches"),
+      CustomFieldConfig(FIELD_PSM_NB_PROTEIN_SETS, "#psm_prot_sets"),
+      CustomFieldConfig(FIELD_PSM_NB_SAMESET_PROTEIN_MATCHES, "#psm_sameset_prot_matches"),
+      if (fromXIC || fromSC) null else CustomFieldConfig(FIELD_PSM_NB_PROTEIN_MATCHES, "#psm_prot_matches"),
+      if (fromXIC || fromSC) null else CustomFieldConfig(FIELD_PSM_NB_DATABANK_PROTEIN_MATCHES, "#psm_db_prot_matches"),
       CustomFieldConfig(FIELD_PSM_START, "start"),
       CustomFieldConfig(FIELD_PSM_END, "end"),
       CustomFieldConfig(FIELD_PSM_RESIDUE_BEFORE, "residue_before"),
       CustomFieldConfig(FIELD_PSM_RESIDUE_AFTER, "residue_after"),
       CustomFieldConfig(FIELD_PSM_PTM_SCORE, "ptm_score"),
       CustomFieldConfig(FIELD_PSM_PTM_SITES_CONFIDENCE, "ptm_sites_confidence")
-    )
+    ).filter( _ != null )
     
     fieldsBuffer ++= getProteinSetsSheetFields(false, false, false)
 

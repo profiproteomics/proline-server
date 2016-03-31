@@ -139,6 +139,7 @@ object ExportConfigConstant {
   val FIELD_PSM_FRAGMENT_MATCHES_COUNT = "psm_fragment_matches_count"
   val FIELD_PSM_SPECTRUM_TITLE = "psm_spectrum_title"
   val FIELD_PSM_NB_PROTEIN_SETS = "psm_nb_protein_sets"
+  val FIELD_PSM_NB_SAMESET_PROTEIN_MATCHES = "psm_nb_sameset_protein_matches"
   val FIELD_PSM_NB_PROTEIN_MATCHES = "psm_nb_protein_matches"
   val FIELD_PSM_NB_DATABANK_PROTEIN_MATCHES = "psm_nb_databank_protein_matches"
   val FIELD_PSM_START = "psm_start"

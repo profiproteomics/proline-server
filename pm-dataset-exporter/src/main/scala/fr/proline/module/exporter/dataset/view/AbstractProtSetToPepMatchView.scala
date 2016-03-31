@@ -24,6 +24,7 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
     FIELD_PSM_FRAGMENT_MATCHES_COUNT,
     FIELD_PSM_SPECTRUM_TITLE,
     FIELD_PSM_NB_PROTEIN_SETS,
+    FIELD_PSM_NB_SAMESET_PROTEIN_MATCHES,
     FIELD_PSM_NB_PROTEIN_MATCHES,
     FIELD_PSM_NB_DATABANK_PROTEIN_MATCHES,
     FIELD_PSM_START,
@@ -39,7 +40,8 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
   override def buildRecord(buildingContext: IRecordBuildingContext): Map[String, Any] = {
 
     val pepMatchBuildingCtx = buildingContext.asInstanceOf[PepMatchBuildingContext]
-    val protMatchRecord = super.buildRecord(pepMatchBuildingCtx.protMatchBuildingCtx.get)
+    val protMatchBuildingCtx = pepMatchBuildingCtx.protMatchBuildingCtx.get
+    val protMatchRecord = super.buildRecord(protMatchBuildingCtx)
     
     val pepMatch = pepMatchBuildingCtx.pepMatch
     val seqMatch = pepMatchBuildingCtx.seqMatch
@@ -95,6 +97,7 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
         case FIELD_PSM_FRAGMENT_MATCHES_COUNT => pepMatch.fragmentMatchesCount
         case FIELD_PSM_SPECTRUM_TITLE => msQueryOpt.map(_.spectrumTitle).orNull
         case FIELD_PSM_NB_PROTEIN_SETS => identDS.validProtSetIdSetByPepMatchId.get(pepMatch.id).map(_.size).getOrElse(0)
+        case FIELD_PSM_NB_SAMESET_PROTEIN_MATCHES => identDS.validSamesetProtMatchIdSetByPepMatchId.get(pepMatch.id).map(_.size).getOrElse(0)
         case FIELD_PSM_NB_PROTEIN_MATCHES => identDS.validProtMatchIdSetByPepMatchId.get(pepMatch.id).map(_.size).getOrElse(0)
         case FIELD_PSM_NB_DATABANK_PROTEIN_MATCHES => identDS.allProtMatchSetByPepId.get(peptide.id).map(_.size).getOrElse(0)
         case FIELD_PSM_START => seqMatch.start

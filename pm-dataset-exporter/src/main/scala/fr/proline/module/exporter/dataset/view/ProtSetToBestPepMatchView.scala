@@ -65,6 +65,7 @@ class ProtSetToBestPepMatchView(
             
             val pepMatchBuildingCtx = new PepMatchBuildingContext(
               pepMatch = pepMatchOpt.get,
+              isInSubset = false,
               protMatch = reprProtMatch,
               seqMatch = seqMatchByPepId(peptideId),
               protMatchBuildingCtx = Some(protMatchBuildingCtx)
