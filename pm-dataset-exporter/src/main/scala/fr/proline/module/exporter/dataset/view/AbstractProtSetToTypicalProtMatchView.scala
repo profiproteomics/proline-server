@@ -42,6 +42,10 @@ abstract class AbstractProtSetToTypicalProtMatchView extends AbstractIdentDatase
     val massOpt = if (proteinId > 0) bioSequenceById.get(proteinId).map(_.mass) else None
     val mass = massOpt.getOrElse(0.0)
     
+    // Coverage
+    val proteinMatchCoverageById = Option(protSet.proteinMatchCoverageById).getOrElse(Map())
+    val protMatchCoverage = proteinMatchCoverageById(protMatch.id)
+    
     val recordBuilder = Map.newBuilder[String,Any]
 
     for (fieldConfig <- protSetFieldsConfigs) {
@@ -54,7 +58,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends AbstractIdentDatase
         case FIELD_PROTEIN_SETS_SELECTION_LEVEL => protSet.selectionLevel
         case FIELD_PROTEIN_SETS_NB_SAMESET_PROTEIN_MATCHES => protSet.getSameSetProteinMatchIds.length
         case FIELD_PROTEIN_SETS_NB_SUBSET_PROTEIN_MATCHES => protSet.getSubSetProteinMatchIds.length
-        case FIELD_PROTEIN_SETS_COVERAGE => dcf2.format(protMatch.coverage)
+        case FIELD_PROTEIN_SETS_COVERAGE => dcf2.format(protMatchCoverage)
         case FIELD_PROTEIN_SETS_MW => decimalFormat.format(mass)
         case FIELD_PROTEIN_SETS_NB_SEQUENCES => buildingCtx.allSeqs.distinct.length
         case FIELD_PROTEIN_SETS_NB_SPECIFIC_SEQUENCES => buildingCtx.specificSeqs.distinct.length
