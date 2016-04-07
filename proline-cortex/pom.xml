@@ -61,10 +61,11 @@
     </dependency>
      <!-- Logger facade -->
     <!-- Serialization -->
+     <!-- Serialization -->
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <!-- Version inherited from parent POM -->
+      <groupId>com.fasterxml.jackson.module</groupId>
+      <artifactId>jackson-module-scala_${scala.version}</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
     </dependency>
     
     <!-- Commons IO used for resursive delete -->
