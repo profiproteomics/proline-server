@@ -37,17 +37,17 @@
 			</exclusions>
 		</dependency>
 
-		<!-- BioJava 3.0.8 used to calculate Peptide mass and pI -->
+		<!-- BioJava 3.0 used to calculate Peptide mass and pI -->
 		<dependency>
 			<groupId>org.biojava</groupId>
-			<artifactId>biojava3-core</artifactId>
-			<version>3.0.8</version>
+			<artifactId>biojava-core</artifactId>
+			<version>4.0.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.biojava</groupId>
-			<artifactId>biojava3-aa-prop</artifactId>
-			<version>3.0.8</version>
+			<artifactId>biojava-aa-prop</artifactId>
+			<version>4.0.0</version>
 		</dependency>
 
 		<dependency>
