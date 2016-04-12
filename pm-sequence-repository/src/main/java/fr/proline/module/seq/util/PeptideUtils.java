@@ -1,8 +1,8 @@
 package fr.proline.module.seq.util;
 
-import org.biojava3.aaproperties.IPeptideProperties;
-import org.biojava3.aaproperties.PeptidePropertiesImpl;
-import org.biojava3.core.sequence.ProteinSequence;
+import org.biojava.nbio.aaproperties.IPeptideProperties;
+import org.biojava.nbio.aaproperties.PeptidePropertiesImpl;
+import org.biojava.nbio.core.sequence.ProteinSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
