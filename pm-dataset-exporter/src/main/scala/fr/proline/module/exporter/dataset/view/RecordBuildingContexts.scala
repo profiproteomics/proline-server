@@ -1,6 +1,7 @@
 package fr.proline.module.exporter.dataset.view
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.LongMap
 
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq.ComputedRatio
@@ -44,7 +45,7 @@ class PepMatchBuildingContext(
 ) extends IRecordBuildingContext
 
 trait IMasterQuantEntityBuildingContext {
-  def getQuantComponentMap(): Map[Long,QuantComponent]
+  def getQuantComponentMap(): LongMap[_ <: QuantComponent]
   def getRatios(): Option[List[Option[ComputedRatio]]]
 }
 
@@ -53,16 +54,21 @@ class MasterQuantProteinSetProfileBuildingContext(
   peptideSet: PeptideSet,
   protMatch: ProteinMatch,
   var masterQuantProteinSet: MasterQuantProteinSet,
-  var profile: Option[MasterQuantProteinSetProfile]
+  var profile: Option[MasterQuantProteinSetProfile],
+  quantChannelIds: Seq[Long]
 ) extends ProtMatchBuildingContext(
   protSet,
   peptideSet,
   protMatch
 ) with IMasterQuantEntityBuildingContext {
-  
-  // FIXME: this is wrong => we want the abundances and raw abundances of the profile, not the protein set
-  def getQuantComponentMap() = masterQuantProteinSet.quantProteinSetMap
-  def getRatios() = profile.map(_.getRatios())
+  def getQuantComponentMap(): LongMap[_ <: QuantComponent] = {
+    /*profile.map { p =>
+      p.getQuantComponentMap(quantChannelIds)
+    }.getOrElse( masterQuantProteinSet.getQuantComponentMap )*/
+    if( profile.isEmpty ) masterQuantProteinSet.getQuantComponentMap
+    else masterQuantProteinSet.getProfileQuantComponentMap(profile.get, quantChannelIds)
+  }
+  def getRatios(): Option[List[Option[ComputedRatio]]] = profile.map(_.getRatios())
 }
 
 class MasterQuantPeptideBuildingContext(
@@ -80,7 +86,7 @@ class MasterQuantPeptideBuildingContext(
   protMatchBuildingCtx
 ) with IMasterQuantEntityBuildingContext {
   
-  def getQuantComponentMap(): Map[Long,QuantComponent] = masterQuantPeptide.quantPeptideMap
+  def getQuantComponentMap(): LongMap[_ <: QuantComponent] = masterQuantPeptide.quantPeptideMap
   def getRatios(): Option[List[Option[ComputedRatio]]] = Some(masterQuantPeptide.getRatios(groupSetupNumber))
 }
 
@@ -100,6 +106,6 @@ class MasterQuantPeptideIonBuildingContext(
   masterQuantPeptide,
   groupSetupNumber
 ) {
-  override def getQuantComponentMap(): Map[Long,QuantComponent]  = masterQuantPeptideIon.quantPeptideIonMap
+  override def getQuantComponentMap(): LongMap[_ <: QuantComponent] = masterQuantPeptideIon.quantPeptideIonMap
   override def getRatios(): Option[List[Option[ComputedRatio]]] = None
 }

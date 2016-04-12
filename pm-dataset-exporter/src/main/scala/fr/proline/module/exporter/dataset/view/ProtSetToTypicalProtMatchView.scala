@@ -74,7 +74,8 @@ class ProtSetToTypicalProtMatchView(
               protSet.peptideSet,
               typicalProtMatch,
               mqProtSet,
-              bestProfile
+              bestProfile,
+              quantChannelIds = qcIds
             )
             
             this.formatRecord(buildingContext, recordFormatter)
@@ -94,7 +95,8 @@ class ProtSetToTypicalProtMatchView(
                 protSet.peptideSet,
                 typicalProtMatch,
                 mqProtSet,
-                Some(profile)
+                Some(profile),
+                quantChannelIds = qcIds
               )
               
               this.formatRecord(ctx, recordFormatter)
