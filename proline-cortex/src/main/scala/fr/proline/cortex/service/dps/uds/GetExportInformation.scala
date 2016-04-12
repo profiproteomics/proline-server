@@ -3,13 +3,12 @@ package fr.proline.cortex.service.dps.uds
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
 
-import fr.profi.util.serialization.ProfiJson.deserialize
-import fr.profi.util.serialization.ProfiJson.serialize
+import fr.profi.util.serialization.ProfiJson._
+import fr.proline.core.om.model.msq.AbundanceUnit
+import fr.proline.core.om.model.msq.QuantMethodType
 import fr.proline.core.orm.uds.Dataset
 import fr.proline.core.orm.uds.Dataset.DatasetType
 import fr.proline.core.orm.uds.QuantitationMethod
-import fr.proline.core.service.msq.AbundanceUnit
-import fr.proline.core.service.msq.QuantMethodType
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.AbstractRemoteProcessService
 import fr.proline.module.exporter.commons.config.ExportConfigConstant

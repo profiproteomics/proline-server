@@ -150,9 +150,9 @@ class QuantifyV2_0  extends AbstractRemoteProcessService with LazyLogging with I
 					  projectId = projectId,
 					  methodId = paramsRetriever.getLong("method_id"),
 					  experimentalDesign = expDesign,
-					  quantConfigAsMap = quantConfigAsMap,
-					  refRSMIdOp = Some(refRSMIdParam),
-					  refDSIdOp = Some(refDSIdParam)					  
+					  quantConfigAsMap = quantConfigAsMap
+					  // note: previous fields refDSIdOp and refRSMIdOpmust be provided using the expDesign
+					  // (MasterQuantChannel identResultSummaryId and identDatasetId)
 					  );
 			  quantifier.run();
       

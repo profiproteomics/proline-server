@@ -1,21 +1,20 @@
 package fr.proline.cortex.service.dps.msq
 
 import scala.collection.JavaConversions.asScalaBuffer
-
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.primitives.toLong
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
-import fr.proline.core.algo.msq.SpectralCountConfig
-import fr.proline.core.om.model.msq.ExperimentalDesign2
 import fr.proline.core.orm.uds.Dataset
-import fr.proline.core.service.msq.QuantifyMasterQuantChannel
 import fr.proline.core.service.uds.CreateSCQuantitation
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.AbstractRemoteProcessService
 import fr.proline.jms.service.api.ISingleThreadedService
+import fr.proline.core.om.model.msq.LabelFreeQuantMethod
+import fr.proline.core.om.model.msq.SimplifiedExperimentalDesign
+import fr.proline.core.service.msq.quantify.BuildMasterQuantChannelQuantifier
+import fr.proline.core.algo.msq.config.SpectralCountConfig
 
 /**
  *  Define JMS Service which allows to compute spectral count for proteins of result summaries associated to experimental design's QuantChannel.
@@ -53,15 +52,16 @@ class QuantifySC extends AbstractRemoteProcessService with LazyLogging with ISin
 			val udsDbCtx = execCtx.getUDSDbConnectionContext();
 			val udsEM = udsDbCtx.getEntityManager();
 			
-			val expDesign = deserialize[ExperimentalDesign2](serialize(paramsRetriever.getMap("experimental_design")));
+			val simplifiedExpDesign = deserialize[SimplifiedExperimentalDesign](serialize(paramsRetriever.getMap("experimental_design")));
 
-			logger.debug(" expr Design => " + expDesign);
-			logger.debug(" expr Design masterQuantChannels => " + expDesign.masterQuantChannels);
-			if (expDesign.masterQuantChannels.length != 1) {
+			logger.debug(" expr Design => " + simplifiedExpDesign);
+			logger.debug(" expr Design masterQuantChannels => " + simplifiedExpDesign.masterQuantChannels);
+			if (simplifiedExpDesign.masterQuantChannels.length != 1) {
 				throw new Exception("Spectral Count could be run on only one MasterQuantChannel")
 			}
 			
 			// Register quantitation in the UDSdb
+			val expDesign = simplifiedExpDesign.toExperimentalDesign()
 			val quantiCreator = new CreateSCQuantitation(
 				executionContext = execCtx,
 				name = paramsRetriever.getString("name"),
@@ -76,21 +76,33 @@ class QuantifySC extends AbstractRemoteProcessService with LazyLogging with ISin
 			// Retrieve master quant channel (Should only be one )
 			val udsMasterQuantChannel = udsQuantitation.getMasterQuantitationChannels.get(0);
     
-			val scCfg = new SpectralCountConfig(parentRSMId = Some(refRSMId), parentDSId = Some(refDSId), weightRefRSMIds=pepRedRSMIds );
+			val scCfg = new SpectralCountConfig(
+			  parentRSMId = Some(refRSMId),
+			  parentDSId = Some(refDSId), 
+			  weightRefRSMIds = pepRedRSMIds
+			)
 
-			val mqcQuantifier = new QuantifyMasterQuantChannel(
+			/*val mqcQuantifier = new QuantifyMasterQuantChannel(
 				executionContext = execCtx,
 				experimentalDesign = null,
 				masterQuantChannelId = udsMasterQuantChannel.getId,
 				quantConfig = scCfg
 					)
-			mqcQuantifier.runService();
+			mqcQuantifier.runService();*/
+      val mqcQuantifier = BuildMasterQuantChannelQuantifier(
+        execCtx,
+        udsMasterQuantChannel,
+        expDesign,
+        LabelFreeQuantMethod,
+        scCfg
+      )
+      mqcQuantifier.quantify()
 
 			val resultMapBuilder = Map.newBuilder[String, Any];
 
 			val quantDsId = quantiCreator.getUdsQuantitation.getId;
 			resultMapBuilder += ("quant_dataset_id" -> quantDsId); 
-			resultMapBuilder += ("spectral_count_result" -> mqcQuantifier.getResultAsJSONString);
+			resultMapBuilder += ("spectral_count_result" -> mqcQuantifier.getResultAsJSON());
     
 			try {
 					execCtx.closeAll();
