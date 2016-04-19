@@ -215,6 +215,7 @@ public class ProjectHandler {
 								if (LOG.isDebugEnabled()) {
 									LOG.debug("{} distinct (validated Accession, Description, SeqDatabase) WITHOUT ProteinMatchSeqDatabaseMap",
 										nSEDbIdentifiers);
+									
 								}
 							}
 
@@ -491,12 +492,24 @@ public class ProjectHandler {
 
 							// Get bioSequence for all ProteinMatch  				    
 							Map<String, List<BioSequenceWrapper>> result = BioSequenceProvider.findBioSequencesBySEDbIdentValues(allProtMatchesAccession);
-
-							// loop into proteins of current protein set.
+							// get missed descriptions for each protein_match.
+							Map<String, List<SEDbIdentifierWrapper>> resultSedbIdentifiers = BioSequenceProvider.findSEDbyIdentValues(allProtMatchesAccession);
+							
 							for (Entry<ProteinMatch, Integer> entry : coveredSeqLengthByProtMatchList.entrySet()) {
 								ProteinMatch protMatch = entry.getKey();
 								coveredSequenceLength = entry.getValue();
-
+								
+								List<SEDbIdentifierWrapper> sedbIdentifiers = resultSedbIdentifiers.get(protMatch.getAccession());
+								String protMatchDescription=protMatch.getDescription();
+								if(protMatchDescription.isEmpty()){
+								  if ((sedbIdentifiers != null) && (sedbIdentifiers.size() >= 1))
+									{SEDbIdentifierWrapper sedbIdent = sedbIdentifiers.get(0);
+									 if(sedbIdent.getDescription().trim().length()>0)
+									 	{
+										  protMatch.setDescription(sedbIdent.getDescription());
+									 	}
+									 }
+								}
 								List<BioSequenceWrapper> protMatchBioSeqs = result.get(protMatch.getAccession());
 								if ((protMatchBioSeqs == null) || (protMatchBioSeqs.isEmpty())) {
 									if (LOG.isDebugEnabled()) {
