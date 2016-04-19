@@ -34,7 +34,9 @@ public class SEDbIdentifier implements Serializable {
 	private String value;
 
 	private boolean inferred;
-
+		
+	private String description;
+	
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "se_db_instance_id")
 	private SEDbInstance seDbInstance;
@@ -63,7 +65,13 @@ public class SEDbIdentifier implements Serializable {
 	public String getValue() {
 		return value;
 	}
+	public void setDescription(final String pdescription) {
+		description = pdescription;
+	}
 
+	public String getDescription() {
+		return description;
+	}
 	public void setInferred(final boolean pInferred) {
 		inferred = pInferred;
 	}
