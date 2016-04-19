@@ -7,13 +7,12 @@ import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import javax.persistence.EntityManagerFactory;
 import fr.proline.module.seq.dto.BioSequenceWrapper;
 import fr.proline.module.seq.dto.RepositoryIdentifierWrapper;
+import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
 import fr.proline.module.seq.dto.SEDbInstanceWrapper;
 import fr.proline.module.seq.orm.Alphabet;
 import fr.proline.module.seq.orm.BioSequence;
@@ -56,6 +55,29 @@ public final class BioSequenceProvider {
 		return result;
 	}
 
+	public static Map<String, List<SEDbIdentifierWrapper>> findSEDbyIdentValues(final Collection<String> values) {
+		Map<String, List<SEDbIdentifierWrapper>> result = null;
+
+		/* Client / Provider side */
+		final IDatabaseConnector seqDb = DatabaseAccess.getSEQDatabaseConnector(false);
+
+		EntityManager seqEM = seqDb.createEntityManager();
+
+		try {
+			result = findSEDbIdentValues(seqEM, values);
+		} finally {
+
+			if (seqEM != null) {
+				try {
+					seqEM.close();
+				} catch (Exception exClose) {
+					LOG.error("Error closing SEQ Db EntityManager", exClose);
+				}
+			}
+		}
+		return result;
+	}
+
 	public static Map<String, List<BioSequenceWrapper>> findBioSequencesBySEDbIdentValues(final EntityManager seqEM, final Collection<String> values) {
 
 		final Map<String, List<BioSequenceWrapper>> result = new HashMap<>();
@@ -75,6 +97,34 @@ public final class BioSequenceProvider {
 
 				final BioSequenceWrapper bioSequenceW = buildBioSequenceWrapper(seDbIdent);
 				bioSequences.add(bioSequenceW);
+			}
+
+		}
+
+		return result;
+	}
+	
+	public static Map<String, List<SEDbIdentifierWrapper>> findSEDbIdentValues(final EntityManager seqEM, final Collection<String> values) {
+
+		final Map<String, List<SEDbIdentifierWrapper>> result = new HashMap<>();
+		
+		final List<SEDbIdentifier> seDbIdentifiers = SEDbIdentifierRepository.findSEDbIdentByValues(seqEM, values);
+		List<SEDbIdentifierWrapper> sedDbid = new ArrayList<>();
+		if ((seDbIdentifiers != null) && !seDbIdentifiers.isEmpty()) {
+
+			for (final SEDbIdentifier seDbIdent : seDbIdentifiers) {
+				final String key = seDbIdent.getValue();// Should not be null
+				final String Description = seDbIdent.getDescription();//could be null
+				
+				if ((key!= null) && (!key.isEmpty())) {
+					 try{
+						 SEDbIdentifierWrapper SEDbIdentWrap=new SEDbIdentifierWrapper(key, Description);
+						 sedDbid.add(SEDbIdentWrap);}
+					 catch(Exception e){
+				     LOG.debug("error ",e);
+					 }
+				}
+				result.put(key, sedDbid);
 			}
 
 		}
