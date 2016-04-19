@@ -199,8 +199,12 @@ public final class DatabaseAccess {
 				}
 
 			} else {
+				boolean cheksumrepair=true;
 				seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
 					ProlineDatabaseType.SEQ, seqDb.toPropertiesMap(udsDbConnector.getDriverType()));
+				    DatabaseUpgrader.upgradeDatabase(seqDbConnector,cheksumrepair);
+				
+		     
 			}
 
 		} finally {
