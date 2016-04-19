@@ -115,7 +115,6 @@ public final class BioSequenceRetriever {
 							if (!(currentThread.getUncaughtExceptionHandler() instanceof ThreadLogger)) {
 								currentThread.setUncaughtExceptionHandler(new ThreadLogger(LOG));
 							}
-
 							return Integer.valueOf(retrieveBioSequences(seDbInstanceW, seDbIdentsW));
 						}
 
@@ -869,7 +868,7 @@ public final class BioSequenceRetriever {
 		final SEDbIdentifier result = new SEDbIdentifier();
 		result.setValue(seDbIdentW.getValue());
 		result.setInferred(seDbIdentW.isInferred());
-
+		result.setDescription(seDbIdentW.getDescription());
 		final SEDbInstance seDbInstance = context.getSEDbInstance();
 		result.setSEDbInstance(seDbInstance);
 
