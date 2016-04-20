@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<architect-project version="1.0" appversion="1.0.6">
+<architect-project version="1.0" appversion="1.0.7">
  <project-name>SEQ-DB</project-name>
  <print-settings numCopies="1" zoom="1.0" pageNumbersPrinted="true" orientation="1" paperWidth="612.0" paperHeight="792.0" leftBorder="50.0" rightBorder="50.0" topBorder="50.0" bottomBorder="50.0" />
  <project-data-sources>
   <data-source id="DS0">
-   <property key="Logical" value="(Target Database)" />
+   <property key="Logical" value="PlayPen Database" />
   </data-source>
  </project-data-sources>
  <source-databases>
@@ -166,16 +166,19 @@ UNIQUE for given seq_db_id .</remarks>
     <column id="COL49" populated="true" UUID="db58e8dd-cc75-4a5e-9761-38243fd3b393" autoIncrement="false" autoIncrementSequenceName="se_db_identifier_value_seq" defaultValue="" name="value" nullable="0" physicalName="value" precision="255" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>UNIQUE for given se_db_instance.</remarks>
     </column>
-    <column id="COL50" populated="true" UUID="b5b644c0-b656-46d7-8275-f929d71b79a9" autoIncrement="false" autoIncrementSequenceName="se_db_identifier_inferred_seq" defaultValue="false" name="inferred" nullable="0" physicalName="inferred" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="16" userDefinedTypeUUID="a26374aa-3026-4bb8-b564-eb2e186dfa5d" >
+    <column id="COL50" populated="true" UUID="887e7c52-db1e-4fce-9cf3-a3c3e2db7dd4" autoIncrement="false" autoIncrementSequenceName="se_db_identifier_description_seq" defaultValue="" name="description" nullable="1" physicalName="description" precision="10000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+     <remarks>The protein description as provided by the search engine.</remarks>
+    </column>
+    <column id="COL51" populated="true" UUID="b5b644c0-b656-46d7-8275-f929d71b79a9" autoIncrement="false" autoIncrementSequenceName="se_db_identifier_inferred_seq" defaultValue="false" name="inferred" nullable="0" physicalName="inferred" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="16" userDefinedTypeUUID="a26374aa-3026-4bb8-b564-eb2e186dfa5d" >
      <remarks>True if this se_db_identifier is inferred by sequence repository service (SE Db source cannot be loaded or protein description does not match).</remarks>
     </column>
-    <column id="COL51" populated="true" UUID="cf880ab0-fec8-492e-a19f-64560614ee43" autoIncrement="false" autoIncrementSequenceName="se_db_identifier_se_db_instance_id_seq" defaultValue="" name="se_db_instance_id" nullable="0" physicalName="se_db_instance_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL52" populated="true" UUID="cf880ab0-fec8-492e-a19f-64560614ee43" autoIncrement="false" autoIncrementSequenceName="se_db_identifier_se_db_instance_id_seq" defaultValue="" name="se_db_instance_id" nullable="0" physicalName="se_db_instance_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL52" populated="true" UUID="c8727afe-8eb5-4e13-9547-51bd29f77dfe" autoIncrement="false" autoIncrementSequenceName="se_db_identifier_bio_sequence_id_seq" defaultValue="" name="bio_sequence_id" nullable="0" physicalName="bio_sequence_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL53" populated="true" UUID="c8727afe-8eb5-4e13-9547-51bd29f77dfe" autoIncrement="false" autoIncrementSequenceName="se_db_identifier_bio_sequence_id_seq" defaultValue="" name="bio_sequence_id" nullable="0" physicalName="bio_sequence_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL53" populated="true" UUID="b333c8e4-c6d4-413d-8664-1ae3d8ed48a3" autoIncrement="false" autoIncrementSequenceName="se_db_identifier_repository_identifier_id_seq" defaultValue="" name="repository_identifier_id" nullable="1" physicalName="repository_identifier_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL54" populated="true" UUID="b333c8e4-c6d4-413d-8664-1ae3d8ed48a3" autoIncrement="false" autoIncrementSequenceName="se_db_identifier_repository_identifier_id_seq" defaultValue="" name="repository_identifier_id" nullable="1" physicalName="repository_identifier_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
@@ -184,75 +187,75 @@ UNIQUE for given seq_db_id .</remarks>
     <folder id="FOLTAB472" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
     </folder>
     <folder id="FOLTAB474" populated="true" name="Indices" physicalName="Indices" type="4">
-    <index id="IDX54" populated="true" UUID="7990df89-d4aa-478c-bbc5-dfb2999f614b" clustered="false" name="se_db_identifier_pk" physicalName="se_db_identifier_pk" primaryKeyIndex="true" unique="false" >
-     <index-column id="IDC55" populated="true" UUID="9f6b22d7-2459-4a96-8735-2529dad0b2f0" ascendingOrDescending="UNSPECIFIED" column-ref="COL48" name="id" physicalName="id" />
+    <index id="IDX55" populated="true" UUID="7990df89-d4aa-478c-bbc5-dfb2999f614b" clustered="false" name="se_db_identifier_pk" physicalName="se_db_identifier_pk" primaryKeyIndex="true" unique="false" >
+     <index-column id="IDC56" populated="true" UUID="9f6b22d7-2459-4a96-8735-2529dad0b2f0" ascendingOrDescending="UNSPECIFIED" column-ref="COL48" name="id" physicalName="id" />
     </index>
-    <index id="IDX56" populated="true" UUID="26e6decf-1076-4ffc-baff-05647898945b" clustered="false" name="se_db_identifier_idx" physicalName="se_db_identifier_idx" primaryKeyIndex="false" unique="true" >
-     <index-column id="IDC57" populated="true" UUID="8143f5a3-0950-4bab-93d9-309ac7a0cc1e" ascendingOrDescending="UNSPECIFIED" column-ref="COL49" name="value" physicalName="value" />
-     <index-column id="IDC58" populated="true" UUID="46dfcb36-0199-4a59-b648-e9904713d067" ascendingOrDescending="UNSPECIFIED" column-ref="COL51" name="se_db_instance_id" physicalName="se_db_instance_id" />
+    <index id="IDX57" populated="true" UUID="26e6decf-1076-4ffc-baff-05647898945b" clustered="false" name="se_db_identifier_idx" physicalName="se_db_identifier_idx" primaryKeyIndex="false" unique="true" >
+     <index-column id="IDC58" populated="true" UUID="8143f5a3-0950-4bab-93d9-309ac7a0cc1e" ascendingOrDescending="UNSPECIFIED" column-ref="COL49" name="value" physicalName="value" />
+     <index-column id="IDC59" populated="true" UUID="46dfcb36-0199-4a59-b648-e9904713d067" ascendingOrDescending="UNSPECIFIED" column-ref="COL52" name="se_db_instance_id" physicalName="se_db_instance_id" />
     </index>
    </folder>
   </table>
-  <table id="TAB59" populated="true" UUID="5ba5cf63-8f0f-4f0e-b278-c97d655ae866" name="parsing_rule" objectType="TABLE" physicalName="parsing_rule" >
+  <table id="TAB60" populated="true" UUID="5ba5cf63-8f0f-4f0e-b278-c97d655ae866" name="parsing_rule" objectType="TABLE" physicalName="parsing_rule" >
    <remarks></remarks>
-   <folder id="FOLTAB591" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL60" populated="true" UUID="cfbacbf7-50b2-4610-806d-77c291b3e487" autoIncrement="true" autoIncrementSequenceName="parsing_rule_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+   <folder id="FOLTAB601" populated="true" name="Columns" physicalName="Columns" type="1">
+    <column id="COL61" populated="true" UUID="cfbacbf7-50b2-4610-806d-77c291b3e487" autoIncrement="true" autoIncrementSequenceName="parsing_rule_id_seq" defaultValue="" name="id" nullable="0" physicalName="id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL61" populated="true" UUID="4ed74e06-4834-4197-812f-b467a5ac5776" autoIncrement="false" autoIncrementSequenceName="parsing_rule_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="255" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+    <column id="COL62" populated="true" UUID="4ed74e06-4834-4197-812f-b467a5ac5776" autoIncrement="false" autoIncrementSequenceName="parsing_rule_name_seq" defaultValue="" name="name" nullable="0" physicalName="name" precision="255" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>UNIQUE .</remarks>
     </column>
-    <column id="COL62" populated="true" UUID="78cedd41-52fe-4f95-a9a5-ad6846ad8495" autoIncrement="false" autoIncrementSequenceName="parsing_rule_release_seq" defaultValue="" name="release" nullable="1" physicalName="release" precision="255" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+    <column id="COL63" populated="true" UUID="78cedd41-52fe-4f95-a9a5-ad6846ad8495" autoIncrement="false" autoIncrementSequenceName="parsing_rule_release_seq" defaultValue="" name="release" nullable="1" physicalName="release" precision="255" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks>Rule to parse SEDbInstance version string from source fileName.</remarks>
     </column>
-    <column id="COL63" populated="true" UUID="b99b17e6-eb79-4584-a742-792150f0d0c3" autoIncrement="false" autoIncrementSequenceName="parsing_rule_se_db_identifier_seq" defaultValue="" name="se_db_identifier" nullable="0" physicalName="se_db_identifier" precision="255" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+    <column id="COL64" populated="true" UUID="b99b17e6-eb79-4584-a742-792150f0d0c3" autoIncrement="false" autoIncrementSequenceName="parsing_rule_se_db_identifier_seq" defaultValue="" name="se_db_identifier" nullable="0" physicalName="se_db_identifier" precision="255" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks></remarks>
     </column>
-    <column id="COL64" populated="true" UUID="ef246085-2c60-40f9-913a-2bdcc5cd049d" autoIncrement="false" autoIncrementSequenceName="parsing_rule_repository_identifier_seq" defaultValue="" name="repository_identifier" nullable="1" physicalName="repository_identifier" precision="255" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+    <column id="COL65" populated="true" UUID="ef246085-2c60-40f9-913a-2bdcc5cd049d" autoIncrement="false" autoIncrementSequenceName="parsing_rule_repository_identifier_seq" defaultValue="" name="repository_identifier" nullable="1" physicalName="repository_identifier" precision="255" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks></remarks>
     </column>
-    <column id="COL65" populated="true" UUID="5d80c599-fcb0-4866-913b-bae135e40374" autoIncrement="false" autoIncrementSequenceName="parsing_rule_repo_id_from_se_id_seq" defaultValue="" name="repo_id_from_se_id" nullable="1" physicalName="repo_id_from_se_id" precision="255" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
+    <column id="COL66" populated="true" UUID="5d80c599-fcb0-4866-913b-bae135e40374" autoIncrement="false" autoIncrementSequenceName="parsing_rule_repo_id_from_se_id_seq" defaultValue="" name="repo_id_from_se_id" nullable="1" physicalName="repo_id_from_se_id" precision="255" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
      <remarks></remarks>
     </column>
     </folder>
-    <folder id="FOLTAB593" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
+    <folder id="FOLTAB603" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
     </folder>
-    <folder id="FOLTAB592" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
+    <folder id="FOLTAB602" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
     </folder>
-    <folder id="FOLTAB594" populated="true" name="Indices" physicalName="Indices" type="4">
-    <index id="IDX66" populated="true" UUID="44e1b1c0-f47b-4681-9bc9-f17c0762cda3" clustered="false" name="parsing_rule_pk" physicalName="parsing_rule_pk" primaryKeyIndex="true" unique="false" >
-     <index-column id="IDC67" populated="true" UUID="a173b4b2-61a5-48ae-8f07-67cd9a3d83be" ascendingOrDescending="UNSPECIFIED" column-ref="COL60" name="id" physicalName="id" />
+    <folder id="FOLTAB604" populated="true" name="Indices" physicalName="Indices" type="4">
+    <index id="IDX67" populated="true" UUID="44e1b1c0-f47b-4681-9bc9-f17c0762cda3" clustered="false" name="parsing_rule_pk" physicalName="parsing_rule_pk" primaryKeyIndex="true" unique="false" >
+     <index-column id="IDC68" populated="true" UUID="a173b4b2-61a5-48ae-8f07-67cd9a3d83be" ascendingOrDescending="UNSPECIFIED" column-ref="COL61" name="id" physicalName="id" />
     </index>
-    <index id="IDX68" populated="true" UUID="68ea7282-f825-42d3-a5b8-8e3a8e571755" clustered="false" name="parsing_rule_name_idx" physicalName="parsing_rule_name_idx" primaryKeyIndex="false" unique="true" >
-     <index-column id="IDC69" populated="true" UUID="7c0c9174-ce3e-412c-b019-41646846e725" ascendingOrDescending="UNSPECIFIED" column-ref="COL61" name="name" physicalName="name" />
+    <index id="IDX69" populated="true" UUID="68ea7282-f825-42d3-a5b8-8e3a8e571755" clustered="false" name="parsing_rule_name_idx" physicalName="parsing_rule_name_idx" primaryKeyIndex="false" unique="true" >
+     <index-column id="IDC70" populated="true" UUID="7c0c9174-ce3e-412c-b019-41646846e725" ascendingOrDescending="UNSPECIFIED" column-ref="COL62" name="name" physicalName="name" />
     </index>
    </folder>
   </table>
   <relationships>
-   <relationship id="REL70" populated="true" UUID="c7fafdbf-8045-4cc9-822d-ad05e284c2c8" deferrability="7" deleteRule="3" fk-table-ref="TAB47" fkCardinality="7" identifying="false" name="bio_sequence_se_db_identifier_fk" physicalName="bio_sequence_se_db_identifier_fk" pk-table-ref="TAB1" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP71" populated="true" UUID="e4d3943e-fb81-4214-9640-2ddc467ebf03" fk-column-ref="COL52" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL2" />
+   <relationship id="REL71" populated="true" UUID="c7fafdbf-8045-4cc9-822d-ad05e284c2c8" deferrability="7" deleteRule="3" fk-table-ref="TAB47" fkCardinality="7" identifying="false" name="bio_sequence_se_db_identifier_fk" physicalName="bio_sequence_se_db_identifier_fk" pk-table-ref="TAB1" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP72" populated="true" UUID="e4d3943e-fb81-4214-9640-2ddc467ebf03" fk-column-ref="COL53" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL2" />
    </relationship>
-   <relationship id="REL72" populated="true" UUID="996349b7-fff4-4ba7-815b-840d0160f772" deferrability="7" deleteRule="3" fk-table-ref="TAB17" fkCardinality="7" identifying="false" name="repository_se_db_fk" physicalName="repository_se_db_fk" pk-table-ref="TAB9" pkCardinality="3" updateRule="3" >
-    <column-mapping id="CMP73" populated="true" UUID="469f5ad1-9381-4552-a2f8-a918ad5fb5bc" fk-column-ref="COL22" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL10" />
+   <relationship id="REL73" populated="true" UUID="996349b7-fff4-4ba7-815b-840d0160f772" deferrability="7" deleteRule="3" fk-table-ref="TAB17" fkCardinality="7" identifying="false" name="repository_se_db_fk" physicalName="repository_se_db_fk" pk-table-ref="TAB9" pkCardinality="3" updateRule="3" >
+    <column-mapping id="CMP74" populated="true" UUID="469f5ad1-9381-4552-a2f8-a918ad5fb5bc" fk-column-ref="COL22" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL10" />
    </relationship>
-   <relationship id="REL74" populated="true" UUID="791d6fd6-560b-455e-9fcb-eec5fa8fd51d" deferrability="7" deleteRule="3" fk-table-ref="TAB27" fkCardinality="7" identifying="false" name="repository_repository_identifier_fk" physicalName="repository_repository_identifier_fk" pk-table-ref="TAB9" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP75" populated="true" UUID="24b43489-421d-431e-9305-0c27301ee7b0" fk-column-ref="COL30" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL10" />
+   <relationship id="REL75" populated="true" UUID="791d6fd6-560b-455e-9fcb-eec5fa8fd51d" deferrability="7" deleteRule="3" fk-table-ref="TAB27" fkCardinality="7" identifying="false" name="repository_repository_identifier_fk" physicalName="repository_repository_identifier_fk" pk-table-ref="TAB9" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP76" populated="true" UUID="24b43489-421d-431e-9305-0c27301ee7b0" fk-column-ref="COL30" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL10" />
    </relationship>
-   <relationship id="REL76" populated="true" UUID="4f5f5418-501e-4a43-8933-decdf71a6698" deferrability="7" deleteRule="3" fk-table-ref="TAB36" fkCardinality="7" identifying="false" name="se_db_se_db_instance_fk" physicalName="se_db_se_db_instance_fk" pk-table-ref="TAB17" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP77" populated="true" UUID="8dfa317c-a99a-458f-a4f4-e4d443517457" fk-column-ref="COL41" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL18" />
+   <relationship id="REL77" populated="true" UUID="4f5f5418-501e-4a43-8933-decdf71a6698" deferrability="7" deleteRule="3" fk-table-ref="TAB36" fkCardinality="7" identifying="false" name="se_db_se_db_instance_fk" physicalName="se_db_se_db_instance_fk" pk-table-ref="TAB17" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP78" populated="true" UUID="8dfa317c-a99a-458f-a4f4-e4d443517457" fk-column-ref="COL41" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL18" />
    </relationship>
-   <relationship id="REL78" populated="true" UUID="fa03a602-d306-45d7-922b-907f06c8b9d0" deferrability="7" deleteRule="3" fk-table-ref="TAB47" fkCardinality="7" identifying="false" name="repository_identifier_se_db_identifier_fk" physicalName="repository_identifier_se_db_identifier_fk" pk-table-ref="TAB27" pkCardinality="3" updateRule="3" >
-    <column-mapping id="CMP79" populated="true" UUID="2beff7ec-bd8c-49c3-93f0-2e806e20c281" fk-column-ref="COL53" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL28" />
+   <relationship id="REL79" populated="true" UUID="fa03a602-d306-45d7-922b-907f06c8b9d0" deferrability="7" deleteRule="3" fk-table-ref="TAB47" fkCardinality="7" identifying="false" name="repository_identifier_se_db_identifier_fk" physicalName="repository_identifier_se_db_identifier_fk" pk-table-ref="TAB27" pkCardinality="3" updateRule="3" >
+    <column-mapping id="CMP80" populated="true" UUID="2beff7ec-bd8c-49c3-93f0-2e806e20c281" fk-column-ref="COL54" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL28" />
    </relationship>
-   <relationship id="REL80" populated="true" UUID="0a60f6fb-26fc-4b9d-b55c-0c004ed44620" deferrability="7" deleteRule="3" fk-table-ref="TAB47" fkCardinality="7" identifying="false" name="se_db_instance_se_db_identifier_fk" physicalName="se_db_instance_se_db_identifier_fk" pk-table-ref="TAB36" pkCardinality="2" updateRule="3" >
-    <column-mapping id="CMP81" populated="true" UUID="72beaa75-0575-48a1-961b-97131604f1c9" fk-column-ref="COL51" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL37" />
+   <relationship id="REL81" populated="true" UUID="0a60f6fb-26fc-4b9d-b55c-0c004ed44620" deferrability="7" deleteRule="3" fk-table-ref="TAB47" fkCardinality="7" identifying="false" name="se_db_instance_se_db_identifier_fk" physicalName="se_db_instance_se_db_identifier_fk" pk-table-ref="TAB36" pkCardinality="2" updateRule="3" >
+    <column-mapping id="CMP82" populated="true" UUID="72beaa75-0575-48a1-961b-97131604f1c9" fk-column-ref="COL52" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL37" />
    </relationship>
-   <relationship id="REL82" populated="true" UUID="b7a99f06-6b97-4590-8440-52eb6b3a8ac2" deferrability="7" deleteRule="3" fk-table-ref="TAB17" fkCardinality="7" identifying="false" name="parsing_rule_se_db_fk" physicalName="parsing_rule_se_db_fk" pk-table-ref="TAB59" pkCardinality="3" updateRule="3" >
-    <column-mapping id="CMP83" populated="true" UUID="e7d7dff8-aa2c-4a72-a270-e8c0ea46c8be" fk-column-ref="COL21" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL60" />
+   <relationship id="REL83" populated="true" UUID="b7a99f06-6b97-4590-8440-52eb6b3a8ac2" deferrability="7" deleteRule="3" fk-table-ref="TAB17" fkCardinality="7" identifying="false" name="parsing_rule_se_db_fk" physicalName="parsing_rule_se_db_fk" pk-table-ref="TAB60" pkCardinality="3" updateRule="3" >
+    <column-mapping id="CMP84" populated="true" UUID="e7d7dff8-aa2c-4a72-a270-e8c0ea46c8be" fk-column-ref="COL21" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL61" />
    </relationship>
   </relationships>
  </target-database>
- <ddl-generator type="ca.sqlpower.architect.ddl.H2DDLGenerator" allow-connection="false" target-schema="public"> </ddl-generator>
+ <ddl-generator type="ca.sqlpower.architect.ddl.H2DDLGenerator" allow-connection="true" target-schema="public"> </ddl-generator>
  <liquibase-settings useSeparateChangeSets="false" generateId="false" idStart="1"/>
  <create-kettle-job-settings filePath="" jobName="" schemaName="" kettleJoinType="0" savingToFile="true" />
  <play-pen zoom="1.0" viewportX="0" viewportY="0" relationship-style="rectilinear" names-displayLogicalNames="true" showPrimaryTag="true" showForeignTag="true" showAlternateTag="true" columnVisibility="ALL" relationshipLabelVisibility="true">
@@ -262,14 +265,14 @@ UNIQUE for given seq_db_id .</remarks>
   <table-pane table-ref="TAB27" x="387" y="117" bgColor="0xe8cfdb" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB36" x="786" y="359" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB47" x="371" y="359" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB59" x="1350" y="350" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-link relationship-ref="REL82" pkConnection="0.0" fkConnection="1.0" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
-  <table-link relationship-ref="REL76" pkConnection="0.0" fkConnection="1.0" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
-  <table-link relationship-ref="REL80" pkConnection="0.0" fkConnection="1.0" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
-  <table-link relationship-ref="REL70" pkConnection="1.0" fkConnection="0.0" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="33"/>
-  <table-link relationship-ref="REL72" pkConnection="0.5225225225225225" fkConnection="0.46" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
-  <table-link relationship-ref="REL74" pkConnection="0.0" fkConnection="1.0" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
-  <table-link relationship-ref="REL78" pkConnection="0.4930555555555556" fkConnection="0.49710982658959535" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
+  <table-pane table-ref="TAB60" x="1350" y="350" bgColor="0xdfedce" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-link relationship-ref="REL83" pkConnection="0.0" fkConnection="1.0" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
+  <table-link relationship-ref="REL77" pkConnection="0.0" fkConnection="1.0" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
+  <table-link relationship-ref="REL81" pkConnection="0.0" fkConnection="1.0" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
+  <table-link relationship-ref="REL71" pkConnection="1.0" fkConnection="0.0" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="33"/>
+  <table-link relationship-ref="REL73" pkConnection="0.5225225225225225" fkConnection="0.46" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
+  <table-link relationship-ref="REL75" pkConnection="0.0" fkConnection="1.0" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="18"/>
+  <table-link relationship-ref="REL79" pkConnection="0.4930555555555556" fkConnection="0.49710982658959535" rLineColor="0x000000" pkLabelText="" fkLabelText="" orientation="132"/>
  </play-pen>
  <critic-manager>
   <critic-grouping platformType="Generic" enabled="true">
