@@ -144,7 +144,9 @@ public class ProjectHandler {
 							try {
 								array = parser.parse(properties).getAsJsonObject();
 							} catch (Exception e) {
-								LOG.debug("error accessing RSM properties for rsm id:" + rsmId + " in project " + projectId + " forcing retrieve ");
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("error accessing RSM properties for rsm id:" + rsmId + " in project " + projectId + " forcing retrieve ");
+								}
 								array = parser.parse("{}").getAsJsonObject();
 							}
 
@@ -474,6 +476,8 @@ public class ProjectHandler {
 							pepIdsByProtSetId.get(psId).add(pi.getPeptide().getId());
 						}
 
+						int nbrNoSeqProt = 0;
+						int nbrManySeqProt = 0;
 						for (ProteinSet protSet : protSets) {
 
 							coveredSeqLengthByProtMatchList.clear();
@@ -512,12 +516,14 @@ public class ProjectHandler {
 								}
 								List<BioSequenceWrapper> protMatchBioSeqs = result.get(protMatch.getAccession());
 								if ((protMatchBioSeqs == null) || (protMatchBioSeqs.isEmpty())) {
-									if (LOG.isDebugEnabled()) {
-										LOG.debug(" ****  FOUND NO Sequence for protein {}", protMatch.getAccession());
+									nbrNoSeqProt++;
+									if (LOG.isTraceEnabled()) {
+										LOG.trace(" ****  FOUND NO Sequence for protein {}", protMatch.getAccession());
 									}
 								} else if (protMatchBioSeqs.size() > 1) {
-									if (LOG.isDebugEnabled()) {
-										LOG.debug(" ****  FOUND MORE THAN 1 Sequence for protein {}. Use first one  ", protMatch.getAccession());
+									nbrManySeqProt++;
+									if (LOG.isTraceEnabled()) {
+										LOG.trace(" ****  FOUND MORE THAN 1 Sequence for protein {}. Use first one  ", protMatch.getAccession());
 									}
 								}
 
@@ -583,10 +589,16 @@ public class ProjectHandler {
 							}
 							psIdcount++;
 						} // end protein sets
-
+						
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("--- FOUND MORE THAN 1 Sequence for {} proteins. Use first one  ", nbrManySeqProt);
+							LOG.debug("--- FOUND NO Sequence for {} proteins.", nbrNoSeqProt);
+						}
 						//Save RSM Property
 						if (!array.has("is_coverage_updated")) {
-							LOG.debug(" Saving coverage_updated property for rsm {}.", rsmId);
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(" Saving coverage_updated property for rsm {}.", rsmId);
+							}
 							array.addProperty("is_coverage_updated", true);
 							rsm.setSerializedProperties(array.toString());
 							msiEM.merge(rsm);
