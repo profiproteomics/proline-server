@@ -167,7 +167,7 @@ UNIQUE for given seq_db_id .</remarks>
      <remarks>UNIQUE for given se_db_instance.</remarks>
     </column>
     <column id="COL50" populated="true" UUID="887e7c52-db1e-4fce-9cf3-a3c3e2db7dd4" autoIncrement="false" autoIncrementSequenceName="se_db_identifier_description_seq" defaultValue="" name="description" nullable="1" physicalName="description" precision="10000" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="12" userDefinedTypeUUID="831ac2d4-0e65-47ec-a0b7-62b7f6b8760a" >
-     <remarks>The protein description as provided by the search engine.</remarks>
+     <remarks>The protein description for a given value.</remarks>
     </column>
     <column id="COL51" populated="true" UUID="b5b644c0-b656-46d7-8275-f929d71b79a9" autoIncrement="false" autoIncrementSequenceName="se_db_identifier_inferred_seq" defaultValue="false" name="inferred" nullable="0" physicalName="inferred" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="16" userDefinedTypeUUID="a26374aa-3026-4bb8-b564-eb2e186dfa5d" >
      <remarks>True if this se_db_identifier is inferred by sequence repository service (SE Db source cannot be loaded or protein description does not match).</remarks>
