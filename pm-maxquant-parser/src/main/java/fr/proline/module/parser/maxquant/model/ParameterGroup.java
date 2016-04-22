@@ -75,6 +75,8 @@ public class ParameterGroup {
 	}
 
 	public Boolean getSearchTolInPpm() {
+		if(m_searchTolInPpm == null) //Not in param file, version 1.4 (?) always true
+			return true;
 		return m_searchTolInPpm;
 	}
 

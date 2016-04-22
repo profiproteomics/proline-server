@@ -1,4 +1,4 @@
-package fr.proline.module.parser.maxquant.model;
+package fr.proline.module.parser.maxquant.model.v1_5;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -6,12 +6,14 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import fr.proline.module.parser.maxquant.model.IMsMsParameters;
+
 @XmlRootElement(name="msmsParams")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class MsMsParameters {
+public class MsMsParameters implements IMsMsParameters {
 
 	@XmlElement(name="MatchTolerance")
-	private Integer m_msmsTolerance;
+	private Float m_msmsTolerance;
 	
 
 	@XmlAttribute(name="Name")
@@ -21,6 +23,7 @@ public class MsMsParameters {
 	private Boolean m_msmsToleranceInPpm;
 
 		
+	@Override
 	public Boolean getMsmsToleranceInPpm() {
 		return m_msmsToleranceInPpm;
 	}
@@ -29,6 +32,7 @@ public class MsMsParameters {
 		this.m_msmsToleranceInPpm = msmsToleranceInPpm;
 	}
 
+	@Override
 	public String getInstrumTypeName() {
 		return m_instrumTypeName;
 	}
@@ -37,11 +41,12 @@ public class MsMsParameters {
 		this.m_instrumTypeName = instrumTypeName;
 	}
 
-	public Integer getMatchTolerance() {
+	@Override
+	public Float getMatchTolerance() {
 		return m_msmsTolerance;
 	}
 	
-	public void setMatchTolerance(Integer msmsTolerance) {
+	public void setMatchTolerance(Float msmsTolerance) {
 		this.m_msmsTolerance = msmsTolerance;
 	}
 
