@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import fr.proline.core.om.model.msi.Instrument;
@@ -58,7 +59,7 @@ public class ExpPropertiesReaderTest {
 		Assert.assertTrue(ss.msmsSearchSettings().isDefined());
 	}
 	
-	@Test
+	@Ignore
 	public void testReadPropertiesV1_4(){
 		ISeqDatabaseProvider testSeqDBProvider = new TestSeqdDBProvider();
 		IPTMProvider testPtmProvider = new TestPTMProvider(); 

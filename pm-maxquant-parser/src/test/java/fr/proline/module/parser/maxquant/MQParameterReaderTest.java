@@ -8,6 +8,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import fr.proline.core.om.model.msi.Peaklist;
@@ -77,7 +78,7 @@ public class MQParameterReaderTest  {
 			   
 	}
 	
-	@Test
+	@Ignore
 	public void testReadParam1_4() {
 		
 	    JAXBContext context;
