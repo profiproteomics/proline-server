@@ -58,6 +58,7 @@ import fr.proline.jms.SingleThreadedServiceRunner
 import scala.collection.mutable.HashMap
 import fr.proline.cortex.service.dps.msi.UpdateSpectraParamsForRS
 import fr.proline.jms.util.ExpiredMessageConsumer
+import fr.proline.cortex.service.dps.msi.ImportMaxQuantResults
 //import fr.proline.cortex.service.misc.WaitService
 
 object ProcessingNode extends LazyLogging {
@@ -275,6 +276,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new DeleteOrphanData())
     ServiceRegistry.addService(new QuantifyV2_0())
     ServiceRegistry.addService(new UpdateSpectraParamsForRS())
+    ServiceRegistry.addService(new ImportMaxQuantResults())
         
 //    ServiceRegistry.addService(new WaitService())
  }
