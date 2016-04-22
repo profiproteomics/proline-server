@@ -157,7 +157,7 @@ public final class RetrieveService {
 
 		final long end = System.currentTimeMillis();
 		final long duration = end - start;
-		udsEM.close();
+		if(udsEM.isOpen()){udsEM.close();}
 		LOG.info("Total retrieveBioSequencesForAllProjects() execution : {} SEDbIdentifiers handleds in {} ms", totalHandledSEDbIdents, duration);
 	}
 
