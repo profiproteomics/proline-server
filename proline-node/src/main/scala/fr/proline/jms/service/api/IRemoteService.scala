@@ -3,6 +3,7 @@ package fr.proline.jms.service.api
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
+import javax.jms.BytesMessage
 
 trait IRemoteService {
 
@@ -31,6 +32,21 @@ trait IRemoteService {
     new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, requestId)
   }
 
+}
+
+trait IRemoteBytesMessageService extends IRemoteService {
+
+  
+  //Exception are catched by ServicRunner to return Error
+  def service(jmsMessageContext: Map[String, Any], message: BytesMessage, req: JSONRPC2Request): JSONRPC2Response = {
+    require((req != null), "Req is null")
+    if(message == null)
+      this.service(jmsMessageContext, req)
+    else {
+      val requestId = req.getID
+      new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, requestId)      
+    }
+  }
 }
 
 trait ISingleThreadedService extends IRemoteService {

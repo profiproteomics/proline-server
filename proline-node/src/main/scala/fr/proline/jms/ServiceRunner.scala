@@ -3,13 +3,10 @@ package fr.proline.jms
 import scala.annotation.elidable
 import scala.annotation.elidable.ASSERTION
 import scala.collection.mutable
-
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.proline.jms.util.IServiceMonitoringNotifier
 import fr.proline.jms.util.MonitoringTopicPublisherRunner
 import fr.proline.jms.util.JMSConstants
@@ -18,7 +15,6 @@ import fr.profi.util.StringUtils
 import fr.profi.util.ThreadLogger
 import fr.proline.jms.service.api.IRemoteService
 import fr.proline.jms.service.api.ISingleThreadedService
-
 import javax.jms.Connection
 import javax.jms.Message
 import javax.jms.MessageProducer
@@ -26,12 +22,13 @@ import javax.jms.Queue
 import javax.jms.Session
 import javax.jms.TextMessage
 import javax.jms.JMSException
+import javax.jms.BytesMessage
+import fr.proline.jms.service.api.IRemoteBytesMessageService
+import fr.proline.jms.service.api.IRemoteBytesMessageService
 
 object ServiceRunner extends LazyLogging {
 
   /* Constants */
-
-
 
   /* Static methods */
   def buildJSONRPC2Error(code: Int, baseErrorMessage: String, t: Throwable = null): JSONRPC2Error = {
@@ -53,7 +50,6 @@ object ServiceRunner extends LazyLogging {
 
     var first: Boolean = true
 
-    
     if (parallelizableRunner) {
       /* Add ResourceService handling for this Node */
       buff.append("((").append(JMSConstants.PROLINE_SERVICE_NAME_KEY)
@@ -311,6 +307,52 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
         } // End if (serviceName property is valid)
 
+      } else if (message.isInstanceOf[BytesMessage]) {
+
+        val bMessage = message.asInstanceOf[BytesMessage]
+
+        /* Create Fake JSON Request */
+        jsonRequestId = bMessage.getJMSMessageID
+        val jsonRequest = new JSONRPC2Request("process", jsonRequestId.toString());
+
+        jsonResponse.setID(jsonRequestId)
+
+        serviceName = message.getStringProperty(JMSConstants.PROLINE_SERVICE_NAME_KEY)
+        val serviceVersion = message.getStringProperty(JMSConstants.PROLINE_SERVICE_VERSION_KEY)
+
+        if (StringUtils.isEmpty(serviceName)) {
+          /* Cannot occur if 'selectorString' is a valid filter for JMS Messages */
+          val errorMessage = "Invalid \"" + JMSConstants.PROLINE_SERVICE_NAME_KEY + "\" property"
+          logger.warn(errorMessage)
+
+          jsonResponse.setError(buildJSONRPC2Error(JMSConstants.MESSAGE_ERROR_CODE, errorMessage))
+        } else {
+          val optionalServiceInstance = getServiceInstance(serviceName, serviceVersion)
+
+          if (optionalServiceInstance.isDefined && optionalServiceInstance.get.isInstanceOf[IRemoteBytesMessageService]) {
+            val jmsMessageContext = buildJMSMessageContext(message)
+
+            jsonResponse = callByteService(jmsMessageContext, bMessage, optionalServiceInstance.get.asInstanceOf[IRemoteBytesMessageService], jsonRequest)
+          } else {
+            /* Cannot occur if 'selectorString' is a valid filter for JMS Messages */
+            val errorMessageBuilder = new StringBuilder()
+            errorMessageBuilder.append("Unknown \"").append(JMSConstants.PROLINE_SERVICE_NAME_KEY).append("\" [")
+            errorMessageBuilder.append(serviceName).append("]  for ")
+
+            if (StringUtils.isEmpty(serviceVersion)) {
+              errorMessageBuilder.append("default version")
+            } else {
+              errorMessageBuilder.append("version [").append(serviceVersion).append(']')
+            }
+
+            val errorMessage = errorMessageBuilder.toString
+            logger.warn(errorMessage)
+
+            jsonResponse.setError(buildJSONRPC2Error(JMSConstants.MESSAGE_ERROR_CODE, errorMessage))
+          } // End if (serviceName map a valid ServiceInstance)
+
+        } // End if (serviceName property is valid)
+
       } else {
         val errorMessage = "Invalid Request JMS Message type"
         logger.warn(errorMessage)
@@ -370,6 +412,59 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
   }
 
+  private def callByteService(jmsMessageContext: Map[String, Any], message: BytesMessage, serviceInstance: IRemoteBytesMessageService, jsonRequest: JSONRPC2Request): JSONRPC2Response = {
+    assert((serviceInstance != null), "callService() serviceInstance is null")
+    assert((jsonRequest != null), "callService() jsonRequest is null")
+
+    val serviceName = serviceInstance.getClass.getName
+    val jsonRequestId = jsonRequest.getID
+
+    if (Thread.interrupted()) {
+      val errorMessage = "Thread interrupted before calling Service [" + serviceName + ']'
+      logger.warn(errorMessage)
+
+      new JSONRPC2Response(buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, errorMessage), jsonRequestId)
+    } else {
+
+      try {
+        logger.debug("Calling Service [" + serviceName + "] with JSON Request [" + jsonRequest + ']')
+
+        /* Notify */
+        var jmsMessageId: String = null
+
+        val value = jmsMessageContext.getOrElse(JMSConstants.JMS_MESSAGE_ID_KEY, null)
+        if (value.isInstanceOf[String]) {
+          jmsMessageId = value.asInstanceOf[String]
+        }
+
+        val serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_START)
+
+        serviceMonitoringNotifier.sendNotification(serviceEvent.toJSONRPCNotification(), null)
+
+        serviceInstance.service(jmsMessageContext, message, jsonRequest)
+      } catch {
+
+        case intEx: InterruptedException => {
+          val errorMessage = "Thread interrupted running Service [" + serviceName + ']'
+          logger.warn(errorMessage, intEx)
+
+          new JSONRPC2Response(buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, errorMessage, intEx), jsonRequestId)
+        }
+
+        /* Catch all Throwables */
+        case t: Throwable => {
+          val errorMessage = "Error calling Service [" + serviceName + ']'
+          logger.error(errorMessage, t)
+
+          new JSONRPC2Response(buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, errorMessage, t), jsonRequestId)
+        }
+
+      }
+
+    } // End if (Thread is not interrupted)
+
+  }
+
   private def callService(jmsMessageContext: Map[String, Any], serviceInstance: IRemoteService, jsonRequest: JSONRPC2Request): JSONRPC2Response = {
     assert((serviceInstance != null), "callService() serviceInstance is null")
     assert((jsonRequest != null), "callService() jsonRequest is null")
@@ -426,7 +521,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
 }
 
-class SingleThreadedServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotifier: MonitoringTopicPublisherRunner, serviceIdent : String, useThreadIdent : Boolean = false)
+class SingleThreadedServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotifier: MonitoringTopicPublisherRunner, serviceIdent: String, useThreadIdent: Boolean = false)
   extends ServiceRunner(queue, connection, serviceMonitoringNotifier) {
 
   import ServiceRunner._
@@ -440,14 +535,14 @@ class SingleThreadedServiceRunner(queue: Queue, connection: Connection, serviceM
 
   protected override def buildSelectorString(): String = {
     /* NON-Parallelizable ServiceRunner */
-   buildConcreteSelectorString(handledServices, false)
+    buildConcreteSelectorString(handledServices, false)
   }
 
   /* Private methods */
   private def retrieveHandledServices(): List[IRemoteService] = {
-    val singleThreadedServicesPerName = if(useThreadIdent) { ServiceRegistry.getSingleThreadedServicesByThreadIdent() } 
-                                            else { ServiceRegistry.getSingleThreadedServices()   }
-    
+    val singleThreadedServicesPerName = if (useThreadIdent) { ServiceRegistry.getSingleThreadedServicesByThreadIdent() }
+    else { ServiceRegistry.getSingleThreadedServices() }
+
     singleThreadedServicesPerName.getOrElse(serviceIdent, null)
   }
 
