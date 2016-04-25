@@ -4,14 +4,18 @@ import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+
 import scala.collection.JavaConversions.mutableMapAsJavaMap
 import scala.collection.mutable
+
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.jms.HornetQJMSClient
 import org.hornetq.api.jms.JMSFactoryType
 import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory
 import org.hornetq.core.remoting.impl.netty.TransportConstants
+
 import com.typesafe.scalalogging.LazyLogging
+
 import fr.profi.util.StringUtils
 import fr.profi.util.ThreadLogger
 import fr.proline.cortex.service.admin.CreateProject
@@ -19,24 +23,29 @@ import fr.proline.cortex.service.admin.GetConnectionTemplate
 import fr.proline.cortex.service.admin.UserAccount
 import fr.proline.cortex.service.dps.msi.CertifyResultFiles
 import fr.proline.cortex.service.dps.msi.ChangeTypicalProteinMatch
+import fr.proline.cortex.service.dps.msi.DeleteOrphanData
 import fr.proline.cortex.service.dps.msi.ExportResultSummary
 import fr.proline.cortex.service.dps.msi.ExportResultSummaryV2_0
 import fr.proline.cortex.service.dps.msi.FilterRSMProteinSets
 import fr.proline.cortex.service.dps.msi.GenerateMSDiagReport
 import fr.proline.cortex.service.dps.msi.GenerateSpectrumMatches
+import fr.proline.cortex.service.dps.msi.ImportMaxQuantResults
 import fr.proline.cortex.service.dps.msi.ImportResultFilesDecoyRegExp
 import fr.proline.cortex.service.dps.msi.ImportResultFilesprotMatchDecoyRule
 import fr.proline.cortex.service.dps.msi.ImportValidateGenerateSM
 import fr.proline.cortex.service.dps.msi.MergeResultSets
+import fr.proline.cortex.service.dps.msi.MergeResultSetsV2_0
 import fr.proline.cortex.service.dps.msi.UpdateSpectraParams
+import fr.proline.cortex.service.dps.msi.UpdateSpectraParamsForRS
 import fr.proline.cortex.service.dps.msi.ValidateResultSet
-import fr.proline.cortex.service.dps.msi.DeleteOrphanData
 import fr.proline.cortex.service.dps.msq.ComputeQuantProfiles
 import fr.proline.cortex.service.dps.msq.Quantify
 import fr.proline.cortex.service.dps.msq.QuantifySC
+import fr.proline.cortex.service.dps.msq.QuantifyV2_0
 import fr.proline.cortex.service.dps.uds.GetExportInformation
 import fr.proline.cortex.service.dps.uds.RegisterRawFile
 import fr.proline.cortex.service.misc.FileSystem
+import fr.proline.cortex.service.misc.FileUpload
 import fr.proline.cortex.service.monitoring.InfoService
 import fr.proline.cortex.service.monitoring.SingleThreadedInfoService
 import fr.proline.cortex.util.DbConnectionHelper
@@ -45,20 +54,13 @@ import fr.proline.cortex.util.WorkDirectoryRegistry
 import fr.proline.jms.ServiceRegistry
 import fr.proline.jms.ServiceRunner
 import fr.proline.jms.SingleThreadedServiceRunner
+import fr.proline.jms.util.ExpiredMessageConsumer
 import fr.proline.jms.util.JMSConstants
 import fr.proline.jms.util.MonitoringTopicPublisherRunner
 import fr.proline.jms.util.NodeConfig
 import javax.jms.Connection
-import javax.jms.ConnectionFactory
 import javax.jms.ExceptionListener
 import javax.jms.JMSException
-import fr.proline.cortex.service.dps.msq.QuantifyV2_0
-import fr.proline.cortex.service.dps.msi.MergeResultSetsV2_0
-import fr.proline.jms.SingleThreadedServiceRunner
-import scala.collection.mutable.HashMap
-import fr.proline.cortex.service.dps.msi.UpdateSpectraParamsForRS
-import fr.proline.jms.util.ExpiredMessageConsumer
-import fr.proline.cortex.service.dps.msi.ImportMaxQuantResults
 //import fr.proline.cortex.service.misc.WaitService
 
 object ProcessingNode extends LazyLogging {
@@ -254,6 +256,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     /* Parallelizable Service */
     ServiceRegistry.addService(new InfoService()) // Monitoring
     ServiceRegistry.addService(new FileSystem())
+    ServiceRegistry.addService(new FileUpload())
     ServiceRegistry.addService(new ValidateResultSet())
     ServiceRegistry.addService(new UpdateSpectraParams())
     ServiceRegistry.addService(new MergeResultSets())
