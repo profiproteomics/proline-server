@@ -199,7 +199,7 @@ public final class DatabaseAccess {
 				}
 
 			} else {
-				boolean cheksumrepair=true;
+				boolean cheksumrepair=false;
 				seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
 					ProlineDatabaseType.SEQ, seqDb.toPropertiesMap(udsDbConnector.getDriverType()));
 				    DatabaseUpgrader.upgradeDatabase(seqDbConnector,cheksumrepair);
@@ -270,7 +270,7 @@ public final class DatabaseAccess {
 		}
 
 		IDatabaseConnector seqDbConnector = null;
-        boolean cheksumrepair=true;
+        boolean cheksumrepair=false;
 		if (transacOK && (seqDb != null)) {
 			seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
 				ProlineDatabaseType.SEQ, seqDb.toPropertiesMap());
