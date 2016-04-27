@@ -502,17 +502,18 @@ public class ProjectHandler {
 							for (Entry<ProteinMatch, Integer> entry : coveredSeqLengthByProtMatchList.entrySet()) {
 								ProteinMatch protMatch = entry.getKey();
 								coveredSequenceLength = entry.getValue();
-								
 								List<SEDbIdentifierWrapper> sedbIdentifiers = resultSedbIdentifiers.get(protMatch.getAccession());
-								String protMatchDescription=protMatch.getDescription();
-								if(protMatchDescription.isEmpty()){
+								if((protMatch.getDescription()==null) || (protMatch.getDescription().isEmpty())){
 								  if ((sedbIdentifiers != null) && (sedbIdentifiers.size() >= 1))
 									{SEDbIdentifierWrapper sedbIdent = sedbIdentifiers.get(0);
-									 if(sedbIdent.getDescription().trim().length()>0)
+									 //sedbIdent description should not be null or empty 
+									 if((sedbIdent!=null)&&(sedbIdent.getDescription()!=null))
 									 	{
-										  protMatch.setDescription(sedbIdent.getDescription());
+										 if(sedbIdent.getDescription().trim().length()>0)
+										   protMatch.setDescription(sedbIdent.getDescription());
 									 	}
 									 }
+								
 								}
 								List<BioSequenceWrapper> protMatchBioSeqs = result.get(protMatch.getAccession());
 								if ((protMatchBioSeqs == null) || (protMatchBioSeqs.isEmpty())) {
@@ -526,7 +527,6 @@ public class ProjectHandler {
 										LOG.trace(" ****  FOUND MORE THAN 1 Sequence for protein {}. Use first one  ", protMatch.getAccession());
 									}
 								}
-
 								if ((protMatchBioSeqs != null) && (protMatchBioSeqs.size() >= 1)) {
 									BioSequenceWrapper bioSeq = protMatchBioSeqs.get(0);
 									int bioSequenceLentgh = bioSeq.getSequence().length();
