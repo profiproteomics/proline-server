@@ -222,7 +222,7 @@ public class FastaSource implements DataSource {
 
 			final String identValue = matcher.group(1).trim();// SEDbIdentifier value should be trimmed
 			
-			if(header.length()>identValue.length()){
+			if((header!=null)&&(!header.isEmpty())&&(header.trim().length()>identValue.trim().length())){
 				MissedDescription=header.substring(identValue.length()+1,header.length());
 			}
 			final List<SEDbIdentifierWrapper> possibleIdentifiers = remainingSEDbIdentifiers.get(identValue);
@@ -245,14 +245,17 @@ public class FastaSource implements DataSource {
 
 						if (sdi.getDescription() == null) {
 							/* Retrieve first SEDbIdentWrapper without description */
-							foundSEDbIdent = new SEDbIdentifierWrapper(identValue,MissedDescription);
+							if((MissedDescription!=null)&&(!MissedDescription.isEmpty())){
+								foundSEDbIdent = new SEDbIdentifierWrapper(identValue,MissedDescription);
+							}else{
+							foundSEDbIdent = sdi;
 							final int nPossibleIdentifiers = possibleIdentifiers.size();
 							if (nPossibleIdentifiers > 1) {
 								foundSEDbIdent.setInferred(true);
 								LOG.warn(
 									"There are {} SEDbIdentWrapper (inferred) for [{}] taking first with no description",
 									nPossibleIdentifiers, identValue);
-							}
+							}}
 
 							break;
 						} // End if (current SEDbIdentWrapper description is null)
