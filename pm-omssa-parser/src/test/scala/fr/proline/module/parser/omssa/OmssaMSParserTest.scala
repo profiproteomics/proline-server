@@ -2,33 +2,34 @@ package fr.proline.module.parser.omssa
 
 import java.io.File
 import java.io.FileNotFoundException
+
 import scala.annotation.elidable
 import scala.annotation.elidable.ASSERTION
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+
 import org.junit.After
 import org.junit.Assert
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import com.typesafe.scalalogging.LazyLogging
+
 import fr.proline.context.BasicExecutionContext
-import fr.proline.core.dal._
+import fr.proline.core.dal.AbstractMultipleDBTestCase
+import fr.proline.core.dal.BuildDbConnectionContext
+import fr.proline.core.dal.BuildMsiDbConnectionContext
+import fr.proline.core.dal.BuildUdsDbConnectionContext
+import fr.proline.core.om.model.msi.Ms2Query
 import fr.proline.core.om.model.msi.Spectrum
-import fr.proline.core.om.model.msi.SpectrumMatch
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
 import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.core.om.provider.uds.impl.{ SQLPeaklistSoftwareProvider => UdsSQLPklSoftProvider }
-import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.service.msi.ResultFileCertifier
 import fr.proline.repository.DriverType
-import fr.profi.util.MathUtils
-import fr.proline.core.om.model.msi.Ms2Query
 
 @Test
 class OmssaMSParserTest extends AbstractMultipleDBTestCase{
@@ -118,15 +119,6 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
     logger.debug("TEST [" + method + "] OK: versionning is successful")
   }
   
-//  @Test
-//  def testProteinReading {
-//    val method = getMethod()
-//    logger.debug("TEST [" + method + "] STARTS")
-//    val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_mgfInputFile.omx")
-//    val rs = omssaOmxFile.getResultSet(wantDecoy = false)
-//    logger.debug("TEST [" + method + "] OK: parsing is successful")
-//  }
-  
   @Test
   def testOmssaFileWithFixedPtm {
     val method = getMethod()
@@ -201,36 +193,6 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
     assertEquals(18, omssaOmxFile.msQueries.size)
     logger.debug("TEST [" + method + "] OK: parsing is successful")
   }
-//  @Test
-//  def testSpectrumMatches {
-//    val method = getMethod()
-//    logger.debug("TEST [" + method + "] STARTS")
-//    try {
-//      // this file is a simple search that should be correct (it can be used to verify most of the algorithm)
-//      val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_mgfInputFile.omx")
-//      val rs = omssaOmxFile.getResultSet(wantDecoy = false)
-//      assertEquals(2, rs.proteinMatches.length)
-//      val ionSeries: ArrayBuffer[String] = new ArrayBuffer[String]()
-//      def eachSpectrumMatches(spectrumMatch: SpectrumMatch) = {
-//        logger.debug("SpectrumMatch: msQueryInitialId:" + spectrumMatch.msQueryInitialId + " peptideMatchRank:" + spectrumMatch.peptideMatchRank)
-//        logger.debug("Spectrum match fragment ion table :")
-//        //        logger.debug(fr.proline.module.fragment_match.FragmentTable.fragmentIonTableAsString(spectrumMatch.fragTable))
-//        logger.debug(FragmentTable.fragmentIonTableAsString(spectrumMatch.fragTable))
-//        //        spectrumMatch.fragTable.foreach(ft => logger.debug("Serie:"+ft.fragSeries+" isReverse:"+ft.isReverse+" "+ft.masses.))
-//        logger.debug("Spectrum match fragment matches :")
-//        //        for (sm <- spectrumMatch.fragMatches) logger.debug("FragmentMatch " + sm.label + " : type:" + sm.`type`.toString() + " moz:" + sm.moz + " theoMoz:" + sm.calculatedMoz + " intensity:" + sm.intensity + " neutralLossMass:" + sm.neutralLossMass)
-//        spectrumMatch.fragMatches.foreach(fm => logger.debug("FragmentMatch " + fm.label + " : type:" + fm.`type`.toString() + " moz:" + fm.moz + " theoMoz:" + fm.calculatedMoz + " intensity:" + fm.intensity + " neutralLossMass:" + fm.neutralLossMass))
-//        logger.debug("")
-//      }
-//      omssaOmxFile.eachSpectrumMatch(false, eachSpectrumMatches)
-//      for (ion <- ionSeries) logger.debug(ion)
-//      logger.debug("TEST [" + method + "] OK: parsing is successful")
-//    } catch {
-//      case e: Exception =>
-//        logger.error("TEST [" + method + "] in error", e)
-//      //        throw e
-//    }
-//  }
 
   /**
    * Temporary test
@@ -320,13 +282,6 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
     logger.debug(" --- run service ")
     val result = certifier.runService()
     Assert.assertTrue(result)
-    //    	throw new Exception("Test "+method+" should have failed !!")
-    //    } catch {
-    //      case e: IllegalArgumentException => logger.debug("TEST [" + method + "] OK: parsing has failed as expected: ", e)
-    //      case e: Exception =>
-    //        logger.debug("TEST [" + method + "] KO: parsing has failed for an unexpected reason : " + e, e)
-    //        throw e
-    //    }
     logger.debug("TEST [" + method + "] OK: file is valid")
   }
 
@@ -521,8 +476,8 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
   }
 
   /* 
-         * tests related to specific options in omssa
-         */
+   * tests related to specific options in omssa
+   */
   @Test
   def testMozTolerance {
     val method = getMethod()
@@ -559,8 +514,8 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
   }
 
   /*
-           * tests related to the results
-           */
+   * tests related to the results
+   */
   @Test
   def testNoMatch {
     val method = getMethod()
@@ -582,24 +537,6 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
           throw e
         }
     }
-    //    
-    //    
-    ////    No pepToPeptideMatches left
-    //    assertEquals(rsTarget.getProteins().size, 0)
-    //    assertEquals(rsTarget.peptides.size, 0)
-    //    assertEquals(rsTarget.peptideMatches.size, 0)
-    //    assertEquals(rsTarget.proteinMatches.size, 0)
-    ////    val rsDecoy = omssaOmxFile.getResultSet(true)
-    ////    assertEquals(rsDecoy.getProteins().size, 0)
-    ////    assertEquals(rsDecoy.peptides.size, 0)
-    ////    assertEquals(rsDecoy.peptideMatches.size, 0)
-    ////    assertEquals(rsDecoy.proteinMatches.size, 0)
-    //    // eachSpectrumMatch should be empty
-    //    val lstSpectra: ArrayBuffer[SpectrumMatch] = new ArrayBuffer[SpectrumMatch]
-    //    def onEachSpectrumMatch(spectrumMatch: SpectrumMatch) = lstSpectra += spectrumMatch
-    //    omssaOmxFile.eachSpectrumMatch(true, onEachSpectrumMatch)
-    //    assertEquals(lstSpectra.length, 0)
-    //    logger.debug("TEST [" + method + "] OK: parsing is successful")
   }
   @Test
   def testMergeOfTwoDifferentOmxFiles {
@@ -646,43 +583,6 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
     logger.debug("number of decoy peptides         = " + dRs.peptides.length)
     logger.debug("TEST [" + method + "] OK: parsing is successful")
   }
-  //  @Test
-  //  def testCompareMatches {
-  //    val method = getMethod()
-  //    logger.debug("TEST [" + method + "] STARTS")
-  //    val omssaOmxFile = parseOmxFile("E 040676.omx")
-  //    val rs = omssaOmxFile.getResultSet(false)
-  //    // get peptides matches
-  //    var pepPeptideIds = new scala.collection.mutable.HashMap[Int, Int]()
-  //    val peptideMatchesByPepId = rs.peptideMatches.groupBy(_.peptide.id)
-  //    for ((peptideId, pepMatchGroup) <- (peptideMatchesByPepId)) {
-  //      var bestPepMatch: fr.proline.core.om.model.msi.PeptideMatch = null
-  //      if (pepMatchGroup.length == 1) { bestPepMatch = pepMatchGroup(0) }
-  //      else { bestPepMatch = pepMatchGroup.toList.reduce { (a, b) => if (a.score > b.score) a else b } }
-  //      pepPeptideIds.put(bestPepMatch.peptide.id, 1)
-  //    }
-  //    logger.debug("pepPeptideIds has " + pepPeptideIds.size + " items")
-  //    // get protein matches
-  //    var countEmptyProtSeqMatch = 0
-  //    var protPeptideIds = new scala.collection.mutable.HashMap[Int, Int]()
-  //    for (protMatch <- rs.proteinMatches) {
-  //      if (protMatch.sequenceMatches.length == 0) { countEmptyProtSeqMatch += 1 }
-  //      for (seqMatch <- protMatch.sequenceMatches) {
-  //        protPeptideIds.put(seqMatch.getPeptideId, 1)
-  //      }
-  //    }
-  //    logger.debug("protPeptideIds has " + protPeptideIds.size + " items")
-  //    // compare
-  //    for (item <- pepPeptideIds.keySet) {
-  //      val opt = protPeptideIds.get(item)
-  //      if (opt == None) { logger.debug("Peptide " + item + " from pepPeptideIds does not exist in protPeptideIds") }
-  //    }
-  //    for (item <- protPeptideIds.keySet) {
-  //      val opt = pepPeptideIds.get(item)
-  //      if (opt == None) { logger.debug("Peptide " + item + " from protPeptideIds does not exist in pepPeptideIds") }
-  //    }
-  //    logger.debug("rs has " + rs.peptideMatches.length + " peptideMatches and " + rs.proteinMatches.length + " proteinMatches (but " + countEmptyProtSeqMatch + " are empty)")
-  //  }
   @Test
   def testCsvFile {
     val method = getMethod()
@@ -697,7 +597,6 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
       case e: IllegalArgumentException => logger.debug("TEST [" + method + "] OK: parsing has failed as expected")
       case e: Exception =>
         logger.debug("TEST [" + method + "] KO: parsing has failed for an unexpected reason : " + e, e)
-
         throw e
     }
   }
@@ -715,7 +614,6 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
       case e: IllegalArgumentException => logger.debug("TEST [" + method + "] OK: parsing has failed as expected")
       case e: Exception =>
         logger.debug("TEST [" + method + "] KO: parsing has failed for an unexpected reason : " + e, e)
-
         throw e
     }
   }
@@ -765,38 +663,6 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
     logger.debug("TEST [" + method + "] OK: parsing is successful")
   }
 
-//  @Test
-  def testUnimodMatch {
-    val method = getMethod()
-    logger.debug("TEST [" + method + "] STARTS")
-    // at least one ptm match in this file
-    val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_unimodPtmMatches.omx")
-    // the first match in the decoy resultset has at least one ptm match, read in the unimod file
-    val rs = omssaOmxFile.getResultSet(true)
-    for (peptideMatch <- rs.peptideMatches; ptm <- peptideMatch.peptide.ptms) {
-      if (ptm.definition.names.fullName == "deamidation of N and Q") assert(ptm.definition.names.shortName == "Deamidated")
-    }
-//    def eachSpectrumMatches(spectrumMatch: SpectrumMatch) = {
-//      try {
-//
-//        for (fm <- spectrumMatch.fragMatches) {
-//
-//          if (fm.label == "y(16)+++") {
-//            assertEquals("FragMatches.calculatedMoz", 794.4326905634059, fm.calculatedMoz, MathUtils.EPSILON_LOW_PRECISION)
-//          }
-//
-//        }
-//
-//      } catch {
-//        case e: Exception =>
-//          logger.debug("eachSpectrumMatch error : " + e.getMessage())
-//          e.printStackTrace()
-//          throw e
-//      }
-//    }
-//    omssaOmxFile.eachSpectrumMatch(true, eachSpectrumMatches)
-    logger.debug("TEST [" + method + "] OK: parsing is successful")
-  }
   @Test
   def testUsermodMatch {
     val method = getMethod()
@@ -813,104 +679,10 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
 
         throw e
     }
-    //    val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_usermodMatches.omx")
-    //    // all peptideMatches must match to the same ptm
-    //    val rs = omssaOmxFile.getResultSet(false)
-    //    for (peptideMatch <- rs.peptideMatches; ptm <- peptideMatch.peptide.ptms) { assert(ptm.definition.names.fullName == "BS3 linker + H2O") }
-    //    logger.debug("TEST [" + method + "] OK: parsing is successful")
-  }
-  //
-  //  /*
-  //   * this file is from LSA and seems to contain at least one redundancy on quadruplet "protein_match_id, peptide_id, start, stop"
-  //   * La clé ½ (protein_match_id, peptide_id, start, stop)=(35, 967485, 248, 264) ╗ existe déjà.
-  //   * This test is commented because the file containing
-  //   */
-  //  @Test
-  //  def testSequenceMatchRedundancyIssue {
-  //    val method = getMethod()
-  //    logger.debug("TEST [" + method + "] STARTS")
-  //    val omssaOmxFile = parseOmxFile("MsMerge_piste mircroparticules.omx")
-  //    val rs = omssaOmxFile.getResultSet(wantDecoy = false)
-  //    logger.debug("rs.proteinMatches.length="+rs.proteinMatches.length)
-  ////    assertEquals(2, rs.proteinMatches.length)
-  //    logger.info("#proteinMatchId#peptideId#start#stop#")
-  //    var count = 0
-  //    for (pm <- rs.proteinMatches ; sm <- pm.sequenceMatches) {
-  //	    if(pm.accession == "sp|REV_A6NJG2" && sm.start == 248 && sm.end == 264) {
-  //	    	count += 1
-  //	    	logger.info("#"+pm.id+"#"+sm.getPeptideId+"#"+sm.start+"#"+sm.end+"#")
-  //	    	logger.info(pm.toString)
-  //	    	logger.info(sm.toString)
-  //	    }
-  //    }
-  //    assert(count == 1)
-  //
-  //    logger.debug("TEST [" + method + "] OK: parsing is successful")
-  //  }
-
-  //  @Test
-  //  def testExtraHighOmssaScore {
-  //    val method = getMethod()
-  //    logger.debug("TEST [" + method + "] STARTS")
-  //    val omssaOmxFile = parseOmxFile("STG_W11940CC_OTD.omx")
-  //    val rs = omssaOmxFile.getResultSet(wantDecoy = false)
-  ////    logger.debug("rs.proteinMatches.length="+rs.proteinMatches.length)
-  ////    assertEquals(2, rs.proteinMatches.length)
-  //    for (pm <- rs.peptideMatches) {
-  //      if(pm.score > 40) {
-  //        logger.debug("ABU found "+pm.toString)
-  //      }
-  //    }
-  //    logger.debug("TEST [" + method + "] OK: parsing is successful")
-  //  }
-
-//  @Test
-  def testPtmPosition {
-    val method = getMethod()
-    logger.debug("TEST [" + method + "] STARTS")
-    val omssaOmxFile = parseOmxFile("STG_W18776LSA_OTD_pklInputFile.omx")
-    val rs = omssaOmxFile.getResultSet(wantDecoy = false)
-    val expectedResidues = new ArrayBuffer[Char]()
-
-    val optionalMsiSearch = rs.msiSearch
-
-    if ((optionalMsiSearch != null) && optionalMsiSearch.isDefined) {
-      val msiSearch = optionalMsiSearch.get
-
-      if (msiSearch.searchSettings.variablePtmDefs.length > 0) {
-        logger.debug("PTM(s) expected : ")
-        for (ptm <- msiSearch.searchSettings.variablePtmDefs) {
-          expectedResidues += ptm.residue
-          logger.debug(ptm.names.fullName + "(" + ptm.residue + ")")
-        }
-      }
-
-    }
-
-    try {
-      for (pm <- rs.peptideMatches) {
-        if (pm.peptide.ptms.length > 0) {
-          logger.debug("PTM in sequence " + pm.peptide.sequence + " on amino acid(s) : ")
-          for (ptm <- pm.peptide.ptms) {
-            if (ptm.seqPosition == -1) logger.debug("C-term ptm")
-            else if (ptm.seqPosition == 0) logger.debug("N-term ptm")
-            else if (ptm.seqPosition > 0) {
-              logger.debug(pm.peptide.sequence.charAt(ptm.seqPosition - 1).toString + " (" + ptm.seqPosition + ")")
-              assert(expectedResidues.contains(pm.peptide.sequence.charAt(ptm.seqPosition - 1)))
-            }
-          }
-        }
-      }
-      logger.debug("TEST [" + method + "] OK: parsing is successful")
-    } catch {
-      case e: Exception =>
-        logger.error("TEST [" + method + "] FAILED", e)
-        throw e
-    }
   }
 
   @Test
-  def testUnknwonEnzyme() = {
+  def testUnknownEnzyme() = {
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")
     ResultFileProviderRegistry.register(new OmssaResultFileProvider())
@@ -921,15 +693,19 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
       importProperties = propertiesBuilder.result
     )
     logger.debug(" --- run service ")
-    try {
-      val result = certifier.runService()
-    } catch {
-      case e: IllegalArgumentException => logger.debug("TEST [" + method + "] OK: parsing has failed as expected")
-      case e: Exception =>
-        logger.error("TEST [" + method + "] FAILED", e)
-        throw e
-    }
-    logger.debug("TEST [" + method + "] KO: parsing has not failed as expected !!")
+    val result = certifier.runService()
+    
+    logger.debug(" --- parse file ")
+    val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_unknownEnzyme.omx")
+    val rs = omssaOmxFile.getResultSet(wantDecoy = false)
+    val e: fr.proline.core.om.model.msi.Enzyme = rs.msiSearch.get.searchSettings.usedEnzymes.head
+    assert(e.name == "gluc-de")
+    assert(e.isSemiSpecific == false)
+    assert(e.enzymeCleavages.size == 1)
+    assert(e.enzymeCleavages.head.site == "C-term")
+    assert(e.enzymeCleavages.head.residues == "ED")
+    assert(e.enzymeCleavages.head.restrictiveResidues == None)
+    logger.debug("TEST [" + method + "] OK: parsing is successful")
   }
 
 }

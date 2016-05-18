@@ -12,6 +12,7 @@ import fr.proline.core.om.model.msi.PtmNames
 import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.IonTypes
 import fr.proline.core.om.model.msi.Enzyme
+import fr.proline.core.om.model.msi.EnzymeCleavage
 import fr.proline.core.om.provider.msi.IResultFileVerifier
 import com.typesafe.scalalogging.LazyLogging
 import scala.io.Source
@@ -30,48 +31,88 @@ class OmssaResultFileVerifier extends IResultFileVerifier with LazyLogging {
     // parser should try to store the enzyme if it is not in the database
     return true
   }
-
+  
+  // Enzymes definitions are set in omssa source code and it's not possible to modify them or add any new one
+  // so it's ok to put these definitions in the omssa parser code
+  // these definitions come from the omssa source code
   def getEnzyme(fileLocation: File, importProperties: Map[String, Any]): Array[Enzyme] = {
-    // put enzyme omssa ids into a map
-    val enzymeIdToName = Map[Int, String](0 -> "trypsin", 1 -> "argc", 2 -> "cnbr", 3 -> "chymotrypsin", 4 -> "formicacid", 5 -> "lysc", 6 -> "lysc-p", 7 -> "pepsin-a", 8 -> "tryp-cnbr",
-		9 -> "tryp-chymo", 10 -> "trypsin-p", 11 -> "whole-protein", 12 -> "aspn", 13 -> "gluc", 14 -> "aspngluc", 15 -> "top-down", 16 -> "semi-tryptic", 17 -> "no-enzyme", 18 -> "chymotrypsin-p",
-		19 -> "aspn-de", 20 -> "gluc-de", 21 -> "lysn", 22 -> "thermolysin-p", 23 -> "max", 255 -> "none")
-	// read omssa file and extract the enzyme id
-	val omssaPreloader = new OmssaFilePreloader(fileLocation)
-	// create a fake Enzyme with just its name and return it
-    val enzyme = new Enzyme(id = -1,
-          name = _convertEnzymeName (enzymeIdToName.get(omssaPreloader.enzymeId).getOrElse("Unknown")),
-          enzymeCleavages = Array.empty,
-          cleavageRegexp = None,
-          isIndependant = false,
-          isSemiSpecific = false,
-          properties = None)
-    Array(enzyme)
+    // read omssa file and extract the enzyme id
+	  val omssaPreloader = new OmssaFilePreloader(fileLocation)
+	  val enzymes = new ArrayBuffer[Enzyme]();
+	  omssaPreloader.enzymeId match {
+      case 0 => enzymes += new Enzyme(id = -1, name = "Trypsin", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "KR", restrictiveResidues = Some("P"))))
+      case 1 => enzymes += new Enzyme(id = -1, name = "Arg-C", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "R", restrictiveResidues = Some("P"))))
+      case 2 => enzymes += new Enzyme(id = -1, name = "CNBr", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "M", restrictiveResidues = None)))
+      case 3 => enzymes += new Enzyme(id = -1, name = "Chymotrypsin", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "FYWL", restrictiveResidues = Some("P"))))
+      case 4 => enzymes += new Enzyme(id = -1, name = "Formic_acid", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "D", restrictiveResidues = None)))
+      case 5 => enzymes += new Enzyme(id = -1, name = "Lys-C", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "K", restrictiveResidues = Some("P"))))
+      case 6 => enzymes += new Enzyme(id = -1, name = "Lys-C/P", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "K", restrictiveResidues = None)))
+      case 7 => enzymes += new Enzyme(id = -1, name = "PepsinA", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "FL", restrictiveResidues = None)))
+      case 8 => enzymes += new Enzyme(id = -1, name = "CNBr+Trypsin", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "KRM", restrictiveResidues = Some("P"))))
+      case 9 => enzymes += new Enzyme(id = -1, name = "TrypChymo", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "FYWLKR", restrictiveResidues = Some("P"))))
+      case 10 => enzymes += new Enzyme(id = -1, name = "Trypsin/P", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "KR", restrictiveResidues = None)))
+      case 11 => enzymes += new Enzyme(id = -1, name = "whole-protein", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "", restrictiveResidues = None)))
+      case 12 => enzymes += new Enzyme(id = -1, name = "Asp-N", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "N-term", residues = "D", restrictiveResidues = None)))
+      case 13 => enzymes += new Enzyme(id = -1, name = "gluc", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "E", restrictiveResidues = None)))
+      case 14 => enzymes += new Enzyme(id = -1, name = "aspngluc", isSemiSpecific = false, enzymeCleavages = Array(
+          new EnzymeCleavage(id = -1, site = "C-term", residues = "E", restrictiveResidues = None),
+          new EnzymeCleavage(id = -1, site = "N-term", residues = "D", restrictiveResidues = None)))
+      case 15 => enzymes += new Enzyme(id = -1, name = "top-down", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "", restrictiveResidues = None)))
+      case 16 => enzymes += new Enzyme(id = -1, name = "semiTrypsin", isSemiSpecific = true, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "KR", restrictiveResidues = Some("P"))))
+      case 17 => enzymes += new Enzyme(id = -1, name = "None", isSemiSpecific = true, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "", restrictiveResidues = None)))
+      case 18 => enzymes += new Enzyme(id = -1, name = "Chymotrypsin", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "FYWL", restrictiveResidues = None)))
+      case 19 => enzymes += new Enzyme(id = -1, name = "aspn-de", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "N-term", residues = "DE", restrictiveResidues = None)))
+      case 20 => enzymes += new Enzyme(id = -1, name = "gluc-de", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "ED", restrictiveResidues = None)))
+      case 21 => enzymes += new Enzyme(id = -1, name = "Lys-N", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "N-term", residues = "K", restrictiveResidues = None)))
+      case 22 => enzymes += new Enzyme(id = -1, name = "thermolysin-p", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "N-term", residues = "AFILMV", restrictiveResidues = Some("P"))))
+      case 23 => enzymes += new Enzyme(id = -1, name = "max", isSemiSpecific = true, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "FYWL", restrictiveResidues = Some("P"))))
+      case 24 => enzymes += new Enzyme(id = -1, name = "semi-gluc", isSemiSpecific = true, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "E", restrictiveResidues = None)))
+	    case _ => enzymes += new Enzyme(id = -1, name = "unknown", enzymeCleavages = Array.empty, cleavageRegexp = None, isIndependant = false, isSemiSpecific = false, properties = None)
+	  }
+	  enzymes.toArray
   }
 
-  // AW: correctif
-   private def _convertEnzymeName(omssaEnzyme:  String): String = {
-          omssaEnzyme match {
-          case "trypsin"       => "Trypsin"
-          case "trypsin-p"     => "Trypsin/P"
-          case "argc"          => "Arg-C"
-          case "aspn"          => "Asp-N"
-          case "chymotrypsin"  => "Chymotrypsin"
-          case "chymotrypsin-p"=> "Chymotrypsin"
-          case "cnbr"          => "CNBr"
-          case "tryp-cnbr"     => "CNBr+Trypsin"
-          case "formicacid"    => "Formic_acid"
-          case "lysc"          => "Lys-C"
-          case "lysc-p"        => "Lys-C/P"
-          case "lysn"          => "Lys-N"
-          case "pepsin-a"      => "PepsinA"
-          case "semi-tryptic"  => "semiTrypsin"
-          case "tryp-chymo"    => "TrypChymo"
-          case "no-enzyme"     => "None"
-          case _               => omssaEnzyme // unknown so far : whole-protein, gluc, aspngluc, top-down, chymotrypsin, aspn-de, gluc-de, thermolysin-p
-        }
-    
-  }
+//  def getEnzyme(fileLocation: File, importProperties: Map[String, Any]): Array[Enzyme] = {
+//    // put enzyme omssa ids into a map
+//    val enzymeIdToName = Map[Int, String](0 -> "trypsin", 1 -> "argc", 2 -> "cnbr", 3 -> "chymotrypsin", 4 -> "formicacid", 5 -> "lysc", 6 -> "lysc-p", 7 -> "pepsin-a", 8 -> "tryp-cnbr",
+//		9 -> "tryp-chymo", 10 -> "trypsin-p", 11 -> "whole-protein", 12 -> "aspn", 13 -> "gluc", 14 -> "aspngluc", 15 -> "top-down", 16 -> "semi-tryptic", 17 -> "no-enzyme", 18 -> "chymotrypsin-p",
+//		19 -> "aspn-de", 20 -> "gluc-de", 21 -> "lysn", 22 -> "thermolysin-p", 23 -> "max", 255 -> "none")
+//	// read omssa file and extract the enzyme id
+//	val omssaPreloader = new OmssaFilePreloader(fileLocation)
+//	// create a fake Enzyme with just its name and return it
+//    val enzyme = new Enzyme(id = -1,
+//          name = _convertEnzymeName (enzymeIdToName.get(omssaPreloader.enzymeId).getOrElse("Unknown")),
+//          enzymeCleavages = Array.empty,
+//          cleavageRegexp = None,
+//          isIndependant = false,
+//          isSemiSpecific = false,
+//          properties = None)
+//    Array(enzyme)
+//  }
+//
+//  // AW: correctif
+//   private def _convertEnzymeName(omssaEnzyme:  String): String = {
+//          omssaEnzyme match {
+//          case "trypsin"       => "Trypsin"
+//          case "trypsin-p"     => "Trypsin/P"
+//          case "argc"          => "Arg-C"
+//          case "aspn"          => "Asp-N"
+//          case "chymotrypsin"  => "Chymotrypsin"
+//          case "chymotrypsin-p"=> "Chymotrypsin"
+//          case "cnbr"          => "CNBr"
+//          case "tryp-cnbr"     => "CNBr+Trypsin"
+//          case "formicacid"    => "Formic_acid"
+//          case "lysc"          => "Lys-C"
+//          case "lysc-p"        => "Lys-C/P"
+//          case "lysn"          => "Lys-N"
+//          case "pepsin-a"      => "PepsinA"
+//          case "semi-tryptic"  => "semiTrypsin"
+//          case "tryp-chymo"    => "TrypChymo"
+//          case "no-enzyme"     => "None"
+//          case _               => omssaEnzyme // unknown so far : whole-protein, gluc, aspngluc, top-down, chymotrypsin, aspn-de, gluc-de, thermolysin-p
+//        }
+//    
+//  }
   
   
   // get the usermods file from the import properties
