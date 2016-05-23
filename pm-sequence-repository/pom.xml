@@ -143,7 +143,7 @@
 				<configuration>
 					<excludes>
 						<exclude>**/logback.xml</exclude>
-						<exclude>**/*.properties</exclude>
+						<exclude>**/*.conf</exclude>
 					</excludes>
 				</configuration>
 			</plugin>
