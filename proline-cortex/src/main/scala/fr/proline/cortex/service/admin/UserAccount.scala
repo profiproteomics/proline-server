@@ -13,9 +13,9 @@ import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.service.uds.UserAuthenticator
 import fr.proline.core.service.uds.UserUpdator
 import fr.proline.cortex.util.DbConnectionHelper
-import fr.proline.jms.service.api.IRemoteService
 import fr.proline.jms.util.jsonrpc.JSONRPC2Utils
 import fr.proline.jms.util.jsonrpc.ProfiJSONRPC2Response
+import fr.proline.jms.service.api.IRemoteJsonRPCService
 
 /**
  * JMS Service to manage UserAccount. 
@@ -47,7 +47,7 @@ import fr.proline.jms.util.jsonrpc.ProfiJSONRPC2Response
  *   Output params : 
  *      Boolean for service status. 
  */
-class UserAccount extends IRemoteService with LazyLogging {
+class UserAccount extends IRemoteJsonRPCService with LazyLogging {
 
   final val UDS_AUTH_METHOD = "UDS_HASH"
 
