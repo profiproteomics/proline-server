@@ -23,8 +23,10 @@ import javax.jms.Session
 import javax.jms.TextMessage
 import javax.jms.JMSException
 import javax.jms.BytesMessage
-import fr.proline.jms.service.api.IRemoteBytesMessageService
-import fr.proline.jms.service.api.IRemoteBytesMessageService
+import fr.proline.jms.service.api.IRemoteJsonRPCService
+import fr.proline.jms.service.api.IRemoteBytesMsgService
+import fr.proline.jms.service.api.IRemoteJsonRPCService
+import fr.proline.jms.service.api.IRemoteBytesMsgService
 
 object ServiceRunner extends LazyLogging {
 
@@ -261,16 +263,18 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
     try {
 
-      if (message.isInstanceOf[TextMessage]) {
-        val requestString = message.asInstanceOf[TextMessage].getText
-
-        /* Parse JSON Request */
-        val jsonRequest = JSONRPC2Request.parse(requestString)
-
-        jsonRequestId = jsonRequest.getID
-
+      if (message.isInstanceOf[TextMessage] || message.isInstanceOf[BytesMessage]) {
+        
+        val isTxtMsg = message.isInstanceOf[TextMessage]
+        var jsonRequest : JSONRPC2Request = null;
+        if(isTxtMsg){
+          val requestString = message.asInstanceOf[TextMessage].getText
+          jsonRequest = JSONRPC2Request.parse(requestString)
+          jsonRequestId = jsonRequest.getID
+        } else
+          jsonRequestId = message.getJMSMessageID          
         jsonResponse.setID(jsonRequestId)
-
+        
         serviceName = message.getStringProperty(JMSConstants.PROLINE_SERVICE_NAME_KEY)
         val serviceVersion = message.getStringProperty(JMSConstants.PROLINE_SERVICE_VERSION_KEY)
 
@@ -278,15 +282,20 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
           /* Cannot occur if 'selectorString' is a valid filter for JMS Messages */
           val errorMessage = "Invalid \"" + JMSConstants.PROLINE_SERVICE_NAME_KEY + "\" property"
           logger.warn(errorMessage)
-
           jsonResponse.setError(buildJSONRPC2Error(JMSConstants.MESSAGE_ERROR_CODE, errorMessage))
+          
         } else {
+          
           val optionalServiceInstance = getServiceInstance(serviceName, serviceVersion)
-
+         
           if (optionalServiceInstance.isDefined) {
             val jmsMessageContext = buildJMSMessageContext(message)
 
-            jsonResponse = callService(jmsMessageContext, optionalServiceInstance.get, jsonRequest)
+            if(isTxtMsg){
+              jsonResponse = callService(jmsMessageContext, optionalServiceInstance.get.asInstanceOf[IRemoteJsonRPCService], jsonRequest)
+            } else { 
+              jsonResponse = callBytesMsgService(jmsMessageContext, message.asInstanceOf[BytesMessage], optionalServiceInstance.get.asInstanceOf[IRemoteBytesMsgService])
+            }
           } else {
             /* Cannot occur if 'selectorString' is a valid filter for JMS Messages */
             val errorMessageBuilder = new StringBuilder()
@@ -306,53 +315,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
           } // End if (serviceName map a valid ServiceInstance)
 
         } // End if (serviceName property is valid)
-
-      } else if (message.isInstanceOf[BytesMessage]) {
-
-        val bMessage = message.asInstanceOf[BytesMessage]
-
-        /* Create Fake JSON Request */
-        jsonRequestId = bMessage.getJMSMessageID
-        val jsonRequest = new JSONRPC2Request("process", jsonRequestId.toString());
-
-        jsonResponse.setID(jsonRequestId)
-
-        serviceName = message.getStringProperty(JMSConstants.PROLINE_SERVICE_NAME_KEY)
-        val serviceVersion = message.getStringProperty(JMSConstants.PROLINE_SERVICE_VERSION_KEY)
-
-        if (StringUtils.isEmpty(serviceName)) {
-          /* Cannot occur if 'selectorString' is a valid filter for JMS Messages */
-          val errorMessage = "Invalid \"" + JMSConstants.PROLINE_SERVICE_NAME_KEY + "\" property"
-          logger.warn(errorMessage)
-
-          jsonResponse.setError(buildJSONRPC2Error(JMSConstants.MESSAGE_ERROR_CODE, errorMessage))
-        } else {
-          val optionalServiceInstance = getServiceInstance(serviceName, serviceVersion)
-
-          if (optionalServiceInstance.isDefined && optionalServiceInstance.get.isInstanceOf[IRemoteBytesMessageService]) {
-            val jmsMessageContext = buildJMSMessageContext(message)
-
-            jsonResponse = callByteService(jmsMessageContext, bMessage, optionalServiceInstance.get.asInstanceOf[IRemoteBytesMessageService], jsonRequest)
-          } else {
-            /* Cannot occur if 'selectorString' is a valid filter for JMS Messages */
-            val errorMessageBuilder = new StringBuilder()
-            errorMessageBuilder.append("Unknown \"").append(JMSConstants.PROLINE_SERVICE_NAME_KEY).append("\" [")
-            errorMessageBuilder.append(serviceName).append("]  for ")
-
-            if (StringUtils.isEmpty(serviceVersion)) {
-              errorMessageBuilder.append("default version")
-            } else {
-              errorMessageBuilder.append("version [").append(serviceVersion).append(']')
-            }
-
-            val errorMessage = errorMessageBuilder.toString
-            logger.warn(errorMessage)
-
-            jsonResponse.setError(buildJSONRPC2Error(JMSConstants.MESSAGE_ERROR_CODE, errorMessage))
-          } // End if (serviceName map a valid ServiceInstance)
-
-        } // End if (serviceName property is valid)
-
+             
       } else {
         val errorMessage = "Invalid Request JMS Message type"
         logger.warn(errorMessage)
@@ -412,12 +375,11 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
   }
 
-  private def callByteService(jmsMessageContext: Map[String, Any], message: BytesMessage, serviceInstance: IRemoteBytesMessageService, jsonRequest: JSONRPC2Request): JSONRPC2Response = {
+  private def callBytesMsgService(jmsMessageContext: Map[String, Any], message: BytesMessage, serviceInstance: IRemoteBytesMsgService): JSONRPC2Response = {
     assert((serviceInstance != null), "callService() serviceInstance is null")
-    assert((jsonRequest != null), "callService() jsonRequest is null")
-
+    
     val serviceName = serviceInstance.getClass.getName
-    val jsonRequestId = jsonRequest.getID
+    val jsonRequestId = message.getJMSMessageID
 
     if (Thread.interrupted()) {
       val errorMessage = "Thread interrupted before calling Service [" + serviceName + ']'
@@ -427,7 +389,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
     } else {
 
       try {
-        logger.debug("Calling Service [" + serviceName + "] with JSON Request [" + jsonRequest + ']')
+        logger.debug("Calling BytesMessage Service [" + serviceName + "]- Message  ID [" + jsonRequestId + ']')
 
         /* Notify */
         var jmsMessageId: String = null
@@ -441,7 +403,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
         serviceMonitoringNotifier.sendNotification(serviceEvent.toJSONRPCNotification(), null)
 
-        serviceInstance.service(jmsMessageContext, message, jsonRequest)
+        serviceInstance.service(jmsMessageContext, message)
       } catch {
 
         case intEx: InterruptedException => {
@@ -465,7 +427,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
   }
 
-  private def callService(jmsMessageContext: Map[String, Any], serviceInstance: IRemoteService, jsonRequest: JSONRPC2Request): JSONRPC2Response = {
+  private def callService(jmsMessageContext: Map[String, Any], serviceInstance: IRemoteJsonRPCService, jsonRequest: JSONRPC2Request): JSONRPC2Response = {
     assert((serviceInstance != null), "callService() serviceInstance is null")
     assert((jsonRequest != null), "callService() jsonRequest is null")
 
