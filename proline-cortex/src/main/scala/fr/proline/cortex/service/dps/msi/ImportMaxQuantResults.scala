@@ -22,6 +22,13 @@ import fr.proline.jms.service.api.AbstractRemoteProcessService
 import fr.proline.jms.service.api.ISingleThreadedService
 import fr.proline.module.parser.maxquant.MaxQuantResultParser
 import scala.collection.mutable.Map
+import java.io.File
+import org.apache.commons.io.FilenameUtils
+import java.io.IOException
+import java.io.FileOutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
+import java.io.FileInputStream
 
 
 /**
@@ -29,12 +36,11 @@ import scala.collection.mutable.Map
  * 
  * Input params
  *   project_id : The id of the project used for data importation.
- *   result_files_dir : The path to folder containing Result files to be imported
+ *   result_files_dir : The path to folder or Zip file containing Result files to be imported. 
  *   instrument_config_id : id in datastore of the instrument config used for result file acquisition
  *   peaklist_software_id : id in datastore of the software use to generate peaklist
- *   save_spectrum_matches : If true, fragment matches of MS/MS spectra will be stored in the MSIdb.
- *   importer_properties : Map of properties for importer : actually no specific data...
- *   
+ * 
+ *    
  *  Output params
  *    Following map corresponding to import result 
  *    - result_set_Ids : List of all created result set Ids 
@@ -100,13 +106,22 @@ class ImportMaxQuantResults extends AbstractRemoteProcessService with LazyLoggin
 
       val udsDbHelper = new UdsDbHelper(udsDbCtx)
 
-      val localPathname = MountPointRegistry.replacePossibleLabel(resultFileFolders, Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname
-
+      var localPathname = MountPointRegistry.replacePossibleLabel(resultFileFolders, Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname
+      var mqFolderName = localPathname
+      val localFile =  new File(localPathname)
+      if(!localFile.exists())
+        throw new IllegalArgumentException("Specified Path not found on server side : "+resultFileFolders)
+      
+      if(!localFile.isDirectory()) { //Should be a zip file !
+         mqFolderName =  unZipIt(localFile) 
+      }
+       logger.debug("TRY to Import MaxQuant result on: " + mqFolderName)
+      
         // Instantiate the ResultFileImporter service
         val rsMQImporter = new MaxQuantResultParser(parserCtx,
             instrumentConfigId,
             peaklistSoftwareId,
-            localPathname
+            mqFolderName
         )
         rsMQImporter.run()
         val rsIds = rsMQImporter.getCreatedResultSetIds
@@ -128,5 +143,78 @@ class ImportMaxQuantResults extends AbstractRemoteProcessService with LazyLoggin
     result
   }
 
+  
+    /**
+     * Unzip maxQuant result file 
+     * @param zipFile input zip file
+     * @param output output folder
+     * @return the root folder name
+     */
+    private def unZipIt( zipFile: File) : String = {
+
+      val  buffer : Array[Byte] = new Array[Byte](4096)
+      var zis :ZipInputStream  = null
+      try{
+    		
+      	//create output directory 
+      	val parentFolder = zipFile.getParentFile
+      	val folderName = FilenameUtils.getBaseName(zipFile.getAbsolutePath)
+      	val folder = new File(parentFolder, folderName+"_unzip")
+    	  if(!folder.exists()){
+    		  folder.mkdir();
+    	  }
+    		
+      	//get the zip file content
+      	zis = new ZipInputStream(new FileInputStream(zipFile));
+      	//get the zipped file list entry
+      	var ze : ZipEntry = zis.getNextEntry();
+    		
+      	while(ze!=null){
+    			
+    	     val nextFileName = ze.getName();
+           val newFile = new File(folder, nextFileName);                
+           logger.debug("file unzip : "+ newFile.getAbsoluteFile());
+                
+            //create all non exists folders
+            //else you will hit FileNotFoundException for compressed folder
+            new File(newFile.getParent()).mkdirs();
+              
+            val fos :FileOutputStream = new FileOutputStream(newFile);             
+            var len = zis.read(buffer);
+            while ( len > 0) {
+       		      fos.write(buffer, 0, len);
+       		      len = zis.read(buffer)
+            }        		
+            fos.close();   
+            ze = zis.getNextEntry();
+    	  }
+    	
+        zis.closeEntry();
+    	  zis.close();
+    		
+    	logger.debug("All zip entry unzip : "+ zipFile.getName());
+    	
+    	if(folder.list().length == 1) //root folder in ZIP
+    	  return folder.listFiles()(0).getAbsolutePath
+    	else
+    	  return folder.getAbsolutePath
+    	  
+    }catch {
+      case e: IOException => { 
+        logger.debug("exception caught: " + e.getMessage)
+        if(zis != null){
+          try {
+            zis.closeEntry();    	      
+            zis.close();
+          } catch {
+            case e: IOException =>  logger.error("Error closing ZIP : " + zipFile.getName)
+          }
+        }
+      }
+      return null;
+    }
+ 
+   } 
+  
 }
 
