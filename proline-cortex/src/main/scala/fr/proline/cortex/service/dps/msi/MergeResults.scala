@@ -1,13 +1,11 @@
 package fr.proline.cortex.service.dps.msi
 
 import scala.Array.canBuildFrom
-
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.DatabaseConnectionContext
@@ -18,6 +16,7 @@ import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.IRemoteService
 import fr.proline.jms.util.jsonrpc.JSONRPC2Utils
 import fr.proline.jms.util.jsonrpc.ProfiJSONRPC2Response
+import fr.proline.jms.service.api.IRemoteJsonRPCService
 
 /**
  * Merge specified result sets (or result summaries) into one new result set (or new result summary).
@@ -34,7 +33,7 @@ import fr.proline.jms.util.jsonrpc.ProfiJSONRPC2Response
  *    for merge RS :  the merged result set Id
  *    for merge RSM : the merged result Summary Id and associated result set id (as RSMMergeResult object)
  */
-class MergeResultSets extends IRemoteService with LazyLogging {
+class MergeResultSets extends IRemoteJsonRPCService with LazyLogging {
 
   /* JMS Service identification */
   val serviceName = "proline/dps/msi/MergeResults"
@@ -152,7 +151,7 @@ class MergeResultSets extends IRemoteService with LazyLogging {
 
 }
 
-class MergeResultSetsV2_0 extends IRemoteService with LazyLogging {
+class MergeResultSetsV2_0 extends IRemoteJsonRPCService with LazyLogging {
 
   /* JMS Service identification */
   val serviceName = "proline/dps/msi/MergeResults"

@@ -1,15 +1,18 @@
 package fr.proline.cortex.service.misc
 
 import java.io.File
+
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.typesafe.scalalogging.LazyLogging
+
 import fr.profi.util.StringUtils
 import fr.proline.cortex.util.FileBrowser
 import fr.proline.cortex.util.MountPoint
 import fr.proline.cortex.util.MountPointRegistry
 import fr.proline.cortex.util.WorkDirectoryRegistry
+import fr.proline.jms.service.api.IRemoteJsonRPCService
 import fr.proline.jms.service.api.IRemoteService
 import fr.proline.jms.util.jsonrpc.JSONRPC2Utils
 import fr.proline.jms.util.jsonrpc.ProfiJSONRPC2Response
@@ -33,7 +36,7 @@ import fr.proline.jms.util.jsonrpc.ProfiJSONRPC2Response
  *       extension_filter : specify a file extension to use as filter
  *
  */
-class FileSystem extends IRemoteService with LazyLogging {
+class FileSystem extends IRemoteJsonRPCService with LazyLogging {
 
   /* Constants */
   val LABEL_PARAM_NAME = "label"
