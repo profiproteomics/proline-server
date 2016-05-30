@@ -8,7 +8,7 @@ import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import fr.proline.jms.util.jsonrpc.JSONRPC2Utils
 import fr.proline.jms.util.jsonrpc.ProfiJSONRPC2Response
 
-abstract class AbstractRemoteProcessService extends IRemoteService {
+abstract class AbstractRemoteProcessService extends IRemoteJsonRPCService {
   
   @throws(classOf[Exception])
   protected def doProcess(paramsRetriever: NamedParamsRetriever) : Object

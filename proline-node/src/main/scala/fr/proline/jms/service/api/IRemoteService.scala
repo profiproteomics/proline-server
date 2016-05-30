@@ -6,7 +6,6 @@ import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import javax.jms.BytesMessage
 
 trait IRemoteService {
-
   /**
    * Fully qualified Proline service name like "proline/dps/msi/ImportResultFiles".
    */
@@ -22,6 +21,11 @@ trait IRemoteService {
    * <p> For a given serviceName, it must exist only one default version.
    */
   val defaultVersion: Boolean = false
+  
+}
+
+trait IRemoteJsonRPCService extends IRemoteService {
+
 
   //Exception are catched by ServicRunner to return Error
   def service(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
@@ -34,18 +38,13 @@ trait IRemoteService {
 
 }
 
-trait IRemoteBytesMessageService extends IRemoteService {
+trait IRemoteBytesMsgService extends IRemoteService {
 
-  
   //Exception are catched by ServicRunner to return Error
-  def service(jmsMessageContext: Map[String, Any], message: BytesMessage, req: JSONRPC2Request): JSONRPC2Response = {
-    require((req != null), "Req is null")
-    if(message == null)
-      this.service(jmsMessageContext, req)
-    else {
-      val requestId = req.getID
-      new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, requestId)      
-    }
+  def service(jmsMessageContext: Map[String, Any], message: BytesMessage): JSONRPC2Response = {
+    require((message != null), "JMS BytesMessage is null")
+    val requestId = message.getJMSMessageID
+    new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, requestId)            
   }
 }
 
