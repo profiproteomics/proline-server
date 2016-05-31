@@ -1,13 +1,10 @@
 package fr.proline.module.parser.mzidentml
 
 import java.io.File
-
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.cv._
 import fr.profi.obo.PsiMs
 import fr.profi.util.ms.MassTolUnit
@@ -19,10 +16,18 @@ import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.orm.msi.Scoring
-
 import uk.ac.ebi.jmzidml.MzIdentMLElement
 import uk.ac.ebi.jmzidml.model.mzidml.{ Enzyme => MzIdEnzyme, Peptide => MzIdPeptide, _ }
 import uk.ac.ebi.jmzidml.xml.io.MzIdentMLUnmarshaller
+import java.net.URL
+
+object MzIdResultFile {
+  
+  def apply( fileLocationURL: URL,parserContext: ProviderDecoratedExecutionContext) : MzIdResultFile = {
+    val f : File = new File( fileLocationURL.toURI());
+    new MzIdResultFile(f , parserContext)
+  }
+}
 
 class MzIdResultFile(
   val fileLocation: File,
@@ -54,7 +59,7 @@ class MzIdResultFile(
   // FIXME: this may cause some issues if msQueryByInitialId is accessed while msQueryByRef has not been initiated
   // TODO: load msQueryByRef even if a ResultSet has not been loaded yet
   def msQueries: Array[MsQuery] = {
-    
+    logger.debug("Start going through MSQuery ")
     var msQueryCount = 0
     for ( sIdentList <- mzIdAnlData.getSpectrumIdentificationList ) {
       for ( sIdentResult <- sIdentList.getSpectrumIdentificationResult ) {
@@ -122,11 +127,11 @@ class MzIdResultFile(
         }
       }
     }
-    
+    logger.debug("End going through "+msQueryByRef.size+" MSQuery ")
     msQueryByRef.values.toArray
   }
   
-  val hasDecoyResultSet: Boolean = false // FIXME: is it possible ot infer this value ???
+  val hasDecoyResultSet: Boolean = false // FIXME: is it possible to infer this value ???
   val hasMs2Peaklist: Boolean = true
   
   //var instrumentConfig: Option[InstrumentConfig] = None
@@ -140,7 +145,7 @@ class MzIdResultFile(
   
   private lazy val seqDbByRef: Map[String,SeqDatabase] = {
     
-    val numSeqSearched = mzIdSpecIdentList.getNumSequencesSearched()
+    val numSeqSearched = mzIdSpecIdentList.getNumSequencesSearched() 
     
     // Convert SearchDatabases into SeqDatabases
     mzIdInputs.getSearchDatabase().map { mzIdSearchDb =>
@@ -151,7 +156,7 @@ class MzIdResultFile(
         sequencesCount = Option(mzIdSearchDb.getNumDatabaseSequences()).map(_.toInt).getOrElse(0),
         releaseDate = Option(mzIdSearchDb.getReleaseDate()).map(_.getTime()).getOrElse(new java.util.Date),
         version = Option(mzIdSearchDb.getVersion()).getOrElse(""),
-        searchedSequencesCount = numSeqSearched.toInt
+        searchedSequencesCount = if (numSeqSearched == null) 0 else numSeqSearched.toInt
       )
     } toMap
    
@@ -164,7 +169,7 @@ class MzIdResultFile(
   private def _parseMSISearch(): MSISearch = {
     // TODO: add this parameter to the getResultSet method instead of using a var field
     require(instrumentConfig.isDefined, "instrumentConfig must be provided first")
-    
+    logger.debug("Parse MSI Search")
     val seqDbs = mzIdInputs.getSearchDatabase().map( sd => seqDbByRef(sd.getId) ).toArray
     
     /** Parse database filters **/
@@ -216,7 +221,32 @@ class MzIdResultFile(
           name = enzymeName,
           enzymeCleavages = cleavages,
           cleavageRegexp = Option(mzidEnzyme.getSiteRegexp),
-          isIndependant = areEnzymesIndependant,
+          isIndependant = if(areEnzymesIndependant == null) false else areEnzymesIndependant,
+          isSemiSpecific = false,
+          properties = Some(
+            EnzymeProperties(
+              ctermGain = Option( mzidEnzyme.getCTermGain ),
+              ntermGain = Option( mzidEnzyme.getNTermGain ),
+              //minDistance = Option( mzidEnzyme.getMinDistance ), // FIXME: throws NPE
+              maxMissedCleavages = Option( mzidEnzyme.getMissedCleavages )
+            )
+          )
+        )
+      } else {
+             
+        val cleavages = Array(EnzymeCleavage(
+          id = EnzymeCleavage.generateNewId(),
+          site = "C-term", // FIXME: parse the cleavage site (C-term vs N-term)
+          residues = "",
+          restrictiveResidues =  None 
+        ))
+        
+        enzymes += Enzyme(
+          id = Enzyme.generateNewId(),
+          name = enzymeName,
+          enzymeCleavages = cleavages,
+          cleavageRegexp = None,
+          isIndependant = if(areEnzymesIndependant == null) false else areEnzymesIndependant,
           isSemiSpecific = false,
           properties = Some(
             EnzymeProperties(
@@ -309,7 +339,7 @@ class MzIdResultFile(
           ms2ErrorTolUnit = MassTolUnit.Da.toString
         )
       )
-      
+       logger.debug("Create SearchSettings using output_pepxmlfile")
       SearchSettings(
         id = SearchSettings.generateNewId(),
         softwareName = analysisSoft.getName(),
@@ -333,7 +363,8 @@ class MzIdResultFile(
       val parentTol = parentTolParam.getValue().toDouble
       val parentTolUnit = mzIdTolToProfiTol(parentTolParam.getUnitName)
       
-      val fragmentTolParamOpt = specIdentProto.getFragmentTolerance().getCvParam().headOption
+      val fragmentTolParamOpt =  if( specIdentProto.getFragmentTolerance() != null) { 
+                        specIdentProto.getFragmentTolerance().getCvParam().headOption } else {None}
       val msmsSearchSettingsOpt = fragmentTolParamOpt.map { fragmentTolParam =>
         MSMSSearchSettings(
           // TODO: parse ms2ChargeStates (they may be stored in AdditionalSearchParams)
@@ -344,7 +375,7 @@ class MzIdResultFile(
       }
       
       val maxMC = enzymes.flatMap(_.properties.get.maxMissedCleavages ).headOption.getOrElse(0)
-      
+      logger.debug("Create SearchSettings ")
       SearchSettings(
         id = SearchSettings.generateNewId(),
         softwareName = analysisSoft.getName(),
@@ -385,7 +416,7 @@ class MzIdResultFile(
     )
     
     val queriesCount = mzIdSpecIdentList.getSpectrumIdentificationResult().size()
-    
+    logger.debug("MSI Search Created")
     MSISearch(
       id = MSISearch.generateNewId(),
       resultFileName = fileLocation.getName(),
@@ -404,7 +435,7 @@ class MzIdResultFile(
   }
   
   private lazy val peptideByRef: Map[String,Peptide] = {
-    
+    logger.debug("Get Peptide by reference")
     val peptideByKey = new HashMap[String,Peptide]()
     
     mzIdSeqCollection.getPeptide().map { mzIdPep =>
@@ -454,7 +485,12 @@ class MzIdResultFile(
       
       //val modId = if( unimodId != 1001460 ) unimodId else (mzIdMod.getMonoisotopicMassDelta() * 100).toInt
       val putativePtmDefs = ptmDefsByUnimodId(unimodId)
-      val resOpt = mzIdMod.getResidues().headOption
+      val loc = mzIdMod.getLocation()  
+      var resOpt = mzIdMod.getResidues().headOption
+      if(resOpt.isEmpty && loc > 0){
+        resOpt = Some(pepSeq.charAt(loc-1).toString())
+      }
+        
       val residue = if(resOpt.isEmpty || resOpt.get.isEmpty || resOpt.get == "." ) '\0' else resOpt.get.charAt(0)
       val ptmDefOpt = putativePtmDefs.find(_.residue == residue)
       require( ptmDefOpt.isDefined, s"can't find PTM for unimodId=$unimodId residue=$residue" )
@@ -485,16 +521,21 @@ class MzIdResultFile(
   }
   
   private def mzIdTolToProfiTol(mzIdTol: String): String = {
-    mzIdTol match {
+    mzIdTol.toLowerCase() match {
       case "dalton" => MassTolUnit.Da.toString
+      case "ppm" => MassTolUnit.PPM.toString()
+      case "parts per million" => MassTolUnit.PPM.toString()
       // TODO: add percent unit to the MassTolUnit enum
       case "percent" => "percent"
+        //TODO  : use specified mzIdTol instead of error ?! 
       case _ => throw new Exception("unhandled tolerance unit: "+ mzIdTol)
     }
   }
   
   def getResultSet( wantDecoy: Boolean ): ResultSet = {
-    
+    logger.debug("START getResultSet")
+    msQueries //Initialize msQueries !
+    logger.debug("msQueries size "+msQueries.length)
     case class MzIdSequenceMatch( id: String, dbSeqRef: String, sequenceMatch: SequenceMatch )
     
     val newRsId = ResultSet.generateNewId()
@@ -539,6 +580,8 @@ class MzIdResultFile(
       mzIdSeqMatchById += mzIdSeqMatch.id -> mzIdSeqMatch
       mzIdSeqMatchesByDbSeqRef.getOrElseUpdate(mzIdSeqMatch.dbSeqRef, new ArrayBuffer[MzIdSequenceMatch]) += mzIdSeqMatch
     }
+    
+    logger.debug("SeqMatch created ")
     
     val pepMatchesByMzIdSeqMatchId = new HashMap[String,ArrayBuffer[PeptideMatch]]()
     val pepMatches = new ArrayBuffer[PeptideMatch]()
@@ -684,7 +727,7 @@ class MzIdResultFile(
         } // end of spectrum identification items
       } // end of spectrum identification results
     } // end of spectrum identification list
-    
+    logger.debug("ENd  PeptideMatches created ")
     // Update the bestPeptideMatch attribute of each SequenceMatch
     for( (mzIdSeqMatchId,pepMatches) <- pepMatchesByMzIdSeqMatchId ) {
       val mzIdSeqMatch = mzIdSeqMatchById(mzIdSeqMatchId)
@@ -724,6 +767,8 @@ class MzIdResultFile(
         resultSetId = newRsId
       )
     } toArray
+     
+    logger.debug("ENd  Protein Match  created ")
     
     ResultSet(
       id = newRsId,
