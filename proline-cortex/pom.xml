@@ -425,4 +425,13 @@
   <scm>
   	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Cortex/trunk</connection>
   </scm>
+  <dependencyManagement>
+  	<dependencies>
+  		<dependency>
+  			<groupId>psidev.psi.tools</groupId>
+  			<artifactId>xxindex</artifactId>
+  			<version>0.14</version>
+  		</dependency>
+  	</dependencies>
+  </dependencyManagement>
 </project>
