@@ -6,12 +6,15 @@ import fr.proline.core.om.model.msi.IResultFile
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IResultFileProvider
 import fr.proline.core.om.provider.msi.IResultFileVerifier
+import fr.proline.core.om.model.msi.Enzyme
+import scala.collection.mutable.ArrayBuffer
+import fr.proline.core.om.model.msi.PtmDefinition
 
 object MzIdResultFileProvider {
   final val fileType: String = "mzidentml.mzid"
 }
 
-class MzIdResultFileProvider extends IResultFileProvider with LazyLogging { // with IResultFileVerifier
+class MzIdResultFileProvider extends IResultFileProvider with IResultFileVerifier with LazyLogging { // with IResultFileVerifier
 
   val fileType: String = MzIdResultFileProvider.fileType
 
@@ -19,7 +22,28 @@ class MzIdResultFileProvider extends IResultFileProvider with LazyLogging { // w
     new MzIdResultFile(fileLocation, parserContext)
   }
   
-  def getResultFileVerifier(): IResultFileVerifier = null
+  def getResultFileVerifier(): IResultFileVerifier = {
+    this
+  }
+  
   val resultFileProperties = Map.empty[String,Class[_]]
+ 
+  def getEnzyme(fileLocation: File, importProperties: Map[String, Any]): Array[Enzyme] = {
+    logger.debug("MzIdentML Parser, call ENZYME : Return EMPTY")
+  
+    val enzymes = new ArrayBuffer[Enzyme]
+    enzymes.toArray
+  }
+  
+   def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): Seq[PtmDefinition] = {
+       logger.debug("MzIdentML Parser, call getPtmDefinitions : Return EMPTY")  
+       val ptmDefs = Seq.empty[PtmDefinition]        
+       return ptmDefs
+   }
+   
+   def isValid(fileLocation: File, importProperties: Map[String, Any]) : Boolean = {
+     logger.debug("MzIdentML Parser, call isValid : Return TRUE")  
+     true
+   }
   
 }
