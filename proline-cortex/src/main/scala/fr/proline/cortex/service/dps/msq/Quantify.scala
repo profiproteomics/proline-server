@@ -123,8 +123,8 @@ class QuantifyV2_0  extends AbstractRemoteProcessService with LazyLogging with I
 
 			val projectId = paramsRetriever.getLong("project_id");
 			val expDesign = deserialize[ExperimentalDesign](serialize(paramsRetriever.getMap("experimental_design")));
-			val refRSMIdParam = paramsRetriever.getLong("ref_rsm_id");
-			val refDSIdParam = paramsRetriever.getLong("ref_ds_id")
+//			val refRSMIdParam = paramsRetriever.getLong("ref_rsm_id");
+//			val refDSIdParam = paramsRetriever.getLong("ref_ds_id")
 			val quantConfigAsMap = paramsRetriever.getMap("quantitation_config")
     
 			
