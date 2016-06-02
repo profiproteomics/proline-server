@@ -1,22 +1,22 @@
 package fr.proline.module.parser.mzidentml
 
 import java.net.URL
-import org.junit.Ignore
+
+import org.junit.Assert
+import org.junit.Before
 import org.junit.Test
+
 import fr.proline.context.BasicExecutionContext
+import fr.proline.core.dal.AbstractMultipleDBTestCase
+import fr.proline.core.dal.BuildDbConnectionContext
+import fr.proline.core.dal.BuildMsiDbConnectionContext
+import fr.proline.core.dal.BuildUdsDbConnectionContext
 import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.model.msi.InstrumentConfig
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.provider.msi.PTMFakeProvider
-import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.repository.DriverType
-import fr.proline.core.dal.BuildMsiDbConnectionContext
-import org.junit.Before
-import org.junit.Assert
-import fr.proline.core.dal.BuildDbConnectionContext
-import fr.proline.core.dal.BuildUdsDbConnectionContext
 import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
+import fr.proline.repository.DriverType
 
 @Test
 class ReadFileTest extends AbstractMultipleDBTestCase {
@@ -24,8 +24,8 @@ class ReadFileTest extends AbstractMultipleDBTestCase {
   val driverType = DriverType.H2
   var parserContext: ProviderDecoratedExecutionContext = null
 
-  val mascotFilePath = "/resultFiles/mascotExample.mzid"
-  val mgfPFilePath = "/resultFiles/mgfPlus.mzid"
+  val mascotFilePath = "/result_files/mascotExample.mzid"
+  val mgfPFilePath = "/result_files/mgfPlus.mzid"
 
   /***   CONNECTION TO DB   ***/
 
@@ -36,12 +36,13 @@ class ReadFileTest extends AbstractMultipleDBTestCase {
 
     //Load Data
     logger.info("Initializing Dbs")
-    psDBTestCase.loadDataSet("/default_datasets/Unimod_Dataset.xml")
-   msiDBTestCase.loadDataSet("/default_datasets/Init_Dataset.xml")
+    msiDBTestCase.loadDataSet("/dbunit/datasets/msi-db_init_dataset.xml")
+    psDBTestCase.loadDataSet("/dbunit/datasets/ps-db_init_dataset.xml")
 
-    logger.info("PS, PDI and MSI dbs succesfully initialized")
+    logger.info("PS and MSI dbs succesfully initialized")
 
     udsDBTestCase.loadDataSet("/default_datasets/UDS_Simple_Dataset.xml")
+    //udsDBTestCase.loadCompositeDataSet(Array("/dbunit/datasets/uds-db_init_dataset.xml", "/default_datasets/UDS_Simple_Dataset.xml"))
     logger.info("UDS db succesfully initialized")
 
     val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, true) // default: false
@@ -54,32 +55,30 @@ class ReadFileTest extends AbstractMultipleDBTestCase {
     parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
     parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx))
 
-     Assert.assertNotNull(parserContext)
+    Assert.assertNotNull(parserContext)
   }
   
   @Test
   def testReadMascotResultFile() {
    
-    val inst: Instrument = new Instrument(-1, "teqt", "src", None)
-    val ic: InstrumentConfig = new InstrumentConfig(-1, inst, "ms1A", "msnA", "ActType")
-    val fileURL: URL = classOf[ReadFileTest].getResource(mascotFilePath);
-    val rf: MzIdResultFile = MzIdResultFile(fileURL, parserContext)
+    val inst = new Instrument(-1, "teqt", "src", None)
+    val ic = new InstrumentConfig(-1, inst, "ms1A", "msnA", "ActType")
+    val fileURL: URL = classOf[ReadFileTest].getResource(mascotFilePath)
+    val rf = MzIdResultFile(fileURL, parserContext)
     rf.instrumentConfig = Some(ic)
 
     rf.getResultSet(false)
-
   }
 
 @Test
   def testReadMgfPlusResultFile() {
    
-    val inst: Instrument = new Instrument(-1, "teqt", "src", None)
-    val ic: InstrumentConfig = new InstrumentConfig(-1, inst, "ms1A", "msnA", "ActType")
-    val fileURL: URL = classOf[ReadFileTest].getResource(mgfPFilePath);
-    val rf: MzIdResultFile = MzIdResultFile(fileURL, parserContext)
+    val inst = new Instrument(-1, "teqt", "src", None)
+    val ic = new InstrumentConfig(-1, inst, "ms1A", "msnA", "ActType")
+    val fileURL: URL = classOf[ReadFileTest].getResource(mgfPFilePath)
+    val rf = MzIdResultFile(fileURL, parserContext)
     rf.instrumentConfig = Some(ic)
 
     rf.getResultSet(false)
-
   }
 }
