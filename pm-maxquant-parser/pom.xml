@@ -3,7 +3,7 @@
   <parent>
     <groupId>fr.proline</groupId>
     <artifactId>ProFI-Pom</artifactId>
-    <version>0.1.0</version>
+    <version>0.3.0-SNAPSHOT</version>
   </parent>
   <artifactId>PM-MaxQuantParser</artifactId>
   <version>0.5.0-SNAPSHOT</version>
