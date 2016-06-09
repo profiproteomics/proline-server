@@ -212,7 +212,7 @@ public class MaxQuantResultParser extends IServiceWrapper {
 	private List<Long> storeResultSets(List<ResultSet> resultSets, InstrumentConfig instrumentConfig,ResultSetsDataMapper rsMapper, StorerContext storerContext){
 		ArrayList<Long> rsIds = new ArrayList<>();
 		DatabaseConnectionContext msiDbContext = m_parserContext.getMSIDbConnectionContext();
-		IRsStorer rsStorer = RsStorer.apply(msiDbContext);
+		IRsStorer rsStorer = RsStorer.apply(msiDbContext,true);
 
 		SQLMsiSearchWriter.insertInstrumentConfig(instrumentConfig, storerContext);
 			
