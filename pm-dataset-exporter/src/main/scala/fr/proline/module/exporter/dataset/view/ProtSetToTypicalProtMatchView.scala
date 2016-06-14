@@ -59,8 +59,8 @@ class ProtSetToTypicalProtMatchView(
           )
           this.formatRecord(protMatchBuildingContext, recordFormatter)
         }
-        // Else if quant DS
-        else {
+        // Else if quant DS and this protein set has been quantified
+        else if (quantDs.mqProtSetByProtSetId.contains(protSet.id) ) {
           
           val mqProtSet = quantDs.mqProtSetByProtSetId(protSet.id)
           
