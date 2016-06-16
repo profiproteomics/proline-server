@@ -13,6 +13,9 @@ package fr.proline.module.parser.xtandem
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
+import fr.proline.core.om.provider.msi.IProteinProvider
+import fr.proline.core.om.provider.msi.ProteinEmptyFakeProvider
+import fr.proline.core.om.provider.msi.ProteinFakeProvider
 import fr.proline.repository.DriverType
 import fr.proline.context.BasicExecutionContext
 import fr.proline.core.om.provider.msi.impl.{ ORMResultSetProvider, SQLPTMProvider, SQLResultSetProvider }
@@ -95,6 +98,13 @@ class XtandemParser(  val xtandemFile : File,
     // Using MSI DataBase classes to send collected XML informations
     // Some invariable definition
     val ptmProvider: IPTMProvider = parserContext.getProvider(classOf[IPTMProvider])
+//    val protProvider = parserContext.getProvider(classOf[IProteinProvider])
+    val protProvider = if(parserContext.getProvider(classOf[IProteinProvider]) == null || 
+      parserContext.getProvider(classOf[IProteinProvider]).isInstanceOf[ProteinEmptyFakeProvider]  ) {
+    	   ProteinFakeProvider //Fake provider should at least create Fake Proteins, not None
+    } else {
+		   parserContext.getProvider(classOf[IProteinProvider])
+    }
     val ptmMonoMassMargin = 0.01
     var fixedPtmDefs: ArrayBuffer[PtmDefinition] = new ArrayBuffer[PtmDefinition]
     var variablePtmDefs: ArrayBuffer[PtmDefinition] = new ArrayBuffer[PtmDefinition]
@@ -114,10 +124,10 @@ class XtandemParser(  val xtandemFile : File,
     var locatedPtmSeqPosition : Int = 0; 
 
     var seqDatabases: ArrayBuffer[SeqDatabase] = new ArrayBuffer[SeqDatabase]
-    var seqDatabaseIdsArray: Array[Long] = null
-    var seqDatabaseFileNames : String = ""
-    var seqDatabaseFileNamesPath: String = ""
-    var seqDatabase : SeqDatabase = null
+//    var seqDatabaseIdsArray: Array[Long] = null
+//    var seqDatabaseFileNames : String = ""
+//    var seqDatabaseFileNamesPath: String = ""
+//    var seqDatabase : SeqDatabase = null
     
     var proteinMatches: ArrayBuffer[ProteinMatch] = new ArrayBuffer[ProteinMatch]
     var peptides: ArrayBuffer[Peptide] = new ArrayBuffer[Peptide]
@@ -126,6 +136,7 @@ class XtandemParser(  val xtandemFile : File,
     var newPeptideMatch : PeptideMatch = null
     var protein : Protein = null
     var proteinList : ArrayBuffer[Protein] = new ArrayBuffer[Protein]
+    val proteinByAccessionAndSebSb = new HashMap[String, Option[Protein]]
 
     val ptmEvidence = new PtmEvidence(
       ionType = IonTypes.Precursor,
@@ -335,23 +346,13 @@ class XtandemParser(  val xtandemFile : File,
           }
         } else if (dbGroupParametersNoteLabel.equals("list path, sequence source #".concat(sequenceSourceCount.toString()))) {
 
-          val FPATH: String = dbGroupParametersNoteInfo
-          seqDatabaseFileNames = new Filename(FPATH, '/', '.').filename()
-          seqDatabaseFileNamesPath = new Filename(dbGroupParametersNoteInfo, '/', '.').path + "/" + seqDatabaseFileNames
-                    
-          seqDatabase = new SeqDatabase(
+          seqDatabases.append(new SeqDatabase(
             id = SeqDatabase.generateNewId(),
-            name = seqDatabaseFileNames, 
-            filePath = seqDatabaseFileNamesPath,
+            name = dbGroupParametersNoteInfo.split("[\\\\/]").last.replaceAll(".fasta.*", ""),
+            filePath = dbGroupParametersNoteInfo.replaceAll(".pro$", ""), // some db may end with "fasta.pro" because of a file conversion,
             sequencesCount = -1, 
-            releaseDate = new Date())
-
-          seqDatabases.append(seqDatabase)
-
-          seqDatabaseIdsArray = new Array[Long](seqDatabases.size)
-          for (i <- 0 until seqDatabases.size) {
-            seqDatabaseIdsArray(i) = seqDatabases(i).id
-          }
+            releaseDate = new Date()
+          ))
           
           sequenceSourceCount += 1
         }
@@ -481,24 +482,26 @@ class XtandemParser(  val xtandemFile : File,
 
           //VDS : Try to find seqDB for current Protein... removing ".pro" extention !
           //FileMarkup variables
-          val dbProteinFileMarkupURL: String = if(dbProteinFileMarkup.URL.endsWith(".pro"))dbProteinFileMarkup.URL.substring(0, dbProteinFileMarkup.URL.length()-4) else dbProteinFileMarkup.URL
-          
-          val currentProtMatchSeqDBIdsBuilder = Array.newBuilder[Long]
-          seqDatabases.foreach(seqDB=>{
-            if(seqDB.filePath.equals(dbProteinFileMarkupURL)){
-              currentProtMatchSeqDBIdsBuilder += seqDB.id
+          val dbProteinFileMarkupURL = dbProteinFileMarkup.URL.replaceAll(".pro$", "") // remove ".pro" at the end if any
+          val currentProtMatchSeqDBIds = seqDatabases.filter(_.filePath.equals(dbProteinFileMarkupURL)).map(_.id).toArray
+
+          val proteinAccessKey = dbProteinLabel + currentProtMatchSeqDBIds
+          // get the protein stored in the hashmap
+          val protOpt = { 
+            if (proteinByAccessionAndSebSb.contains(proteinAccessKey)) {
+              proteinByAccessionAndSebSb.get(proteinAccessKey).get
+            } else {
+              // if not found yet, try to retrieve it in the database
+              var tmpProtOpt = protProvider.getProtein(dbProteinLabel, seqDatabases.filter(_.filePath == dbProteinFileMarkupURL).head)
+              // if the protein cannot be found, try to create it (needs the parameter "output, sequences" activated)
+              if(!tmpProtOpt.isDefined && !dbProteinPeptideInfo.isEmpty()) {
+                tmpProtOpt = Some(new Protein(id = Protein.generateNewId(), sequence = dbProteinPeptideInfo))
+              }
+              // store the protein
+              proteinByAccessionAndSebSb += proteinAccessKey -> tmpProtOpt
+              tmpProtOpt
             }
-          })
-          var currentProtMatchSeqDBIds = currentProtMatchSeqDBIdsBuilder.result
-          if(currentProtMatchSeqDBIds.length <1){
-           currentProtMatchSeqDBIds = seqDatabaseIdsArray
-           logger.trace(" ===== NOT FOUND SEQ DB ! ")
           }
-          
-          protein = new Protein(
-            id = Protein.generateNewId(),
-            sequence = dbProteinPeptideInfo
-          )
 
           var newProteinMatch = new ProteinMatch(
             accession = dbProteinLabel,
@@ -506,7 +509,7 @@ class XtandemParser(  val xtandemFile : File,
             id = ProteinMatch.generateNewId(),
             seqDatabaseIds = currentProtMatchSeqDBIds,
             scoreType = "xtandem:hyperscore",
-            protein = Some(protein))
+            protein = protOpt)
 
           for (dbPeptideDomain <- dbProteinPeptide.domainList) {
             //Domain variables
