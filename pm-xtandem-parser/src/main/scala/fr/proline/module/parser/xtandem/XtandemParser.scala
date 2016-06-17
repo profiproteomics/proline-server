@@ -625,6 +625,9 @@ class XtandemParser(  val xtandemFile : File,
             var peptideMatchIsDecoy: Boolean = false
             if (dbProteinNoteInfo.contains("reversed")) peptideMatchIsDecoy = true
 
+            val residueBefore = if(seqMatch != null) Some(seqMatch.residueBefore) else None
+            val residueAfter = if(seqMatch != null) Some(seqMatch.residueAfter) else None
+            
             newPeptideMatch = new PeptideMatch(
               id = PeptideMatch.generateNewId(),
               rank = dbDomainIdPartsInt(1), /*3 dans DomainId<domain id=987.3.1 ...> */
@@ -634,6 +637,7 @@ class XtandemParser(  val xtandemFile : File,
               deltaMoz = dbDomainDelta.toFloat,
               isDecoy = peptideMatchIsDecoy,
               peptide = peptide,
+              missedCleavage = PeptideMatch.countMissedCleavages(dbDomainSeq, residueBefore, residueAfter, usedEnzymes.toArray),
               msQuery = ms2Query
               )
             peptideMatches += newPeptideMatch
