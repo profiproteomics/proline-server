@@ -214,13 +214,17 @@ object BuildDatasetViewSet extends LazyLogging {
       val quantRsmId = masterQc.quantResultSummaryId.get
       val quantChannels = masterQc.quantChannels
       var identRsmIds = quantChannels.map(_.identResultSummaryId)
+      val childRsmIdsByParentRsmId = new LongMap[Array[Long]]
       
       // Workaround for SC quantitations
       if (mode == ExportConfigConstant.MODE_QUANT_SC) {
         // SC quantitation
         // FIXME: it should not be required to merge parent and child ids
         identRsmIds ++= quantChannels.flatMap { qc =>
-          msiDbHelper.getResultSummaryChildrenIds(qc.identResultSummaryId)
+          val identRsmId = qc.identResultSummaryId
+          val childIds = msiDbHelper.getResultSummaryChildrenIds(identRsmId)
+          childRsmIdsByParentRsmId += identRsmId -> childIds
+          childIds
         }
       }
       
@@ -254,33 +258,43 @@ object BuildDatasetViewSet extends LazyLogging {
       // Check if we have retrieved defined names
       if(qcNames.length != definedQcNames.length) {
         
-        if (mode == ExportConfigConstant.MODE_QUANT_SC) {
-          // TODO: find an other way to retrieve names for SC quantitations ?
-          qcNameById = quantChannels.toLongMapWith( qc => qc.id -> qc.number.toString )
-        } else {
-          logger.warn("Some quantitation channels are not named, we will use the result file names instead")
+        logger.warn("Some quantitation channels are not named, we will use the result file names instead")
+        
+        // TODO: does this cover all cases of SC quantitation ?
+        val qcIdByIdentRsmId = if (mode == ExportConfigConstant.MODE_QUANT_SC) {
+          val longMap = new LongMap[Long]
           
-          val qcIdByIdentRsmId = quantChannels.toLongMapWith(qc => qc.identResultSummaryId -> qc.id)
+          for (qc <- quantChannels; childId <- childRsmIdsByParentRsmId(qc.identResultSummaryId)) {
+            longMap += childId -> qc.id
+          }
           
-          // Set QC names as the result file name
-          qcNameById = {
-    
-            DoJDBCReturningWork.withEzDBC(msiDbCtx) { ezDBC =>
-              
-              val sqlQuery = new SelectQueryBuilder3(MsiDbResultSetTable, MsiDbResultSummaryTable, MsiDbMsiSearchTable).mkSelectQuery { (t1, c1, t2, c2, t3, c3) =>
-                List(t2.ID, t3.RESULT_FILE_NAME) ->
-                  "WHERE " ~ t2.ID ~ " IN (" ~ identRsmIds.mkString(",") ~ ") " ~
-                  "AND " ~ t1.ID ~ "=" ~ t2.RESULT_SET_ID ~ " AND " ~ t3.ID ~ " = " ~ t1.MSI_SEARCH_ID
-              }
-    
-              val longMap = new LongMap[String]()
-              ezDBC.selectAndProcess(sqlQuery) { r =>
-                longMap += qcIdByIdentRsmId(r.nextLong) -> r.nextString
-                ()
-              }
-    
-              longMap
+          longMap
+        }
+        else {
+          quantChannels.toLongMapWith(qc => qc.identResultSummaryId -> qc.id)
+        }
+        
+        // Set QC names as the result file name
+        qcNameById = {
+  
+          DoJDBCReturningWork.withEzDBC(msiDbCtx) { ezDBC =>
+            
+            val qcIdentRsmIds = identRsmIds.filter(qcIdByIdentRsmId.contains(_))
+            println(qcIdentRsmIds.toList)
+            
+            val sqlQuery = new SelectQueryBuilder3(MsiDbResultSetTable, MsiDbResultSummaryTable, MsiDbMsiSearchTable).mkSelectQuery { (t1, c1, t2, c2, t3, c3) =>
+              List(t2.ID, t3.RESULT_FILE_NAME) ->
+                "WHERE " ~ t2.ID ~ " IN (" ~ qcIdentRsmIds.mkString(",") ~ ") " ~
+                "AND " ~ t1.ID ~ "=" ~ t2.RESULT_SET_ID ~ " AND " ~ t3.ID ~ " = " ~ t1.MSI_SEARCH_ID
             }
+  
+            val longMap = new LongMap[String]()
+            ezDBC.selectAndProcess(sqlQuery) { r =>
+              longMap += qcIdByIdentRsmId(r.nextLong) -> r.nextString
+              ()
+            }
+  
+            longMap
           }
         }
 
