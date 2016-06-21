@@ -309,7 +309,9 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
             }
 
             val errorMessage = errorMessageBuilder.toString
-            logger.warn(errorMessage)
+            val logErrorMessageBuilder = new StringBuilder()
+            logErrorMessageBuilder.append("##Message##_").append(jmsMessageId).append(" ").append(errorMessage)
+            logger.warn(logErrorMessageBuilder.toString())
 
             jsonResponse.setError(buildJSONRPC2Error(JMSConstants.MESSAGE_ERROR_CODE, errorMessage))
           } // End if (serviceName map a valid ServiceInstance)
@@ -318,7 +320,9 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
              
       } else {
         val errorMessage = "Invalid Request JMS Message type"
-        logger.warn(errorMessage)
+        val logErrorMessageBuilder = new StringBuilder()
+        logErrorMessageBuilder.append("##Message##_").append(jmsMessageId).append(" ").append(errorMessage)
+        logger.warn(logErrorMessageBuilder.toString())
 
         jsonResponse.setError(buildJSONRPC2Error(JMSConstants.MESSAGE_ERROR_CODE, errorMessage))
       } // End if (JMS Message is a TextMessage)
@@ -327,7 +331,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
       /* Catch all Throwables */
       case t: Throwable => {
-        val errorMessage = "Error handling Request JMS Message [" + jmsMessageId + ']'
+        val errorMessage = "##Message##_"+jmsMessageId+" Error handling Request JMS Message"
         logger.error(errorMessage, t)
 
         jsonResponse = new JSONRPC2Response(buildJSONRPC2Error(JMSConstants.MESSAGE_ERROR_CODE, errorMessage, t), jsonRequestId)
@@ -368,7 +372,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
         logger.debug("Sending JMS Response to Request JMS Message [" + jmsMessageId + "] on Destination [" + replyDestination + ']')
 
         replyProducer.send(replyDestination, responseJMSMessage)
-        logger.info("JMS Response to Request JMS Message [" + jmsMessageId + "] sent")
+        logger.info("##Message##_"+jmsMessageId+" JMS Response to Request sent")
       }
 
     }
@@ -389,16 +393,16 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
     } else {
 
       try {
-        logger.debug("Calling BytesMessage Service [" + serviceName + "]- Message  ID [" + jsonRequestId + ']')
-
-        /* Notify */
         var jmsMessageId: String = null
 
         val value = jmsMessageContext.getOrElse(JMSConstants.JMS_MESSAGE_ID_KEY, null)
         if (value.isInstanceOf[String]) {
           jmsMessageId = value.asInstanceOf[String]
-        }
+        }               
 
+         logger.info("##Message##_"+jmsMessageId +" Calling BytesMessage Service [" + serviceName + "] ")
+         
+        /* Notify */
         val serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_START)
 
         serviceMonitoringNotifier.sendNotification(serviceEvent.toJSONRPCNotification(), null)
@@ -443,15 +447,17 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
     } else {
 
       try {
-        logger.debug("Calling Service [" + serviceName + "] with JSON Request [" + jsonRequest + ']')
-
-        /* Notify */
         var jmsMessageId: String = null
 
         val value = jmsMessageContext.getOrElse(JMSConstants.JMS_MESSAGE_ID_KEY, null)
         if (value.isInstanceOf[String]) {
           jmsMessageId = value.asInstanceOf[String]
         }
+                
+        logger.info("##Message##_"+jmsMessageId +" Calling Service [" + serviceName + "] with JSON Request [" + jsonRequest + ']')
+
+        /* Notify */
+
 
         val serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_START)
 
