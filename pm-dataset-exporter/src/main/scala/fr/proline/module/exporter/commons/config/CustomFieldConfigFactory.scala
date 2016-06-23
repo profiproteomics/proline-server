@@ -181,6 +181,7 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id"),
       CustomFieldConfig(FIELD_PSM_QUANT_ELUTION_TIME, "master_elution_time"),
       CustomFieldConfig(FIELD_PSM_QUANT_SELECTION_LEVEL, "master_quant_selection_level"),
+      CustomFieldConfig(FIELD_PSM_NB_PROTEIN_SETS, "#psm_prot_sets"),
       CustomFieldConfig(FIELD_MASTER_QUANT_PEPTIDE_ION_ID, "master_quant_peptide_ion_id"),
       CustomFieldConfig(FIELD_MASTER_QUANT_PEPTIDE_ION_CHARGE, "master_quant_peptide_ion_charge"),
       CustomFieldConfig(FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME, "master_quant_peptide_ion_elution_time"),
