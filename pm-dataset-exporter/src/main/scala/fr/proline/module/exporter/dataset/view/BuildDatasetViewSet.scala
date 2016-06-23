@@ -277,6 +277,7 @@ object BuildDatasetViewSet extends LazyLogging {
 //        }
          val qcIdByIdentRsmId =quantChannels.toLongMapWith(qc => qc.identResultSummaryId -> qc.id)
         // Set QC names as the result file name
+         
         qcNameById = {
   
           DoJDBCReturningWork.withEzDBC(msiDbCtx) { ezDBC =>
@@ -295,7 +296,25 @@ object BuildDatasetViewSet extends LazyLogging {
               longMap += qcIdByIdentRsmId(r.nextLong) -> r.nextString
               ()
             }
-  
+            if(mode==ExportConfigConstant.MODE_QUANT_SC) {
+              for (qc <- quantChannels){
+                // get the name
+                val qcNameWork = new JDBCWork() {
+                  override def execute(con: Connection) {
+                    val getQCName = "SELECT ds.name FROM data_set ds, quant_channel qc WHERE qc.id = ? AND qc.ident_result_summary_id = ds.result_summary_id AND ds.project_id = ? "
+                    val pStmt = con.prepareStatement(getQCName)
+                    pStmt.setLong(1, qc.id)
+                    pStmt.setLong(2, projectId)
+                    val sqlResultSet = pStmt.executeQuery()
+                    while (sqlResultSet.next) { //Should be One ! 
+                      longMap += qc.id -> sqlResultSet.getString("name")
+                    }
+                    pStmt.close()
+                  }
+                }
+                udsDbCtx.doWork(qcNameWork, false)                
+              }
+            }
             longMap
           }
         }
