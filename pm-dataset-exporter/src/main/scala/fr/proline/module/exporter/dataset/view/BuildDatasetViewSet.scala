@@ -30,6 +30,8 @@ import fr.proline.module.exporter.commons.config._
 import fr.proline.module.exporter.commons.view.ViewSet
 import fr.proline.module.exporter.dataset._
 import fr.proline.module.exporter.dataset.template._
+import java.sql.Connection
+import fr.proline.repository.util.JDBCWork
 
 object BuildDatasetViewSet extends LazyLogging {
 
@@ -214,19 +216,19 @@ object BuildDatasetViewSet extends LazyLogging {
       val quantRsmId = masterQc.quantResultSummaryId.get
       val quantChannels = masterQc.quantChannels
       var identRsmIds = quantChannels.map(_.identResultSummaryId)
-      val childRsmIdsByParentRsmId = new LongMap[Array[Long]]
+//      val childRsmIdsByParentRsmId = new LongMap[Array[Long]]
       
-      // Workaround for SC quantitations
-      if (mode == ExportConfigConstant.MODE_QUANT_SC) {
-        // SC quantitation
-        // FIXME: it should not be required to merge parent and child ids
-        identRsmIds ++= quantChannels.flatMap { qc =>
-          val identRsmId = qc.identResultSummaryId
-          val childIds = msiDbHelper.getResultSummaryChildrenIds(identRsmId)
-          childRsmIdsByParentRsmId += identRsmId -> childIds
-          childIds
-        }
-      }
+//      // Workaround for SC quantitations
+//      if (mode == ExportConfigConstant.MODE_QUANT_SC) {
+//        // SC quantitation
+//        // FIXME: it should not be required to merge parent and child ids
+//        identRsmIds ++= quantChannels.flatMap { qc =>
+//          val identRsmId = qc.identResultSummaryId
+//          val childIds = msiDbHelper.getResultSummaryChildrenIds(identRsmId)
+//          childRsmIdsByParentRsmId += identRsmId -> childIds
+//          childIds
+//        }
+//      }
       
       // Load the quant RSM
       logger.debug(s"Loading quant result summary #$rsmId...")
@@ -261,19 +263,19 @@ object BuildDatasetViewSet extends LazyLogging {
         logger.warn("Some quantitation channels are not named, we will use the result file names instead")
         
         // TODO: does this cover all cases of SC quantitation ?
-        val qcIdByIdentRsmId = if (mode == ExportConfigConstant.MODE_QUANT_SC) {
-          val longMap = new LongMap[Long]
-          
-          for (qc <- quantChannels; childId <- childRsmIdsByParentRsmId(qc.identResultSummaryId)) {
-            longMap += childId -> qc.id
-          }
-          
-          longMap
-        }
-        else {
-          quantChannels.toLongMapWith(qc => qc.identResultSummaryId -> qc.id)
-        }
-        
+//        val qcIdByIdentRsmId = if (mode == ExportConfigConstant.MODE_QUANT_SC) {
+//          val longMap = new LongMap[Long]
+//          
+//          for (qc <- quantChannels; childId <- childRsmIdsByParentRsmId(qc.identResultSummaryId)) {
+//            longMap += childId -> qc.id
+//          }
+//          
+//          longMap
+//        }
+//        else {
+//          quantChannels.toLongMapWith(qc => qc.identResultSummaryId -> qc.id)
+//        }
+         val qcIdByIdentRsmId =quantChannels.toLongMapWith(qc => qc.identResultSummaryId -> qc.id)
         // Set QC names as the result file name
         qcNameById = {
   
@@ -300,6 +302,30 @@ object BuildDatasetViewSet extends LazyLogging {
 
       }
       
+      val protMatchPeptideNumberByPepMatchIdByQCId: scala.collection.mutable.Map[Long, Map[Long, Int]] = scala.collection.mutable.Map.empty[Long, Map[Long, Int]]
+      for (qc <- quantChannels) {
+        val protMatchPeptideNumberByPepMatchId: scala.collection.mutable.Map[Long, Int] = scala.collection.mutable.Map.empty[Long, Int]
+        val protStatJdbcWork = new JDBCWork() {
+          override def execute(con: Connection) {
+
+            //---- Read PepCount
+            val getPepCount = "SELECT peptide_count, protein_match_id FROM peptide_set_protein_match_map pspmm, peptide_set " +
+              "WHERE  pspmm.result_summary_id = ?  AND peptide_set.id = pspmm.peptide_set_id"
+            val pStmt2 = con.prepareStatement(getPepCount)
+            pStmt2.setLong(1, qc.identResultSummaryId)
+            val sqlResultSet2 = pStmt2.executeQuery()
+            while (sqlResultSet2.next) {
+              val protMatchPepNbr = sqlResultSet2.getInt("peptide_count")
+              val protMatchId = sqlResultSet2.getLong("protein_match_id")
+              protMatchPeptideNumberByPepMatchId += protMatchId -> protMatchPepNbr
+            }
+            pStmt2.close()
+          }
+        }
+        msiDbCtx.doWork(protStatJdbcWork, false)
+        protMatchPeptideNumberByPepMatchIdByQCId.put(qc.id, protMatchPeptideNumberByPepMatchId.toMap)
+      }
+      
       logger.debug("Build QuantDataSet")
 
       val quantDs = new QuantDataset(
@@ -311,7 +337,8 @@ object BuildDatasetViewSet extends LazyLogging {
         identResultSummariesLoader,
         this._buildBioSequenceLoader(msiDbCtx, lazyQuantRSM.lazyResultSummary),
         this._buildSpectraLoader(msiDbCtx),
-        qcNameById
+        qcNameById,
+        protMatchPeptideNumberByPepMatchIdByQCId.toMap
       )
 
       this.apply(quantDs, viewSetName, viewSetTemplate, exportConfig)
