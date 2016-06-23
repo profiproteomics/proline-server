@@ -7,41 +7,40 @@ import fr.proline.module.exporter.api.view.IRecordBuildingContext
 import fr.proline.module.exporter.commons.config.ExportConfigConstant._
 
 abstract class AbstractProtSetToMQProtSetProfileView extends AbstractProtSetToTypicalProtMatchView with AbstractQuantDatasetView {
-  
+
   protected val mqProtSetProfileFieldSet = Set(
     FIELD_PROTEIN_SETS_QUANT_STATUS,
-    FIELD_PROTEIN_SETS_QUANT_PEPTIDE_NUMBER
-  )
-  
+    FIELD_PROTEIN_SETS_QUANT_PEPTIDE_NUMBER)
+
   // Override getQcFieldSet in order to generate QuantChannel based columns for fields defined by mqProtSetProfileFieldSet
   override protected def getQcFieldSet() = {
     val superQcFieldSet = super.getQcFieldSet()
     superQcFieldSet ++ mqProtSetProfileFieldSet
   }
-  
-  protected val mqProtSetProfileFieldsConfigs = sheetConfig.fields.filter( f => mqProtSetProfileFieldSet.contains(f.id) )
+
+  protected val mqProtSetProfileFieldsConfigs = sheetConfig.fields.filter(f => mqProtSetProfileFieldSet.contains(f.id))
 
   override def buildRecord(buildingContext: IRecordBuildingContext): Map[String, Any] = {
 
     val protMatchRecord = super.buildRecord(buildingContext)
-    
+
     // If this building context is not a MasterQuantProteinSetProfileBuildingContext then we return the record as is
-    if( buildingContext.isInstanceOf[MasterQuantProteinSetProfileBuildingContext] == false) {
+    if (buildingContext.isInstanceOf[MasterQuantProteinSetProfileBuildingContext] == false) {
       return protMatchRecord
     }
-    
+
     val mqProtSetProfileBuildingCtx = buildingContext.asInstanceOf[MasterQuantProteinSetProfileBuildingContext]
-    
+
     val mqProtSet = mqProtSetProfileBuildingCtx.masterQuantProteinSet
     val qProtSetMap = mqProtSet.quantProteinSetMap
-    
+
     def getProteinMatchId(qcId: Long, identRsm: LazyResultSummary): Option[Long] = {
-      val protMatchIdOpt = qProtSetMap.get(qcId).flatMap( _.proteinMatchId )
-      
-      if( protMatchIdOpt.isDefined ) protMatchIdOpt
+      val protMatchIdOpt = qProtSetMap.get(qcId).flatMap(_.proteinMatchId)
+
+      if (protMatchIdOpt.isDefined) protMatchIdOpt
       else Some(mqProtSet.proteinSet.getRepresentativeProteinMatchId)
     }
-    
+
     /*def getProteinMatch(qcId: Long, identRsm: LazyResultSummary): Option[ProteinMatch] = {
       
       val protMatchIdOpt = getProteinMatchId(qcId, identRsm)
@@ -57,57 +56,64 @@ abstract class AbstractProtSetToMQProtSetProfileView extends AbstractProtSetToTy
       
       protMatchOpt
     }*/
-    
+
     def getProteinSet(qcId: Long, identRsm: LazyResultSummary): Option[ProteinSet] = {
-      
+
       // Try to get QuantProteinSet for current ProteinSet in current QuantChannel
       val qProtSetOpt = qProtSetMap.get(qcId)
-      
+
       // TODO: remove me
-      if( qProtSetOpt.isEmpty ) None
+      if (qProtSetOpt.isEmpty) None
       else {
         val protSetId = qProtSetOpt.get.proteinSetId.getOrElse(0L)
         identRsm.proteinSetById.get(protSetId)
       }
-      
+
     }
-    
-    val recordBuilder = Map.newBuilder[String,Any]
+
+    val recordBuilder = Map.newBuilder[String, Any]
     recordBuilder ++= protMatchRecord
-    
+
     for (fieldConfig <- mqProtSetProfileFieldsConfigs) {
-      
+
       fieldConfig.id match {
         case FIELD_PROTEIN_SETS_QUANT_STATUS => {
-          for( qcId <- qcIds ) {
+          for (qcId <- qcIds) {
             val identRsm = quantDs.identRsmByQcId(qcId)
             val protMatchIdOpt = getProteinMatchId(qcId, identRsm)
-            
+
             if (protMatchIdOpt.isDefined) {
-              
+
               val qcStatusOpt = quantDs.getProteinMatchStatus(identRsm, protMatchIdOpt.get)
-              if( qcStatusOpt.isDefined ) {
-                recordBuilder += Tuple2(mkQcFieldTitle(fieldConfig,qcId), qcStatusOpt.get.toString)
+              if (qcStatusOpt.isDefined) {
+                recordBuilder += Tuple2(mkQcFieldTitle(fieldConfig, qcId), qcStatusOpt.get.toString)
               }
             }
           }
         }
         case FIELD_PROTEIN_SETS_QUANT_PEPTIDE_NUMBER => {
-          for( qcId <- qcIds ) {
-            val identRsm = quantDs.identRsmByQcId(qcId)
-            val protSetOpt = getProteinSet(qcId, identRsm)
-            
-            if (protSetOpt.isDefined) {
-              val protMatchPepCount = protSetOpt.get.peptideSet.items.length
-              
-              recordBuilder += Tuple2(mkQcFieldTitle(fieldConfig,qcId), protMatchPepCount)
+          for (qcId <- qcIds) {
+            var pmId: Long = -1
+            //Get QuantProteinSet for current ProteinSet in current QuantChannel
+            val protQuant = mqProtSet.quantProteinSetMap.get(qcId)
+            if (protQuant.isDefined) {
+              if (protQuant.get.proteinSetId.isDefined) {
+                pmId = protQuant.get.proteinMatchId.getOrElse(-1)
+              }
             }
+            var qcPeptideNumber: Int = if (quantDs.protMatchPeptideNumberByPepMatchIdByQCId.contains(qcId)) {
+              val protMatchPeptideNumberByPepMatchId: Map[Long, Int] = quantDs.protMatchPeptideNumberByPepMatchIdByQCId.get(qcId).get              
+                protMatchPeptideNumberByPepMatchId.getOrElse(pmId,0)              
+            } else {
+              0
+            }
+            recordBuilder += Tuple2(mkQcFieldTitle(fieldConfig, qcId), qcPeptideNumber)            
           }
         }
       }
-      
+
     }
-    
+
     recordBuilder.result()
   }
 
