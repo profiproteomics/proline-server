@@ -224,16 +224,17 @@ object BuildDatasetViewSet extends LazyLogging {
 //      val childRsmIdsByParentRsmId = new LongMap[Array[Long]]
       
 //      // Workaround for SC quantitations
-//      if (mode == ExportConfigConstant.MODE_QUANT_SC) {
+      if (mode == ExportConfigConstant.MODE_QUANT_SC) {
 //        // SC quantitation
 //        // FIXME: it should not be required to merge parent and child ids
-//        identRsmIds ++= quantChannels.flatMap { qc =>
+        identRsmIds ++= quantChannels.flatMap { qc =>
+          getRsmLeafChildsID(qc.identResultSummaryId, executionContext)          
 //          val identRsmId = qc.identResultSummaryId
 //          val childIds = msiDbHelper.getResultSummaryChildrenIds(identRsmId)
 //          childRsmIdsByParentRsmId += identRsmId -> childIds
 //          childIds
-//        }
-//      }
+        }
+      }
       
       // Load the quant RSM
       logger.debug(s"Loading quant result summary #$rsmId...")
