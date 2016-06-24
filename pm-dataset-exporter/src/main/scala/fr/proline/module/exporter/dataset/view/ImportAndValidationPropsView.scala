@@ -75,9 +75,9 @@ class ImportAndValidationPropsView(
     val rsm = myBuildingContext.rsm
     val rs = rsm.lazyResultSet
 
-    // FIXME: merged result sets should be named with the name of corresponding dataset
+    // FIXME: merged result sets should be named with the name of corresponding dataset  to be passed in IdentDS  
     val fileNameOrRsName = rs.msiSearch.map( _.resultFileName ).getOrElse( rs.descriptor.name )
-    val fileName = if( StringUtils.isEmpty(fileNameOrRsName) ) "DATASET" else fileNameOrRsName
+    val fileName = if( StringUtils.isEmpty(fileNameOrRsName) ) "DATASET_"+rs.descriptor.id else fileNameOrRsName
     logger.debug("Import and validation of file named " + fileName)
     
     // *** Get import Parameters
