@@ -162,19 +162,24 @@ object BuildDatasetViewSet extends LazyLogging {
       val lazyRsm = lazyRsmOpt.get
   
       // Load child result summaries (merge)
-      val childResultSummariesLoader = () => {
+      //VDS : Load only leaf RSM not all children. To test get all hierarchy level
+      val childResultSummariesLoader = () => {        
         logger.debug("Loading child result summaries (merge)...")
-        
+         val leavesRsmIds = getRsmLeafChildsID(rsmId, executionContext)
+         
         // TODO: add children ids to the RsmDescriptor
-        val childRsmIds = msiDbHelper.getResultSummaryChildrenIds(rsmId)
+//        val childRsmIds = msiDbHelper.getResultSummaryChildrenIds(rsmId)
         val childResultSummaries = lazyRsmProvider.getLazyResultSummaries(
-          childRsmIds,
+          leavesRsmIds,
           loadFullResultSet = loadFullResultSet,
           linkPeptideSets = loadSubsets,
           linkResultSetEntities = true
         )
         
-        childResultSummaries.sortBy(_.lazyResultSet.descriptor.name)
+         if(childResultSummaries.filter(lrsm =>{ lrsm.lazyResultSet.descriptor.name == null || lrsm.lazyResultSet.descriptor.name.isEmpty}).length >0 ) 
+             childResultSummaries.sortBy(_.lazyResultSet.id) //If no name, use ID should always have one !
+         else 
+            childResultSummaries.sortBy(_.lazyResultSet.descriptor.name)   
       }
       
       logger.debug("Build IdentDataSet")
@@ -407,4 +412,29 @@ object BuildDatasetViewSet extends LazyLogging {
     }
   }
 
+  private def getRsmLeafChildsID(rsmId: Long, execContext: IExecutionContext): Seq[Long] = {
+    var allRSMIds = Seq.newBuilder[Long]
+
+    val jdbcWork = new JDBCWork() {
+
+      override def execute(con: Connection) {
+
+        val stmt = con.prepareStatement("select child_result_summary_id from result_summary_relation where result_summary_relation.parent_result_summary_id = ?")
+        stmt.setLong(1, rsmId)
+        val sqlResultSummary = stmt.executeQuery()
+        var childDefined = false
+        while (sqlResultSummary.next) {
+          childDefined = true
+          val nextChildId = sqlResultSummary.getInt(1)
+          allRSMIds ++= getRsmLeafChildsID(nextChildId, execContext)
+        }
+        if (!childDefined)
+          allRSMIds += rsmId
+        stmt.close()
+      } // End of jdbcWork anonymous inner class
+    }
+    execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
+
+    allRSMIds.result
+  }
 }
