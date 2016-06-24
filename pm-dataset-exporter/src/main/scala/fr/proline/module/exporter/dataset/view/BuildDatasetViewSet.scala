@@ -162,19 +162,26 @@ object BuildDatasetViewSet extends LazyLogging {
       val lazyRsm = lazyRsmOpt.get
   
       // Load child result summaries (merge)
-      val childResultSummariesLoader = () => {
+      // VDS : Load only leaf RSM not all children
+      // VDS To test get all hierarchy level
+      val childResultSummariesLoader = () => {        
         logger.debug("Loading child result summaries (merge)...")
+        val leavesRsmIds = msiDbHelper.getResultSummaryLeavesIds(rsmId)
+//        // TODO: add children ids to the RsmDescriptor
+//        val childRsmIds = msiDbHelper.getResultSummaryChildrenIds(rsmId)
         
-        // TODO: add children ids to the RsmDescriptor
-        val childRsmIds = msiDbHelper.getResultSummaryChildrenIds(rsmId)
         val childResultSummaries = lazyRsmProvider.getLazyResultSummaries(
-          childRsmIds,
+          leavesRsmIds,
           loadFullResultSet = loadFullResultSet,
           linkPeptideSets = loadSubsets,
           linkResultSetEntities = true
         )
         
-        childResultSummaries.sortBy(_.lazyResultSet.descriptor.name)
+        if(childResultSummaries.filter(lrsm =>{ lrsm.lazyResultSet.descriptor.name == null || lrsm.lazyResultSet.descriptor.name.isEmpty}).length >0 ) 
+             childResultSummaries.sortBy(_.lazyResultSet.id) //If no name, use ID should always have one !
+         else 
+            childResultSummaries.sortBy(_.lazyResultSet.descriptor.name)            
+         
       }
       
       logger.debug("Build IdentDataSet")
