@@ -187,7 +187,7 @@ object BuildDatasetViewSet extends LazyLogging {
       
       val leaveResultSetLoader = () => {
         logger.debug("Loading leave result set (merge)...")
-        val leavesRsIds = getRsLeafChildsID(lazyRsm.getResultSetId())
+        val leavesRsIds = getRsLeafChildsID(lazyRsm.getResultSetId(), executionContext)
 
         val leavesResultSets = lazyRsProvider.getLazyResultSets(leavesRsIds)
 
@@ -272,7 +272,7 @@ object BuildDatasetViewSet extends LazyLogging {
     
       val leaveResultSetLoader = () => {
         logger.debug("Loading leaves result set (quantitation)...")
-        val leavesRsIds = getRsLeafChildsID(lazyQuantRSM.lazyResultSummary.getResultSetId())
+        val leavesRsIds = getRsLeafChildsID(lazyQuantRSM.lazyResultSummary.getResultSetId(), executionContext)
 
         val leavesResultSets = lazyRsProvider.getLazyResultSets(leavesRsIds)
 
