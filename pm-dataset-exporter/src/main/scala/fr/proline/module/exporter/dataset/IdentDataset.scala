@@ -18,6 +18,7 @@ class IdentDataset(
   val projectName: String,
   val resultSummary: LazyResultSummary,
   val loadChildResultSummaries: () => Array[LazyResultSummary],
+  val loadLeaveResultSets: () => Array[LazyResultSet],
   val loadBioSequences: () => Array[BioSequence],
   val loadSpectraDescriptors: (Array[Long]) => Array[Spectrum]
 ) extends LazyLogging {
@@ -66,17 +67,13 @@ class IdentDataset(
     protMatchSetByPepId
   }
   
-  lazy val childResultSummaries: Array[LazyResultSummary] = loadChildResultSummaries()
-  
+  lazy val childResultSummaries: Array[LazyResultSummary] = loadChildResultSummaries()  
   lazy val allResultSummaries: Array[LazyResultSummary] = Array(resultSummary) ++ childResultSummaries
-  lazy val allResultSets: Array[LazyResultSet] = allResultSummaries.map(_.lazyResultSet)
-  lazy val allMsiSearches: Array[MSISearch] = allResultSets.withFilter(_.msiSearch.isDefined).map(_.msiSearch.get)
-    /*{
-    val lazyRs = resultSummary.lazyResultSet
-    val msiSearchOpt = lazyRs.msiSearch
-    if(msiSearchOpt.isDefined) Array(msiSearchOpt.get) else childResultSets.map(_.msiSearch.get)
-  }*/
-  lazy val allPeaklistsIds: Array[Long] = allMsiSearches.map(_.peakList.id)
+  
+  lazy val leavesResultSets : Array[LazyResultSet] = loadLeaveResultSets()  
+  lazy val leavesMsiSearches: Array[MSISearch] = leavesResultSets.withFilter(_.msiSearch.isDefined).map(_.msiSearch.get)
+  lazy val allPeaklistsIds: Array[Long] = leavesMsiSearches.map(_.peakList.id)
+
   lazy val spectraDescriptorById: LongMap[Spectrum] = loadSpectraDescriptors(allPeaklistsIds).mapByLong(_.id)
   lazy val spectrumDescriptorByMsQueryId = {
     val ms2QueryIdSpecIdPairs = for(

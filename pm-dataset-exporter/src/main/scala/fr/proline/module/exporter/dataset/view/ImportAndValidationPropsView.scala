@@ -77,7 +77,7 @@ class ImportAndValidationPropsView(
 
     // FIXME: merged result sets should be named with the name of corresponding dataset
     val fileNameOrRsName = rs.msiSearch.map( _.resultFileName ).getOrElse( rs.descriptor.name )
-    val fileName = if( StringUtils.isEmpty(fileNameOrRsName) ) "DATASET_"+rs.descriptor.id else fileNameOrRsName
+    val fileName = if( StringUtils.isEmpty(fileNameOrRsName) ) "DATASET_IdentSummary_Id"+rsm.id else fileNameOrRsName
     logger.debug("Import and validation of file named " + fileName)
     
     // *** Get import Parameters

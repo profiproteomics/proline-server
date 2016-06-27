@@ -32,6 +32,10 @@ import fr.proline.module.exporter.dataset._
 import fr.proline.module.exporter.dataset.template._
 import java.sql.Connection
 import fr.proline.repository.util.JDBCWork
+import fr.proline.core.dal.tables.uds.UdsDbDataSetTable
+import fr.proline.core.dal.tables.uds.UdsDbQuantChannelTable
+import fr.proline.core.dal.tables.SelectQueryBuilder2
+
 
 object BuildDatasetViewSet extends LazyLogging {
 
@@ -74,9 +78,9 @@ object BuildDatasetViewSet extends LazyLogging {
     val loadSubsets = true // TODO moved in the config export param ?
 
     // Build the template
-    val viewSetTemplate = if (exportConfig.format == ExportConfigConstant.FORMAT_XLSX) 
+    val viewSetTemplate = if (exportConfig.format == ExportConfigConstant.FORMAT_XLSX)
       new DatasetTemplateAsXLSX(exportConfig)
-    else 
+    else
       new DatasetTemplateAsTSV(exportConfig)
 
     this.apply(
@@ -135,7 +139,8 @@ object BuildDatasetViewSet extends LazyLogging {
     val msiDbCtx = executionContext.getMSIDbConnectionContext()
     val msiDbHelper = new MsiDbHelper(msiDbCtx)
     val lazyRsmProvider = new SQLLazyResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
-
+    val lazyRsProvider = new SQLLazyResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
+    
     // Retrieve the project name
     val projectName = DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
 
@@ -167,8 +172,6 @@ object BuildDatasetViewSet extends LazyLogging {
         logger.debug("Loading child result summaries (merge)...")
          val leavesRsmIds = getRsmLeafChildsID(rsmId, executionContext)
          
-        // TODO: add children ids to the RsmDescriptor
-//        val childRsmIds = msiDbHelper.getResultSummaryChildrenIds(rsmId)
         val childResultSummaries = lazyRsmProvider.getLazyResultSummaries(
           leavesRsmIds,
           loadFullResultSet = loadFullResultSet,
@@ -182,12 +185,25 @@ object BuildDatasetViewSet extends LazyLogging {
             childResultSummaries.sortBy(_.lazyResultSet.descriptor.name)   
       }
       
+      val leaveResultSetLoader = () => {
+        logger.debug("Loading leave result set (merge)...")
+        val leavesRsIds = getRsLeafChildsID(lazyRsm.getResultSetId())
+
+        val leavesResultSets = lazyRsProvider.getLazyResultSets(leavesRsIds)
+
+        if (leavesResultSets.filter(lrs => { lrs.descriptor.name == null || lrs.descriptor.name.isEmpty }).length > 0)
+          leavesResultSets.sortBy(_.id) //If no name, use ID should always have one !
+        else
+          leavesResultSets.sortBy(_.descriptor.name)
+      }
+      
       logger.debug("Build IdentDataSet")
       
       val identDs = new IdentDataset(
         projectName,
         lazyRsm,
         childResultSummariesLoader,
+        leaveResultSetLoader,
         this._buildBioSequenceLoader(msiDbCtx, lazyRsm),
         this._buildSpectraLoader(msiDbCtx)
       )
@@ -225,14 +241,9 @@ object BuildDatasetViewSet extends LazyLogging {
       
 //      // Workaround for SC quantitations
       if (mode == ExportConfigConstant.MODE_QUANT_SC) {
-//        // SC quantitation
 //        // FIXME: it should not be required to merge parent and child ids
         identRsmIds ++= quantChannels.flatMap { qc =>
           getRsmLeafChildsID(qc.identResultSummaryId, executionContext)          
-//          val identRsmId = qc.identResultSummaryId
-//          val childIds = msiDbHelper.getResultSummaryChildrenIds(identRsmId)
-//          childRsmIdsByParentRsmId += identRsmId -> childIds
-//          childIds
         }
       }
       
@@ -258,71 +269,75 @@ object BuildDatasetViewSet extends LazyLogging {
           linkResultSetEntities = false // TODO: set to true ?
         )
       }
+    
+      val leaveResultSetLoader = () => {
+        logger.debug("Loading leaves result set (quantitation)...")
+        val leavesRsIds = getRsLeafChildsID(lazyQuantRSM.lazyResultSummary.getResultSetId())
+
+        val leavesResultSets = lazyRsProvider.getLazyResultSets(leavesRsIds)
+
+        if (leavesResultSets.filter(lrs => { lrs.descriptor.name == null || lrs.descriptor.name.isEmpty }).length > 0)
+          leavesResultSets.sortBy(_.id) //If no name, use ID should always have one !
+        else
+          leavesResultSets.sortBy(_.descriptor.name)
+      }
       
       var qcNameById = quantChannels.toLongMapWith(qc => qc.id -> qc.name)
       val qcNames = qcNameById.values.toList
       val definedQcNames = qcNames.filter(StringUtils.isNotEmpty(_))
-      
+
       // Check if we have retrieved defined names
-      if(qcNames.length != definedQcNames.length) {
-        
+      if (qcNames.length != definedQcNames.length) {
+
         logger.warn("Some quantitation channels are not named, we will use the result file names instead")
-        
-        // TODO: does this cover all cases of SC quantitation ?
-//        val qcIdByIdentRsmId = if (mode == ExportConfigConstant.MODE_QUANT_SC) {
-//          val longMap = new LongMap[Long]
-//          
-//          for (qc <- quantChannels; childId <- childRsmIdsByParentRsmId(qc.identResultSummaryId)) {
-//            longMap += childId -> qc.id
-//          }
-//          
-//          longMap
-//        }
-//        else {
-//          quantChannels.toLongMapWith(qc => qc.identResultSummaryId -> qc.id)
-//        }
-         val qcIdByIdentRsmId =quantChannels.toLongMapWith(qc => qc.identResultSummaryId -> qc.id)
+
+        val qcIdByIdentRsmId = quantChannels.toLongMapWith(qc => qc.identResultSummaryId -> qc.id)
         // Set QC names as the result file name
-         
+
         qcNameById = {
-  
-          DoJDBCReturningWork.withEzDBC(msiDbCtx) { ezDBC =>
-            
+          val resultLongMap = DoJDBCReturningWork.withEzDBC(msiDbCtx) { ezDBC =>
+
             val qcIdentRsmIds = identRsmIds.filter(qcIdByIdentRsmId.contains(_))
-            println(qcIdentRsmIds.toList)
-            
+
             val sqlQuery = new SelectQueryBuilder3(MsiDbResultSetTable, MsiDbResultSummaryTable, MsiDbMsiSearchTable).mkSelectQuery { (t1, c1, t2, c2, t3, c3) =>
               List(t2.ID, t3.RESULT_FILE_NAME) ->
                 "WHERE " ~ t2.ID ~ " IN (" ~ qcIdentRsmIds.mkString(",") ~ ") " ~
                 "AND " ~ t1.ID ~ "=" ~ t2.RESULT_SET_ID ~ " AND " ~ t3.ID ~ " = " ~ t1.MSI_SEARCH_ID
             }
-  
+
             val longMap = new LongMap[String]()
             ezDBC.selectAndProcess(sqlQuery) { r =>
               longMap += qcIdByIdentRsmId(r.nextLong) -> r.nextString
               ()
             }
-            if(mode==ExportConfigConstant.MODE_QUANT_SC) {
-              for (qc <- quantChannels){
-                // get the name
-                val qcNameWork = new JDBCWork() {
-                  override def execute(con: Connection) {
-                    val getQCName = "SELECT ds.name FROM data_set ds, quant_channel qc WHERE qc.id = ? AND qc.ident_result_summary_id = ds.result_summary_id AND ds.project_id = ? "
-                    val pStmt = con.prepareStatement(getQCName)
-                    pStmt.setLong(1, qc.id)
-                    pStmt.setLong(2, projectId)
-                    val sqlResultSet = pStmt.executeQuery()
-                    while (sqlResultSet.next) { //Should be One ! 
-                      longMap += qc.id -> sqlResultSet.getString("name")
-                    }
-                    pStmt.close()
-                  }
-                }
-                udsDbCtx.doWork(qcNameWork, false)                
-              }
-            }
+
             longMap
           }
+
+          if (mode == ExportConfigConstant.MODE_QUANT_SC) {
+            resultLongMap ++ DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
+
+              val longMap = new LongMap[String]()
+
+              for (qc <- quantChannels) {
+                // get the name
+                val sqlQuery2 = new SelectQueryBuilder2(UdsDbDataSetTable, UdsDbQuantChannelTable).mkSelectQuery { (t1, c1, t2, c2) =>
+                  List(t2.ID) ->
+                    "WHERE " ~ t2.ID ~ " = " ~ qc.id ~
+                    " AND " ~ t2.IDENT_RESULT_SUMMARY_ID ~ "=" ~ t1.RESULT_SUMMARY_ID ~ " AND " ~ t1.PROJECT_ID ~ " = " ~ projectId
+                }
+
+                ezDBC.selectAndProcess(sqlQuery2) { r =>
+                  longMap += qc.id -> r.nextString
+                  ()
+                }
+              }
+              longMap
+            }
+
+          }
+          resultLongMap
+
         }
 
       }
@@ -360,6 +375,7 @@ object BuildDatasetViewSet extends LazyLogging {
         masterQc,
         groupSetupNumber,
         identResultSummariesLoader,
+        leaveResultSetLoader,
         this._buildBioSequenceLoader(msiDbCtx, lazyQuantRSM.lazyResultSummary),
         this._buildSpectraLoader(msiDbCtx),
         qcNameById,
