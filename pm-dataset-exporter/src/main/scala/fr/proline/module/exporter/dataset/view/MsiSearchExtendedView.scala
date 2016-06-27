@@ -91,7 +91,7 @@ class MsiSearchExtendedView(
   
   def onEachRecord( recordFormatter: Map[String,Any] => Unit ) {
     
-    for( rs <- identDS.allResultSets if rs.msiSearch.isDefined ) {
+    for( rs <- identDS.leavesResultSets ) {
       this.formatRecord(MyBuildingContext(rs, rs.msiSearch.get), recordFormatter)
     }
     
