@@ -454,4 +454,32 @@ object BuildDatasetViewSet extends LazyLogging {
 
     allRSMIds.result
   }
+  
+  
+  private def getRsLeafChildsID(rsId: Long, execContext: IExecutionContext): Seq[Long] = {
+    var allRSIds = Seq.newBuilder[Long]
+
+    val jdbcWork = new JDBCWork() {
+
+      override def execute(con: Connection) {
+
+        val stmt = con.prepareStatement("select child_result_set_id from result_set_relation where result_set_relation.parent_result_set_id = ?")
+        stmt.setLong(1, rsId)
+        val sqlResultSet = stmt.executeQuery()
+        var childDefined = false
+        while (sqlResultSet.next) {
+          childDefined = true
+          val nextChildId = sqlResultSet.getInt(1)
+          allRSIds ++= getRsLeafChildsID(nextChildId, execContext)
+        }
+        if (!childDefined)
+          allRSIds += rsId
+        stmt.close()
+      } // End of jdbcWork anonymous inner class
+    }
+    execContext.getMSIDbConnectionContext().doWork(jdbcWork, false)
+
+    allRSIds.result
+  }
+  
 }
