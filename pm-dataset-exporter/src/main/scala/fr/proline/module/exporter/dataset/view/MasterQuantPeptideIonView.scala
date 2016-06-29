@@ -65,7 +65,7 @@ class MasterQuantPeptideIonView(
           }
           null
         }
-        case FIELD_MASTER_QUANT_PEPTIDE_ION_FEATURE_ID => mqPepIon.lcmsMasterFeatureId.get
+        case FIELD_MASTER_QUANT_PEPTIDE_ION_FEATURE_ID => mqPepIon.lcmsMasterFeatureId.getOrElse(0)
       }
       
       if( fieldValue != null ) recordBuilder += fieldConfig.title -> fieldValue
