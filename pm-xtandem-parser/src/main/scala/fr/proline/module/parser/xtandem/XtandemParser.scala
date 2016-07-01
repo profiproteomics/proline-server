@@ -8,6 +8,7 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi.Spectrum
 import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.model.msi.Enzyme
+import fr.proline.core.om.model.msi.IonTypes
 import fr.proline.core.om.model.msi.MsQuery
 import fr.proline.core.om.model.msi.MSISearch
 import fr.proline.core.om.model.msi.MSMSSearchSettings
@@ -427,7 +428,7 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
         }).headOption
       }
       if (_ptm.isDefined) {
-        _ptm.get.ptmEvidences.foreach(e => {
+        _ptm.get.ptmEvidences.filter(e => e.ionType.equals(IonTypes.Precursor) && ptmMass - e.monoMass <= XtandemPtmVerifier.ptmMonoMassMargin).foreach(e => {
           if (_ptm.get.location matches ".+N-term$") {
             locatedPtms += new LocatedPtm(definition = _ptm.get, seqPosition = 0, monoMass = e.monoMass, averageMass = e.averageMass, 
                 composition = e.composition, isNTerm = true, isCTerm = false)
