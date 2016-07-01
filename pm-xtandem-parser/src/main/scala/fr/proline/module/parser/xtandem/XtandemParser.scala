@@ -187,7 +187,6 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
                   score = peptideItem.hyperScore.toFloat, // also keep Evalue somewhere !
                   scoreType = PeptideMatchScoreType.XTANDEM_HYPERSCORE,
                   charge = currentQuery.charge,
-//                  deltaMoz = peptideItem.delta.toFloat,
 //                  deltaMoz = ((peptideItem.mh + (currentQuery.charge - 1) * MolecularConstants.PROTON_MASS) / currentQuery.charge - currentQuery.moz).toFloat,
                   deltaMoz = peptideItem.delta.toFloat / currentQuery.charge,
                   isDecoy = isDecoy,
@@ -198,14 +197,11 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
                   msQuery = currentQuery)
               
               // define the unique key for the protein
-//              val seqDatabases = msiSearch.searchSettings.seqDatabases.filter(_.filePath.equals(getFastaFile(proteinItem.fileMarkup.URL).getPath))
               val seqDatabaseOpt = msiSearch.searchSettings.seqDatabases.filter(_.filePath.equals(getFastaFile(proteinItem.fileMarkup.URL).getPath)).headOption.get
-//              val proteinAccessKey = proteinItem.label + seqDatabases.map(_.id).toArray
               val proteinAccessKey = proteinItem.label + seqDatabaseOpt.id
               // get or create ProteinMatch and store it with a unique key
               if(!proteinMatchesPerUniqueKey.isDefinedAt(proteinAccessKey)) {
                 // get protein first
-//                val protein = protProvider.getProtein(proteinItem.label, seqDatabases.head).getOrElse(new Protein(id = Protein.generateNewId(), sequence = proteinItem.peptide.info))
                 val protein = protProvider.getProtein(proteinItem.label, seqDatabaseOpt).getOrElse(new Protein(id = Protein.generateNewId(), sequence = proteinItem.peptide.info))
                 // create a protein match
                 proteinMatchesPerUniqueKey.put(proteinAccessKey, new ProteinMatch(
@@ -216,7 +212,6 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
                     scoreType = PeptideMatchScoreType.XTANDEM_HYPERSCORE.toString(),
                     isDecoy = isDecoy,
                     protein = if(protein.sequence.isEmpty()) None else Some(protein),
-//                    seqDatabaseIds = seqDatabases.map(_.id).toArray))
                     seqDatabaseIds = Array(seqDatabaseOpt.id)))
                 sequenceMatchesPerUniqueKey.put(proteinAccessKey, new ArrayBuffer[SequenceMatch])
               }
@@ -278,7 +273,6 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
   
   def close() {}
 
-//  private def extractMsiSearchAndProperties(resultBioml: XTBioml, msiSearchProvider: IMSISearchProvider, ptmProvider: IPTMProvider): ResultSetProperties = {
   private def extractMsiSearchAndProperties(resultBioml: XTBioml): ResultSetProperties = {
     // parse all settings
     val settings = new HashMap[String, String]
@@ -344,7 +338,8 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
         refinedResults)
     
     // set SearchSettings
-    val ms1ChargeStates = settings.getOrElse("spectrum, maximum parent charge", "4").toString
+    // XTandem only allows to set maximum charge state, so we have to turn 4 into "1+, 2+, 3+, 4+"
+    val ms1ChargeStates = List.range(1, settings.getOrElse("spectrum, maximum parent charge", "4").toInt + 1).map(_+"+").mkString(", ")
     val ms1ErrorTolMinusOrPlus = settings.getOrElse("spectrum, parent monoisotopic mass error minus", settings.getOrElse("spectrum, parent monoisotopic mass error plus", 0.0))
     val ms1ToleranceUnit = settings.getOrElse("spectrum, parent monoisotopic mass error units", "Da")
     val ms2ToleranceUnit = settings.getOrElse("spectrum, fragment monoisotopic mass error units", "Da")
