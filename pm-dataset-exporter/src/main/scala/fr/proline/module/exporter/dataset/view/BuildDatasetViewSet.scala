@@ -305,14 +305,14 @@ object BuildDatasetViewSet extends LazyLogging {
           }
 
           if (mode == ExportConfigConstant.MODE_QUANT_SC) {
-            resultLongMap ++ DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
+            resultLongMap ++= DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
 
               val longMap = new LongMap[String]()
 
               for (qc <- quantChannels) {
                 // get the name
                 val sqlQuery2 = new SelectQueryBuilder2(UdsDbDataSetTable, UdsDbQuantChannelTable).mkSelectQuery { (t1, c1, t2, c2) =>
-                  List(t2.ID) ->
+                  List(t1.NAME) ->
                     "WHERE " ~ t2.ID ~ " = " ~ qc.id ~
                     " AND " ~ t2.IDENT_RESULT_SUMMARY_ID ~ "=" ~ t1.RESULT_SUMMARY_ID ~ " AND " ~ t1.PROJECT_ID ~ " = " ~ projectId
                 }
