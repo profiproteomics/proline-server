@@ -23,40 +23,29 @@ class PeptideSpectrumMatcherXtandem(
   def getUsedPeaks(peptideMatch: PeptideMatch): Array[Peak] = {
     val spectrum = spectraByIds(peptideMatch.getMs2Query.spectrumId)
     val allPeaks = for ( (m,i) <- spectrum.mozList.get.zip(spectrum.intensityList.get)) yield new Peak(moz = m, intensity = i)
-    val usedPeaksCount = {
-      if (peptideMatch.properties.isDefined && peptideMatch.properties.get.xtandemProperties.isDefined) {
-        peptideMatch.properties.get.xtandemProperties.get.getUsedPeaksCount.getOrElse(allPeaks.length)
-      } else { allPeaks.length }
-    }
-    var usedPeaks = xtandemLikePeaksSelection(peptideMatch, allPeaks, usedPeaksCount)
-    usedPeaks.sortBy(_.moz)
+    allPeaks.sortBy(_.moz)
+//    val spectrum = spectraByIds(peptideMatch.getMs2Query.spectrumId)
+//    val allPeaks = for ( (m,i) <- spectrum.mozList.get.zip(spectrum.intensityList.get)) yield new Peak(moz = m, intensity = i)
+//    val usedPeaksCount = {
+//      if (peptideMatch.properties.isDefined && peptideMatch.properties.get.xtandemProperties.isDefined) {
+//        peptideMatch.properties.get.xtandemProperties.get.getIonSeriesMatches.values.sum
+////        peptideMatch.properties.get.xtandemProperties.get.getUsedPeaksCount.getOrElse(allPeaks.length)
+//      } else { allPeaks.length }
+//    }
+//    var usedPeaks = xtandemLikePeaksSelection(peptideMatch, allPeaks, usedPeaksCount)
+//    usedPeaks.sortBy(_.moz)
   }
   
   def getPtmNeutralLosses(peptideMatch: PeptideMatch): Map[LocatedPtm, Double] = {
-    val nlString = {
-      if (peptideMatch.properties.isDefined && peptideMatch.properties.get.xtandemProperties.isDefined) {
-        peptideMatch.properties.get.xtandemProperties.get.getNlString.getOrElse("");
-      } else { "" }
+    if(peptideMatch.peptide.ptms.exists(_.definition.neutralLosses.size > 1)) {
+      peptideMatch.peptide.ptms.filter(_.definition.neutralLosses.size > 1).map(ptm => ptm -> ptm.definition.neutralLosses(1).monoMass).toMap
+    } else {
+      Map.empty
     }
-    val ptmNeutralLosses = new HashMap[LocatedPtm, Double]()
-    for (idx <- 0 until nlString.size) {
-    	if(nlString.charAt(idx) != '0') {
-    	  val ptm = peptideMatch.peptide.ptms.find(_.seqPosition == (idx))
-    	  ptmNeutralLosses += (ptm.get -> ptm.get.definition.neutralLosses(nlString.charAt(idx).asDigit - 1).monoMass)
-    	}
-    }
-    ptmNeutralLosses.toMap
   }
   
   def getSequence(peptideMatch: PeptideMatch): Array[Char] = {
-    val seq = peptideMatch.peptide.sequence.toCharArray()
-    if (peptideMatch.properties.isDefined && peptideMatch.properties.get.xtandemProperties.isDefined && peptideMatch.properties.get.xtandemProperties.get.getAmbiguityString.isDefined) {
-      val ambiguities = peptideMatch.properties.get.xtandemProperties.get.getAmbiguityString.get.split(",")
-      for (i <- 0 to (ambiguities.length-1) by 3) {
-        seq(ambiguities(i).toInt - 1) = ambiguities(i+2).charAt(0)
-      } 
-    } 
-    seq
+    peptideMatch.peptide.sequence.toCharArray()
   }
 
   def getFragmentIonTypes(peptideMatch: PeptideMatch, charge: Int): FragmentIons = {
