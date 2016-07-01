@@ -39,7 +39,7 @@ class XtandemHandler extends DefaultHandler with LazyLogging {
   var gamlValues: XTGAMLValues = new XTGAMLValues()
   // flags indicate in which markups we are
   var inBioml = false; var inGroupModel = false; var inProtein = false; var inNote = false; var inFileMarkup = false;
-  var inPeptide = false; var inDomain = false; var inAAMarkup = false; var inGroupSupport = false; var inGroupParameters = false;
+  var inPeptide = false; var inDomain = false; var inAAMarkup = false; var inGroupSupport = false; var inGroupParameters = false; var inUnusedParameters = false;
   var inGAMLTrace = false; var inGAMLAttribute = false; var inGAMLXdata = false; var inGAMLYdata = false; var inGAMLValues = false;
   var inGroupSupportFragmentIonMassSpectrum = false;
   // buffer allow to collect "info" datas
@@ -76,6 +76,7 @@ class XtandemHandler extends DefaultHandler with LazyLogging {
       } else if (typeMU.equals("parameters")) {
         if (displayTree) println(" - groupParameters")
         inGroupParameters = true
+        inUnusedParameters = attributes.getValue("label").equals("unused input parameters")
       }
 
     } else if (qName.equals("protein") && inGroupModel) {
@@ -160,9 +161,11 @@ class XtandemHandler extends DefaultHandler with LazyLogging {
 
     } else if (qName.equals("group") && inBioml) {
       if (inGroupParameters) {
-        bioml.groupParametersList.append(groupParameters)
+        if(!inUnusedParameters) // unused parameters should not be stored
+          bioml.groupParametersList.append(groupParameters)
         groupParameters = new XTGroupParameters
         inGroupParameters = false
+        inUnusedParameters = false
 
       } else if (inGroupSupport) {
         if (inGroupSupportFragmentIonMassSpectrum) {
@@ -172,7 +175,6 @@ class XtandemHandler extends DefaultHandler with LazyLogging {
           groupModel.groupSupportList.append(groupSupport)
           inGroupSupportFragmentIonMassSpectrum = false
         }
-        //				groupModel.groupSupportList.append(groupSupport)
         groupSupport = new XTGroupSupport
         inGroupSupport = false
 
