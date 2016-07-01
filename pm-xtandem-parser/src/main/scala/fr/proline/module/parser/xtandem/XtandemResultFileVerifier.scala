@@ -60,6 +60,5 @@ class XtandemResultFileVerifier extends IResultFileVerifier with LazyLogging {
   
   def setParserContext(parserContext: ProviderDecoratedExecutionContext) {
     this.parserContext = parserContext
-//    logger.debug("IY - XtandemResultFileVerifier - setParserContext parserContext = " + parserContext)
   }
 }

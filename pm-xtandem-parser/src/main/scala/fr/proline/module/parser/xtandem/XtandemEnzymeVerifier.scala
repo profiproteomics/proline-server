@@ -21,11 +21,86 @@ import java.io._
 import scala.collection.mutable.ArrayBuffer
 import com.typesafe.scalalogging.LazyLogging
 
-class XTandemEnzymeVerifier ( val parserContext: ProviderDecoratedExecutionContext
-                              ) extends DefaultHandler with LazyLogging {
+object XTandemEnzymeVerifier extends LazyLogging {
+  
+  def extractEnzymesFromXTandemString(parserContext: ProviderDecoratedExecutionContext, enzymesAsString: String, isSemiSpecific: Boolean): Array[Enzyme] = {
+    val enzymes = new ArrayBuffer[Enzyme]
+    
+    val msiSearchProvider = new SQLMsiSearchProvider(parserContext.getUDSDbConnectionContext(), parserContext.getMSIDbConnectionContext(), parserContext.getPSDbConnectionContext())
+    val commaParts: Array[String] = enzymesAsString.split(",")
+    val inputParametersEnzymeCount = commaParts.length
+    if(inputParametersEnzymeCount == 0) {
+      logger.error("There is no cleavage enzyme(s) or the format is not correct")
+    }
+    var residue : String = ""
+    var restrictiveResidue : String = ""
+    var site : String = ""
+    val allEnzymesArray = msiSearchProvider.getAllEnzymes()
+    
+    for (i <- 0 until commaParts.length) {
+      commaParts(i) match {
+        // most probable cases
+        case "[RK]|{P}" => enzymes += new Enzyme(id = -1, name = "Trypsin", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "KR", restrictiveResidues = Some("P"))))
+        case "[KR]|{P}" => enzymes += new Enzyme(id = -1, name = "Trypsin", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "KR", restrictiveResidues = Some("P"))))
+        case "[KR]" => enzymes += new Enzyme(id = -1, name = "Trypsin/P", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "KR", restrictiveResidues = None)))
+        case "[RK]" => enzymes += new Enzyme(id = -1, name = "Trypsin/P", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "KR", restrictiveResidues = None)))
+        // all other cases
+        case _ => 
+          residue = ""
+          restrictiveResidue = ""
+          site = ""
+          val pipeParts: Array[String] = commaParts(i).split("\\|")
+          if(pipeParts.length ==2) {
+            val leftResidue : String = pipeParts(0).substring(1,pipeParts(0).length-1)
+            val rightResidue : String =  pipeParts(1).substring(1,pipeParts(1).length-1)
+            if((pipeParts(0).length==3 && pipeParts(0).substring(0,1).equals("{") && pipeParts(0).substring(pipeParts(0).length-1,pipeParts(0).length).equals("}")) || pipeParts(0).equals("[X]")) {
+              site = "N-term"
+              residue = rightResidue
+              if(!leftResidue.equals("X")) restrictiveResidue = leftResidue
+            } else if((pipeParts(1).length==3 && pipeParts(1).substring(0,1).equals("{") && pipeParts(1).substring(pipeParts(1).length-1,pipeParts(1).length).equals("}")) || pipeParts(1).equals("[X]")) {
+              site = "C-term"
+              residue = leftResidue
+              if(!rightResidue.equals("X")) restrictiveResidue = rightResidue
+            } else {
+              logger.error("Enzyme : can't etablish site of enzyme")  
+            }
+          } else {
+            logger.error("More then 2 residues are found. Format should be for exemple [KR]|{P} for trypsin")
+          }
+          val enzyme = findEnzyme(allEnzymesArray, residue, restrictiveResidue, site, isSemiSpecific)
+          if(!enzyme.isEmpty) {
+            enzymes += enzyme.get 
+          }
+      }
+    } 
+    enzymes.toArray
+  }
+  
+  // Find and return first found enzyme in a enzyme array 
+	private def findEnzyme(allEnzymesArray : Array[Enzyme], residue : String, restrictiveResidue : String, site : String, semiSpecific : Boolean) : Option[Enzyme] = {
+	  logger.debug("allEnzymesArray.length 2 = " + allEnzymesArray.length)
+	  allEnzymesArray.foreach( enz => {
+      if(enz.enzymeCleavages.length == 1
+         && residue.length() == enz.enzymeCleavages.head.residues.length()
+         && enz.enzymeCleavages.head.restrictiveResidues != None
+         && restrictiveResidue.length() == enz.enzymeCleavages.head.restrictiveResidues.get.length()
+         && residue.toUpperCase.sorted.equals(enz.enzymeCleavages.head.residues.toUpperCase.sorted)
+         && restrictiveResidue.toUpperCase.sorted.equals(enz.enzymeCleavages.head.restrictiveResidues.get.toUpperCase.sorted)
+         && site.toUpperCase().equals(enz.enzymeCleavages.head.site.toUpperCase())
+         && semiSpecific == enz.isSemiSpecific
+         ) {
+//        logger.debug("Enzyme "+enz.name+" matches the search")
+        return Some(enz)
+      }
+    })
+    logger.error("No enzyme match for this search")
+    None
+	}
+  
+}
 
-//  var isEnzymesDefinedInDB : Boolean = true
-
+class XTandemEnzymeVerifier(val parserContext: ProviderDecoratedExecutionContext) extends DefaultHandler with LazyLogging {
+  
 	// flags indicate in which markups we are
   private var inBioml = false; private var inNote = false; private var inGroupParameters = false;
 	
@@ -89,62 +164,7 @@ class XTandemEnzymeVerifier ( val parserContext: ProviderDecoratedExecutionConte
         isSemiSpecific = true
   
         } else if (parametersLabel.equals("protein, cleavage site") && !info.isEmpty) {  // Format [RK]|{P}, [[X]|[D], ..]
-          val msiSearchProvider = new SQLMsiSearchProvider(parserContext.getUDSDbConnectionContext(), parserContext.getMSIDbConnectionContext(), parserContext.getPSDbConnectionContext())
-          val commaParts: Array[String] = info.split(",")
-          inputParametersEnzymeCount = commaParts.length
-          if(inputParametersEnzymeCount == 0) {
-            logger.error("There is no cleavage enzyme(s) or the format is not correct")
-          }
-          var residue : String = ""
-          var restrictiveResidue : String = ""
-          var site : String = ""
-          val allEnzymesArray = msiSearchProvider.getAllEnzymes()
-//          logger.debug("allEnzymesArray.length 1 = " + allEnzymesArray.length)
-          
-          println("commaParts.length = " + commaParts.length)
-          for (i <- 0 until commaParts.length) {
-            println("commaParts("+i+") = " + commaParts(i))
-            residue = ""
-            restrictiveResidue = ""
-            site = ""
-            val pipeParts: Array[String] = commaParts(i).split("\\|")
-            
-            if(pipeParts.length ==2) {
-              val leftResidue : String = pipeParts(0).substring(1,pipeParts(0).length-1)
-              val rightResidue : String =  pipeParts(1).substring(1,pipeParts(1).length-1)
-              
-              if( (pipeParts(0).length==3 && pipeParts(0).substring(0,1).equals("{") && pipeParts(0).substring(pipeParts(0).length-1,pipeParts(0).length).equals("}")) 
-                  || pipeParts(0).equals("[X]"))
-              {
-                site = "N-term"
-                residue = rightResidue
-                if(!leftResidue.equals("X")) restrictiveResidue = leftResidue
-                
-              } else if( (pipeParts(1).length==3 && pipeParts(1).substring(0,1).equals("{") && pipeParts(1).substring(pipeParts(1).length-1,pipeParts(1).length).equals("}")) 
-                  || pipeParts(1).equals("[X]"))
-              {
-                site = "C-term"
-                residue = leftResidue
-                if(!rightResidue.equals("X")) restrictiveResidue = rightResidue
-                
-              } else {
-                logger.error("Enzyme : can't etablish site of enzyme")  
-              }
-            } else {
-              logger.error("More then 2 residues are found. Format should be for exemple [KR]|{P} for trypsin")
-            }
-//            logger.debug("\nXtandemEnzymeVerifier before findEnzyme\n")
-            val enzyme = findEnzyme(allEnzymesArray, residue, restrictiveResidue, site, isSemiSpecific)
-//            logger.debug("\nXtandemEnzymeVerifier after findEnzyme\n")
-            if(!enzyme.isEmpty) {
-              usedEnzymes += enzyme.get
-              foundEnzymeInDBCount += 1 
-            }
-          }
-//          if(foundEnzymeInDBCount < inputParametersEnzymeCount ) {
-//            logger.error("Can't find all enzymes in database")
-//            isEnzymesDefinedInDB = false
-//          } 
+          usedEnzymes ++= XTandemEnzymeVerifier.extractEnzymesFromXTandemString(parserContext, info, isSemiSpecific)
         }
 	    }
 			buffer.delete(0, buffer.length())
@@ -168,53 +188,4 @@ class XTandemEnzymeVerifier ( val parserContext: ProviderDecoratedExecutionConte
 	  logger.info("End of Handler for XTandemEnzymeVerifier")
 	}
 
-	// Find and return first found enzyme in a enzyme array 
-	def findEnzyme(allEnzymesArray : Array[Enzyme], residue : String, restrictiveResidue : String, site : String, semiSpecific : Boolean) : Option[Enzyme] = {
-	  logger.debug("allEnzymesArray.length 2 = " + allEnzymesArray.length)
-	  allEnzymesArray.foreach( enz => {
-//	    logger.debug("IY - XtandemEnzymeVerifier 1/3 : Enzyme to find with residue = "+ residue + ", restrictiveResidue = " + restrictiveResidue +", site =" + site + ", semiSpecific =  "+ semiSpecific)
-	    
-//	    logger.debug("enz.enzymeCleavages.head.restrictiveResidues = " + enz.enzymeCleavages.head.restrictiveResidues)
-	    
-//	    logger.debug("IY - XtandemEnzymeVerifier 2/3:Enzyme to be questioned is  \nenz.enzymeCleavages.length "+ enz.name)
-//	    logger.debug("residue.length() = " + residue.length() + ", enz.enzymeCleavages.head.residues.length() = " + enz.enzymeCleavages.head.residues.length())
-//	    logger.debug("restrictiveResidue.length() = " + restrictiveResidue.length())
-//	    if(enz.enzymeCleavages.head.restrictiveResidues != None) logger.debug("enz.enzymeCleavages.head.restrictiveResidues.get.length() = " + enz.enzymeCleavages.head.restrictiveResidues.get.length())
-//	    else logger.debug("enz.enzymeCleavages.head.restrictiveResidues == None")
-//	    logger.debug("residue.toUpperCase.sorted = " + residue.toUpperCase.sorted + ", enz.enzymeCleavages.head.residues.toUpperCase.sorted = " + enz.enzymeCleavages.head.residues.toUpperCase.sorted)
-//	    if(enz.enzymeCleavages.head.restrictiveResidues != None)logger.debug("restrictiveResidue.toUpperCase.sorted = " + restrictiveResidue.toUpperCase.sorted + ", enz.enzymeCleavages.head.restrictiveResidues.get.toUpperCase.sorted = " + enz.enzymeCleavages.head.restrictiveResidues.get.toUpperCase.sorted)
-//	    else logger.debug("enz.enzymeCleavages.head.restrictiveResidues == None")
-//	    logger.debug("site.toUpperCase() = " + site.toUpperCase() + ", enz.enzymeCleavages.head.site.toUpperCase() = " + enz.enzymeCleavages.head.site.toUpperCase())
-//	    logger.debug("semiSpecific = " + semiSpecific + ", enz.isSemiSpecific = " + enz.isSemiSpecific)
-                
-	    
-//	    logger.debug("IY - XtandemEnzymeVerifier 3/3:Enzyme to be questioned is  = "+ enz.name + 
-//                ", residues = " + enz.enzymeCleavages.head.residues +
-//                ", restrictiveResidues = " + enz.enzymeCleavages.head.restrictiveResidues +
-//                ", site = " + enz.enzymeCleavages.head.site +
-//                ", isSemiSpecific = " + enz.isSemiSpecific )
-	    
-      if(enz.enzymeCleavages.length == 1
-         && residue.length() == enz.enzymeCleavages.head.residues.length()
-         && enz.enzymeCleavages.head.restrictiveResidues != None
-         && restrictiveResidue.length() == enz.enzymeCleavages.head.restrictiveResidues.get.length()
-         && residue.toUpperCase.sorted.equals(enz.enzymeCleavages.head.residues.toUpperCase.sorted)
-         && restrictiveResidue.toUpperCase.sorted.equals(enz.enzymeCleavages.head.restrictiveResidues.get.toUpperCase.sorted)
-         && site.toUpperCase().equals(enz.enzymeCleavages.head.site.toUpperCase())
-         && semiSpecific == enz.isSemiSpecific
-         ) {
-        logger.debug("IY - XtandemEnzymeVerifier :Match found ! Enzyme is  = "+ enz.name + 
-                ", residues = " + enz.enzymeCleavages.head.residues +
-                ", restrictiveResidues = " + enz.enzymeCleavages.head.restrictiveResidues +
-                ", site = " + enz.enzymeCleavages.head.site +
-                ", isSemiSpecific = " + enz.isSemiSpecific )
-        return Some(enz)
-      }
-//      else {
-//        logger.debug("IY - XtandemEnzymeVerifier :Match not found !!!!!")
-//      }
-    })
-    logger.debug("IY - XtandemEnzymeVerifier : def findEnzyme return None")
-    None
-	}
 }

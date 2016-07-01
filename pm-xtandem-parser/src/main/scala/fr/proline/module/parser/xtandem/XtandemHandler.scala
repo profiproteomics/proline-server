@@ -58,7 +58,12 @@ class XtandemHandler extends DefaultHandler with LazyLogging {
       if (typeMU.equals("model")) {
         if (displayTree) println(" - groupModel")
         groupModel.id = augmentString(attributes.getValue("id")).toInt
-        groupModel.rt = try { Some(augmentString(attributes.getValue("rt")).toDouble) } catch { case _ => None }
+        groupModel.rt = {
+          if(attributes.getIndex("rt") == -1 || attributes.getValue("rt") == "")
+            0
+          else
+            attributes.getValue("rt").toDouble
+        }
         groupModel.mh = augmentString(attributes.getValue("mh")).toDouble
         groupModel.z = augmentString(attributes.getValue("z")).toInt
         inGroupModel = true
@@ -105,9 +110,16 @@ class XtandemHandler extends DefaultHandler with LazyLogging {
       domain.mh = augmentString(attributes.getValue("mh")).toDouble
       domain.delta = augmentString(attributes.getValue("delta")).toDouble
       domain.hyperScore = augmentString(attributes.getValue("hyperscore")).toDouble
+      domain.expectValue = augmentString(attributes.getValue("expect")).toDouble
+      domain.nextScore = augmentString(attributes.getValue("nextscore")).toDouble
       domain.pre = attributes.getValue("pre")
       domain.post = attributes.getValue("post")
       domain.seq = attributes.getValue("seq")
+      Array("a", "b", "c", "x", "y", "z").foreach(n => {
+        if(attributes.getIndex(n+"_ions") != -1 && attributes.getIndex(n+"_score") != -1) {
+          domain.fragmentMatches += new XTFragmentMatch(n, attributes.getValue(n+"_ions").toInt, attributes.getValue(n+"_score").toDouble)
+        }
+      })
       inDomain = true
 
     } else if (qName.equals("aa") && inDomain) {
