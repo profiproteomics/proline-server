@@ -178,7 +178,8 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
               val xtandemProperties = new PeptideMatchXtandemProperties(
                   expectationValue = peptideItem.expectValue, // important for validation 
                   nextScore = peptideItem.nextScore, // I have no idea what it is and how it's calculated (but it's always close to hyperscore)
-                  ionSeries = ionSeries.toArray) // may be useful for FragmentMatchGenerator
+                  ionSeriesMatches = peptideItem.fragmentMatches.map(p => p.serie -> p.nbMatches).toMap, // may be useful for FragmentMatchGenerator
+                  ionSeriesScores = peptideItem.fragmentMatches.map(p => p.serie -> p.score).toMap) // may be useful for FragmentMatchGenerator
               // new PeptideMatch
               if(!peptideMatchesByUniqueKey.isDefinedAt(key)) peptideMatchesByUniqueKey.put(key, new ArrayBuffer[PeptideMatch])
               peptideMatchesByUniqueKey(key) += new PeptideMatch(
