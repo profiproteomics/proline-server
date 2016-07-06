@@ -60,9 +60,6 @@ trait PeptideSpectrumMatcher extends LazyLogging {
 
             val LabelRegex(ionserie, chargeStr) = fragment.series.get
             val label = new StringBuilder().append(ionserie).append('(').append(fragment.position.toString).append(')').append(chargeStr)
-            if (fragment.neutralLoss > 0.0) {
-              label.append(" -"+scala.math.round(fragment.neutralLoss))
-            }
             
             val fragMatch = new FragmentMatch(
               label = label.toString,
