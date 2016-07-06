@@ -183,7 +183,8 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
                   ionSeriesScores = peptideItem.fragmentMatches.map(p => p.serie -> p.score).toMap) // may be useful for FragmentMatchGenerator
               // new PeptideMatch
               if(!peptideMatchesByUniqueKey.isDefinedAt(key)) peptideMatchesByUniqueKey.put(key, new ArrayBuffer[PeptideMatch])
-              peptideMatchesByUniqueKey(key) += new PeptideMatch(
+              // only add the peptide match if it's a "real new" one
+              val newPeptideMatch = new PeptideMatch(
                   id = PeptideMatch.generateNewId(),
                   rank = 1, // X!Tandem only keeps best matches
                   score = peptideItem.hyperScore.toFloat, // also keep Evalue somewhere !
@@ -197,6 +198,9 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
                   fragmentMatchesCount = peptideItem.fragmentMatches.map(_.nbMatches).sum, 
                   properties = Some(new PeptideMatchProperties(xtandemProperties = Some(xtandemProperties))),
                   msQuery = currentQuery)
+              if(!peptideMatchesByUniqueKey(key).exists(pm => { pm.msQuery.initialId == newPeptideMatch.msQuery.initialId && pm.peptide.uniqueKey == newPeptideMatch.peptide.uniqueKey })) {
+                peptideMatchesByUniqueKey(key) += newPeptideMatch
+              }
               
               // define the unique key for the protein
               val seqDatabaseOpt = msiSearch.searchSettings.seqDatabases.filter(_.filePath.equals(getFastaFile(proteinItem.fileMarkup.URL).getPath)).headOption.get
@@ -428,7 +432,7 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
         }).headOption
       }
       if (_ptm.isDefined) {
-        _ptm.get.ptmEvidences.filter(e => e.ionType.equals(IonTypes.Precursor) && ptmMass - e.monoMass <= XtandemPtmVerifier.ptmMonoMassMargin).foreach(e => {
+        _ptm.get.ptmEvidences.filter(e => e.ionType.equals(IonTypes.Precursor) && scala.math.abs(ptmMass - e.monoMass) <= XtandemPtmVerifier.ptmMonoMassMargin).foreach(e => {
           if (_ptm.get.location matches ".+N-term$") {
             locatedPtms += new LocatedPtm(definition = _ptm.get, seqPosition = 0, monoMass = e.monoMass, averageMass = e.averageMass, 
                 composition = e.composition, isNTerm = true, isCTerm = false)
