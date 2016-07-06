@@ -150,6 +150,47 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     logger.info("End xtandemParserTest")
     
   }
+  
+//  @Test
+  def xtandemABUParserTest {
+    logger.info("Start xtandemABUParserTest")
+    var startTime : Long = System.currentTimeMillis()
+
+    val myXtandemParser = new XtandemParser(new File(getClass.getResource("/xtandemResultFile/QEKAC141027_133.raw.mzDB.t.xml").toURI), parserContext)
+    var endTime : Long = System.currentTimeMillis()
+
+    try {
+    val rs = myXtandemParser.getResultSet(false)
+    assertNotNull(rs)
+    println("resultSet.peptideMatches.length = " + rs.peptideMatches.length)  // Number of <domain> markup
+    
+    println("ABU ms1ChargeStates="+rs.msiSearch.get.searchSettings.ms1ChargeStates)
+    println("ABU ms2ChargeStates="+rs.msiSearch.get.searchSettings.msmsSearchSettings.get.ms2ChargeStates)
+//    println("ABU properties="+rs.properties.toString)
+    
+    rs.peptideMatches.filter(_.msQuery.initialId==29206).foreach(pm => {
+      println("ABU id="+pm.id+" peptide="+pm.peptide.sequence+" ptms="+pm.peptide.ptmString)
+//      println("ABU ptms="+pm.peptide.ptms.map(_.toReadableString()).mkString(" ; "))
+    })
+    
+//    rs.peptides.filter(_.sequence.equals("GSSHHHHHHSSGLVPR")).foreach(p => println("ABU peptide to store: "+p.sequence+" "+p.ptmString))
+//    rs.peptideMatches.filter(_.peptide.sequence.equals("FTAVQALSVIESSK")).foreach(pm => {
+    var nbOk = 0
+    rs.peptideMatches.foreach(pm => {
+      var ppm = ((pm.deltaMoz * 1000000) / ((pm.peptide.calculatedMass + (pm.charge * 1.007825)) / pm.charge));
+//      if(ppm > 5 || ppm < -5) ppm = (((pm.deltaMoz - 1/pm.charge)* 1000000) / ((pm.peptide.calculatedMass + (pm.charge * 1.007825)) / pm.charge));
+//      if(ppm > 5 || ppm < -5) ppm = (((pm.deltaMoz - 1/pm.charge)* 1000000) / ((pm.peptide.calculatedMass + (pm.charge * 1.007825)) / pm.charge));
+      if(ppm >= -5 && ppm <= 5) nbOk += 1
+//      println(pm.msQuery.initialId+", "+pm.peptide.sequence+", "+pm.peptide.ptmString+", "+pm.deltaMoz+", "+pm.peptide.calculatedMass+", "+pm.msQuery.moz+", "+pm.charge+", "+ppm)
+    })
+    println("Total of good peptideMatches: "+nbOk+"/"+rs.peptideMatches.size)
+    
+    } catch {
+      case e: Exception => logger.error("ABU error", e)
+    }
+    logger.info("End xtandemABUParserTest")
+    
+  }
 
   @Test
   def XtandemResultFileVerifierTest {
@@ -175,7 +216,13 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     logger.info("Start XtandemResultFileProviderTest")
     val myXtandemResultFileProvider = new XtandemResultFileProvider
     myXtandemResultFileProvider.setParserContext(parserContext)
+    try {
     myXtandemResultFileProvider.getResultFile(file, null, parserContext).getResultSet(false)
+    } catch {
+      case e: Exception =>
+        logger.error("Error on XtandemResultFileProviderTest", e)
+        throw e
+    }
     logger.info("End XtandemResultFileProviderTest")
   }
   
@@ -202,7 +249,7 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     assertEquals(AspNAmbicFound,true)
   }
   
-  @Test
+//  @Test
   def sixPtmFound {
     // Find following six PTM writen in different parameters in Xtandem input file :
     // Iodoacetamide derivative, Oxidation or Hydroxylation, Pyro-glu from Q ,Loss of ammonia, Pyro-glu from E, Acetylation
@@ -293,14 +340,169 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
 //    logger.info("End noInputParameters test")
 //  }
 //  
-  @Test
-  def sortByProtein {
-    logger.info("Start sortByProtein test")
-//    val file : File = new File(getClass.getResource("/xtandemResultFile/output.test.2Enzymes.xml").toURI)
-//    val myXtandemParser = new XtandemParser(getClass.getResource("/xtandemResultFile/output.test.SortResultByProtein.xml").toURI, parserContext)
-    val myXtandemParser = new XtandemParser(new File(getClass.getResource("/xtandemResultFile/output.test.SortResultByProtein.xml").toURI), parserContext)
-    myXtandemParser.getResultSet(false)
-    logger.info("End sortByProtein test")
+//  @Test
+//  def sortByProtein {
+//    logger.info("Start sortByProtein test")
+////    val file : File = new File(getClass.getResource("/xtandemResultFile/output.test.2Enzymes.xml").toURI)
+////    val myXtandemParser = new XtandemParser(getClass.getResource("/xtandemResultFile/output.test.SortResultByProtein.xml").toURI, parserContext)
+//    val myXtandemParser = new XtandemParser(new File(getClass.getResource("/xtandemResultFile/output.test.SortResultByProtein.xml").toURI), parserContext)
+//    myXtandemParser.getResultSet(false)
+//    logger.info("End sortByProtein test")
+//  }
+
+  import fr.profi.util.regex.RegexUtils._
+//  @Test
+  def xtandemParserABUTest {
+    logger.info("Start xtandemParserABUTest")
+    var startTime : Long = System.currentTimeMillis()
+
+    try {
+      val myXtandemParser = new XtandemParser(new File(getClass.getResource("/xtandemResultFile/QEKAC141027_122.raw.mzDB.t.xml").toURI), parserContext)
+      var endTime : Long = System.currentTimeMillis()
+  
+      // Let's test if useful values in xml file are in Xtandem classes
+      val resultSet = myXtandemParser.getResultSet(false)
+      
+      assertNotNull(resultSet)
+      println("resultSet.peptideMatches.length = " + resultSet.peptideMatches.length)  // Number of <domain> markup
+      
+      val regex = "###REV###".r
+      val (trs, drs) = fr.proline.core.algo.msi.TargetDecoyResultSetSplitter.split(resultSet, regex)
+      println("ABU target psm: "+trs.peptideMatches.size)
+      println("ABU decoy psm: "+drs.peptideMatches.size)
+      println("ABU decoy psm: "+trs.decoyResultSet.get.peptideMatches.size)
+      
+//      resultSet.proteinMatches.foreach(pm => {
+//        if(regex.findFirstIn(pm.accession).isDefined)
+//          println("ABU match of protein "+pm.accession)
+//      })
+      
+      logger.debug("ABU start")
+//      val (decoyProtMatches, targetProtMatches) = resultSet.proteinMatches.partition { protMatch =>
+//        protMatch.accession =~ regex
+//      }
+      val (decoyProtMatches, targetProtMatches) = resultSet.proteinMatches.partition { protMatch =>
+        regex.findFirstIn(protMatch.accession).isDefined
+      }
+      logger.debug("ABU end")
+//      val targetProtMatches = new ArrayBuffer[PeptideMatch]()
+//      val decoyProtMatches = new ArrayBuffer[PeptideMatch]()
+//      resultSet.proteinMatches.foreach(pm => {
+//        if(regex.findFirstIn(pm.accession).isDefined)
+//          decoyProtMatches ++ pm.accession
+//        else
+//          targetProtMatches ++ pm.accession
+//      })
+      println("ABU nb targetProtMatches: "+targetProtMatches.size+" ; nb decoyProtMatches: "+decoyProtMatches.size)
+      
+      val targetPepIdSet = for (protMatch <- targetProtMatches; seqMatch <- protMatch.sequenceMatches) yield seqMatch.getPeptideId
+      val decoyPepIdSet = for (protMatch <- decoyProtMatches; seqMatch <- protMatch.sequenceMatches) yield seqMatch.getPeptideId
+      
+      println("ABU nb targetPepIdSet: "+targetPepIdSet.size+" ; nb decoyPepIdSet: "+decoyPepIdSet.size)
+      
+      val targetPepMatches = new ArrayBuffer[PeptideMatch]()
+      val decoyPepMatches = new ArrayBuffer[PeptideMatch]()
+      
+      for (pepMatch <- resultSet.peptideMatches) {
+        val pepId = pepMatch.peptide.id
+        if (targetPepIdSet.contains(pepId)) targetPepMatches += pepMatch
+        if (decoyPepIdSet.contains(pepId)) decoyPepMatches += pepMatch
+      }
+      println("ABU nb targetPepMatches: "+targetPepMatches.size+" ; nb decoyPepMatches: "+decoyPepMatches.size)
+      
+      val targetRS = this._buildResultSet(resultSet, targetProtMatches, targetPepMatches, false)
+      val decoyRS = this._buildResultSet(resultSet, decoyProtMatches, decoyPepMatches, true)
+      
+      targetRS.decoyResultSet = Some(decoyRS)
+      
+      
+      println("ABU target psm: "+targetRS.peptideMatches.size)
+      println("ABU decoy psm: "+decoyRS.peptideMatches.size)
+      println("ABU decoy psm: "+targetRS.decoyResultSet.get.peptideMatches.size)
+    
+//      val pm = resultSet.peptideMatches.filter(_.msQuery.initialId==74).head
+//      println("ABU peptide "+pm.peptide.sequence+" calcMass="+pm.peptide.calculatedMass+", expMoz="+pm.msQuery.moz)
+      
+//      resultSet.peptideMatches.foreach(pm => {
+//        println("ABU peptide at query "+pm.msQuery.initialId+" with ranks ("+pm.rank+", "+pm.cdPrettyRank+", "+pm.sdPrettyRank+"): "+pm.peptide.sequence+" and "+pm.peptide.readablePtmString+" with "+pm.missedCleavage)
+//      })
+//      resultSet.proteinMatches.foreach(pm => {
+//        pm.sequenceMatches.filter(_.peptide.get.sequence.equals("AHNVSTSNNSPSTDNDSISK")).foreach(sm => {
+//          println("ABU ProteinMatch '"+pm.accession+"' SequenceMatch "+sm.start+" to "+sm.end)
+//        })
+////        println("ABU Protein '"+pm.accession+"' "+pm.description)
+//      })
+//      myXtandemParser.msQueries.foreach(msq => {
+//        msq match {
+//          case m: Ms2Query => println("ABU Query "+m.initialId+" Title "+m.spectrumTitle)
+//        }
+//      })
+      def onEachSpectrum(spectrum: Spectrum) = {
+        if(spectrum.title.startsWith("controllerType=0 controllerNumber=1 scan=2989 "))
+          println("ABU title "+spectrum.firstTime)
+      }
+//      myXtandemParser.eachSpectrum(onEachSpectrum)
+  
+      logger.info("End xtandemParserABUTest")
+    } catch {
+      case e: Exception => {
+        e.printStackTrace()
+        throw e
+      }
+    }
+    
+  }
+  private def _buildResultSet(tmpRs: ResultSet,
+                              protMatches: Array[ProteinMatch],
+                              pepMatches: Seq[PeptideMatch],
+                              isDecoy: Boolean): ResultSet = {
+
+    val newPepMatches = new ArrayBuffer[PeptideMatch]()
+
+    val rsId = ResultSet.generateNewId
+
+    // Re-rank peptide matches
+    pepMatches.groupBy(_.msQuery.id).foreach {
+      case (msQueryId, msQueryPepMatches) =>
+        val sortedPepMatches = msQueryPepMatches.sortBy(_.rank)
+        var rank = 1
+        for (sortedPepMatch <- sortedPepMatches) {
+          val newRankedPepMatch = sortedPepMatch.copy(id = PeptideMatch.generateNewId, rank = rank, isDecoy = isDecoy, resultSetId = rsId)
+          newPepMatches += newRankedPepMatch
+          rank += 1
+        }
+    }
+
+    val peptideByIds = newPepMatches.groupBy(_.peptide.id)
+
+    val newProtMatches = protMatches.map { protMatch =>
+      val seqMatches = protMatch.sequenceMatches.filter { seqMatch => peptideByIds.contains(seqMatch.peptide.get.id) }
+
+      val newSeqMatch = seqMatches.map { seqMatch =>
+        val pepMatches = peptideByIds.get(seqMatch.peptide.get.id).getOrElse(List())
+        var bestPepMatch = pepMatches(0)
+        for (i <- 1 until pepMatches.length) {
+          val nextPepMatch = pepMatches(i)
+          if ((bestPepMatch.score < nextPepMatch.score) || ((bestPepMatch.score == nextPepMatch.score) && (bestPepMatch.id < nextPepMatch.id)))
+            bestPepMatch = nextPepMatch
+        }
+
+        seqMatch.copy(resultSetId = rsId, bestPeptideMatch = Some(bestPepMatch), isDecoy = isDecoy)
+      }
+
+      protMatch.copy(isDecoy = isDecoy, resultSetId = rsId, sequenceMatches = newSeqMatch)
+    }
+
+    // Build the result set: create a copy of the TMP one and replace some attributes
+    tmpRs.copy(
+      id = rsId,
+      peptides = newPepMatches.map(_.peptide).distinct.toArray,
+      peptideMatches = newPepMatches.toArray,
+      proteinMatches = newProtMatches,
+      isDecoy = isDecoy,
+      decoyResultSetId = 0,
+      decoyResultSet = None
+    )
   }
   
   // Other tests : XML File Structure is respected(use preParsingTest ?)

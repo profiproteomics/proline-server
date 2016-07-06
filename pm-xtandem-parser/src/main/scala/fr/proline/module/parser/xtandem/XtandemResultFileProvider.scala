@@ -40,7 +40,6 @@ class XtandemResultFileProvider extends IResultFileProvider with LazyLogging {
   
   override def setParserContext(parserContext: ProviderDecoratedExecutionContext) {
     this.parserContext = parserContext
-//    logger.debug("IY - XtandemResultFileProvider - setParserContext parserContext = " + parserContext)
   }
   
 }

@@ -11,6 +11,8 @@ package fr.proline.module.parser.xtandem
 
 import scala.collection.mutable.ArrayBuffer
 
+case class XTFragmentMatch(serie: String, nbMatches: Int, score: Double)
+
 class XTAAMarkup {
 	var typeMU : Char = _
 	var at : Int  = _
@@ -27,7 +29,10 @@ class XTDomain {
 	var pre : String = _
 	var post : String = _
 	var seq : String = _
+	var expectValue : Double = _
+	var nextScore : Double = _
 	var aaMarkupList : ArrayBuffer[XTAAMarkup] = new ArrayBuffer[XTAAMarkup]()
+	var fragmentMatches = new ArrayBuffer[XTFragmentMatch]
 }
 
 class XTPeptide {
@@ -86,7 +91,8 @@ class XTGroupSupport {
 class XTGroupModel {
 	var id : Int = _
 //	var typeMU : String ="model"
-	var rt : Option[Double] = _  // retention time
+//	var rt : Option[Double] = _  // retention time
+	var rt : Double = _  // retention time
 	var mh : Double = _
 	var z : Int = _
 	var groupSupportList : ArrayBuffer[XTGroupSupport] = new ArrayBuffer[XTGroupSupport]()
