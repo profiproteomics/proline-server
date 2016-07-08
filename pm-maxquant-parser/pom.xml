@@ -6,7 +6,7 @@
     <version>0.2.0</version>
   </parent>
   <artifactId>PM-MaxQuantParser</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.1</version>
   <dependencies>
   	<dependency>
   		<groupId>javax.xml.bind</groupId>
@@ -96,6 +96,6 @@
 		</pluginManagement>
   </build>
   <scm>
-  	<url>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MaxQuantParser/branches/0.0.1-RCandidates</url>
+  	<url>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MaxQuantParser/tags/0.0.1</url>
   </scm>
 </project>
