@@ -95,4 +95,7 @@
 			</plugins>
 		</pluginManagement>
   </build>
+  <scm>
+  	<url>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MaxQuantParser/branches/0.0.1-RCandidates</url>
+  </scm>
 </project>
