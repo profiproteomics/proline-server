@@ -6,20 +6,20 @@
 	<parent>
 		<artifactId>ProFI-Pom</artifactId>
 		<groupId>fr.proline</groupId>
-		<version>0.2.0-SNAPSHOT</version>
+		<version>0.2.0</version>
 	</parent>
 
 	<artifactId>PM-SequenceRepository</artifactId>
-	<version>0.4.0-SNAPSHOT</version>
+	<version>0.4.0</version>
 
 	<name>PM-SequenceRepository</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<core.version>0.6.0-SNAPSHOT</core.version>
+		<core.version>0.6.0</core.version>
 	</properties>
 	<scm>
-		<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-SequenceRepository/branches/0.4.0-RCandidates</connection>
+		<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-SequenceRepository/tags/0.4.0</connection>
 	</scm>
 
 
@@ -97,7 +97,7 @@
 		<dependency>
 			<groupId>fr.proline</groupId>
 			<artifactId>Proline-Node</artifactId>
-			<version>0.1.0-SNAPSHOT</version>
+			<version>0.1.0</version>
 		</dependency>
 	</dependencies>
 
