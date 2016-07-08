@@ -3,7 +3,7 @@
   <parent>
     <groupId>fr.proline</groupId>
     <artifactId>ProFI-Pom</artifactId>
-    <version>0.2.0-SNAPSHOT</version>
+    <version>0.2.0</version>
   </parent>
   <artifactId>PM-MaxQuantParser</artifactId>
   <version>0.0.1-SNAPSHOT</version>
@@ -26,7 +26,7 @@
   	<dependency>
   		<groupId>fr.proline.util</groupId>
   		<artifactId>ProFI-Commons-Java</artifactId>
-  		<version>0.3.0-SNAPSHOT</version>
+  		<version>0.3.0</version>
   	</dependency>
   	<dependency>
   		<groupId>junit</groupId>
@@ -48,7 +48,7 @@
   	<dependency>
   		<groupId>fr.proline.util</groupId>
   		<artifactId>ProFI-Commons-Scala</artifactId>
-  		<version>0.4.0-SNAPSHOT</version>
+  		<version>0.4.0</version>
   	</dependency>
   	<dependency>
   		<groupId>commons-io</groupId>
@@ -62,7 +62,7 @@
   	</dependency>
   </dependencies>
   <properties>
-  	<core.version>0.6.0-SNAPSHOT</core.version>
+  	<core.version>0.6.0</core.version>
   </properties>
   <build>
   	<pluginManagement>
