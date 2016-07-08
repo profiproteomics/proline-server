@@ -225,7 +225,7 @@ public class ExperimentPropertiesReader {
 		Map<String, Integer> qCountByRS = getQueriesCount();
 		
 		for(String nextFilePath : m_mqParams.getFilePaths()){
-			ResultSetProperties rsProp = new ResultSetProperties(Option.apply("SEPARATED"), null, null);
+			ResultSetProperties rsProp = new ResultSetProperties(Option.apply("SEPARATED"), null, null,null);
 			MSISearch nextMSI = createMSISearch(nextFilePath, creationDate, m_peaklistSoftware, qCountByRS );
 			
 			String rsName = FilenameUtils.getBaseName(nextFilePath);
