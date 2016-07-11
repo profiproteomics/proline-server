@@ -38,9 +38,12 @@
 
       <!-- Bridge Apache commons-logging over SLF4J -->
 
-    
-
     <!-- Proline -->
+	<dependency>
+      <groupId>fr.profi</groupId>
+      <artifactId>ProFI-Proteomics</artifactId>
+      <version>0.1.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+    </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-OM</artifactId>
@@ -50,11 +53,6 @@
       <groupId>fr.proline</groupId>
       <artifactId>Proline-DAL</artifactId>
       <version>${core.version}</version>
-    </dependency>
-	<dependency>
-      <groupId>fr.profi</groupId>
-      <artifactId>mzdb-processing</artifactId>
-      <version>0.6.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
     </dependency>
 
     <!-- Tests -->
