@@ -352,106 +352,106 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
 
   import fr.profi.util.regex.RegexUtils._
 //  @Test
-  def xtandemParserABUTest {
-    logger.info("Start xtandemParserABUTest")
-    var startTime : Long = System.currentTimeMillis()
-
-    try {
-      val myXtandemParser = new XtandemParser(new File(getClass.getResource("/xtandemResultFile/QEKAC141027_122.raw.mzDB.t.xml").toURI), parserContext)
-      var endTime : Long = System.currentTimeMillis()
-  
-      // Let's test if useful values in xml file are in Xtandem classes
-      val resultSet = myXtandemParser.getResultSet(false)
-      
-      assertNotNull(resultSet)
-      println("resultSet.peptideMatches.length = " + resultSet.peptideMatches.length)  // Number of <domain> markup
-      
-      val regex = "###REV###".r
-      val (trs, drs) = fr.proline.core.algo.msi.TargetDecoyResultSetSplitter.split(resultSet, regex)
-      println("ABU target psm: "+trs.peptideMatches.size)
-      println("ABU decoy psm: "+drs.peptideMatches.size)
-      println("ABU decoy psm: "+trs.decoyResultSet.get.peptideMatches.size)
-      
-//      resultSet.proteinMatches.foreach(pm => {
-//        if(regex.findFirstIn(pm.accession).isDefined)
-//          println("ABU match of protein "+pm.accession)
-//      })
-      
-      logger.debug("ABU start")
+//  def xtandemParserABUTest {
+//    logger.info("Start xtandemParserABUTest")
+//    var startTime : Long = System.currentTimeMillis()
+//
+//    try {
+//      val myXtandemParser = new XtandemParser(new File(getClass.getResource("/xtandemResultFile/QEKAC141027_122.raw.mzDB.t.xml").toURI), parserContext)
+//      var endTime : Long = System.currentTimeMillis()
+//  
+//      // Let's test if useful values in xml file are in Xtandem classes
+//      val resultSet = myXtandemParser.getResultSet(false)
+//      
+//      assertNotNull(resultSet)
+//      println("resultSet.peptideMatches.length = " + resultSet.peptideMatches.length)  // Number of <domain> markup
+//      
+//      val regex = "###REV###".r
+//      val (trs, drs) = fr.proline.core.algo.msi.TargetDecoyResultSetSplitter.split(resultSet, regex)
+//      println("ABU target psm: "+trs.peptideMatches.size)
+//      println("ABU decoy psm: "+drs.peptideMatches.size)
+//      println("ABU decoy psm: "+trs.decoyResultSet.get.peptideMatches.size)
+//      
+////      resultSet.proteinMatches.foreach(pm => {
+////        if(regex.findFirstIn(pm.accession).isDefined)
+////          println("ABU match of protein "+pm.accession)
+////      })
+//      
+//      logger.debug("ABU start")
+////      val (decoyProtMatches, targetProtMatches) = resultSet.proteinMatches.partition { protMatch =>
+////        protMatch.accession =~ regex
+////      }
 //      val (decoyProtMatches, targetProtMatches) = resultSet.proteinMatches.partition { protMatch =>
-//        protMatch.accession =~ regex
+//        regex.findFirstIn(protMatch.accession).isDefined
 //      }
-      val (decoyProtMatches, targetProtMatches) = resultSet.proteinMatches.partition { protMatch =>
-        regex.findFirstIn(protMatch.accession).isDefined
-      }
-      logger.debug("ABU end")
-//      val targetProtMatches = new ArrayBuffer[PeptideMatch]()
-//      val decoyProtMatches = new ArrayBuffer[PeptideMatch]()
-//      resultSet.proteinMatches.foreach(pm => {
-//        if(regex.findFirstIn(pm.accession).isDefined)
-//          decoyProtMatches ++ pm.accession
-//        else
-//          targetProtMatches ++ pm.accession
-//      })
-      println("ABU nb targetProtMatches: "+targetProtMatches.size+" ; nb decoyProtMatches: "+decoyProtMatches.size)
-      
-      val targetPepIdSet = for (protMatch <- targetProtMatches; seqMatch <- protMatch.sequenceMatches) yield seqMatch.getPeptideId
-      val decoyPepIdSet = for (protMatch <- decoyProtMatches; seqMatch <- protMatch.sequenceMatches) yield seqMatch.getPeptideId
-      
-      println("ABU nb targetPepIdSet: "+targetPepIdSet.size+" ; nb decoyPepIdSet: "+decoyPepIdSet.size)
-      
-      val targetPepMatches = new ArrayBuffer[PeptideMatch]()
-      val decoyPepMatches = new ArrayBuffer[PeptideMatch]()
-      
-      for (pepMatch <- resultSet.peptideMatches) {
-        val pepId = pepMatch.peptide.id
-        if (targetPepIdSet.contains(pepId)) targetPepMatches += pepMatch
-        if (decoyPepIdSet.contains(pepId)) decoyPepMatches += pepMatch
-      }
-      println("ABU nb targetPepMatches: "+targetPepMatches.size+" ; nb decoyPepMatches: "+decoyPepMatches.size)
-      
-      val targetRS = this._buildResultSet(resultSet, targetProtMatches, targetPepMatches, false)
-      val decoyRS = this._buildResultSet(resultSet, decoyProtMatches, decoyPepMatches, true)
-      
-      targetRS.decoyResultSet = Some(decoyRS)
-      
-      
-      println("ABU target psm: "+targetRS.peptideMatches.size)
-      println("ABU decoy psm: "+decoyRS.peptideMatches.size)
-      println("ABU decoy psm: "+targetRS.decoyResultSet.get.peptideMatches.size)
-    
-//      val pm = resultSet.peptideMatches.filter(_.msQuery.initialId==74).head
-//      println("ABU peptide "+pm.peptide.sequence+" calcMass="+pm.peptide.calculatedMass+", expMoz="+pm.msQuery.moz)
-      
-//      resultSet.peptideMatches.foreach(pm => {
-//        println("ABU peptide at query "+pm.msQuery.initialId+" with ranks ("+pm.rank+", "+pm.cdPrettyRank+", "+pm.sdPrettyRank+"): "+pm.peptide.sequence+" and "+pm.peptide.readablePtmString+" with "+pm.missedCleavage)
-//      })
-//      resultSet.proteinMatches.foreach(pm => {
-//        pm.sequenceMatches.filter(_.peptide.get.sequence.equals("AHNVSTSNNSPSTDNDSISK")).foreach(sm => {
-//          println("ABU ProteinMatch '"+pm.accession+"' SequenceMatch "+sm.start+" to "+sm.end)
-//        })
-////        println("ABU Protein '"+pm.accession+"' "+pm.description)
-//      })
-//      myXtandemParser.msQueries.foreach(msq => {
-//        msq match {
-//          case m: Ms2Query => println("ABU Query "+m.initialId+" Title "+m.spectrumTitle)
-//        }
-//      })
-      def onEachSpectrum(spectrum: Spectrum) = {
-        if(spectrum.title.startsWith("controllerType=0 controllerNumber=1 scan=2989 "))
-          println("ABU title "+spectrum.firstTime)
-      }
-//      myXtandemParser.eachSpectrum(onEachSpectrum)
+//      logger.debug("ABU end")
+////      val targetProtMatches = new ArrayBuffer[PeptideMatch]()
+////      val decoyProtMatches = new ArrayBuffer[PeptideMatch]()
+////      resultSet.proteinMatches.foreach(pm => {
+////        if(regex.findFirstIn(pm.accession).isDefined)
+////          decoyProtMatches ++ pm.accession
+////        else
+////          targetProtMatches ++ pm.accession
+////      })
+//      println("ABU nb targetProtMatches: "+targetProtMatches.size+" ; nb decoyProtMatches: "+decoyProtMatches.size)
+//      
+//      val targetPepIdSet = for (protMatch <- targetProtMatches; seqMatch <- protMatch.sequenceMatches) yield seqMatch.getPeptideId
+//      val decoyPepIdSet = for (protMatch <- decoyProtMatches; seqMatch <- protMatch.sequenceMatches) yield seqMatch.getPeptideId
+//      
+//      println("ABU nb targetPepIdSet: "+targetPepIdSet.size+" ; nb decoyPepIdSet: "+decoyPepIdSet.size)
+//      
+//      val targetPepMatches = new ArrayBuffer[PeptideMatch]()
+//      val decoyPepMatches = new ArrayBuffer[PeptideMatch]()
+//      
+//      for (pepMatch <- resultSet.peptideMatches) {
+//        val pepId = pepMatch.peptide.id
+//        if (targetPepIdSet.contains(pepId)) targetPepMatches += pepMatch
+//        if (decoyPepIdSet.contains(pepId)) decoyPepMatches += pepMatch
+//      }
+//      println("ABU nb targetPepMatches: "+targetPepMatches.size+" ; nb decoyPepMatches: "+decoyPepMatches.size)
+//      
+//      val targetRS = this._buildResultSet(resultSet, targetProtMatches, targetPepMatches, false)
+//      val decoyRS = this._buildResultSet(resultSet, decoyProtMatches, decoyPepMatches, true)
+//      
+//      targetRS.decoyResultSet = Some(decoyRS)
+//      
+//      
+//      println("ABU target psm: "+targetRS.peptideMatches.size)
+//      println("ABU decoy psm: "+decoyRS.peptideMatches.size)
+//      println("ABU decoy psm: "+targetRS.decoyResultSet.get.peptideMatches.size)
+//    
+////      val pm = resultSet.peptideMatches.filter(_.msQuery.initialId==74).head
+////      println("ABU peptide "+pm.peptide.sequence+" calcMass="+pm.peptide.calculatedMass+", expMoz="+pm.msQuery.moz)
+//      
+////      resultSet.peptideMatches.foreach(pm => {
+////        println("ABU peptide at query "+pm.msQuery.initialId+" with ranks ("+pm.rank+", "+pm.cdPrettyRank+", "+pm.sdPrettyRank+"): "+pm.peptide.sequence+" and "+pm.peptide.readablePtmString+" with "+pm.missedCleavage)
+////      })
+////      resultSet.proteinMatches.foreach(pm => {
+////        pm.sequenceMatches.filter(_.peptide.get.sequence.equals("AHNVSTSNNSPSTDNDSISK")).foreach(sm => {
+////          println("ABU ProteinMatch '"+pm.accession+"' SequenceMatch "+sm.start+" to "+sm.end)
+////        })
+//////        println("ABU Protein '"+pm.accession+"' "+pm.description)
+////      })
+////      myXtandemParser.msQueries.foreach(msq => {
+////        msq match {
+////          case m: Ms2Query => println("ABU Query "+m.initialId+" Title "+m.spectrumTitle)
+////        }
+////      })
+//      def onEachSpectrum(spectrum: Spectrum) = {
+//        if(spectrum.title.startsWith("controllerType=0 controllerNumber=1 scan=2989 "))
+//          println("ABU title "+spectrum.firstTime)
+//      }
+////      myXtandemParser.eachSpectrum(onEachSpectrum)
+//  
+//      logger.info("End xtandemParserABUTest")
+//    } catch {
+//      case e: Exception => {
+//        e.printStackTrace()
+//        throw e
+//      }
+//    }
+//  }
   
-      logger.info("End xtandemParserABUTest")
-    } catch {
-      case e: Exception => {
-        e.printStackTrace()
-        throw e
-      }
-    }
-    
-  }
   private def _buildResultSet(tmpRs: ResultSet,
                               protMatches: Array[ProteinMatch],
                               pepMatches: Seq[PeptideMatch],
