@@ -151,46 +151,46 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     
   }
   
-  @Test
-  def xtandemABUParserTest {
-    logger.info("Start xtandemABUParserTest")
-    var startTime : Long = System.currentTimeMillis()
-
-    val myXtandemParser = new XtandemParser(new File(getClass.getResource("/xtandemResultFile/QEKAC141027_133.raw.mzDB.t.xml").toURI), parserContext)
-    var endTime : Long = System.currentTimeMillis()
-
-    try {
-    val rs = myXtandemParser.getResultSet(false)
-    assertNotNull(rs)
-    println("resultSet.peptideMatches.length = " + rs.peptideMatches.length)  // Number of <domain> markup
-    
-    println("ABU ms1ChargeStates="+rs.msiSearch.get.searchSettings.ms1ChargeStates)
-    println("ABU ms2ChargeStates="+rs.msiSearch.get.searchSettings.msmsSearchSettings.get.ms2ChargeStates)
-//    println("ABU properties="+rs.properties.toString)
-    
-    rs.peptideMatches.filter(_.msQuery.initialId==475).foreach(pm => {
-      println("ABU id="+pm.id+" peptide="+pm.peptide.sequence+" ptms="+pm.peptide.ptmString)
-      println("ABU ptms="+pm.peptide.ptms.map(_.toReadableString()).mkString(" ; "))
-    })
-    
-    rs.peptides.filter(_.sequence.equals("GSSHHHHHHSSGLVPR")).foreach(p => println("ABU peptide to store: "+p.sequence+" "+p.ptmString))
-//    rs.peptideMatches.filter(_.peptide.sequence.equals("FTAVQALSVIESSK")).foreach(pm => {
-    var nbOk = 0
-    rs.peptideMatches.foreach(pm => {
-      var ppm = ((pm.deltaMoz * 1000000) / ((pm.peptide.calculatedMass + (pm.charge * 1.007825)) / pm.charge));
-//      if(ppm > 5 || ppm < -5) ppm = (((pm.deltaMoz - 1/pm.charge)* 1000000) / ((pm.peptide.calculatedMass + (pm.charge * 1.007825)) / pm.charge));
-//      if(ppm > 5 || ppm < -5) ppm = (((pm.deltaMoz - 1/pm.charge)* 1000000) / ((pm.peptide.calculatedMass + (pm.charge * 1.007825)) / pm.charge));
-      if(ppm >= -5 && ppm <= 5) nbOk += 1
-//      println(pm.msQuery.initialId+", "+pm.peptide.sequence+", "+pm.peptide.ptmString+", "+pm.deltaMoz+", "+pm.peptide.calculatedMass+", "+pm.msQuery.moz+", "+pm.charge+", "+ppm)
-    })
-    println("Total of good peptideMatches: "+nbOk+"/"+rs.peptideMatches.size)
-    
-    } catch {
-      case e: Exception => logger.error("ABU error", e)
-    }
-    logger.info("End xtandemABUParserTest")
-    
-  }
+//  @Test
+//  def xtandemABUParserTest {
+//    logger.info("Start xtandemABUParserTest")
+//    var startTime : Long = System.currentTimeMillis()
+//
+//    val myXtandemParser = new XtandemParser(new File(getClass.getResource("/xtandemResultFile/QEKAC141027_133.raw.mzDB.t.xml").toURI), parserContext)
+//    var endTime : Long = System.currentTimeMillis()
+//
+//    try {
+//    val rs = myXtandemParser.getResultSet(false)
+//    assertNotNull(rs)
+//    println("resultSet.peptideMatches.length = " + rs.peptideMatches.length)  // Number of <domain> markup
+//    
+//    println("ABU ms1ChargeStates="+rs.msiSearch.get.searchSettings.ms1ChargeStates)
+//    println("ABU ms2ChargeStates="+rs.msiSearch.get.searchSettings.msmsSearchSettings.get.ms2ChargeStates)
+////    println("ABU properties="+rs.properties.toString)
+//    
+//    rs.peptideMatches.filter(_.msQuery.initialId==475).foreach(pm => {
+//      println("ABU id="+pm.id+" peptide="+pm.peptide.sequence+" ptms="+pm.peptide.ptmString)
+//      println("ABU ptms="+pm.peptide.ptms.map(_.toReadableString()).mkString(" ; "))
+//    })
+//    
+//    rs.peptides.filter(_.sequence.equals("GSSHHHHHHSSGLVPR")).foreach(p => println("ABU peptide to store: "+p.sequence+" "+p.ptmString))
+////    rs.peptideMatches.filter(_.peptide.sequence.equals("FTAVQALSVIESSK")).foreach(pm => {
+//    var nbOk = 0
+//    rs.peptideMatches.foreach(pm => {
+//      var ppm = ((pm.deltaMoz * 1000000) / ((pm.peptide.calculatedMass + (pm.charge * 1.007825)) / pm.charge));
+////      if(ppm > 5 || ppm < -5) ppm = (((pm.deltaMoz - 1/pm.charge)* 1000000) / ((pm.peptide.calculatedMass + (pm.charge * 1.007825)) / pm.charge));
+////      if(ppm > 5 || ppm < -5) ppm = (((pm.deltaMoz - 1/pm.charge)* 1000000) / ((pm.peptide.calculatedMass + (pm.charge * 1.007825)) / pm.charge));
+//      if(ppm >= -5 && ppm <= 5) nbOk += 1
+////      println(pm.msQuery.initialId+", "+pm.peptide.sequence+", "+pm.peptide.ptmString+", "+pm.deltaMoz+", "+pm.peptide.calculatedMass+", "+pm.msQuery.moz+", "+pm.charge+", "+ppm)
+//    })
+//    println("Total of good peptideMatches: "+nbOk+"/"+rs.peptideMatches.size)
+//    
+//    } catch {
+//      case e: Exception => logger.error("ABU error", e)
+//    }
+//    logger.info("End xtandemABUParserTest")
+//    
+//  }
 
   @Test
   def XtandemResultFileVerifierTest {
