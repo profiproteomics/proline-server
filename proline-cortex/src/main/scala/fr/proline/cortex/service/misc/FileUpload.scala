@@ -35,6 +35,7 @@ class FileUpload extends IRemoteBytesMsgService with LazyLogging {
 
   val DEST_FOLDER_PATH_PARAM_KEY = "dest_folder_path"
   val DEST_FILE_NAME_PARAM_KEY = "dest_file_name"
+//  val OVERWRITE_PARAM_KEY = "overwrite_file"
 
   
   override def service(jmsMessageContext: Map[String, Any], message: BytesMessage): JSONRPC2Response = {
@@ -46,6 +47,7 @@ class FileUpload extends IRemoteBytesMsgService with LazyLogging {
     var delFileOnexit = false;
     
     //Get Parameters 
+    val overwriteFile = false
     val readFileName =   message.getStringProperty(DEST_FILE_NAME_PARAM_KEY)
     val readFilePath =   message.getStringProperty(DEST_FOLDER_PATH_PARAM_KEY)
     var localPath = ""
@@ -59,28 +61,43 @@ class FileUpload extends IRemoteBytesMsgService with LazyLogging {
     
             
     val dirPath = new File(localPath)
-        
-    if (!dirPath.isDirectory()) {
-      jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, "Invalid destination folder "+localPath), jsonRequestId)
-    } else {
-
-      //Read File name
-      logger.debug("Write upladed File to "+readFileName+" in "+dirPath.getAbsoluteFile)
-      val destFile = new File(dirPath, readFileName)
-    //    if(delFileOnexit)
-    //    destFile.deleteOnExit()
-      
-      
-      val fos: FileOutputStream = new FileOutputStream(destFile);
-      val outBuf: BufferedOutputStream = new BufferedOutputStream(fos);
-      message.setObjectProperty("JMS_HQ_SaveStream", outBuf)
-
-
-      outBuf.close()
-      fos.close();
-
-      jsonResponse = new ProfiJSONRPC2Response(destFile.getAbsolutePath, jsonRequestId)
+    if(!dirPath.exists()){
+      try {
+        dirPath.mkdirs()
+      }catch {
+        case se: SecurityException => {
+          jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, "Unable to create destination folder "+readFilePath), jsonRequestId)
+        }
+      }
     }
+      
+    if(jsonResponse == null) { //No Previous Error    
+      if (!dirPath.isDirectory()) {
+        jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, "Invalid destination folder "+readFilePath), jsonRequestId)
+      } else {
+  
+        //Read File name
+        logger.debug("Write uploaded File to "+readFileName+" in "+dirPath.getAbsoluteFile)
+        val destFile = new File(dirPath, readFileName)
+        if(destFile.exists() && !overwriteFile){
+          jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, "Destination file already exist"+destFile.getName+" in "+readFilePath), jsonRequestId)
+        } else { 
+          //    if(delFileOnexit)
+          //    destFile.deleteOnExit()
+        
+        
+          val fos: FileOutputStream = new FileOutputStream(destFile);
+          val outBuf: BufferedOutputStream = new BufferedOutputStream(fos);
+          message.setObjectProperty("JMS_HQ_SaveStream", outBuf)
+  
+  
+          outBuf.close()
+          fos.close();
+  
+          jsonResponse = new ProfiJSONRPC2Response(destFile.getAbsolutePath, jsonRequestId)
+        }
+      }
+    } // End No Previous error
 
     jsonResponse
   }
