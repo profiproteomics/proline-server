@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+    <groupId>fr.proline</groupId>
+    <artifactId>ProFI-Pom</artifactId>
+    <version>0.3.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+  </parent>
+  
+  <artifactId>Proline-Cortex-API</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  
+  <name>${project.artifactId}</name>
+  <description>Proline Cortex API (services, methods and parameters)</description>
+  
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <version.path>${basedir}/src/main/scala/fr/proline/cortex/api</version.path>
+  </properties>
+  
+  <dependencies>
+  
+    <!-- Scala -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <!-- Version inherited from ProFI-Pom ${scala-library.version} -->
+    </dependency>
+    
+    <!-- Logging -->
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe</groupId>
+      <artifactId>scalalogging-slf4j_${scala.version}</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
+    </dependency>
+    
+    <!-- Serialization -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.module</groupId>
+      <artifactId>jackson-module-scala_${scala.version}</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
+    </dependency>
+    
+    <!-- JSON-RPC -->
+    <dependency>
+      <groupId>com.thetransactioncompany</groupId>
+      <artifactId>jsonrpc2-base</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
+    </dependency>
+    
+    <!-- Proline -->
+    <dependency>
+      <groupId>fr.proline.util</groupId>
+      <artifactId>ProFI-Commons-Scala</artifactId>
+      <version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    </dependency>
+
+    <!-- Test -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_${scala.version}</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
+      <scope>test</scope>
+    </dependency>
+    
+  </dependencies>
+  
+  <build>
+    <sourceDirectory>src/main/scala</sourceDirectory>
+    <testSourceDirectory>src/test/scala</testSourceDirectory>
+
+    <pluginManagement>
+      <plugins>
+        <!-- For Eclipse build -->
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>com.google.code.maven-replacer-plugin</groupId>
+                    <artifactId>replacer</artifactId>
+                    <versionRange>[1.5.2,)</versionRange>
+                    <goals>
+                      <goal>replace</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <execute>
+                       <runOnIncremental>false</runOnIncremental>
+                     </execute>
+                  </action>
+                </pluginExecution>
+
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+        
+        <plugin>
+          <groupId>net.alchim31.maven</groupId>
+          <artifactId>scala-maven-plugin</artifactId>
+          <!-- Version inherited from ProFI-Pom -->
+          
+          <configuration>
+            <recompileMode>incremental</recompileMode>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <!-- Version and configuration inherited from ProFI-Pom -->
+      </plugin>
+
+      <plugin>
+        <groupId>com.google.code.maven-replacer-plugin</groupId>
+        <artifactId>replacer</artifactId>
+
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+              <goals>
+                <goal>replace</goal>
+              </goals>
+           </execution>
+         </executions>
+
+         <configuration>
+           <file>${version.path}/ScalaVersion.scala.template</file>
+           <outputFile>${version.path}/ScalaVersion.scala</outputFile>
+           <replacements>
+             <replacement>
+               <token>@moduleName@</token>
+               <value>${project.artifactId}</value>
+             </replacement>
+             <replacement>
+               <token>@version@</token>
+               <value>${project.version}_${maven.build.timestamp}_${user.name}</value>
+             </replacement>
+           </replacements>
+         </configuration>
+
+      </plugin>
+
+      <!-- Maven Release for branches and tags -->
+      <plugin>
+        <artifactId>maven-release-plugin</artifactId>
+        <!-- Version inherited from parent POM -->
+        <configuration>
+          <providerImplementations>
+            <svn>javasvn</svn>
+          </providerImplementations>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>com.google.code.maven-scm-provider-svnjava</groupId>
+            <artifactId>maven-scm-provider-svnjava</artifactId>
+            <version>2.1.1</version>
+            <scope>compile</scope>
+          </dependency>
+        </dependencies>
+      </plugin>
+      
+    </plugins>
+  </build>
+  
+</project>
