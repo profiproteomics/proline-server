@@ -1,21 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+  
   <parent>
     <groupId>fr.proline</groupId>
     <artifactId>ProFI-Pom</artifactId>
     <version>0.3.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
   </parent>
-  
+
   <artifactId>Proline-Node</artifactId>
   <version>0.2.0-SNAPSHOT</version>
   
+  <name>${project.artifactId}</name>
+  <description>A base project to assist the creation of Proline-Cortex nodes (JMS consumers)</description>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding> <!-- Snapshot Trunk version -->
   </properties>
+
+  <scm>
+    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Node/trunk</connection>
+  </scm>
   
+  <dependencies>
   
-   <build>
+    <!-- Scala -->
+    <dependency>
+      <groupId>com.typesafe</groupId>
+      <artifactId>config</artifactId>
+      <version>1.0.0</version>
+    </dependency>
     
+    <!-- JSON-RPC -->
+    <dependency>
+      <groupId>com.thetransactioncompany</groupId>
+      <artifactId>jsonrpc2-base</artifactId>
+    </dependency>
+    
+    <!-- JMS Spec 2.0 + HornetQ JMS client + Netty (versions checked 10 july 2014) -->
+    <dependency>
+      <groupId>org.jboss.spec.javax.jms</groupId>
+      <artifactId>jboss-jms-api_2.0_spec</artifactId>
+      <version>1.0.0.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>org.hornetq</groupId>
+      <artifactId>hornetq-jms-client</artifactId>
+      <version>2.4.1.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>org.hornetq</groupId>
+      <artifactId>hornetq-core-client</artifactId>
+      <version>2.4.1.Final</version>
+    </dependency>
+    
+    <!-- Proline -->
+    <dependency>
+      <groupId>fr.proline.util</groupId>
+      <artifactId>ProFI-Commons-Scala</artifactId>
+      <version>0.5.0-SNAPSHOT</version>
+    </dependency>
+    
+    <!-- Test -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+
     <pluginManagement>
       <plugins>
         <!-- For Eclipse build -->
@@ -32,15 +86,15 @@
                     <groupId>com.google.code.maven-replacer-plugin</groupId>
                     <artifactId>replacer</artifactId>
                     <versionRange>[1.5.2,)</versionRange>
-                    
+
                     <goals>
                       <goal>replace</goal>
                     </goals>
                   </pluginExecutionFilter>
                   <action>
                     <execute>
-                       <runOnIncremental>false</runOnIncremental>
-                     </execute>
+                      <runOnIncremental>false</runOnIncremental>
+                    </execute>
                   </action>
                 </pluginExecution>
 
@@ -48,65 +102,23 @@
             </lifecycleMappingMetadata>
           </configuration>
         </plugin>
-              
+
       </plugins>
     </pluginManagement>
 
-
     <plugins>
 
- 
       <!-- Phase "compile" Scala compiler -->
       <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
         <!-- Version inherited from ProFI-Pom -->
         <configuration>
-        	<charset>UTF-8</charset>
+          <charset>UTF-8</charset>
         </configuration>
       </plugin>
-     
+
     </plugins>
   </build>
 
-
-  
-   <dependencies>
-   	<dependency>
-   		<groupId>com.typesafe</groupId>
-   		<artifactId>config</artifactId>
-   		<version>1.0.0</version>
-   	</dependency>
-   	<dependency>
-   		<groupId>fr.proline.util</groupId>
-   		<artifactId>ProFI-Commons-Scala</artifactId>
-   		<version>0.5.0-SNAPSHOT</version>
-   	</dependency>
-   	<dependency>
-   		<groupId>com.thetransactioncompany</groupId>
-   		<artifactId>jsonrpc2-base</artifactId>
-   	</dependency>
-   	<dependency>
-   		<groupId>org.jboss.spec.javax.jms</groupId>
-   		<artifactId>jboss-jms-api_2.0_spec</artifactId>
-   		<version>1.0.0.Final</version>
-   	</dependency>
-   	<dependency>
-   		<groupId>org.hornetq</groupId>
-   		<artifactId>hornetq-jms-client</artifactId>
-   		<version>2.4.1.Final</version>
-   	</dependency>
-   	<dependency>
-   		<groupId>org.hornetq</groupId>
-   		<artifactId>hornetq-core-client</artifactId>
-   		<version>2.4.1.Final</version>
-   	</dependency>
-   	<dependency>
-   		<groupId>junit</groupId>
-   		<artifactId>junit</artifactId>
-   	</dependency>
-   </dependencies>
-   <scm>
-   	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Node/trunk</connection>
-   </scm>
 </project>
