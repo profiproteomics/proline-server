@@ -4,10 +4,9 @@ import scala.reflect.runtime.universe._
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.cortex.util.reflect._
 import fr.proline.cortex.util.json._
-import scala.util.parsing.json.JSONType
 
 /** JSONRPC2 Service Description
  * 
@@ -108,7 +107,7 @@ case class JSONRPC2MethodParameter(
 trait JSONRPC2DefaultMethodParameter extends IJSONRPC2MethodParameter {
   def name: String
   def description: String
-  @transient val scalaType: Type
+  @transient def scalaType: Type
   //var `type`: String = JSONType.Any
   var optional: Boolean = false
   var default: Option[String] = None
@@ -147,7 +146,7 @@ case class JSONRPC2MethodResult(
   def default = None
 }
 
-trait JSONRPC2Schema extends JsonSchema with Logging {
+trait JSONRPC2Schema extends JsonSchema with LazyLogging {
   
   // Interface
   def scalaType: Type

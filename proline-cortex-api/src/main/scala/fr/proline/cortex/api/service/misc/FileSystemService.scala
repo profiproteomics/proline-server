@@ -2,7 +2,7 @@ package fr.proline.cortex.api.service.misc
 
 import scala.reflect.runtime.universe.typeOf
 
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.cortex.api.IDefaultServiceVersion
 import fr.proline.cortex.util.FileAttrs
@@ -19,7 +19,7 @@ trait IFileSystemService extends IMiscService {
   
 }
 
-object FileSystemService extends IFileSystemService with IDefaultServiceVersion with Logging {
+object FileSystemService extends IFileSystemService with IDefaultServiceVersion with LazyLogging {
   
   /* List the handled methods */
   val handledMethods = List(RetrieveAllDirectoryTypes, RetrieveAllMountPoints, RetrieveMountPointsByType, RetrieveMountPointsByLabel, RetrieveDirectoryContent)

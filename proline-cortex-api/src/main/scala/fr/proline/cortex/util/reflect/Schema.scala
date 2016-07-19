@@ -195,7 +195,7 @@ object Schema {
       
       // Initialize fields later to handle circular dependencies
       new ObjectSchema(
-        t.typeSymbol.name.decoded,
+        t.typeSymbol.name.decodedName.toString,
         scalaType,
         thisSchema => fieldsOf(t, knownObjects + (t -> thisSchema))
       )
@@ -212,13 +212,13 @@ object Schema {
   private def fieldsOf(scalaType: Type, knownObjects: Map[Type, Schema]): List[(String, Schema)] = {
 
     // Try to reflect constructor members
-    val ctor = scalaType.member(nme.CONSTRUCTOR)
+    val ctor = scalaType.member(termNames.CONSTRUCTOR)
     
     val constructorFields = if( ctor != NoSymbol ) {
       try {
-        ctor.asMethod.paramss.head.map { p =>
+        ctor.asMethod.paramLists.head.map { p =>
           
-          val fieldName = p.name.decoded
+          val fieldName = p.name.decodedName.toString
           val fieldSchema = buildSchema(p.typeSignature, knownObjects)
           
           annotateField(p, fieldSchema)
@@ -243,7 +243,7 @@ object Schema {
         .withFilter(f => f.isPublic && f.isGetter )
         .map { field =>
         
-        val fieldName = field.name.decoded
+        val fieldName = field.name.decodedName.toString
         val fieldSchema = buildSchema(field.typeSignature.typeSymbol.asClass.toType, knownObjects)
         
         annotateField( field, fieldSchema )
@@ -257,8 +257,11 @@ object Schema {
   
   // Add description to the fieldSchema
   private def annotateField( field: Symbol, fieldSchema: Schema ) {
-    field.annotations.find(_.tpe =:= typeOf[FieldDescription]).map { fieldAnnotation =>
-      val desc = fieldAnnotation.javaArgs.head._2.toString
+    field.annotations.find(_.tree.tpe =:= typeOf[FieldDescription]).map { fieldAnnotation =>
+      val deprecatedDesc = fieldAnnotation.javaArgs.head._2.toString
+      val desc = fieldAnnotation.tree.children.last.productElement(1).toString
+      assert( desc == deprecatedDesc, "The description has not been retrieved correctly by reflection")
+      
       fieldSchema.description = desc.substring(1, desc.length-1).replaceAll("\\\\","")
     }
   }

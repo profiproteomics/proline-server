@@ -4,14 +4,14 @@ import scala.reflect.runtime.universe.typeOf
 
 import com.thetransactioncompany.jsonrpc2.{JSONRPC2Error, JSONRPC2Request, JSONRPC2Response}
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.cortex.api.JSONRPC2Service
 import fr.proline.cortex.util.json.JSONType
 import fr.proline.cortex.util.jsonrpc._
 import fr.proline.cortex.util.reflect._
 
-trait IDataProcessingService extends JSONRPC2Service with Logging {
+trait IDataProcessingService extends JSONRPC2Service with LazyLogging {
 
   /* Constants */  
   //val RUN_JOB_METHOD = "run_job"

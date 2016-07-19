@@ -19,6 +19,10 @@
     <version.path>${basedir}/src/main/scala/fr/proline/cortex/api</version.path>
   </properties>
   
+  <scm>
+    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Cortex-Components/Proline-Cortex-API/trunk</connection>
+  </scm>
+  
   <dependencies>
   
     <!-- Scala -->
@@ -35,8 +39,8 @@
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
     <dependency>
-      <groupId>com.typesafe</groupId>
-      <artifactId>scalalogging-slf4j_${scala.version}</artifactId>
+      <groupId>com.typesafe.scala-logging</groupId>
+      <artifactId>scala-logging_${scala.version}</artifactId>
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
     
@@ -79,107 +83,38 @@
   </dependencies>
   
   <build>
-    <sourceDirectory>src/main/scala</sourceDirectory>
-    <testSourceDirectory>src/test/scala</testSourceDirectory>
-
-    <pluginManagement>
-      <plugins>
-        <!-- For Eclipse build -->
-        <plugin>
-          <groupId>org.eclipse.m2e</groupId>
-          <artifactId>lifecycle-mapping</artifactId>
-          <version>1.0.0</version>
-          <configuration>
-            <lifecycleMappingMetadata>
-              <pluginExecutions>
-
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>com.google.code.maven-replacer-plugin</groupId>
-                    <artifactId>replacer</artifactId>
-                    <versionRange>[1.5.2,)</versionRange>
-                    <goals>
-                      <goal>replace</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <execute>
-                       <runOnIncremental>false</runOnIncremental>
-                     </execute>
-                  </action>
-                </pluginExecution>
-
-              </pluginExecutions>
-            </lifecycleMappingMetadata>
-          </configuration>
-        </plugin>
-        
-        <plugin>
-          <groupId>net.alchim31.maven</groupId>
-          <artifactId>scala-maven-plugin</artifactId>
-          <!-- Version inherited from ProFI-Pom -->
-          
-          <configuration>
-            <recompileMode>incremental</recompileMode>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
 
     <plugins>
+    
+      <!-- Scala build -->
       <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
         <!-- Version and configuration inherited from ProFI-Pom -->
       </plugin>
 
+      <!-- Used to replace strings in text files (generate Version.java and Version.scala from templates) -->
       <plugin>
         <groupId>com.google.code.maven-replacer-plugin</groupId>
         <artifactId>replacer</artifactId>
+        <!-- Version inherited from ProFI-Pom -->
 
         <executions>
           <execution>
+            <id>scala-version-generation</id>
             <phase>generate-sources</phase>
-              <goals>
-                <goal>replace</goal>
-              </goals>
-           </execution>
-         </executions>
-
-         <configuration>
-           <file>${version.path}/ScalaVersion.scala.template</file>
-           <outputFile>${version.path}/ScalaVersion.scala</outputFile>
-           <replacements>
-             <replacement>
-               <token>@moduleName@</token>
-               <value>${project.artifactId}</value>
-             </replacement>
-             <replacement>
-               <token>@version@</token>
-               <value>${project.version}_${maven.build.timestamp}_${user.name}</value>
-             </replacement>
-           </replacements>
-         </configuration>
-
+            <!-- Execution and configuration inherited from ProFI-Pom -->
+            <configuration>
+              <skip>false</skip>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
 
       <!-- Maven Release for branches and tags -->
       <plugin>
         <artifactId>maven-release-plugin</artifactId>
-        <!-- Version inherited from parent POM -->
-        <configuration>
-          <providerImplementations>
-            <svn>javasvn</svn>
-          </providerImplementations>
-        </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>com.google.code.maven-scm-provider-svnjava</groupId>
-            <artifactId>maven-scm-provider-svnjava</artifactId>
-            <version>2.1.1</version>
-            <scope>compile</scope>
-          </dependency>
-        </dependencies>
+        <!-- Version and configuration inherited from parent POM -->
       </plugin>
       
     </plugins>
