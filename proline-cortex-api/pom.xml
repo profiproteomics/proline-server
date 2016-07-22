@@ -5,11 +5,11 @@
   <parent>
     <groupId>fr.proline</groupId>
     <artifactId>ProFI-Pom</artifactId>
-    <version>0.3.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    <version>0.3.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
   </parent>
   
   <artifactId>Proline-Cortex-API</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.3.0-SNAPSHOT</version>
   
   <name>${project.artifactId}</name>
   <description>Proline Cortex API (services, methods and parameters)</description>
@@ -56,6 +56,20 @@
       <groupId>com.thetransactioncompany</groupId>
       <artifactId>jsonrpc2-base</artifactId>
       <!-- Version inherited from ProFI-Pom -->
+    </dependency>
+    
+    <!-- JMS Spec 2.0 -->
+    <dependency>
+      <groupId>org.jboss.spec.javax.jms</groupId>
+      <artifactId>jboss-jms-api_2.0_spec</artifactId>
+      <version>1.0.0.Final</version>
+    </dependency>
+    
+    <!-- Proline-Cortex-Utils -->
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-Cortex-Utils</artifactId>
+      <version>0.1.0-SNAPSHOT</version>
     </dependency>
     
     <!-- Proline -->
