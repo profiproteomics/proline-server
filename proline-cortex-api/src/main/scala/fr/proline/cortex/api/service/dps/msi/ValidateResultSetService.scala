@@ -3,12 +3,12 @@ package fr.proline.cortex.api.service.dps.msi
 import scala.reflect.runtime.universe.typeOf
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import fr.proline.cortex.api.IDefaultServiceVersion
-import fr.proline.cortex.util.jsonrpc.JSONRPC2DefaultMethodParameter
+import fr.proline.cortex.util.jsonrpc._
 
 trait IValidateResultSetService extends IMsiService {
   
   /* JMS Service identification */
-  val serviceName = "ValidateResultSet"
+  val serviceLabel = "ValidateResultSet"
   this.serviceDescription = Some("Filters and validates a Result Set for a given set of rules.")
   
 }
@@ -47,6 +47,10 @@ object ValidateResultSetService extends IValidateResultSetService with IDefaultS
     PEP_SET_SCORE_TYPE_PARAM,
     PROT_SET_FILTERS_PARAM,
     PROT_SET_VALIDATOR_CONFIG_PARAM
+  )
+  val serviceResult = JSONRPC2MethodResult(
+    description = "The generated ResultSummary ID.",
+    scalaType = typeOf[Long]
   )
   
   object PROJECT_ID_PARAM extends JSONRPC2DefaultMethodParameter {

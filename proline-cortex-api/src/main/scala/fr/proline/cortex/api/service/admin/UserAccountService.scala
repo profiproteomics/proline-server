@@ -3,67 +3,26 @@ package fr.proline.cortex.api.service.admin
 import scala.reflect.runtime.universe.typeOf
 import fr.profi.util.lang.EnhancedEnum
 import fr.proline.cortex.api.IDefaultServiceVersion
-import fr.proline.cortex.util.jsonrpc.JSONRPC2DefaultMethod
-import fr.proline.cortex.util.jsonrpc.JSONRPC2DefaultMethodParameter
-import fr.proline.cortex.util.jsonrpc.JSONRPC2MethodResult
+import fr.proline.cortex.util.jsonrpc._
 
-trait IUserAccountService extends IAdminService {
+object UserAccountService extends IUserAccountService
+
+trait IUserAccountService extends IAdminService with IDefaultServiceVersion {
   
   /* JMS Service identification */
-  val serviceName = "UserAccount"
-  this.serviceDescription = Some("Filters and validates a Result Set for a given set of rules.")
-  
-}
-
-/**
- * JMS Service to manage UserAccount. 
- * 
- * Create method to add a new user in Proline Suite
- *   Input params :
- *      "login" : new User login
- *      "password_hash" : encrypted user password
- *  
- *   Output params : 
- *      new user Id. 
- *      
- * Change Password method to update existing user password
- *   Input params :
- *      "login" : existing User login
- *      "old_password_hash" : actual encrypted user password
- *      "new_password_hash" : new encrypted user password
- *  
- *   Output params : 
- *      Boolean for service status. 
- *  
- * Authenticate method 
- *   Input params :
- *      "login" : existing User login
- *      "password_hash" : encrypted user password
- *      "need_db_pwd" : specify if database password should be retrieve to caller 
- *      "public_key" : The public key to use for encryption of returned database password
- *  
- *   Output params : 
- *      Boolean for service status. 
- */
-object UserAccountService extends IUserAccountService with IDefaultServiceVersion {
+  val serviceLabel = "UserAccount"
+  this.serviceDescription = Some("Service providing methods for user accounts mangement. ")
   
   // List the handled methods
-  val handledMethods = List(Create,ChangePassword,Authenticate)
+  val methodDefinitions: Seq[IJSONRPC2Method] = List(CREATE_METHOD,CHANGE_PASSWORD_METHOD,AUTHENTICATE_METHOD)
   
   val UDS_AUTH_METHOD = "UDS_HASH"
   
-  private object UserAccountMethodName extends EnhancedEnum {
-    val create = Value("create")
-    val update = Value("update")
-    val change_password = Value("change_password")
-    val authenticate = Value("authenticate")
-  }
-  
   // Description of the Create service method
-  object Create extends JSONRPC2DefaultMethod { // Emulate an enumeration of objects
+  object CREATE_METHOD extends JSONRPC2DefaultMethod { // Emulate an enumeration of objects
     
     // Method description
-    val name = UserAccountMethodName.create.toString
+    val name = "create"
     val description = "Creates a new user account."
     val parameters = List(LOGIN_PARAM,PASSWORD_HASH_PARAM)
     val returns = JSONRPC2MethodResult(
@@ -85,23 +44,26 @@ object UserAccountService extends IUserAccountService with IDefaultServiceVersio
     
   }
   
-  object ChangePassword extends JSONRPC2DefaultMethod {
+  object CHANGE_PASSWORD_METHOD extends JSONRPC2DefaultMethod {
     
     val name = "change_password"
     val description = "Change the password of the specified user."
     val parameters = List(LOGIN_PARAM,OLD_PASSWORD_HASH_PARAM,NEW_PASSWORD_HASH_PARAM)
-    val returns = JSONRPC2MethodResult(typeOf[Boolean])
+    val returns = JSONRPC2MethodResult(
+      typeOf[Boolean],
+      "Boolean for service status."
+    )
     
     object LOGIN_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "login"
       val description = "The login of the user whom password will be changed."
       val scalaType = typeOf[String]
-    }    
+    }
     object OLD_PASSWORD_HASH_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "old_password_hash"
       val description = "The current password hash of the specified user."
       val scalaType = typeOf[String]
-    }    
+    }
     object NEW_PASSWORD_HASH_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "new_password_hash"
       val description = "The new password hash of the specified user."
@@ -110,7 +72,7 @@ object UserAccountService extends IUserAccountService with IDefaultServiceVersio
     
   }
   
-  object Authenticate extends JSONRPC2DefaultMethod {
+  object AUTHENTICATE_METHOD extends JSONRPC2DefaultMethod {
     
     val name = "authenticate"
     val description = "Authenticate a user using its login and its password hash."
@@ -120,7 +82,10 @@ object UserAccountService extends IUserAccountService with IDefaultServiceVersio
       RETURN_DB_PASSWORD_PARAM,
       PUBLIC_KEY_PARAM
     )
-    val returns = JSONRPC2MethodResult(typeOf[AnyRef])
+    val returns = JSONRPC2MethodResult(
+      typeOf[AnyRef],
+      "Returned value may be a boolean value or the encrypted database password (if 'return_db_password' is set to true)."
+    )
     
     object LOGIN_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "login"
@@ -148,3 +113,4 @@ object UserAccountService extends IUserAccountService with IDefaultServiceVersio
   }
 
 }
+

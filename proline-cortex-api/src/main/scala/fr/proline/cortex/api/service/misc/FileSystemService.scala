@@ -2,27 +2,25 @@ package fr.proline.cortex.api.service.misc
 
 import scala.reflect.runtime.universe.typeOf
 
-import com.typesafe.scalalogging.LazyLogging
-
 import fr.proline.cortex.api.IDefaultServiceVersion
-import fr.proline.cortex.util.FileAttrs
-import fr.proline.cortex.util.MountPoint
+import fr.proline.cortex.util.fs.FileAttrs
+import fr.proline.cortex.util.fs.MountPoint
 import fr.proline.cortex.util.jsonrpc.JSONRPC2DefaultMethod
 import fr.proline.cortex.util.jsonrpc.JSONRPC2DefaultMethodParameter
 import fr.proline.cortex.util.jsonrpc.JSONRPC2MethodResult
 
-trait IFileSystemService extends IMiscService {
+trait IFileSystemService extends IMiscService with IDefaultServiceVersion {
   
   /* JMS Service identification */
-  val serviceName = "FileSystem"
-  this.serviceDescription = Some("Provides a remote API to the FileSystem")
+  val serviceLabel = "FileSystem"
+  this.serviceDescription = Some("Provides a remote API to the FileSystem.")
   
 }
 
-object FileSystemService extends IFileSystemService with IDefaultServiceVersion with LazyLogging {
+object FileSystemService extends IFileSystemService {
   
   /* List the handled methods */
-  val handledMethods = List(RetrieveAllDirectoryTypes, RetrieveAllMountPoints, RetrieveMountPointsByType, RetrieveMountPointsByLabel, RetrieveDirectoryContent)
+  val methodDefinitions = List(RetrieveAllDirectoryTypes, RetrieveAllMountPoints, RetrieveMountPointsByType, RetrieveMountPointsByLabel, RetrieveDirectoryContent)
   
   /* Constants */
   val LABEL_PARAM_NAME = "label"
