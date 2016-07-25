@@ -31,7 +31,7 @@ trait IRemoteServiceIdentity {
    * Fully qualified service path like "proline/dps/msi/ImportResultFiles".
    */
   // TODO: rename to servicePath or serviceFullName
-  lazy val servicePath = serviceNamespace + '/' + serviceLabel //+ "@" + wsVersion
+  lazy val serviceName = serviceNamespace + '/' + serviceLabel //+ "@" + wsVersion
   
   /** The methods handled by the Web Service. */
   def methodDefinitions: Seq[IJSONRPC2Method]
