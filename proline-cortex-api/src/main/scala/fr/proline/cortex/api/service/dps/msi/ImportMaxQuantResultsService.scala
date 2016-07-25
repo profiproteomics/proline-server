@@ -8,7 +8,7 @@ import fr.proline.cortex.util.reflect.FieldDescription
 
 object ImportMaxQuantResultsService extends IImportMaxQuantResultsService
 
-trait IImportMaxQuantResultsService extends IMsiService with IRemoteProcessingService with IDefaultServiceVersion {
+trait IImportMaxQuantResultsService extends IMsiService with IDefaultServiceVersion {
   
   /* JMS Service identification */
   val serviceLabel = "ImportMaxQuantResultsService"

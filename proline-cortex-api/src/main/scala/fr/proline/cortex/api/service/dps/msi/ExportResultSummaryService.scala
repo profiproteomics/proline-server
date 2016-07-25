@@ -50,7 +50,7 @@ case class RsmIdentifier(
 )
 
 
-trait IExportResultSummaryService extends IMsiService with IRemoteProcessingService {
+trait IExportResultSummaryService extends IMsiService {
   
   /* JMS Service identification */
   val serviceLabel = "ExportResultSummary"

@@ -5,14 +5,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import fr.proline.cortex.api.IDefaultServiceVersion
 import fr.proline.cortex.util.jsonrpc._
 
-trait IValidateResultSetService extends IMsiService {
-  
-  /* JMS Service identification */
-  val serviceLabel = "ValidateResultSet"
-  this.serviceDescription = Some("Filters and validates a Result Set for a given set of rules.")
-  
-}
-
 case class FilterConfig(
   parameter: String,
   threshold: AnyVal,
@@ -34,7 +26,13 @@ case class ProtSetValidatorConfig(
   expectedFdr: Option[Float] = None
 )
 
-object ValidateResultSetService extends IValidateResultSetService with IDefaultServiceVersion {
+object ValidateResultSetService extends IValidateResultSetService
+
+trait IValidateResultSetService extends IValidateResultSetServiceParams with IMsiService with IDefaultServiceVersion {
+  
+  /* JMS Service identification */
+  val serviceLabel = "ValidateResultSet"
+  this.serviceDescription = Some("Filters and validates a Result Set for a given set of rules.")
   
   // Configure service interface
   val serviceParams = List(
@@ -58,6 +56,10 @@ object ValidateResultSetService extends IValidateResultSetService with IDefaultS
     val description = "The id of the project the result set belongs to."
     val scalaType = typeOf[Long]
   }
+
+}
+
+trait IValidateResultSetServiceParams {
   object RESULT_SET_ID_PARAM extends JSONRPC2DefaultMethodParameter {
     val name = "result_set_id"
     val description = "The id of the result set to validate."
@@ -106,5 +108,4 @@ object ValidateResultSetService extends IValidateResultSetService with IDefaultS
     val scalaType = typeOf[ProtSetValidatorConfig]
     optional = true
   }
-
 }

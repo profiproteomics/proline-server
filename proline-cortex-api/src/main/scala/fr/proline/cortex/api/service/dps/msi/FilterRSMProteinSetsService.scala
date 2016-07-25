@@ -7,7 +7,7 @@ import fr.proline.cortex.util.jsonrpc._
 
 object FilterRSMProteinSetsService extends IFilterRSMProteinSetsService
 
-trait IFilterRSMProteinSetsService extends IMsiService with IRemoteProcessingService with IDefaultServiceVersion {
+trait IFilterRSMProteinSetsService extends IMsiService with IDefaultServiceVersion {
   
   /* JMS Service identification */
   val serviceLabel = "FilterRSMProteinSets"

@@ -7,7 +7,7 @@ import fr.proline.cortex.util.jsonrpc._
 
 object GenerateSpectrumMatchesService extends IGenerateSpectrumMatchesService
 
-trait IGenerateSpectrumMatchesService extends IMsiService with IRemoteProcessingService with IDefaultServiceVersion {
+trait IGenerateSpectrumMatchesService extends IMsiService with IDefaultServiceVersion {
   
   /* JMS Service identification */
   val serviceLabel = "GenerateSpectrumMatches"

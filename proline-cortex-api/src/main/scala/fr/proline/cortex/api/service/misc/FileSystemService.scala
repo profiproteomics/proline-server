@@ -9,39 +9,43 @@ import fr.proline.cortex.util.jsonrpc.JSONRPC2DefaultMethod
 import fr.proline.cortex.util.jsonrpc.JSONRPC2DefaultMethodParameter
 import fr.proline.cortex.util.jsonrpc.JSONRPC2MethodResult
 
+object FileSystemService extends IFileSystemService
+
 trait IFileSystemService extends IMiscService with IDefaultServiceVersion {
   
   /* JMS Service identification */
   val serviceLabel = "FileSystem"
   this.serviceDescription = Some("Provides a remote API to the FileSystem.")
   
-}
-
-object FileSystemService extends IFileSystemService {
-  
   /* List the handled methods */
-  val methodDefinitions = List(RetrieveAllDirectoryTypes, RetrieveAllMountPoints, RetrieveMountPointsByType, RetrieveMountPointsByLabel, RetrieveDirectoryContent)
+  val methodDefinitions = List(
+    RETRIEVE_ALL_DIRECTORY_TYPES_METHOD,
+    RETRIEVE_ALL_MOUNT_POINTS_METHOD,
+    RETRIEVE_MOUNT_POINT_BY_TYPE_METHOD,
+    RETRIEVE_MOUNT_POINT_BY_LABEL_METHOD,
+    RETRIEVE_DIRECTORY_CONTENT_METHOD
+  )
   
   /* Constants */
   val LABEL_PARAM_NAME = "label"
   val LABEL_PATH_PARAM_NAME = "label_path"
   val DIRECTORY_TYPE_PARAM_NAME = "dir_type"
   
-  object RetrieveAllDirectoryTypes extends JSONRPC2DefaultMethod {    
+  object RETRIEVE_ALL_DIRECTORY_TYPES_METHOD extends JSONRPC2DefaultMethod {    
     val name = "retrieve_all_directory_types"
-    val description = "Returns the list of all directory types."
+    val description = "Return hard-coded Proline directory types (result_files, raw_files, mzdb_files)."
     val parameters = null
     val returns = JSONRPC2MethodResult(typeOf[Array[String]])
   }
   
-  object RetrieveAllMountPoints extends JSONRPC2DefaultMethod {    
+  object RETRIEVE_ALL_MOUNT_POINTS_METHOD extends JSONRPC2DefaultMethod {    
     val name = "retrieve_all_mount_points"
-    val description = "Returns the list of defined mount points."
+    val description = "Returns the list of defined mount points for all defined directory types and labels."
     val parameters = null
     val returns = JSONRPC2MethodResult(typeOf[Array[MountPoint]])
   }
   
-  object RetrieveMountPointsByType extends JSONRPC2DefaultMethod {
+  object RETRIEVE_MOUNT_POINT_BY_TYPE_METHOD extends JSONRPC2DefaultMethod {
     
     val name = "retrieve_mount_points_by_type"
     val description = "Returns the list of mount points corresponding to a given directory type."
@@ -51,13 +55,13 @@ object FileSystemService extends IFileSystemService {
     // Method parameters definitions
     object DIR_TYPE_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = DIRECTORY_TYPE_PARAM_NAME
-      val description = null
+      val description = "Valid directory types are: result_files, raw_files, mzdb_files."
       val scalaType = typeOf[String]
     }
     
   }
   
-  object RetrieveMountPointsByLabel extends JSONRPC2DefaultMethod {
+  object RETRIEVE_MOUNT_POINT_BY_LABEL_METHOD extends JSONRPC2DefaultMethod {
     
     val name = "retrieve_mount_points_by_label"
     val description = "Returns the list of mount points corresponding to a given label."
@@ -67,13 +71,13 @@ object FileSystemService extends IFileSystemService {
     // Method parameters definitions
     object LABEL_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = LABEL_PARAM_NAME
-      val description = null
+      val description = "The label that will be used to search for corresponding mount points."
       val scalaType = typeOf[String]
     }
     
   }
   
-  object RetrieveDirectoryContent extends JSONRPC2DefaultMethod {
+  object RETRIEVE_DIRECTORY_CONTENT_METHOD extends JSONRPC2DefaultMethod {
     
     val name = "retrieve_directory_content"
     val description = "Returns the list of files/directories found in a given managed directory."

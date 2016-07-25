@@ -8,7 +8,7 @@ import fr.proline.cortex.util.jsonrpc.JSONRPC2MethodResult
 
 object RegisterRawFileService extends IRegisterRawFileService
 
-trait IRegisterRawFileService extends IUdsService with IRemoteProcessingService with IDefaultServiceVersion {
+trait IRegisterRawFileService extends IUdsService with IDefaultServiceVersion {
   
   /* JMS Service identification */
   val serviceLabel = "RegisterRawFile"

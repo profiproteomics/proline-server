@@ -20,7 +20,7 @@ case class RepresentativeProteinMatchRule(
 
 object ChangeRepresentativeProteinMatchService extends IChangeRepresentativeProteinMatchService
 
-trait IChangeRepresentativeProteinMatchService extends IMsiService with IRemoteProcessingService with IDefaultServiceVersion {
+trait IChangeRepresentativeProteinMatchService extends IMsiService with IDefaultServiceVersion {
   
   /* JMS Service identification */
   // TODO: rename to "ChangeRepresentativeProteinMatch"

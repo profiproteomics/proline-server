@@ -21,7 +21,7 @@ case class ResultFileDescriptor(
   path: String
 )
 
-trait ICertifyResultFilesService extends IMsiService with IRemoteProcessingService with IDefaultServiceVersion {
+trait ICertifyResultFilesService extends IMsiService with IDefaultServiceVersion {
   
   /* JMS Service identification */
   val serviceLabel = "CertifyResultFiles"

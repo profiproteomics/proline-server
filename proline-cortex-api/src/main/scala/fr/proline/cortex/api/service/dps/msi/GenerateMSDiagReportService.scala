@@ -7,7 +7,7 @@ import fr.proline.cortex.util.jsonrpc._
 
 object GenerateMSDiagReportService extends IGenerateMSDiagReportService
 
-trait IGenerateMSDiagReportService extends IMsiService with IRemoteProcessingService with IDefaultServiceVersion {
+trait IGenerateMSDiagReportService extends IMsiService with IDefaultServiceVersion {
   
   /* JMS Service identification */
   val serviceLabel = "GenerateMSDiagReport"

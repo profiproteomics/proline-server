@@ -7,7 +7,7 @@ import fr.proline.cortex.util.jsonrpc._
 
 object DeleteOrphanDataService extends IDeleteOrphanDataService
 
-trait IDeleteOrphanDataService extends IMsiService with IRemoteProcessingService with IDefaultServiceVersion {
+trait IDeleteOrphanDataService extends IMsiService with IDefaultServiceVersion {
   
   /* JMS Service identification */
   val serviceLabel = "DeleteOrphanData"

@@ -8,7 +8,7 @@ import fr.proline.cortex.util.jsonrpc.JSONRPC2MethodResult
 
 object GetExportInformationService extends IGetExportInformationService
 
-trait IGetExportInformationService extends IUdsService with IRemoteProcessingService with IDefaultServiceVersion {
+trait IGetExportInformationService extends IUdsService with IDefaultServiceVersion {
   
   /* JMS Service identification */
   val serviceLabel = "GetExportInformation"

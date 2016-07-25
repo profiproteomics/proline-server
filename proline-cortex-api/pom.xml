@@ -32,29 +32,10 @@
       <!-- Version inherited from ProFI-Pom ${scala-library.version} -->
     </dependency>
     
-    <!-- Logging -->
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe.scala-logging</groupId>
-      <artifactId>scala-logging_${scala.version}</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
-    </dependency>
-    
     <!-- Serialization -->
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
       <artifactId>jackson-module-scala_${scala.version}</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
-    </dependency>
-    
-    <!-- JSON-RPC -->
-    <dependency>
-      <groupId>com.thetransactioncompany</groupId>
-      <artifactId>jsonrpc2-base</artifactId>
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
     
@@ -65,19 +46,19 @@
       <version>1.0.0.Final</version>
     </dependency>
     
-    <!-- Proline-Cortex-Utils -->
+    <!-- Proline-Cortex-Utils
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-Cortex-Utils</artifactId>
       <version>0.1.0-SNAPSHOT</version>
-    </dependency>
+    </dependency>  -->
     
-    <!-- Proline -->
+    <!-- Proline
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Scala</artifactId>
-      <version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
-    </dependency>
+      <version>0.5.0-SNAPSHOT</version>
+    </dependency>  -->
 
     <!-- Test -->
     <dependency>
