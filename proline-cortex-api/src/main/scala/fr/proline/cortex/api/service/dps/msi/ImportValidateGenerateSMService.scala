@@ -2,11 +2,9 @@ package fr.proline.cortex.api.service.dps.msi
 
 import scala.reflect.runtime.universe.typeOf
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import fr.proline.cortex.api.IDefaultServiceVersion
-import fr.proline.cortex.api.IRemoteProcessingService
-import fr.proline.cortex.api.RemoteServiceIdentity
 import fr.proline.cortex.util.jsonrpc._
 import fr.proline.cortex.util.reflect.FieldDescription
+import fr.proline.jms.service.api._
 
 object ImportValidateGenerateSMService extends IImportValidateGenerateSMService
 

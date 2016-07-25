@@ -2,11 +2,9 @@ package fr.proline.cortex.api.service.dps.msi
 
 import scala.reflect.runtime.universe.typeOf
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import fr.proline.cortex.api.IDefaultServiceVersion
-import fr.proline.cortex.api.IRemoteProcessingService
-import fr.proline.cortex.api.RemoteServiceIdentity
 import fr.proline.cortex.util.jsonrpc._
 import fr.proline.cortex.util.reflect.FieldDescription
+import fr.proline.jms.service.api._
 
 trait IResultFileDescriptor {
 
@@ -85,7 +83,6 @@ case class ResultFileDescriptorRuleId(
 // Static object only defined to reuse its params in other static objects
 object ImportResultFilesService extends IImportResultFilesService {
   val serviceVersion = "NONE"
-  val isDefaultVersion = false
 }
 
 trait IImportResultFilesService extends IImportResultFilesServiceParams with IMsiService {
@@ -165,7 +162,6 @@ object ImportResultFilesServiceV1_0 extends IImportResultFilesServiceV1_0
 trait IImportResultFilesServiceV1_0 extends IImportResultFilesService {
   
   val serviceVersion = RemoteServiceIdentity.defaultVersion
-  val isDefaultVersion = true
 
   /* Configure the service interface */
   override val serviceParams = List(
@@ -190,7 +186,6 @@ object ImportResultFilesServiceV2_0 extends IImportResultFilesServiceV2_0
 trait IImportResultFilesServiceV2_0 extends IImportResultFilesService {
   
   val serviceVersion = "2.0"
-  val isDefaultVersion = false
 
   /* Configure the service interface */
   override val serviceParams = List(

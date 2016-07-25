@@ -1,7 +1,7 @@
 package fr.proline.cortex.api.service.admin
 
-import fr.proline.cortex.api.JSONRPC2ServiceDefinition
+import fr.proline.jms.service.api.IRemoteServiceIdentity
 
-trait IAdminService extends JSONRPC2ServiceDefinition {
+trait IAdminService extends IRemoteServiceIdentity {
   val serviceNamespace = "proline/admin"
 }

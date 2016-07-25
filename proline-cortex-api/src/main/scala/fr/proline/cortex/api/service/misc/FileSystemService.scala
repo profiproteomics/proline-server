@@ -2,12 +2,12 @@ package fr.proline.cortex.api.service.misc
 
 import scala.reflect.runtime.universe.typeOf
 
-import fr.proline.cortex.api.IDefaultServiceVersion
-import fr.proline.cortex.util.fs.FileAttrs
-import fr.proline.cortex.util.fs.MountPoint
+import fr.proline.cortex.api.fs.FileAttrs
+import fr.proline.cortex.api.fs.MountPoint
 import fr.proline.cortex.util.jsonrpc.JSONRPC2DefaultMethod
 import fr.proline.cortex.util.jsonrpc.JSONRPC2DefaultMethodParameter
 import fr.proline.cortex.util.jsonrpc.JSONRPC2MethodResult
+import fr.proline.jms.service.api.IDefaultServiceVersion
 
 object FileSystemService extends IFileSystemService
 

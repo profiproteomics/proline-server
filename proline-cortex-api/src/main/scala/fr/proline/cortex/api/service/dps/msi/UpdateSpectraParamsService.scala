@@ -1,8 +1,8 @@
 package fr.proline.cortex.api.service.dps.msi
 
 import scala.reflect.runtime.universe.typeOf
-import fr.proline.cortex.api.IDefaultServiceVersion
-import fr.proline.cortex.api.IRemoteProcessingService
+import fr.proline.jms.service.api.IDefaultServiceVersion
+import fr.proline.jms.service.api.IRemoteProcessingService
 import fr.proline.cortex.util.jsonrpc._
 
 //object UpdateSpectraParamsService extends IUpdateSpectraParamsService
@@ -56,7 +56,6 @@ trait IUpdateSpectraParamsServiceV2_0 extends IUpdateSpectraParamsService {
   
   /* JMS Service identification */
   val serviceVersion = "2.0"
-  val isDefaultVersion = false
   
   /* Configure the service interface */
   val serviceParams = List(PROJECT_ID_PARAM, RESULT_SET_IDS_PARAM, PEAKLIST_SOFTWARE_ID_PARAM)

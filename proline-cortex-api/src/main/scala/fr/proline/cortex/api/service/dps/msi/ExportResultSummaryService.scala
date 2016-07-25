@@ -2,10 +2,10 @@ package fr.proline.cortex.api.service.dps.msi
 
 import scala.reflect.runtime.universe.typeOf
 import fr.profi.util.lang.EnhancedEnum
-import fr.proline.cortex.api.IRemoteProcessingService
-import fr.proline.cortex.api.RemoteServiceIdentity
 import fr.proline.cortex.util.jsonrpc._
 import fr.proline.cortex.util.reflect.FieldDescription
+import fr.proline.jms.service.api.IRemoteProcessingService
+import fr.proline.jms.service.api.RemoteServiceIdentity
 
 object FileFormat extends EnhancedEnum {
   val MZIDENTML = Value("MZIDENTML")
@@ -100,7 +100,6 @@ object ExportResultSummaryServiceV1_0 extends IExportResultSummaryServiceV1_0
 trait IExportResultSummaryServiceV1_0 extends IExportResultSummaryService {
   
   val serviceVersion = RemoteServiceIdentity.defaultVersion
-  val isDefaultVersion = false
   
   /* Configure the service interface */
   val serviceParams = List(
@@ -127,7 +126,6 @@ trait IExportResultSummariesServiceV2_0 extends IExportResultSummaryService {
   /* JMS Service identification */
   // TODO: rename the serviceLabel to ExportResultSummaries
   val serviceVersion = "2.0"
-  val isDefaultVersion = true
   
   /* Configure the service interface */
   val serviceParams = List(

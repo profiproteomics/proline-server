@@ -2,7 +2,7 @@ package fr.proline.cortex.api.service.admin
 
 import scala.reflect.runtime.universe.typeOf
 import fr.profi.util.lang.EnhancedEnum
-import fr.proline.cortex.api.IDefaultServiceVersion
+import fr.proline.jms.service.api.IDefaultServiceVersion
 import fr.proline.cortex.util.jsonrpc._
 
 object UserAccountService extends IUserAccountService

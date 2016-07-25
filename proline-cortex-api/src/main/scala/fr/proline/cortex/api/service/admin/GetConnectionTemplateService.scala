@@ -1,9 +1,9 @@
 package fr.proline.cortex.api.service.admin
 
 import scala.reflect.runtime.universe.typeOf
-import fr.proline.cortex.api.IDefaultServiceVersion
-import fr.proline.cortex.api.IRemoteProcessingService
 import fr.proline.cortex.util.jsonrpc._
+import fr.proline.jms.service.api.IDefaultServiceVersion
+import fr.proline.jms.service.api.IRemoteProcessingService
 
 object GetConnectionTemplateService extends IGetConnectionTemplateService
 

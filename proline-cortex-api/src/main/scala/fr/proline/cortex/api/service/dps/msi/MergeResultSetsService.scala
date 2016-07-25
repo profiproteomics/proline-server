@@ -1,12 +1,12 @@
 package fr.proline.cortex.api.service.dps.msi
 
 import scala.reflect.runtime.universe.typeOf
-import fr.proline.cortex.api._
 import fr.proline.cortex.util.jsonrpc._
+import fr.proline.jms.service.api._
 
 //object MergeResultSetsService extends IMergeResultSetsService
 
-trait IMergeResultSetsService extends JSONRPC2ServiceDefinition with IRemoteService {
+trait IMergeResultSetsService extends IRemoteServiceIdentity {
   
   /* JMS Service identification */
   val serviceNamespace = "proline/dps/msi"
@@ -92,7 +92,6 @@ object MergeResultSetsServiceV2_0 extends IMergeResultSetsServiceV2_0
 trait IMergeResultSetsServiceV2_0 extends IMergeResultSetsService {
   
   val serviceVersion = "2.0"
-  val isDefaultVersion = false
   
   // List the handled methods
   val methodDefinitions: Seq[IJSONRPC2Method] = List(MERGE_RESULT_SETS_METHOD,MERGE_RESULT_SUMMARIES_METHOD)
