@@ -1,4 +1,4 @@
-package fr.proline.cortex.util.reflect;
+package fr.proline.jms.util.reflect;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
