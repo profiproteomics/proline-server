@@ -15,7 +15,8 @@ import fr.proline.jms.util.jsonrpc.JSONRPC2MethodResult
 case class FilterConfig(
   parameter: String,
   threshold: AnyVal,
-  postValidation: Boolean = false)
+  postValidation: Boolean = false) 
+  
 
 case class PepMatchValidatorConfig(
   parameter: String,
@@ -28,7 +29,15 @@ case class ProtSetValidatorConfig(
   thresholds: Option[Map[String, AnyVal]] = None,
   @JsonDeserialize(contentAs = classOf[java.lang.Float]) expectedFdr: Option[Float] = None)
 
-object ValidateResultSetService extends IValidateResultSetService
+object ValidateResultSetService extends IValidateResultSetService {
+  final val PARAMETER_PARAM_NAME= "parameter"
+  val THRESHOLD_PARAM_NAME = "threshold"
+  val THRESHOLDS_PARAM_NAME = "thresholds"
+  val POST_VALIDATION_PARAM_NAME = "post_validation"
+  val EXPECTED_FDR_PARAM_NAME = "expected_fdr"
+  val VALIDATION_METHOD_PARAM_NAME ="validation_method"
+ 
+}
 
 trait IValidateResultSetService extends IValidateResultSetServiceParams with IMsiService with IDefaultServiceVersion {
 
