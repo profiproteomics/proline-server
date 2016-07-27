@@ -1,8 +1,14 @@
 package fr.proline.jms.service.api
 
 import javax.jms.BytesMessage
-import com.thetransactioncompany.jsonrpc2._
-import fr.proline.cortex.util.jsonrpc._
+import fr.proline.jms.util.jsonrpc.JSONRPC2ServiceTransport
+import fr.proline.jms.util.jsonrpc.BuildJSONRPC2Response
+import fr.proline.jms.util.jsonrpc.JSONRPC2ServiceDescription
+import fr.proline.jms.util.jsonrpc.JSONRPC2ServiceEnvelope
+import fr.proline.jms.util.jsonrpc.IJSONRPC2Method
+import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
+import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
+
 
 trait IRemoteServiceIdentity {
   
@@ -69,45 +75,23 @@ trait IDefaultServiceVersion extends IRemoteServiceIdentity {
 /** The Object WSIdentity contains static methods useful for Web Service identification. */
 object RemoteServiceIdentity {
   val defaultVersion = "1.0"
+  
+  val PROCESS_METHOD_NAME = "process"
 }
 
 trait IRemoteJsonRPC2Service extends IRemoteServiceIdentity {
   
-  // Define the "process" method which must be implemented by child classes
+  // Define the "runSevice" method which must be implemented by child classes
   // Note: exceptions are caught by the ServiceRunner to return an error properly
-  def process(jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any]): JSONRPC2Response
+  def runSevice(jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any]): JSONRPC2Response
 
 }
 
-trait IRemoteProcessingService extends IRemoteJsonRPC2Service {
-  
-  // List of parameters used by the processing service
-  val serviceParams: Seq[IJSONRPC2MethodParameter]
-  val serviceResult: JSONRPC2MethodResult
-  
-  protected val PROCESS_METHOD_NAME = "process"
-  
-  // Specify the method definitions of the handled requests
-  lazy val methodDefinitions = List(
-    JSONRPC2Method(
-      name = PROCESS_METHOD_NAME,
-      description = "Runs the service using specified parameters",
-      parameters = serviceParams.map(_.toSerializableJSONRPC2Parameter()),
-      returns = JSONRPC2MethodResult(scala.reflect.runtime.universe.typeOf[Int])
-    )
-  )
-  
-  def process(jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any]): JSONRPC2Response = {
-    require(jsonRequest != null, "Req is null")
-    BuildJSONRPC2Response.forMethodNotFound(jsonRequest.getID)
-  }
-  
-}
 
 trait IRemoteBytesMsgService extends IRemoteServiceIdentity {
 
   // Exceptions are caught by the ServiceRunner to return Error
-  def process(bytesMessage: BytesMessage, jmsMessageContext: Map[String, Any] = Map()): JSONRPC2Response = {
+  def runService(bytesMessage: BytesMessage, jmsMessageContext: Map[String, Any] = Map()): JSONRPC2Response = {
     require(bytesMessage != null, "JMS BytesMessage is null")
     BuildJSONRPC2Response.forMethodNotFound(bytesMessage.getJMSMessageID)
   }
