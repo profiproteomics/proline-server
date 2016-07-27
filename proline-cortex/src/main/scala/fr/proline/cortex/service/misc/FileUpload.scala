@@ -50,6 +50,7 @@ class FileUpload extends IRemoteBytesMsgService with LazyLogging {
     val overwriteFile = false
     val readFileName =   message.getStringProperty(DEST_FILE_NAME_PARAM_KEY)
     val readFilePath =   message.getStringProperty(DEST_FOLDER_PATH_PARAM_KEY)
+    logger.debug("Will try to upload "+readFileName+" in "+readFilePath+ " (or temp). Allow overwrite ? "+overwriteFile )
     var localPath = ""
     
     if(readFilePath != null) {
@@ -66,6 +67,7 @@ class FileUpload extends IRemoteBytesMsgService with LazyLogging {
         dirPath.mkdirs()
       }catch {
         case se: SecurityException => {
+          logger.debug("Unable to create destination folder "+localPath)
           jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, "Unable to create destination folder "+readFilePath), jsonRequestId)
         }
       }
@@ -73,6 +75,7 @@ class FileUpload extends IRemoteBytesMsgService with LazyLogging {
       
     if(jsonResponse == null) { //No Previous Error    
       if (!dirPath.isDirectory()) {
+          logger.debug("Invalid destination folder "+localPath)
         jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, "Invalid destination folder "+readFilePath), jsonRequestId)
       } else {
   
@@ -80,6 +83,7 @@ class FileUpload extends IRemoteBytesMsgService with LazyLogging {
         logger.debug("Write uploaded File to "+readFileName+" in "+dirPath.getAbsoluteFile)
         val destFile = new File(dirPath, readFileName)
         if(destFile.exists() && !overwriteFile){
+          logger.debug("Destination file already exist in "+localPath+" : " +destFile.getAbsoluteFile)
           jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, "Destination file already exist"+destFile.getName+" in "+readFilePath), jsonRequestId)
         } else { 
           //    if(delFileOnexit)
