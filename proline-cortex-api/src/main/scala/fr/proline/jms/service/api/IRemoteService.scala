@@ -1,13 +1,16 @@
 package fr.proline.jms.service.api
 
-import javax.jms.BytesMessage
-import fr.proline.jms.util.jsonrpc.JSONRPC2ServiceTransport
-import fr.proline.jms.util.jsonrpc.BuildJSONRPC2Response
-import fr.proline.jms.util.jsonrpc.JSONRPC2ServiceDescription
-import fr.proline.jms.util.jsonrpc.JSONRPC2ServiceEnvelope
-import fr.proline.jms.util.jsonrpc.IJSONRPC2Method
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
+
+import fr.proline.jms.util.jsonrpc.BuildJSONRPC2Response
+import fr.proline.jms.util.jsonrpc.IJSONRPC2Method
+import fr.proline.jms.util.jsonrpc.JSONRPC2ServiceDescription
+import fr.proline.jms.util.jsonrpc.JSONRPC2ServiceEnvelope
+import fr.proline.jms.util.jsonrpc.JSONRPC2ServiceEnvelope.enumToString
+import fr.proline.jms.util.jsonrpc.JSONRPC2ServiceTransport
+import fr.proline.jms.util.jsonrpc.JSONRPC2ServiceTransport.enumToString
+import javax.jms.BytesMessage
 
 
 trait IRemoteServiceIdentity {
@@ -83,7 +86,7 @@ trait IRemoteJsonRPC2Service extends IRemoteServiceIdentity {
   
   // Define the "runSevice" method which must be implemented by child classes
   // Note: exceptions are caught by the ServiceRunner to return an error properly
-  def runSevice(jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any]): JSONRPC2Response
+  def runService(jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any]): JSONRPC2Response
 
 }
 
