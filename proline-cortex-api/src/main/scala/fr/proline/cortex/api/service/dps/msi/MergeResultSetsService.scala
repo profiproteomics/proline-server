@@ -17,7 +17,7 @@ trait IMergeResultSetsService extends IRemoteServiceIdentity {
   /* JMS Service identification */
   val serviceNamespace = "proline/dps/msi"
   // TODO: rename to MergeDataSetsService
-  val serviceLabel = "MergeResultSetsService"
+  val serviceLabel = "MergeResults"
   this.serviceDescription = Some(
     "Merge specified data sets  (result sets or result summaries) into one new data set (new result set or new result summary)." +
     "In case or merge result summaries, only validated data will be taken into account for new result summary and associated result set." +
