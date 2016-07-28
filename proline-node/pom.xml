@@ -19,7 +19,7 @@
   </properties>
 
   <scm>
-    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-Node/trunk</connection>
+    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-JMS-Components/Proline-Node/trunk</connection>
   </scm>
   
   <dependencies>
