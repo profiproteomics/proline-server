@@ -15,7 +15,7 @@ object ImportMaxQuantResultsService extends IImportMaxQuantResultsService
 trait IImportMaxQuantResultsService extends IMsiService with IDefaultServiceVersion {
 
   /* JMS Service identification */
-  val serviceLabel = "ImportMaxQuantResultsService"
+  val serviceLabel = "ImportMaxQuantResults"
   this.serviceDescription = Some(
     "Import MaxQuant result file in the MSIdb corresponding to the provided project id.")
 
