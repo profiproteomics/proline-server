@@ -39,6 +39,8 @@ object JMSConstants {
   val PROLINE_NODE_ID_KEY = "Proline_NodeId"
   val PROLINE_SERVICE_NAME_KEY = "Proline_ServiceName"
   val PROLINE_SERVICE_VERSION_KEY = "Proline_ServiceVersion"
+  val PROLINE_SERVICE_SOURCE_KEY = "Proline_ServiceSource"
+
 
   /* JSON-RPC Proline custom error codes */
   val MESSAGE_ERROR_CODE = -32001
