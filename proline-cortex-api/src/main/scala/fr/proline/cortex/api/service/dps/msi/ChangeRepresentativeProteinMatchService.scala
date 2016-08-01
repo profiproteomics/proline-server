@@ -5,11 +5,11 @@ import scala.reflect.runtime.universe.typeOf
 
 import fr.proline.jms.service.api.IDefaultServiceVersion
 import fr.proline.jms.service.api.RemoteServiceIdentity
-import fr.proline.jms.util.jsonrpc.IJSONRPC2Method
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethod
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethodParameter
-import fr.proline.jms.util.jsonrpc.JSONRPC2MethodResult
-import fr.proline.jms.util.reflect.FieldDescription
+import fr.profi.util.jsonrpc.IJSONRPC2Method
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
+import fr.profi.util.jsonrpc.JSONRPC2MethodResult
+import fr.profi.util.reflect.FieldDescription
 
 case class RepresentativeProteinMatchRule(
   @FieldDescription(
@@ -38,15 +38,18 @@ trait IChangeRepresentativeProteinMatchService extends IMsiService with IDefault
    // List the handled methods
   val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
  
-   object PROCESS_METHOD extends JSONRPC2DefaultMethod {
+  object PROCESS_METHOD extends JSONRPC2DefaultMethod {
       
-     // Method description
-     val name = RemoteServiceIdentity.PROCESS_METHOD_NAME
-     val description = "Creates a new Proline project"
-     val parameters = List(PROJECT_ID_PARAM, RESULT_SUMMARY_ID_PARAM, CHANGE_TYPICAL_RULES_PARAM)
-     val returns = JSONRPC2MethodResult(
+    // Method description
+    val name = RemoteServiceIdentity.PROCESS_METHOD_NAME
+    val description = serviceDescription.get
+    
+    // Configure method interface
+    val parameters = List(PROJECT_ID_PARAM, RESULT_SUMMARY_ID_PARAM, CHANGE_TYPICAL_RULES_PARAM)
+    val returns = JSONRPC2MethodResult(
       typeOf[Boolean],
-      "True if the service ran successfully, false otherwise."  )
+      "True if the service ran successfully, false otherwise."
+    )
   
     object PROJECT_ID_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "project_id"
@@ -61,7 +64,7 @@ trait IChangeRepresentativeProteinMatchService extends IMsiService with IDefault
     object CHANGE_TYPICAL_RULES_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "change_typical_rules" // TODO: rename to 'rules'
       val description = "List of rules used to select the representative protein match of each protein set. "
-      val scalaType = typeOf[RepresentativeProteinMatchRule]
+      val scalaType = typeOf[Array[RepresentativeProteinMatchRule]]
     }
   }
   

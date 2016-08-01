@@ -1,4 +1,4 @@
-package fr.proline.jms.util.jsonrpc
+package fr.profi.util.jsonrpc
 
 import scala.reflect.runtime.universe.Type
 
@@ -6,10 +6,10 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.lang.EnhancedEnum
-import fr.proline.jms.util.json.JSONType
-import fr.proline.jms.util.json.JsonSchema
-import fr.proline.jms.util.json.JsonSchemaRef
-import fr.proline.jms.util.reflect.Schema
+import fr.profi.util.json.JSONType
+import fr.profi.util.json.JsonSchema
+import fr.profi.util.json.JsonSchemaRef
+import fr.profi.util.reflect.Schema
 
 /** JSONRPC2 Service Description
  * 

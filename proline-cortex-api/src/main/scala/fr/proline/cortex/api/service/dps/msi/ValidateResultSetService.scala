@@ -7,36 +7,40 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 import fr.proline.jms.service.api.IDefaultServiceVersion
 import fr.proline.jms.service.api.RemoteServiceIdentity
-import fr.proline.jms.util.jsonrpc.IJSONRPC2Method
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethod
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethodParameter
-import fr.proline.jms.util.jsonrpc.JSONRPC2MethodResult
+import fr.profi.util.jsonrpc.IJSONRPC2Method
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
+import fr.profi.util.jsonrpc.JSONRPC2MethodResult
 
 case class FilterConfig(
   parameter: String,
   threshold: AnyVal,
-  postValidation: Boolean = false) 
+  postValidation: Boolean = false
+) 
   
 
 case class PepMatchValidatorConfig(
   parameter: String,
   threshold: Option[AnyVal] = None,
-  @JsonDeserialize(contentAs = classOf[java.lang.Float]) expectedFdr: Option[Float] = None)
+  @JsonDeserialize(contentAs = classOf[java.lang.Float])
+  expectedFdr: Option[Float] = None
+)
 
 case class ProtSetValidatorConfig(
   validationMethod: String,
   parameter: String,
   thresholds: Option[Map[String, AnyVal]] = None,
-  @JsonDeserialize(contentAs = classOf[java.lang.Float]) expectedFdr: Option[Float] = None)
+  @JsonDeserialize(contentAs = classOf[java.lang.Float])
+  expectedFdr: Option[Float] = None
+)
 
 object ValidateResultSetService extends IValidateResultSetService {
-  final val PARAMETER_PARAM_NAME= "parameter"
+  val PARAMETER_PARAM_NAME = "parameter"
   val THRESHOLD_PARAM_NAME = "threshold"
   val THRESHOLDS_PARAM_NAME = "thresholds"
   val POST_VALIDATION_PARAM_NAME = "post_validation"
   val EXPECTED_FDR_PARAM_NAME = "expected_fdr"
-  val VALIDATION_METHOD_PARAM_NAME ="validation_method"
- 
+  val VALIDATION_METHOD_PARAM_NAME = "validation_method"
 }
 
 trait IValidateResultSetService extends IValidateResultSetServiceParams with IMsiService with IDefaultServiceVersion {
@@ -44,6 +48,7 @@ trait IValidateResultSetService extends IValidateResultSetServiceParams with IMs
   /* JMS Service identification */
   val serviceLabel = "ValidateResultSet"
   this.serviceDescription = Some("Filters and validates a Result Set for a given set of rules.")
+  
   // List the handled methods
   val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
@@ -51,7 +56,8 @@ trait IValidateResultSetService extends IValidateResultSetServiceParams with IMs
 
     // Method description
     val name = RemoteServiceIdentity.PROCESS_METHOD_NAME
-    val description = "Creates a new Proline project"
+    val description = serviceDescription.get
+    
     // Configure service interface
     val parameters = List(
       PROJECT_ID_PARAM,
@@ -62,10 +68,12 @@ trait IValidateResultSetService extends IValidateResultSetServiceParams with IMs
       PEP_MATCH_VALIDATOR_CONFIG_PARAM,
       PEP_SET_SCORE_TYPE_PARAM,
       PROT_SET_FILTERS_PARAM,
-      PROT_SET_VALIDATOR_CONFIG_PARAM)
+      PROT_SET_VALIDATOR_CONFIG_PARAM
+    )
     val returns = JSONRPC2MethodResult(
       description = "The generated ResultSummary ID.",
-      scalaType = typeOf[Long])
+      scalaType = typeOf[Long]
+    )
 
   }
 }
@@ -103,7 +111,7 @@ trait IValidateResultSetServiceParams {
     val name = "pep_set_score_type"
     val description =
       "The type of score to use for peptide sets. " +
-        "Valid values are: 'mascot:standard score', 'mascot:mudpit score', 'mascot:modified mudpit score'."
+      "Valid values are: 'mascot:standard score', 'mascot:mudpit score', 'mascot:modified mudpit score'."
     val scalaType = typeOf[String]
     optional = true
   }

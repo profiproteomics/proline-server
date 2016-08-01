@@ -5,10 +5,10 @@ import scala.reflect.runtime.universe.typeOf
 
 import fr.proline.jms.service.api.IDefaultServiceVersion
 import fr.proline.jms.service.api.RemoteServiceIdentity
-import fr.proline.jms.util.jsonrpc.IJSONRPC2Method
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethod
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethodParameter
-import fr.proline.jms.util.jsonrpc.JSONRPC2MethodResult
+import fr.profi.util.jsonrpc.IJSONRPC2Method
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
+import fr.profi.util.jsonrpc.JSONRPC2MethodResult
 
 
 object QuantifyService extends IQuantifyService
@@ -18,7 +18,8 @@ trait IQuantifyService extends IMsqService with IDefaultServiceVersion {
   /* JMS Service identification */
   val serviceLabel = "Quantify"
   this.serviceDescription = Some(
-    "Creates a new quantitation and perform the corresponding data analysis.")
+    "Creates a new quantitation and perform the corresponding data analysis."
+  )
 
   // List the handled methods
   val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
@@ -27,17 +28,21 @@ trait IQuantifyService extends IMsqService with IDefaultServiceVersion {
 
     // Method description
     val name = RemoteServiceIdentity.PROCESS_METHOD_NAME
-    val description = "Creates a new Proline project"
+    val description = serviceDescription.get
+    
+    // Configure method interface
     val parameters = List(
       NAME_PARAM,
       DESCRIPTION_PARAM,
       PROJECT_ID_PARAM,
       METHOD_ID_PARAM,
       EXPERIMENTAL_DESIGN_PARAM,
-      QUANTITATION_CONFIG_PARAM)
+      QUANTITATION_CONFIG_PARAM
+    )
     val returns = JSONRPC2MethodResult(
       typeOf[Boolean],
-      "True if the service ran successfully, false otherwise.")
+      "True if the service ran successfully, false otherwise."
+    )
 
     object NAME_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "name"

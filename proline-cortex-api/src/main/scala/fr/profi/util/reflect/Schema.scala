@@ -1,14 +1,8 @@
-package fr.proline.jms.util.reflect
+package fr.profi.util.reflect
 
 import scala.collection.mutable.HashMap
 import scala.reflect.runtime.universe._
-import fr.proline.jms.util.json.JsonSchemaReference
-import fr.proline.jms.util.json.JsonSchemaRef
-import fr.proline.jms.util.json.JsonValueSchema
-import fr.proline.jms.util.json.JsonObjectSchema
-import fr.proline.jms.util.json.JsonArraySchema
-import fr.proline.jms.util.json.JSONType
-import fr.proline.jms.util.json.JsonSchema
+import fr.profi.util.json._
 
 object SchemaConversionRules {
   var camelCase = false

@@ -5,10 +5,10 @@ import scala.reflect.runtime.universe.typeOf
 
 import fr.proline.jms.service.api.IDefaultServiceVersion
 import fr.proline.jms.service.api.RemoteServiceIdentity
-import fr.proline.jms.util.jsonrpc.IJSONRPC2Method
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethod
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethodParameter
-import fr.proline.jms.util.jsonrpc.JSONRPC2MethodResult
+import fr.profi.util.jsonrpc.IJSONRPC2Method
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
+import fr.profi.util.jsonrpc.JSONRPC2MethodResult
 
 object ImportValidateGenerateSMService extends IImportValidateGenerateSMService
 
@@ -18,7 +18,8 @@ trait IImportValidateGenerateSMService extends IImportResultFilesServiceParams w
   val serviceLabel = "ImportValidateGenerateSM"
   this.serviceDescription = Some(
     "Import a result file in the MSIdb corresponding to the provided project id. " +
-      "Validate the imported result and optionnaly generate Spectrum Matches for the validated PSMs.")
+    "Validate the imported result and optionnaly generate Spectrum Matches for the validated PSMs."
+  )
 
   // List the handled methods
   val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
@@ -32,7 +33,8 @@ trait IImportValidateGenerateSMService extends IImportResultFilesServiceParams w
     val returns = JSONRPC2MethodResult(
       // TODO: create a case class for these parameters
       typeOf[Array[ImportedResultFile]],
-      "List of ImportedResultFile: path of imported file and id of created target RS.")
+      "List of ImportedResultFile: path of imported file and id of created target RS."
+    )
 
     /* Configure the service interface */
     override val parameters = List(
@@ -48,7 +50,8 @@ trait IImportValidateGenerateSMService extends IImportResultFilesServiceParams w
       PROT_SET_FILTERS_PARAM,
       PROT_SET_VALIDATOR_CONFIG_PARAM,
       GENERATE_SPECTRUM_MATCHES_PARAM,
-      FORCE_INSERT_PARAM)
+      FORCE_INSERT_PARAM
+    )
 
     /* Import Specific parameters */
     object USE_DECOY_REGEX_PARAM extends JSONRPC2DefaultMethodParameter {

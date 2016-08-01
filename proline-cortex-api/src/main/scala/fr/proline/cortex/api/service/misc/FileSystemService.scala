@@ -6,9 +6,9 @@ import scala.reflect.runtime.universe.typeOf
 import fr.proline.cortex.api.fs.FileAttrs
 import fr.proline.cortex.api.fs.MountPoint
 import fr.proline.jms.service.api.IDefaultServiceVersion
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethod
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethodParameter
-import fr.proline.jms.util.jsonrpc.JSONRPC2MethodResult
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
+import fr.profi.util.jsonrpc.JSONRPC2MethodResult
 
 object FileSystemService extends IFileSystemService
 

@@ -5,9 +5,9 @@ import scala.reflect.runtime.universe.typeOf
 
 import fr.proline.jms.service.api.IDefaultServiceVersion
 import fr.proline.jms.service.api.RemoteServiceIdentity
-import fr.proline.jms.util.jsonrpc.IJSONRPC2Method
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethod
-import fr.proline.jms.util.jsonrpc.JSONRPC2MethodResult
+import fr.profi.util.jsonrpc.IJSONRPC2Method
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
+import fr.profi.util.jsonrpc.JSONRPC2MethodResult
 
 object GetConnectionTemplateService extends IGetConnectionTemplateService
 
@@ -25,10 +25,13 @@ trait IGetConnectionTemplateService extends IAdminService with IDefaultServiceVe
     // Method description
     val name = RemoteServiceIdentity.PROCESS_METHOD_NAME
     val description = "A Map of JDBC connection properties and JMS server information."
+    
+    // Configure method interface
     val parameters = List()
     val returns = JSONRPC2MethodResult(
       description = "A Map of JDBC connection properties and JMS server information.",
-      scalaType = typeOf[Map[String, Object]])
+      scalaType = typeOf[Map[String, Object]]
+    )
 
   }
 

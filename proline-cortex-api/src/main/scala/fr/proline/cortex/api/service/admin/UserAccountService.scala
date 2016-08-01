@@ -4,10 +4,10 @@ import scala.reflect.runtime.universe
 import scala.reflect.runtime.universe.typeOf
 
 import fr.proline.jms.service.api.IDefaultServiceVersion
-import fr.proline.jms.util.jsonrpc.IJSONRPC2Method
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethod
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethodParameter
-import fr.proline.jms.util.jsonrpc.JSONRPC2MethodResult
+import fr.profi.util.jsonrpc.IJSONRPC2Method
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
+import fr.profi.util.jsonrpc.JSONRPC2MethodResult
 
 object UserAccountService extends IUserAccountService
 
@@ -28,6 +28,8 @@ trait IUserAccountService extends IAdminService with IDefaultServiceVersion {
     // Method description
     val name = "create"
     val description = "Creates a new user account."
+    
+    // Configure method interface
     val parameters = List(LOGIN_PARAM,PASSWORD_HASH_PARAM)
     val returns = JSONRPC2MethodResult(
       typeOf[Long],
@@ -50,8 +52,11 @@ trait IUserAccountService extends IAdminService with IDefaultServiceVersion {
   
   object CHANGE_PASSWORD_METHOD extends JSONRPC2DefaultMethod {
     
+    // Method description
     val name = "change_password"
     val description = "Change the password of the specified user."
+    
+    // Configure method interface
     val parameters = List(LOGIN_PARAM,OLD_PASSWORD_HASH_PARAM,NEW_PASSWORD_HASH_PARAM)
     val returns = JSONRPC2MethodResult(
       typeOf[Boolean],
@@ -78,8 +83,11 @@ trait IUserAccountService extends IAdminService with IDefaultServiceVersion {
   
   object AUTHENTICATE_METHOD extends JSONRPC2DefaultMethod {
     
+    // Method description
     val name = "authenticate"
     val description = "Authenticate a user using its login and its password hash."
+    
+    // Configure method interface
     val parameters = List(
       LOGIN_PARAM,
       PASSWORD_HASH_PARAM,

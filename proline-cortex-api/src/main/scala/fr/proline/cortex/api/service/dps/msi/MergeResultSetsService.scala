@@ -5,10 +5,10 @@ import scala.reflect.runtime.universe.typeOf
 
 import fr.proline.jms.service.api.IDefaultServiceVersion
 import fr.proline.jms.service.api.IRemoteServiceIdentity
-import fr.proline.jms.util.jsonrpc.IJSONRPC2Method
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethod
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethodParameter
-import fr.proline.jms.util.jsonrpc.JSONRPC2MethodResult
+import fr.profi.util.jsonrpc.IJSONRPC2Method
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
+import fr.profi.util.jsonrpc.JSONRPC2MethodResult
 
 //object MergeResultSetsService extends IMergeResultSetsService
 
@@ -60,6 +60,7 @@ trait IMergeResultSetsService extends IRemoteServiceIdentity {
     val description = "Merge specified result summaries into one new result summary. " +
     "Only validated data will be taken into account for new result summary and associated result set."
     
+    // Configure method interface
     val parameters = List(PROJECT_ID_PARAM,RESULT_SUMMARY_IDS_PARAM)
     val returns = JSONRPC2MethodResult(
       typeOf[RSMMergeResult],
@@ -76,10 +77,7 @@ trait IMergeResultSetsService extends IRemoteServiceIdentity {
       val description = "A list of ids corresponding to the result summaries to merge."
       val scalaType = typeOf[Array[Long]]
     }
-    
   }
-  
-  
 }
 
 object MergeResultSetsServiceV1_0 extends IMergeResultSetsServiceV1_0

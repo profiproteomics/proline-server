@@ -13,7 +13,8 @@ case class FileAttrs(
   name: String,
   size: Long,
   lastmodified: Int, // mod time since epoch
-  extension: String) extends FileOrDirAttrs {
+  extension: String
+) extends FileOrDirAttrs {
   val isDir = false
 }
 
@@ -23,6 +24,6 @@ case class DirAttrs(
   lastmodified: Int // mod time since epoch
   //subdirs: Seq[DirProps] = Seq(),
   //files: Seq[FileProps] = Seq()
-  ) extends FileOrDirAttrs {
+) extends FileOrDirAttrs {
   val isDir = true
 }

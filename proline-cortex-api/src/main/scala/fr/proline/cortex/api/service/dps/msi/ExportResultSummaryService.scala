@@ -6,11 +6,11 @@ import scala.reflect.runtime.universe.typeOf
 import fr.profi.util.lang.EnhancedEnum
 import fr.proline.jms.service.api.IDefaultServiceVersion
 import fr.proline.jms.service.api.RemoteServiceIdentity
-import fr.proline.jms.util.jsonrpc.IJSONRPC2Method
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethod
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethodParameter
-import fr.proline.jms.util.jsonrpc.JSONRPC2MethodResult
-import fr.proline.jms.util.reflect.FieldDescription
+import fr.profi.util.jsonrpc.IJSONRPC2Method
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
+import fr.profi.util.jsonrpc.JSONRPC2MethodResult
+import fr.profi.util.reflect.FieldDescription
 
 object FileFormat extends EnhancedEnum {
   val MZIDENTML = Value("MZIDENTML")
@@ -26,33 +26,47 @@ object OutputMode extends EnhancedEnum {
 
 case class ResultSummaryIdentifier(
   @FieldDescription(
-    content = "The ID of the project this result summary belongs to.") projectId: Long,
+    content = "The ID of the project this result summary belongs to."
+  )
+  projectId: Long,
 
   @FieldDescription(
-    content = "The ID of the result summary to export.") rsmId: Long)
+    content = "The ID of the result summary to export."
+  )
+  rsmId: Long
+)
 
 case class RsmIdentifier(
 
   @FieldDescription(
-    content = "The ID of the project this result summary belongs to.") projectId: Long,
+    content = "The ID of the project this result summary belongs to."
+  )
+  projectId: Long,
 
   @FieldDescription(
-    content = "The ID of the data set corresponding to the result summary being exported.") dsId: Long,
+    content = "The ID of the data set corresponding to the result summary being exported."
+  )
+  dsId: Long,
 
   @FieldDescription(
-    content = "The ID of the result summary to export.") rsmId: Long)
+    content = "The ID of the result summary to export."
+  )
+  rsmId: Long
+)
 
 trait IExportResultSummaryService extends IMsiService {
 
   /* JMS Service identification */
   val serviceLabel = "ExportResultSummary"
   this.serviceDescription = Some(
-    "Exports result summaries on server side in various files formats.")
+    "Exports result summaries on server side in various files formats."
+  )
 
   val serviceResult = JSONRPC2MethodResult(
     typeOf[AnyRef],
     "The file paths in FILE output mode. The file paths and PROLINE_NODE_ID in STREAM output mode." +
-      "Call the ResourceService using the PROLINE_NODE_ID and the file paths")
+    "Call the ResourceService using the PROLINE_NODE_ID and the file paths."
+  )
 
   object FILE_FORMAT_PARAM extends JSONRPC2DefaultMethodParameter {
     val name = "file_format"
@@ -93,16 +107,20 @@ trait IExportResultSummaryServiceV1_0 extends IExportResultSummaryService with I
   val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
   object PROCESS_METHOD extends JSONRPC2DefaultMethod {
+    
     // Method description
     val name = RemoteServiceIdentity.PROCESS_METHOD_NAME
     val description = "Exports result summaries on server side in various files formats."
+    
+    // Configure method interface
     val parameters = List(
       RSM_IDENTIFIER_PARAM,
       FILE_FORMAT_PARAM,
       FILE_NAME_PARAM,
       FILE_DIRECTORY_PARAM,
       OUTPUT_MODE_PARAM, // FILE || STREAM
-      EXTRA_PARAMS_PARAM)
+      EXTRA_PARAMS_PARAM
+    )
     val returns = serviceResult
 
     object RSM_IDENTIFIER_PARAM extends JSONRPC2DefaultMethodParameter {
@@ -129,13 +147,16 @@ trait IExportResultSummariesServiceV2_0 extends IExportResultSummaryService {
     // Method description
     val name = RemoteServiceIdentity.PROCESS_METHOD_NAME
     val description = "Exports result summaries on server side in various files formats."
+    
+    // Configure method interface
     val parameters = List(
       RSM_IDENTIFIERS_PARAM,
       FILE_FORMAT_PARAM,
       FILE_NAME_PARAM,
       FILE_DIRECTORY_PARAM,
       OUTPUT_MODE_PARAM, // FILE || STREAM
-      EXTRA_PARAMS_PARAM)
+      EXTRA_PARAMS_PARAM
+    )
     val returns = serviceResult
 
     object RSM_IDENTIFIERS_PARAM extends JSONRPC2DefaultMethodParameter {

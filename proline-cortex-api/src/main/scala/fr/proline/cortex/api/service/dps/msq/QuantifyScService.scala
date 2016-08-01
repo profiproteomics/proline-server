@@ -5,10 +5,10 @@ import scala.reflect.runtime.universe.typeOf
 
 import fr.proline.jms.service.api.IDefaultServiceVersion
 import fr.proline.jms.service.api.RemoteServiceIdentity
-import fr.proline.jms.util.jsonrpc.IJSONRPC2Method
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethod
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethodParameter
-import fr.proline.jms.util.jsonrpc.JSONRPC2MethodResult
+import fr.profi.util.jsonrpc.IJSONRPC2Method
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
+import fr.profi.util.jsonrpc.JSONRPC2MethodResult
 
 object QuantifySCService extends IQuantifySCService
 
@@ -18,7 +18,8 @@ trait IQuantifySCService extends IMsqService with IDefaultServiceVersion {
   val serviceLabel = "QuantifySC"
   this.serviceDescription = Some(
     "Computes spectral count for proteins of result summaries associated to experimental design's QuantChannel." +
-      "This service return the id of the created dataset (dataset_quanti_id) and the JSON result containing spectral count values (spectral_count_result).")
+    "This service return the id of the created dataset (dataset_quanti_id) and the JSON result containing spectral count values (spectral_count_result)."
+  )
 
   // List the handled methods
   val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
@@ -27,17 +28,21 @@ trait IQuantifySCService extends IMsqService with IDefaultServiceVersion {
 
     // Method description
     val name = RemoteServiceIdentity.PROCESS_METHOD_NAME
-    val description = "Creates a new Proline project"
+    val description = serviceDescription.get
+    
+    // Configure method interface
     val parameters = List(
       NAME_PARAM,
       DESCRIPTION_PARAM,
       PROJECT_ID_PARAM,
       REF_RSM_ID_PARAM,
       REF_DS_ID_PARAM,
-      EXPERIMENTAL_DESIGN_PARAM)
+      EXPERIMENTAL_DESIGN_PARAM
+    )
     val returns = JSONRPC2MethodResult(
       typeOf[Map[String, Any]],
-      "A Map containging the quant_dataset_id and the spectral_count_result as a JSON string.")
+      "A Map containging the quant_dataset_id and the spectral_count_result as a JSON string."
+    )
 
     object NAME_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "name"

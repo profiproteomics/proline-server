@@ -6,10 +6,10 @@ import scala.reflect.runtime.universe.typeOf
 import fr.proline.cortex.api.service.dps.msi.IValidateResultSetServiceParams
 import fr.proline.jms.service.api.IDefaultServiceVersion
 import fr.proline.jms.service.api.RemoteServiceIdentity
-import fr.proline.jms.util.jsonrpc.IJSONRPC2Method
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethod
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethodParameter
-import fr.proline.jms.util.jsonrpc.JSONRPC2MethodResult
+import fr.profi.util.jsonrpc.IJSONRPC2Method
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
+import fr.profi.util.jsonrpc.JSONRPC2MethodResult
 
 object ValidateIdentDSInTreeService extends IValidateIdentDSInTreeService
 
@@ -19,7 +19,8 @@ trait IValidateIdentDSInTreeService extends IValidateResultSetServiceParams with
   val serviceLabel = "ValidateIdentDSInTree"
   this.serviceDescription = Some(
     "Validates all result sets associated to an identification dataset hierarchy." +
-      "Creates appropriate result summaries after having applied provided filters. ")
+    "Creates appropriate result summaries after having applied provided filters. "
+  )
 
   // List the handled methods
   val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
@@ -28,7 +29,9 @@ trait IValidateIdentDSInTreeService extends IValidateResultSetServiceParams with
 
     // Method description
     val name = RemoteServiceIdentity.PROCESS_METHOD_NAME
-    val description = "Creates a new Proline project"
+    val description = serviceDescription.get
+    
+    // Configure method interface
     val parameters = List(
       PROJECT_ID_PARAM,
       PARENT_DATASET_IDS_PARAM,
@@ -38,10 +41,12 @@ trait IValidateIdentDSInTreeService extends IValidateResultSetServiceParams with
       PEP_MATCH_VALIDATOR_CONFIG_PARAM,
       PEP_SET_SCORE_TYPE_PARAM,
       PROT_SET_FILTERS_PARAM,
-      PROT_SET_VALIDATOR_CONFIG_PARAM)
+      PROT_SET_VALIDATOR_CONFIG_PARAM
+    )
     val returns = JSONRPC2MethodResult(
       typeOf[String],
-      "The JSON String corresponding to the default export configuration of specified mode.")
+      "The JSON String corresponding to the default export configuration of specified mode."
+    )
 
     object PARENT_DATASET_IDS_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "parent_dataset_ids"

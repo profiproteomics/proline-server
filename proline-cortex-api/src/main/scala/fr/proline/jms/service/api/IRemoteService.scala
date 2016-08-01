@@ -3,13 +3,13 @@ package fr.proline.jms.service.api
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 
-import fr.proline.jms.util.jsonrpc.BuildJSONRPC2Response
-import fr.proline.jms.util.jsonrpc.IJSONRPC2Method
-import fr.proline.jms.util.jsonrpc.JSONRPC2ServiceDescription
-import fr.proline.jms.util.jsonrpc.JSONRPC2ServiceEnvelope
-import fr.proline.jms.util.jsonrpc.JSONRPC2ServiceEnvelope.enumToString
-import fr.proline.jms.util.jsonrpc.JSONRPC2ServiceTransport
-import fr.proline.jms.util.jsonrpc.JSONRPC2ServiceTransport.enumToString
+import fr.profi.util.jsonrpc.BuildJSONRPC2Response
+import fr.profi.util.jsonrpc.IJSONRPC2Method
+import fr.profi.util.jsonrpc.JSONRPC2ServiceDescription
+import fr.profi.util.jsonrpc.JSONRPC2ServiceEnvelope
+import fr.profi.util.jsonrpc.JSONRPC2ServiceEnvelope.enumToString
+import fr.profi.util.jsonrpc.JSONRPC2ServiceTransport
+import fr.profi.util.jsonrpc.JSONRPC2ServiceTransport.enumToString
 import javax.jms.BytesMessage
 
 

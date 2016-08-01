@@ -1,4 +1,4 @@
-package fr.proline.jms.util.json
+package fr.profi.util.json
 
 import fr.profi.util.lang.EnhancedEnum
 

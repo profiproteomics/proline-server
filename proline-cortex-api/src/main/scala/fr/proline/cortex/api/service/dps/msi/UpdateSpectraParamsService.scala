@@ -5,10 +5,10 @@ import scala.reflect.runtime.universe.typeOf
 
 import fr.proline.jms.service.api.IDefaultServiceVersion
 import fr.proline.jms.service.api.RemoteServiceIdentity
-import fr.proline.jms.util.jsonrpc.IJSONRPC2Method
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethod
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethodParameter
-import fr.proline.jms.util.jsonrpc.JSONRPC2MethodResult
+import fr.profi.util.jsonrpc.IJSONRPC2Method
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
+import fr.profi.util.jsonrpc.JSONRPC2MethodResult
 
 trait IUpdateSpectraParamsService extends IMsiService {
 
@@ -16,12 +16,14 @@ trait IUpdateSpectraParamsService extends IMsiService {
   val serviceLabel = "UpdateSpectraParams"
   this.serviceDescription = Some(
     "Update scan, cycle and time information of spectra belonging to specified peaklists. " +
-      "Information are extracted from the spectrum title string by applying the regexes corresponding to the given parsing rule.")
+    "Information are extracted from the spectrum title string by applying the regexes corresponding to the given parsing rule."
+  )
 
   /* Configure the service interface */
   val serviceResult = JSONRPC2MethodResult(
     typeOf[Int],
-    "The number of updated spectra.")
+    "The number of updated spectra."
+  )
 
   object PROJECT_ID_PARAM extends JSONRPC2DefaultMethodParameter {
     val name = "project_id"
@@ -42,7 +44,9 @@ trait IUpdateSpectraParamsServiceV1_0 extends IUpdateSpectraParamsService with I
 
     // Method description
     val name = RemoteServiceIdentity.PROCESS_METHOD_NAME
-    val description = "Update scan, cycle and time information of spectra belonging to specified peaklists. "
+    val description = "Update scan, cycle and time information of spectra belonging to specified peaklists."
+    
+    // Configure method interface
     val parameters = List(PROJECT_ID_PARAM, PEAKLIST_IDS_PARAM, SPEC_TITLE_RULE_ID_PARAM)
     val returns = serviceResult
 
@@ -72,7 +76,9 @@ trait IUpdateSpectraParamsServiceV2_0 extends IUpdateSpectraParamsService {
 
     // Method description
     val name = RemoteServiceIdentity.PROCESS_METHOD_NAME
-    val description = "Update scan, cycle and time information of spectra belonging to specified peaklists. "
+    val description = "Update scan, cycle and time information of spectra belonging to specified peaklists."
+    
+    // Configure method interface
     val parameters = List(PROJECT_ID_PARAM, RESULT_SET_IDS_PARAM, PEAKLIST_SOFTWARE_ID_PARAM)
     val returns = serviceResult
 

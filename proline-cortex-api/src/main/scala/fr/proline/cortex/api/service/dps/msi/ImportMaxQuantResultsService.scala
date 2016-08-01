@@ -5,10 +5,10 @@ import scala.reflect.runtime.universe.typeOf
 
 import fr.proline.jms.service.api.IDefaultServiceVersion
 import fr.proline.jms.service.api.RemoteServiceIdentity
-import fr.proline.jms.util.jsonrpc.IJSONRPC2Method
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethod
-import fr.proline.jms.util.jsonrpc.JSONRPC2DefaultMethodParameter
-import fr.proline.jms.util.jsonrpc.JSONRPC2MethodResult
+import fr.profi.util.jsonrpc.IJSONRPC2Method
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
+import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
+import fr.profi.util.jsonrpc.JSONRPC2MethodResult
 
 object ImportMaxQuantResultsService extends IImportMaxQuantResultsService
 
@@ -17,7 +17,8 @@ trait IImportMaxQuantResultsService extends IMsiService with IDefaultServiceVers
   /* JMS Service identification */
   val serviceLabel = "ImportMaxQuantResults"
   this.serviceDescription = Some(
-    "Import MaxQuant result file in the MSIdb corresponding to the provided project id.")
+    "Import MaxQuant result file in the MSIdb corresponding to the provided project id."
+  )
 
   // List the handled methods
   val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
@@ -26,18 +27,22 @@ trait IImportMaxQuantResultsService extends IMsiService with IDefaultServiceVers
 
     // Method description
     val name = RemoteServiceIdentity.PROCESS_METHOD_NAME
-    val description = "Creates a new Proline project"
+    val description = serviceDescription.get
+    
+    // Configure method interface
     val parameters = List(
       PROJECT_ID_PARAM,
       RESULT_FILES_DIR_PARAM,
       INSTRUMENT_CONFIG_ID_PARAM,
-      PEAKLIST_SOFTWARE_ID_PARAM)
+      PEAKLIST_SOFTWARE_ID_PARAM
+    )
     val returns = JSONRPC2MethodResult(
       // TODO: create a case class for these parameters
       typeOf[Map[String, Any]],
       "A map corresponding to import result:\n" +
-        "- result_set_ids: list of all created result set ids\n" +
-        "- warning_msg: information message that could be of interest for to caller (GUI for instance)")
+      "- result_set_ids: list of all created result set ids\n" +
+      "- warning_msg: information message that could be of interest for to caller (GUI for instance)"
+    )
 
     object PROJECT_ID_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "project_id"
