@@ -92,13 +92,14 @@ case class ResultFileDescriptorRuleId(
 //  val serviceVersion = "NONE"
 //}
 
-trait IImportResultFilesService extends IImportResultFilesServiceParams with IMsiService {
+trait IImportResultFilesService extends IMsiService with IImportResultFilesServiceParams {
 
   /* JMS Service identification */
   val serviceLabel = "ImportResultFiles"
   this.serviceDescription = Some(
     "Import a result file in the MSIdb corresponding to the provided project id."
   )
+  
 }
 
 trait IImportResultFilesServiceParams {
@@ -150,8 +151,8 @@ trait IImportResultFilesServiceV1_0 extends IImportResultFilesService with IDefa
 
   // List the handled methods
   val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
-
-  object PROCESS_METHOD extends JSONRPC2DefaultMethod {
+  
+  object PROCESS_METHOD extends JSONRPC2DefaultMethod with IImportResultFilesServiceParams {
 
     // Method description
     val name = RemoteServiceIdentity.PROCESS_METHOD_NAME
@@ -187,8 +188,8 @@ trait IImportResultFilesServiceV2_0 extends IImportResultFilesService {
   val serviceVersion = "2.0"
   // List the handled methods
   val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
-
-  object PROCESS_METHOD extends JSONRPC2DefaultMethod {
+  
+  object PROCESS_METHOD extends JSONRPC2DefaultMethod with IImportResultFilesServiceParams {
 
     // Method description
     val name = RemoteServiceIdentity.PROCESS_METHOD_NAME

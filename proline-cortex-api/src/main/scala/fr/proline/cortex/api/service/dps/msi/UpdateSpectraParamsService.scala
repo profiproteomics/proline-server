@@ -83,6 +83,7 @@ trait IUpdateSpectraParamsServiceV2_0 extends IUpdateSpectraParamsService {
     val returns = serviceResult
 
     object RESULT_SET_IDS_PARAM extends JSONRPC2DefaultMethodParameter {
+      // FIXME: should be result_set_ids and not resultset_ids
       val name = "resultset_ids"
       val description = "The ids of the resultsets to update. These RS should be SEARCH ResultSet."
       val scalaType = typeOf[Array[Long]]

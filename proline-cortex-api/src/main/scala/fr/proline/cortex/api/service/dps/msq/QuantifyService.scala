@@ -32,18 +32,23 @@ trait IQuantifyService extends IMsqService with IDefaultServiceVersion {
     
     // Configure method interface
     val parameters = List(
+      PROJECT_ID_PARAM,
       NAME_PARAM,
       DESCRIPTION_PARAM,
-      PROJECT_ID_PARAM,
       METHOD_ID_PARAM,
       EXPERIMENTAL_DESIGN_PARAM,
       QUANTITATION_CONFIG_PARAM
     )
     val returns = JSONRPC2MethodResult(
-      typeOf[Boolean],
-      "True if the service ran successfully, false otherwise."
+      typeOf[Long],
+      "True ID of the created quantitation."
     )
 
+    object PROJECT_ID_PARAM extends JSONRPC2DefaultMethodParameter {
+      val name = "project_id"
+      val description = "The id of the project the quantitation will be created in."
+      val scalaType = typeOf[Long]
+    }
     object NAME_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "name"
       val description = "The quantitation name."
@@ -53,11 +58,6 @@ trait IQuantifyService extends IMsqService with IDefaultServiceVersion {
       val name = "description"
       val description = "The quantitation description."
       val scalaType = typeOf[String]
-    }
-    object PROJECT_ID_PARAM extends JSONRPC2DefaultMethodParameter {
-      val name = "project_id"
-      val description = "The id of the project the quantitation will be created in."
-      val scalaType = typeOf[Long]
     }
     object METHOD_ID_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "method_id"

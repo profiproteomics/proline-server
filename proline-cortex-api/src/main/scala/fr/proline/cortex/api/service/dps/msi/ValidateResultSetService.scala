@@ -43,7 +43,7 @@ object ValidateResultSetService extends IValidateResultSetService {
   val VALIDATION_METHOD_PARAM_NAME = "validation_method"
 }
 
-trait IValidateResultSetService extends IValidateResultSetServiceParams with IMsiService with IDefaultServiceVersion {
+trait IValidateResultSetService extends IMsiService with IDefaultServiceVersion {
 
   /* JMS Service identification */
   val serviceLabel = "ValidateResultSet"
@@ -52,7 +52,7 @@ trait IValidateResultSetService extends IValidateResultSetServiceParams with IMs
   // List the handled methods
   val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
-  object PROCESS_METHOD extends JSONRPC2DefaultMethod {
+  object PROCESS_METHOD extends JSONRPC2DefaultMethod with IValidateResultSetServiceParams {
 
     // Method description
     val name = RemoteServiceIdentity.PROCESS_METHOD_NAME
@@ -79,6 +79,11 @@ trait IValidateResultSetService extends IValidateResultSetServiceParams with IMs
 }
 
 trait IValidateResultSetServiceParams {
+  object PROJECT_ID_PARAM extends JSONRPC2DefaultMethodParameter {
+    val name = "project_id"
+    val description = "The id of the project the result set belongs to."
+    val scalaType = typeOf[Long]
+  }
   object RESULT_SET_ID_PARAM extends JSONRPC2DefaultMethodParameter {
     val name = "result_set_id"
     val description = "The id of the result set to validate."
@@ -126,11 +131,5 @@ trait IValidateResultSetServiceParams {
     val description = "Protein Set validator config to use: expected FDR by category."
     val scalaType = typeOf[ProtSetValidatorConfig]
     optional = true
-  }
-  
-  object PROJECT_ID_PARAM extends JSONRPC2DefaultMethodParameter {
-    val name = "project_id"
-    val description = "The id of the project the result set belongs to."
-    val scalaType = typeOf[Long]
   }
 }

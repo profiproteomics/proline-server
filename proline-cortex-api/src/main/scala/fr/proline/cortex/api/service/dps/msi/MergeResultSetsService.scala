@@ -105,6 +105,7 @@ trait IMergeResultSetsServiceV2_0 extends IMergeResultSetsService {
       val name = "aggregation_mode" // TODO: rename to addition_mode ?
       val description = "The mode of PSM aggregation to use (union or aggregation)."
       val scalaType = typeOf[String]
+      optional = true
     }
   }
   

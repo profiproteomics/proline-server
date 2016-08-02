@@ -22,8 +22,8 @@ trait IFileSystemService extends IMiscService with IDefaultServiceVersion {
   val methodDefinitions = List(
     RETRIEVE_ALL_DIRECTORY_TYPES_METHOD,
     RETRIEVE_ALL_MOUNT_POINTS_METHOD,
-    RETRIEVE_MOUNT_POINT_BY_TYPE_METHOD,
-    RETRIEVE_MOUNT_POINT_BY_LABEL_METHOD,
+    RETRIEVE_MOUNT_POINTS_BY_TYPE_METHOD,
+    RETRIEVE_MOUNT_POINTS_BY_LABEL_METHOD,
     RETRIEVE_DIRECTORY_CONTENT_METHOD
   )
   
@@ -46,7 +46,7 @@ trait IFileSystemService extends IMiscService with IDefaultServiceVersion {
     val returns = JSONRPC2MethodResult(typeOf[Array[MountPoint]])
   }
   
-  object RETRIEVE_MOUNT_POINT_BY_TYPE_METHOD extends JSONRPC2DefaultMethod {
+  object RETRIEVE_MOUNT_POINTS_BY_TYPE_METHOD extends JSONRPC2DefaultMethod {
     
     val name = "retrieve_mount_points_by_type"
     val description = "Returns the list of mount points corresponding to a given directory type."
@@ -62,7 +62,7 @@ trait IFileSystemService extends IMiscService with IDefaultServiceVersion {
     
   }
   
-  object RETRIEVE_MOUNT_POINT_BY_LABEL_METHOD extends JSONRPC2DefaultMethod {
+  object RETRIEVE_MOUNT_POINTS_BY_LABEL_METHOD extends JSONRPC2DefaultMethod {
     
     val name = "retrieve_mount_points_by_label"
     val description = "Returns the list of mount points corresponding to a given label."

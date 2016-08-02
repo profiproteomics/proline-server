@@ -46,7 +46,7 @@ trait IGenerateMSDiagReportService extends IMsiService with IDefaultServiceVersi
     }
     object MSDIAG_SETTINGS_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "msdiag_settings"
-      val description = null
+      val description = "Settings for msDiag report."
       val scalaType = typeOf[Map[String, Any]]
     }
   }

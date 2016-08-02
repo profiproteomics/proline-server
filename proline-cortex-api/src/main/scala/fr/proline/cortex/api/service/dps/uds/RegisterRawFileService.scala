@@ -59,12 +59,12 @@ trait IRegisterRawFileService extends IUdsService with IDefaultServiceVersion {
     }
     object INSTRUMENT_ID_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "instrument_id"
-      val description = null
+      val description = "ID of the instrument used for the raw file acquisition."
       val scalaType = typeOf[Long]
     }
     object OWNER_ID_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "owner_id"
-      val description = null
+      val description = "ID of the project owner associated to the raw file."
       val scalaType = typeOf[Long]
     }
   }

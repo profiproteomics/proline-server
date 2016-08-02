@@ -44,8 +44,8 @@ trait IValidateIdentDSInTreeService extends IValidateResultSetServiceParams with
       PROT_SET_VALIDATOR_CONFIG_PARAM
     )
     val returns = JSONRPC2MethodResult(
-      typeOf[String],
-      "The JSON String corresponding to the default export configuration of specified mode."
+      typeOf[Long],
+      "The generated ResultSummary ID."
     )
 
     object PARENT_DATASET_IDS_PARAM extends JSONRPC2DefaultMethodParameter {

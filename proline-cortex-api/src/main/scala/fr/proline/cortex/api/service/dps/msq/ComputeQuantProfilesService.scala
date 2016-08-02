@@ -15,6 +15,7 @@ object ComputeQuantProfilesService extends IComputeQuantProfilesService
 trait IComputeQuantProfilesService extends IMsqService with IDefaultServiceVersion {
 
   /* JMS Service identification */
+  // TODO: rename to PostProcessQuantitation
   val serviceLabel = "ComputeQuantProfiles"
   this.serviceDescription = Some(
     "Computes quantitative profiles of peptides and protein sets."

@@ -56,12 +56,12 @@ trait IImportMaxQuantResultsService extends IMsiService with IDefaultServiceVers
     }
     object INSTRUMENT_CONFIG_ID_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "instrument_config_id"
-      val description = null
+      val description = "The id in the datastore of the instrument config used for result file acquisition."
       val scalaType = typeOf[Long]
     }
     object PEAKLIST_SOFTWARE_ID_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "peaklist_software_id"
-      val description = null
+      val description = "The id in the datastore of the software used to generate the peaklist."
       val scalaType = typeOf[Long]
     }
   }

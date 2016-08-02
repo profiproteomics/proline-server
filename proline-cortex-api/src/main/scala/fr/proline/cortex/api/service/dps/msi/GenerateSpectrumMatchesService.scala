@@ -21,7 +21,7 @@ trait IGenerateSpectrumMatchesServiceParams {
   }
 }
 
-trait IGenerateSpectrumMatchesService extends IGenerateSpectrumMatchesServiceParams with IMsiService with IDefaultServiceVersion {
+trait IGenerateSpectrumMatchesService extends IMsiService with IDefaultServiceVersion {
 
   /* JMS Service identification */
   val serviceLabel = "GenerateSpectrumMatches"
@@ -30,7 +30,7 @@ trait IGenerateSpectrumMatchesService extends IGenerateSpectrumMatchesServicePar
   // List the handled methods
   val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
-  object PROCESS_METHOD extends JSONRPC2DefaultMethod {
+  object PROCESS_METHOD extends JSONRPC2DefaultMethod with IGenerateSpectrumMatchesServiceParams {
 
     // Method description
     val name = RemoteServiceIdentity.PROCESS_METHOD_NAME

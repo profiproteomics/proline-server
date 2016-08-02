@@ -32,11 +32,12 @@ trait IQuantifySCService extends IMsqService with IDefaultServiceVersion {
     
     // Configure method interface
     val parameters = List(
+      PROJECT_ID_PARAM,
       NAME_PARAM,
       DESCRIPTION_PARAM,
-      PROJECT_ID_PARAM,
       REF_RSM_ID_PARAM,
       REF_DS_ID_PARAM,
+      PEPTIDE_REF_RSM_IDS_PARAM,
       EXPERIMENTAL_DESIGN_PARAM
     )
     val returns = JSONRPC2MethodResult(
@@ -44,6 +45,11 @@ trait IQuantifySCService extends IMsqService with IDefaultServiceVersion {
       "A Map containging the quant_dataset_id and the spectral_count_result as a JSON string."
     )
 
+    object PROJECT_ID_PARAM extends JSONRPC2DefaultMethodParameter {
+      val name = "project_id"
+      val description = "The id of the project the quantitation will be created in."
+      val scalaType = typeOf[Long]
+    }
     object NAME_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "name"
       val description = "Name of the quantitation dataset that will be created for this quantitation."
@@ -53,11 +59,6 @@ trait IQuantifySCService extends IMsqService with IDefaultServiceVersion {
       val name = "description"
       val description = "Description of the quantitation dataset that will be created for this quantitation."
       val scalaType = typeOf[String]
-    }
-    object PROJECT_ID_PARAM extends JSONRPC2DefaultMethodParameter {
-      val name = "project_id"
-      val description = "The id of the project the quantitation will be created in."
-      val scalaType = typeOf[Long]
     }
     object REF_RSM_ID_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "ref_rsm_id"
@@ -73,6 +74,7 @@ trait IQuantifySCService extends IMsqService with IDefaultServiceVersion {
       val name = "peptide_ref_rsm_ids"
       val description = "List of result summary ID where the spectral count specificity and weight should be calculated."
       val scalaType = typeOf[Array[Long]]
+      optional = true
     }
     object EXPERIMENTAL_DESIGN_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "experimental_design"
