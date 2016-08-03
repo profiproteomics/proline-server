@@ -13,15 +13,15 @@ import fr.profi.util.jsonrpc.JSONRPC2MethodResult
 import fr.profi.util.reflect.FieldDescription
 
 object FileFormat extends EnhancedEnum {
-  val MZIDENTML = Value("MZIDENTML")
-  val TEMPLATED = Value("TEMPLATED")
-  val PRIDE = Value("PRIDE")
-  val SPECTRA_LIST = Value("SPECTRA_LIST")
+  val MZIDENTML, TEMPLATED, PRIDE, SPECTRA_LIST = Value
+}
+
+object TemplateName extends EnhancedEnum {
+  val ALL_PEP_MATCHES_XLSX, IRMA_LIKE_TSV, IRMA_LIKE_XLSX, IRMA_LIKE_FULL_XLSX, PROLINE_XLSX = Value
 }
 
 object OutputMode extends EnhancedEnum {
-  val FILE = Value("FILE")
-  val STREAM = Value("STREAM")
+  val FILE, STREAM = Value
 }
 
 case class ResultSummaryIdentifier(
