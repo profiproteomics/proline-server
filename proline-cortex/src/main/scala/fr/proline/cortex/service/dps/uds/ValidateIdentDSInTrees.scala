@@ -7,9 +7,10 @@ import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.primitives.toLong
 import fr.proline.core.service.uds.IdentificationTreeValidator
+import fr.proline.cortex.api.service.dps.uds.IValidateIdentDSInTreeService
 import fr.proline.cortex.service.dps.msi.ValidateResultSet
 import fr.proline.cortex.util.DbConnectionHelper
-import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.jms.service.api.AbstractRemoteProcessingService
 
 /**
  *  Define JMS Service which validates all RS associated to Identification dataset of specific DS hierarchy, and creates appropriates ResultSummaries. 
@@ -28,19 +29,15 @@ import fr.proline.jms.service.api.AbstractRemoteProcessService
  * Output params :
  *   generated ResultSummary ID 
  */
-class ValidateIdentDSInTree extends AbstractRemoteProcessService with LazyLogging {
+// TODO: rename the file to ValidateIdentDSInTree.scala
+class ValidateIdentDSInTree extends AbstractRemoteProcessingService with IValidateIdentDSInTreeService with LazyLogging {
 
-  /* JMS Service identification */
-  val serviceName = "proline/dps/uds/ValidateIdentDSInTree"
-  val serviceVersion = "1.0"
-  override val defaultVersion = true
+  def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
+    require(paramsRetriever != null, "No parameter specified")
 
-  override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
-    require((paramsRetriever != null), "No parameter specified")
-
-    val projectId = paramsRetriever.getLong("project_id")
-    val parentDsIds = paramsRetriever.getList("parent_dataset_ids").toArray.map { id => toLong(id) }
-    val mergeResultSets = paramsRetriever.getBoolean("merge_result_sets")
+    val projectId = paramsRetriever.getLong(PROJECT_ID_PARAM)
+    val parentDsIds = paramsRetriever.getList(PROCESS_METHOD.PARENT_DATASET_IDS_PARAM).toArray.map { id => toLong(id) }
+    val mergeResultSets = paramsRetriever.getBoolean(PROCESS_METHOD.MERGE_RESULT_SETS_PARAM)
 //    val useTdCompet = paramsRetriever.getOptBoolean("use_td_competition", false)
     val validationConfig = ValidateResultSet.parseValidationConfig(paramsRetriever)
    

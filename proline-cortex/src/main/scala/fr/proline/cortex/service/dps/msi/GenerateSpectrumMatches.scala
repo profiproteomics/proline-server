@@ -4,9 +4,11 @@ import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.primitives.toLong
+import fr.proline.cortex.api.service.dps.msi.IGenerateSpectrumMatchesService
 import fr.proline.cortex.util.DbConnectionHelper
-import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.jms.service.api.AbstractRemoteProcessingService
 import fr.proline.module.fragment_match.service.SpectrumMatchesGenerator
+
 
 /**
  *  Define JMS Service which allows to generate spectrum matches
@@ -22,45 +24,40 @@ import fr.proline.module.fragment_match.service.SpectrumMatchesGenerator
  *    Boolean for service run status
  */
 
-class GenerateSpectrumMatches extends AbstractRemoteProcessService with LazyLogging {
+class GenerateSpectrumMatches extends AbstractRemoteProcessingService with IGenerateSpectrumMatchesService with LazyLogging {
 
-	/* JMS Service identification */
-	val serviceName = "proline/dps/msi/GenerateSpectrumMatches";
-	val serviceVersion = "1.0";
-	override val defaultVersion = true;
+	def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 
-	override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
+		require(paramsRetriever != null, "no parameter specified")
 
-			require((paramsRetriever != null), "no parameter specified");
+		val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
+		val resultSetId = paramsRetriever.getLong(PROCESS_METHOD.RESULT_SET_ID_PARAM)
+		val resultSummaryId = if (paramsRetriever.hasParam(PROCESS_METHOD.RESULT_SUMMARY_ID_PARAM)) Some(paramsRetriever.getLong(PROCESS_METHOD.RESULT_SUMMARY_ID_PARAM)) else None
+		val peptideMatchIds = Option(paramsRetriever.getOptList(PROCESS_METHOD.PEPTIDE_MATCH_IDS_PARAM, null)).map { _.toArray.map(toLong(_)) }
+		val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId) // Use JPA context
+		val forceInsert = paramsRetriever.getOptBoolean(FORCE_INSERT_PARAM, false)
 
-			val projectId = paramsRetriever.getLong("project_id");
-			val resultSetId = paramsRetriever.getLong("result_set_id");
-			val resultSummaryId = if (paramsRetriever.hasParam("result_summary_id")) Some(paramsRetriever.getLong("result_summary_id")) else None;
-			val peptideMatchIds = Option(paramsRetriever.getOptList("peptide_match_ids", null)).map { _.toArray.map(toLong(_)) };
-			val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId); // Use JPA context
-			val forceInsert = paramsRetriever.getOptBoolean("force_insert", false);
+		val spectrumMatchesGenerator = new SpectrumMatchesGenerator(execCtx, resultSetId, resultSummaryId, peptideMatchIds, forceInsert)
 
-			val spectrumMatchesGenerator = new SpectrumMatchesGenerator(execCtx, resultSetId, resultSummaryId, peptideMatchIds, forceInsert);
-
-			var result : java.lang.Boolean = true;
-			try {
-				result = spectrumMatchesGenerator.runService;
-			} catch {
-				case ex: Exception => {
-					result = false;
-					logger.error("Error running Spectrum Matches Generator", ex);
-					val msg = if (ex.getCause() != null) { "Error running Spectrum Matches Generator " + ex.getCause().getMessage() } else { "Error running Spectrum Matches Generator " + ex.getMessage() };
-					throw new Exception(msg)
-				}
-			} finally {
-				try {
-					execCtx.closeAll();
-				} catch {
-					case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-				}
+		var result = true
+		try {
+			result = spectrumMatchesGenerator.runService
+		} catch {
+			case ex: Exception => {
+				result = false
+				logger.error("Error running Spectrum Matches Generator", ex)
+				val msg = if (ex.getCause() != null) { "Error running Spectrum Matches Generator " + ex.getCause().getMessage() } else { "Error running Spectrum Matches Generator " + ex.getMessage() };
+				throw new Exception(msg)
 			}
+		} finally {
+			try {
+				execCtx.closeAll()
+			} catch {
+				case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
+			}
+		}
 
-			result;
+		result
 	}
 
 }

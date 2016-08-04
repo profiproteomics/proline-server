@@ -3,16 +3,16 @@ package fr.proline.cortex.service.monitoring
 import java.net.NetworkInterface
 import java.util.UUID
 
-import scala.Array.canBuildFrom
-
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.StringUtils.LINE_SEPARATOR
+import fr.profi.util.jsonrpc.IJSONRPC2Method
 import fr.proline.jms.ServiceRegistry
-import fr.proline.jms.service.api.IRemoteJsonRPCService
-import fr.proline.jms.service.api.IRemoteService
+import fr.proline.jms.service.api.IDefaultServiceVersion
+import fr.proline.jms.service.api.IRemoteJsonRPC2Service
+import fr.proline.jms.service.api.IRemoteServiceIdentity
 import fr.proline.jms.util.NodeConfig
 import fr.proline.util.version.VersionHelper
 
@@ -22,24 +22,27 @@ import fr.proline.util.version.VersionHelper
  *    Modules Versions for "version" method as a String
  *    and an info string (instance and host IP) an any other method call.
  */
-class InfoService extends IRemoteJsonRPCService with LazyLogging {
+class InfoService extends IRemoteJsonRPC2Service with IDefaultServiceVersion with LazyLogging {
 
   /* Constants */
   val SHORT_TAB = "  "
 
   /* JMS Service identification */
-  val serviceName = "proline/monitoring/Info"
-  val serviceVersion = "1.0"
-  override val defaultVersion = true
+  val serviceNamespace = "proline/monitoring"
+  val serviceLabel = "Info"
+  
+  // TODO: define me
+  def methodDefinitions: Seq[IJSONRPC2Method] = Seq()
+
 
   /* Uniquely identify this instance */
   val instanceUniqueIdentifier = UUID.randomUUID().toString
 
-  override def service(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
-    require((req != null), "Req is null")
+  override def runService(jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any]): JSONRPC2Response = {
+    require(jsonRequest != null, "jsonRequest is null")
 
-    val requestId = req.getID
-    val method = req.getMethod
+    val requestId = jsonRequest.getID
+    val method = jsonRequest.getMethod
 
     /* Method dispatcher */
     method match {
@@ -52,7 +55,7 @@ class InfoService extends IRemoteJsonRPCService with LazyLogging {
         return new JSONRPC2Response(buff.toString, requestId)
       }
 
-      case "error" => throw new RuntimeException("Fake Exception thrown by " + getClass.getSimpleName)
+      case "error" => throw new Exception("Fake Exception thrown by " + getClass.getSimpleName)
 
       case _       => return new JSONRPC2Response(buildMessage(jmsMessageContext, requestId, method), requestId)
     }
@@ -102,7 +105,7 @@ class InfoService extends IRemoteJsonRPCService with LazyLogging {
 
     /* List all handled services : SingleThreaded and Parallelizable */
 
-    val handledSingleThreadedServices = ServiceRegistry.getSingleThreadedServices
+    val handledSingleThreadedServices = ServiceRegistry.getSingleThreadedServicesByName()
     if ((handledSingleThreadedServices == null) || handledSingleThreadedServices.isEmpty) {
       buff.append("NO SingleThreaded Services handled")
       buff.append(LINE_SEPARATOR)
@@ -279,15 +282,15 @@ class InfoService extends IRemoteJsonRPCService with LazyLogging {
 
   }
 
-  private def appendService(sb: StringBuilder, service: IRemoteService) {
-    assert((sb != null), "appendService() sb is null")
-    assert((service != null), "appendService() service is null")
+  private def appendService(sb: StringBuilder, service: IRemoteServiceIdentity) {
+    assert(sb != null, "appendService() sb is null")
+    assert(service != null, "appendService() service is null")
 
     append(sb, service.serviceName)
     sb.append(" version ")
     append(sb, service.serviceVersion)
 
-    if (service.defaultVersion) {
+    if (service.isDefaultVersion) {
       sb.append(" *")
     }
 

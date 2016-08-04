@@ -7,15 +7,15 @@ import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.typesafe.scalalogging.LazyLogging
 
+import fr.profi.util.jsonrpc.JSONRPC2Utils
+import fr.profi.util.jsonrpc.ProfiJSONRPC2Response
 import fr.profi.util.StringUtils
-import fr.proline.cortex.util.FileBrowser
-import fr.proline.cortex.util.MountPoint
-import fr.proline.cortex.util.MountPointRegistry
-import fr.proline.cortex.util.WorkDirectoryRegistry
-import fr.proline.jms.service.api.IRemoteJsonRPCService
-import fr.proline.jms.service.api.IRemoteService
-import fr.proline.jms.util.jsonrpc.JSONRPC2Utils
-import fr.proline.jms.util.jsonrpc.ProfiJSONRPC2Response
+import fr.proline.cortex.api.fs.MountPoint
+import fr.proline.cortex.api.service.misc.IFileSystemService
+import fr.proline.cortex.util.fs.FileBrowser
+import fr.proline.cortex.util.fs.MountPointRegistry
+import fr.proline.cortex.util.fs.WorkDirectoryRegistry
+import fr.proline.jms.service.api.IRemoteJsonRPC2Service
 
 /**
  * Define JMS Service to get information on Proline Server FileSystem.
@@ -36,46 +36,34 @@ import fr.proline.jms.util.jsonrpc.ProfiJSONRPC2Response
  *       extension_filter : specify a file extension to use as filter
  *
  */
-class FileSystem extends IRemoteJsonRPCService with LazyLogging {
+class FileSystem extends IFileSystemService with IRemoteJsonRPC2Service with LazyLogging {
 
-  /* Constants */
-  val LABEL_PARAM_NAME = "label"
-  val DIRECTORY_TYPE_PARAM_NAME = "dir_type"
+  /* Define the concrete process method */
+  def runService(jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any]): JSONRPC2Response = {
+    require(jsonRequest != null, "jsonRequest is null")
 
-  val LABEL_PATH_PARAM_NAME = "label_path"
-
-  /* JMS Service identification */
-  val serviceName = "proline/misc/FileSystem"
-  val serviceVersion = "1.0"
-  override val defaultVersion = true
-
-  /* Define the concrete service method */
-  override def service(jmsMessageContext: Map[String, Any], req: JSONRPC2Request): JSONRPC2Response = {
-    require((req != null), "Req is null")
-
-    val requestId = req.getID
-    val methodName = req.getMethod
+    val requestId = jsonRequest.getID
+    val methodName = jsonRequest.getMethod
 
     /* Method dispatch */
     methodName match {
 
-      case "retrieve_all_directory_types" => {
+      case RETRIEVE_ALL_DIRECTORY_TYPES_METHOD.name => {
         val directoryTypes = MountPointRegistry.retrieveAllDirectoryTypes()
 
-        return new ProfiJSONRPC2Response(directoryTypes, requestId)
+        new ProfiJSONRPC2Response(directoryTypes, requestId)
       }
 
-      case "retrieve_all_mount_points" => {
+      case RETRIEVE_ALL_MOUNT_POINTS_METHOD.name => {
         // Do not return real absolute path to client
         val mountPoints = MountPointRegistry.retrieveAllMountPoints(false)
 
-        return new ProfiJSONRPC2Response(mountPoints, requestId)
+        new ProfiJSONRPC2Response(mountPoints, requestId)
       }
 
-      case "retrieve_mount_points_by_type" => {
-        val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(req)
-             
-        require((paramsRetriever != null), "no parameter specified")
+      case RETRIEVE_MOUNT_POINT_BY_TYPE_METHOD.name => {
+        val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(jsonRequest)
+        require(paramsRetriever != null, "no parameter specified")
       
         val directoryType = paramsRetriever.getString(DIRECTORY_TYPE_PARAM_NAME)
         require(!StringUtils.isEmpty(directoryType), "Invalid \"" + DIRECTORY_TYPE_PARAM_NAME + "\" parameter")
@@ -83,25 +71,24 @@ class FileSystem extends IRemoteJsonRPCService with LazyLogging {
         // Do not return real absolute path to client
         val mountPoints = MountPointRegistry.retrieveMountPointsByType(directoryType, false)
 
-        return new ProfiJSONRPC2Response(mountPoints, requestId)
+        new ProfiJSONRPC2Response(mountPoints, requestId)
       }
 
-      case "retrieve_mount_points_by_label" => {
-        val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(req)
-      
-        require((paramsRetriever != null), "no parameter specified")
+      case RETRIEVE_MOUNT_POINT_BY_LABEL_METHOD.name => {
+        val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(jsonRequest)
+        require(paramsRetriever != null, "no parameter specified")
       
         val label = paramsRetriever.getString(LABEL_PARAM_NAME)
-        require(!StringUtils.isEmpty(label), "Invalid \"" + LABEL_PARAM_NAME + "\" parameter")
+        require(StringUtils.isNotEmpty(label), "Invalid \"" + LABEL_PARAM_NAME + "\" parameter")
 
         // Do not return real absolute path to client
         val mountPoints = MountPointRegistry.retrieveMountPointsByLabel(label, false)
 
-        return new ProfiJSONRPC2Response(mountPoints, requestId)
+        new ProfiJSONRPC2Response(mountPoints, requestId)
       }
 
-      case "retrieve_directory_content" => {
-        return retrieveDirectoryContent(req)
+      case RETRIEVE_DIRECTORY_CONTENT_METHOD.name => {
+        return retrieveDirectoryContent(jsonRequest)
       }
 
       // Method name not supported
@@ -109,15 +96,18 @@ class FileSystem extends IRemoteJsonRPCService with LazyLogging {
     }
 
   }
-
+    
   private def retrieveDirectoryContent(req: JSONRPC2Request): JSONRPC2Response = {
+    
+    import RETRIEVE_DIRECTORY_CONTENT_METHOD._
+    
     val requestId = req.getID
           
     val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(req)
-    require((paramsRetriever != null), "no parameter specified")
+    require(paramsRetriever != null, "no parameter specified")
       
     val labelOrPath = paramsRetriever.getString(LABEL_PATH_PARAM_NAME)
-    require(!StringUtils.isEmpty(labelOrPath), "Invalid \"" + LABEL_PATH_PARAM_NAME + "\" parameter")
+    require(StringUtils.isNotEmpty(labelOrPath), s"Invalid '$LABEL_PATH_PARAM_NAME' parameter")
 
     val directoryType = paramsRetriever.getOptString(DIRECTORY_TYPE_PARAM_NAME, "")
 
@@ -127,9 +117,9 @@ class FileSystem extends IRemoteJsonRPCService with LazyLogging {
       Some(directoryType)
     }
 
-    val includeFiles = paramsRetriever.getBoolean("include_files")
-    val includeDirs = paramsRetriever.getBoolean("include_dirs")
-    val extensionFilter = paramsRetriever.getOptString("extension_filter", "")
+    val includeFiles = paramsRetriever.getBoolean(INCLUDE_FILES_PARAM)
+    val includeDirs = paramsRetriever.getBoolean(INCLUDE_DIRS_PARAM)
+    val extensionFilter = paramsRetriever.getOptString(EXTENSION_FILTER_PARAM, "")
 
     val localPath = MountPointRegistry.replacePossibleLabel(labelOrPath, directoryTypeHint)
 
@@ -143,7 +133,7 @@ class FileSystem extends IRemoteJsonRPCService with LazyLogging {
 
     // Send the same error message for the following cases (for security reasons) :
     // non-existing directory, file, unmanaged resource
-    val errorMessage = s"directory ${labelOrPath} cannot be found"
+    val errorMessage = s"directory $labelOrPath cannot be found"
 
     // Check that the directory exists and is not a file
     // TODO: return a specific exception

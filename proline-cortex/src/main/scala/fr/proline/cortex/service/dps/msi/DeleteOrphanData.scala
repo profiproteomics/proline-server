@@ -7,8 +7,10 @@ import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.service.msi.OrphanDataDeleter
+import fr.proline.cortex.api.service.dps.msi.IDeleteOrphanDataService
 import fr.proline.cortex.util.DbConnectionHelper
-import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.jms.service.api.AbstractRemoteProcessingService
+
 
 /**
  * Define JMS Service to remove orphan data into the MSI database: rsm and rs data
@@ -23,45 +25,41 @@ import fr.proline.jms.service.api.AbstractRemoteProcessService
  *  
  * @author MB243701
  */
-class DeleteOrphanData extends AbstractRemoteProcessService with LazyLogging  {
-  /* JMS Service identification */
-  val serviceName = "proline/dps/msi/DeleteOrphanData"
-  val serviceVersion = "1.0"
-  override val defaultVersion = true
+class DeleteOrphanData extends AbstractRemoteProcessingService with IDeleteOrphanDataService with LazyLogging  {
   
-  override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
-    require((paramsRetriever != null), "No Parameters specified")
+  def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
+    require(paramsRetriever != null, "No parameters specified")
     
-    var deleteResult: java.lang.Boolean = false
+    var deleteResult = false
     
-    val projectId = paramsRetriever.getLong("project_id")
-    val resultSummaryIds = paramsRetriever.getList("result_summary_ids").toArray.map { rf => deserialize[Long](serialize(rf)) }
-    val resultSetIds = paramsRetriever.getList("result_set_ids").toArray.map { rf => deserialize[Long](serialize(rf)) }
+    val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
+    val resultSummaryIds = paramsRetriever.getList(PROCESS_METHOD.RESULT_SUMMARY_IDS_PARAM).toArray.map { rf => deserialize[Long](serialize(rf)) }
+    val resultSetIds = paramsRetriever.getList(PROCESS_METHOD.RESULT_SET_IDS_PARAM).toArray.map { rf => deserialize[Long](serialize(rf)) }
     
     val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId)  // Use JPA context
-    var msiDbConnectionContext: DatabaseConnectionContext = null;
+    var msiDbConnectionContext: DatabaseConnectionContext = null
     
     try {
       // Begin transaction
-      msiDbConnectionContext = execCtx.getMSIDbConnectionContext;
-      msiDbConnectionContext.beginTransaction();
+      msiDbConnectionContext = execCtx.getMSIDbConnectionContext
+      msiDbConnectionContext.beginTransaction()
       
-      val orphanDataDeleter = new OrphanDataDeleter(execCtx, projectId, resultSummaryIds, resultSetIds);
+      val orphanDataDeleter = new OrphanDataDeleter(execCtx, projectId, resultSummaryIds, resultSetIds)
       orphanDataDeleter.runService()
       
       //Commit transaction
-      msiDbConnectionContext.commitTransaction();
+      msiDbConnectionContext.commitTransaction()
     }catch {
         case ex: Exception => {
-          deleteResult = false;
-          msiDbConnectionContext.rollbackTransaction();
-          logger.error("Error while deleting orphan data in MSI", ex);
-          val msg = if (ex.getCause() != null) { "Error while deleting orphan data in MSI " + ex.getCause().getMessage() } else { "Error  while deleting orphan data in MSI " + ex.getMessage() };
+          deleteResult = false
+          msiDbConnectionContext.rollbackTransaction()
+          logger.error("Error while deleting orphan data in MSI", ex)
+          val msg = if (ex.getCause() != null) { "Error while deleting orphan data in MSI " + ex.getCause().getMessage() } else { "Error  while deleting orphan data in MSI " + ex.getMessage() }
           throw new Exception(msg)
         }
       } finally {
         try {
-          execCtx.closeAll();
+          execCtx.closeAll()
         } catch {
           case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
         }

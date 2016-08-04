@@ -9,8 +9,11 @@ import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.algo.msi.filtering.IProteinSetFilter
 import fr.proline.core.algo.msi.validation.BuildProteinSetFilter
 import fr.proline.core.service.msi.RSMProteinSetFilterer
+import fr.proline.cortex.api.service.dps.msi.FilterConfig
+import fr.proline.cortex.api.service.dps.msi.IFilterRSMProteinSetsService
 import fr.proline.cortex.util.DbConnectionHelper
-import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.jms.service.api.AbstractRemoteProcessingService
+
 
 /**
  *  Define JMS Service which Filters ProteinSets of a given Result Summary
@@ -24,86 +27,82 @@ import fr.proline.jms.service.api.AbstractRemoteProcessService
  *    Boolean for service run status
  */
 
-class FilterRSMProteinSets extends AbstractRemoteProcessService with LazyLogging {
+class FilterRSMProteinSets extends AbstractRemoteProcessingService with IFilterRSMProteinSetsService with LazyLogging {
 
-	/* JMS Service identification */
-	val serviceName = "proline/dps/msi/FilterRSMProteinSets";
-	val serviceVersion = "1.0";
-	override val defaultVersion = true;
+	def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
 
-	override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
+		require(paramsRetriever != null, "no parameter specified")
 
-			require((paramsRetriever != null), "no parameter specified");
+		val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
+		val resultSummaryId = paramsRetriever.getLong(PROCESS_METHOD.RESULT_SUMMARY_ID_PARAM)
+		
+		val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId)
 
-			val projectId = paramsRetriever.getLong("project_id");
-			val resultSummaryId = paramsRetriever.getLong("result_summary_id");
-			
-			val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId)
+		var msiDbConnectionContext: DatabaseConnectionContext = null
+		var msiDbTransacOk: Boolean = false
+  
+		var result : java.lang.Boolean = true
+		try {
+			val filterConfigs = this.parseProtSetFilters(paramsRetriever)
+  
+			if(filterConfigs.isDefined){
+  
+				// Begin transaction
+				msiDbConnectionContext = execCtx.getMSIDbConnectionContext
+				msiDbConnectionContext.beginTransaction()
+				msiDbTransacOk = false
 
-			var msiDbConnectionContext: DatabaseConnectionContext = null;
-			var msiDbTransacOk: Boolean = false;
-    
-			var result : java.lang.Boolean = true;
-			try {
-				val filterConfigs = this.parseProtSetFilters(paramsRetriever);
-	  
-				if(filterConfigs.isDefined){
-    
-					// Begin transaction
-					msiDbConnectionContext = execCtx.getMSIDbConnectionContext;
-					msiDbConnectionContext.beginTransaction();
-					msiDbTransacOk = false;
+				// Instantiate a result set validator
+				val rsmFilterer  = RSMProteinSetFilterer(
+					execCtx = execCtx,
+					targetRsmId = resultSummaryId,
+					protSetFilters = filterConfigs.get
+				)
 
-					// Instantiate a result set validator
-					val rsmFilterer  = RSMProteinSetFilterer(
-							execCtx = execCtx,
-							targetRsmId = resultSummaryId,
-							protSetFilters = filterConfigs.get
-							);
-	
-					rsmFilterer.run;
-	      
-					//Commit transaction
-					msiDbConnectionContext.commitTransaction();
-					msiDbTransacOk = true;
-				}
-			} catch {
-				case ex: Exception => {
-					result = false;
-					logger.error("Error running Filter RSM Protein Sets", ex);
-					val msg = if (ex.getCause() != null) { "Error running Filter RSM Protein Sets " + ex.getCause().getMessage() } else { "Error running Filter RSM Protein Sets " + ex.getMessage() };
-					throw new Exception(msg)
-				}
-			} finally {
-				try {
-					execCtx.closeAll();
-				} catch {
-					case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-				}
+				rsmFilterer.run
+      
+				//Commit transaction
+				msiDbConnectionContext.commitTransaction()
+				msiDbTransacOk = true
 			}
+		} catch {
+			case ex: Exception => {
+				result = false
+				logger.error("Error running Filter RSM Protein Sets", ex)
+				val msg = if (ex.getCause() != null) { "Error running Filter RSM Protein Sets " + ex.getCause().getMessage() } else { "Error running Filter RSM Protein Sets " + ex.getMessage() }
+				throw new Exception(msg)
+			}
+		} finally {
+			try {
+				execCtx.closeAll()
+			} catch {
+				case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
+			}
+		}
 
-			result;
+		result
 	}
 			
 	def parseProtSetFilters(params: NamedParamsRetriever): Option[Seq[IProteinSetFilter]] = {
-			if (params.hasParam("prot_set_filters")) {
-				val protSetFiltersConfigs = params.getList("prot_set_filters").toArray.map(parseFilterConfig(_))
-      
-				Some(protSetFiltersConfigs.map(fc => { 
-					logger.debug(" ---- TRY to BuildProteinSetFilter for "+fc.parameter+" threshold "+ fc.threshold.asInstanceOf[AnyVal] )
-					val proSetFilter= BuildProteinSetFilter(fc.parameter, fc.threshold.asInstanceOf[AnyVal])
-					proSetFilter
-				}).toSeq)
-      
-			} else None
+		if (params.hasParam(PROCESS_METHOD.PROT_SET_FILTERS_PARAM) == false) None
+		else {
+		  val protSetFiltersConfigs = params.getList(PROCESS_METHOD.PROT_SET_FILTERS_PARAM).toArray.map(parseFilterConfig(_))
+    
+			val filters = protSetFiltersConfigs.map { fc =>
+				logger.debug(" ---- TRY to BuildProteinSetFilter for "+fc.parameter+" threshold "+ fc.threshold )
+				BuildProteinSetFilter(fc.parameter, fc.threshold)
+			}
+			
+			Some(filters)
+		}
   }
 	
 	def parseFilterConfig(paramsMap: Object): FilterConfig = {
-			val configAsMap = deserialize[Map[String, AnyRef]](serialize(paramsMap))
-			if(configAsMap.contains("post_validation"))
-				new FilterConfig(configAsMap("parameter").asInstanceOf[String], configAsMap("threshold").asInstanceOf[AnyVal],configAsMap("post_validation").asInstanceOf[Boolean] )
-			else
-				new FilterConfig(configAsMap("parameter").asInstanceOf[String], configAsMap("threshold").asInstanceOf[AnyVal])
+		val configAsMap = deserialize[Map[String, AnyRef]](serialize(paramsMap))
+		if(configAsMap.contains("post_validation"))
+			new FilterConfig(configAsMap("parameter").asInstanceOf[String], configAsMap("threshold").asInstanceOf[AnyVal],configAsMap("post_validation").asInstanceOf[Boolean] )
+		else
+			new FilterConfig(configAsMap("parameter").asInstanceOf[String], configAsMap("threshold").asInstanceOf[AnyVal])
   }
 
 }

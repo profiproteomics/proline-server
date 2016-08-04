@@ -3,18 +3,28 @@ package fr.proline.cortex.service.dps.msi
 import java.io.File
 import java.util.HashMap
 import java.util.UUID
-import scala.Array.canBuildFrom
+
 import scala.collection.mutable.ArrayBuffer
+
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
+
 import fr.profi.util.StringUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.IExecutionContext
+import fr.proline.cortex.api.service.dps.msi.FileFormat
+import fr.proline.cortex.api.service.dps.msi.IExportResultSummariesServiceV2_0
+import fr.proline.cortex.api.service.dps.msi.IExportResultSummaryServiceV1_0
+import fr.proline.cortex.api.service.dps.msi.OutputMode
+import fr.proline.cortex.api.service.dps.msi.OutputMode.enumToString
+import fr.proline.cortex.api.service.dps.msi.ResultSummaryIdentifier
+import fr.proline.cortex.api.service.dps.msi.RsmIdentifier
 import fr.proline.cortex.service.dps.uds.DatasetUtil
 import fr.proline.cortex.util.DbConnectionHelper
-import fr.proline.cortex.util.WorkDirectoryFactory
-import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.cortex.util.fs.WorkDirectoryFactory
+import fr.proline.jms.service.api.AbstractRemoteProcessingService
+import fr.proline.jms.util.JMSConstants
 import fr.proline.jms.util.NodeConfig
 import fr.proline.module.exporter.ViewSetExporter
 import fr.proline.module.exporter.commons.config.ExportConfig
@@ -30,7 +40,7 @@ import fr.proline.module.exporter.msi.view.BuildRSMSpectraViewSet
 import fr.proline.module.exporter.msi.view.BuildResultSummaryViewSet
 import fr.proline.module.exporter.mzidentml.MzIdExporter
 import fr.proline.module.exporter.pridexml.PrideExporterService
-import fr.proline.jms.util.JMSConstants
+
 
 /**
  * Define a JMS Service to :
@@ -55,29 +65,7 @@ import fr.proline.jms.util.JMSConstants
  *   Output params 
  *     Same as Version 1.0 
  */
-
-object FileFormat extends Enumeration {
-  val MZIDENTML = Value("MZIDENTML")
-  val TEMPLATED = Value("TEMPLATED")
-  val PRIDE = Value("PRIDE")
-  val SPECTRA_LIST = Value("SPECTRA_LIST")
-}
-
-object OutputMode extends Enumeration {
-  val FILE = Value("FILE")
-  val STREAM = Value("STREAM")
-}
-
-case class ResultSummaryIdentifier(projectId: Long, rsmId: Long)
-case class RsmIdentifier(projectId: Long, dsId: Long, rsmId: Long)
-
-class ExportResultSummary extends AbstractRemoteProcessService with LazyLogging {
-
-  /* JMS Service identification */
-  val serviceName = "proline/dps/msi/ExportResultSummary"
-  val serviceVersion = "1.0"
-  override val defaultVersion = true
-
+class ExportResultSummary extends AbstractRemoteProcessingService with IExportResultSummaryServiceV1_0 with LazyLogging {
 
   // TODO: find a more dynamic way to load the templates
   val viewSetTemplateByName = Map(
@@ -85,24 +73,25 @@ class ExportResultSummary extends AbstractRemoteProcessService with LazyLogging 
     "IRMA_LIKE_TSV" -> IRMaLikeViewSetTemplateAsTSV,
     "IRMA_LIKE_XLSX" -> IRMaLikeViewSetTemplateAsXLSX,
     "IRMA_LIKE_FULL_XLSX" -> IRMaLikeFullViewSetTemplateAsXLSX,
-    "PROLINE_XLSX" -> ProlineViewSetTemplateAsXLSX)
+    "PROLINE_XLSX" -> ProlineViewSetTemplateAsXLSX
+  )
 
-  override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
+  def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
 
-    require((paramsRetriever != null), "No parameter specified")
+    require(paramsRetriever != null, "No parameter specified")
 
     //val rsmIdentifiers = paramsRetriever.getList("rsm_identifiers").toArray.map { rsmIdent => deserialize[ResultSummaryIdentifier](serialize(rsmIdent)) }
     //    val rsmIdentifiers = paramsRetriever.getList("rsm_identifier").toArray.map { rsmIdent => deserialize[ResultSummaryIdentifier](serialize(rsmIdent)) }
-    val rsmIdentifier = Some(paramsRetriever.getMap("rsm_identifier")).map { rsmIdent => deserialize[ResultSummaryIdentifier](serialize(rsmIdent)) }
+    val rsmIdentifier = Some(paramsRetriever.getMap(PROCESS_METHOD.RSM_IDENTIFIER_PARAM)).map { rsmIdent => deserialize[ResultSummaryIdentifier](serialize(rsmIdent)) }
 
-    val fileFormat = FileFormat.withName(paramsRetriever.getString("file_format"))
+    val fileFormat = FileFormat.withName(paramsRetriever.getString(FILE_FORMAT_PARAM))
 
     val fileName = this.parseFileName(paramsRetriever)
     val fileDirectory = this.parseFileDirectory(paramsRetriever)
 
-    val extraParamsAsOptStr = Option(paramsRetriever.getOptMap("extra_params", true, null)).map(serialize(_))
+    val extraParamsAsOptStr = Option(paramsRetriever.getOptMap(EXTRA_PARAMS_PARAM, true, null)).map(serialize(_))
     val extraParams = extraParamsAsOptStr.map(deserialize[Map[String, Object]](_))
-    val outputParams = OutputMode.withName(paramsRetriever.getOptString("output_mode", "FILE"))
+    val outputParams = OutputMode.withName(paramsRetriever.getOptString(OUTPUT_MODE_PARAM, OutputMode.FILE))
 
     fileFormat match {
       //      case FileFormat.MZIDENTML => exportToMzIdentML(Seq(rsmIdentifiers.get), fileName, fileDirectory, outputParams, extraParams)
@@ -116,7 +105,7 @@ class ExportResultSummary extends AbstractRemoteProcessService with LazyLogging 
   }
 
   def parseFileName(params: NamedParamsRetriever): String = {
-    val providedFileName = params.getOptString("file_name", null)
+    val providedFileName = params.getOptString(FILE_NAME_PARAM, null)
 
     if (StringUtils.isEmpty(providedFileName)) {
       "IdentificationSummaryExport_" + UUID.randomUUID().toString
@@ -126,7 +115,7 @@ class ExportResultSummary extends AbstractRemoteProcessService with LazyLogging 
   }
 
   def parseFileDirectory(params: NamedParamsRetriever): String = {
-    val providedFileDirectory = params.getOptString("file_directory", null)
+    val providedFileDirectory = params.getOptString(FILE_DIRECTORY_PARAM, null)
 
     if (StringUtils.isEmpty(providedFileDirectory)) {
       WorkDirectoryFactory.prolineWorkDirectory.getAbsolutePath
@@ -220,12 +209,13 @@ class ExportResultSummary extends AbstractRemoteProcessService with LazyLogging 
 
   }
   
-    def exportToSpectraList(
+  def exportToSpectraList(
     rsmIdentifier: ResultSummaryIdentifier,
     fileName: String,
     fileDir: String,
     outputFormat: OutputMode.Value,
-    extraParams: Option[Map[String, Any]]): Object = {
+    extraParams: Option[Map[String, Any]]
+  ): Object = {
 
     val viewSetTemplate = SpectraListAsTSV
 
@@ -270,7 +260,8 @@ class ExportResultSummary extends AbstractRemoteProcessService with LazyLogging 
     fileName: String,
     fileDir: String,
     outputFormat: OutputMode.Value,
-    extraParams: Option[Map[String, Object]]): Object = {
+    extraParams: Option[Map[String, Object]]
+  ): Object = {
 
     //    require(extraParams.isDefined, "some extra parameters must be provided")
 
@@ -309,14 +300,10 @@ class ExportResultSummary extends AbstractRemoteProcessService with LazyLogging 
   
 }
 
-class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogging {
-
-  /* JMS Service identification */
-  val serviceName = "proline/dps/msi/ExportResultSummary"
-  val serviceVersion = "2.0"
+class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExportResultSummariesServiceV2_0 with LazyLogging {
 
   def parseFileDirectory(params: NamedParamsRetriever): String = {
-    val providedFileDirectory = params.getOptString("file_directory", null)
+    val providedFileDirectory = params.getOptString(FILE_DIRECTORY_PARAM, null)
 
     if (StringUtils.isEmpty(providedFileDirectory)) {
       WorkDirectoryFactory.prolineWorkDirectory.getAbsolutePath
@@ -329,18 +316,17 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
     deserialize[RsmIdentifier](serialize(rfDescObj))
   }
   
-  override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
-
-    require((paramsRetriever != null), "ParamsRetriever is null")
+  def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
+    require(paramsRetriever != null, "ParamsRetriever is null")
 
     val rsmIdentifiers: ArrayBuffer[RsmIdentifier] = new ArrayBuffer()
-    val listRsm : java.util.List[Object] = paramsRetriever.getList("rsm_identifiers")
+    val listRsm : java.util.List[Object] = paramsRetriever.getList(PROCESS_METHOD.RSM_IDENTIFIERS_PARAM)
     for (rsm <- listRsm.toArray){
        val rsmIdent : RsmIdentifier = deserialize[RsmIdentifier](serialize(rsm)) 
        rsmIdentifiers += rsmIdent
     }
     
-    val fileFormat = FileFormat.withName(paramsRetriever.getString("file_format"))
+    val fileFormat = FileFormat.withName(paramsRetriever.getString(FILE_FORMAT_PARAM))
    fileFormat match {
       case FileFormat.MZIDENTML => require(rsmIdentifiers.size ==1, "Could export only one Result into MzIdent")
       case FileFormat.TEMPLATED => require(rsmIdentifiers.size > 0, "Could export at least one Result into Excel format")
@@ -367,7 +353,8 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
     fileName: String,
     fileDir: String,
     outputFormat: OutputMode.Value,
-    extraParams: Option[Map[String, Any]]): Array[String] = {
+    extraParams: Option[Map[String, Any]]
+  ): Array[String] = {
 
     //	  require(rsmIdentifiers.length == 1, "can only export one RSM at a time for the mzIdentML file format")
 
@@ -399,7 +386,8 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
     fileName: String,
     fileDir: String,
     outputFormat: OutputMode.Value,
-    extraParams: Option[Map[String, Object]]): Object = {
+    extraParams: Option[Map[String, Object]]
+  ): Object = {
 
     //    require(extraParams.isDefined, "some extra parameters must be provided")
 
@@ -440,7 +428,8 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
     fileName: String,
     fileDir: String,
     outputFormat: OutputMode.Value,
-    extraParams: Option[Map[String, Any]]): Object = {
+    extraParams: Option[Map[String, Any]]
+  ): Object = {
 
     //    require(rsmIdentifiers.length == 1, "can only export one RSM at a time for this file format")
     require(extraParams.isDefined, "some extra parameters must be provided")
@@ -505,12 +494,13 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessService with LazyLogg
 
   }
   
-    def exportToSpectraList(
+  def exportToSpectraList(
     rsmIdentifier: RsmIdentifier,
     fileName: String,
     fileDir: String,
     outputFormat: OutputMode.Value,
-    extraParams: Option[Map[String, Any]]): Object = {
+    extraParams: Option[Map[String, Any]]
+  ): Object = {
 
     val viewSetTemplate = SpectraListAsTSV
 

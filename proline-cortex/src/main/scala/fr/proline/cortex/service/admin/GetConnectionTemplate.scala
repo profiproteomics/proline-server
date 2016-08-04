@@ -1,12 +1,14 @@
 package fr.proline.cortex.service.admin
 
-import com.typesafe.scalalogging.LazyLogging
-import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
+import scala.collection.JavaConversions.mapAsScalaMap
 import scala.collection.mutable.HashMap
-import fr.proline.admin.service.db.SetupProline
-import collection.JavaConversions._
-import fr.proline.jms.service.api.AbstractRemoteProcessService
 
+import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
+import com.typesafe.scalalogging.LazyLogging
+
+import fr.proline.admin.service.db.SetupProline
+import fr.proline.cortex.api.service.admin.IGetConnectionTemplateService
+import fr.proline.jms.service.api.AbstractRemoteProcessingService
 
 /**
  * JMS Service to create a get the connection template to access Proline DataStore (UDS db access and JMS Server information) .
@@ -19,14 +21,9 @@ import fr.proline.jms.service.api.AbstractRemoteProcessService
  *   HashMap containing UDSdb connection properties // and JMS server information 
  *  
  */
-class GetConnectionTemplate extends AbstractRemoteProcessService with LazyLogging {
+class GetConnectionTemplate extends AbstractRemoteProcessingService with IGetConnectionTemplateService with LazyLogging {
 
-  /* JMS Service identification */
-  override val serviceName = "proline/admin/GetConnectionTemplate"
-  override val defaultVersion = true
-  override val serviceVersion = "1.0"
-
-  override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
+  def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 
     val prolineConf = SetupProline.config
 

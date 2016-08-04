@@ -13,7 +13,7 @@ import fr.proline.repository.ProlineDatabaseType
 
 object DbConnectionHelper extends LazyLogging {
 
-  private var m_dsConnectorFactory: IDataStoreConnectorFactory = null;
+  private var m_dsConnectorFactory: IDataStoreConnectorFactory = null
 
   def initDataStore() {
     m_dsConnectorFactory = DataStoreConnectorFactory.getInstance()
@@ -30,7 +30,7 @@ object DbConnectionHelper extends LazyLogging {
 
   }
 
-  def getIDataStoreConnectorFactory() = {
+  def getDataStoreConnectorFactory() = {
     if (m_dsConnectorFactory == null) {
       initDataStore()
     }
@@ -47,10 +47,14 @@ object DbConnectionHelper extends LazyLogging {
 
   private def createExecutionContext(projectID: Long, useJPA: Boolean): IExecutionContext = {
     val onConnectionContextClose = { dbConnector: IDatabaseConnector =>
+      
       logger.info("onConnectionContextClose called ... ")
+      
       if ((dbConnector.getOpenConnectionCount == 0) && (dbConnector.getOpenEntityManagerCount == 0)) {
+        
         val dbType = dbConnector.getProlineDatabaseType
         logger.info("db type =  " + dbType)
+        
         if (dbType == ProlineDatabaseType.LCMS) {
           logger.info(s"Closing database connector for LCMSdb with project id=$projectID (EntityManagerCount equals zero)")
           m_dsConnectorFactory.closeLcMsDbConnector(projectID)
@@ -62,7 +66,7 @@ object DbConnectionHelper extends LazyLogging {
 
     }
 
-    BuildLazyExecutionContext(DbConnectionHelper.getIDataStoreConnectorFactory, projectID, useJPA, Some(onConnectionContextClose))
+    BuildLazyExecutionContext(DbConnectionHelper.getDataStoreConnectorFactory, projectID, useJPA, Some(onConnectionContextClose))
   }
 
 }

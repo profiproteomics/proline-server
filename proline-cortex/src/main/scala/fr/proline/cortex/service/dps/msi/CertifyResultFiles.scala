@@ -21,13 +21,15 @@ import fr.proline.core.om.provider.msi.SeqDbFakeProvider
 import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.service.msi.ResultFileCertifier
+import fr.proline.cortex.api.service.dps.msi.ICertifyResultFilesService
+import fr.proline.cortex.api.service.dps.msi.ResultFileDescriptor
 import fr.proline.cortex.util.DbConnectionHelper
-import fr.proline.cortex.util.MountPointRegistry
-import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.cortex.util.fs.MountPointRegistry
+import fr.proline.jms.service.api.AbstractRemoteProcessingService
 
 /**
  *  Define JMS Service to :
- *  Verify result files integrity for importation in the MSIdb. This service should be called before an import result file
+ *  Verify result files integrity before importing them in the MSIdb. This service should be called before the service ImportResultFiles.
  *  
  *  Input Params :
  *    project_id : The id of the project used for data importation.
@@ -38,27 +40,19 @@ import fr.proline.jms.service.api.AbstractRemoteProcessService
  *    "OK" if service run successfuly
  *    Error message if service was not successfull
  */
-case class ResultFileDescriptor( path: String, format: String)
- 
-class CertifyResultFiles extends AbstractRemoteProcessService with LazyLogging {
+class CertifyResultFiles extends AbstractRemoteProcessingService with ICertifyResultFilesService with LazyLogging {
 
-  /* JMS Service identification */
-  val serviceName = "proline/dps/msi/CertifyResultFiles"
-  val serviceVersion = "1.0"
-  override val defaultVersion = true
-
-
-  override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
+  def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 
    require((paramsRetriever != null), "no parameter specified")
 
     var processResult: String = null
 
-    val projectId = paramsRetriever.getLong("project_id")   
-    val resultFiles = paramsRetriever.getList("result_files").toArray.map { rfd => deserialize[ResultFileDescriptor](serialize(rfd)) }
+    val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
+    val resultFiles = paramsRetriever.getList(PROCESS_METHOD.RESULT_FILES_PARAM).toArray.map { rfd => deserialize[ResultFileDescriptor](serialize(rfd)) }
 
-    val importerProperties = if (paramsRetriever.hasParam("importer_properties") == false) Map.empty[String, Any]
-    else paramsRetriever.getMap("importer_properties").map {
+    val importerProperties = if (paramsRetriever.hasParam(PROCESS_METHOD.IMPORTER_PROPERTIES_PARAM) == false) Map.empty[String, Any]
+    else paramsRetriever.getMap(PROCESS_METHOD.IMPORTER_PROPERTIES_PARAM).map {
       case (a, b) => {
         if (a.endsWith(".file")) {
           a -> MountPointRegistry.replacePossibleLabel(b.toString(), Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname

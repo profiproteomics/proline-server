@@ -2,11 +2,13 @@ package fr.proline.cortex.service.admin
 
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
+
 import fr.proline.admin.service.db.CreateProjectDBs
 import fr.proline.admin.service.db.SetupProline
 import fr.proline.context.DatabaseConnectionContext
+import fr.proline.cortex.api.service.admin.ICreateProjectService
 import fr.proline.cortex.util.DbConnectionHelper
-import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.jms.service.api.AbstractRemoteProcessingService
 
 /**
  * JMS Service to create a new Project in current Proline DataStore. 
@@ -21,28 +23,23 @@ import fr.proline.jms.service.api.AbstractRemoteProcessService
  *  new project Id. 
  *  
  */
-class CreateProject extends AbstractRemoteProcessService with LazyLogging {
-
-  /* JMS Service identification */
-  override val serviceName = "proline/admin/CreateProject"
-  override val defaultVersion = true
-  override val serviceVersion = "1.0"
-
+class CreateProject extends AbstractRemoteProcessingService with ICreateProjectService with LazyLogging {
+  
   //PARAM Description
   // "name" : "The project name" : String   
   // "description" :  "The project description": String
   // "owner_id" : "The project owner ID" : Long
 
-  override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
+  def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 
     require((paramsRetriever != null), "no parameter specified")
-    require(paramsRetriever.hasParam("name") && paramsRetriever.hasParam("owner_id"), "Project name and owner requiered")
+    require(paramsRetriever.hasParam(PROCESS_METHOD.NAME_PARAM) && paramsRetriever.hasParam(PROCESS_METHOD.OWNER_ID_PARAM), "Project name and owner requiered")
 
-    val description = if (paramsRetriever.hasParam("description")) paramsRetriever.getString("description") else ""
-    val name = paramsRetriever.getString("name")
+    val description = paramsRetriever.getOptString(PROCESS_METHOD.DESCRIPTION_PARAM, true, "")
+    val name = paramsRetriever.getString(PROCESS_METHOD.NAME_PARAM)
     var prjID: Long = -1L
     
-    val udsDbConnectionContext: DatabaseConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getIDataStoreConnectorFactory.getUdsDbConnector())
+    val udsDbConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
 
     try {
       

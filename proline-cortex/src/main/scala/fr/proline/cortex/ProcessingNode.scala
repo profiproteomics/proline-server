@@ -4,64 +4,42 @@ import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import javax.jms.Connection
+import javax.jms.ExceptionListener
+import javax.jms.JMSException
 
 import scala.collection.JavaConversions.mutableMapAsJavaMap
 import scala.collection.mutable
-
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.jms.HornetQJMSClient
 import org.hornetq.api.jms.JMSFactoryType
 import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory
 import org.hornetq.core.remoting.impl.netty.TransportConstants
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.StringUtils
 import fr.profi.util.ThreadLogger
 import fr.proline.cortex.service.admin.CreateProject
 import fr.proline.cortex.service.admin.GetConnectionTemplate
 import fr.proline.cortex.service.admin.UserAccount
-import fr.proline.cortex.service.dps.msi.CertifyResultFiles
-import fr.proline.cortex.service.dps.msi.ChangeTypicalProteinMatch
-import fr.proline.cortex.service.dps.msi.DeleteOrphanData
-import fr.proline.cortex.service.dps.msi.ExportResultSummary
-import fr.proline.cortex.service.dps.msi.ExportResultSummaryV2_0
-import fr.proline.cortex.service.dps.msi.FilterRSMProteinSets
-import fr.proline.cortex.service.dps.msi.GenerateMSDiagReport
-import fr.proline.cortex.service.dps.msi.GenerateSpectrumMatches
-import fr.proline.cortex.service.dps.msi.ImportMaxQuantResults
-import fr.proline.cortex.service.dps.msi.ImportResultFilesDecoyRegExp
-import fr.proline.cortex.service.dps.msi.ImportResultFilesprotMatchDecoyRule
-import fr.proline.cortex.service.dps.msi.ImportValidateGenerateSM
-import fr.proline.cortex.service.dps.msi.MergeResultSets
-import fr.proline.cortex.service.dps.msi.MergeResultSetsV2_0
-import fr.proline.cortex.service.dps.msi.UpdateSpectraParams
-import fr.proline.cortex.service.dps.msi.UpdateSpectraParamsForRS
-import fr.proline.cortex.service.dps.msi.ValidateResultSet
-import fr.proline.cortex.service.dps.msq.ComputeQuantProfiles
-import fr.proline.cortex.service.dps.msq.Quantify
-import fr.proline.cortex.service.dps.msq.QuantifySC
-import fr.proline.cortex.service.dps.msq.QuantifyV2_0
+import fr.proline.cortex.service.dps.msi._
+import fr.proline.cortex.service.dps.msq._
 import fr.proline.cortex.service.dps.uds.GetExportInformation
 import fr.proline.cortex.service.dps.uds.RegisterRawFile
 import fr.proline.cortex.service.misc.FileSystem
 import fr.proline.cortex.service.misc.FileUpload
 import fr.proline.cortex.service.monitoring.InfoService
 import fr.proline.cortex.service.monitoring.SingleThreadedInfoService
-import fr.proline.cortex.util.DbConnectionHelper
-import fr.proline.cortex.util.MountPointRegistry
-import fr.proline.cortex.util.WorkDirectoryRegistry
-import fr.proline.jms.ServiceRegistry
-import fr.proline.jms.ServiceRunner
-import fr.proline.jms.SingleThreadedServiceRunner
-import fr.proline.jms.util.ExpiredMessageConsumer
-import fr.proline.jms.util.JMSConstants
-import fr.proline.jms.util.MonitoringTopicPublisherRunner
-import fr.proline.jms.util.NodeConfig
-import javax.jms.Connection
-import javax.jms.ExceptionListener
-import javax.jms.JMSException
+import fr.proline.cortex.util._
+import fr.proline.cortex.util.fs._
+import fr.proline.jms._
+import fr.proline.jms.util.JMSConstants._
+import fr.proline.jms.util._
 //import fr.proline.cortex.service.misc.WaitService
+import scala.collection.mutable.HashMap
+import java.util.concurrent.Future
+//import fr.proline.cortex.service.misc.CancelService
+import fr.proline.jms.ServiceManager
+
 
 object ProcessingNode extends LazyLogging {
 
@@ -106,7 +84,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
   /* Constructor checks */
   require(!StringUtils.isEmpty(jmsServerHost), "Invalid JMS Server Host name or address")
 
-  require(((0 < jmsServerPort) && (jmsServerPort <= JMSConstants.MAX_PORT)), "Invalid JMS Server port")
+  require(0 < jmsServerPort && jmsServerPort <= MAX_JMS_SERVER_PORT, "Invalid JMS Server port")
 
   private val m_lock = new Object()
 
@@ -115,7 +93,6 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
   private var m_executor: ExecutorService = null
 
-  
   /**
    * Starts JMS Connection and Executor running Consumers receive loop.
    */
@@ -142,23 +119,23 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         connectionParams.put(TransportConstants.HOST_PROP_NAME, jmsServerHost) // JMS Server hostname or IP
         connectionParams.put(TransportConstants.PORT_PROP_NAME, java.lang.Integer.valueOf(jmsServerPort)) // JMS port
 
-        val transportConfiguration = new TransportConfiguration(classOf[NettyConnectorFactory].getName,
-          connectionParams)
+        val transportConfiguration = new TransportConfiguration(
+          classOf[NettyConnectorFactory].getName,
+          connectionParams
+        )
 
         // Step 3 Directly instantiate the JMS ConnectionFactory object using that TransportConfiguration
         val cf = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF, transportConfiguration) //.asInstanceOf[ConnectionFactory]
-       cf.setConsumerWindowSize(0);
+       cf.setConsumerWindowSize(0)
         
         // Step 4.Create a JMS Connection
         m_connection = cf.createConnection()
 
         // Add an ExceptionListener to handle asynchronous Connection problems
         val exceptionListener = new ExceptionListener() {
-
           override def onException(exception: JMSException) = {
             logger.error("Asynchronous JMS Connection problem", exception)
           }
-
         }
 
         m_connection.setExceptionListener(exceptionListener)
@@ -184,14 +161,15 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         var nbrSingleThreads = 0 
         for (threadIdent <- handledSingleThreadedServiceIdents) {
           val singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier, threadIdent, true)
-          m_executor.submit(singleThreadedServiceRunner)
-            nbrSingleThreads +=  1 
+          val singleThreadFuture =  m_executor.submit(singleThreadedServiceRunner)
+          ServiceManager.addRunnale2FuturEntry(singleThreadedServiceRunner, singleThreadFuture)
+          nbrSingleThreads += 1
         }
 
-        //Start Expired Message Listener
-        val expiredMessageConsumer = new ExpiredMessageConsumer(expiredRequestQueue, m_connection, serviceMonitoringNotifier)        
+        // Start Expired Message Listener
+        val expiredMessageConsumer = new ExpiredMessageConsumer(expiredRequestQueue, m_connection, serviceMonitoringNotifier)
         m_executor.submit(expiredMessageConsumer)
-        nbrSingleThreads +=  1 
+        nbrSingleThreads += 1
         
         logger.debug(nbrSingleThreads +" Single Thread ServiceRunners started")
        
@@ -200,10 +178,11 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
         for (i <- 1 to NodeConfig.SERVICE_THREAD_POOL_SIZE) {
           val parallelizableSeviceRunner = new ServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier)
-          m_executor.submit(parallelizableSeviceRunner)
+          val threadFuture = m_executor.submit(parallelizableSeviceRunner)
+          ServiceManager.addRunnale2FuturEntry(parallelizableSeviceRunner, threadFuture)
         }
 
-        m_connection.start() // Explicitely start connection to begin Consumer reception
+        m_connection.start() // Explicitly start connection to begin Consumer reception
         logger.debug("JMS Connection : " + m_connection + "  started")
       } catch {
 
@@ -246,7 +225,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
     if (NodeConfig.ENABLE_IMPORTS) {
       ServiceRegistry.addService(new ImportResultFilesDecoyRegExp())
-      ServiceRegistry.addService(new ImportResultFilesprotMatchDecoyRule())
+      ServiceRegistry.addService(new ImportResultFilesProtMatchDecoyRule())
       ServiceRegistry.addService(new ImportValidateGenerateSM())
       logger.info("This node HANDLE Result Files Import")
     } else {
@@ -258,9 +237,10 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new FileSystem())
     ServiceRegistry.addService(new FileUpload())
     ServiceRegistry.addService(new ValidateResultSet())
-    ServiceRegistry.addService(new UpdateSpectraParams())
-    ServiceRegistry.addService(new MergeResultSets())
-    ServiceRegistry.addService(new MergeResultSetsV2_0())
+    ServiceRegistry.addService(new UpdateSpectraParamsV1_0())
+    ServiceRegistry.addService(new UpdateSpectraParamsV2_0())
+    ServiceRegistry.addService(new MergeDatasetsV1_0())
+    ServiceRegistry.addService(new MergeDatasetsV2_0())
     ServiceRegistry.addService(new ChangeTypicalProteinMatch())
     ServiceRegistry.addService(new CertifyResultFiles())
     ServiceRegistry.addService(new ExportResultSummary())
@@ -278,10 +258,10 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new RegisterRawFile())
     ServiceRegistry.addService(new DeleteOrphanData())
     ServiceRegistry.addService(new QuantifyV2_0())
-    ServiceRegistry.addService(new UpdateSpectraParamsForRS())
     ServiceRegistry.addService(new ImportMaxQuantResults())
-        
+    //VDS TEST only ! 
 //    ServiceRegistry.addService(new WaitService())
+//    ServiceRegistry.addService(new CancelService())
  }
 
   /**

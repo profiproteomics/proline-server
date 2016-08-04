@@ -23,17 +23,16 @@ import fr.proline.core.om.provider.msi.SeqDbFakeProvider
 import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.service.msi.ResultFileImporter
+import fr.proline.cortex.api.service.dps.msi.IImportResultFilesService
+import fr.proline.cortex.api.service.dps.msi.IImportResultFilesServiceV1_0
+import fr.proline.cortex.api.service.dps.msi.IImportResultFilesServiceV2_0
+import fr.proline.cortex.api.service.dps.msi.IResultFileDescriptor
+import fr.proline.cortex.api.service.dps.msi.ResultFileDescriptorRuleId
+import fr.proline.cortex.api.service.dps.msi.ResultFileDescriptorsDecoyRegExp
 import fr.proline.cortex.util.DbConnectionHelper
-import fr.proline.cortex.util.MountPointRegistry
-import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.cortex.util.fs.MountPointRegistry
+import fr.proline.jms.service.api.AbstractRemoteProcessingService
 import fr.proline.jms.service.api.ISingleThreadedService
-
-trait IResultFileDescriptor {
-
-  val format: String
-  val path: String
-  val peaklistId: Option[Long]
-}
 
 /**
  * Import a result file in the MSIdb corresponding to the provided project id
@@ -49,13 +48,10 @@ trait IResultFileDescriptor {
  *  Output params
  *    List of ImportedResultFile : path of imported file and Id of created target RS 
  */
-abstract class AbstractImportResultFiles extends AbstractRemoteProcessService with LazyLogging with ISingleThreadedService {
-  /* JMS Service identification */
-  val serviceName = "proline/dps/msi/ImportResultFiles"
-  val singleThreadIdent= "ImportThread"
+abstract class AbstractImportResultFiles extends AbstractRemoteProcessingService with IImportResultFilesService with ISingleThreadedService with LazyLogging  {
   
-  case class ImportedResultFile(path: String, var targetResultSetId: Long = -1L)
-
+  /* JMS Service identification */
+  val singleThreadIdent= "ImportThread"
 
   // Methods to be implemented
   protected def parseResultFileDescriptor(rfDescObj: Object): IResultFileDescriptor
@@ -83,15 +79,15 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessService wi
   }
 
   /* Define the concrete doProcess method */
-  override def doProcess(params: NamedParamsRetriever): Object = {
-    require((params != null), "no parameter specified")
+  def doProcess(params: NamedParamsRetriever): Any = {
+    require(params != null, "no parameter specified")
     
-    val projectId = params.getLong("project_id")
-    val resultFiles = params.getList("result_files").toArray.map { rfd => parseResultFileDescriptor(rfd) }
-    val instrumentConfigId = params.getLong("instrument_config_id")
-    val peaklistSoftwareId = params.getLong("peaklist_software_id")
-    val importerProperties = if (params.hasParam("importer_properties") == false) Map.empty[String, Any]
-    else params.getMap("importer_properties").map {
+    val projectId = params.getLong(IMPORT_PROJECT_ID_PARAM)
+    val resultFiles = params.getList(RESULT_FILES_PARAM).toArray.map { rfd => parseResultFileDescriptor(rfd) }
+    val instrumentConfigId = params.getLong(INSTRUMENT_CONFIG_ID_PARAM)
+    val peaklistSoftwareId = params.getLong(PEAKLIST_SOFTWARE_ID_PARAM)
+    val importerProperties = if (params.hasParam(IMPORTER_PROPERTIES_PARAM) == false) Map.empty[String, Any]
+    else params.getMap(IMPORTER_PROPERTIES_PARAM).map {
       case (a, b) => {
         if (a.endsWith(".file")) {
           a -> MountPointRegistry.replacePossibleLabel(b.toString(), Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname
@@ -99,8 +95,8 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessService wi
       }
     } toMap
 
-    val saveSpectrumMatches = if (params.hasParam("save_spectrum_matches") == false) false
-    else params.getBoolean("save_spectrum_matches")
+    val saveSpectrumMatches = if (params.hasParam(SAVE_SPECTRUM_MATCHES_PARAM) == false) false
+    else params.getBoolean(SAVE_SPECTRUM_MATCHES_PARAM)
 
     logger.info("Params : " + serialize(params))
 
@@ -175,21 +171,8 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessService wi
 
 }
 
-
-  /*
-   * format :  The type of the file to be imported (for instance 'mascot.dat', 'omssa.omx').
-   * path : The relative path of the file to be imported. The server uses a 'mount_points.result_files' label as a prefix to find the corresponding file.
-   * decoyStrategy : The Regular expression used to detect decoy protein matches.
-   * peaklistId : The id of the software which has been used to generate the peaklist.
-   */
-case class ResultFileDescriptorsDecoyRegExp (format: String, path: String, decoyStrategy: Option[String] = None, peaklistId: Option[Long] = None) extends IResultFileDescriptor
-
   
-class ImportResultFilesDecoyRegExp extends AbstractImportResultFiles {
-  
-  /* JMS Service identification */
-  val serviceVersion = "1.0"
-  override val defaultVersion = true
+class ImportResultFilesDecoyRegExp extends AbstractImportResultFiles with IImportResultFilesServiceV1_0 {
   
   protected def parseResultFileDescriptor(rfDescObj: Object): IResultFileDescriptor = {
     deserialize[ResultFileDescriptorsDecoyRegExp](serialize(rfDescObj))
@@ -200,20 +183,8 @@ class ImportResultFilesDecoyRegExp extends AbstractImportResultFiles {
   }
 }
 
+class ImportResultFilesProtMatchDecoyRule extends AbstractImportResultFiles with IImportResultFilesServiceV2_0 {
 
-  /*
-   * format :  The type of the file to be imported (for instance 'mascot.dat', 'omssa.omx').
-   * path : The relative path of the file to be imported. The server uses a 'mount_points.result_files' label as a prefix to find the corresponding file.
-   * protMatchDecoyRuleId : The id of the rule to be used to detect decoy protein matches.
-   * peaklistId : The id of the software which has been used to generate the peaklist.
-   */
-  case class ResultFileDescriptorRuleId(format: String, path: String, peaklistId: Option[Long] = None, protMatchDecoyRuleId: Option[Long] = None) extends IResultFileDescriptor
-
-  
-class ImportResultFilesprotMatchDecoyRule extends AbstractImportResultFiles {
-  /* JMS Service identification */
-  val serviceVersion = "2.0"
-  override val defaultVersion = false
 
   protected def parseResultFileDescriptor(rfDescObj: Object): IResultFileDescriptor = {
     deserialize[ResultFileDescriptorRuleId](serialize(rfDescObj))

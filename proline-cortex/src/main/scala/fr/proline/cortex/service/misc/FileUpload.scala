@@ -3,18 +3,21 @@ package fr.proline.cortex.service.misc
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import scala.util.control.Breaks._
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
+
+import org.hornetq.api.jms.HornetQJMSConstants.JMS_HORNETQ_SAVE_STREAM
+
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.typesafe.scalalogging.LazyLogging
-import fr.proline.cortex.util.MountPointRegistry
-import fr.proline.jms.service.api.IRemoteBytesMsgService
-import fr.proline.jms.util.jsonrpc.ProfiJSONRPC2Response
-import javax.jms.BytesMessage
-import fr.proline.jms.util.JMSConstants
-import fr.proline.cortex.util.WorkDirectoryFactory
+
+import fr.profi.util.jsonrpc.IJSONRPC2Method
+import fr.profi.util.jsonrpc.ProfiJSONRPC2Response
+import fr.proline.cortex.util.fs.MountPointRegistry
+import fr.proline.cortex.util.fs.WorkDirectoryFactory
 import fr.proline.jms.ServiceRunner
+import fr.proline.jms.service.api.IDefaultServiceVersion
+import fr.proline.jms.service.api.IRemoteBytesMsgService
+import fr.proline.jms.util.JMSConstants
+import javax.jms.BytesMessage
 
 /**
  * 
@@ -26,25 +29,26 @@ import fr.proline.jms.ServiceRunner
  * 
  * 
  */
-class FileUpload extends IRemoteBytesMsgService with LazyLogging {
+class FileUpload extends IRemoteBytesMsgService with IDefaultServiceVersion with LazyLogging {
 
   /* JMS Service identification */
-  val serviceName = "proline/misc/FileUpload"
-  val serviceVersion = "1.0"
-  override val defaultVersion = true
+  val serviceNamespace = "proline/misc"
+  val serviceLabel = "FileUpload"
 
   val DEST_FOLDER_PATH_PARAM_KEY = "dest_folder_path"
   val DEST_FILE_NAME_PARAM_KEY = "dest_file_name"
 //  val OVERWRITE_PARAM_KEY = "overwrite_file"
-
   
-  override def service(jmsMessageContext: Map[String, Any], message: BytesMessage): JSONRPC2Response = {
-    require((message != null), "message is null")
+  // TODO: define me in Proline-Cortex-API
+  def methodDefinitions: Seq[IJSONRPC2Method] = Seq()
+
+  override def runService(message: BytesMessage, jmsMessageContext: Map[String, Any]): JSONRPC2Response = {
+    require(message != null, "message is null")
 
     val jsonRequestId = message.getJMSMessageID
     var jsonResponse: JSONRPC2Response = null
     
-    var delFileOnexit = false;
+    var delFileOnexit = false
     
     //Get Parameters 
     val overwriteFile = false
@@ -90,13 +94,12 @@ class FileUpload extends IRemoteBytesMsgService with LazyLogging {
           //    destFile.deleteOnExit()
         
         
-          val fos: FileOutputStream = new FileOutputStream(destFile);
-          val outBuf: BufferedOutputStream = new BufferedOutputStream(fos);
-          message.setObjectProperty("JMS_HQ_SaveStream", outBuf)
-  
+          val fos = new FileOutputStream(destFile)
+          val outBuf = new BufferedOutputStream(fos)
+          message.setObjectProperty(JMS_HORNETQ_SAVE_STREAM, outBuf)
   
           outBuf.close()
-          fos.close();
+          fos.close()
   
           jsonResponse = new ProfiJSONRPC2Response(destFile.getAbsolutePath, jsonRequestId)
         }

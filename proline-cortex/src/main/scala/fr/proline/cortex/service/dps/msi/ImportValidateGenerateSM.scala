@@ -34,16 +34,20 @@ import fr.proline.core.orm.uds.repository.DatasetRepository
 import fr.proline.core.service.msi.ResultFileCertifier
 import fr.proline.core.service.msi.ResultFileImporter
 import fr.proline.core.service.msi.ResultSetValidator
+import fr.proline.cortex.api.service.dps.msi.IImportValidateGenerateSMService
+import fr.proline.cortex.api.service.dps.msi.IResultFileDescriptor
+import fr.proline.cortex.api.service.dps.msi.ResultFileDescriptorRuleId
+import fr.proline.cortex.api.service.dps.msi.ResultFileDescriptorsDecoyRegExp
 import fr.proline.cortex.util.DbConnectionHelper
-import fr.proline.cortex.util.MountPointRegistry
-import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.cortex.util.fs.MountPointRegistry
+import fr.proline.jms.service.api.AbstractRemoteProcessingService
 import fr.proline.jms.service.api.ISingleThreadedService
 import fr.proline.module.fragment_match.service.SpectrumMatchesGenerator
 
 
 
 /**
- * Import a result file in the MSIdb corresponding to the provided project id. Validate the imported result and optionnaly 
+ * Import a result file in the MSIdb corresponding to the provided project id. Validate the imported result and optionaly 
  * generate Spectrum Matched for the validated PSM.
  * 
  * Input params :
@@ -51,7 +55,7 @@ import fr.proline.module.fragment_match.service.SpectrumMatchesGenerator
  *   project_id : The id of the project used for data importation.
  *  Import Specific
  *   use_decoy_regexp: true if result file is formated with decoy strategy RegExp, false if it is formated with the id of the rule to be used. 
- *   result_files : The list of the result files to be imported, as IResultFileDescriptor object (format, path, peaklist_id (optionnal)) + protMatchDecoyRuleId or + decoyStrategy
+ *   result_files : The list of the result files to be imported, as IResultFileDescriptor object (format, path, peaklist_id (optional)) + protMatchDecoyRuleId or + decoyStrategy
  *   instrument_config_id : id in datastore of the instrument config used for result file acquisition
  *   peaklist_software_id : id in datastore of the software use to generate peaklist
  *   importer_properties : Map of properties for importer, specific to result files format
@@ -66,18 +70,14 @@ import fr.proline.module.fragment_match.service.SpectrumMatchesGenerator
  *   force_insert : Specify if existing spectrum matches should be replaced 
  *   
  *  Output params
- *    List of ImportedResultFile : path of imported file and Id of created target RS 
+ *    List of ImportedResultFileDesc : path of imported file and Id of created target RS 
  */
-class ImportValidateGenerateSM extends AbstractRemoteProcessService with LazyLogging with ISingleThreadedService {
+class ImportValidateGenerateSM extends AbstractRemoteProcessingService with IImportValidateGenerateSMService with ISingleThreadedService with LazyLogging {
   
   /* JMS Service identification */
-  val serviceName = "proline/dps/msi/ImportValidateGenerateSM"
   val singleThreadIdent= "ImportThread"
-  val serviceVersion = "1.0"
-  override val defaultVersion = true
   
-  case class ImportedResultFile(path: String, var targetResultSetOpt: Option[ResultSet] = None, var targetResultSetId: Long = -1L)
-
+  case class ImportedResultFileDesc(path: String, var targetResultSetOpt: Option[ResultSet] = None, var targetResultSetId: Long = -1L)
 
 //  /*
 //   * format :  The type of the file to be imported (for instance 'mascot.dat', 'omssa.omx').
@@ -133,16 +133,16 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessService with LazyLog
 
   /* Define the concrete doProcess method */
   override def doProcess(params: NamedParamsRetriever): Object = {
-    require((params != null), "no parameter specified")
+    require(params != null, "no parameter specified")
     
     // **** Get all parameters
-    val projectId = params.getLong("project_id")
-    val useDecoyRegExp = params.getBoolean("use_decoy_regexp")
-    val resultFiles = params.getList("result_files").toArray.map { rfd => parseResultFileDescriptor(rfd,useDecoyRegExp) }
-    val instrumentConfigId = params.getLong("instrument_config_id")
-    val peaklistSoftwareId = params.getLong("peaklist_software_id")
-    val importerProperties = if (params.hasParam("importer_properties") == false) Map.empty[String, Any]
-    else params.getMap("importer_properties").map {
+    val projectId = params.getLong(PROJECT_ID_PARAM)
+    val useDecoyRegExp = params.getBoolean(PROCESS_METHOD.USE_DECOY_REGEX_PARAM)
+    val resultFiles = params.getList(RESULT_FILES_PARAM).toArray.map { rfd => parseResultFileDescriptor(rfd,useDecoyRegExp) }
+    val instrumentConfigId = params.getLong(INSTRUMENT_CONFIG_ID_PARAM)
+    val peaklistSoftwareId = params.getLong(PEAKLIST_SOFTWARE_ID_PARAM)
+    val importerProperties = if (params.hasParam(IMPORTER_PROPERTIES_PARAM) == false) Map.empty[String, Any]
+    else params.getMap(IMPORTER_PROPERTIES_PARAM).map {
       case (a, b) => {
         if (a.endsWith(".file")) {
           a -> MountPointRegistry.replacePossibleLabel(b.toString(), Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname
@@ -150,18 +150,18 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessService with LazyLog
       }
     } toMap
 
-    val generateSpectrumMatches = if (params.hasParam("generate_spectrum_matches") == false) false
-    else params.getBoolean("generate_spectrum_matches")
+    val generateSpectrumMatches = if (params.hasParam(PROCESS_METHOD.GENERATE_SPECTRUM_MATCHES_PARAM) == false) false
+    else params.getBoolean(PROCESS_METHOD.GENERATE_SPECTRUM_MATCHES_PARAM)
 
-    val gsmForceInsert = if (params.hasParam("force_insert") == false) false
-    else params.getBoolean("force_insert")
+    val gsmForceInsert = if (params.hasParam(FORCE_INSERT_PARAM) == false) false
+    else params.getBoolean(FORCE_INSERT_PARAM)
     
     
     val validationParam = ValidateResultSet.parseValidationConfig(params)
     
     logger.debug("Params : " + serialize(params))
 
-    var resultImport: Array[ImportedResultFile] = null
+    var resultImport: Array[ImportedResultFileDesc] = null
     var resultValidate: ArrayBuffer[java.lang.Long] = new ArrayBuffer[java.lang.Long]
     
     // *** Initialize the providers    
@@ -178,7 +178,7 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessService with LazyLog
       val udsDbHelper = new UdsDbHelper(udsbConnectionContext)
       val decoyRegexById = udsDbHelper.getProteinMatchDecoyRegexById()
 
-      val importedRFs = new collection.mutable.ArrayBuffer[ImportedResultFile]
+      val importedRFs = new collection.mutable.ArrayBuffer[ImportedResultFileDesc]
       
          // Begin transaction
       msiDbConnectionContext = execCtx.getMSIDbConnectionContext
@@ -214,7 +214,7 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessService with LazyLog
       for (resultFile <- resultFiles) {
         
         val resultFileType = resultFile.format
-        val importedRF = new ImportedResultFile(resultFile.path)
+        val importedRF = new ImportedResultFileDesc(resultFile.path)
 
         // Instantiate the appropriate result file provider and register it
         val rfProviderOpt = ResultFileProviderRegistry.get(resultFileType)

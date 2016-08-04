@@ -1,9 +1,19 @@
 package fr.proline.cortex.service.dps.msi
 
-import java.util.ArrayList
-import scala.collection.JavaConversions.mapAsScalaMap
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
+
+import scala.collection.mutable.Map
+
+import org.apache.commons.io.FilenameUtils
+
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
+
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.helper.UdsDbHelper
@@ -16,19 +26,13 @@ import fr.proline.core.om.provider.msi.ProteinFakeProvider
 import fr.proline.core.om.provider.msi.SeqDbFakeProvider
 import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
+import fr.proline.cortex.api.service.dps.msi.IImportMaxQuantResultsService
 import fr.proline.cortex.util.DbConnectionHelper
-import fr.proline.cortex.util.MountPointRegistry
-import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.cortex.util.fs.MountPointRegistry
+import fr.proline.jms.service.api.AbstractRemoteProcessingService
 import fr.proline.jms.service.api.ISingleThreadedService
 import fr.proline.module.parser.maxquant.MaxQuantResultParser
-import scala.collection.mutable.Map
-import java.io.File
-import org.apache.commons.io.FilenameUtils
-import java.io.IOException
-import java.io.FileOutputStream
-import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
-import java.io.FileInputStream
+
 
 
 /**
@@ -46,12 +50,9 @@ import java.io.FileInputStream
  *    - result_set_Ids : List of all created result set Ids 
  *    - warning_msg : information message that could be of interest for to caller (even up to GUI)... 
  */
-class ImportMaxQuantResults extends AbstractRemoteProcessService with LazyLogging with ISingleThreadedService {
+class ImportMaxQuantResults extends AbstractRemoteProcessingService with IImportMaxQuantResultsService with LazyLogging with ISingleThreadedService {
   
   /* JMS Service identification */
-  val serviceName = "proline/dps/msi/ImportMaxQuantResults"
-  val serviceVersion = "1.0"
-  override val defaultVersion = true
   val singleThreadIdent= "ImportThread"
   
   private def buildParserContext(executionContext: IExecutionContext): ProviderDecoratedExecutionContext = {
@@ -74,13 +75,13 @@ class ImportMaxQuantResults extends AbstractRemoteProcessService with LazyLoggin
   }
 
   /* Define the concrete doProcess method */
-  override def doProcess(params: NamedParamsRetriever): Object = {
-    require((params != null), "no parameter specified")
+  def doProcess(params: NamedParamsRetriever): Any = {
+    require(params != null, "no parameter specified")
     
-    val projectId = params.getLong("project_id")
-    val resultFileFolders = params.getString("result_files_dir")
-    val instrumentConfigId = params.getLong("instrument_config_id")
-    val peaklistSoftwareId = params.getLong("peaklist_software_id")
+    val projectId = params.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
+    val resultFileFolders = params.getString(PROCESS_METHOD.RESULT_FILES_DIR_PARAM)
+    val instrumentConfigId = params.getLong(PROCESS_METHOD.INSTRUMENT_CONFIG_ID_PARAM)
+    val peaklistSoftwareId = params.getLong(PROCESS_METHOD.PEAKLIST_SOFTWARE_ID_PARAM)
 //    val importerProperties = if (params.hasParam("importer_properties") == false) Map.empty[String, Any]
 //    else params.getMap("importer_properties").map {
 //      case (a, b) => {
@@ -144,13 +145,13 @@ class ImportMaxQuantResults extends AbstractRemoteProcessService with LazyLoggin
   }
 
   
-    /**
-     * Unzip maxQuant result file 
-     * @param zipFile input zip file
-     * @param output output folder
-     * @return the root folder name
-     */
-    private def unZipIt( zipFile: File) : String = {
+  /**
+   * Unzip maxQuant result file 
+   * @param zipFile input zip file
+   * @param output output folder
+   * @return the root folder name
+   */
+  private def unZipIt( zipFile: File) : String = {
 
       val  buffer : Array[Byte] = new Array[Byte](4096)
       var zis :ZipInputStream  = null
@@ -161,38 +162,38 @@ class ImportMaxQuantResults extends AbstractRemoteProcessService with LazyLoggin
       	val folderName = FilenameUtils.getBaseName(zipFile.getAbsolutePath)
       	val folder = new File(parentFolder, folderName+"_unzip")
     	  if(!folder.exists()){
-    		  folder.mkdir();
+    		  folder.mkdir()
     	  }
     		
       	//get the zip file content
-      	zis = new ZipInputStream(new FileInputStream(zipFile));
+      	zis = new ZipInputStream(new FileInputStream(zipFile))
       	//get the zipped file list entry
-      	var ze : ZipEntry = zis.getNextEntry();
+      	var ze : ZipEntry = zis.getNextEntry()
     		
       	while(ze!=null){
     			
-    	     val nextFileName = ze.getName();
-           val newFile = new File(folder, nextFileName);                
-           logger.debug("file unzip : "+ newFile.getAbsoluteFile());
+    	     val nextFileName = ze.getName()
+           val newFile = new File(folder, nextFileName)            
+           logger.debug("file unzip : "+ newFile.getAbsoluteFile())
                 
             //create all non exists folders
             //else you will hit FileNotFoundException for compressed folder
-            new File(newFile.getParent()).mkdirs();
+            new File(newFile.getParent()).mkdirs()
               
-            val fos :FileOutputStream = new FileOutputStream(newFile);             
-            var len = zis.read(buffer);
+            val fos :FileOutputStream = new FileOutputStream(newFile)            
+            var len = zis.read(buffer)
             while ( len > 0) {
-       		      fos.write(buffer, 0, len);
+       		      fos.write(buffer, 0, len)
        		      len = zis.read(buffer)
             }        		
-            fos.close();   
-            ze = zis.getNextEntry();
+            fos.close()
+            ze = zis.getNextEntry()
     	  }
     	
         zis.closeEntry();
     	  zis.close();
     		
-    	logger.debug("All zip entry unzip : "+ zipFile.getName());
+    	logger.debug("All zip entry unzip : "+ zipFile.getName())
     	
     	if(folder.list().length == 1) //root folder in ZIP
     	  return folder.listFiles()(0).getAbsolutePath
@@ -204,14 +205,14 @@ class ImportMaxQuantResults extends AbstractRemoteProcessService with LazyLoggin
         logger.debug("exception caught: " + e.getMessage)
         if(zis != null){
           try {
-            zis.closeEntry();    	      
-            zis.close();
+            zis.closeEntry()
+            zis.close()
           } catch {
             case e: IOException =>  logger.error("Error closing ZIP : " + zipFile.getName)
           }
         }
       }
-      return null;
+      return null
     }
  
    } 

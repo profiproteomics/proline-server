@@ -1,50 +1,47 @@
 package fr.proline.cortex.service.dps.uds
 
-import com.typesafe.scalalogging.LazyLogging
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
-import fr.proline.core.orm.uds.RawFile
-import fr.proline.cortex.util.MountPointRegistry
+import com.typesafe.scalalogging.LazyLogging
+
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.cortex.util.DbConnectionHelper
+import fr.proline.core.orm.uds.RawFile
 import fr.proline.core.orm.uds.Run
-import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.cortex.api.service.dps.uds.IRegisterRawFileService
+import fr.proline.cortex.util.DbConnectionHelper
+import fr.proline.cortex.util.fs.MountPointRegistry
+import fr.proline.jms.service.api.AbstractRemoteProcessingService
 
 /**
  *  Define JMS Service wich allows to register a raw file in UDS database
  *
- *  Input params :
- *    raw_file_identifier : The identifier of the raw file, defined as its name without the extension.
- *    raw_file_path : The raw file path relative to a managed mount point.
- *    mzdb_file_path :  The mzDB file path relative to a managed mount point.
- *    instrument_id : database id of the instrument on which acquisition was done
- *    owner_id :  id of the project owner associated to the raw file
+ *  Input params:
+ *    raw_file_identifier: The identifier of the raw file, defined as its name without the extension.
+ *    raw_file_path: The raw file path relative to a managed mount point.
+ *    mzdb_file_path:  The mzDB file path relative to a managed mount point.
+ *    instrument_id: database id of the instrument on which acquisition was done
+ *    owner_id:  id of the project owner associated to the raw file
  *
- *  Output params :
+ *  Output params:
  *    Boolean for service run status
  */
-class RegisterRawFile extends AbstractRemoteProcessService with LazyLogging {
+class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawFileService with LazyLogging {
+  
+  def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 
-  /* JMS Service identification */
-  val serviceName = "proline/dps/uds/RegisterRawFile"
-  val serviceVersion = "1.0"
-  override val defaultVersion = true
-
-  override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
-
-    require((paramsRetriever != null), "no parameter specified")
-    require(paramsRetriever.hasParam("raw_file_identifier"), "raw_file_identifier parameter not specified")
-    require(paramsRetriever.hasParam("instrument_id"), "instrument_id parameter not specified")
-    require(paramsRetriever.hasParam("owner_id"), "owner_id parameter not specified")
+    require(paramsRetriever != null, "no parameter specified")
+    require(paramsRetriever.hasParam(PROCESS_METHOD.RAW_FILE_IDENTIFIER_PARAM), "raw_file_identifier parameter not specified")
+    require(paramsRetriever.hasParam(PROCESS_METHOD.INSTRUMENT_ID_PARAM), "instrument_id parameter not specified")
+    require(paramsRetriever.hasParam(PROCESS_METHOD.OWNER_ID_PARAM), "owner_id parameter not specified")
 
     // Create new raw file
     val udsRawFile = new RawFile()
-    udsRawFile.setIdentifier(paramsRetriever.getString("raw_file_identifier"))
-    udsRawFile.setInstrumentId(paramsRetriever.getLong("instrument_id"))
-    udsRawFile.setOwnerId(paramsRetriever.getLong("owner_id"))
+    udsRawFile.setIdentifier(paramsRetriever.getString(PROCESS_METHOD.RAW_FILE_IDENTIFIER_PARAM))
+    udsRawFile.setInstrumentId(paramsRetriever.getLong(PROCESS_METHOD.INSTRUMENT_ID_PARAM))
+    udsRawFile.setOwnerId(paramsRetriever.getLong(PROCESS_METHOD.OWNER_ID_PARAM))
 
     // Parse raw file path if provided
-    if (paramsRetriever.hasParam("raw_file_path")) {
-      val rawFilePath = paramsRetriever.getString("raw_file_path")
+    if (paramsRetriever.hasParam(PROCESS_METHOD.RAW_FILE_PATH_PARAM)) {
+      val rawFilePath = paramsRetriever.getString(PROCESS_METHOD.RAW_FILE_PATH_PARAM)
       val rawFile = new java.io.File(rawFilePath)
 
       udsRawFile.setRawFileDirectory(rawFile.getParent())
@@ -58,8 +55,8 @@ class RegisterRawFile extends AbstractRemoteProcessService with LazyLogging {
     }
 
     // Parse mzDB file path if provided
-    if (paramsRetriever.hasParam("mzdb_file_path")) {
-      val mzDbFilePath = paramsRetriever.getString("mzdb_file_path")
+    if (paramsRetriever.hasParam(PROCESS_METHOD.MZDB_FILE_PATH_PARAM)) {
+      val mzDbFilePath = paramsRetriever.getString(PROCESS_METHOD.MZDB_FILE_PATH_PARAM)
       extractMzDbFileMetaData(udsRawFile, mzDbFilePath)
     }
 
@@ -70,7 +67,7 @@ class RegisterRawFile extends AbstractRemoteProcessService with LazyLogging {
   protected def registerRawFile(udsRawFile: RawFile): java.lang.Long = {
 
     // 	Retrieve UdsDb context and entity manager
-    val udsDbCtx: DatabaseConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getIDataStoreConnectorFactory.getUdsDbConnector())
+    val udsDbCtx: DatabaseConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
 
     val runId = try {
 

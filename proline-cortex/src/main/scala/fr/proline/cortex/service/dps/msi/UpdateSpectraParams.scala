@@ -8,9 +8,12 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.core.service.msi.SpectraParamsUpdater
+import fr.proline.cortex.api.service.dps.msi.IUpdateSpectraParamsServiceV1_0
+import fr.proline.cortex.api.service.dps.msi.IUpdateSpectraParamsServiceV2_0
 import fr.proline.cortex.util.DbConnectionHelper
-import fr.proline.jms.service.api.AbstractRemoteProcessService
+import fr.proline.jms.service.api.AbstractRemoteProcessingService
 import fr.proline.repository.util.JDBCWork
+
 
 /**
  *  Define JMS Service which allows to update scan, cycle and time information of spectra belonging to specified peaklists.
@@ -25,23 +28,18 @@ import fr.proline.repository.util.JDBCWork
  *  new project Id.
  *
  */
-class UpdateSpectraParams extends AbstractRemoteProcessService with LazyLogging {
+class UpdateSpectraParamsV1_0 extends AbstractRemoteProcessingService with IUpdateSpectraParamsServiceV1_0 with LazyLogging {
 
-  /* JMS Service identification */
-  val serviceName = "proline/dps/msi/UpdateSpectraParams"
-  val serviceVersion = "1.0"
-  override val defaultVersion = true
+  def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
+    require(paramsRetriever != null, "No Parameters specified")
 
-  override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
-    require((paramsRetriever != null), "No Parameters specified")
-
-    val projectId = paramsRetriever.getLong("project_id")
-    val peaklistIds = paramsRetriever.getList("peaklist_ids").toArray.map { rf => deserialize[Long](serialize(rf)) }
-    val specTitleRuleId = paramsRetriever.getLong("spec_title_rule_id")
+    val projectId = paramsRetriever.getLong(PROJECT_ID_PARAM)
+    val peaklistIds = paramsRetriever.getList(PROCESS_METHOD.PEAKLIST_IDS_PARAM).toArray.map { rf => deserialize[Long](serialize(rf)) }
+    val specTitleRuleId = paramsRetriever.getLong(PROCESS_METHOD.SPEC_TITLE_RULE_ID_PARAM)
 
     val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId) 
 
-    var updatedSpectraCount: Integer = 0
+    var updatedSpectraCount = 0
     try {
       logger.info("UpdateSpectraParams WebService is starting...")
 
@@ -75,19 +73,14 @@ class UpdateSpectraParams extends AbstractRemoteProcessService with LazyLogging 
  *  nbr updated spectra
  *
  */
-class UpdateSpectraParamsForRS extends AbstractRemoteProcessService with LazyLogging {
+class UpdateSpectraParamsV2_0 extends AbstractRemoteProcessingService with IUpdateSpectraParamsServiceV2_0 with LazyLogging {
   
-  /* JMS Service identification */
-  val serviceName = "proline/dps/msi/UpdateSpectraParams"
-  val serviceVersion = "2.0"
-  override val defaultVersion = false
+  def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
+    require(paramsRetriever != null, "No Parameters specified")
 
-  override def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
-    require((paramsRetriever != null), "No Parameters specified")
-
-    val projectId = paramsRetriever.getLong("project_id")
-    val rsIds = paramsRetriever.getList("resultset_ids").toArray.map { rf => deserialize[Long](serialize(rf)) }
-    val peaklistSoftwareId = paramsRetriever.getLong("peaklist_software_id")
+    val projectId = paramsRetriever.getLong(PROJECT_ID_PARAM)
+    val rsIds = paramsRetriever.getList(PROCESS_METHOD.RESULT_SET_IDS_PARAM).toArray.map { rf => deserialize[Long](serialize(rf)) }
+    val peaklistSoftwareId = paramsRetriever.getLong(PROCESS_METHOD.PEAKLIST_SOFTWARE_ID_PARAM)
     val peaklistIdsBuilder = Seq.newBuilder[Long]
     var specTitleParsingRuleId : Long = -1l
     val execCtx =  DbConnectionHelper.createJPAExecutionContext(projectId) 
