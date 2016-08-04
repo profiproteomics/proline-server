@@ -26,8 +26,8 @@
       <directory>${project.build.directory}</directory>
       <includes>
         <include>*.jar</include> <!-- Proline-Cortex Jar itself -->
-        <include>*.sh</include>
-        <include>*.bat</include>
+        <include>start_cortex.sh</include>
+        <include>start_cortex.bat</include>        
       </includes>
       <outputDirectory>/</outputDirectory>
     </fileSet>
