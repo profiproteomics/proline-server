@@ -63,7 +63,7 @@ object ValidateResultSet {
     // Create a default TD analyzer 
     val tdAnalyzer: Option[ITargetDecoyAnalyzer] = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED))
     val pepMatchValidator = parsePepMatchValidator(paramsRetriever, tdAnalyzer)
-    val pepSetScoring = Option(paramsRetriever.getOptString(ValidateResultSetService.PEP_SET_SCORE_TYPE_PARAM, true, null)).map(PepSetScoring.withName(_))
+    val pepSetScoring = Option(paramsRetriever.getOptString(ValidateResultSetService.PROCESS_METHOD.PEP_SET_SCORE_TYPE_PARAM, true, null)).map(PepSetScoring.withName(_))
     val protSetFilters = parseProtSetFilters(paramsRetriever)
     val protSetValidator = parseProtSetValidator(paramsRetriever)
 
@@ -86,8 +86,8 @@ object ValidateResultSet {
   }
 
   def parsePepMatchFilters(params: NamedParamsRetriever): Option[Seq[IPeptideMatchFilter]] = {
-    if (params.hasParam(ValidateResultSetService.PEP_MATCH_FILTERS_PARAM)) {
-      val pepMatchFiltersConfigs = params.getList(ValidateResultSetService.PEP_MATCH_FILTERS_PARAM).toArray.map(parseFilterConfig(_))
+    if (params.hasParam(ValidateResultSetService.PROCESS_METHOD.PEP_MATCH_FILTERS_PARAM)) {
+      val pepMatchFiltersConfigs = params.getList(ValidateResultSetService.PROCESS_METHOD.PEP_MATCH_FILTERS_PARAM).toArray.map(parseFilterConfig(_))
 
       Some(pepMatchFiltersConfigs.map(fc => {
         val nextFilter = BuildPeptideMatchFilter(fc.parameter, fc.threshold.asInstanceOf[AnyVal])
@@ -105,9 +105,9 @@ object ValidateResultSet {
 
   // def parsePepMatchValidator(params: NamedParamsRetriever, tdAnalyzer: Option[ITargetDecoyAnalyzer], targetRS: ResultSet): Option[IPeptideMatchValidator] = {
   def parsePepMatchValidator(params: NamedParamsRetriever, tdAnalyzer: Option[ITargetDecoyAnalyzer]): Option[IPeptideMatchValidator] = {
-    if (params.hasParam(ValidateResultSetService.PEP_MATCH_VALIDATOR_CONFIG_PARAM)) {
+    if (params.hasParam(ValidateResultSetService.PROCESS_METHOD.PEP_MATCH_VALIDATOR_CONFIG_PARAM)) {
 
-      val pepMatchValidatorConfig = parsePepMatchValidatorConfig(params.getMap(ValidateResultSetService.PEP_MATCH_VALIDATOR_CONFIG_PARAM))
+      val pepMatchValidatorConfig = parsePepMatchValidatorConfig(params.getMap(ValidateResultSetService.PROCESS_METHOD.PEP_MATCH_VALIDATOR_CONFIG_PARAM))
 
       val pepMatchValidationFilter = if (pepMatchValidatorConfig.expectedFdr.isDefined) {
         BuildOptimizablePeptideMatchFilter(pepMatchValidatorConfig.parameter)
@@ -129,8 +129,8 @@ object ValidateResultSet {
   }
 
   def parseProtSetFilters(params: NamedParamsRetriever): Option[Seq[IProteinSetFilter]] = {
-    if (params.hasParam(ValidateResultSetService.PROT_SET_FILTERS_PARAM)) {
-      val protSetFiltersConfigs = params.getList(ValidateResultSetService.PROT_SET_FILTERS_PARAM).toArray.map(parseFilterConfig(_))
+    if (params.hasParam(ValidateResultSetService.PROCESS_METHOD.PROT_SET_FILTERS_PARAM)) {
+      val protSetFiltersConfigs = params.getList(ValidateResultSetService.PROCESS_METHOD.PROT_SET_FILTERS_PARAM).toArray.map(parseFilterConfig(_))
       Some(protSetFiltersConfigs.map(fc => BuildProteinSetFilter(fc.parameter, fc.threshold.asInstanceOf[AnyVal])).toSeq)
     } else None
   }
@@ -140,9 +140,9 @@ object ValidateResultSet {
   }
 
   def parseProtSetValidator(params: NamedParamsRetriever): Option[IProteinSetValidator] = {
-    if (params.hasParam(ValidateResultSetService.PROT_SET_VALIDATOR_CONFIG_PARAM)) {
+    if (params.hasParam(ValidateResultSetService.PROCESS_METHOD.PROT_SET_VALIDATOR_CONFIG_PARAM)) {
 
-      val protSetValidatorConfig = parseProtSetValidatorConfig(params.getMap(ValidateResultSetService.PROT_SET_VALIDATOR_CONFIG_PARAM))
+      val protSetValidatorConfig = parseProtSetValidatorConfig(params.getMap(ValidateResultSetService.PROCESS_METHOD.PROT_SET_VALIDATOR_CONFIG_PARAM))
       val thresholds = protSetValidatorConfig.thresholds.map(_.map(e => e._1 -> e._2.asInstanceOf[AnyVal]))
 
       // Retrieve protein set validation method
@@ -168,8 +168,8 @@ class ValidateResultSet extends AbstractRemoteProcessingService with IValidateRe
   def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
     require(paramsRetriever != null, "No Parameters specified")
 
-    val projectId = paramsRetriever.getLong(PROJECT_ID_PARAM)
-    val resultSetId = paramsRetriever.getLong(RESULT_SET_ID_PARAM)
+    val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
+    val resultSetId = paramsRetriever.getLong(PROCESS_METHOD.RESULT_SET_ID_PARAM)
 
     var result = -1L
 

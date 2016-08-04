@@ -61,7 +61,7 @@ class FileSystem extends IFileSystemService with IRemoteJsonRPC2Service with Laz
         new ProfiJSONRPC2Response(mountPoints, requestId)
       }
 
-      case RETRIEVE_MOUNT_POINT_BY_TYPE_METHOD.name => {
+      case RETRIEVE_MOUNT_POINTS_BY_TYPE_METHOD.name => {
         val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(jsonRequest)
         require(paramsRetriever != null, "no parameter specified")
       
@@ -74,7 +74,7 @@ class FileSystem extends IFileSystemService with IRemoteJsonRPC2Service with Laz
         new ProfiJSONRPC2Response(mountPoints, requestId)
       }
 
-      case RETRIEVE_MOUNT_POINT_BY_LABEL_METHOD.name => {
+      case RETRIEVE_MOUNT_POINTS_BY_LABEL_METHOD.name => {
         val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(jsonRequest)
         require(paramsRetriever != null, "no parameter specified")
       

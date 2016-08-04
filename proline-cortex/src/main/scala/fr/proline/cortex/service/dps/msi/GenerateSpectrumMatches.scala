@@ -35,7 +35,7 @@ class GenerateSpectrumMatches extends AbstractRemoteProcessingService with IGene
 		val resultSummaryId = if (paramsRetriever.hasParam(PROCESS_METHOD.RESULT_SUMMARY_ID_PARAM)) Some(paramsRetriever.getLong(PROCESS_METHOD.RESULT_SUMMARY_ID_PARAM)) else None
 		val peptideMatchIds = Option(paramsRetriever.getOptList(PROCESS_METHOD.PEPTIDE_MATCH_IDS_PARAM, null)).map { _.toArray.map(toLong(_)) }
 		val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId) // Use JPA context
-		val forceInsert = paramsRetriever.getOptBoolean(FORCE_INSERT_PARAM, false)
+		val forceInsert = paramsRetriever.getOptBoolean(PROCESS_METHOD.FORCE_INSERT_PARAM, false)
 
 		val spectrumMatchesGenerator = new SpectrumMatchesGenerator(execCtx, resultSetId, resultSummaryId, peptideMatchIds, forceInsert)
 
