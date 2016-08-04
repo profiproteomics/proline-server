@@ -44,7 +44,7 @@ public class RunNode {
 
 	public RunNode(String jmsHost, Integer jmsPort) {
 		assert jmsHost != null : "Invalid JMS Server Host name or address";
-		assert ((0 < jmsPort) && (jmsPort <= JMSConstants.MAX_PORT())) : "Invalid JMS Server port";
+		assert ((0 < jmsPort) && (jmsPort <= JMSConstants.MAX_JMS_SERVER_PORT())) : "Invalid JMS Server port";
 		m_jmsServerHost = jmsHost;
 		m_jmsServerPort = jmsPort;
 
