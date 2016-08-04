@@ -2,6 +2,10 @@ package fr.proline.jms.util
 
 import java.util.concurrent.LinkedBlockingQueue
 
+import javax.jms.Connection
+import javax.jms.JMSException
+import javax.jms.Session
+
 import org.hornetq.api.jms.HornetQJMSClient
 
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Message
@@ -9,10 +13,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.StringUtils
 import fr.profi.util.ThreadLogger
-
-import javax.jms.Connection
-import javax.jms.JMSException
-import javax.jms.Session
+import JMSConstants._
 
 trait IServiceMonitoringNotifier {
 
@@ -50,7 +51,7 @@ class MonitoringTopicPublisherRunner(connection: Connection) extends IServiceMon
       currentThread.setUncaughtExceptionHandler(new ThreadLogger(logger.underlying.getName))
     }
 
-    val prolineNotificationTopic = HornetQJMSClient.createTopic(JMSConstants.SERVICE_MONITORING_NOTIFICATION_TOPIC_NAME)
+    val prolineNotificationTopic = HornetQJMSClient.createTopic(SERVICE_MONITORING_NOTIFICATION_TOPIC_NAME)
 
     logger.debug("JMS Topic : " + prolineNotificationTopic)
 
@@ -79,7 +80,7 @@ class MonitoringTopicPublisherRunner(connection: Connection) extends IServiceMon
           }
 
           /* Alway set nodeId Property on broadcast messages */
-          message.setStringProperty(JMSConstants.PROLINE_NODE_ID_KEY, nodeId)
+          message.setStringProperty(PROLINE_NODE_ID_KEY, nodeId)
 
           message.setText(topicMessage.content)
 

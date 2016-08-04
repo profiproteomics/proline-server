@@ -4,21 +4,25 @@ import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
-import scala.annotation.elidable
-import scala.annotation.elidable.ASSERTION
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
-import com.typesafe.scalalogging.LazyLogging
-import fr.profi.util.StringUtils
-import fr.proline.jms.ServiceEvent
-import fr.proline.jms.ServiceRunner
-import fr.proline.jms.util.IServiceMonitoringNotifier
+
 import javax.jms.Message
 import javax.jms.MessageProducer
 import javax.jms.Session
 import javax.jms.TextMessage
-import fr.proline.jms.util.JMSConstants
+
+import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
+import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
+import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
+import com.typesafe.scalalogging.LazyLogging
+
+import org.hornetq.api.jms.HornetQJMSConstants
+
+import fr.profi.util.StringUtils
+import fr.proline.jms.ServiceEvent
+import fr.proline.jms.ServiceRunner
+import fr.proline.jms.util.IServiceMonitoringNotifier
+import fr.proline.jms.util.JMSConstants._
+
 
 /**
  * JMS Service to get a resource on Proline Server or at least Node side as a Stream. Value is returned in BytesMessage
@@ -32,13 +36,16 @@ class ResourceService extends LazyLogging {
   val GET_RESOURCE_AS_STREAM_METHOD = "get_resource_as_stream"
   val FILE_PATH_PARAM_KEY = "file_path"
 
-  val JMS_HORNET_Q_INPUT_STREAM_KEY = "JMS_HQ_InputStream"
-
   val serviceName = "proline/misc/ResourceService"
 
   /* About the same code as ServiceRunner.handleMessage() but can return either a JMS BytesMessage with JMS_HQ_InputStream property 
      either a JMS TextMessage containing a standard JSON-RPC Response string (in case of service or file error) */
-  def handleMessage(session: Session, message: Message, replyProducer: MessageProducer, serviceMonitoringNotifier: IServiceMonitoringNotifier) {
+  def handleMessage(
+    session: Session,
+    message: Message,
+    replyProducer: MessageProducer,
+    serviceMonitoringNotifier: IServiceMonitoringNotifier
+  ): Unit = {
     require((session != null), "Session is null")
     require((message != null), "Message is null")
     require((replyProducer != null), "ReplyProducer is null")
@@ -49,31 +56,40 @@ class ResourceService extends LazyLogging {
 
     var responseJMSMessage: Message = null
 
+    var jsonRequest :JSONRPC2Request = null
     var jsonRequestId: java.lang.Object = null
     var jsonResponse: JSONRPC2Response = new JSONRPC2Response(JSONRPC2Error.INVALID_REQUEST, jsonRequestId)
-
+    var serviceVersionOp : Option[String] = None
+    var serviceSourceOp : Option[String] = None
+  
     try {
 
       if (message.isInstanceOf[TextMessage]) {
         val requestString = message.asInstanceOf[TextMessage].getText
 
         /* Parse JSON Request */
-        val jsonRequest = JSONRPC2Request.parse(requestString)
-
+        jsonRequest = JSONRPC2Request.parse(requestString)
         jsonRequestId = jsonRequest.getID
-
         jsonResponse.setID(jsonRequestId)
 
         if (Thread.interrupted()) {
           val errorMessage = "Thread interrupted before calling Service [" + serviceName + ']'
           logger.warn(errorMessage)
 
-          jsonResponse.setError(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, errorMessage))
+          jsonResponse.setError(ServiceRunner.buildJSONRPC2Error(SERVICE_ERROR_CODE, errorMessage))
         } else {
           val jmsMessageContext = ServiceRunner.buildJMSMessageContext(message)
-
-          val serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_START)
-
+          
+          val serviceVersion = message.getStringProperty(PROLINE_SERVICE_VERSION_KEY)
+          if  (StringUtils.isNotEmpty(serviceVersion))
+            serviceVersionOp =  Some(serviceVersion) 
+            
+          val serviceSource = message.getStringProperty(PROLINE_SERVICE_SOURCE_KEY)          
+          if  (StringUtils.isNotEmpty(serviceSource)) 
+            serviceSourceOp = Some(serviceSource) 
+          
+          val serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_START, serviceVersionOp, serviceSourceOp)          
+          serviceEvent.setComplementaryInfo(requestString)
           serviceMonitoringNotifier.sendNotification(serviceEvent.toJSONRPCNotification(), null)
 
           val resourceResult = service(session, jmsMessageContext, jsonRequest)
@@ -86,7 +102,7 @@ class ResourceService extends LazyLogging {
         val errorMessage = "Invalid ResourceService JMS Message type"
         logger.warn(errorMessage)
 
-        jsonResponse.setError(ServiceRunner.buildJSONRPC2Error(JMSConstants.MESSAGE_ERROR_CODE, errorMessage))
+        jsonResponse.setError(ServiceRunner.buildJSONRPC2Error(MESSAGE_ERROR_CODE, errorMessage))
       } // End if (JMS Message is a TextMessage)
 
     } catch {
@@ -96,7 +112,7 @@ class ResourceService extends LazyLogging {
         val errorMessage = "Error handling ResourceService JMS Message [" + jmsMessageId + ']'
         logger.error(errorMessage, t)
 
-        jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.MESSAGE_ERROR_CODE, errorMessage, t), jsonRequestId)
+        jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(MESSAGE_ERROR_CODE, errorMessage, t), jsonRequestId)
       }
 
     } finally {
@@ -110,7 +126,7 @@ class ResourceService extends LazyLogging {
         var serviceEvent: ServiceEvent = null
 
         if (responseJMSMessage == null) {
-          serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_FAIL)
+          serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_FAIL, serviceVersionOp, serviceSourceOp)
 
           responseJMSMessage = session.createTextMessage()
           responseJMSMessage.setJMSCorrelationID(jmsMessageId)
@@ -121,10 +137,11 @@ class ResourceService extends LazyLogging {
 
           responseJMSMessage.asInstanceOf[TextMessage].setText(jsonResponse.toJSONString())
         } else {
-          serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_SUCCESS)
+          serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_SUCCESS, serviceVersionOp, serviceSourceOp)
         }
 
         /* Notify */
+        serviceEvent.setComplementaryInfo(jsonRequest.toJSONString())
         serviceMonitoringNotifier.sendNotification(serviceEvent.toJSONRPCNotification(), null)
 
         logger.debug("Sending JMS Response to ResourceService JMS Message [" + jmsMessageId + "] on Destination [" + replyDestination + ']')
@@ -174,7 +191,7 @@ class ResourceService extends LazyLogging {
     }
 
     if (StringUtils.isEmpty(filePath)) {
-      jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, "Invalid \"" + FILE_PATH_PARAM_KEY + "\" JSON-RPC named param"), jsonRequestId)
+      jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(SERVICE_ERROR_CODE, "Invalid \"" + FILE_PATH_PARAM_KEY + "\" JSON-RPC named param"), jsonRequestId)
     } else {
       val file = new File(filePath)
 
@@ -190,7 +207,7 @@ class ResourceService extends LazyLogging {
 
           logger.debug("Sending InputStream from File [" + absolutePathname + "] to JMS BytesMessage")
 
-          responseJMSMessage.setObjectProperty(JMS_HORNET_Q_INPUT_STREAM_KEY, br)
+          responseJMSMessage.setObjectProperty(HornetQJMSConstants.JMS_HORNETQ_INPUT_STREAM, br)
         } catch {
 
           case ex: Exception => {
@@ -205,14 +222,14 @@ class ResourceService extends LazyLogging {
               }
             }
 
-            jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, errorMessage, ex), jsonRequestId)
+            jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(SERVICE_ERROR_CODE, errorMessage, ex), jsonRequestId)
           }
 
         }
 
-        // br is closed by HornetQ JMS implementation ?        
+        // br is closed by HornetQ JMS implementation ?
       } else {
-        jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, "Unknown [" + filePath + "] file pathname"), jsonRequestId)
+        jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(SERVICE_ERROR_CODE, "Unknown [" + filePath + "] file pathname"), jsonRequestId)
       }
 
     }

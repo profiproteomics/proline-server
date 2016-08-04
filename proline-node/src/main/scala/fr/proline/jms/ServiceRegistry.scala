@@ -2,95 +2,90 @@ package fr.proline.jms
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+
 import fr.profi.util.StringUtils
-import fr.proline.jms.service.api.IRemoteService
+import fr.proline.jms.service.api.IRemoteServiceIdentity
 import fr.proline.jms.service.api.ISingleThreadedService
 import fr.proline.jms.service.misc.ResourceService
 
 /**
- * Singleton Registry providing all {{{IRemoteService}}} instances.
+ * Singleton Registry providing all {{{IRemoteServiceIdentity}}} instances.
  * Note :
  * - Services must be stateless, multiple threads can share the same service instance (like a Servlet container).
  * - Accesses to the Registry collection itself are thread safe (synchronized by the collection implicit lock).
  */
 object ServiceRegistry {
 
-
   val resourceService = new ResourceService() // Unique instance of ResourceService
 
-  // MultiMap
-  private val m_servicesPerName = mutable.Map.empty[String, ArrayBuffer[IRemoteService]]
+  // MultiMap @GuardedBy("m_servicesByName_lock")
+  private val m_servicesByName = mutable.Map.empty[String, ArrayBuffer[IRemoteServiceIdentity]]
+  private val m_servicesByName_lock = new Object()
 
-  def addService(service: IRemoteService) {
-    require((service != null), "Service is null")
-    require(!StringUtils.isEmpty(service.serviceName), "Invalid Service name")
-    require(!StringUtils.isEmpty(service.serviceVersion), "Invalid Service version")
+  def addService(service: IRemoteServiceIdentity) {
+    require(service != null, "service is null")
+    require(StringUtils.isNotEmpty(service.serviceName), "Invalid Service name")
+    require(StringUtils.isNotEmpty(service.serviceVersion), "Invalid Service version")
 
-    m_servicesPerName.synchronized {
-      val optionalList = m_servicesPerName.get(service.serviceName)
-
-      val servicesList = if (optionalList.isDefined) {
-        optionalList.get
-      } else {
-        val newList = ArrayBuffer.empty[IRemoteService]
-        m_servicesPerName.put(service.serviceName, newList)
-        newList
-      }
+    m_servicesByName_lock.synchronized {
+      val services = m_servicesByName.getOrElseUpdate(service.serviceName, ArrayBuffer() )
 
       /* Check duplicate same version or multiple default version */
-      for (currentService <- servicesList) {
+      for (existingService <- services) {
 
-        if (service.serviceVersion.equals(currentService.serviceVersion)) {
-          throw new IllegalArgumentException("Sevice [" + service.serviceName + "] already present with version [" + service.serviceVersion + ']')
-        }
+        require(
+          service.serviceVersion != existingService.serviceVersion,
+          s"Service '${service.serviceName}' already present with version '${service.serviceVersion}'"
+        )
 
-        if (service.defaultVersion && currentService.defaultVersion) {
-          throw new IllegalArgumentException("Sevice [" + service.serviceName + "] already present with a default version")
-        }
+        require(
+          (service.isDefaultVersion && existingService.isDefaultVersion) == false,
+          s"Service '${service.serviceName}' already present with a default version"
+        )
 
       }
 
-      servicesList += service
-    } // End of synchronized block on m_servicesPerName
+      services += service
+      
+    } // End of synchronized block on m_servicesByName_lock
 
   }
 
   /**
    * If {{{serviceVersion}}} is null or empty, return default Service version for given {{{serviceName}}}.
    */
-  def getService(serviceName: String, serviceVersion: String): Option[IRemoteService] = {
-    require(!StringUtils.isEmpty(serviceName), "Invalid Service name")
+  def getService(serviceName: String, serviceVersion: String): Option[IRemoteServiceIdentity] = {
+    require(StringUtils.isNotEmpty(serviceName), "Invalid Service name")
 
-    m_servicesPerName.synchronized {
-      val optionalList = m_servicesPerName.get(serviceName)
+    m_servicesByName_lock.synchronized {
+      val servicesOpt = m_servicesByName.get(serviceName)
 
-      if (optionalList.isDefined) {
-        val servicesList = optionalList.get
+      if (servicesOpt.isDefined) {
+        val services = servicesOpt.get
 
         if (StringUtils.isEmpty(serviceVersion)) {
-          servicesList.find(svc => svc.defaultVersion)
+          services.find(_.isDefaultVersion)
         } else {
-          servicesList.find(svc => serviceVersion.equals(svc.serviceVersion))
+          services.find(svc => svc.serviceVersion == serviceVersion)
         }
 
       } else {
         None
       }
 
-    } // End of synchronized block on m_servicesPerName
+    } // End of synchronized block on m_servicesByName
 
   }
 
-  def getParallelizableServices(): List[IRemoteService] = {
-    val buff = ArrayBuffer.empty[IRemoteService]
+  def getParallelizableServices(): Seq[IRemoteServiceIdentity] = {
+    val buff = ArrayBuffer.empty[IRemoteServiceIdentity]
 
-    m_servicesPerName.synchronized {
+    m_servicesByName_lock.synchronized {
 
-      for (entry <- m_servicesPerName) {
-        val servicesList = entry._2
+      for ( (serviceName,services) <- m_servicesByName) {
 
-        if ((servicesList != null) && !servicesList.isEmpty) {
-          for (service <- servicesList) {
+        if (services != null && services.nonEmpty) {
+          for (service <- services) {
 
             if (!service.isInstanceOf[ISingleThreadedService]) {
               buff += service
@@ -102,76 +97,29 @@ object ServiceRegistry {
 
       } // End loop for each entry
 
-    } // End of synchronized block on m_servicesPerName
+    } // End of synchronized block on m_servicesByName
 
     /* Return an immutable List */
-    buff.toList
-  }
-
-  def getSingleThreadedServices(): Map[String, List[IRemoteService]] = {
-    val mutableMap = mutable.Map.empty[String, ArrayBuffer[IRemoteService]]
-
-    m_servicesPerName.synchronized {
-
-      for (entry <- m_servicesPerName) {
-        val servicesList = entry._2
-
-        if ((servicesList != null) && !servicesList.isEmpty) {
-          for (service <- servicesList) {
-
-            if (service.isInstanceOf[ISingleThreadedService]) {
-              val optionalList = mutableMap.get(service.serviceName)
-
-              val servicesList = if (optionalList.isDefined) {
-                optionalList.get
-              } else {
-                val newList = ArrayBuffer.empty[IRemoteService]
-                mutableMap.put(service.serviceName, newList)
-                newList
-              }
-
-              /* Version consistency already checked by addService() */
-
-              servicesList += service
-            }
-
-          } // End loop for each service
-
-        } // End if (servicesList is not empty)
-
-      } // End loop for each entry
-
-    } // End of synchronized block on m_servicesPerName
-
-    /* Return an immutable Map of (String, immutable List) */
-    (mutableMap.mapValues(svcs => svcs.toList)).toMap
+    buff
   }
   
-def getSingleThreadedServicesByThreadIdent(): Map[String, List[IRemoteService]] = {
-    val mutableMap = mutable.Map.empty[String, ArrayBuffer[IRemoteService]]
+  protected def getSingleThreadedServiceByKey(singleThreadedServiceToKey: ISingleThreadedService => String): Map[String, Seq[ISingleThreadedService]] = {
+    val singleThreadedServicesByName = mutable.Map.empty[String, ArrayBuffer[ISingleThreadedService]]
 
-    m_servicesPerName.synchronized {
+    m_servicesByName_lock.synchronized {
 
-      for (entry <- m_servicesPerName) {
-        val servicesList = entry._2
+      for ( (serviceName,services) <- m_servicesByName) {
 
-        if ((servicesList != null) && !servicesList.isEmpty) {
-          for (service <- servicesList) {
+        if ((services != null) && !services.isEmpty) {
+          for (service <- services) {
 
             if (service.isInstanceOf[ISingleThreadedService]) {
-              val optionalList = mutableMap.get(service.asInstanceOf[ISingleThreadedService].singleThreadIdent)
-
-              val servicesList = if (optionalList.isDefined) {
-                optionalList.get
-              } else {
-                val newList = ArrayBuffer.empty[IRemoteService]
-                mutableMap.put(service.asInstanceOf[ISingleThreadedService].singleThreadIdent, newList)
-                newList
-              }
-
-              /* Version consistency already checked by addService() */
-
-              servicesList += service
+                val singleThreadedService = service.asInstanceOf[ISingleThreadedService]
+                // Append this service to the the singleThreadedServicesByName map
+                // Note: version consistency has already been checked in the addService() method
+                val key = singleThreadedServiceToKey(singleThreadedService)
+                singleThreadedServicesByName.getOrElseUpdate(key, ArrayBuffer()) += singleThreadedService
+             
             }
 
           } // End loop for each service
@@ -180,10 +128,18 @@ def getSingleThreadedServicesByThreadIdent(): Map[String, List[IRemoteService]] 
 
       } // End loop for each entry
 
-    } // End of synchronized block on m_servicesPerName
+    } // End of synchronized block on m_servicesByName
 
-    /* Return an immutable Map of (String, immutable List) */
-    (mutableMap.mapValues(svcs => svcs.toList)).toMap
+    /* Return an immutable Map of (String, immutable Seq) */
+    singleThreadedServicesByName.toMap
+  }
+
+  def getSingleThreadedServicesByName(): Map[String, Seq[ISingleThreadedService]] = {
+    getSingleThreadedServiceByKey( singleThreadedService => singleThreadedService.serviceName )
+  }
+  
+  def getSingleThreadedServicesByThreadIdent(): Map[String, Seq[ISingleThreadedService]] = {
+    getSingleThreadedServiceByKey( singleThreadedService => singleThreadedService.singleThreadIdent )
   }
 
 }

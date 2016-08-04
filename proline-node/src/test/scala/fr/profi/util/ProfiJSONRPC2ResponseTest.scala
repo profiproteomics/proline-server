@@ -1,4 +1,4 @@
-package fr.proline.jms.util.jsonrpc
+package fr.profi.util.jsonrpc
 
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

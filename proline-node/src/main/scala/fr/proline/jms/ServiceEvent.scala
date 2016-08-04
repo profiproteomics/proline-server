@@ -6,6 +6,8 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Notification
 import fr.profi.util.StringUtils
+import javax.jms.TextMessage
+import com.thetransactioncompany.jsonrpc2.JSONRPC2Message
 
 object ServiceEvent {
 
@@ -19,6 +21,12 @@ object ServiceEvent {
   val JSON_RPC_REQUEST_ID_KEY = "json_rpc_request_id"
 
   val SERVICE_NAME_KEY = "service_name"
+  
+  val SERVICE_VERSION_KEY = "service_version"
+  
+  val SERVICE_SOURCE_KEY = "service_source"
+  
+  val SERVICE_MORE_INFO ="complementary_info"
 
   val EVENT_TYPE = "event_type"
 
@@ -27,10 +35,9 @@ object ServiceEvent {
   val EVENT_SUCCESS = "Success"
 
   val EVENT_FAIL = "Fail"
-
 }
 
-case class ServiceEvent(requestJMSMessageId: String, jsonRPCRequestId: java.lang.Object, serviceName: String, eventType: String) {
+case class ServiceEvent(requestJMSMessageId: String, jsonRPCRequestId: java.lang.Object, serviceName: String, eventType: String, serviceVersion : Option[String] = None, serviceSource: Option[String] = None) {
 
   import ServiceEvent._
 
@@ -39,8 +46,16 @@ case class ServiceEvent(requestJMSMessageId: String, jsonRPCRequestId: java.lang
 
   require(!StringUtils.isEmpty(eventType), "Invalid eventType")
 
+  private var m_complementary_info : String = null 
   private val m_eventTimestamp = new Date()
 
+  def setComplementaryInfo(fullInfo : String){
+    m_complementary_info = fullInfo
+  }
+  
+  def getComplementaryInfo = m_complementary_info;
+  
+  
   def getEventTimestamp() = {
     (m_eventTimestamp.clone()).asInstanceOf[Date]
   }
@@ -53,11 +68,20 @@ case class ServiceEvent(requestJMSMessageId: String, jsonRPCRequestId: java.lang
     if (jsonRPCRequestId != null) {
       namedParams.put(JSON_RPC_REQUEST_ID_KEY, jsonRPCRequestId)
     }
+    
 
-    if (!StringUtils.isEmpty(serviceName)) {
+    if (StringUtils.isNotEmpty(serviceName)) {
       namedParams.put(SERVICE_NAME_KEY, serviceName)
     }
-
+    if (serviceSource.isDefined) {
+      namedParams.put(SERVICE_SOURCE_KEY, serviceSource.get)
+    }
+    if (serviceVersion.isDefined) {
+      namedParams.put(SERVICE_VERSION_KEY,serviceVersion.get)
+    }
+    if(StringUtils.isNotEmpty(m_complementary_info))
+      namedParams.put(SERVICE_MORE_INFO,m_complementary_info)
+      
     namedParams.put(EVENT_TYPE, eventType)
 
     val notification = new JSONRPC2Notification(NOTIFY_METHOD_NAME)
