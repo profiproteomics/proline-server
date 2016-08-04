@@ -16,7 +16,10 @@
     <version.path>${project.basedir}/src/main/scala/fr/proline/cortex</version.path>
     <core.version>1.0.0-SNAPSHOT</core.version> <!-- Snapshot Trunk version -->
   </properties>
-
+  
+  <scm>
+  	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-JMS-Components/Proline-Cortex/branches/0.3.0.c_Merge_0.3.0.a&amp;0.3.0.b</connection>
+  </scm>
   <dependencies>
 
     <!-- Scala -->
@@ -221,9 +224,18 @@
     </dependency>
     
   </dependencies>
-
+    <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>psidev.psi.tools</groupId>
+        <artifactId>xxindex</artifactId>
+        <version>0.14</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  
   <build>
-    
+
     <pluginManagement>
       <plugins>
         <!-- For Eclipse build -->
@@ -368,6 +380,29 @@
         </configuration>
       </plugin>
 
+
+ 	<!-- Phase "generate-resources" unzip hornetQ -->
+ 	   <plugin>
+   		  <groupId>org.apache.maven.plugins</groupId>
+	      <artifactId>maven-antrun-plugin</artifactId>
+	      <version>1.8</version>
+	      <executions>
+	         <execution>
+	         	<id>0</id>
+	            <phase>generate-resources</phase>
+	            <configuration>
+	               <tasks>
+	                  <echo message="unzipping hornetQ distribution" />
+	                  <unzip src="assembly/hornetq_light-2.4.0.Final.zip" dest="${project.build.directory}/" />
+	               </tasks>
+	            </configuration>
+	            <goals>
+	               <goal>run</goal>
+	            </goals>
+	         </execution>
+	      </executions>
+	   </plugin>	
+			
       <!-- Phase "package" Copy Jar and native dependencies to lib/ directory -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -434,7 +469,7 @@
         <!-- Version inherited from ProFI-Pom -->
         <configuration>
           <descriptors>
-            <descriptor>assembly/assembly.xml</descriptor>
+            <descriptor>${assembly.file.path}</descriptor>
           </descriptors>
         </configuration>
       </plugin>
@@ -442,18 +477,27 @@
     </plugins>
   </build>
 
-  <scm>
-  	<connection>scm:svn:ttps://bioproj.extra.cea.fr/svn/proline/Proline-JMS-Components/Proline-Cortex/branches/0.3.0.c_Merge_0.3.0.a&amp;0.3.0.b</connection>
-  </scm>
   
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>psidev.psi.tools</groupId>
-        <artifactId>xxindex</artifactId>
-        <version>0.14</version>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-  
+	<profiles>
+
+		<profile>
+			<!-- Full Profile : create assembly with hornetQ stand alone Server -->
+			<id>full_distrib</id>
+			<properties>
+				<assembly.file.path>assembly/assembly_full.xml</assembly.file.path>
+			</properties>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+		</profile> <!-- End of full_distrib profile -->
+
+		<profile>
+			<!-- Cortex Profile: create assembly with ProlineCortex only -->
+			<id>cortex_distrib</id>
+			<properties>
+				<assembly.file.path>assembly/assembly.xml</assembly.file.path>
+			</properties>
+
+		</profile>
+	</profiles>
 </project>
