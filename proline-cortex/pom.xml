@@ -19,15 +19,17 @@
 
   <dependencies>
 
+    <!-- Scala -->
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
+      <!-- Version inherited from ProFI-Pom ${scala-library.version} -->
     </dependency>
 
     <!-- Logging -->
     <dependency>
       <groupId>com.typesafe.scala-logging</groupId>
-        <artifactId>scala-logging_${scala.version}</artifactId>
+      <artifactId>scala-logging_${scala.version}</artifactId>
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
     
@@ -39,29 +41,31 @@
     </dependency>
 
     <!-- JMS Spec 2.0 + HornetQ JMS client + Netty (versions checked 10 july 2014) -->
+    <!-- TODO: remove me because we depend on Proline-Cortex-Node -->
     <dependency>
       <groupId>org.jboss.spec.javax.jms</groupId>
-	  <artifactId>jboss-jms-api_2.0_spec</artifactId>
-	  <version>1.0.0.Final</version>
+      <artifactId>jboss-jms-api_2.0_spec</artifactId>
+      <version>1.0.0.Final</version>
     </dependency>
     <dependency>
-	  <groupId>org.hornetq</groupId>
-	  <artifactId>hornetq-jms-client</artifactId>
-	  <version>2.4.1.Final</version>
+      <groupId>org.hornetq</groupId>
+      <artifactId>hornetq-jms-client</artifactId>
+      <version>2.4.1.Final</version>
     </dependency>
     <dependency>
-	  <groupId>org.hornetq</groupId>
-	  <artifactId>hornetq-core-client</artifactId>
-	  <version>2.4.1.Final</version>
+      <groupId>org.hornetq</groupId>
+      <artifactId>hornetq-core-client</artifactId>
+      <version>2.4.1.Final</version>
     </dependency>
+    
+    <!-- HTTP layer -->
     <dependency>
 	  <groupId>io.netty</groupId>
       <artifactId>netty-all</artifactId>
       <version>4.0.20.Final</version>
     </dependency>
-     <!-- Logger facade -->
+     
     <!-- Serialization -->
-     <!-- Serialization -->
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
       <artifactId>jackson-module-scala_${scala.version}</artifactId>
@@ -92,8 +96,53 @@
       <artifactId>ProFI-Commons-Scala</artifactId>
       <version>0.5.0-SNAPSHOT</version>
     </dependency>
+    
+    <!-- sqlite4java (needed for mzDB-access) -->
+    <dependency>
+      <groupId>com.almworks.sqlite4java</groupId>
+      <artifactId>sqlite4java</artifactId>
+      <version>${sqlite4java.version}</version>
+    </dependency>
+    
+    <!-- Proline-Cortex components -->
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-Cortex-API</artifactId>
+      <version>0.3.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-Node</artifactId>
+      <version>0.2.0-SNAPSHOT</version>
+    </dependency>
 
-    <!-- Proline-Core Service layer -->
+    <!-- Proline-Core -->
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-Databases</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-ORM</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-OM</artifactId>
+      <version>${core.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>fr.profi</groupId>
+          <artifactId>mzdb-processing</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>Proline-DAL</artifactId>
+      <version>${core.version}</version>
+    </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-OMP</artifactId>
@@ -107,27 +156,24 @@
       <version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
     </dependency>
     
-    <!--  MSDiag -->
-	<dependency>
-    	<groupId>fr.proline</groupId>
-     	<artifactId>PM-MSDiag</artifactId>
-	  	<version>0.5.0-SNAPSHOT</version>
-	</dependency>
-	
-	<dependency>
+    <!-- Proline Modules for result files import -->
+    <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>PM-MascotParser</artifactId>
       <version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
       <scope>runtime</scope>
     </dependency>
-
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>PM-MaxQuantParser</artifactId>
+      <version>0.1.0-SNAPSHOT</version>
+    </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>PM-OmssaParser</artifactId>
       <version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
       <scope>runtime</scope>
     </dependency>
-    
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>PM-XtandemParser</artifactId>
@@ -135,71 +181,45 @@
       <scope>runtime</scope>
     </dependency>
     
+    <!-- Other Proline Modules -->
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>PM-DatasetExporter</artifactId>
+      <version>0.5.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>PM-FragmentMatchGenerator</artifactId>
+      <version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>PM-MSDiag</artifactId>
+      <version>0.5.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>PM-MzIdentML</artifactId>
+      <version>0.5.0-SNAPSHOT</version>
+    </dependency>
+  
     <!-- Test -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-core</artifactId>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <scope>test</scope>
     </dependency>
-
-    <dependency>
-    	<groupId>fr.proline</groupId>
-    	<artifactId>PM-DatasetExporter</artifactId>
-    	<version>0.5.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-    	<groupId>fr.proline</groupId>
-    	<artifactId>PM-MzIdentML</artifactId>
-    	<version>0.5.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-    	<groupId>fr.proline</groupId>
-     	<artifactId>PM-FragmentMatchGenerator</artifactId>
-     	<version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
-     </dependency>
-     
-    <dependency>
-    	<groupId>fr.proline</groupId>
-    	<artifactId>Proline-ORM</artifactId>
-    	<version>${core.version}</version>
-    </dependency>
-    <dependency>
-    	<groupId>fr.proline</groupId>
-    	<artifactId>Proline-DAL</artifactId>
-    	<version>${core.version}</version>
-    </dependency>
-    <dependency>
-    	<groupId>fr.proline</groupId>
-    	<artifactId>Proline-OM</artifactId>
-    	<version>${core.version}</version>
-    </dependency>
-    <dependency>
-    	<groupId>fr.proline</groupId>
-    	<artifactId>Proline-Databases</artifactId>
-    	<version>${core.version}</version>
-    </dependency>
-    <dependency>
-    	<groupId>fr.proline</groupId>
-    	<artifactId>Proline-Node</artifactId>
-    	<version>0.2.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-    	<groupId>fr.proline</groupId>
-    	<artifactId>PM-MaxQuantParser</artifactId>
-    	<version>0.1.0-SNAPSHOT</version>
-    </dependency>
+    
   </dependencies>
 
   <build>
@@ -333,7 +353,7 @@
             <phase>generate-sources</phase>
             <configuration>
 			<skip>false</skip>
-      	</configuration>            
+      	</configuration>
           </execution>
         </executions>
       </plugin>
@@ -381,27 +401,27 @@
               <outputDirectory>${project.build.directory}/lib</outputDirectory>
               <stripVersion>true</stripVersion>
               <overWriteIfNewer>true</overWriteIfNewer>
-          		<artifactItems>
-           			<artifactItem>
-              				<groupId>com.almworks.sqlite4java</groupId>
-               				<artifactId>sqlite4java-win32-x64</artifactId>
-               				<version>${sqlite4java.version}</version>
-               				<type>dll</type>
-               				<overWrite>true</overWrite>
-               				<outputDirectory>${project.build.directory}/lib</outputDirectory>
-             			</artifactItem>
-
-                		<artifactItem>
-                  			<groupId>com.almworks.sqlite4java</groupId>
-                  			<artifactId>libsqlite4java-linux-amd64</artifactId>
-                  			<version>${sqlite4java.version}</version>
-                  			<type>so</type>
-                  			<overWrite>true</overWrite>
-                  			<outputDirectory>${project.build.directory}/lib</outputDirectory>
-                		</artifactItem>
-
-              			</artifactItems>
-            		</configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>com.almworks.sqlite4java</groupId>
+                  <artifactId>sqlite4java-win32-x64</artifactId>
+                  <version>${sqlite4java.version}</version>
+                  <type>dll</type>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                </artifactItem>
+          
+                <artifactItem>
+                  <groupId>com.almworks.sqlite4java</groupId>
+                  <artifactId>libsqlite4java-linux-amd64</artifactId>
+                  <version>${sqlite4java.version}</version>
+                  <type>so</type>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                </artifactItem>
+          
+              </artifactItems>
+            </configuration>
           </execution>
 
         </executions>
@@ -423,15 +443,17 @@
   </build>
 
   <scm>
-  	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-JMS-Components/Proline-Cortex/trunk</connection>
+  	<connection>scm:svn:ttps://bioproj.extra.cea.fr/svn/proline/Proline-JMS-Components/Proline-Cortex/branches/0.3.0.c_Merge_0.3.0.a&amp;0.3.0.b</connection>
   </scm>
+  
   <dependencyManagement>
-  	<dependencies>
-  		<dependency>
-  			<groupId>psidev.psi.tools</groupId>
-  			<artifactId>xxindex</artifactId>
-  			<version>0.14</version>
-  		</dependency>
-  	</dependencies>
+    <dependencies>
+      <dependency>
+        <groupId>psidev.psi.tools</groupId>
+        <artifactId>xxindex</artifactId>
+        <version>0.14</version>
+      </dependency>
+    </dependencies>
   </dependencyManagement>
+  
 </project>
