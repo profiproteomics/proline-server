@@ -12,31 +12,19 @@ import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
 import fr.profi.util.jsonrpc.JSONRPC2MethodResult
 import fr.profi.util.reflect.FieldDescription
 
-object FileFormat extends EnhancedEnum {
+object ExportFileFormat extends EnhancedEnum {
   val MZIDENTML, TEMPLATED, PRIDE, SPECTRA_LIST = Value
 }
 
-object TemplateName extends EnhancedEnum {
+object ExportTemplateName extends EnhancedEnum {
   val ALL_PEP_MATCHES_XLSX, IRMA_LIKE_TSV, IRMA_LIKE_XLSX, IRMA_LIKE_FULL_XLSX, PROLINE_XLSX = Value
 }
 
-object OutputMode extends EnhancedEnum {
+object ExportOutputMode extends EnhancedEnum {
   val FILE, STREAM = Value
 }
 
-case class ResultSummaryIdentifier(
-  @FieldDescription(
-    content = "The ID of the project this result summary belongs to."
-  )
-  projectId: Long,
-
-  @FieldDescription(
-    content = "The ID of the result summary to export."
-  )
-  rsmId: Long
-)
-
-case class RsmIdentifier(
+case class ExportResultSummaryIdentifier(
 
   @FieldDescription(
     content = "The ID of the project this result summary belongs to."
@@ -46,7 +34,7 @@ case class RsmIdentifier(
   @FieldDescription(
     content = "The ID of the data set corresponding to the result summary being exported."
   )
-  dsId: Long,
+  dsId: Option[Long],
 
   @FieldDescription(
     content = "The ID of the result summary to export."
@@ -126,7 +114,7 @@ trait IExportResultSummaryServiceV1_0 extends IExportResultSummaryService with I
     object RSM_IDENTIFIER_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "rsm_identifier"
       val description = "A tuple containing the project id and the result summary id."
-      val scalaType = typeOf[Array[ResultSummaryIdentifier]]
+      val scalaType = typeOf[Array[ExportResultSummaryIdentifier]]
     }
   }
 }
@@ -162,7 +150,7 @@ trait IExportResultSummariesServiceV2_0 extends IExportResultSummaryService {
     object RSM_IDENTIFIERS_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "rsm_identifiers"
       val description = "A tuple containing the project id, the datasetId, and the result summary id."
-      val scalaType = typeOf[Array[RsmIdentifier]]
+      val scalaType = typeOf[Array[ExportResultSummaryIdentifier]]
     }
   }
 
