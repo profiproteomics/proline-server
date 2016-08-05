@@ -17,7 +17,6 @@ import fr.proline.cortex.util.fs.MountPointPathConverter
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
 import fr.proline.jms.service.api.ISingleThreadedService
 
-
 /**
  *  Define JMS Service which allows to creates a new quantitation and perform the corresponding data analysis.
  *
@@ -33,65 +32,64 @@ import fr.proline.jms.service.api.ISingleThreadedService
  *    Boolean for service run status
  */
 class Quantify extends AbstractRemoteProcessingService with IQuantifyService with LazyLogging with ISingleThreadedService {
-  
+
   /* JMS Service identification */
   // TODO: create an enumeration of singleThreadIdentifiers
-	val singleThreadIdent = "quantifyThread"
-	
-	def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
+  val singleThreadIdent = "quantifyThread"
 
-		require(paramsRetriever != null, "no parameter specified")
+  def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 
-		val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
-		val expDesign = deserialize[ExperimentalDesign](serialize(paramsRetriever.getMap(PROCESS_METHOD.EXPERIMENTAL_DESIGN_PARAM)))
-		val quantConfigAsMap = paramsRetriever.getMap(PROCESS_METHOD.QUANTITATION_CONFIG_PARAM)
-  
-		
-		val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId)  // Use JPA context
-		
-		// Register SQLRunProvider 
-		val scanSeqProvider = new SQLScanSequenceProvider(execCtx.getLCMSDbConnectionContext())
-		val lcMsRunProvider = new SQLRunProvider(
-				execCtx.getUDSDbConnectionContext(),
-				Some(scanSeqProvider),
-				Some(MountPointPathConverter)
-				)
-		val providerContext = ProviderDecoratedExecutionContext(execCtx) // Use Object factory
-		providerContext.putProvider(classOf[IRunProvider],lcMsRunProvider )
-  
-		var result = true
-		var quantiId = -1L
-		try {
-		  val quantifier = new Quantifier(
-			  executionContext = providerContext,
-			  name = paramsRetriever.getString(PROCESS_METHOD.NAME_PARAM),
-			  description = paramsRetriever.getString(PROCESS_METHOD.DESCRIPTION_PARAM),
-			  projectId = projectId,
-			  methodId = paramsRetriever.getLong(PROCESS_METHOD.METHOD_ID_PARAM),
-			  experimentalDesign = expDesign,
-			  quantConfigAsMap = quantConfigAsMap
-			)
-		  quantifier.run()
-    
-		  quantiId = quantifier.getQuantitationId
-			
-		} catch {
-			case ex: Exception => {
-				result = false
-				logger.error("Error running Quantify", ex)
-				val msg = if (ex.getCause() != null) { "Error running Quantify " + ex.getCause().getMessage() } else { "Error running Quantify " + ex.getMessage() }
-				throw new Exception(msg)
-			}
-		} finally {
-			try {
-				execCtx.closeAll()
-			} catch {
-				case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-			}
-		}
+    require(paramsRetriever != null, "no parameter specified")
 
-		return quantiId
-	}
+    val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
+    val expDesign = deserialize[ExperimentalDesign](serialize(paramsRetriever.getMap(PROCESS_METHOD.EXPERIMENTAL_DESIGN_PARAM)))
+    val quantConfigAsMap = paramsRetriever.getMap(PROCESS_METHOD.QUANTITATION_CONFIG_PARAM)
+
+    val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId) // Use JPA context
+
+    // Register SQLRunProvider 
+    val scanSeqProvider = new SQLScanSequenceProvider(execCtx.getLCMSDbConnectionContext())
+    val lcMsRunProvider = new SQLRunProvider(
+      execCtx.getUDSDbConnectionContext(),
+      Some(scanSeqProvider),
+      Some(MountPointPathConverter)
+    )
+    val providerContext = ProviderDecoratedExecutionContext(execCtx) // Use Object factory
+    providerContext.putProvider(classOf[IRunProvider], lcMsRunProvider)
+
+    var result = true
+    var quantiId = -1L
+    try {
+      val quantifier = new Quantifier(
+        executionContext = providerContext,
+        name = paramsRetriever.getString(PROCESS_METHOD.NAME_PARAM),
+        description = paramsRetriever.getString(PROCESS_METHOD.DESCRIPTION_PARAM),
+        projectId = projectId,
+        methodId = paramsRetriever.getLong(PROCESS_METHOD.METHOD_ID_PARAM),
+        experimentalDesign = expDesign,
+        quantConfigAsMap = quantConfigAsMap
+      )
+      quantifier.run()
+
+      quantiId = quantifier.getQuantitationId
+
+    } catch {
+      case ex: Exception => {
+        result = false
+        logger.error("Error running Quantify", ex)
+        val msg = if (ex.getCause() != null) { "Error running Quantify " + ex.getCause().getMessage() } else { "Error running Quantify " + ex.getMessage() }
+        throw new Exception(msg)
+      }
+    } finally {
+      try {
+        execCtx.closeAll()
+      } catch {
+        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
+      }
+    }
+
+    return quantiId
+  }
 }
 
 /**
@@ -113,68 +111,67 @@ class Quantify extends AbstractRemoteProcessingService with IQuantifyService wit
 // TODO: remove me because this version is now useless
 @deprecated
 class QuantifyV2_0 extends AbstractRemoteProcessingService with IQuantifyService with LazyLogging with ISingleThreadedService {
-  
-	/* JMS Service identification */
-	override val serviceVersion = "2.0"
-	override val isDefaultVersion = false
-	val singleThreadIdent = "quantifyThread"
-	
-	def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 
-		require(paramsRetriever != null, "no parameter specified")
+  /* JMS Service identification */
+  override val serviceVersion = "2.0"
+  override val isDefaultVersion = false
+  val singleThreadIdent = "quantifyThread"
 
-		val projectId = paramsRetriever.getLong("project_id")
-		val expDesign = deserialize[ExperimentalDesign](serialize(paramsRetriever.getMap("experimental_design")))
-//			val refRSMIdParam = paramsRetriever.getLong("ref_rsm_id")
-//			val refDSIdParam = paramsRetriever.getLong("ref_ds_id")
-		val quantConfigAsMap = paramsRetriever.getMap("quantitation_config")
-  
-		
-		val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId)  // Use JPA context
-		
-		// Register SQLRunProvider 
-		val scanSeqProvider = new SQLScanSequenceProvider(execCtx.getLCMSDbConnectionContext())
-		val lcMsRunProvider = new SQLRunProvider(
-				execCtx.getUDSDbConnectionContext(),
-				Some(scanSeqProvider),
-				Some(MountPointPathConverter)
-				)
-		val providerContext = ProviderDecoratedExecutionContext(execCtx) // Use Object factory
-		providerContext.putProvider(classOf[IRunProvider],lcMsRunProvider )
-  
-		var result = true
-		var quantiId = -1L
-		try {
-		  val quantifier = new Quantifier(
-			  executionContext = providerContext,
-			  name = paramsRetriever.getString("name"),
-			  description = paramsRetriever.getString("description"),
-			  projectId = projectId,
-			  methodId = paramsRetriever.getLong("method_id"),
-			  experimentalDesign = expDesign,
-			  quantConfigAsMap = quantConfigAsMap
-			  // note: previous fields refDSIdOp and refRSMIdOpmust be provided using the expDesign
-			  // (MasterQuantChannel identResultSummaryId and identDatasetId)
-			)
-		  quantifier.run()
-    
-		  quantiId = quantifier.getQuantitationId
-			
-		} catch {
-			case ex: Exception => {
-				result = false
-				logger.error("Error running Quantify", ex)
-				val msg = if (ex.getCause() != null) { "Error running Quantify " + ex.getCause().getMessage() } else { "Error running Quantify " + ex.getMessage() }
-				throw new Exception(msg)
-			}
-		} finally {
-			try {
-				execCtx.closeAll()
-			} catch {
-				case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-			}
-		}
+  def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 
-		return quantiId
-	}
+    require(paramsRetriever != null, "no parameter specified")
+
+    val projectId = paramsRetriever.getLong("project_id")
+    val expDesign = deserialize[ExperimentalDesign](serialize(paramsRetriever.getMap("experimental_design")))
+    // val refRSMIdParam = paramsRetriever.getLong("ref_rsm_id")
+    // val refDSIdParam = paramsRetriever.getLong("ref_ds_id")
+    val quantConfigAsMap = paramsRetriever.getMap("quantitation_config")
+
+    val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId) // Use JPA context
+
+    // Register SQLRunProvider 
+    val scanSeqProvider = new SQLScanSequenceProvider(execCtx.getLCMSDbConnectionContext())
+    val lcMsRunProvider = new SQLRunProvider(
+      execCtx.getUDSDbConnectionContext(),
+      Some(scanSeqProvider),
+      Some(MountPointPathConverter)
+    )
+    val providerContext = ProviderDecoratedExecutionContext(execCtx) // Use Object factory
+    providerContext.putProvider(classOf[IRunProvider], lcMsRunProvider)
+
+    var result = true
+    var quantiId = -1L
+    try {
+      val quantifier = new Quantifier(
+        executionContext = providerContext,
+        name = paramsRetriever.getString("name"),
+        description = paramsRetriever.getString("description"),
+        projectId = projectId,
+        methodId = paramsRetriever.getLong("method_id"),
+        experimentalDesign = expDesign,
+        quantConfigAsMap = quantConfigAsMap
+      // note: previous fields refDSIdOp and refRSMIdOpmust be provided using the expDesign
+      // (MasterQuantChannel identResultSummaryId and identDatasetId)
+      )
+      quantifier.run()
+
+      quantiId = quantifier.getQuantitationId
+
+    } catch {
+      case ex: Exception => {
+        result = false
+        logger.error("Error running Quantify", ex)
+        val msg = if (ex.getCause() != null) { "Error running Quantify " + ex.getCause().getMessage() } else { "Error running Quantify " + ex.getMessage() }
+        throw new Exception(msg)
+      }
+    } finally {
+      try {
+        execCtx.closeAll()
+      } catch {
+        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
+      }
+    }
+
+    return quantiId
+  }
 }

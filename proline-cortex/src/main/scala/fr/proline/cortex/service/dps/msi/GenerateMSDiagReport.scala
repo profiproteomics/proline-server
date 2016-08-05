@@ -24,47 +24,47 @@ import fr.proline.module.quality.msdiag.service.MSDiagReportGenerator
 
 class GenerateMSDiagReport extends AbstractRemoteProcessingService with IGenerateMSDiagReportService with LazyLogging {
 
-	def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
-		logger.debug("GenerateMSDiagReport JMS WS: running doProcess")
-		require((paramsRetriever != null), "no parameter specified")
+  def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
+    logger.debug("GenerateMSDiagReport JMS WS: running doProcess")
+    require((paramsRetriever != null), "no parameter specified")
 
-		val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
-		val resultSetId = paramsRetriever.getLong(PROCESS_METHOD.RESULT_SET_ID_PARAM)
-		val msdiagSettingsAsOptStr = Option(paramsRetriever.getOptMap(PROCESS_METHOD.MSDIAG_SETTINGS_PARAM, true, null)).map(serialize(_))
-		val msdiagSettings = msdiagSettingsAsOptStr.map(deserialize[Map[String, Any]](_))
-  
-		val execCtx =  DbConnectionHelper.createJPAExecutionContext(projectId) // Use JPA context
-		
-		logger.debug("GenerateMSDiagReport WS: going to launch MSDiag generator")
+    val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
+    val resultSetId = paramsRetriever.getLong(PROCESS_METHOD.RESULT_SET_ID_PARAM)
+    val msdiagSettingsAsOptStr = Option(paramsRetriever.getOptMap(PROCESS_METHOD.MSDIAG_SETTINGS_PARAM, true, null)).map(serialize(_))
+    val msdiagSettings = msdiagSettingsAsOptStr.map(deserialize[Map[String, Any]](_))
 
-		val msDiagReportGenerator = new MSDiagReportGenerator(
-			execCtx,
-			resultSetId,
-			msdiagSettings
-		)
-		logger.debug("GenerateMSDiagReport WS: report generated !")
-		
-		/// ************************************
-		var result = true
-		try {
-			result = msDiagReportGenerator.runService
-		} catch {
-			case ex: Exception => {
-				result = false
-				logger.error("Error running MSDiag data Generator", ex)
-				val msg = if (ex.getCause() != null) "Error running MSDiag report Generator " + ex.getCause().getMessage()
-						else "Error running MS Diag report Generator " + ex.getMessage()
-				throw new Exception(msg)
-			}
-		} finally {
-			try {
-				execCtx.closeAll()
-			} catch {
-				case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-			}
-		}
+    val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId) // Use JPA context
 
-		msDiagReportGenerator.resultHashMapJson
-	}
+    logger.debug("GenerateMSDiagReport WS: going to launch MSDiag generator")
+
+    val msDiagReportGenerator = new MSDiagReportGenerator(
+      execCtx,
+      resultSetId,
+      msdiagSettings
+    )
+    logger.debug("GenerateMSDiagReport WS: report generated !")
+
+    /// ************************************
+    var result = true
+    try {
+      result = msDiagReportGenerator.runService
+    } catch {
+      case ex: Exception => {
+        result = false
+        logger.error("Error running MSDiag data Generator", ex)
+        val msg = if (ex.getCause() != null) "Error running MSDiag report Generator " + ex.getCause().getMessage()
+        else "Error running MS Diag report Generator " + ex.getMessage()
+        throw new Exception(msg)
+      }
+    } finally {
+      try {
+        execCtx.closeAll()
+      } catch {
+        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
+      }
+    }
+
+    msDiagReportGenerator.resultHashMapJson
+  }
 
 }

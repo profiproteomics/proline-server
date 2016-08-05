@@ -55,6 +55,8 @@ import fr.proline.jms.service.api.AbstractRemoteProcessingService
  */
 object ValidateResultSet {
   
+  import ValidateResultSetService.PROCESS_METHOD._
+  
   def parseValidationConfig(paramsRetriever: NamedParamsRetriever): ValidationConfig = {
 
     // val pepMatchFilters =  .parsePepMatchFilters(params,targetRS )
@@ -63,7 +65,7 @@ object ValidateResultSet {
     // Create a default TD analyzer 
     val tdAnalyzer: Option[ITargetDecoyAnalyzer] = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED))
     val pepMatchValidator = parsePepMatchValidator(paramsRetriever, tdAnalyzer)
-    val pepSetScoring = Option(paramsRetriever.getOptString(ValidateResultSetService.PROCESS_METHOD.PEP_SET_SCORE_TYPE_PARAM, true, null)).map(PepSetScoring.withName(_))
+    val pepSetScoring = Option(paramsRetriever.getOptString(PEP_SET_SCORE_TYPE_PARAM, true, null)).map(PepSetScoring.withName(_))
     val protSetFilters = parseProtSetFilters(paramsRetriever)
     val protSetValidator = parseProtSetValidator(paramsRetriever)
 
@@ -86,8 +88,8 @@ object ValidateResultSet {
   }
 
   def parsePepMatchFilters(params: NamedParamsRetriever): Option[Seq[IPeptideMatchFilter]] = {
-    if (params.hasParam(ValidateResultSetService.PROCESS_METHOD.PEP_MATCH_FILTERS_PARAM)) {
-      val pepMatchFiltersConfigs = params.getList(ValidateResultSetService.PROCESS_METHOD.PEP_MATCH_FILTERS_PARAM).toArray.map(parseFilterConfig(_))
+    if (params.hasParam(PEP_MATCH_FILTERS_PARAM)) {
+      val pepMatchFiltersConfigs = params.getList(PEP_MATCH_FILTERS_PARAM).toArray.map(parseFilterConfig(_))
 
       Some(pepMatchFiltersConfigs.map(fc => {
         val nextFilter = BuildPeptideMatchFilter(fc.parameter, fc.threshold.asInstanceOf[AnyVal])
@@ -105,9 +107,9 @@ object ValidateResultSet {
 
   // def parsePepMatchValidator(params: NamedParamsRetriever, tdAnalyzer: Option[ITargetDecoyAnalyzer], targetRS: ResultSet): Option[IPeptideMatchValidator] = {
   def parsePepMatchValidator(params: NamedParamsRetriever, tdAnalyzer: Option[ITargetDecoyAnalyzer]): Option[IPeptideMatchValidator] = {
-    if (params.hasParam(ValidateResultSetService.PROCESS_METHOD.PEP_MATCH_VALIDATOR_CONFIG_PARAM)) {
+    if (params.hasParam(PEP_MATCH_VALIDATOR_CONFIG_PARAM)) {
 
-      val pepMatchValidatorConfig = parsePepMatchValidatorConfig(params.getMap(ValidateResultSetService.PROCESS_METHOD.PEP_MATCH_VALIDATOR_CONFIG_PARAM))
+      val pepMatchValidatorConfig = parsePepMatchValidatorConfig(params.getMap(PEP_MATCH_VALIDATOR_CONFIG_PARAM))
 
       val pepMatchValidationFilter = if (pepMatchValidatorConfig.expectedFdr.isDefined) {
         BuildOptimizablePeptideMatchFilter(pepMatchValidatorConfig.parameter)
@@ -129,8 +131,8 @@ object ValidateResultSet {
   }
 
   def parseProtSetFilters(params: NamedParamsRetriever): Option[Seq[IProteinSetFilter]] = {
-    if (params.hasParam(ValidateResultSetService.PROCESS_METHOD.PROT_SET_FILTERS_PARAM)) {
-      val protSetFiltersConfigs = params.getList(ValidateResultSetService.PROCESS_METHOD.PROT_SET_FILTERS_PARAM).toArray.map(parseFilterConfig(_))
+    if (params.hasParam(PROT_SET_FILTERS_PARAM)) {
+      val protSetFiltersConfigs = params.getList(PROT_SET_FILTERS_PARAM).toArray.map(parseFilterConfig(_))
       Some(protSetFiltersConfigs.map(fc => BuildProteinSetFilter(fc.parameter, fc.threshold.asInstanceOf[AnyVal])).toSeq)
     } else None
   }
@@ -140,9 +142,9 @@ object ValidateResultSet {
   }
 
   def parseProtSetValidator(params: NamedParamsRetriever): Option[IProteinSetValidator] = {
-    if (params.hasParam(ValidateResultSetService.PROCESS_METHOD.PROT_SET_VALIDATOR_CONFIG_PARAM)) {
+    if (params.hasParam(PROT_SET_VALIDATOR_CONFIG_PARAM)) {
 
-      val protSetValidatorConfig = parseProtSetValidatorConfig(params.getMap(ValidateResultSetService.PROCESS_METHOD.PROT_SET_VALIDATOR_CONFIG_PARAM))
+      val protSetValidatorConfig = parseProtSetValidatorConfig(params.getMap(PROT_SET_VALIDATOR_CONFIG_PARAM))
       val thresholds = protSetValidatorConfig.thresholds.map(_.map(e => e._1 -> e._2.asInstanceOf[AnyVal]))
 
       // Retrieve protein set validation method

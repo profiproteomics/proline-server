@@ -77,12 +77,12 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessingService
 
     parserContext
   }
-
+  
   /* Define the concrete doProcess method */
   def doProcess(params: NamedParamsRetriever): Any = {
     require(params != null, "no parameter specified")
     
-    val projectId = params.getLong(IMPORT_PROJECT_ID_PARAM)
+    val projectId = params.getLong(IMPORT_PROJECT_ID_PARAM.toString)
     val resultFiles = params.getList(RESULT_FILES_PARAM).toArray.map { rfd => parseResultFileDescriptor(rfd) }
     val instrumentConfigId = params.getLong(INSTRUMENT_CONFIG_ID_PARAM)
     val peaklistSoftwareId = params.getLong(PEAKLIST_SOFTWARE_ID_PARAM)

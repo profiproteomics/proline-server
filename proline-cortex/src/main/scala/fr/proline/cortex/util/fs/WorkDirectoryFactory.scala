@@ -115,7 +115,7 @@ class TempDirectoryPurgeTask(tempDirectory: File) extends TimerTask with LazyLog
         if (fileOrDir.lastModified + PURGE_DELAY < now) {
           val fileAbsolutePathname = fileOrDir.getAbsolutePath
           
-		  if( fileOrDir.isFile() ) {
+          if( fileOrDir.isFile() ) {
             val result = fileOrDir.delete()
   
             if (result) {

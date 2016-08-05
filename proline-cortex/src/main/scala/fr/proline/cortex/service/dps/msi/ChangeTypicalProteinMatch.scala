@@ -64,7 +64,7 @@ class ChangeTypicalProteinMatch extends AbstractRemoteProcessingService with ICh
       ruleIndex += 1
     })
 
-	  msgLogBuilder.append("]")
+    msgLogBuilder.append("]")
     logger.info(msgLogBuilder.result)
     
     val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId)  // Use JPA context

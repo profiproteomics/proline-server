@@ -14,7 +14,6 @@ import fr.proline.cortex.api.service.dps.msi.IFilterRSMProteinSetsService
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
 
-
 /**
  *  Define JMS Service which Filters ProteinSets of a given Result Summary
  *
@@ -29,80 +28,80 @@ import fr.proline.jms.service.api.AbstractRemoteProcessingService
 
 class FilterRSMProteinSets extends AbstractRemoteProcessingService with IFilterRSMProteinSetsService with LazyLogging {
 
-	def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
+  def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
 
-		require(paramsRetriever != null, "no parameter specified")
+    require(paramsRetriever != null, "no parameter specified")
 
-		val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
-		val resultSummaryId = paramsRetriever.getLong(PROCESS_METHOD.RESULT_SUMMARY_ID_PARAM)
-		
-		val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId)
+    val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
+    val resultSummaryId = paramsRetriever.getLong(PROCESS_METHOD.RESULT_SUMMARY_ID_PARAM)
 
-		var msiDbConnectionContext: DatabaseConnectionContext = null
-		var msiDbTransacOk: Boolean = false
-  
-		var result : java.lang.Boolean = true
-		try {
-			val filterConfigs = this.parseProtSetFilters(paramsRetriever)
-  
-			if(filterConfigs.isDefined){
-  
-				// Begin transaction
-				msiDbConnectionContext = execCtx.getMSIDbConnectionContext
-				msiDbConnectionContext.beginTransaction()
-				msiDbTransacOk = false
+    val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId)
 
-				// Instantiate a result set validator
-				val rsmFilterer  = RSMProteinSetFilterer(
-					execCtx = execCtx,
-					targetRsmId = resultSummaryId,
-					protSetFilters = filterConfigs.get
-				)
+    var msiDbConnectionContext: DatabaseConnectionContext = null
+    var msiDbTransacOk: Boolean = false
 
-				rsmFilterer.run
-      
-				//Commit transaction
-				msiDbConnectionContext.commitTransaction()
-				msiDbTransacOk = true
-			}
-		} catch {
-			case ex: Exception => {
-				result = false
-				logger.error("Error running Filter RSM Protein Sets", ex)
-				val msg = if (ex.getCause() != null) { "Error running Filter RSM Protein Sets " + ex.getCause().getMessage() } else { "Error running Filter RSM Protein Sets " + ex.getMessage() }
-				throw new Exception(msg)
-			}
-		} finally {
-			try {
-				execCtx.closeAll()
-			} catch {
-				case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-			}
-		}
+    var result: java.lang.Boolean = true
+    try {
+      val filterConfigs = this.parseProtSetFilters(paramsRetriever)
 
-		result
-	}
-			
-	def parseProtSetFilters(params: NamedParamsRetriever): Option[Seq[IProteinSetFilter]] = {
-		if (params.hasParam(PROCESS_METHOD.PROT_SET_FILTERS_PARAM) == false) None
-		else {
-		  val protSetFiltersConfigs = params.getList(PROCESS_METHOD.PROT_SET_FILTERS_PARAM).toArray.map(parseFilterConfig(_))
-    
-			val filters = protSetFiltersConfigs.map { fc =>
-				logger.debug(" ---- TRY to BuildProteinSetFilter for "+fc.parameter+" threshold "+ fc.threshold )
-				BuildProteinSetFilter(fc.parameter, fc.threshold)
-			}
-			
-			Some(filters)
-		}
+      if (filterConfigs.isDefined) {
+
+        // Begin transaction
+        msiDbConnectionContext = execCtx.getMSIDbConnectionContext
+        msiDbConnectionContext.beginTransaction()
+        msiDbTransacOk = false
+
+        // Instantiate a result set validator
+        val rsmFilterer = RSMProteinSetFilterer(
+          execCtx = execCtx,
+          targetRsmId = resultSummaryId,
+          protSetFilters = filterConfigs.get
+        )
+
+        rsmFilterer.run
+
+        //Commit transaction
+        msiDbConnectionContext.commitTransaction()
+        msiDbTransacOk = true
+      }
+    } catch {
+      case ex: Exception => {
+        result = false
+        logger.error("Error running Filter RSM Protein Sets", ex)
+        val msg = if (ex.getCause() != null) { "Error running Filter RSM Protein Sets " + ex.getCause().getMessage() } else { "Error running Filter RSM Protein Sets " + ex.getMessage() }
+        throw new Exception(msg)
+      }
+    } finally {
+      try {
+        execCtx.closeAll()
+      } catch {
+        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
+      }
+    }
+
+    result
   }
-	
-	def parseFilterConfig(paramsMap: Object): FilterConfig = {
-		val configAsMap = deserialize[Map[String, AnyRef]](serialize(paramsMap))
-		if(configAsMap.contains("post_validation"))
-			new FilterConfig(configAsMap("parameter").asInstanceOf[String], configAsMap("threshold").asInstanceOf[AnyVal],configAsMap("post_validation").asInstanceOf[Boolean] )
-		else
-			new FilterConfig(configAsMap("parameter").asInstanceOf[String], configAsMap("threshold").asInstanceOf[AnyVal])
+
+  def parseProtSetFilters(params: NamedParamsRetriever): Option[Seq[IProteinSetFilter]] = {
+    if (params.hasParam(PROCESS_METHOD.PROT_SET_FILTERS_PARAM) == false) None
+    else {
+      val protSetFiltersConfigs = params.getList(PROCESS_METHOD.PROT_SET_FILTERS_PARAM).toArray.map(parseFilterConfig(_))
+
+      val filters = protSetFiltersConfigs.map { fc =>
+        logger.debug(" ---- TRY to BuildProteinSetFilter for " + fc.parameter + " threshold " + fc.threshold)
+        BuildProteinSetFilter(fc.parameter, fc.threshold)
+      }
+
+      Some(filters)
+    }
+  }
+
+  def parseFilterConfig(paramsMap: Object): FilterConfig = {
+    val configAsMap = deserialize[Map[String, AnyRef]](serialize(paramsMap))
+    if (configAsMap.contains("post_validation"))
+      new FilterConfig(configAsMap("parameter").asInstanceOf[String], configAsMap("threshold").asInstanceOf[AnyVal], configAsMap("post_validation").asInstanceOf[Boolean])
+    else
+      new FilterConfig(configAsMap("parameter").asInstanceOf[String], configAsMap("threshold").asInstanceOf[AnyVal])
   }
 
 }
