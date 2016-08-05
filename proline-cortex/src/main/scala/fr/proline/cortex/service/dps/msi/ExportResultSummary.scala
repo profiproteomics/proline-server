@@ -13,13 +13,11 @@ import fr.profi.util.StringUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.IExecutionContext
-import fr.proline.cortex.api.service.dps.msi.FileFormat
+import fr.proline.cortex.api.service.dps.msi.ExportFileFormat
+import fr.proline.cortex.api.service.dps.msi.ExportOutputMode
+import fr.proline.cortex.api.service.dps.msi.ExportResultSummaryIdentifier
 import fr.proline.cortex.api.service.dps.msi.IExportResultSummariesServiceV2_0
 import fr.proline.cortex.api.service.dps.msi.IExportResultSummaryServiceV1_0
-import fr.proline.cortex.api.service.dps.msi.OutputMode
-import fr.proline.cortex.api.service.dps.msi.OutputMode.enumToString
-import fr.proline.cortex.api.service.dps.msi.ResultSummaryIdentifier
-import fr.proline.cortex.api.service.dps.msi.RsmIdentifier
 import fr.proline.cortex.service.dps.uds.DatasetUtil
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.fs.WorkDirectoryFactory
@@ -82,24 +80,24 @@ class ExportResultSummary extends AbstractRemoteProcessingService with IExportRe
 
     //val rsmIdentifiers = paramsRetriever.getList("rsm_identifiers").toArray.map { rsmIdent => deserialize[ResultSummaryIdentifier](serialize(rsmIdent)) }
     //    val rsmIdentifiers = paramsRetriever.getList("rsm_identifier").toArray.map { rsmIdent => deserialize[ResultSummaryIdentifier](serialize(rsmIdent)) }
-    val rsmIdentifier = Some(paramsRetriever.getMap(PROCESS_METHOD.RSM_IDENTIFIER_PARAM)).map { rsmIdent => deserialize[ResultSummaryIdentifier](serialize(rsmIdent)) }
+    val rsmIdentifier = Some(paramsRetriever.getMap(PROCESS_METHOD.RSM_IDENTIFIER_PARAM)).map { rsmIdent => deserialize[ExportResultSummaryIdentifier](serialize(rsmIdent)) }
 
-    val fileFormat = FileFormat.withName(paramsRetriever.getString(FILE_FORMAT_PARAM))
+    val fileFormat = ExportFileFormat.withName(paramsRetriever.getString(FILE_FORMAT_PARAM))
 
     val fileName = this.parseFileName(paramsRetriever)
     val fileDirectory = this.parseFileDirectory(paramsRetriever)
 
     val extraParamsAsOptStr = Option(paramsRetriever.getOptMap(EXTRA_PARAMS_PARAM, true, null)).map(serialize(_))
     val extraParams = extraParamsAsOptStr.map(deserialize[Map[String, Object]](_))
-    val outputParams = OutputMode.withName(paramsRetriever.getOptString(OUTPUT_MODE_PARAM, OutputMode.FILE))
+    val outputParams = ExportOutputMode.withName(paramsRetriever.getOptString(OUTPUT_MODE_PARAM, ExportOutputMode.FILE))
 
     fileFormat match {
       //      case FileFormat.MZIDENTML => exportToMzIdentML(Seq(rsmIdentifiers.get), fileName, fileDirectory, outputParams, extraParams)
       //      case FileFormat.TEMPLATED => exportToTemplatedFile(Seq(rsmIdentifiers.get), fileName, fileDirectory, outputParams, extraParams)
-      case FileFormat.MZIDENTML => exportToMzIdentML(rsmIdentifier.get, fileName, fileDirectory, outputParams, extraParams)
-      case FileFormat.TEMPLATED => exportToTemplatedFile(rsmIdentifier.get, fileName, fileDirectory, outputParams, extraParams)
-      case FileFormat.PRIDE => exportToPrideFile(rsmIdentifier.get, fileName, fileDirectory, outputParams, extraParams)
-      case FileFormat.SPECTRA_LIST => exportToSpectraList(rsmIdentifier.get, fileName, fileDirectory, outputParams, extraParams)
+      case ExportFileFormat.MZIDENTML => exportToMzIdentML(rsmIdentifier.get, fileName, fileDirectory, outputParams, extraParams)
+      case ExportFileFormat.TEMPLATED => exportToTemplatedFile(rsmIdentifier.get, fileName, fileDirectory, outputParams, extraParams)
+      case ExportFileFormat.PRIDE => exportToPrideFile(rsmIdentifier.get, fileName, fileDirectory, outputParams, extraParams)
+      case ExportFileFormat.SPECTRA_LIST => exportToSpectraList(rsmIdentifier.get, fileName, fileDirectory, outputParams, extraParams)
     }
 
   }
@@ -125,10 +123,10 @@ class ExportResultSummary extends AbstractRemoteProcessingService with IExportRe
   }
 
   def exportToMzIdentML(
-    rsmIdentifier: ResultSummaryIdentifier,
+    rsmIdentifier: ExportResultSummaryIdentifier,
     fileName: String,
     fileDir: String,
-    outputFormat: OutputMode.Value,
+    outputFormat: ExportOutputMode.Value,
     extraParams: Option[Map[String, Any]]): Array[String] = {
 
     //	  require(rsmIdentifiers.length == 1, "can only export one RSM at a time for the mzIdentML file format")
@@ -157,10 +155,10 @@ class ExportResultSummary extends AbstractRemoteProcessingService with IExportRe
   }
 
   def exportToTemplatedFile(
-    rsmIdentifier: ResultSummaryIdentifier,
+    rsmIdentifier: ExportResultSummaryIdentifier,
     fileName: String,
     fileDir: String,
-    outputFormat: OutputMode.Value,
+    outputFormat: ExportOutputMode.Value,
     extraParams: Option[Map[String, Any]]): Object = {
 
     //    require(rsmIdentifiers.length == 1, "can only export one RSM at a time for this file format")
@@ -197,7 +195,7 @@ class ExportResultSummary extends AbstractRemoteProcessingService with IExportRe
       }
     }
 
-    if (outputFormat == OutputMode.STREAM) {
+    if (outputFormat == ExportOutputMode.STREAM) {
       // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
       val resultMap = new HashMap[String, Object]()
       resultMap.put("file_paths", exportedFiles.toArray.map(_.getAbsolutePath))
@@ -210,10 +208,10 @@ class ExportResultSummary extends AbstractRemoteProcessingService with IExportRe
   }
   
   def exportToSpectraList(
-    rsmIdentifier: ResultSummaryIdentifier,
+    rsmIdentifier: ExportResultSummaryIdentifier,
     fileName: String,
     fileDir: String,
-    outputFormat: OutputMode.Value,
+    outputFormat: ExportOutputMode.Value,
     extraParams: Option[Map[String, Any]]
   ): Object = {
 
@@ -243,7 +241,7 @@ class ExportResultSummary extends AbstractRemoteProcessingService with IExportRe
       }
     }
 
-    if (outputFormat == OutputMode.STREAM) {
+    if (outputFormat == ExportOutputMode.STREAM) {
       // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
       val resultMap = new HashMap[String, Object]()
       resultMap.put("file_paths", exportedFiles.toArray.map(_.getAbsolutePath))
@@ -256,10 +254,10 @@ class ExportResultSummary extends AbstractRemoteProcessingService with IExportRe
   }
 
   def exportToPrideFile(
-    rsmIdentifier: ResultSummaryIdentifier,
+    rsmIdentifier: ExportResultSummaryIdentifier,
     fileName: String,
     fileDir: String,
-    outputFormat: OutputMode.Value,
+    outputFormat: ExportOutputMode.Value,
     extraParams: Option[Map[String, Object]]
   ): Object = {
 
@@ -284,7 +282,7 @@ class ExportResultSummary extends AbstractRemoteProcessingService with IExportRe
       }
     }
 
-    if (outputFormat == OutputMode.STREAM) {
+    if (outputFormat == ExportOutputMode.STREAM) {
       // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
       val resultMap = new HashMap[String, Object]()
       resultMap.put("file_paths", Seq(filePath))
@@ -312,47 +310,47 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
     }
   }
 
-  def parseRsmIdent(rfDescObj: Object): RsmIdentifier  ={
-    deserialize[RsmIdentifier](serialize(rfDescObj))
+  def parseRsmIdent(rfDescObj: Object): ExportResultSummaryIdentifier  ={
+    deserialize[ExportResultSummaryIdentifier](serialize(rfDescObj))
   }
   
   def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
     require(paramsRetriever != null, "ParamsRetriever is null")
 
-    val rsmIdentifiers: ArrayBuffer[RsmIdentifier] = new ArrayBuffer()
+    val rsmIdentifiers: ArrayBuffer[ExportResultSummaryIdentifier] = new ArrayBuffer()
     val listRsm : java.util.List[Object] = paramsRetriever.getList(PROCESS_METHOD.RSM_IDENTIFIERS_PARAM)
     for (rsm <- listRsm.toArray){
-       val rsmIdent : RsmIdentifier = deserialize[RsmIdentifier](serialize(rsm)) 
+       val rsmIdent: ExportResultSummaryIdentifier = deserialize[ExportResultSummaryIdentifier](serialize(rsm)) 
        rsmIdentifiers += rsmIdent
     }
     
-    val fileFormat = FileFormat.withName(paramsRetriever.getString(FILE_FORMAT_PARAM))
+    val fileFormat = ExportFileFormat.withName(paramsRetriever.getString(FILE_FORMAT_PARAM))
    fileFormat match {
-      case FileFormat.MZIDENTML => require(rsmIdentifiers.size ==1, "Could export only one Result into MzIdent")
-      case FileFormat.TEMPLATED => require(rsmIdentifiers.size > 0, "Could export at least one Result into Excel format")
-      case FileFormat.PRIDE => require(rsmIdentifiers.size ==1, "Could export only one Result into Pride format")
-      case FileFormat.SPECTRA_LIST => require(rsmIdentifiers.size ==1, "Could export only one Result into Spectra List")
+      case ExportFileFormat.MZIDENTML => require(rsmIdentifiers.size ==1, "Could export only one Result into MzIdent")
+      case ExportFileFormat.TEMPLATED => require(rsmIdentifiers.size > 0, "Could export at least one Result into Excel format")
+      case ExportFileFormat.PRIDE => require(rsmIdentifiers.size ==1, "Could export only one Result into Pride format")
+      case ExportFileFormat.SPECTRA_LIST => require(rsmIdentifiers.size ==1, "Could export only one Result into Spectra List")
     }
     val fileName = paramsRetriever.getOptString("file_name", null)
     val fileDirectory = this.parseFileDirectory(paramsRetriever)
 
     val extraParamsAsOptStr = Option(paramsRetriever.getOptMap("extra_params", true, null)).map(serialize(_))
     val extraParams = extraParamsAsOptStr.map(deserialize[Map[String, Object]](_))
-    val outputParams = OutputMode.withName(paramsRetriever.getOptString("output_mode", "FILE"))
+    val outputParams = ExportOutputMode.withName(paramsRetriever.getOptString("output_mode", "FILE"))
 
     fileFormat match {
-      case FileFormat.MZIDENTML => exportToMzIdentML(rsmIdentifiers(0), fileName, fileDirectory, outputParams, extraParams)
-      case FileFormat.TEMPLATED => exportToTemplatedFile(rsmIdentifiers, fileName, fileDirectory, outputParams, extraParams)
-      case FileFormat.PRIDE => exportToPrideFile(rsmIdentifiers(0), fileName, fileDirectory, outputParams, extraParams)
-      case FileFormat.SPECTRA_LIST => exportToSpectraList(rsmIdentifiers(0), fileName, fileDirectory, outputParams, extraParams)
+      case ExportFileFormat.MZIDENTML => exportToMzIdentML(rsmIdentifiers(0), fileName, fileDirectory, outputParams, extraParams)
+      case ExportFileFormat.TEMPLATED => exportToTemplatedFile(rsmIdentifiers, fileName, fileDirectory, outputParams, extraParams)
+      case ExportFileFormat.PRIDE => exportToPrideFile(rsmIdentifiers(0), fileName, fileDirectory, outputParams, extraParams)
+      case ExportFileFormat.SPECTRA_LIST => exportToSpectraList(rsmIdentifiers(0), fileName, fileDirectory, outputParams, extraParams)
     }
   }
 
   def exportToMzIdentML(
-    rsmIdentifier: RsmIdentifier,
+    rsmIdentifier: ExportResultSummaryIdentifier,
     fileName: String,
     fileDir: String,
-    outputFormat: OutputMode.Value,
+    outputFormat: ExportOutputMode.Value,
     extraParams: Option[Map[String, Any]]
   ): Array[String] = {
 
@@ -382,10 +380,10 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
   }
 
   def exportToPrideFile(
-    rsmIdentifier: RsmIdentifier,
+    rsmIdentifier: ExportResultSummaryIdentifier,
     fileName: String,
     fileDir: String,
-    outputFormat: OutputMode.Value,
+    outputFormat: ExportOutputMode.Value,
     extraParams: Option[Map[String, Object]]
   ): Object = {
 
@@ -410,7 +408,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
       }
     }
 
-    if (outputFormat == OutputMode.STREAM) {
+    if (outputFormat == ExportOutputMode.STREAM) {
       // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
       val resultMap = new HashMap[String, Object]()
       resultMap.put("file_paths", Seq(filePath))
@@ -424,17 +422,17 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
   
   
   def exportToTemplatedFile(
-    rsmIdentifiers:  Seq[RsmIdentifier],
+    rsmIdentifiers:  Seq[ExportResultSummaryIdentifier],
     fileName: String,
     fileDir: String,
-    outputFormat: OutputMode.Value,
+    outputFormat: ExportOutputMode.Value,
     extraParams: Option[Map[String, Any]]
   ): Object = {
 
     //    require(rsmIdentifiers.length == 1, "can only export one RSM at a time for this file format")
     require(extraParams.isDefined, "some extra parameters must be provided")
 
-    var mode: String = DatasetUtil.getExportMode(rsmIdentifiers(0).projectId, rsmIdentifiers(0).dsId)
+    var mode: String = DatasetUtil.getExportMode(rsmIdentifiers(0).projectId, rsmIdentifiers(0).dsId.get)
     var exportConfig: ExportConfig = null
     
     if (extraParams != null && extraParams.isDefined && extraParams.get.contains("config")){
@@ -462,7 +460,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
         val viewSet = BuildDatasetViewSet(
           executionContext = executionContext,
           projectId = rsmIdentifier.projectId,
-          dsId = rsmIdentifier.dsId,
+          dsId = rsmIdentifier.dsId.get,
           rsmId = rsmIdentifier.rsmId,
           viewSetName = fileDatasetName,
           mode = mode,
@@ -482,7 +480,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
     }
     
     
-    if (outputFormat == OutputMode.STREAM) {
+    if (outputFormat == ExportOutputMode.STREAM) {
       // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
       val resultMap = new HashMap[String, Object]()
       resultMap.put("file_paths", exportedFiles.toArray.map(_.getAbsolutePath))
@@ -495,10 +493,10 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
   }
   
   def exportToSpectraList(
-    rsmIdentifier: RsmIdentifier,
+    rsmIdentifier: ExportResultSummaryIdentifier,
     fileName: String,
     fileDir: String,
-    outputFormat: OutputMode.Value,
+    outputFormat: ExportOutputMode.Value,
     extraParams: Option[Map[String, Any]]
   ): Object = {
 
@@ -528,7 +526,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
       }
     }
 
-    if (outputFormat == OutputMode.STREAM) {
+    if (outputFormat == ExportOutputMode.STREAM) {
       // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
       val resultMap = new HashMap[String, Object]()
       resultMap.put("file_paths", exportedFiles.toArray.map(_.getAbsolutePath))
