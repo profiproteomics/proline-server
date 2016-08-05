@@ -97,7 +97,6 @@ trait IFileSystemService extends IMiscService with IDefaultServiceVersion {
       val description = "The aliased path of the directory to browse. It has to be prefixed by a registered label."
       val scalaType = typeOf[String]
     }
-    
     object DIRECTORY_TYPE_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = DIRECTORY_TYPE_PARAM_NAME
       val description = "The mount point type of the targeted directory."
