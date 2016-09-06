@@ -155,11 +155,11 @@ object CustomFieldConfigFactory {
       fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_ELUTION_TIME, "master_elution_time")
       fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_SELECTION_LEVEL, "master_quant_selection_level")
       fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PSM_COUNT, if (fromXIC) "psm_count" else "Basic SC")
-      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE, if (fromXIC) "raw_abundance" else "Specific SC")
-      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_ABUNDANCE, if (fromXIC) "abundance" else "Weighted SC")
+      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE, if (fromXIC) "raw_abundance" else "Specific SC")      
     }
     
     if (fromXIC) {
+      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_ABUNDANCE,  "abundance" ) // field only used in XIC. for SC : no WSC for peptide   
       this._appendProfilizerFields(fieldsBuffer)
     }
     
