@@ -514,6 +514,7 @@ class PrideExporter(
 	      idf.setDatabaseVersion(dbVersion)
 	      
 	      val seqMatches = typicalProteinMatch.sequenceMatches.groupBy(_.getPeptideId)      
+	      var nbrSpectrumNotFound = 0
 	      for (pepInstance <- protSet.peptideSet.getPeptideInstances) {
 	        val seqMatch = seqMatches(pepInstance.peptideId)(0)
 	        val peptideMatch = rsm.resultSet.get.getPeptideMatchById.get(pepInstance.bestPeptideMatchId).get
@@ -541,11 +542,14 @@ class PrideExporter(
 	        	val spectrumMatch =  spectrumMatchByPeptideMatchId(pepInstance.bestPeptideMatchId)
 	        	_buildFragmentMatches(peptideItem,spectrumMatch)
 	        } else {
-	          logger.warn("Unable to get Spectrum for peptide {} ",pepInstance.peptide.sequence )
+	          nbrSpectrumNotFound += 1
+	          logger.trace("Unable to get Spectrum for peptide {} ",pepInstance.peptide.sequence )
 	        }
 	        idf.getPeptideItem().add(peptideItem)
 	      } // End go through Peptide Matches
-	      
+	      if(nbrSpectrumNotFound >0)
+	        logger.warn("Unable to found " +nbrSpectrumNotFound+" Spectra")
+	        
 	      idf.setScore(typicalProteinMatch.score)
 	      //Add extra parameters
 	      val protAdditional = new Param()
