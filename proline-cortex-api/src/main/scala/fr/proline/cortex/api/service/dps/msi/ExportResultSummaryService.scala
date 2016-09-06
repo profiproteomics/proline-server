@@ -2,7 +2,6 @@ package fr.proline.cortex.api.service.dps.msi
 
 import scala.reflect.runtime.universe
 import scala.reflect.runtime.universe.typeOf
-
 import fr.profi.util.lang.EnhancedEnum
 import fr.proline.jms.service.api.IDefaultServiceVersion
 import fr.proline.jms.service.api.RemoteServiceIdentity
@@ -11,6 +10,7 @@ import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
 import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
 import fr.profi.util.jsonrpc.JSONRPC2MethodResult
 import fr.profi.util.reflect.FieldDescription
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
 object ExportFileFormat extends EnhancedEnum {
   val MZIDENTML, TEMPLATED, PRIDE, SPECTRA_LIST = Value
@@ -33,7 +33,7 @@ case class ExportResultSummaryIdentifier(
 
   @FieldDescription(
     content = "The ID of the data set corresponding to the result summary being exported."
-  )
+  )@JsonDeserialize(contentAs = classOf[java.lang.Long]) 
   dsId: Option[Long],
 
   @FieldDescription(
