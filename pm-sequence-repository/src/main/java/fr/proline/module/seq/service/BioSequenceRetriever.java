@@ -20,7 +20,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
 import org.slf4j.Logger;
