@@ -72,10 +72,13 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_PROTEIN_SETS_NB_PEPTIDE_MATCHES, "#peptide_matches", defaultDisplayed = fromProtein),
       CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDE_MATCHES, "#specific_peptide_matches", defaultDisplayed = fromProtein)
     )
+    
+    if(fromSC){ //Actually not available for XIC 
+      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_STATUS, "status", defaultDisplayed = fromSC)
+      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PEPTIDE_NUMBER, "#peptides", defaultDisplayed = fromSC)
+    }
 
     if (fromXIC || fromSC) {
-      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_STATUS, "status", defaultDisplayed = fromSC)
-      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PEPTIDE_NUMBER, "peptide_number", defaultDisplayed = fromSC)
       fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PSM_COUNT, if (fromXIC) "psm_count" else "Basic SC")
       fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE, if (fromXIC) "raw_abundance" else "Specific SC")
       fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_ABUNDANCE, if (fromXIC) "abundance" else "Weighted SC")
