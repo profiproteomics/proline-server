@@ -107,7 +107,7 @@ abstract class AbstractProtSetToMQProtSetProfileView extends AbstractProtSetToTy
             } else {
               0
             }
-            recordBuilder += Tuple2(mkQcFieldTitle(fieldConfig, qcId), qcPeptideNumber)            
+            recordBuilder += Tuple2(mkQcFieldTitle(fieldConfig, qcId), if(qcPeptideNumber>0) qcPeptideNumber else "")            
           }
         }
       }
