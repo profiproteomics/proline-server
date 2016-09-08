@@ -452,7 +452,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
 
         var fileDatasetName = fileName
         if (StringUtils.isEmpty(fileName)) {
-          fileDatasetName = "DatasetSummaryExport-" + rsmIdentifier.dsId + "_" + UUID.randomUUID().toString
+          fileDatasetName = "DatasetSummaryExport-" + rsmIdentifier.dsId.get + "_" + UUID.randomUUID().toString //In this version of exported DSId is mandatory
         }
         var exFiles: Seq[java.io.File] = Seq()
         // Export
