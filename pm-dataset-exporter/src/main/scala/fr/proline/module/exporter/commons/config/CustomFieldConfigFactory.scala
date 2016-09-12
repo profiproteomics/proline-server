@@ -75,7 +75,7 @@ object CustomFieldConfigFactory {
     
     if(fromSC){ //Actually not available for XIC 
       fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_STATUS, "status", defaultDisplayed = fromSC)
-      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PEPTIDE_NUMBER, "#peptides", defaultDisplayed = fromSC)
+      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PEPTIDE_NUMBER, "peptides_count", defaultDisplayed = fromSC)
     }
 
     if (fromXIC || fromSC) {
