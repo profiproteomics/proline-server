@@ -7,7 +7,6 @@ import java.util.concurrent.TimeUnit
 import javax.jms.Connection
 import javax.jms.ExceptionListener
 import javax.jms.JMSException
-
 import scala.collection.JavaConversions.mutableMapAsJavaMap
 import scala.collection.mutable
 import org.hornetq.api.core.TransportConfiguration
@@ -34,11 +33,10 @@ import fr.proline.cortex.util.fs._
 import fr.proline.jms._
 import fr.proline.jms.util.JMSConstants._
 import fr.proline.jms.util._
-//import fr.proline.cortex.service.misc.WaitService
 import scala.collection.mutable.HashMap
 import java.util.concurrent.Future
-//import fr.proline.cortex.service.misc.CancelService
 import fr.proline.jms.ServiceManager
+import fr.proline.cortex.service.dps.uds.ValidateIdentDSInTree
 
 
 object ProcessingNode extends LazyLogging {
@@ -237,6 +235,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new FileSystem())
     ServiceRegistry.addService(new FileUpload())
     ServiceRegistry.addService(new ValidateResultSet())
+    ServiceRegistry.addService(new ValidateIdentDSInTree())
     ServiceRegistry.addService(new UpdateSpectraParamsV1_0())
     ServiceRegistry.addService(new UpdateSpectraParamsV2_0())
     ServiceRegistry.addService(new MergeDatasetsV1_0())

@@ -23,6 +23,7 @@ import fr.proline.core.om.provider.msi.SeqDbFakeProvider
 import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.service.msi.ResultFileImporter
+import fr.proline.cortex.api.service.dps.msi.ImportedResultFile
 import fr.proline.cortex.api.service.dps.msi.IImportResultFilesService
 import fr.proline.cortex.api.service.dps.msi.IImportResultFilesServiceV1_0
 import fr.proline.cortex.api.service.dps.msi.IImportResultFilesServiceV2_0
