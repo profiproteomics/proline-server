@@ -92,6 +92,14 @@ case class ResultFileDescriptorRuleId(
 //  val serviceVersion = "NONE"
 //}
 
+case class ImportedResultFile(
+  @FieldDescription(content = "The path of the imported file.")
+  path: String,
+
+  @FieldDescription(content = "ID of created target result set.")
+  var targetResultSetId: Long = -1L
+)
+
 trait IImportResultFilesService extends IMsiService with IImportResultFilesServiceParams {
 
   /* JMS Service identification */
@@ -135,13 +143,6 @@ trait IImportResultFilesServiceParams {
     val scalaType = typeOf[Long]
   }
 
-  case class ImportedResultFile(
-    @FieldDescription(content = "The path of the imported file.")
-    path: String,
-
-    @FieldDescription(content = "ID of created target result set.")
-    var targetResultSetId: Long = -1L
-  )
 }
 
 
