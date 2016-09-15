@@ -42,7 +42,7 @@ import fr.proline.cortex.service.dps.uds.ValidateIdentDSInTree
 object ProcessingNode extends LazyLogging {
 
   /* Constants */
-  private val EXECUTOR_SHUTDOWN_TIMEOUT = 30 // 30 seconds
+  private val EXECUTOR_SHUTDOWN_TIMEOUT = 3 // 3 seconds
 
   def main(args: Array[String]) {
     Thread.currentThread.setUncaughtExceptionHandler(new ThreadLogger(logger.underlying.getName))
@@ -292,10 +292,9 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
           if (m_executor.awaitTermination(EXECUTOR_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
             logger.info("JMS Consumers Executor terminated")
-
           } else {
             val remainingRunnables = m_executor.shutdownNow()
-            logger.info("JMS Consumers Executor terminated remain " + remainingRunnables.size + " never commenced Runnable(s)")
+            logger.info(s"JMS Consumers Executor terminated, ${remainingRunnables.size} remaining Runnable(s) that never started.")
           }
 
         } catch {
