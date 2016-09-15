@@ -65,12 +65,6 @@ object BuildDatasetViewSet extends LazyLogging {
     mode: String,
     exportConfig: ExportConfig): ViewSet = {
 
-    //val exportConfig = ExportConfigManager.readConfig(exportConfigStr)
-
-    /*require(
-      ExportConfigManager.checkTitle(exportConfig),
-      "Some titles in the configuration file for export are incorrect !"
-    )*/
 
     val loadFullResultSet = exportConfig.dataExport.allProteinSet
     val loadSubsets = true // TODO moved in the config export param ?

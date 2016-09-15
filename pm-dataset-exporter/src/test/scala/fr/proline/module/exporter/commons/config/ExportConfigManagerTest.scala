@@ -11,10 +11,40 @@ class ExportConfigManagerTest extends LazyLogging {
 
   @Test
   def testReadConfig() {
-    var filename = this.getClass().getResource("/exportConfig_test.json").toString()
-    // remove file:/
-    filename = filename.substring(6)
-    val config = ExportConfigManager.readConfig(Source.fromFile(filename).getLines.mkString)
+
+    val configStr = """{
+              	"format": "xlsx",
+              	"decimal_separator": ".",
+              	"date_format": "YYYY:MM:DD HH:mm:ss",
+              	"data_export": {
+              		"all_protein_set": true
+              	},
+              	"sheets": [{
+              		"id": "information",
+              		"title": "search settings and infos",
+              		"presentation": "rows",
+              		"fields": [{
+              			"id": "information_project_name",
+              			"title": "project_name"
+              		},
+              		{
+              			"id": "information_result_set_name",
+              			"title": "result_set_name"
+              		}]
+              	},
+              	{
+              		"id": "import",
+              		"title": "import and filters",
+              		"presentation": "rows",
+              		"fields": [{
+              			"id": "import_import_params",
+              			"title": "import_params"
+              		}]
+              	}]
+              }"""
+
+   
+    val config = ExportConfigManager.readConfig(configStr)
     assertEquals("Config nbSheets", 2, config.sheets.length)
     assertEquals("Config nbSheets", 1, config.sheets(1).fields.length)
 
