@@ -42,7 +42,7 @@ import fr.proline.cortex.service.dps.uds.ValidateIdentDSInTree
 object ProcessingNode extends LazyLogging {
 
   /* Constants */
-  private val EXECUTOR_SHUTDOWN_TIMEOUT = 3 // 3 seconds
+  private val EXECUTOR_SHUTDOWN_TIMEOUT = 30 // 30 seconds : te be sure currently running services could have a chance to terminate 
 
   def main(args: Array[String]) {
     Thread.currentThread.setUncaughtExceptionHandler(new ThreadLogger(logger.underlying.getName))
