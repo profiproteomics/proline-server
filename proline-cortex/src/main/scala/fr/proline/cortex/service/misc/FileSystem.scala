@@ -11,7 +11,7 @@ import fr.profi.util.jsonrpc.JSONRPC2Utils
 import fr.profi.util.jsonrpc.ProfiJSONRPC2Response
 import fr.profi.util.StringUtils
 import fr.proline.cortex.api.fs.MountPoint
-import fr.proline.cortex.api.service.misc.IFileSystemService
+import fr.proline.cortex.api.service.misc._
 import fr.proline.cortex.util.fs.FileBrowser
 import fr.proline.cortex.util.fs.MountPointRegistry
 import fr.proline.cortex.util.fs.WorkDirectoryRegistry
@@ -37,6 +37,8 @@ import fr.proline.jms.service.api.IRemoteJsonRPC2Service
  *
  */
 class FileSystem extends IFileSystemService with IRemoteJsonRPC2Service with LazyLogging {
+  
+  import FileSystemServiceConstants._
 
   /* Define the concrete process method */
   def runService(jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any]): JSONRPC2Response = {
