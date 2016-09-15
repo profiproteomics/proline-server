@@ -27,11 +27,6 @@ trait IFileSystemService extends IMiscService with IDefaultServiceVersion {
     RETRIEVE_DIRECTORY_CONTENT_METHOD
   )
   
-  /* Constants */
-  val LABEL_PARAM_NAME = "label"
-  val LABEL_PATH_PARAM_NAME = "label_path"
-  val DIRECTORY_TYPE_PARAM_NAME = "dir_type"
-  
   object RETRIEVE_ALL_DIRECTORY_TYPES_METHOD extends JSONRPC2DefaultMethod {    
     val name = "retrieve_all_directory_types"
     val description = "Return hard-coded Proline directory types (result_files, raw_files, mzdb_files)."
@@ -55,7 +50,7 @@ trait IFileSystemService extends IMiscService with IDefaultServiceVersion {
       
     // Method parameters definitions
     object DIR_TYPE_PARAM extends JSONRPC2DefaultMethodParameter {
-      val name = DIRECTORY_TYPE_PARAM_NAME
+      val name = "dir_type"
       val description = "Valid directory types are: result_files, raw_files, mzdb_files."
       val scalaType = typeOf[String]
     }
@@ -71,7 +66,7 @@ trait IFileSystemService extends IMiscService with IDefaultServiceVersion {
       
     // Method parameters definitions
     object LABEL_PARAM extends JSONRPC2DefaultMethodParameter {
-      val name = LABEL_PARAM_NAME
+      val name = "label"
       val description = "The label that will be used to search for corresponding mount points."
       val scalaType = typeOf[String]
     }
@@ -93,12 +88,12 @@ trait IFileSystemService extends IMiscService with IDefaultServiceVersion {
       
     // Method parameters definitions
     object LABEL_PATH_PARAM extends JSONRPC2DefaultMethodParameter {
-      val name = LABEL_PATH_PARAM_NAME
+      val name = "label_path"
       val description = "The aliased path of the directory to browse. It has to be prefixed by a registered label."
       val scalaType = typeOf[String]
     }
     object DIRECTORY_TYPE_PARAM extends JSONRPC2DefaultMethodParameter {
-      val name = DIRECTORY_TYPE_PARAM_NAME
+      val name = "dir_type"
       val description = "The mount point type of the targeted directory."
       val scalaType = typeOf[String]
       optional = true
