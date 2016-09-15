@@ -10,9 +10,17 @@ import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
 import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
 import fr.profi.util.jsonrpc.JSONRPC2MethodResult
 
+object FileSystemServiceConstants {
+  val LABEL_PARAM_NAME = "label"
+  val LABEL_PATH_PARAM_NAME = "label_path"
+  val DIRECTORY_TYPE_PARAM_NAME = "dir_type"
+}
+
 object FileSystemService extends IFileSystemService
 
 trait IFileSystemService extends IMiscService with IDefaultServiceVersion {
+  
+  import FileSystemServiceConstants._
   
   /* JMS Service identification */
   val serviceLabel = "FileSystem"
@@ -50,7 +58,7 @@ trait IFileSystemService extends IMiscService with IDefaultServiceVersion {
       
     // Method parameters definitions
     object DIR_TYPE_PARAM extends JSONRPC2DefaultMethodParameter {
-      val name = "dir_type"
+      val name = DIRECTORY_TYPE_PARAM_NAME
       val description = "Valid directory types are: result_files, raw_files, mzdb_files."
       val scalaType = typeOf[String]
     }
@@ -66,7 +74,7 @@ trait IFileSystemService extends IMiscService with IDefaultServiceVersion {
       
     // Method parameters definitions
     object LABEL_PARAM extends JSONRPC2DefaultMethodParameter {
-      val name = "label"
+      val name = LABEL_PARAM_NAME
       val description = "The label that will be used to search for corresponding mount points."
       val scalaType = typeOf[String]
     }
@@ -88,12 +96,12 @@ trait IFileSystemService extends IMiscService with IDefaultServiceVersion {
       
     // Method parameters definitions
     object LABEL_PATH_PARAM extends JSONRPC2DefaultMethodParameter {
-      val name = "label_path"
+      val name = LABEL_PATH_PARAM_NAME
       val description = "The aliased path of the directory to browse. It has to be prefixed by a registered label."
       val scalaType = typeOf[String]
     }
     object DIRECTORY_TYPE_PARAM extends JSONRPC2DefaultMethodParameter {
-      val name = "dir_type"
+      val name = DIRECTORY_TYPE_PARAM_NAME
       val description = "The mount point type of the targeted directory."
       val scalaType = typeOf[String]
       optional = true
