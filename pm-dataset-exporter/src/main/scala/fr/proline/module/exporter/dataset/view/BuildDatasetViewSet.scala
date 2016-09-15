@@ -9,6 +9,7 @@ import fr.profi.util.StringUtils
 import fr.profi.util.collection._
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
+import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.helper.UdsDbHelper
@@ -63,7 +64,8 @@ object BuildDatasetViewSet extends LazyLogging {
     rsmId: Long,
     viewSetName: String,
     mode: String,
-    exportConfig: ExportConfig): ViewSet = {
+    exportConfig: ExportConfig
+  ): ViewSet = {
 
 
     val loadFullResultSet = exportConfig.dataExport.allProteinSet
@@ -85,7 +87,8 @@ object BuildDatasetViewSet extends LazyLogging {
       viewSetName,
       viewSetTemplate,
       mode,
-      exportConfig)
+      exportConfig
+    )
   }
 
   def apply(
@@ -96,7 +99,8 @@ object BuildDatasetViewSet extends LazyLogging {
     loadFullResultSet: Boolean,
     viewSetName: String,
     viewSetTemplate: IViewSetTemplate,
-    mode: String): ViewSet = {
+    mode: String
+  ): ViewSet = {
     this.apply(
       executionContext,
       projectId,
@@ -107,7 +111,8 @@ object BuildDatasetViewSet extends LazyLogging {
       viewSetName,
       viewSetTemplate,
       mode,
-      exportConfig = null)
+      exportConfig = null
+    )
   }
 
   def apply(
@@ -120,7 +125,8 @@ object BuildDatasetViewSet extends LazyLogging {
     viewSetName: String,
     viewSetTemplate: IViewSetTemplate,
     mode: String,
-    exportConfig: ExportConfig): ViewSet = {
+    exportConfig: ExportConfig
+  ): ViewSet = {
 
     val udsDbCtx = executionContext.getUDSDbConnectionContext()
     val psDbCtx = executionContext.getPSDbConnectionContext()
@@ -147,7 +153,8 @@ object BuildDatasetViewSet extends LazyLogging {
         rsmId,
         loadFullResultSet = loadFullResultSet,
         linkPeptideSets = loadSubsets,
-        linkResultSetEntities = true)
+        linkResultSetEntities = true
+      )
       require(lazyRsmOpt.isDefined, "can't load the result summary with id=" + rsmId)
 
       val lazyRsm = lazyRsmOpt.get
@@ -163,7 +170,8 @@ object BuildDatasetViewSet extends LazyLogging {
           leavesRsmIds,
           loadFullResultSet = loadFullResultSet,
           linkPeptideSets = loadSubsets,
-          linkResultSetEntities = true)
+          linkResultSetEntities = true
+        )
 
         if (childResultSummaries.filter(lrsm => { lrsm.lazyResultSet.descriptor.name == null || lrsm.lazyResultSet.descriptor.name.isEmpty }).length > 0)
           childResultSummaries.sortBy(_.lazyResultSet.id) //If no name, use ID should always have one !
@@ -191,7 +199,8 @@ object BuildDatasetViewSet extends LazyLogging {
         childResultSummariesLoader,
         leaveResultSetLoader,
         this._buildBioSequenceLoader(msiDbCtx, lazyRsm),
-        this._buildSpectraLoader(msiDbCtx))
+        this._buildSpectraLoader(msiDbCtx)
+      )
 
       this.apply(identDs, viewSetName, viewSetTemplate, exportConfig)
 
@@ -240,7 +249,8 @@ object BuildDatasetViewSet extends LazyLogging {
         Seq(quantRsmId),
         loadFullResultSet = loadFullResultSet,
         linkPeptideSets = loadSubsets,
-        linkResultSetEntities = true).head
+        linkResultSetEntities = true
+      ).head
 
       // Create a lazy loader of ident RSMs
       val identResultSummariesLoader = () => {
@@ -250,7 +260,7 @@ object BuildDatasetViewSet extends LazyLogging {
           loadFullResultSet = false,
           linkPeptideSets = false, // TODO: set to true ?
           linkResultSetEntities = false // TODO: set to true ?
-          )
+        )
       }
 
       val leaveResultSetLoader = () => {
@@ -276,10 +286,13 @@ object BuildDatasetViewSet extends LazyLogging {
 
         val qcIdByIdentRsmId = quantChannels.toLongMapWith(qc => qc.identResultSummaryId -> qc.id)
 
-        // Set QC names as the result file name         
+        // Set QC names as the result file name
+        // FIXME: try to avoid the use of SQL queries, the names should be available directly from the QuantChannel entity
         qcNameById = {
 
-          val resultLongMap = DoJDBCReturningWork.withEzDBC(msiDbCtx) { ezDBC =>
+          val tmpQcNameById = new LongMap[String]()
+          
+          DoJDBCWork.withEzDBC(msiDbCtx) { ezDBC =>
 
             val qcIdentRsmIds = identRsmIds.filter(qcIdByIdentRsmId.contains(_))
 
@@ -289,19 +302,16 @@ object BuildDatasetViewSet extends LazyLogging {
                 "AND " ~ t1.ID ~ "=" ~ t2.RESULT_SET_ID ~ " AND " ~ t3.ID ~ " = " ~ t1.MSI_SEARCH_ID
             }
 
-            val longMap = new LongMap[String]()
+            
             ezDBC.selectAndProcess(sqlQuery) { r =>
-              longMap += qcIdByIdentRsmId(r.nextLong) -> r.nextString
+              tmpQcNameById += qcIdByIdentRsmId(r.nextLong) -> r.nextString
               ()
             }
 
-            longMap
           }
 
           if (mode == ExportConfigConstant.MODE_QUANT_SC) {
-            resultLongMap ++= DoJDBCReturningWork.withEzDBC(udsDbCtx) { ezDBC =>
-
-              val longMap = new LongMap[String]()
+            DoJDBCWork.withEzDBC(udsDbCtx) { ezDBC =>
 
               for (qc <- quantChannels) {
                 // get the name
@@ -312,42 +322,98 @@ object BuildDatasetViewSet extends LazyLogging {
                 }
 
                 ezDBC.selectAndProcess(sqlQuery2) { r =>
-                  longMap += qc.id -> r.nextString
+                  tmpQcNameById += qc.id -> r.nextString
                   ()
                 }
               }
-              longMap
             }
-
           }
 
-          resultLongMap
+          tmpQcNameById
         }
 
       }
 
-      val protMatchPeptideNumberByPepMatchIdByQCId: scala.collection.mutable.Map[Long, Map[Long, Int]] = scala.collection.mutable.Map.empty[Long, Map[Long, Int]]
-      for (qc <- quantChannels) {
-        val protMatchPeptideNumberByPepMatchId: scala.collection.mutable.Map[Long, Int] = scala.collection.mutable.Map.empty[Long, Int]
-        val protStatJdbcWork = new JDBCWork() {
-          override def execute(con: Connection) {
-
-            //---- Read PepCount
-            val getPepCount = "SELECT peptide_count, protein_match_id FROM peptide_set_protein_match_map pspmm, peptide_set " +
-              "WHERE  pspmm.result_summary_id = ?  AND peptide_set.id = pspmm.peptide_set_id"
-            val pStmt2 = con.prepareStatement(getPepCount)
-            pStmt2.setLong(1, qc.identResultSummaryId)
-            val sqlResultSet2 = pStmt2.executeQuery()
-            while (sqlResultSet2.next) {
-              val protMatchPepNbr = sqlResultSet2.getInt("peptide_count")
-              val protMatchId = sqlResultSet2.getLong("protein_match_id")
-              protMatchPeptideNumberByPepMatchId += protMatchId -> protMatchPepNbr
+      var peptideCountByProtMatchIdByQCId: LongMap[LongMap[Int]] = null
+      var peptideCountByMqProtSetIdByQCId: LongMap[LongMap[Int]] = null
+      
+      if (mode == ExportConfigConstant.MODE_QUANT_XIC) {
+        
+        peptideCountByMqProtSetIdByQCId = new LongMap[LongMap[Int]]()
+        
+        // --- TEMPORARY FIX TO COMPUTE THE NUMBER OF MASTER QUANT PEPTIDES --- //
+        // FIXME: do this in the IMQProteinSetSummarizer trait and update the MSIdb
+        
+        val qcCount = quantChannels.length
+        
+        // Initialize the map peptideCountByMqProtSetIdByQCId
+        for ( quantChannel <- quantChannels) {
+          peptideCountByMqProtSetIdByQCId.put(quantChannel.id,new LongMap[Int])
+        }
+        
+        val mqProtSets = lazyQuantRSM.masterQuantProteinSets
+        
+        val mqPepByPepInstId = lazyQuantRSM.masterQuantPeptides
+        .withFilter(_.peptideInstance.isDefined)
+        .toLongMapWith { mqp => mqp.peptideInstance.get.id -> mqp }
+        
+        val qcPeptideCountMap = new LongMap[LongMap[Int]]()
+        qcPeptideCountMap.sizeHint(mqProtSets.length)
+        
+        for( mqProtSet <- mqProtSets ) {
+          
+          val pepInsts = mqProtSet.proteinSet.peptideSet.getPeptideInstances
+          
+          val pepCountByQcId = new LongMap[Int](qcCount)
+          
+          for( pepInst <- pepInsts ) {
+            
+            // If the peptide has been quantified
+            val mqPepOpt = mqPepByPepInstId.get(pepInst.id)
+            if (mqPepOpt.isDefined) {
+              
+              val mqPep = mqPepOpt.get
+              
+              if( mqPep.selectionLevel >= 2 ) {
+                for( (qcId,quantPep) <- mqPep.quantPeptideMap ) {
+                  if (quantPep.peptideMatchesCount > 0) {
+                    pepCountByQcId.getOrElseUpdate(qcId,0)
+                    pepCountByQcId(qcId) += 1
+                  }
+                }
+              }
             }
-            pStmt2.close()
+          }
+          
+          for ( (qcId,pepCount) <- pepCountByQcId) {
+            peptideCountByMqProtSetIdByQCId(qcId).getOrElseUpdate(mqProtSet.id,pepCount)
           }
         }
-        msiDbCtx.doWork(protStatJdbcWork, false)
-        protMatchPeptideNumberByPepMatchIdByQCId.put(qc.id, protMatchPeptideNumberByPepMatchId.toMap)
+        
+      }
+      else {
+        
+        peptideCountByProtMatchIdByQCId = new LongMap[LongMap[Int]]()
+        
+        for (qc <- quantChannels) {
+          val pepCountByProtMatchId = new LongMap[Int]()
+          
+          DoJDBCWork.withEzDBC(msiDbCtx) { ezDBC =>
+            //---- Read PepCount
+            val getPepCountSqlQuery = "SELECT peptide_count, protein_match_id " +
+              "FROM peptide_set_protein_match_map pspmm, peptide_set " +
+              "WHERE pspmm.result_summary_id = ? AND peptide_set.id = pspmm.peptide_set_id"
+            
+            ezDBC.selectAndProcess(getPepCountSqlQuery, qc.identResultSummaryId) { record =>
+              val protMatchPepNbr = record.getInt("peptide_count")
+              val protMatchId = record.getLong("protein_match_id")
+              pepCountByProtMatchId.put( protMatchId, protMatchPepNbr )
+            }
+          }
+          
+          peptideCountByProtMatchIdByQCId.put(qc.id, pepCountByProtMatchId)
+        }
+        
       }
 
       logger.debug("Build QuantDataSet")
@@ -363,7 +429,9 @@ object BuildDatasetViewSet extends LazyLogging {
         this._buildBioSequenceLoader(msiDbCtx, lazyQuantRSM.lazyResultSummary),
         this._buildSpectraLoader(msiDbCtx),
         qcNameById,
-        protMatchPeptideNumberByPepMatchIdByQCId.toMap)
+        Option(peptideCountByProtMatchIdByQCId),
+        Option(peptideCountByMqProtSetIdByQCId)
+      )
 
       this.apply(quantDs, viewSetName, viewSetTemplate, exportConfig)
     }

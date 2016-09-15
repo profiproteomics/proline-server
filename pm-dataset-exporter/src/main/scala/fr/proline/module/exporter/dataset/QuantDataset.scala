@@ -20,7 +20,8 @@ class QuantDataset(
   
   val qcNameById: LongMap[String], // TODO: update and use the QuantChannel name in the UDSdb
   //val protMatchStatusByIdPepMatchByQCId: Map[Long, Map[Long, String]],
-  val protMatchPeptideNumberByPepMatchIdByQCId: Map[Long, Map[Long, Int]]
+  val peptideCountByProtMatchIdByQCId: Option[LongMap[LongMap[Int]]],
+  val peptideCountByMqProtSetByQCId: Option[LongMap[LongMap[Int]]]
   
 ) extends IdentDataset(projectName,quantRSM.lazyResultSummary,loadChildResultSummaries,loadLeaveResultSets, loadBioSequences,loadSpectraDescriptors) {
   
