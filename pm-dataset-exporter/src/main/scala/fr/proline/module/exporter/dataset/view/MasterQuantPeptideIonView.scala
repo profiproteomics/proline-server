@@ -61,7 +61,7 @@ class MasterQuantPeptideIonView(
         case FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME => dcf2.format(mqPepIon.elutionTime / 60)
         case FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME => {
           for (qcId <- quantDs.qcIds; qPepIon <- qPepIonMap.get(qcId) ) {
-            recordBuilder += mkQcFieldTitle("elution_time", qcId) -> dcf2.format(mqPepIon.elutionTime / 60)
+            recordBuilder += mkQcFieldTitle("elution_time", qcId) -> dcf2.format(qPepIon.elutionTime / 60)
           }
           null
         }
