@@ -9,7 +9,7 @@ object ServiceManager {
   private val msgId2FuturesMap : HashMap[String, Future[_]]  = new HashMap[String, Future[_]]()
   private val runnable2FutureMap : HashMap[Runnable, Future[_]]  = new HashMap[Runnable, Future[_]]()
   
-  def addRunnale2FuturEntry(r: Runnable, f: Future[_]) = {
+  def addRunnale2FutureEntry(r: Runnable, f: Future[_]) = {
     runnable2FutureMap.put(r,f)
   }
   

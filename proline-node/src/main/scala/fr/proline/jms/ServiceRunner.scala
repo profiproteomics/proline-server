@@ -214,7 +214,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
           }
 
         } catch {
-          /* Catch all Throwables to run INFINITE loop */
+          /* Catch all Throwable to run INFINITE loop */
           case t: Throwable => logger.error("Error running Consumer reception loop", t)
         }
 
@@ -261,8 +261,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
     var jsonResponse: JSONRPC2Response = new JSONRPC2Response(JSONRPC2Error.INVALID_REQUEST, jsonRequestId)
     
     var serviceName: String = null
-    var serviceVersionOp : Option[String] = None
-    var serviceSourceOp : Option[String] = None
+    var serviceVersion: String = null
     val isTxtMsg = message.isInstanceOf[TextMessage]
     var requestString : String = null
     
@@ -281,15 +280,9 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
         jsonResponse.setID(jsonRequestId)
         
         serviceName = message.getStringProperty(PROLINE_SERVICE_NAME_KEY)
-        val serviceVersion = message.getStringProperty(PROLINE_SERVICE_VERSION_KEY)
-        if (StringUtils.isNotEmpty(serviceVersion))
-          serviceVersionOp =  Some(serviceVersion) 
+        serviceVersion = message.getStringProperty(PROLINE_SERVICE_VERSION_KEY)
             
-        val serviceSource = message.getStringProperty(PROLINE_SERVICE_SOURCE_KEY)          
-        if  (StringUtils.isNotEmpty(serviceSource)) 
-          serviceSourceOp = Some(serviceSource) 
-          
-        if (StringUtils.isEmpty(serviceName)) {
+         if (StringUtils.isEmpty(serviceName)) {
           /* Cannot occur if 'selectorString' is a valid filter for JMS Messages */
           val errorMessage = "Invalid \"" + PROLINE_SERVICE_NAME_KEY + "\" property"
           logger.warn(errorMessage)
@@ -373,16 +366,24 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
         }
 
         /* Notify */
+        val serviceSource = message.getStringProperty(PROLINE_SERVICE_SOURCE_KEY)
+        val serviceSourceOp = if  (StringUtils.isNotEmpty(serviceSource)) Some(serviceSource) else None 
+
+        val serviceDescr = message.getStringProperty(PROLINE_SERVICE_DESCR_KEY)        
+        val serviceDescrOp = if  (StringUtils.isNotEmpty(serviceDescr)) Some(serviceDescr) else None 
+        
+        val serviceVersionOp = if (StringUtils.isNotEmpty(serviceVersion)) Some(serviceVersion) else None 
+
         val serviceEvent = if (jsonResponse.getError == null) {
 
           if (jsonResponse.getResult == null) {
-            new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_FAIL, serviceVersionOp, serviceSourceOp)
+            new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_FAIL, serviceVersionOp, serviceSourceOp, serviceDescrOp)
           } else {
-            new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_SUCCESS, serviceVersionOp, serviceSourceOp)
+            new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_SUCCESS, serviceVersionOp, serviceSourceOp, serviceDescrOp)
           }
 
         } else {
-          new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_FAIL, serviceVersionOp, serviceSourceOp)
+          new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_FAIL, serviceVersionOp, serviceSourceOp, serviceDescrOp)
         }
         
         if(isTxtMsg)
@@ -420,20 +421,29 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
       try {
         var jmsMessageId: String = null
         
-         val serviceVersion = jmsMessageContext.getOrElse(PROLINE_SERVICE_VERSION_KEY, "default") 
-        val serviceVersionOp = if(StringUtils.isNotEmpty(serviceVersion.asInstanceOf[String])) Some(serviceVersion.asInstanceOf[String]) else None    
-        val serviceSource = message.getStringProperty(PROLINE_SERVICE_SOURCE_KEY)          
-        val serviceSourceOp =  if  (StringUtils.isNotEmpty(serviceSource)) Some(serviceSource) else None
+        val serviceVersion = jmsMessageContext.getOrElse(PROLINE_SERVICE_VERSION_KEY, "default") 
+        val serviceVersionOp = if(StringUtils.isNotEmpty(serviceVersion.asInstanceOf[String])) Some(serviceVersion.asInstanceOf[String]) else None
         
+        val serviceSourceOp =  if (jmsMessageContext.contains(PROLINE_SERVICE_SOURCE_KEY) ) {
+          val serviceSource = jmsMessageContext.get(PROLINE_SERVICE_SOURCE_KEY).get.asInstanceOf[String]
+           if( StringUtils.isNotEmpty(serviceSource)) Some(serviceSource) else None
+        } else None
+        
+        val serviceDescrOp =  if (jmsMessageContext.contains(PROLINE_SERVICE_DESCR_KEY) ) {
+          val serviceDescr = jmsMessageContext.get(PROLINE_SERVICE_DESCR_KEY).get.asInstanceOf[String]
+           if( StringUtils.isNotEmpty(serviceDescr)) Some(serviceDescr) else None
+        } else None
+
+
         val value = jmsMessageContext.getOrElse(JMS_MESSAGE_ID_KEY, null)
         if (value.isInstanceOf[String]) {
           jmsMessageId = value.asInstanceOf[String]
         }               
 
-         logger.info("##Message##_"+jmsMessageId +" Calling BytesMessage Service [" + serviceName + "] ")
+         logger.info(" Calling ##Message##_"+jmsMessageId +"_ . BytesMessage Service [" + serviceName + "] ")
          
         /* Notify */
-        val serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_START, serviceVersionOp, serviceSourceOp)
+        val serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_START, serviceVersionOp, serviceSourceOp, serviceDescrOp)
 //        serviceEvent.setComplementaryInfo()
         serviceMonitoringNotifier.sendNotification(serviceEvent.toJSONRPCNotification(), null)
 
@@ -479,9 +489,16 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
       try {
         
         val serviceVersion = jmsMessageContext.getOrElse(PROLINE_SERVICE_VERSION_KEY, "default") 
-        val serviceVersionOp = if(StringUtils.isNotEmpty(serviceVersion.asInstanceOf[String])) Some(serviceVersion.asInstanceOf[String]) else None    
-        val serviceSource= jmsMessageContext.getOrElse(PROLINE_SERVICE_SOURCE_KEY, "") 
-        val serviceSourceOp: Option[String] = if(StringUtils.isNotEmpty(serviceSource.asInstanceOf[String])) Some(serviceSource.asInstanceOf[String]) else None        
+        val serviceVersionOp = if(StringUtils.isNotEmpty(serviceVersion.asInstanceOf[String])) Some(serviceVersion.asInstanceOf[String]) else None
+        val serviceSourceOp =  if (jmsMessageContext.contains(PROLINE_SERVICE_SOURCE_KEY) ) {
+          val serviceSource = jmsMessageContext.get(PROLINE_SERVICE_SOURCE_KEY).get.asInstanceOf[String]
+           if( StringUtils.isNotEmpty(serviceSource)) Some(serviceSource) else None
+        } else None
+        
+        val serviceDescrOp =  if (jmsMessageContext.contains(PROLINE_SERVICE_DESCR_KEY) ) {
+          val serviceDescr = jmsMessageContext.get(PROLINE_SERVICE_DESCR_KEY).get.asInstanceOf[String]
+           if( StringUtils.isNotEmpty(serviceDescr)) Some(serviceDescr) else None
+        } else None
         
         var jmsMessageId: String = null
         val value = jmsMessageContext.getOrElse(JMS_MESSAGE_ID_KEY, null)
@@ -489,10 +506,10 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
           jmsMessageId = value.asInstanceOf[String]
         }
                 
-        logger.info("##Message##_"+jmsMessageId +" Calling Service [" + serviceName + "] with JSON Request [" + jsonRequest + ']')
+        logger.info(" Calling ##Message##_"+jmsMessageId +" Service [" + serviceName + "] with JSON Request [" + jsonRequest + ']')
 
         /* Notify */
-        val serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_START, serviceVersionOp,serviceSourceOp)
+        val serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_START, serviceVersionOp,serviceSourceOp, serviceDescrOp)
         serviceEvent.setComplementaryInfo(jsonRequest.toJSONString())
         serviceMonitoringNotifier.sendNotification(serviceEvent.toJSONRPCNotification(), null)
 
