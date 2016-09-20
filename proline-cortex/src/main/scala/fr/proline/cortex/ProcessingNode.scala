@@ -153,14 +153,13 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         m_executor.submit(serviceMonitoringNotifier)
 
         /* Add SingleThreadedServiceRunner */
-//        val handledSingleThreadedServiceNames = ServiceRegistry.getSingleThreadedServices.keySet
         val handledSingleThreadedServiceIdents = ServiceRegistry.getSingleThreadedServicesByThreadIdent().keySet
 
         var nbrSingleThreads = 0 
         for (threadIdent <- handledSingleThreadedServiceIdents) {
           val singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier, threadIdent, true)
           val singleThreadFuture =  m_executor.submit(singleThreadedServiceRunner)
-          ServiceManager.addRunnale2FuturEntry(singleThreadedServiceRunner, singleThreadFuture)
+          ServiceManager.addRunnale2FutureEntry(singleThreadedServiceRunner, singleThreadFuture)
           nbrSingleThreads += 1
         }
 
@@ -177,7 +176,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         for (i <- 1 to NodeConfig.SERVICE_THREAD_POOL_SIZE) {
           val parallelizableSeviceRunner = new ServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier)
           val threadFuture = m_executor.submit(parallelizableSeviceRunner)
-          ServiceManager.addRunnale2FuturEntry(parallelizableSeviceRunner, threadFuture)
+          ServiceManager.addRunnale2FutureEntry(parallelizableSeviceRunner, threadFuture)
         }
 
         m_connection.start() // Explicitly start connection to begin Consumer reception
