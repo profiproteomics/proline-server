@@ -61,6 +61,7 @@ class ResourceService extends LazyLogging {
     var jsonResponse: JSONRPC2Response = new JSONRPC2Response(JSONRPC2Error.INVALID_REQUEST, jsonRequestId)
     var serviceVersionOp : Option[String] = None
     var serviceSourceOp : Option[String] = None
+    var serviceDescrOp : Option[String] = None
   
     try {
 
@@ -88,7 +89,12 @@ class ResourceService extends LazyLogging {
           if  (StringUtils.isNotEmpty(serviceSource)) 
             serviceSourceOp = Some(serviceSource) 
           
-          val serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_START, serviceVersionOp, serviceSourceOp)          
+          val serviceDescr = message.getStringProperty(PROLINE_SERVICE_DESCR_KEY)          
+          if  (StringUtils.isNotEmpty(serviceDescr)) 
+            serviceDescrOp = Some(serviceDescr) 
+          
+                        
+          val serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_START, serviceVersionOp, serviceSourceOp, serviceDescrOp)          
           serviceEvent.setComplementaryInfo(requestString)
           serviceMonitoringNotifier.sendNotification(serviceEvent.toJSONRPCNotification(), null)
 
@@ -126,7 +132,7 @@ class ResourceService extends LazyLogging {
         var serviceEvent: ServiceEvent = null
 
         if (responseJMSMessage == null) {
-          serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_FAIL, serviceVersionOp, serviceSourceOp)
+          serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_FAIL, serviceVersionOp, serviceSourceOp, serviceDescrOp)
 
           responseJMSMessage = session.createTextMessage()
           responseJMSMessage.setJMSCorrelationID(jmsMessageId)
@@ -137,7 +143,7 @@ class ResourceService extends LazyLogging {
 
           responseJMSMessage.asInstanceOf[TextMessage].setText(jsonResponse.toJSONString())
         } else {
-          serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_SUCCESS, serviceVersionOp, serviceSourceOp)
+          serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_SUCCESS, serviceVersionOp, serviceSourceOp, serviceDescrOp)
         }
 
         /* Notify */

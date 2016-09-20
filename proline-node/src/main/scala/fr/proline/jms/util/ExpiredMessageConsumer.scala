@@ -7,6 +7,7 @@ import JMSConstants.EXPIRED_MSG_ERROR_CODE
 import JMSConstants.PROLINE_SERVICE_NAME_KEY
 import JMSConstants.PROLINE_SERVICE_SOURCE_KEY
 import JMSConstants.PROLINE_SERVICE_VERSION_KEY
+import JMSConstants.PROLINE_SERVICE_DESCR_KEY
 import fr.profi.util.ThreadLogger
 import fr.proline.jms.ServiceEvent
 import javax.jms.Connection
@@ -69,6 +70,8 @@ class ExpiredMessageConsumer(
             val serviceVersionOp = if  (StringUtils.isNotEmpty(serviceVersion)) Some(serviceVersion) else None
             val serviceSource = jmsMessage.getStringProperty(PROLINE_SERVICE_SOURCE_KEY)
             val serviceSourceOp = if  (StringUtils.isNotEmpty(serviceSource)) Some(serviceSource) else None
+            val serviceDescr = jmsMessage.getStringProperty(PROLINE_SERVICE_DESCR_KEY)
+            val serviceDescrOp = if  (StringUtils.isNotEmpty(serviceDescr)) Some(serviceDescr) else None
             
             
             if (replyDestination == null) {
@@ -76,7 +79,7 @@ class ExpiredMessageConsumer(
             } else {
 
               /* Notify */
-              val serviceEvent = new ServiceEvent(jsonResponse.getID.toString(), jmsMessageId, serviceName, ServiceEvent.EVENT_FAIL, serviceVersionOp, serviceSourceOp)
+              val serviceEvent = new ServiceEvent(jsonResponse.getID.toString(), jmsMessageId, serviceName, ServiceEvent.EVENT_FAIL, serviceVersionOp, serviceSourceOp, serviceDescrOp)
               if(jmsMessage.isInstanceOf[TextMessage])
                 serviceEvent.setComplementaryInfo(jmsMessage.asInstanceOf[TextMessage].getText)
               serviceMonitoringNotifier.sendNotification(serviceEvent.toJSONRPCNotification(), null)
