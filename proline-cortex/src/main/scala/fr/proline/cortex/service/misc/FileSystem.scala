@@ -124,6 +124,7 @@ class FileSystem extends IFileSystemService with IRemoteJsonRPC2Service with Laz
     val extensionFilter = paramsRetriever.getOptString(EXTENSION_FILTER_PARAM, "")
 
     val localPath = MountPointRegistry.replacePossibleLabel(labelOrPath, directoryTypeHint)
+    logger.debug("looking for content of directory: " + localPath.localPathname) 
 
     val dir = new File(localPath.localPathname)
 
@@ -139,7 +140,10 @@ class FileSystem extends IFileSystemService with IRemoteJsonRPC2Service with Laz
 
     // Check that the directory exists and is not a file
     // TODO: return a specific exception
-    require(dir.isDirectory, errorMessage)
+    if (dir.isDirectory == false) {
+      logger.error(s"Directory ${localPath.localPathname} cannot be found")
+      require(dir.isDirectory, errorMessage)
+    }
 
     // Check that this directory is managed by Proline
     // TODO: return a specific exception
