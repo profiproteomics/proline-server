@@ -35,7 +35,7 @@ class ProtSetToAllPepMatchesView(
         // Note that we export only protein matches which are loaded with the RSM
         // The result will depend of provider which have been used
 
-        // Representatiive Protein Match is put first
+        // Representative Protein Match is put first
         val reprProtMatch = protSet.getRepresentativeProteinMatch.getOrElse(protSet.samesetProteinMatches.get.head)
         val seqMatchByPepId = reprProtMatch.sequenceMatches.toLongMapWith { seqMatch =>
           (seqMatch.getPeptideId -> seqMatch)
@@ -47,8 +47,8 @@ class ProtSetToAllPepMatchesView(
           reprProtMatch
         )
 
-        // FIXME: why pepInst.peptideMatches should be null ???
-        for (pepInst <- protSet.peptideSet.getPeptideInstances; if pepInst.peptideMatches != null) {
+        for (pepInst <- protSet.peptideSet.getPeptideInstances) {
+          require (pepInst.peptideMatches != null, "the peptide matches must be loaded to be able to export them")
 
           val peptideId = pepInst.peptide.id
           val allPepMatches = pepInst.peptideMatches
@@ -57,7 +57,6 @@ class ProtSetToAllPepMatchesView(
           if (!isQuantDs || mqPepOpt.isEmpty) {
 
             for (pepMatch <- allPepMatches) {
-
               val identRecordBuildingCtx = new PepMatchBuildingContext(
                 pepMatch = pepMatch,
                 isInSubset = false,
@@ -69,8 +68,7 @@ class ProtSetToAllPepMatchesView(
               this.formatRecord(identRecordBuildingCtx, recordFormatter)
             }
           } else {
-            val peptideId = pepInst.peptide.id
-
+            
             for (pepMatch <- allPepMatches) {
               val quantRecordBuildingCtx = new MasterQuantPeptideBuildingContext(
                 pepMatch = pepMatch,
