@@ -28,7 +28,7 @@ class ProtSetToTypicalProtMatchView(
     val protMatchById = rs.proteinMatchById
 
     // Go through protein sets
-    for (protSet <- rsm.proteinSets) {
+    for (protSet <- rsm.proteinSets.sortBy( - _.peptideSet.score ) ) {
       if (exportAllProteinSet || protSet.isValidated) { // filter on validated proteinSet
         // Note that we export only protein matches which are loaded with the RSM
         // The result will depend of provider which have been used

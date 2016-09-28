@@ -84,7 +84,7 @@ class MasterQuantPeptideIonView(
     val exportedPepMatchIds = new collection.mutable.HashSet[Long]
 
     // Iterate over RSM protein sets
-    for (protSet <- rsm.proteinSets) {
+    for (protSet <- rsm.proteinSets.sortBy( - _.peptideSet.score ) ) {
       if (exportAllProteinSet || protSet.isValidated) { // filter on validated proteinSet
         // Note that we export only protein matches which are loaded with the RSM
         // The result will depend on provider which have been used
@@ -101,7 +101,7 @@ class MasterQuantPeptideIonView(
           reprProtMatch
         )
 
-        for (pepInst <- protSet.peptideSet.getPeptideInstances) {
+        for (pepInst <- protSet.peptideSet.getPeptideInstances.sortBy(_.peptide.calculatedMass) ) {
 
           val peptideId = pepInst.peptide.id
           
@@ -109,7 +109,7 @@ class MasterQuantPeptideIonView(
           if (!isQuantDs) {
 
             val allPepMatches = pepInst.peptideMatches
-            for (pepMatch <- allPepMatches) {
+            for (pepMatch <- allPepMatches.sortBy(_.charge) ) {
 
               val identRecordBuildingCtx = new PepMatchBuildingContext(
                 pepMatch = pepMatch,

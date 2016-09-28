@@ -39,7 +39,7 @@ class ProtSetToBestPepMatchView(
     val exportedPepMatchIds = new collection.mutable.HashSet[Long]
 
     // Iterate over RSM protein sets
-    for (protSet <- rsm.proteinSets) {
+    for (protSet <- rsm.proteinSets.sortBy( - _.peptideSet.score ) ) {
       if (exportAllProteinSet || protSet.isValidated) { // filter on validated proteinSet
         // Note that we export only protein matches which are loaded with the RSM
         // The result will depend of provider which have been used
@@ -56,7 +56,7 @@ class ProtSetToBestPepMatchView(
           reprProtMatch
         )
 
-        for (pepInst <- protSet.peptideSet.getPeptideInstances) {
+        for (pepInst <- protSet.peptideSet.getPeptideInstances.sortBy(_.peptide.calculatedMass) ) {
           require (pepInst.peptideMatches != null, "the peptide matches must be loaded to be able to export them")
           
           val peptideId = pepInst.peptide.id
