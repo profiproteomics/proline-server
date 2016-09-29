@@ -194,10 +194,11 @@ object CustomFieldConfigFactory {
     fieldsBuffer ++= getProteinSetsSheetFields(false, false, false)
     
     fieldsBuffer ++= Array(
-      CustomFieldConfig(FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME, "elution_time"),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE, "raw_abundance"),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_ABUNDANCE, "abundance"),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PSM_COUNT, "psm_count"),
+      CustomFieldConfig(FIELD_QUANT_PEPTIDE_ION_BEST_SCORE, "best_score"), // incremental
+      CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PSM_COUNT, "psm_count"), // incremental
+      CustomFieldConfig(FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME, "elution_time"), // incremental
+      CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE, "raw_abundance"), // incremental
+      CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_ABUNDANCE, "abundance"), // incremental
       CustomFieldConfig(FIELD_PROFILIZER_RATIO, "ratio"),
       CustomFieldConfig(FIELD_PROFILIZER_TTEST_PVALUE, "t-test"),
       CustomFieldConfig(FIELD_PROFILIZER_ZTEST_PVALUE, "z-test"),

@@ -13,10 +13,10 @@ class QuantDataset(
   val expDesign: Option[ExperimentalDesign],
   val masterQuantChannel: MasterQuantChannel,
   val groupSetupNumber: Int,
-  override val loadChildResultSummaries: () => Array[LazyResultSummary],
-  override val loadLeaveResultSets: () => Array[LazyResultSet],
-  override val loadBioSequences: () => Array[BioSequence],
-  override val loadSpectraDescriptors: (Array[Long]) => Array[Spectrum],
+  override protected val loadChildResultSummaries: () => Array[LazyResultSummary],
+  override protected val loadLeaveResultSets: () => Array[LazyResultSet],
+  override protected val loadBioSequences: () => Array[BioSequence],
+  override protected val loadSpectraDescriptors: (Array[Long]) => Array[Spectrum],
   
   val qcNameById: LongMap[String], // TODO: update and use the QuantChannel name in the UDSdb
   //val protMatchStatusByIdPepMatchByQCId: Map[Long, Map[Long, String]],

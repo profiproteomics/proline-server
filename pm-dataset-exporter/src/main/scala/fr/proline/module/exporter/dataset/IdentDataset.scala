@@ -17,10 +17,10 @@ object ProteinMatchStatus extends Enumeration {
 class IdentDataset(
   val projectName: String,
   val resultSummary: LazyResultSummary,
-  val loadChildResultSummaries: () => Array[LazyResultSummary],
-  val loadLeaveResultSets: () => Array[LazyResultSet],
-  val loadBioSequences: () => Array[BioSequence],
-  val loadSpectraDescriptors: (Array[Long]) => Array[Spectrum]
+  protected val loadChildResultSummaries: () => Array[LazyResultSummary],
+  protected val loadLeaveResultSets: () => Array[LazyResultSet], // TODO: remove me => we don't need this, it should be identical to loadChildResultSummaries
+  protected val loadBioSequences: () => Array[BioSequence],
+  protected val loadSpectraDescriptors: (Array[Long]) => Array[Spectrum]
 ) extends LazyLogging {
   
   // Count the number of protein sets and proteins matches related to a given peptide match
@@ -70,6 +70,10 @@ class IdentDataset(
   lazy val childResultSummaries: Array[LazyResultSummary] = loadChildResultSummaries()
   lazy val allResultSummaries: Array[LazyResultSummary] = Array(resultSummary) ++ childResultSummaries
   
+  // TODO: restore me => the childResultSummaries should contain the leaves
+  /*lazy val allResultSets: Array[LazyResultSet] = allResultSummaries.map(_.lazyResultSet)
+  lazy val allMsiSearches: Array[MSISearch] = allResultSets.withFilter(_.msiSearch.isDefined).map(_.msiSearch.get)*/
+
   lazy val leavesResultSets : Array[LazyResultSet] = loadLeaveResultSets()  
   lazy val leavesMsiSearches: Array[MSISearch] = leavesResultSets.withFilter(_.msiSearch.isDefined).map(_.msiSearch.get)
   lazy val allPeaklistsIds: Array[Long] = leavesMsiSearches.map(_.peakList.id)

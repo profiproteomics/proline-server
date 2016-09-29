@@ -103,6 +103,8 @@ object ExportConfigConstant {
 
   val FIELD_PROTEIN_SETS_QUANT_STATUS = "protein_sets_status" //incremental
   val FIELD_PROTEIN_SETS_QUANT_PEPTIDE_NUMBER = "protein_sets_qc_peptide_number" //incremental
+  
+  // FIXME: this is badly named => this not always relative to protein sets
   val FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE = "raw_abundance" //incremental // SC Specific 
   val FIELD_PROTEIN_SETS_QUANT_ABUNDANCE = "abundance" // incremental // SC Weighted
   val FIELD_PROTEIN_SETS_QUANT_PSM_COUNT = "psm_count" // incremental  // SC Basic
@@ -156,6 +158,7 @@ object ExportConfigConstant {
   // MasterQuantPeptideIon sheet  
   val SHEET_MASTER_QUANT_PEPTIDE_ION = "master_quant_peptide_ion"
   val FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME = "quant_peptide_ion_elution_time" //incremental
+  val FIELD_QUANT_PEPTIDE_ION_BEST_SCORE = "quant_peptide_ion_best_score" //incremental
   val FIELD_MASTER_QUANT_PEPTIDE_ION_ID = "master_quant_peptide_ion_id"
   val FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME = "master_quant_peptide_ion_elution_time"
   val FIELD_MASTER_QUANT_PEPTIDE_ION_CHARGE = "master_quant_peptide_ion_charge"
