@@ -21,6 +21,7 @@ class ProtSetToAllPepMatchesView(
   
   override var viewName = "all_prot_set_peptide_matches"
   
+  // TODO: factorize this code with ProtSetToBestPepMatchView in AbsractProtSetToPepMatchView (onEachPeptideMatch method)
   override def onEachRecord(recordFormatter: Map[String, Any] => Unit) {
 
     val rsm = identDS.resultSummary
@@ -37,17 +38,20 @@ class ProtSetToAllPepMatchesView(
 
         // Representative Protein Match is put first
         val reprProtMatch = protSet.getRepresentativeProteinMatch.getOrElse(protSet.samesetProteinMatches.get.head)
-        val seqMatchByPepId = reprProtMatch.sequenceMatches.toLongMapWith { seqMatch =>
-          (seqMatch.getPeptideId -> seqMatch)
-        }
 
         val protMatchBuildingCtx = new ProtMatchBuildingContext(
           protSet,
           protSet.peptideSet,
           reprProtMatch
         )
+        
+        // We group sequence matches by peptide id because a given protein may have the same peptide at different locations
+        val seqMatchesByPepId = reprProtMatch.sequenceMatches.groupBy(_.getPeptideId)
 
-        for (pepInst <- protSet.peptideSet.getPeptideInstances.sortBy(_.peptide.calculatedMass) ) {
+        for (
+          pepInst <- protSet.peptideSet.getPeptideInstances.sortBy(_.peptide.calculatedMass);
+          seqMatch <- seqMatchesByPepId(pepInst.peptideId)
+        ) {
           require (pepInst.peptideMatches != null, "the peptide matches must be loaded to be able to export them")
 
           val peptideId = pepInst.peptide.id
@@ -61,7 +65,7 @@ class ProtSetToAllPepMatchesView(
                 pepMatch = pepMatch,
                 isInSubset = false,
                 protMatch = reprProtMatch,
-                seqMatch = seqMatchByPepId(peptideId),
+                seqMatch = seqMatch,
                 protMatchBuildingCtx = Some(protMatchBuildingCtx)
               )
               // Format this peptide match with protein set information
@@ -73,7 +77,7 @@ class ProtSetToAllPepMatchesView(
               val quantRecordBuildingCtx = new MasterQuantPeptideBuildingContext(
                 pepMatch = pepMatch,
                 protMatch = reprProtMatch,
-                seqMatch = seqMatchByPepId(peptideId),
+                seqMatch = seqMatch,
                 protMatchBuildingCtx = Some(protMatchBuildingCtx),
                 mqPepOpt.get,
                 groupSetupNumber = groupSetupNumber
