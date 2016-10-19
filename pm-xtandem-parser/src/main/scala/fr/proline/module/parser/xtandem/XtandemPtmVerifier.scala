@@ -29,7 +29,7 @@ object XtandemPtmVerifier extends LazyLogging {
     ptms.appendAll(extractPtmDefinitions(ptmProvider, residuePtms, null))
     if(refine)
       ptms.appendAll(extractPtmDefinitions(ptmProvider, refinePtms, null))
-    ptms.toArray
+    ptms.distinct.toArray
   }
   
   def getVariablePtms(ptmProvider: IPTMProvider, residuePtms: String, refinePtms: String, refineCtermPtms: String, refineNtermPtms: String, quickAcetyl: Boolean, quickPyrolidone: Boolean, refine: Boolean): Array[PtmDefinition] = {
@@ -52,7 +52,7 @@ object XtandemPtmVerifier extends LazyLogging {
       ptms.appendAll(extractPtmDefinitions(ptmProvider, refineCtermPtms, null))
       ptms.appendAll(extractPtmDefinitions(ptmProvider, refineNtermPtms, null))
     }
-    ptms.toArray
+    ptms.distinct.toArray
   }
   
   def extractPtmDefinitions(ptmProvider: IPTMProvider, ptmsAsString: String, location: PtmLocation.Value): Array[PtmDefinition] = {
