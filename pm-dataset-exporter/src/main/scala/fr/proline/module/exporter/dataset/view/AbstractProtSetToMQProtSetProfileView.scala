@@ -64,10 +64,12 @@ abstract class AbstractProtSetToMQProtSetProfileView extends AbstractProtSetToTy
       // If peptideCountByProtMatchIdByQCId is provided (SC mode)
       if (quantDs.peptideCountByProtMatchIdByQCId.isDefined) {
         val pepCountByProtMatchIdByQCId = quantDs.peptideCountByProtMatchIdByQCId.get
-        var pmId: Long = -1
-              
+        
         // Get QuantProteinSet for current ProteinSet in current QuantChannel
         val quantProtSetOpt = qProtSetMap.get(qcId)
+        
+        // Retrieve the corresponding protein match id
+        var pmId: Long = -1
         if (quantProtSetOpt.isDefined) {
           if (quantProtSetOpt.get.proteinSetId.isDefined) {
             pmId = quantProtSetOpt.get.proteinMatchId.getOrElse(-1)
@@ -76,7 +78,7 @@ abstract class AbstractProtSetToMQProtSetProfileView extends AbstractProtSetToTy
         
         val qcPeptideNumber = if (pepCountByProtMatchIdByQCId.contains(qcId) == false) 0
         else {
-          val pepCountByProtMatchId = pepCountByProtMatchIdByQCId.get(qcId).get              
+          val pepCountByProtMatchId = pepCountByProtMatchIdByQCId.get(qcId).get
           pepCountByProtMatchId.getOrElse(pmId,0)
         }
         
@@ -86,9 +88,9 @@ abstract class AbstractProtSetToMQProtSetProfileView extends AbstractProtSetToTy
       else if (quantDs.peptideCountByMqProtSetByQCId.isDefined) {
         val pepCountByMqProtSetByQCId = quantDs.peptideCountByMqProtSetByQCId.get
 
-        val qcPeptideNumber = if (pepCountByMqProtSetByQCId.contains(qcId)) 0
+        val qcPeptideNumber = if (pepCountByMqProtSetByQCId.contains(qcId) == false) 0
         else {
-          val pepCountByMqProtSet = pepCountByMqProtSetByQCId.get(qcId).get              
+          val pepCountByMqProtSet = pepCountByMqProtSetByQCId.get(qcId).get
           pepCountByMqProtSet.getOrElse(mqProtSet.id,0)
         }
         

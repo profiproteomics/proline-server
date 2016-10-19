@@ -78,7 +78,7 @@ object CustomFieldConfigFactory {
     }
     
     if (fromXIC || fromSC) {
-      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PEPTIDE_NUMBER, "peptides_count", defaultDisplayed = fromSC)
+      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PEPTIDE_NUMBER, "peptides_count", defaultDisplayed = fromXIC || fromSC)
       fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PSM_COUNT, if (fromXIC) "psm_count" else "Basic SC")
       fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE, if (fromXIC) "raw_abundance" else "Specific SC")
       fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_ABUNDANCE, if (fromXIC) "abundance" else "Weighted SC")
