@@ -45,8 +45,25 @@ import fr.proline.core.om.model.msi.Protein
 import fr.proline.core.om.model.msi.PeptideMatchProperties
 import fr.proline.core.om.model.msi.PeptideMatchXtandemProperties
 
-class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedExecutionContext) extends DefaultHandler with IResultFile with LazyLogging {
+class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedExecutionContext, val importProperties: Map[String, Any]) extends DefaultHandler with IResultFile with LazyLogging {
 
+  // this matches the old constructor
+//  def this(xtandemFile: File, parserContext: ProviderDecoratedExecutionContext) {
+//    this(xtandemFile, parserContext, null)
+//  }
+
+  // append user properties if any
+  private val properties = new HashMap[String, Any]
+  if(importProperties != null) properties ++= importProperties
+  // and add default values
+  val defaultProteinParsingRule = "^([^ ]+).*" // default parsing rule is 'extract all until first space'
+  if(!properties.isDefinedAt("protein.parsing.rule")) {
+    logger.info("Using default parsing rule: "+defaultProteinParsingRule)
+    properties.put("protein.parsing.rule", defaultProteinParsingRule)
+  } else {
+    logger.info("Using given parsing rule: "+properties.get("protein.parsing.rule").toString)
+  }
+  
   // private values
   private val msQueriesList = new ArrayBuffer[MsQuery]
   private val spectrumList = new ArrayBuffer[Spectrum] // will only be used in the eachSpectrum method
@@ -55,7 +72,6 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
   val fileLocation: File = xtandemFile
   var hasDecoyResultSet: Boolean = false
   var hasMs2Peaklist: Boolean = true
-  val importProperties: Map[String, Any] = null
   val msLevel: Int = 2
   def msQueries = msQueriesList.toArray
   var msiSearch: MSISearch = null
@@ -139,10 +155,18 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
         
         // for each protein
         spectrumItem.proteinList.foreach(proteinItem => {
+          // fix long accession names
+          val userPattern = properties.get("protein.parsing.rule").get.toString
+          val accession = proteinItem.note.info match {
+            case userPattern.r(accession) => accession // user pattern, may not work
+            case defaultProteinParsingRule.r(accession) => accession // default pattern: extract string until first space character
+            case _ => proteinItem.note.info // keep description if everything else failed (or maybe accession ?)
+          }
+          // from this point, use accession instead of proteinItem.label
           // for each Domain (peptide)
           proteinItem.peptide.domainList.foreach(peptideItem => {
             // when "include reverse" parameter is set to yes, tag ":reversed" is added to the protein description
-            val isDecoy = proteinItem.note.label.endsWith(":reversed")
+            val isDecoy = proteinItem.note.info.endsWith(":reversed")
             if(isDecoy == wantDecoy) {
             
               // define uniqueKey
@@ -204,16 +228,16 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
               
               // define the unique key for the protein
               val seqDatabaseOpt = msiSearch.searchSettings.seqDatabases.filter(_.filePath.equals(getFastaFile(proteinItem.fileMarkup.URL).getPath)).headOption.get
-              val proteinAccessKey = proteinItem.label + seqDatabaseOpt.id
+              val proteinAccessKey = accession + seqDatabaseOpt.id
               // get or create ProteinMatch and store it with a unique key
               if(!proteinMatchesPerUniqueKey.isDefinedAt(proteinAccessKey)) {
                 // get protein first
-                val protein = protProvider.getProtein(proteinItem.label, seqDatabaseOpt).getOrElse(new Protein(id = Protein.generateNewId(), sequence = proteinItem.peptide.info))
+                val protein = protProvider.getProtein(accession, seqDatabaseOpt).getOrElse(new Protein(id = Protein.generateNewId(), sequence = proteinItem.peptide.info))
                 // create a protein match
                 proteinMatchesPerUniqueKey.put(proteinAccessKey, new ProteinMatch(
                     id = ProteinMatch.generateNewId(),
-                    accession = proteinItem.label,
-                    description = proteinItem.note.label, 
+                    accession = accession,
+                    description = proteinItem.note.info, 
                     peptideMatchesCount = 0, 
                     scoreType = PeptideMatchScoreType.XTANDEM_HYPERSCORE.toString(),
                     isDecoy = isDecoy,
@@ -253,7 +277,7 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
     }}
     
     logger.debug("XTandem file parsed, generating final ResultSet")
-    
+
     // return the result set
     new ResultSet(
       id = ResultSet.generateNewId(),

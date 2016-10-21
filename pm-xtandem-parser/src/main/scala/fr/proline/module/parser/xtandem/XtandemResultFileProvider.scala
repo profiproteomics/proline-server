@@ -25,7 +25,7 @@ class XtandemResultFileProvider extends IResultFileProvider with LazyLogging {
   def getResultFile( fileLocation: File, importProperties : Map[String, Any], parserContext: ProviderDecoratedExecutionContext ): IResultFile = {
 
     require(parserContext != null,"getResultFile - No parser context found. Use setParserContext(parserContext: ProviderDecoratedExecutionContext)")
-    new XtandemParser(fileLocation, parserContext)
+    new XtandemParser(fileLocation, parserContext, importProperties)
   }
 
   val resultFileProperties : Map[String, Class[_]] = null

@@ -32,6 +32,7 @@ import java.io.ByteArrayOutputStream
 import fr.proline.core.dal.BuildUdsDbConnectionContext
 import fr.proline.core.dal.BuildDbConnectionContext
 import fr.proline.core.dal.BuildMsiDbConnectionContext
+import scala.collection.mutable.HashMap
 
 class XTandemParserTest extends AbstractMultipleDBTestCase {
   val driverType = DriverType.H2
@@ -112,7 +113,7 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     var startTime : Long = System.currentTimeMillis()
 //    logger.info("startTime")
 
-    val myXtandemParser = new XtandemParser(new File(getClass.getResource("/xtandemResultFile/output.2015_04_08_13_00_45.t.xml").toURI), parserContext)  // output.2015_04_08_13_00_45.t
+    val myXtandemParser = new XtandemParser(new File(getClass.getResource("/xtandemResultFile/output.2015_04_08_13_00_45.t.xml").toURI), parserContext, null)  // output.2015_04_08_13_00_45.t
 //    logger.info("endTime")
     var endTime : Long = System.currentTimeMillis()
 
@@ -357,7 +358,7 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
 //    var startTime : Long = System.currentTimeMillis()
 //
 //    try {
-//      val myXtandemParser = new XtandemParser(new File(getClass.getResource("/xtandemResultFile/QEKAC141027_122.raw.mzDB.t.xml").toURI), parserContext)
+//      val myXtandemParser = new XtandemParser(new File(getClass.getResource("/xtandemResultFile/QEKAC141027_84.raw.mzDB.t.xml").toURI), parserContext, null)
 //      var endTime : Long = System.currentTimeMillis()
 //  
 //      // Let's test if useful values in xml file are in Xtandem classes
@@ -503,6 +504,42 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
       decoyResultSetId = 0,
       decoyResultSet = None
     )
+  }
+
+  @Test
+  def duplicatedPtms {
+    logger.debug("Test 'duplicatedPtms'")
+    val file : File = new File(getClass.getResource("/xtandemResultFile/ptmsDuplicated-output.2016_10_19_08_51_42.t.xml").toURI)
+    val myXtandemResultFileVerifier = new XtandemResultFileVerifier
+    myXtandemResultFileVerifier.setParserContext(parserContext)
+    val ptms = myXtandemResultFileVerifier.getPtmDefinitions(file, null)
+    val uniquePtmDefinitions = ptms.map(ptm => ptm.toReadableString() -> ptm).toMap
+    logger.debug("Ptms count 1: " + myXtandemResultFileVerifier.getPtmDefinitions(file, null).size + " ptms, " + uniquePtmDefinitions.size + " unique ptms (numbers should be equal)")
+    assert(ptms.size == uniquePtmDefinitions.size)
+    logger.debug("Test 'duplicatedPtms' is ok")
+  }
+  
+  @Test
+  def parsingRuleOnAccessionNumbers {
+    logger.info("Start parsingRuleOnAccessionNumbers")
+
+    val file = new File(getClass.getResource("/xtandemResultFile/ptmsDuplicated-output.2016_10_19_08_51_42.t.xml").toURI)
+    assert(testParsingRuleAndGetNumberOfAccessionWithTag(file, null, " ") == 0) // use default: everything until first space character
+    assert(testParsingRuleAndGetNumberOfAccessionWithTag(file, "^(\\S+).*", " ") == 0) // similar as default
+    assert(testParsingRuleAndGetNumberOfAccessionWithTag(file, "^([^\\|]+\\|[^\\|]+).*", " ") == 0) // everything until second pipe character
+    assert(testParsingRuleAndGetNumberOfAccessionWithTag(file, "^(.+).*", " ") != 0) // everything
+  }
+  
+  def testParsingRuleAndGetNumberOfAccessionWithTag(file: File, parsingRule: String, testTag: String): Int = {
+    logger.info("Test parsing rule '"+parsingRule+"'")
+    val properties: Map[String, Any] = if(parsingRule != null) Map[String, Any]("protein.parsing.rule" -> parsingRule) else null
+    val parser = new XtandemParser(file, parserContext, properties)
+    // Let's test if useful values in xml file are in Xtandem classes
+    val rs = parser.getResultSet(false)
+    // return number of accession numbers containing a space character
+    val nb = rs.proteinMatches.filter(_.accession.contains(testTag)).size
+    logger.info("Parsing rule '"+parsingRule+"' produced "+nb+" proteins containing the tag '"+testTag+"'")
+    nb
   }
   
   // Other tests : XML File Structure is respected(use preParsingTest ?)
