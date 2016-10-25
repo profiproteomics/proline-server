@@ -20,6 +20,7 @@ import fr.proline.core.service.msi.ResultSetValidator
 import fr.proline.module.fragment_match.service.SpectrumMatchesGenerator
 import fr.proline.repository.DriverType
 import org.junit.Assert
+import org.junit.Ignore
 
 object PrideExporterTest extends AbstractEmptyDatastoreTestCase {
 
