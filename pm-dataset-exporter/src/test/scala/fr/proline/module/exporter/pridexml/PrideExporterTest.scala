@@ -43,7 +43,7 @@ object PrideExporterTest extends AbstractEmptyDatastoreTestCase {
 class PrideExporterTest extends LazyLogging {
 
   //@Test
-  //@Ignore
+  @Ignore
   def testExport() {
     val f = new File("pridexml_test.xml")
     
