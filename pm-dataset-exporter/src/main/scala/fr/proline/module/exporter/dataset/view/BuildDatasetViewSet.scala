@@ -23,8 +23,7 @@ import fr.proline.core.dal.tables.uds.UdsDbProjectTable
 import fr.proline.core.om.model.msi.LazyResultSummary
 import fr.proline.core.om.model.msi.Ms2Query
 import fr.proline.core.om.provider.msi.impl._
-import fr.proline.core.om.provider.msq.impl.SQLExperimentalDesignProvider
-import fr.proline.core.om.provider.msq.impl.SQLLazyQuantResultSummaryProvider
+import fr.proline.core.om.provider.msq.impl._
 import fr.proline.module.exporter.api.template._
 import fr.proline.module.exporter.api.template.ViewWithTemplate
 import fr.proline.module.exporter.commons.config._
@@ -216,6 +215,14 @@ object BuildDatasetViewSet extends LazyLogging {
 
       // FIXME: how to deal with other MQC ids
       val masterQuantChannelId = masterQcIds.head
+      
+      // Load the quant config
+      val quantConfigProvider = new SQLQuantConfigProvider(udsDbCtx)
+      val quantConfigAndMethodOpt = quantConfigProvider.getQuantConfigAndMethod(dsId)
+      
+      // Load the profilizer config
+      val profilizerConfigProvider = new SQLProfilizerConfigProvider(udsDbCtx)
+      val profilizerConfigOpt = profilizerConfigProvider.getProfilizerConfig(dsId)
 
       // Load the experimental design
       val expDesignProvider = new SQLExperimentalDesignProvider(udsDbCtx)
@@ -422,6 +429,8 @@ object BuildDatasetViewSet extends LazyLogging {
         projectName,
         lazyQuantRSM,
         expDesignOpt,
+        quantConfigAndMethodOpt,
+        profilizerConfigOpt,
         masterQc,
         groupSetupNumber,
         identResultSummariesLoader,

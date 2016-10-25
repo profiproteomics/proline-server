@@ -191,4 +191,6 @@ object ExportConfigConstant {
   val FIELD_STAT_NB_VALIDATED_PROT_SETS_SINGLE_SPE_PEP_SEQUENCE = "stat_nb_validated_prot_sets_single_spe_pep_sequence"
   val FIELD_STAT_NB_VALIDATED_PROT_SETS_MULTI_SPE_PEP_SEQUENCES = "stat_nb_validated_prot_sets_multi_spe_pep_sequences"
 
+  // Statistics sheet
+  val SHEET_QUANT_CONFIG = "quant_config"
 }

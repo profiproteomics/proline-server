@@ -4,14 +4,14 @@ import java.text.SimpleDateFormat
 
 import com.typesafe.scalalogging.LazyLogging
 
-import fr.proline.module.exporter.api.view.IFixedTableView
+import fr.proline.module.exporter.api.view.ICustomTableView
 import fr.proline.module.exporter.commons.config.ExportConfigSheet
 import fr.proline.module.exporter.commons.config.view.CustomViewFields
 
 import fr.proline.module.exporter.commons.view.SmartDecimalFormat
 import fr.proline.module.exporter.dataset.IdentDataset
 
-trait AbstractIdentDatasetView extends IFixedTableView with LazyLogging {
+trait AbstractIdentDatasetView extends ICustomTableView with LazyLogging {
   
   val identDS: IdentDataset
   val sheetConfig: ExportConfigSheet

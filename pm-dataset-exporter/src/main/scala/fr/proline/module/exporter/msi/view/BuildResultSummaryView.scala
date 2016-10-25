@@ -9,7 +9,6 @@ import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.module.exporter.api.view.IDataView
-import fr.proline.module.exporter.api.view.IFixedTableView
 import fr.proline.module.exporter.api.view.IViewTypeEnumeration
 import fr.proline.core.om.model.msq.MasterQuantPeptide
 import fr.proline.module.exporter.commons.config.ExportConfig

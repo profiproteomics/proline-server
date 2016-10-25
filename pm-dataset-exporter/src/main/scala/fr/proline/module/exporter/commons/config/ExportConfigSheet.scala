@@ -136,5 +136,16 @@ object ExportConfigSheet {
       defaultDisplayed
     )
   }
+  
+  // get full config for "quant config" sheet
+  def getQuantConfigSheetExportConfig(defaultDisplayed: Boolean = true): ExportConfigSheet = {
+    ExportConfigSheet(
+      id = ExportConfigConstant.SHEET_QUANT_CONFIG,
+      title = "Quant config",
+      presentation = ExportConfigConstant.PRESENTATION_SHEET_ROWS,
+      fields = Array(),
+      defaultDisplayed
+    )
+  }
 
 }

@@ -17,7 +17,7 @@ class MsiSearchExtendedView(
   val sheetConfig: ExportConfigSheet,
   val dateFormat: SimpleDateFormat,
   val decimalFormat: SmartDecimalFormat
-) extends IFixedTableView {
+) extends ICustomTableView {
   
   var viewName = "msi_search"
   val fieldsTitles = sheetConfig.fields.map(_.title)

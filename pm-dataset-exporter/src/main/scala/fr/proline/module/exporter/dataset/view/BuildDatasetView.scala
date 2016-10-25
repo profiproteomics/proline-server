@@ -8,9 +8,9 @@ import fr.proline.module.exporter.api.view.IDataView
 import fr.proline.module.exporter.api.view.IViewTypeEnumeration
 import fr.proline.module.exporter.commons.config.ExportConfig
 import fr.proline.module.exporter.commons.config.ExportConfigConstant
-import fr.proline.module.exporter.commons.config.view.DatasetViewType
+import fr.proline.module.exporter.commons.config.view.DatasetViewType._
 import fr.proline.module.exporter.commons.view.SmartDecimalFormat
-import fr.proline.module.exporter.dataset.IdentDataset
+import fr.proline.module.exporter.dataset._
 
 object BuildDatasetView {
 
@@ -35,30 +35,33 @@ object BuildDatasetView {
       
       sheet.id match {
         case ExportConfigConstant.SHEET_INFORMATION => {
-          mapBuilder += (DatasetViewType.MSI_SEARCH_EXTENDED -> { ds: IdentDataset => new MsiSearchExtendedView(ds, sheet, dateFormat, smartDecimalFormat) })
+          mapBuilder += (MSI_SEARCH_EXTENDED -> { ds: IdentDataset => new MsiSearchExtendedView(ds, sheet, dateFormat, smartDecimalFormat) })
         }
         case ExportConfigConstant.SHEET_IMPORT => {
-          mapBuilder += (DatasetViewType.IMPORT_AND_VALIDATION_PROPS -> { ds: IdentDataset => new ImportAndValidationPropsView(ds, sheet, dateFormat, smartDecimalFormat, titleSep) })
+          mapBuilder += (IMPORT_AND_VALIDATION_PROPS -> { ds: IdentDataset => new ImportAndValidationPropsView(ds, sheet, dateFormat, smartDecimalFormat, titleSep) })
+        }
+        case ExportConfigConstant.SHEET_QUANT_CONFIG => {
+          mapBuilder += (QUANT_CONFIG -> { ds: IdentDataset => new QuantConfigView(ds.asInstanceOf[QuantDataset], dateFormat, decimalFormat) })
         }
         case ExportConfigConstant.SHEET_PROTEIN_SETS => {
-          mapBuilder += (DatasetViewType.PROT_SET_TO_TYPICAL_PROT_MATCH -> { ds: IdentDataset => new ProtSetToTypicalProtMatchView(ds, sheet, dateFormat, smartDecimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
+          mapBuilder += (PROT_SET_TO_TYPICAL_PROT_MATCH -> { ds: IdentDataset => new ProtSetToTypicalProtMatchView(ds, sheet, dateFormat, smartDecimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
         }
         case ExportConfigConstant.SHEET_BEST_PSM => {
-          mapBuilder += (DatasetViewType.PROT_SET_TO_BEST_PEPTIDE_MATCH -> { ds: IdentDataset => new ProtSetToBestPepMatchView(ds, sheet, dateFormat, smartDecimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
+          mapBuilder += (PROT_SET_TO_BEST_PEPTIDE_MATCH -> { ds: IdentDataset => new ProtSetToBestPepMatchView(ds, sheet, dateFormat, smartDecimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
         }
         case ExportConfigConstant.SHEET_PROTEIN_MATCH => {
-          mapBuilder += (DatasetViewType.PROT_SET_TO_PROT_MATCH -> { ds: IdentDataset => new ProtSetToProtMatchView(ds, sheet, dateFormat, smartDecimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
+          mapBuilder += (PROT_SET_TO_PROT_MATCH -> { ds: IdentDataset => new ProtSetToProtMatchView(ds, sheet, dateFormat, smartDecimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
         }
         case ExportConfigConstant.SHEET_ALL_PSM => {
-          mapBuilder += (DatasetViewType.PROT_SET_TO_ALL_PEPTIDE_MATCHES -> { ds: IdentDataset => new ProtSetToAllPepMatchesView(ds, sheet, dateFormat, smartDecimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
+          mapBuilder += (PROT_SET_TO_ALL_PEPTIDE_MATCHES -> { ds: IdentDataset => new ProtSetToAllPepMatchesView(ds, sheet, dateFormat, smartDecimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
         }
         case ExportConfigConstant.SHEET_MASTER_QUANT_PEPTIDE_ION => {
-          mapBuilder += (DatasetViewType.MASTER_QUANT_PEPTIDE_ION -> { ds: IdentDataset => new MasterQuantPeptideIonView(ds, sheet, dateFormat, smartDecimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
+          mapBuilder += (MASTER_QUANT_PEPTIDE_ION -> { ds: IdentDataset => new MasterQuantPeptideIonView(ds, sheet, dateFormat, smartDecimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
         }
         case ExportConfigConstant.SHEET_STAT => {
-          mapBuilder += (DatasetViewType.STATISTICS -> { ds: IdentDataset => new StatisticsView(ds.resultSummary, sheet, dateFormat, decimalFormat) })
+          mapBuilder += (STATISTICS -> { ds: IdentDataset => new StatisticsView(ds.resultSummary, sheet, dateFormat, decimalFormat) })
         }
-        case _ => throw new Exception("invalid sheet")
+        case _ => throw new Exception(s"Invalid sheet: ${sheet.id}")
       }
     }
     
@@ -66,8 +69,8 @@ object BuildDatasetView {
   }
 
   def apply(identDS: IdentDataset, viewType: IViewTypeEnumeration#Value, exportConfig: ExportConfig): IDataView = {
-    val a= _builders(exportConfig)(viewType)
-    a(identDS)
+    val builViewFn = _builders(exportConfig)(viewType)
+    builViewFn(identDS)
   }
   
   //implicit def abstractDs2IdentDs( abstractDs: AbstractDataset ): IdentDataset = abstractDs.asInstanceOf[IdentDataset]

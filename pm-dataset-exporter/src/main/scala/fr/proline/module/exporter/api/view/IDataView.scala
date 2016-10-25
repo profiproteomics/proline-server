@@ -8,7 +8,7 @@ trait IDataView {
   
   def getFieldsNames(): Array[String]
   
-  def getAllRecords(): Seq[Map[String,Any]]  
+  def getAllRecords(): Seq[Map[String,Any]]
     
   def onEachRecord( recordFormatter: Map[String,Any] => Unit )
 
@@ -50,6 +50,8 @@ trait ITableLikeView extends IDataView {
   
 }
 
+// Must be used when a view as a predefined set of fields
+// These fields are described through and IViewFieldEnumeration
 trait IFixedTableView extends ITableLikeView {
   
   val fields: IViewFieldEnumeration
@@ -59,11 +61,7 @@ trait IFixedTableView extends ITableLikeView {
   
 }
 
-trait ICustomTableView extends ITableLikeView {
-  
-  val fields: IViewFieldEnumeration
-  
-  private lazy val fieldsNames = fields.values.toArray.map(_.toString)  
-  def getFieldsNames(): Array[String] = fieldsNames
-  
+// TODO: move this trait to commons view
+trait ICustomTableView extends IFixedTableView {
+  override val fields: fr.proline.module.exporter.commons.config.view.CustomViewFields
 }

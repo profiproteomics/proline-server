@@ -76,6 +76,7 @@ object ExportConfig {
       sheets = Array(
         ExportConfigSheet.getInformationSheetExportConfig(),
         ExportConfigSheet.getImportSheetExportConfig(),
+        ExportConfigSheet.getQuantConfigSheetExportConfig(),
         ExportConfigSheet.getProteinSetsSheetExportConfig(fromXIC, fromSC),
         ExportConfigSheet.getProteinMatchesSheetExportConfig(defaultDisplayed = false),
         //ExportConfigSheet.getBestPeptideMatchesSheetExportConfig(fromXIC, fromSC, defaultDisplayed = false),

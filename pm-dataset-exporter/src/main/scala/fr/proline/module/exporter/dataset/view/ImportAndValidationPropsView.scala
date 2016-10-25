@@ -6,7 +6,7 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.StringUtils
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.om.model.msi._
-import fr.proline.module.exporter.api.view.IFixedTableView
+import fr.proline.module.exporter.api.view.ICustomTableView
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
 import fr.proline.module.exporter.commons.config.ExportConfigConstant._
 import fr.proline.module.exporter.commons.config.ExportConfigSheet
@@ -20,7 +20,7 @@ class ImportAndValidationPropsView(
   val dateFormat: SimpleDateFormat,
   val decimalFormat: SmartDecimalFormat,
   val titleSep: String
-) extends IFixedTableView with LazyLogging {
+) extends ICustomTableView with LazyLogging {
 
   var viewName = "import and validation"
   
