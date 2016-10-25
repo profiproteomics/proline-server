@@ -2,17 +2,7 @@ package fr.proline.module.parser.mascot
 
 import java.io.{ InputStream, File, FileInputStream }
 import scala.io.Source
-import fr.proline.core.om.model.msi.{
-  Activation,
-  ChargeConstraint,
-  Instrument,
-  InstrumentConfig,
-  FragmentIonRequirement,
-  FragmentIonSeries,
-  Fragmentation,
-  FragmentationRule,
-  RequiredSeries
-}
+import fr.proline.core.om.model.msi._
 import fr.profi.util.regex.RegexUtils._
 import fr.profi.util.io._
 import com.typesafe.scalalogging.LazyLogging 
@@ -72,8 +62,10 @@ object MascotFragmentationRuleParser extends LazyLogging  {
     instrumentConfigs.result
   }
 
-  private def _buildInstrumentConfig(instrumentType: String,
-                                     ruleNumbers: Array[Int]): Option[InstrumentConfig] = {
+  private def _buildInstrumentConfig(
+    instrumentType: String,
+    ruleNumbers: Array[Int]
+  ): Option[InstrumentConfig] = {
 
     // Define some vars
     var analyzers = ("", "")
@@ -125,6 +117,8 @@ object MascotFragmentationRuleParser extends LazyLogging  {
 }
 
 object MascotFragmentation {
+  
+  import RequiredSeriesQualityLevel._
 
   val rules: Array[FragmentationRule] = {
 
@@ -160,14 +154,14 @@ object MascotFragmentation {
         description = "a - NH3 if a significant and fragment includes RKNQ",
         ionType = ionTypeMap("a-NH3"),
         requiredSeries = ionSeries.a,
-        requiredSeriesQualityLevel = "significant",
+        requiredSeriesQualityLevel = SIGNIFICANT,
         residueConstraint = Some("RKNQ")
       ),
       FragmentIonRequirement(
         description = "a - H2O if a significant and fragment includes STED",
         ionType = ionTypeMap("a-H2O"),
         requiredSeries = ionSeries.a,
-        requiredSeriesQualityLevel = "significant",
+        requiredSeriesQualityLevel = SIGNIFICANT,
         residueConstraint = Some("STED")
       ),
       FragmentIonRequirement(
@@ -178,14 +172,14 @@ object MascotFragmentation {
         description = "b - NH3 if b significant and fragment includes RKNQ",
         ionType = ionTypeMap("b-NH3"),
         requiredSeries = ionSeries.b,
-        requiredSeriesQualityLevel = "significant",
+        requiredSeriesQualityLevel = SIGNIFICANT,
         residueConstraint = Some("RKNQ")
       ),
       FragmentIonRequirement(
         description = "b - H2O if b significant and fragment includes STED",
         ionType = ionTypeMap("b-H2O"),
         requiredSeries = ionSeries.b,
-        requiredSeriesQualityLevel = "significant",
+        requiredSeriesQualityLevel = SIGNIFICANT,
         residueConstraint = Some("STED")
       ),
       FragmentIonRequirement(
@@ -204,14 +198,14 @@ object MascotFragmentation {
         description = "y - NH3 if y significant and fragment includes RKNQ",
         ionType = ionTypeMap("y-NH3"),
         requiredSeries = ionSeries.y,
-        requiredSeriesQualityLevel = "significant",
+        requiredSeriesQualityLevel = SIGNIFICANT,
         residueConstraint = Some("RKNQ")
       ),
       FragmentIonRequirement(
         description = "y - H2O if y significant and fragment includes STED",
         ionType = ionTypeMap("y-H2O"),
         requiredSeries = ionSeries.y,
-        requiredSeriesQualityLevel = "significant",
+        requiredSeriesQualityLevel = SIGNIFICANT,
         residueConstraint = Some("STED")
       ),
       FragmentIonRequirement(
@@ -231,12 +225,12 @@ object MascotFragmentation {
       RequiredSeries(
         description = "y or y++ must be significant",
         requiredSeries = ionSeries.y,
-        requiredSeriesQualityLevel = "significant"
+        requiredSeriesQualityLevel = SIGNIFICANT
       ),
       RequiredSeries(
         description = "y or y++ must be highest scoring series",
         requiredSeries = ionSeries.y,
-        requiredSeriesQualityLevel = "highest_scoring"
+        requiredSeriesQualityLevel = HIGHEST_SCORING
       ),
       FragmentIonRequirement(
         description = "z+1 series",
