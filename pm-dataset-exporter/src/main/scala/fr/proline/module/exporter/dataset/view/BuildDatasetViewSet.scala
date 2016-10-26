@@ -216,13 +216,14 @@ object BuildDatasetViewSet extends LazyLogging {
       // FIXME: how to deal with other MQC ids
       val masterQuantChannelId = masterQcIds.head
       
-      // Load the quant config
-      val quantConfigProvider = new SQLQuantConfigProvider(udsDbCtx)
-      val quantConfigAndMethodOpt = quantConfigProvider.getQuantConfigAndMethod(dsId)
-      
-      // Load the profilizer config
-      val profilizerConfigProvider = new SQLProfilizerConfigProvider(udsDbCtx)
-      val profilizerConfigOpt = profilizerConfigProvider.getProfilizerConfig(dsId)
+      val( quantConfigAndMethodOpt, profilizerConfigOpt) = if (mode != ExportConfigConstant.MODE_QUANT_XIC) (None,None)
+      else {
+        // Load the quant config and the profilizer config
+        val quantConfigProvider = new SQLQuantConfigProvider(udsDbCtx)
+        val profilizerConfigProvider = new SQLProfilizerConfigProvider(udsDbCtx)
+        
+        (quantConfigProvider.getQuantConfigAndMethod(dsId),profilizerConfigProvider.getProfilizerConfig(dsId))
+      }
 
       // Load the experimental design
       val expDesignProvider = new SQLExperimentalDesignProvider(udsDbCtx)
