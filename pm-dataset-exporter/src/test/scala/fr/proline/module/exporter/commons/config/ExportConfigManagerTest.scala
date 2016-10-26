@@ -73,8 +73,8 @@ class ExportConfigManagerTest extends LazyLogging {
     val configStr = ExportConfigManager.getFullConfigForXicExport()
     //  reserialize check the conf
     val config = ExportConfigManager.readConfig(configStr)
-    assertEquals("All XIC export nbSheets", 7, config.sheets.length)
-    assertEquals("All XIC export nbFields in ProteinSet sheet ", 24, config.sheets(2).fields.length)
+    assertEquals("All XIC export nbSheets", 8, config.sheets.length)
+    assertEquals("All XIC export nbFields in ProteinSet sheet ", 24, config.sheets(3).fields.length)
   }
 
   @Test
@@ -93,7 +93,7 @@ class ExportConfigManagerTest extends LazyLogging {
     val defaultXICConf = ExportConfigManager.getDefaultExportConfigAsJson(ExportConfigConstant.MODE_QUANT_XIC)
     // reserialize to check
     val defaultXICConfObj = ExportConfigManager.readConfig(defaultXICConf)
-    assertEquals("Default Configuration for XIC ", 3, defaultXICConfObj.sheets.length)
+    assertEquals("Default Configuration for XIC ", 4, defaultXICConfObj.sheets.length)
 
   }
 
