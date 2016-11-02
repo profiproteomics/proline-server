@@ -73,10 +73,10 @@ trait AbstractRFImporterTestCase extends AbstractMultipleDBTestCase   {
   }
 
   def buildSQLContextForJPA() = {
-    val udsDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
+    val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
     val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
     val psDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
-    val msiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(2), false)
+    val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(2), false)
 
     val executionContext = BuildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
     val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
