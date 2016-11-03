@@ -805,13 +805,17 @@ class MzIdExporter(
   
   protected def _buildFragmentTolerance(): Option[Tolerance] = {
     
+    import fr.profi.util.ms.MassTolUnitRegex._
+    
     val ms2Settings = searchSettings.msmsSearchSettings
     if( ms2Settings == None) return None
     
-    // TODO: use MassTolUnit enum when also used in MSIdb (check PPM case)
-    val tolUnit = ms2Settings.get.ms2ErrorTolUnit match {
-      case "ppm" => UnitTerm.PartsPerMillion//CvParamUnit("UO:0000169","parts per million")
-      case "Da" => UnitTerm.Dalton//CvParamUnit("UO:0000221","dalton")
+    val tolUnitAsStr = ms2Settings.get.ms2ErrorTolUnit
+    val tolUnit = tolUnitAsStr match {
+      case DaUnit() => UnitTerm.PartsPerMillion // CvParamUnit("UO:0000169","parts per million")
+      case MmuUnit() => UnitTerm.Milli // FIXME: this term is currently missing in the Unit Ontology
+      case PpmUnit() => UnitTerm.Dalton // CvParamUnit("UO:0000221","dalton")
+      case _ => throw new IllegalArgumentException(s"Unknown tolerance unit: '$tolUnitAsStr'")
     }
     
     val tolValue = ms2Settings.get.ms2ErrorTol.toString
