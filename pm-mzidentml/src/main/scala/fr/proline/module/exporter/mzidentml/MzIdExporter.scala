@@ -642,7 +642,10 @@ class MzIdExporter(
         mod.setLocation( if( pepPtm.isCTerm ) seqLength + 1 else pepPtm.seqPosition )
         mod.setAvgMassDelta(pepPtm.averageMass)
         mod.setMonoisotopicMassDelta(pepPtm.monoMass)
-        mod.getResidues().add(pepPtm.definition.residue.toString)
+        
+        val residueChar = pepPtm.definition.residue
+        val residueAsStr = if (residueChar == 0) "." else residueChar.toString
+        mod.getResidues().add(residueAsStr)
         
         modList.add(mod)
       }
