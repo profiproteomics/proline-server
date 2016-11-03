@@ -47,11 +47,6 @@ import fr.proline.core.om.model.msi.PeptideMatchXtandemProperties
 
 class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedExecutionContext, val importProperties: Map[String, Any]) extends DefaultHandler with IResultFile with LazyLogging {
 
-  // this matches the old constructor
-//  def this(xtandemFile: File, parserContext: ProviderDecoratedExecutionContext) {
-//    this(xtandemFile, parserContext, null)
-//  }
-
   // append user properties if any
   private val properties = new HashMap[String, Any]
   if(importProperties != null) properties ++= importProperties
@@ -101,8 +96,8 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
 
     val peptideByUniqueKey = new HashMap[String, Peptide]
     val peptideMatchesByUniqueKey = new HashMap[String, ArrayBuffer[PeptideMatch]]
-    val proteinMatchesPerUniqueKey = new HashMap[String, ProteinMatch]
-    val sequenceMatchesPerUniqueKey = new HashMap[String, ArrayBuffer[SequenceMatch]]
+    val proteinMatchesPerUniqueKey = new HashMap[Tuple2[String, Long], ProteinMatch]
+    val sequenceMatchesPerUniqueKey = new HashMap[Tuple2[String, Long], ArrayBuffer[SequenceMatch]]
     
     // get parsing rules if any
     val parsingRules = if(this.peaklistSoftware.isDefined) this.peaklistSoftware.get.specTitleParsingRule else None
@@ -225,10 +220,10 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
               if(!peptideMatchesByUniqueKey(key).exists(pm => { pm.msQuery.initialId == newPeptideMatch.msQuery.initialId && pm.peptide.uniqueKey == newPeptideMatch.peptide.uniqueKey })) {
                 peptideMatchesByUniqueKey(key) += newPeptideMatch
               }
-              
+
               // define the unique key for the protein
               val seqDatabaseOpt = msiSearch.searchSettings.seqDatabases.filter(_.filePath.equals(getFastaFile(proteinItem.fileMarkup.URL).getPath)).headOption.get
-              val proteinAccessKey = accession + seqDatabaseOpt.id
+              val proteinAccessKey = new Tuple2(accession, seqDatabaseOpt.id)
               // get or create ProteinMatch and store it with a unique key
               if(!proteinMatchesPerUniqueKey.isDefinedAt(proteinAccessKey)) {
                 // get protein first
@@ -276,6 +271,31 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
       proteinMatchesPerUniqueKey(proteinAccessKey).peptideMatchesCount = uniqueSequenceMatches.size
     }}
     
+    // just before the creation of the RS, loop on ProteinMatches and merge those with same AC
+    val proteinMatches = new HashMap[String, ProteinMatch]
+    // loop on each protein matches
+    proteinMatchesPerUniqueKey.foreach{ case (key, proteinMatch) => {
+      val accession = key._1
+      val seqDbId = key._2
+      if(proteinMatches.contains(accession)) {
+        // update this protein match
+        val finalProteinMatch = proteinMatches.get(accession).get
+        // add seqDbId if not already present
+        if(!finalProteinMatch.seqDatabaseIds.contains(seqDbId)) {
+          finalProteinMatch.seqDatabaseIds = finalProteinMatch.seqDatabaseIds ++ Array(seqDbId)
+        }
+        // add sequence matches
+        proteinMatch.sequenceMatches.foreach(seqMatch => {
+          if(!finalProteinMatch.sequenceMatches.contains(seqMatch)) {
+            finalProteinMatch.sequenceMatches = finalProteinMatch.sequenceMatches ++ Array(seqMatch)
+          }
+        })
+      } else {
+        // first occurence of the protein match, add it to the list
+        proteinMatches.put(accession, proteinMatchesPerUniqueKey(key))
+      }
+    }}
+    
     logger.debug("XTandem file parsed, generating final ResultSet")
 
     // return the result set
@@ -284,7 +304,7 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
       name = msiSearch.title,
       peptides = peptideByUniqueKey.values.toArray,
       peptideMatches = peptideMatchesByUniqueKey.flatten(_._2).toArray,
-      proteinMatches = proteinMatchesPerUniqueKey.values.toArray,
+      proteinMatches = proteinMatches.values.toArray,
       isDecoy = wantDecoy, 
       isSearchResult = true,
       isValidatedContent = false, 
