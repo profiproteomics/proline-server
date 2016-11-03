@@ -40,12 +40,15 @@ class MascotDataParser(
   /**
    * References ProteinWrapper by ProteinAcc_SeqDbId key
    */
-  private var protAccSeqDbToProteinWrapper: HashMap[String, ProteinWrapper] = null
+//  private var protAccSeqDbToProteinWrapper: HashMap[String, ProteinWrapper] = null
+  private var protAccSeqDbToProteinWrapper: HashMap[Tuple2[String, String], ProteinWrapper] = null
   /**
    * References ProteinMatch by ProteinWrapper. If associated Protein, it will be store in
    * ProteinWrapper else the accession / seqdatabase id will be store in wrapper.
    */
   private var wrappedProtToProtMatch: HashMap[ProteinWrapper, ProteinMatch] = null
+  
+  private var accessionToProteinMatches: HashMap[String, ProteinMatch] = null
 
   /**
    *  Get Resulting Peptide Matches (for each identified peptide)
@@ -57,7 +60,8 @@ class MascotDataParser(
   /**
    *  Get Resulting Protein Matches
    */
-  def getProteinMatches(): Array[ProteinMatch] = wrappedProtToProtMatch.values.toArray
+//  def getProteinMatches(): Array[ProteinMatch] = wrappedProtToProtMatch.values.toArray
+  def getProteinMatches(): Array[ProteinMatch] = accessionToProteinMatches.values.toArray
 
   /**
    * Create all necessary data for each peptide Matches identifying at least one protein.
@@ -84,7 +88,8 @@ class MascotDataParser(
     pepByUniqueKey = new HashMap[String, Peptide]()
     pepToPeptideMatches = new HashMap[Peptide, ArrayBuffer[PeptideMatch]]()
     wrappedProtToProtMatch = new HashMap[ProteinWrapper, ProteinMatch]()
-    protAccSeqDbToProteinWrapper = new HashMap[String, ProteinWrapper]()
+//    protAccSeqDbToProteinWrapper = new HashMap[String, ProteinWrapper]()
+    protAccSeqDbToProteinWrapper = new HashMap[Tuple2[String, String], ProteinWrapper]()
 
     val nbrQueries = mascotResFile.getNumQueries()
     val maxRankPerQuery = pepSummary.getMaxRankValue()
@@ -258,7 +263,8 @@ class MascotDataParser(
             // --- Get or create ProteinWrapper, and Protein if defined, for matched Protein ---
             
             // Check if the protein has been already accessed            
-            val protWrapperKey = protAcc.get(indProt) + (dbs.get(indProt).toString)
+//            val protWrapperKey = protAcc.get(indProt) + (dbs.get(indProt).toString)
+            val protWrapperKey = new Tuple2(protAcc.get(indProt), (dbs.get(indProt).toString))
             val protOpt = if (protAccSeqDbToProteinWrapper.contains(protWrapperKey)) {
               protAccSeqDbToProteinWrapper.get(protWrapperKey).get.wrappedProt
             } else {
@@ -389,6 +395,31 @@ class MascotDataParser(
       } // End of try - finally block
 
     }
+
+    // just before the creation of the RS, loop on ProteinMatches and merge those with same AC
+    accessionToProteinMatches = new HashMap[String, ProteinMatch]
+    // loop on each protein matches
+    protAccSeqDbToProteinWrapper.foreach{ case (key, proteinWrapper) => {
+      val accession = key._1
+      val seqDbId = key._2.toLong
+      if(accessionToProteinMatches.contains(accession)) {
+        // update this protein match
+        val finalProteinMatch = accessionToProteinMatches.get(accession).get
+        // add seqDbId if not already present
+        if(!finalProteinMatch.seqDatabaseIds.contains(seqDbId)) {
+          finalProteinMatch.seqDatabaseIds = finalProteinMatch.seqDatabaseIds ++ Array(seqDbId)
+        }
+        // add sequence matches
+        wrappedProtToProtMatch.get(proteinWrapper).get.sequenceMatches.foreach(seqMatch => {
+          if(!finalProteinMatch.sequenceMatches.contains(seqMatch)) {
+            finalProteinMatch.sequenceMatches = finalProteinMatch.sequenceMatches ++ Array(seqMatch)
+          }
+        })
+      } else {
+        // first occurence of the protein match, add it to the list
+        accessionToProteinMatches.put(accession, wrappedProtToProtMatch.get(proteinWrapper).get)
+      }
+    }}
 
     logger.debug("Found " + totalNbrSeqMatches + " SeqMatches for " + totalNbrPepMatches + " PeptidesMatches")
     return true
