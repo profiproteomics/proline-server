@@ -8,6 +8,7 @@ import fr.profi.jdbc.easy._
 import fr.profi.util.StringUtils
 import fr.profi.util.collection._
 import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.MsiDbConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.DoJDBCReturningWork
@@ -448,48 +449,42 @@ object BuildDatasetViewSet extends LazyLogging {
 
   }
 
-  private def _buildBioSequenceLoader(msiDbCtx: DatabaseConnectionContext, lazyRsm: LazyResultSummary) = {
-    () =>
-      {
-        logger.debug("Loading biological sequences...")
+  private def _buildBioSequenceLoader(msiDbCtx: MsiDbConnectionContext, lazyRsm: LazyResultSummary) = { () =>
+    logger.debug("Loading biological sequences...")
 
-        val bioSeqProvider = new SQLBioSequenceProvider(msiDbCtx)
+    val bioSeqProvider = new SQLBioSequenceProvider(msiDbCtx)
 
-        val protMatches = lazyRsm.lazyResultSet.proteinMatches
-        val protIds = new ArrayBuffer[Long](protMatches.length)
+    val protMatches = lazyRsm.lazyResultSet.proteinMatches
+    val protIds = new ArrayBuffer[Long](protMatches.length)
 
-        for (protMatch <- protMatches) {
-          val protId = protMatch.getProteinId
-          if (protId > 0) {
-            protIds += protId
-          }
-        }
-
-        bioSeqProvider.getBioSequences(protIds, loadSequence = false)
+    for (protMatch <- protMatches) {
+      val protId = protMatch.getProteinId
+      if (protId > 0) {
+        protIds += protId
       }
+    }
+
+    bioSeqProvider.getBioSequences(protIds, loadSequence = false)
   }
 
-  private def _buildSpectraLoader(msiDbCtx: DatabaseConnectionContext) = {
-    (peaklistIds: Array[Long]) =>
-      {
-        logger.debug("Loading spectra descriptors...")
+  private def _buildSpectraLoader(msiDbCtx: MsiDbConnectionContext) = { (peaklistIds: Array[Long]) =>
+    logger.debug("Loading spectra descriptors...")
 
-        val spectrumProvider = new SQLSpectrumProvider(msiDbCtx)
+    val spectrumProvider = new SQLSpectrumProvider(msiDbCtx)
 
-        spectrumProvider.getPeaklistsSpectra(peaklistIds, loadPeaks = false)
+    spectrumProvider.getPeaklistsSpectra(peaklistIds, loadPeaks = false)
 
-        /*val peptideMatches = lazyRsm.lazyResultSet.peptideMatches
-      val spectraIds = new ArrayBuffer[Long](peptideMatches.length)
-      for( peptideMatch <- peptideMatches) {
-        if( peptideMatch.msQuery != null ) {
-          peptideMatch.msQuery match {
-            case ms2Query: Ms2Query => spectraIds += ms2Query.spectrumId
-          }
+    /*val peptideMatches = lazyRsm.lazyResultSet.peptideMatches
+    val spectraIds = new ArrayBuffer[Long](peptideMatches.length)
+    for( peptideMatch <- peptideMatches) {
+      if( peptideMatch.msQuery != null ) {
+        peptideMatch.msQuery match {
+          case ms2Query: Ms2Query => spectraIds += ms2Query.spectrumId
         }
       }
-      
-      spectrumProvider.getSpectra(spectraIds, loadPeaks = false)*/
-      }
+    }
+    
+    spectrumProvider.getSpectra(spectraIds, loadPeaks = false)*/
   }
 
 }
