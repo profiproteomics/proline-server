@@ -9,9 +9,9 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi.SearchSettings
 import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.om.model.msi.SpectrumMatch
-import fr.proline.module.fragment_match.FragmentIonTable
-import fr.proline.module.fragment_match.FragmentIons
-//import fr.proline.module.fragment_match.FragmentMatchManager
+import fr.proline.module.fragmentmatch.FragmentIonTable
+import fr.proline.module.fragmentmatch.FragmentIons
+//import fr.proline.module.fragmentmatch.FragmentMatchManager
 import javax.xml.stream.XMLInputFactory
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.LocatedPtm
