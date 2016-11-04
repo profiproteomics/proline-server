@@ -42,7 +42,7 @@ import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.fs.MountPointRegistry
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
 import fr.proline.jms.service.api.ISingleThreadedService
-import fr.proline.module.fragment_match.service.SpectrumMatchesGenerator
+import fr.proline.module.fragmentmatch.service.SpectrumMatchesGenerator
 
 
 
