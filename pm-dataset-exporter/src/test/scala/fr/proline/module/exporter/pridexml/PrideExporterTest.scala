@@ -17,7 +17,7 @@ import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.ResultSummary
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.service.msi.ResultSetValidator
-import fr.proline.module.fragment_match.service.SpectrumMatchesGenerator
+import fr.proline.module.fragmentmatch.service.SpectrumMatchesGenerator
 import fr.proline.repository.DriverType
 import org.junit.Assert
 import org.junit.Ignore
