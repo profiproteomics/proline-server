@@ -1,4 +1,4 @@
-package fr.proline.module.fragment_match
+package fr.proline.module.fragmentmatch
 
 import scala.collection.mutable.ArrayBuffer
 

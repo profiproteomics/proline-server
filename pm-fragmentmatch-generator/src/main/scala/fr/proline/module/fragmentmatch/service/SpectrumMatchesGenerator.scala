@@ -1,4 +1,4 @@
-package fr.proline.module.fragment_match.service
+package fr.proline.module.fragmentmatch.service
 
 import java.sql.Connection
 import scala.Array.canBuildFrom
@@ -22,10 +22,7 @@ import fr.proline.core.om.provider.msi.impl.SQLSpectrumProvider
 import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.SQLRsWriter
 import fr.proline.core.om.storer.msi.impl.StorerContext
-import fr.proline.module.fragment_match.PeptideSpectrumMatcher
-import fr.proline.module.fragment_match.PeptideSpectrumMatcherMascot
-import fr.proline.module.fragment_match.PeptideSpectrumMatcherOmssa
-import fr.proline.module.fragment_match.PeptideSpectrumMatcherXtandem
+import fr.proline.module.fragmentmatch._
 import fr.proline.repository.util.JDBCWork
 import fr.proline.core.om.model.msi.MSISearch
 import fr.proline.context.DatabaseConnectionContext

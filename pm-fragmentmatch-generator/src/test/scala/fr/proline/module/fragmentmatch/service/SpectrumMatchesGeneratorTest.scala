@@ -1,4 +1,4 @@
-package fr.proline.module.fragment_match.service
+package fr.proline.module.fragmentmatch.service
 
 import org.junit.After
 import org.junit.Assert.assertTrue
