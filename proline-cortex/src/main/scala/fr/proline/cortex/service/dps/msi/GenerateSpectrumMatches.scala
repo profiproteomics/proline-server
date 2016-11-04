@@ -7,7 +7,7 @@ import fr.profi.util.primitives.toLong
 import fr.proline.cortex.api.service.dps.msi.IGenerateSpectrumMatchesService
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
-import fr.proline.module.fragment_match.service.SpectrumMatchesGenerator
+import fr.proline.module.fragmentmatch.service.SpectrumMatchesGenerator
 
 /**
  *  Define JMS Service which allows to generate spectrum matches
