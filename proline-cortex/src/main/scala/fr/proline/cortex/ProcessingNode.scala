@@ -125,7 +125,8 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         // Step 3 Directly instantiate the JMS ConnectionFactory object using that TransportConfiguration
         val cf = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF, transportConfiguration) //.asInstanceOf[ConnectionFactory]
        cf.setConsumerWindowSize(0)
-        
+//       cf.setClientFailureCheckPeriod(5000);
+       cf.setReconnectAttempts(10);
         // Step 4.Create a JMS Connection
         m_connection = cf.createConnection()
 
