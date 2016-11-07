@@ -808,17 +808,16 @@ class MzIdExporter(
   
   protected def _buildFragmentTolerance(): Option[Tolerance] = {
     
-    import fr.profi.util.ms.MassTolUnitRegex._
+    import fr.profi.util.ms.MassTolUnit
     
     val ms2Settings = searchSettings.msmsSearchSettings
     if( ms2Settings == None) return None
     
-    val tolUnitAsStr = ms2Settings.get.ms2ErrorTolUnit
-    val tolUnit = tolUnitAsStr match {
-      case DaUnit() => UnitTerm.PartsPerMillion // CvParamUnit("UO:0000169","parts per million")
-      case MmuUnit() => UnitTerm.Milli // FIXME: this term is currently missing in the Unit Ontology
-      case PpmUnit() => UnitTerm.Dalton // CvParamUnit("UO:0000221","dalton")
-      case _ => throw new IllegalArgumentException(s"Unknown tolerance unit: '$tolUnitAsStr'")
+    val tolUnit = MassTolUnit.string2unit(ms2Settings.get.ms2ErrorTolUnit)
+    val tolUnitCv = tolUnit match {
+      case MassTolUnit.Da => UnitTerm.Dalton // CvParamUnit("UO:0000221","dalton")
+      case MassTolUnit.mmu => UnitTerm.Milli // FIXME: this term is currently missing in the Unit Ontology
+      case MassTolUnit.PPM => UnitTerm.PartsPerMillion // CvParamUnit("UO:0000169","parts per million")
     }
     
     val tolValue = ms2Settings.get.ms2ErrorTol.toString
@@ -826,14 +825,14 @@ class MzIdExporter(
     tol.getCvParam().add(
       PsiCvParam(
         PsiMs.SearchTolerancePlusValue,
-        tolUnit,
+        tolUnitCv,
         tolValue
       )
     )
     tol.getCvParam().add(
       PsiCvParam(
         PsiMs.SearchToleranceMinusValue,
-        tolUnit,
+        tolUnitCv,
         tolValue
       )
     )
