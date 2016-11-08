@@ -347,7 +347,7 @@ public class MSDataReader {
 		PeptideMatch pm = new PeptideMatch(PeptideMatch.generateNewId(),
 			1, // Rank will be calculated once all Pep matches are read
 			score,
-			PeptideMatchScoreType.MAXQUANT_SCORE(),
+			PeptideMatchScoreType.ANDROMEDA_SCORE(),
 			charge,
 			deltaMass,
 			Boolean.FALSE, //isDecoy !! TODO
