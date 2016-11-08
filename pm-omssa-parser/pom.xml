@@ -20,7 +20,7 @@
     <version.path>${basedir}/src/main/scala/fr/proline/module/parser/omssa</version.path>
   </properties>
 	<scm>
-	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-OmssaParser/trunk</connection>
+	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-OmssaParser/branches/0.5.0-RCandidates</connection>
 	</scm>
 
 
