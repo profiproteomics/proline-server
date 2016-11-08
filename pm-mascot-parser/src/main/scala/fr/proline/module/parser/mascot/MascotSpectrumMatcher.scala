@@ -86,7 +86,7 @@ class MascotSpectrumMatcher(mascotResFile: ms_mascotresfile, mascotConfig: IMasc
     val usedPeaksCount = mascotPep.getPeaksUsedFromIons1() // was numUsed    
 
     val (ms2ErrorTol, ms2ErrorTolUnitStr) = (mascotSearchParams.getITOL, mascotSearchParams.getITOLU)
-    val ms2ErrorTolUnit = MassTolUnit.withName(ms2ErrorTolUnitStr)
+    val ms2ErrorTolUnit = MassTolUnit.string2unit(ms2ErrorTolUnitStr)
 
     // To find the matching peaks we need to have them in the correct order
     // Mascot store peaks in a custom order so we have to parse again the data
