@@ -18,7 +18,7 @@
   </properties>
   
   <scm>
-  	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-JMS-Components/Proline-Cortex/branches/0.3.0.c_Merge_0.3.0.a&amp;0.3.0.b</connection>
+  	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-JMS-Components/Proline-Cortex/branches/0.3.0-RCandidates</connection>
   </scm>
   <dependencies>
 
