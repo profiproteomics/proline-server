@@ -20,7 +20,7 @@
   </properties>
   
   <scm>
-    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-JMS-Components/Proline-Cortex-API/trunk</connection>
+    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-JMS-Components/Proline-Cortex-API/branches/0.3.0-RCandidates</connection>
   </scm>
   
   <dependencies>
