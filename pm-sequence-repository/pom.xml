@@ -19,7 +19,7 @@
 		<core.version>1.0.0-SNAPSHOT</core.version>
 	</properties>
 	<scm>
-		<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-SequenceRepository/trunk</connection>
+		<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-SequenceRepository/branches/0.5.0-RCandidates</connection>
 	</scm>
 
 
