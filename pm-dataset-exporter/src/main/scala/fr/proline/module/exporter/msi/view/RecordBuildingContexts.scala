@@ -17,11 +17,11 @@ case class ProtMatchBuildingContext(
   val specificSeqs = new ArrayBuffer[String]( peptideCount )
   val specificPeps = new ArrayBuffer[Peptide]( peptideCount )
   val specificPepMatchIds = new ArrayBuffer[Long]( peptideCount )
-  
+
   for(item <- protSet.peptideSet.items ) {
     val pepInst = item.peptideInstance
     allSeqs += pepInst.peptide.sequence
-    if( pepInst.isValidProteinSetSpecific) {
+    if(protSet.isValidated && pepInst.isValidProteinSetSpecific) {
       specificSeqs += pepInst.peptide.sequence
       specificPeps += pepInst.peptide
       specificPepMatchIds ++= pepInst.getPeptideMatchIds

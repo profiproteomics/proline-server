@@ -61,11 +61,11 @@ abstract class AbstractProtSetToTypicalProtMatchView extends AbstractIdentDatase
         case FIELD_PROTEIN_SETS_COVERAGE => dcf2.format(protMatchCoverage)
         case FIELD_PROTEIN_SETS_MW => decimalFormat.format(mass)
         case FIELD_PROTEIN_SETS_NB_SEQUENCES => buildingCtx.allSeqs.distinct.length
-        case FIELD_PROTEIN_SETS_NB_SPECIFIC_SEQUENCES => buildingCtx.specificSeqs.distinct.length
+        case FIELD_PROTEIN_SETS_NB_SPECIFIC_SEQUENCES => if(protSet.isValidated) buildingCtx.specificSeqs.distinct.length else -1
         case FIELD_PROTEIN_SETS_NB_PEPTIDES => buildingCtx.peptideCount
-        case FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDES => buildingCtx.specificPeps.length
+        case FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDES => if(protSet.isValidated) buildingCtx.specificPeps.length else -1 
         case FIELD_PROTEIN_SETS_NB_PEPTIDE_MATCHES => protSet.peptideSet.peptideMatchesCount
-        case FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDE_MATCHES => buildingCtx.specificPepMatchIds.length
+        case FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDE_MATCHES => if(protSet.isValidated) buildingCtx.specificPepMatchIds.length else -1 
       }
       
       recordBuilder += fieldConfig.title -> fieldValue
