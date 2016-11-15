@@ -198,11 +198,13 @@ public final class DatabaseAccess {
 					throw new RuntimeException("SEQ Db does not exist");
 				}
 
-			} else if (allowCreateUpdateDB) {
+			} else {
 				boolean cheksumrepair=false;
 				seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
 					ProlineDatabaseType.SEQ, seqDb.toPropertiesMap(udsDbConnector.getDriverType()));
-				DatabaseUpgrader.upgradeDatabase(seqDbConnector,cheksumrepair);
+				if (allowCreateUpdateDB) {
+					DatabaseUpgrader.upgradeDatabase(seqDbConnector,cheksumrepair);
+				}
 			}		     			
 
 		} finally {
