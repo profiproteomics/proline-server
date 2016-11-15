@@ -128,13 +128,13 @@ public final class DatabaseAccess {
 	 *            <code>true</code> if called by service (lazy initialization of SEQ Database) or <code>false</code> if called by client (provider use)
 	 * @return SEQ DatabaseConnector or <code>null</code> if DatabaseConnector cannot be initialized
 	 */
-	public static IDatabaseConnector getSEQDatabaseConnector(final boolean allowCreateDB) {
+	public static IDatabaseConnector getSEQDatabaseConnector(final boolean allowCreateUpdateDB) {
 		IDatabaseConnector result = null;
 
 		synchronized (INITIALIZATION_LOCK) {
 
 			if (seqDatabaseConnector == null) {
-				result = createSEQDatabaseConnector(allowCreateDB, null);
+				result = createSEQDatabaseConnector(allowCreateUpdateDB, null);
 
 				seqDatabaseConnector = result;
 			} else {
@@ -155,13 +155,13 @@ public final class DatabaseAccess {
 	 *            Properties to use to create UDSConnector
 	 * @return SEQ DatabaseConnector or <code>null</code> if DatabaseConnector cannot be initialized
 	 */
-	public static IDatabaseConnector getSEQDatabaseConnector(final boolean allowCreateDB, final Map<Object, Object> udsDbProperties) {
+	public static IDatabaseConnector getSEQDatabaseConnector(final boolean allowCreateUpdateDB, final Map<Object, Object> udsDbProperties) {
 		IDatabaseConnector result = null;
 
 		synchronized (INITIALIZATION_LOCK) {
 
 			if (seqDatabaseConnector == null) {
-				result = createSEQDatabaseConnector(allowCreateDB, udsDbProperties);
+				result = createSEQDatabaseConnector(allowCreateUpdateDB, udsDbProperties);
 
 				seqDatabaseConnector = result;
 			} else {
@@ -174,7 +174,7 @@ public final class DatabaseAccess {
 	}
 
 	/* Called holding INITIALIZATION_LOCK */
-	private static IDatabaseConnector createSEQDatabaseConnector(final boolean allowCreateDB, final Map<Object, Object> udsDbProperties) {
+	private static IDatabaseConnector createSEQDatabaseConnector(final boolean allowCreateUpdateDB, final Map<Object, Object> udsDbProperties) {
 		IDatabaseConnector seqDbConnector = null;
 		IDataStoreConnectorFactory dataStoreConnectorFactory = null;
 		if (udsDbProperties != null && !udsDbProperties.isEmpty())
@@ -191,21 +191,19 @@ public final class DatabaseAccess {
 
 			if (seqDb == null) {
 
-				if (allowCreateDB) {
+				if (allowCreateUpdateDB) {
 					LOG.info("No ExternalDb for SEQ Db creating a new one");
 					seqDbConnector = createSEQDatabase(udsDbConnector, udsEM);
 				} else {
 					throw new RuntimeException("SEQ Db does not exist");
 				}
 
-			} else {
+			} else if (allowCreateUpdateDB) {
 				boolean cheksumrepair=false;
 				seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
 					ProlineDatabaseType.SEQ, seqDb.toPropertiesMap(udsDbConnector.getDriverType()));
-				    DatabaseUpgrader.upgradeDatabase(seqDbConnector,cheksumrepair);
-				
-		     
-			}
+				DatabaseUpgrader.upgradeDatabase(seqDbConnector,cheksumrepair);
+			}		     			
 
 		} finally {
 
