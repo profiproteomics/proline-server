@@ -38,7 +38,8 @@ case class MSDiagOutput(
   val columnTypes: Seq[_] = Seq[String](), // the column types (i.e. Integer, Double, String) to determine action for graphs
   val columnCategories: Seq[_] = Seq[String](), // tells whether it is a legend or data
   val xAxisDescription: String = "", // the string description of the X axis (ie. Retention times)
-  val yAxisDescription: String = "" // the string description of the Y axis (ie. Score)
+  val yAxisDescription: String = "", // the string description of the Y axis (ie. Score)
+  val preferedOrder: Int = 0
   ) {
   
   override def toString: String = {

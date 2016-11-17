@@ -73,7 +73,7 @@ class MSDiag(val rsId: Long, val parserContext: IExecutionContext) extends LazyL
     })
   }
 									      
-  private val authorizedMethodRegex = "^getMSDiag.*"
+  private val authorizedMethodRegex = "^getMSDiag_.*"
   /**
    * Access the list of methods available in MSDiag
    * @return the list of methods with a name starting with "getMSDiag"
@@ -102,21 +102,21 @@ class MSDiag(val rsId: Long, val parserContext: IExecutionContext) extends LazyL
     })
     msdiags.toArray
   }
+
+  def getMSDiag_assignementRepartition: MSDiagOutput = AssignementRepartition.get(rs, 0)
+  def getMSDiag_matchesPerResultSetAndScore: MSDiagOutput = MatchesPerResultSetAndScore.get(rs, scoreWindow, maxRank, 1)
+  def getMSDiag_matchesPerChargeAndScore: MSDiagOutput = MatchesPerChargeAndScore.get(rs, scoreWindow, maxRank, 2)
+  def getMSDiag_massesPerChargeAndScore: MSDiagOutput = MassesPerChargeAndScore.get(rs, scoreWindow, maxRank, 3)
+  def getMSDiag_matchesPerMinuteAndScore: MSDiagOutput = MatchesPerMinuteAndScore.get(rs, scoreWindow, maxRank, 4)
   
-  def getMSDiagMatchesPerChargeAndScore: MSDiagOutput = MatchesPerChargeAndScore.get(rs, scoreWindow, maxRank)
-  
-  def getMSDiagMatchesPerMinuteAndScore: MSDiagOutput = MatchesPerMinuteAndScore.get(rs, scoreWindow, maxRank)
-  
+//  def getMSDiagMatchesPerChargeAndScore: MSDiagOutput = MatchesPerChargeAndScore.get(rs, scoreWindow, maxRank)
+//  def getMSDiagMatchesPerMinuteAndScore: MSDiagOutput = MatchesPerMinuteAndScore.get(rs, scoreWindow, maxRank)
+//  def getMSDiagMatchesPerResultSetAndScore: MSDiagOutput = MatchesPerResultSetAndScore.get(rs, scoreWindow, maxRank)
+//  def getMSDiagMassesPerChargeAndScore: MSDiagOutput = MassesPerChargeAndScore.get(rs, scoreWindow, maxRank)
+//  def getMSDiagAssignementRepartition: MSDiagOutput = AssignementRepartition.get(rs)
+  // not used anymore
 //  def getMSDiagMatchesPerScanAndScore: MSDiagOutput = MatchesPerScanAndScore.get(rs, scoreWindow, maxRank, nbScansPerGroup)
-  
-  def getMSDiagMatchesPerResultSetAndScore: MSDiagOutput = MatchesPerResultSetAndScore.get(rs, scoreWindow, maxRank)
-  
 //  def getMSDiagMassesPerCharge: MSDiagOutput = MassesPerCharge.get(rs, maxRank)
-  
-  def getMSDiagMassesPerChargeAndScore: MSDiagOutput = MassesPerChargeAndScore.get(rs, scoreWindow, maxRank)
-  
-  def getMSDiagAssignementRepartition: MSDiagOutput = AssignementRepartition.get(rs)
-  
 //  def getMSDiagMassesPerScore: MSDiagOutput = null
 
 }

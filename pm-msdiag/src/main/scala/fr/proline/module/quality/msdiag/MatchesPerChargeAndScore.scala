@@ -24,7 +24,7 @@ object MatchesPerChargeAndScore extends LazyLogging {
   
   private var rs: MSDiagResultSetManager = null
   
-  def get(_rs: MSDiagResultSetManager, scoreWindow: Array[Float], maxRank: Integer): MSDiagOutput = {
+  def get(_rs: MSDiagResultSetManager, scoreWindow: Array[Float], maxRank: Integer, preferedOrder: Int = 0): MSDiagOutput = {
     
     rs = _rs
 //    val peptideMatches = rs.getAllPeptideMatches.filter(_.rank == maxRank)
@@ -79,7 +79,8 @@ object MatchesPerChargeAndScore extends LazyLogging {
       columnTypes = columnTypes.toSeq,
       columnCategories = columnCategories.toSeq,
       xAxisDescription = "Charge",
-      yAxisDescription = "PSMs")
+      yAxisDescription = "PSMs",
+      preferedOrder = preferedOrder)
   }
 
 }
