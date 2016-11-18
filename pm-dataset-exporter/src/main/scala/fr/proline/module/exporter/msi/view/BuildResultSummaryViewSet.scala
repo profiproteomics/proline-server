@@ -297,8 +297,11 @@ object BuildRSMSpectraViewSet extends LazyLogging {
     })
 
     logger.debug(" spectrumMatchesByPeptMatchId  " + spectrumMatchesByPeptMatchId.size)
-    if(spectrumMatchesByPeptMatchId.size != validatedPepMatchIdsSet.size)
-      logger.warn(" *** Some spectrum Matches are missing for RSM "+rsm.id+" !!!!")
+    if(spectrumMatchesByPeptMatchId.size != validatedPepMatchIdsSet.size) {
+      val errorMsg = " *** Some spectrum Matches are missing for RSM "+rsm.id+" !! Generate Spectrum Matches should be run first"
+      logger.warn(errorMsg)
+      throw new RuntimeException(errorMsg)
+    }
       
     return apply(IdentWithSpectrumDataSet( rsm, sharedPepMatchIds.toSet.toArray, spectrumByPepMathID, spectrumMatchesByPeptMatchId, mqPepByPepId ), viewSetName, viewSetTemplate, null)
 
