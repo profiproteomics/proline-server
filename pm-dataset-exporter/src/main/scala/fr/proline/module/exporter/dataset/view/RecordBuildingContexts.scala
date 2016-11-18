@@ -27,7 +27,7 @@ class ProtMatchBuildingContext(
   for (item <- protSet.peptideSet.items) {
     val pepInst = item.peptideInstance
     allSeqs += pepInst.peptide.sequence
-    if (pepInst.isValidProteinSetSpecific) {
+    if (protSet.isValidated && pepInst.isValidProteinSetSpecific) {
       specificSeqs += pepInst.peptide.sequence
       specificPeps += pepInst.peptide
       specificPepMatchIds ++= pepInst.getPeptideMatchIds
