@@ -24,7 +24,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 object MatchesPerScanAndScore extends LazyLogging {
 
-  def get(rs: MSDiagResultSetManager, scoreWindow: Array[Float], maxRank: Integer, nbScansPerGroup: Int): MSDiagOutput = {
+  def get(rs: MSDiagResultSetManager, scoreWindow: Array[Float], maxRank: Integer, nbScansPerGroup: Int, preferedOrder: Int = 0): MSDiagOutput = {
 
 //    val peptideMatches = rs.getAllPeptideMatches.filter(_.rank == maxRank)
     val peptideMatches = if(rs.isTargetOnly) rs.getAllPeptideMatches.filter(_.sdPrettyRank <= maxRank) else rs.getAllPeptideMatches.filter(_.cdPrettyRank <= maxRank)
@@ -73,7 +73,8 @@ object MatchesPerScanAndScore extends LazyLogging {
       columnTypes = columnTypes.toSeq,
       columnCategories = columnCategories.toSeq,
       xAxisDescription = "Scan numbers",
-      yAxisDescription = "Matches")
+      yAxisDescription = "Matches",
+      preferedOrder = preferedOrder)
   }
   
 }

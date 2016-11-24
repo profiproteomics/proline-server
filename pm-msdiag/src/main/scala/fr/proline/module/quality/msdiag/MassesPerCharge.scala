@@ -18,7 +18,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 object MassesPerCharge extends LazyLogging {
 
-  def get(rs: MSDiagResultSetManager, maxRank: Integer): MSDiagOutput = {
+  def get(rs: MSDiagResultSetManager, maxRank: Integer, preferedOrder: Int = 0): MSDiagOutput = {
     
 //    val peptideMatches = rs.getAllPeptideMatches.filter(_.rank == maxRank)
     val peptideMatches = if(rs.isTargetOnly) rs.getAllPeptideMatches.filter(_.sdPrettyRank <= maxRank) else rs.getAllPeptideMatches.filter(_.cdPrettyRank <= maxRank)
@@ -52,7 +52,8 @@ object MassesPerCharge extends LazyLogging {
       columnTypes = columnTypes.toSeq,
       columnCategories = columnCategories.toSeq,
       xAxisDescription = "Masses",
-      yAxisDescription = "Charges")
+      yAxisDescription = "Charges",
+      preferedOrder = preferedOrder)
   }
   
   private def getMedianMass(peptideMatchesPerCharge: Array[PeptideMatch]): Double = {

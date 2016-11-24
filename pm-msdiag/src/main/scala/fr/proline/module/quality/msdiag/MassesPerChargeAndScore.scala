@@ -11,7 +11,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 object MassesPerChargeAndScore extends LazyLogging {
 
-  def get(rs: MSDiagResultSetManager, scoreWindow: Array[Float], maxRank: Integer): MSDiagOutput = {
+  def get(rs: MSDiagResultSetManager, scoreWindow: Array[Float], maxRank: Integer, preferedOrder: Int = 0): MSDiagOutput = {
 
     if (scoreWindow.length == 0) throw new Exception("Score window is empty")
     val unassignedQueries = rs.getUnassignedQueries
@@ -53,7 +53,8 @@ object MassesPerChargeAndScore extends LazyLogging {
       columnTypes = columnTypes.toSeq,
       columnCategories = columnCategories.toSeq,
       xAxisDescription = "Charge and score",
-      yAxisDescription = "MoZ")
+      yAxisDescription = "MoZ",
+      preferedOrder = preferedOrder)
   }
 
   private def getRowValues(charge: Int, score: String, matches: Any): Array[Any] = Array(charge, score, getMinMoz(matches), getMaxMoz(matches), getAverageMoz(matches), getMedianMoz(matches))  

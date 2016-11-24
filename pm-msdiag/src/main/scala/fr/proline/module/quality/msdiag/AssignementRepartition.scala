@@ -15,7 +15,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 object AssignementRepartition extends LazyLogging {
 
-  def get(rs: MSDiagResultSetManager): MSDiagOutput = {
+  def get(rs: MSDiagResultSetManager, preferedOrder: Int = 0): MSDiagOutput = {
     
     val columnNames = Array[String]("Unassigned", "Assigned")
     val columnTypes = Array[String]("Double", "Double")
@@ -31,6 +31,7 @@ object AssignementRepartition extends LazyLogging {
       columnTypes = columnTypes.toSeq,
       columnCategories = columnCategories.toSeq,
       description = "Assigned and unassigned spectra",
-      columnNames = columnNames.toSeq)
+      columnNames = columnNames.toSeq,
+      preferedOrder = preferedOrder)
   }
 }

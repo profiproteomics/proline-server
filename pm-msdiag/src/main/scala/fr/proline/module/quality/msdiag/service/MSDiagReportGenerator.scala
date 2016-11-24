@@ -9,6 +9,7 @@ import fr.proline.core.om.storer.msi.RsStorer
 import fr.proline.core.om.storer.msi.impl.StorerContext
 import fr.proline.module.quality.msdiag.MSDiag
 import com.typesafe.scalalogging.LazyLogging
+import fr.proline.module.quality.msdiag.msi.MSDiagOutput
 
 class MSDiagReportGenerator(
   executionContext: IExecutionContext,
@@ -45,7 +46,7 @@ class MSDiagReportGenerator(
     val reports = msdiag.getAvailableReports
     logger.info("MSDiag returned " + reports.size + " reports")
     resultHashMapJson = ProfiJson.serialize(reports.map(msd => msd.description -> ProfiJson.serialize(msd)).toMap)
-    logger.info("Json serialization takes " + resultHashMapJson.length() + " bytes")   
+    logger.info("Json serialization takes " + resultHashMapJson.length() + " bytes")
 
     // Execution context should be closed by the service caller
     executionContext.closeAll()
