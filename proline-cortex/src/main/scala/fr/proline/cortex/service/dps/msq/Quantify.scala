@@ -2,7 +2,6 @@ package fr.proline.cortex.service.dps.msq
 
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.core.om.model.msq.ExperimentalDesign
@@ -16,6 +15,7 @@ import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.fs.MountPointPathConverter
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
 import fr.proline.jms.service.api.ISingleThreadedService
+import fr.proline.jms.util.NodeConfig
 
 /**
  *  Define JMS Service which allows to creates a new quantitation and perform the corresponding data analysis.
@@ -57,6 +57,9 @@ class Quantify extends AbstractRemoteProcessingService with IQuantifyService wit
     val providerContext = ProviderDecoratedExecutionContext(execCtx) // Use Object factory
     providerContext.putProvider(classOf[IRunProvider], lcMsRunProvider)
 
+    //Get nbr XIC files to process in parallel from NodeConfig
+     val nXICFileInParallel = NodeConfig.NBR_XIC_FILES_IN_PARALLEL
+    
     var result = true
     var quantiId = -1L
     try {
@@ -67,7 +70,8 @@ class Quantify extends AbstractRemoteProcessingService with IQuantifyService wit
         projectId = projectId,
         methodId = paramsRetriever.getLong(PROCESS_METHOD.METHOD_ID_PARAM),
         experimentalDesign = expDesign,
-        quantConfigAsMap = quantConfigAsMap
+        quantConfigAsMap = quantConfigAsMap,
+        nbrXICFileInParallel = Some(nXICFileInParallel)
       )
       quantifier.run()
 
