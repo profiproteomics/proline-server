@@ -47,6 +47,7 @@ object NodeConfig extends LazyLogging {
   private val JMS_SERVER_PORT_KEY = "jms_server_port"
   private val PROLINE_SERVICE_REQUEST_QUEUE_KEY = "proline_service_request_queue_name"
   private val SERVICE_THREAD_POOL_SIZE_KEY = "service_thread_pool_size"
+  private val XIC_FILES_POOL_SIZE_KEY = "xic_files_pool_size"
   private val ENABLE_IMPORTS_KEY = "enable_imports"
 
   private val DEFAULT_PROLINE_SERVICE_REQUEST_QUEUE_NAME = "ProlineServiceRequestQueue"
@@ -71,6 +72,8 @@ object NodeConfig extends LazyLogging {
 
   val ENABLE_IMPORTS = retrieveEnableImports(m_jmsConfig)
 
+  val NBR_XIC_FILES_IN_PARALLEL = retrieveXicFilesPoolSize(m_jmsConfig)
+  
   private def retrieveQueueName(config: Config): String = {
     var queueName: String = null
 
@@ -102,6 +105,17 @@ object NodeConfig extends LazyLogging {
     }
 
     nThreads
+  }
+  
+  private def retrieveXicFilesPoolSize(config: Config): Int = {
+    var nXicThreads: Int = 2
+
+    if (config.hasPath(XIC_FILES_POOL_SIZE_KEY)) {
+      nXicThreads = config.getInt(XIC_FILES_POOL_SIZE_KEY)
+    }
+
+     nXicThreads
+       
   }
 
   private def retrieveEnableImports(config: Config): Boolean = {
