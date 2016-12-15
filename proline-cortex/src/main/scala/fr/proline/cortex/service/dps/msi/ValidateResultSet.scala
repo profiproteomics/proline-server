@@ -190,11 +190,12 @@ class ValidateResultSet extends AbstractRemoteProcessingService with IValidateRe
           validationConfig.pepMatchValidator.get.validationFilter.asInstanceOf[IPeptideMatchSorter]
         else if (validationConfig.pepMatchPreFilters.isDefined) {
           var foundSorter: IPeptideMatchSorter = null
-          val index = 0
+          var index = 0
           while (foundSorter == null && index < validationConfig.pepMatchPreFilters.get.size) {
             if (validationConfig.pepMatchPreFilters.get(index).isInstanceOf[IPeptideMatchSorter]) {
               foundSorter = validationConfig.pepMatchPreFilters.get(index).asInstanceOf[IPeptideMatchSorter]
             }
+            index = index +1 
           }
           if (foundSorter == null)
             foundSorter = new ScorePSMFilter()
