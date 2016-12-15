@@ -77,7 +77,7 @@ class SpectrumMatchesGenerator(
 
     val msiDbCtx = executionContext.getMSIDbConnectionContext
     var storerContext: StorerContext = null
-    val rsStorer = RsStorer(msiDbCtx)
+    val rsStorer = RsStorer(msiDbCtx, true) //USe JPA
     var localMSITransaction: Boolean = false
     var msiTransacOk: Boolean = false
 
