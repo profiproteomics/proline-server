@@ -1,14 +1,18 @@
 package fr.proline.module.exporter.pridexml
 
 import java.io.File
+
+import org.junit.Assert
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
+
 import com.typesafe.scalalogging.LazyLogging
+
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
-import fr.proline.core.algo.msi.filtering.pepmatch.RankPSMFilter
+import fr.proline.core.algo.msi.filtering.pepmatch.PrettyRankPSMFilter
 import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
 import fr.proline.core.algo.msi.validation.TargetDecoyModes
 import fr.proline.core.dal.AbstractEmptyDatastoreTestCase
@@ -19,8 +23,6 @@ import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.service.msi.ResultSetValidator
 import fr.proline.module.fragmentmatch.service.SpectrumMatchesGenerator
 import fr.proline.repository.DriverType
-import org.junit.Assert
-import org.junit.Ignore
 
 object PrideExporterTest extends AbstractEmptyDatastoreTestCase {
 
@@ -71,7 +73,7 @@ class PrideExporterTest extends LazyLogging {
   private def validate(execContext: IExecutionContext, rs: ResultSet): ResultSummary = {
     /* PeptideMatch pre-filter on Rank */
     val seqBuilder = Seq.newBuilder[IPeptideMatchFilter]
-    seqBuilder += new RankPSMFilter(2) // Only 1, 2 ranks
+    seqBuilder += new PrettyRankPSMFilter(2) // Only 1, 2 ranks
 
     val rsValidator = new ResultSetValidator(
       execContext = execContext,
