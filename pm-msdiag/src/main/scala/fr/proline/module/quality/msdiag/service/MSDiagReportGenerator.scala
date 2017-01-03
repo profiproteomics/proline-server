@@ -24,7 +24,7 @@ class MSDiagReportGenerator(
 
     val msiDbCtx = executionContext.getMSIDbConnectionContext
     var storerContext: StorerContext = null
-    val rsStorer = RsStorer(msiDbCtx)
+    val rsStorer = RsStorer(msiDbCtx, useJPA = false)
     var localMSITransaction: Boolean = false
     var msiTransacOk: Boolean = false
 
