@@ -3,10 +3,10 @@
   <parent>
     <groupId>fr.proline</groupId>
     <artifactId>ProFI-Pom</artifactId>
-    <version>0.3.0-SNAPSHOT</version>
+    <version>0.2.0</version>
   </parent>
   <artifactId>PM-MaxQuantParser</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.1.0</version>
   <dependencies>
   	<dependency>
   		<groupId>javax.xml.bind</groupId>
@@ -26,7 +26,7 @@
   	<dependency>
   		<groupId>fr.proline.util</groupId>
   		<artifactId>ProFI-Commons-Java</artifactId>
-  		<version>0.4.0-SNAPSHOT</version>
+  		<version>0.4.0</version>
   	</dependency>
   	<dependency>
   		<groupId>junit</groupId>
@@ -48,7 +48,7 @@
   	<dependency>
   		<groupId>fr.proline.util</groupId>
   		<artifactId>ProFI-Commons-Scala</artifactId>
-  		<version>0.5.0-SNAPSHOT</version>
+  		<version>0.5.0</version>
   	</dependency>
   	<dependency>
   		<groupId>commons-io</groupId>
@@ -62,7 +62,7 @@
   	</dependency>
   </dependencies>
   <properties>
-  	<core.version>1.0.0-SNAPSHOT</core.version>
+  	<core.version>1.0.0</core.version>
   </properties>
   <build>
   	<pluginManagement>
@@ -96,6 +96,6 @@
 		</pluginManagement>
   </build>
   <scm>
-  	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MaxQuantParser/branches/0.1.0-RCandidates</connection>
+  	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MaxQuantParser/tags/0.1.0</connection>
   </scm>
 </project>
