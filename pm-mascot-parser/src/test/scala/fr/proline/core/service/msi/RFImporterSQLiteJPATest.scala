@@ -105,7 +105,8 @@ class RFImporterSQLiteJPATest extends AbstractRFImporterTestCase {
   }
 
 
-  @Test
+  //@Test
+  @Ignore
   def runRFIwithJPA() = {
    
     assertNotNull(executionContext)
