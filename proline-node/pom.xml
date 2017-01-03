@@ -5,11 +5,11 @@
   <parent>
     <groupId>fr.proline</groupId>
     <artifactId>ProFI-Pom</artifactId>
-    <version>0.3.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+    <version>0.2.0</version> <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>Proline-Node</artifactId>
-  <version>0.2.0-SNAPSHOT</version>
+  <version>0.2.0</version>
   
   <name>${project.artifactId}</name>
   <description>A base project to assist the creation of Proline-Cortex nodes (JMS consumers)</description>
@@ -19,7 +19,7 @@
   </properties>
 
   <scm>
-    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-JMS-Components/Proline-Node/branches/0.2.0-RCandidates</connection>
+    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-JMS-Components/Proline-Node/tags/0.2.0</connection>
   </scm>
   
   <dependencies>
@@ -58,14 +58,14 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-Cortex-API</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>0.3.0</version>
     </dependency>
     
     <!-- Proline -->
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Scala</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
+      <version>0.5.0</version>
     </dependency>
     
     <!-- Test -->
