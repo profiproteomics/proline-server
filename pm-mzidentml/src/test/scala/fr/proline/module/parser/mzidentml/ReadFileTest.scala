@@ -2,8 +2,10 @@ package fr.proline.module.parser.mzidentml
 
 import java.net.URL
 
+import org.junit.AfterClass
 import org.junit.Assert
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Test
 
 import fr.proline.context.BasicExecutionContext
@@ -18,18 +20,14 @@ import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.repository.DriverType
 
-@Test
-class ReadFileTest extends AbstractMultipleDBTestCase {
+object ReadFileTest extends AbstractMultipleDBTestCase {
 
   val driverType = DriverType.H2
   var parserContext: ProviderDecoratedExecutionContext = null
 
-  val mascotFilePath = "/result_files/mascotExample.mzid"
-  val mgfPFilePath = "/result_files/mgfPlus.mzid"
-
   /***   CONNECTION TO DB   ***/
 
-  @Before
+  @BeforeClass
   def init() {
     logger.debug("Test initialization")
     super.initDBsDBManagement(driverType)
@@ -58,6 +56,20 @@ class ReadFileTest extends AbstractMultipleDBTestCase {
     Assert.assertNotNull(parserContext)
   }
   
+  @AfterClass
+  override def tearDown() {
+    if (parserContext != null) parserContext.closeAll()
+    super.tearDown()
+  }
+  
+}
+
+class ReadFileTest {
+  
+  val parserContext = ReadFileTest.parserContext
+  val mascotFilePath = "/result_files/mascotExample.mzid"
+  val mgfPFilePath = "/result_files/mgfPlus.mzid"
+  
   @Test
   def testReadMascotResultFile() {
    
@@ -70,7 +82,7 @@ class ReadFileTest extends AbstractMultipleDBTestCase {
     rf.getResultSet(false)
   }
 
-@Test
+  @Test
   def testReadMgfPlusResultFile() {
    
     val inst = new Instrument(-1, "teqt", "src", None)
