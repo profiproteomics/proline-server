@@ -148,7 +148,7 @@ class MascotResultFile(
       if (pepSummaryOpt == None) None
       else {
         val pepSum = pepSummaryOpt.get
-        var ht: Float = mascotResFile.getSectionValueDouble(ms_mascotresfile.SEC_SUMMARY, "qplughole" + msQueryNum).toFloat
+        val ht = mascotResFile.getSectionValueDouble(ms_mascotresfile.SEC_SUMMARY, "qplughole" + msQueryNum).toFloat
         val candidatePepCount = pepSum.getQmatch(msQueryNum)
         //val it = pepSum.getPeptideIdentityThreshold(msQueryNum,20)
         val it = if (candidatePepCount > 0) Some(MascotValidationHelper.calcIdentityThreshold(candidatePepCount, 0.05)) else None
@@ -165,9 +165,7 @@ class MascotResultFile(
 
     var fileComesFromPklInput = false
     for (q <- 1 to nbrQueries) { // Go through each Query
-      //  AW/ABU: ticket #10344 fix
-//      var specTitle = s"Cmpd ${q}, +MSn(${mascotResFile.getObservedMass(q)}), ? min" 
-      var specTitle = "Cmpd "+q+", +MSn("+mascotResFile.getObservedMass(q)+"), ? min" // back to a simple format because query number was always at '0'
+      var specTitle = ""
       try {
         val tmp = URLDecoder.decode(mascotResFile.getQuerySectionValueStr(q, "title"), "UTF-8").replace('\\', '/') //WorkAround for \ char in spectrum storer  !
         if(!tmp.trim().equals("")) {
@@ -176,6 +174,18 @@ class MascotResultFile(
       } catch {
         case ex: Exception => fileComesFromPklInput = true
       }
+      
+      if (specTitle.isEmpty()) {
+        // AW/ABU: ticket #10344 fix
+        val qMass = mascotResFile.getObservedMass(q)
+        specTitle = s"Cmpd $q, +MSn($qMass), ? min" 
+        
+        // TODO: remove this assertion if we have no error
+        assert( specTitle == "Cmpd "+q+", +MSn("+qMass+"), ? min", "something wrong with string interpolation" )
+
+        specTitle
+      }
+
       // ----------------- 
 
       val msQueryProps = new MsQueryProperties(
@@ -195,18 +205,33 @@ class MascotResultFile(
       msQueryMapBuilder += (q -> query)
     }
     if(fileComesFromPklInput) {
-      logger.info("Peaklist format looks like PKL, spectrum fake titles have been generated")
+      logger.warn("Peaklist format looks like PKL, spectrum fake titles have been generated")
     }
 
     msQueryMapBuilder.result()
   }
 
   lazy val peaklist: Peaklist = {
+    
+    var fileNameStr = mascotSearchParams.getFILENAME()
+    // Split string if it correspond to a Proteome Discoverer template
+    if (fileNameStr.startsWith("File Name: ")) {
+      logger.debug(s"Proteome Discoverer template detected, we will keep only the 'File Name' part of: $fileNameStr")
+      val FileNamePattern = "File Name: (.+?);".r
+      val FileNamePattern(pklPath) = fileNameStr
+      fileNameStr = pklPath
+      logger.debug(s"Extracted peaklist path: $fileNameStr")
+    }
+    
+    val peaklistFile = new File(fileNameStr)
+    val peaklistFileName = peaklistFile.getName
+    val rawFileIdentifier = peaklistFileName.split('.').headOption.getOrElse(peaklistFileName)
+    
     new Peaklist(
       id = Peaklist.generateNewId,
       fileType = mascotSearchParams.getFORMAT(), // TODO: check file extension first (ex: .raw)
       path = mascotSearchParams.getFILENAME(),
-      rawFileIdentifier = "", // TODO: retrieve this
+      rawFileIdentifier = rawFileIdentifier,
       msLevel = 2
     )
   }
