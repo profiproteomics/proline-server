@@ -144,7 +144,7 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessingService
           peaklistSoftwareId = peaklistSoftwareId,
           importerProperties = importerProperties,
           acDecoyRegex = acDecoyRegex,
-          saveSpectrumMatches
+          saveSpectrumMatch = saveSpectrumMatches
         )
         rsImporter.run()
 

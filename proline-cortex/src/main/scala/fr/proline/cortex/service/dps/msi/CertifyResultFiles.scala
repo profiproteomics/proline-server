@@ -1,12 +1,9 @@
 package fr.proline.cortex.service.dps.msi
 
 import java.io.File
-
 import scala.collection.JavaConversions.mapAsScalaMap
-
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.StringUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
@@ -22,7 +19,7 @@ import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.service.msi.ResultFileCertifier
 import fr.proline.cortex.api.service.dps.msi.ICertifyResultFilesService
-import fr.proline.cortex.api.service.dps.msi.ResultFileDescriptor
+import fr.proline.cortex.api.service.dps.msi.ResultFileDescriptorRuleId
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.fs.MountPointRegistry
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
@@ -49,7 +46,7 @@ class CertifyResultFiles extends AbstractRemoteProcessingService with ICertifyRe
     var processResult: String = null
 
     val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
-    val resultFiles = paramsRetriever.getList(PROCESS_METHOD.RESULT_FILES_PARAM).toArray.map { rfd => deserialize[ResultFileDescriptor](serialize(rfd)) }
+    val resultFiles = paramsRetriever.getList(PROCESS_METHOD.RESULT_FILES_PARAM).toArray.map { rfd => deserialize[ResultFileDescriptorRuleId](serialize(rfd)) }
 
     val importerProperties = if (paramsRetriever.hasParam(PROCESS_METHOD.IMPORTER_PROPERTIES_PARAM) == false) Map.empty[String, Any]
     else paramsRetriever.getMap(PROCESS_METHOD.IMPORTER_PROPERTIES_PARAM).map {
