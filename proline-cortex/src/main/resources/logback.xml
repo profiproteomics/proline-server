@@ -44,8 +44,8 @@
     
   </appender>
 
-  <logger name="fr.profi" level="DEBUG" />
-  <logger name="fr.proline" level="DEBUG" />
+  <logger name="fr.profi" level="info" />
+  <logger name="fr.proline" level="info" />
   <logger name="fr.profi.mzdb" additivity="false">
     <appender-ref ref="mzDBRollingAppender" />
   </logger>
