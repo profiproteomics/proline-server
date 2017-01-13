@@ -64,7 +64,9 @@ public class ProjectHandler {
 			+ " AND ((upper(pm.resultSet.type) = 'SEARCH') OR (upper(pm.resultSet.type) = 'USER'))"
 			+ " AND (ps.proteinSet.isValidated = true) AND (ps.proteinSet.resultSummary.id IN  (:rsm_ids))";
 
-	private static final String LIST_RSM_IN_DATASET_ID_QUERY = "SELECT DISTINCT(dt.resultSummaryId) FROM Dataset dt WHERE dt.project.id= :projectId AND dt.type IN ('AGGREGATE','IDENTIFICATION', 'QUANTITATION') AND dt.resultSummaryId IS NOT NULL";
+	private static final String LIST_RSM_IN_DATASET_ID_QUERY = "SELECT DISTINCT(dt.resultSummaryId) FROM Dataset dt WHERE dt.project.id= :projectId AND dt.type IN ('AGGREGATE','IDENTIFICATION') AND dt.resultSummaryId IS NOT NULL";
+
+	private static final String LIST_QUANT_RSM_ID_QUERY = "SELECT DISTINCT(mqc.quantResultSummaryId) FROM MasterQuantitationChannel mqc, Dataset dt WHERE dt.project.id= :projectId AND mqc.dt = dt.id and dt.type IN ('QUANTITATION') AND mqc.quantResultSummaryId IS NOT NULL";
 
 	private static final String LIST_PS_FOR_RSM_QUERY = "SELECT ps FROM ProteinSet ps WHERE ps.resultSummary.id= :rsmId AND ps.isValidated = 'true'";
 
@@ -78,26 +80,22 @@ public class ProjectHandler {
 			+ " AND ps.resultSummary.id = :rsmId AND ps.isValidated=true AND pspi.peptideSet.proteinSet = ps";
 
 	/**
-	 * Find all Search Engine protein identifier in all Search Engine protein databases of a specific MSIdb specified by it's projectId.
+	 * Find all Search Engine protein identifier in all Search Engine protein databases of a specific list of RSM in MSIdb specified by it's projectId.
 	 * 
 	 * @param projectId
 	 * @param seDbIdentifiersBySeDbInstance
-	 * @param rsmIds
-	 *            : if specified only consider those RSMs
-	 * @param forceUpdate
+	 * @param rsmIds : RSM to consider 
 	 */
 	@SuppressWarnings("unchecked")
 	public static void fillSEDbIdentifiersBySEDb(
 		final long projectId,
 		final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiersBySeDbInstance,
-		final List<Long> rsmIds,
-		boolean forceUpdate) {
+		final Map<Long, SEDbInstanceWrapper> seDbInstances,
+		final List<Long> rsmIds) {
 
 		if (seDbIdentifiersBySeDbInstance == null) {
 			throw new IllegalArgumentException("SeDbIdentifiers Map is null");
 		}
-
-		boolean useSpecifedRsms = (rsmIds != null && !rsmIds.isEmpty()) ? true : false;
 
 		final IDataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();
 		final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId);
@@ -113,125 +111,79 @@ public class ProjectHandler {
 
 				msiEM = msiDbConnector.createEntityManager();
 				udsEM = udsDbConnector.createEntityManager();
-				final Map<Long, SEDbInstanceWrapper> seDbInstances = retrieveAllSeqDatabases(msiEM);
-				final List<Long> untreatedRsmIds = new ArrayList<Long>();
 
 				if ((seDbInstances == null) || seDbInstances.isEmpty()) {
 					LOG.warn("There is NO SEDbInstance in MSI Project #{}", projectId);
 
-				} else {
-					// check if any rsm has not been validated within this project
+				} else if (rsmIds.size() > 0) {
 
-					List<Long> rsmIdsToTest = new ArrayList<>();
-					if (useSpecifedRsms)
-						rsmIdsToTest = rsmIds;
-					else {
-						final Query udsQuery = udsEM.createQuery(LIST_RSM_IN_DATASET_ID_QUERY);
-						udsQuery.setParameter("projectId", projectId);
-						rsmIdsToTest = udsQuery.getResultList();
+					LOG.info(" Quering SEDbIdentifiers for {} RSM(s) for this project ({})  ", rsmIds.size(), projectId);
+
+					// VDS - TODO : Use outer join query to get all PM even if not directly linked to SeqDb.... Then treat separatly ! 
+					// VDS - TODO 2 : Use HQL Query with "Select new MyObj( pm.acc, ...)  " for  VALIDATED_PM_SDM_FOR_RSMS_QUERY  VALIDATED_PM_FOR_RSMS_QUERY
+
+					//-- Get ALL ProteinMatch count associated to untreatedRsm
+					long nExpectedAccessions = -1L;
+
+					final Query countQuery = msiEM.createQuery(VALIDATED_PM_COUNT_FOR_RSMS_QUERY);
+					countQuery.setParameter("rsm_ids", rsmIds);
+					final Object obj = countQuery.getSingleResult();
+
+					if (obj instanceof Number) {
+						nExpectedAccessions = ((Number) obj).longValue();
 					}
 
-					if (forceUpdate)
-						untreatedRsmIds.addAll(rsmIdsToTest);
-					else {
-						for (Long rsmId : rsmIdsToTest) {
+					LOG.info("MSI Project #{} found {} SEDbInstances and {} validated Accession", projectId, seDbInstances.size(), nExpectedAccessions);
 
-							// get the properties of the RSM to update
-							ResultSummary rsm = msiEM.find(ResultSummary.class, rsmId);
-							String properties = rsm.getSerializedProperties();
-							JsonParser parser = new JsonParser();
-							JsonObject array = null;
-							try {
-								array = parser.parse(properties).getAsJsonObject();
-							} catch (Exception e) {
-								if (LOG.isDebugEnabled()) {
-									LOG.debug("error accessing RSM properties for rsm id:" + rsmId + " in project " + projectId + " forcing retrieve ");
-								}
-								array = parser.parse("{}").getAsJsonObject();
-							}
+					if (nExpectedAccessions > 0L) {
 
-							// test if the RSM is already calculated
+						//-- Get ProteinMatch + Associated SeqDB for untreatedRsm
+						int nSEDbIdentifiers = 0;
 
-							if (!array.has("is_coverage_updated")) {
-								untreatedRsmIds.add(rsmId);
-							}
-						} // end rsmIds loop
-					}
+						final Query pmSdmQuery = msiEM.createQuery(VALIDATED_PM_SDM_FOR_RSMS_QUERY);
+						pmSdmQuery.setParameter("rsm_ids", rsmIds);
+						final List<Object[]> pmSdmLines = pmSdmQuery.getResultList();
 
-					if (untreatedRsmIds.size() > 0) {
-						if (forceUpdate) {
-							LOG.info(" Quering SEDbIdentifiers for all RSMs for this project ({})", projectId);
-						} else {
-							LOG.info(" Quering SEDbIdentifiers for {} RSM(s) for this project ({})  ", untreatedRsmIds.size(), projectId);
+						// Fill seDbIdentifiers map
+						if ((pmSdmLines != null) && !pmSdmLines.isEmpty()) {
+							nSEDbIdentifiers = fillSEDbIdentifiers(pmSdmLines, seDbInstances, seDbIdentifiersBySeDbInstance);
 						}
 
-						// VDS - TODO : Use outer join query to get all PM even if not directly linked to SeqDb.... Then treat separatly ! 
-						// VDS - TODO 2 : Use HQL Query with "Select new MyObj( pm.acc, ...)  " for  VALIDATED_PM_SDM_FOR_RSMS_QUERY  VALIDATED_PM_FOR_RSMS_QUERY
-
-						//-- Get ALL ProteinMatch count associated to untreatedRsm
-						long nExpectedAccessions = -1L;
-
-						final Query countQuery = msiEM.createQuery(VALIDATED_PM_COUNT_FOR_RSMS_QUERY);
-						countQuery.setParameter("rsm_ids", untreatedRsmIds);
-						final Object obj = countQuery.getSingleResult();
-
-						if (obj instanceof Number) {
-							nExpectedAccessions = ((Number) obj).longValue();
-						}
-
-						LOG.info("MSI Project #{} found {} SEDbInstances and {} validated Accession", projectId, seDbInstances.size(), nExpectedAccessions);
-
-						if (nExpectedAccessions > 0L) {
-
-							//-- Get ProteinMatch + Associated SeqDB for untreatedRsm
-							int nSEDbIdentifiers = 0;
-
-							final Query pmSdmQuery = msiEM.createQuery(VALIDATED_PM_SDM_FOR_RSMS_QUERY);
-							pmSdmQuery.setParameter("rsm_ids", untreatedRsmIds);
-							final List<Object[]> pmSdmLines = pmSdmQuery.getResultList();
-
-							// Fill seDbIdentifiers map
-							if ((pmSdmLines != null) && !pmSdmLines.isEmpty()) {
-								nSEDbIdentifiers = fillSEDbIdentifiers(pmSdmLines, seDbInstances, seDbIdentifiersBySeDbInstance);
-							}
-
-							if (nSEDbIdentifiers >= nExpectedAccessions) {
-								//All seDbIdentifiers were found.
-								if (LOG.isDebugEnabled()) {
-									LOG.debug("{} distinct (validated Accession, Description, SeqDatabase) retrieved via ProteinMatchSeqDatabaseMap",
-										nSEDbIdentifiers);
-								}
-
-							} else {
-								//Still some seDbIdentifiers not found with previous query. Search using searchSettings SeqDBInstances
-								nSEDbIdentifiers = 0;
-
-								final Query pmQuery = msiEM.createQuery(VALIDATED_PM_FOR_RSMS_QUERY);
-								pmQuery.setParameter("rsm_ids", untreatedRsmIds);
-								final List<Object[]> pmLines = pmQuery.getResultList();
-
-								if ((pmLines != null) && !pmLines.isEmpty()) {
-									// Fill seDbIdentifiers map
-									nSEDbIdentifiers = fillSEDbIdentifiers(pmLines, seDbInstances, seDbIdentifiersBySeDbInstance);
-								}
-								if (LOG.isDebugEnabled()) {
-									LOG.debug("{} distinct (validated Accession, Description, SeqDatabase) WITHOUT ProteinMatchSeqDatabaseMap",
-										nSEDbIdentifiers);
-									
-								}
+						if (nSEDbIdentifiers >= nExpectedAccessions) {
+							//All seDbIdentifiers were found.
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("{} distinct (validated Accession, Description, SeqDatabase) retrieved via ProteinMatchSeqDatabaseMap",
+									nSEDbIdentifiers);
 							}
 
 						} else {
-							LOG.warn("There is NO new validated Accession in MSI Project #{}", projectId);
+							//Still some seDbIdentifiers not found with previous query. Search using searchSettings SeqDBInstances
+							nSEDbIdentifiers = 0;
+
+							final Query pmQuery = msiEM.createQuery(VALIDATED_PM_FOR_RSMS_QUERY);
+							pmQuery.setParameter("rsm_ids", rsmIds);
+							final List<Object[]> pmLines = pmQuery.getResultList();
+
+							if ((pmLines != null) && !pmLines.isEmpty()) {
+								// Fill seDbIdentifiers map
+								nSEDbIdentifiers = fillSEDbIdentifiers(pmLines, seDbInstances, seDbIdentifiersBySeDbInstance);
+							}
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("{} distinct (validated Accession, Description, SeqDatabase) WITHOUT ProteinMatchSeqDatabaseMap",
+									nSEDbIdentifiers);
+
+							}
 						}
 
-					} // at least one rsm not yet treated
+					} else {
+						LOG.warn("There is NO new validated Accession in MSI Project #{}", projectId);
+					}
 
-				} // sedb instances not null
+				} // at least one rsm not yet treated and sedb instances not null
 
 				final long end = System.currentTimeMillis();
 				final long duration = end - start;
-				LOG.info(" Total fillSEDbIdentifiersBySEDb() execution for {} RSM(s) : {} ms ", untreatedRsmIds.size(), duration);
+				LOG.info(" Total fillSEDbIdentifiersBySEDb() execution for {} RSM(s) : {} ms ", rsmIds.size(), duration);
 
 			} catch (Exception ex) {
 				LOG.error("Error accessing MSI Db Project #" + projectId, ex);
@@ -248,6 +200,63 @@ public class ProjectHandler {
 			}
 		} // End no MSIDb connector
 	}
+	
+	@SuppressWarnings("unchecked")
+	/**
+	 * 
+	 * @param projectId : Project to get RSM to fill for
+	 * @param forceUpdate : retrieve information even if previously done
+	 * @param rsmIdsToTest : specify of subset of RSM of specific project to test : test if should fill data 
+	 * @param udsEM
+	 * @return
+	 */
+	public static List<Long> retrieveRSMIdToFill(Long projectId, boolean forceUpdate, List<Long> rsmIdsToTest,  EntityManager udsEM){
+		EntityManager msiEM = null;
+		
+		List<Long> rsmIdsToFill = new ArrayList<>();
+		
+		if(rsmIdsToTest == null || rsmIdsToTest.isEmpty()) {
+			final Query udsQuery = udsEM.createQuery(LIST_RSM_IN_DATASET_ID_QUERY);
+			udsQuery.setParameter("projectId", projectId);
+			rsmIdsToTest = udsQuery.getResultList();
+		
+			final Query udsQuantQuery = udsEM.createQuery(LIST_QUANT_RSM_ID_QUERY);
+			udsQuantQuery.setParameter("projectId", projectId);
+			rsmIdsToTest.addAll( udsQuantQuery.getResultList());
+		}
+
+		if (forceUpdate)
+			rsmIdsToFill = rsmIdsToTest;
+		else {
+			for (Long rsmId : rsmIdsToTest) {
+
+				// get the properties of the RSM to update
+				ResultSummary rsm = msiEM.find(ResultSummary.class, rsmId);
+				JsonObject array = getRSMPropertiesAsJsonObject(rsm);
+
+				// test if the RSM is already calculated
+				if (!array.has("is_coverage_updated")) {
+					rsmIdsToFill.add(rsmId);
+				}
+			} // end rsmIds loop
+		}
+		return rsmIdsToFill;
+	}
+	
+	private static JsonObject getRSMPropertiesAsJsonObject(ResultSummary rsm){
+		String properties = rsm.getSerializedProperties();
+		JsonParser parser = new JsonParser();
+		JsonObject array = null;
+		try {
+			array = parser.parse(properties).getAsJsonObject();
+		} catch (Exception e) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("error accessing RSM properties for rsm id:" + rsm.getId() +" forcing retrieve ");
+			}
+			array = parser.parse("{}").getAsJsonObject();
+		}
+		return array;	
+	}
 
 	/**
 	 * Retrieve all MSIdb SeqDatabase of a specified MSidb and returns a map of search engine database instance by msi.SeqDatabase id. Returns null if no
@@ -256,7 +265,7 @@ public class ProjectHandler {
 	 * @param msiEM
 	 * @return a map of all SEDatabase Instance of a specified MSIdb or null if no SeqDatabase found.
 	 */
-	private static Map<Long, SEDbInstanceWrapper> retrieveAllSeqDatabases(final EntityManager msiEM) {
+	public static Map<Long, SEDbInstanceWrapper> retrieveAllSeqDatabases(final EntityManager msiEM) {
 
 		Map<Long, SEDbInstanceWrapper> result = null;
 
@@ -373,83 +382,50 @@ public class ProjectHandler {
 	 * Calculate sequence coverage, mass and updates these properties as well as the BioSequence information in msidb.
 	 * 
 	 * @param projectId
-	 * @param rsmIds
-	 *            : if specified only consider those RSMs
+	 * @param rsmIds : RSMs to consider
 	 * @param forceUpdate
 	 */
 	@SuppressWarnings("unchecked")
-	public static void fillProteinMatchesProperties(final long projectId, final List<Long> rsmIds, boolean forceUpdate) {
+	public static void fillProteinMatchesProperties(final long projectId, final Map<Long, SEDbInstanceWrapper> seDbInstances, final List<Long> rsmIds) {
 
 		final IDataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();
 		final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId);
 		final IDatabaseConnector udsDbConnector = connectorFactory.getUdsDbConnector();
 		Map<ProteinMatch, Integer> coveredSeqLengthByProtMatchList = new HashMap<ProteinMatch, Integer>();
+		if (msiDbConnector == null) {
+			LOG.warn("Project #{} has NO associated MSI Db", projectId);
+		} else { 
+					
+			EntityManager msiEM = null;
+			EntityManager udsEM = null;
+			boolean msiTransactionOK = false;
+			try {
+				final long startAll = System.currentTimeMillis();
+				msiEM = msiDbConnector.createEntityManager();
+				udsEM = udsDbConnector.createEntityManager();
+		
+				if ((seDbInstances == null) || seDbInstances.isEmpty()) {
+					LOG.warn("There is NO SEDbInstance in MSI Project #{}", projectId);
+					msiTransactionOK = true;
+				} else {
+					LOG.info(" Filling ProteinMatches properties on project {}. Found a total of {} rsm", projectId, rsmIds.size());
 
-		EntityManager msiEM = null;
-		EntityManager udsEM = null;
-		boolean msiTransactionOK = false;
-		boolean useSpecifedRsms = (rsmIds != null && !rsmIds.isEmpty()) ? true : false;
+					int coveredSequenceLength;
 
-		try {
-			final long startAll = System.currentTimeMillis();
-			msiEM = msiDbConnector.createEntityManager();
-			udsEM = udsDbConnector.createEntityManager();
-
-			// get the list of RSM
-			// get the list of RSM
-			List<Long> rsmIdsToTest = new ArrayList<>();
-			if (useSpecifedRsms)
-				rsmIdsToTest = rsmIds;
-			else {
-				final Query udsQuery = udsEM.createQuery(LIST_RSM_IN_DATASET_ID_QUERY);
-				udsQuery.setParameter("projectId", projectId);
-				rsmIdsToTest = udsQuery.getResultList();
-			}
-
-			//TODO : Mutualiser l'appel a cette methode avec fillSEDbIdentifiersBySEDb !!  
-			final Map<Long, SEDbInstanceWrapper> seDbInstances = retrieveAllSeqDatabases(msiEM);
-
-			if ((seDbInstances == null) || seDbInstances.isEmpty()) {
-				LOG.warn("There is NO SEDbInstance in MSI Project #{}", projectId);
-				msiTransactionOK = true;
-			} else {
-				LOG.info(" Filling ProteinMatches properties on project {}. Found a total of {} rsm", projectId, rsmIdsToTest.size());
-
-				int coveredSequenceLength;
-
-				// for each RSM in data_set.result_summmary_id
-				for (Long rsmId : rsmIdsToTest) {
-					final long start = System.currentTimeMillis();
-					//Start Transaction for each RSM
-					msiTransactionOK = false;
-					msiEM.getTransaction().begin();
-
-					// get the properties of the RSM to test if update needed
-					final ResultSummary rsm = msiEM.find(ResultSummary.class, rsmId);
-					String properties = rsm.getSerializedProperties();
-					JsonParser parser = new JsonParser(); //VDS TODO ? Use jackson as for ORM DxxQuant object 
-					JsonObject array = null;
-					try {
-						array = parser.parse(properties).getAsJsonObject();
-					} catch (Exception e) {
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("error accessing project id: " + projectId + " (missing JSON): forcing project work...");
-						}
-						array = parser.parse("{}").getAsJsonObject(); // this to avoid error if processing a dataset that has no serialized properties
-					}
-
-					int psIdcount = 0;
-
-					// test if the RSM is already calculated
-					if (forceUpdate || !array.has("is_coverage_updated")) {
-
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("Going to compute rsmId:" + rsmId);
-						}
-
-						// Get ALL SeqMatches For current RSM
-						List<SequenceMatch> seqMatches = SequenceMatchRepository.findSequenceMatchForResultSet(msiEM, rsm.getResultSet().getId());
-						Map<Long, List<SequenceMatch>> seqMatchesByProteinMatchId = new HashMap<>();
+					// for each RSM in data_set.result_summmary_id
+					for (Long rsmId : rsmIds) {
+						final long start = System.currentTimeMillis();
+						//Start Transaction for each RSM
+						msiTransactionOK = false;
+						msiEM.getTransaction().begin();
+	
+						int psIdcount = 0;
+	
+						if (LOG.isDebugEnabled()) {							LOG.debug("Going to compute rsmId:" + rsmId);						}
+					
+						final ResultSummary rsm = msiEM.find(ResultSummary.class, rsmId);
+						
+						// Get ALL SeqMatches For current RSM						List<SequenceMatch> seqMatches = SequenceMatchRepository.findSequenceMatchForResultSet(msiEM, rsm.getResultSet().getId());						Map<Long, List<SequenceMatch>> seqMatchesByProteinMatchId = new HashMap<>();
 						for (SequenceMatch seqMatch : seqMatches) {
 							Long pmId = seqMatch.getId().getProteinMatchId();
 							if (!seqMatchesByProteinMatchId.containsKey(pmId))
@@ -462,7 +438,7 @@ public class ProjectHandler {
 						psQuery.setParameter("rsmId", rsmId);
 						final List<ProteinSet> protSets = psQuery.getResultList();
 						int psIdListSize = protSets.size();
-
+	
 						//Get All Peptide Ids identified
 						Map<Long, List<Long>> pepIdsByProtSetId = new HashMap<Long, List<Long>>();
 						final Query getPepInstQuery = msiEM.createQuery(GET_PEP_INSTANCE_BY_PS_PM_QUERY);
@@ -594,7 +570,9 @@ public class ProjectHandler {
 							LOG.debug("--- FOUND MORE THAN 1 Sequence for {} proteins. Use first one  ", nbrManySeqProt);
 							LOG.debug("--- FOUND NO Sequence for {} proteins.", nbrNoSeqProt);
 						}
+						
 						//Save RSM Property
+						JsonObject array = getRSMPropertiesAsJsonObject(rsm);
 						if (!array.has("is_coverage_updated")) {
 							if (LOG.isDebugEnabled()) {
 								LOG.debug(" Saving coverage_updated property for rsm {}.", rsmId);
@@ -602,46 +580,46 @@ public class ProjectHandler {
 							array.addProperty("is_coverage_updated", true);
 							rsm.setSerializedProperties(array.toString());
 							msiEM.merge(rsm);
-						}
-					}
-					msiEM.getTransaction().commit();
+						}					
+					
+						msiEM.getTransaction().commit();
+						msiTransactionOK = true;
+						msiEM.clear();
+						final long end = System.currentTimeMillis();
+						final long duration = end - start;
+						LOG.info("rsmId: {} successfully/already calculated. Duration : {} ms for {} protein sets ", rsmId, duration, psIdcount);
+
+					} //End go through RSMs
+
 					msiTransactionOK = true;
-					msiEM.clear();
+				} //At least One SEdb
 
-					final long end = System.currentTimeMillis();
-					final long duration = end - start;
-					LOG.info("rsmId: {} successfully/already calculated. Duration : {} ms for {} protein sets ", rsmId, duration, psIdcount);
+				final long endAll = System.currentTimeMillis();
+				final long duration = endAll - startAll;
+				LOG.info("Total: fillProteinMatchesProperties() execution : {} ms for project {} ", duration, projectId);
 
-				} //End go through RSMs
-
-				msiTransactionOK = true;
-			} //At least One SEdb
-
-			final long endAll = System.currentTimeMillis();
-			final long duration = endAll - startAll;
-			LOG.info("Total: fillProteinMatchesProperties() execution : {} ms for project {} ", duration, projectId);
-
-		} catch (Exception ex) {
-			LOG.error("Error accessing MSI Db Project #" + projectId, ex);
-			try {
-				if (!msiTransactionOK)
-					msiEM.getTransaction().rollback();
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} finally {
-			if (msiEM != null) {
+			} catch (Exception ex) {
+				LOG.error("Error accessing MSI Db Project #" + projectId, ex);
 				try {
-					//			    con.commit();
-					msiEM.close();
-					udsEM.close();
-
-				} catch (Exception exClose) {
-					LOG.error("Error closing MSI Db EntityManager", exClose);
+					if (!msiTransactionOK)
+						msiEM.getTransaction().rollback();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			} finally {
+				if (msiEM != null) {
+					try {
+						//			    con.commit();
+						msiEM.close();
+						udsEM.close();
+	
+					} catch (Exception exClose) {
+						LOG.error("Error closing MSI Db EntityManager", exClose);
+					}
 				}
 			}
-		}
+		} //End msiDbConnector !=null
 	}
 
 	private static Integer getSeqCoverageForProteinMatch(
