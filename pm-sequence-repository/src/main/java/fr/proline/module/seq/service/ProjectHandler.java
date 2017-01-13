@@ -66,8 +66,8 @@ public class ProjectHandler {
 
 	private static final String LIST_RSM_IN_DATASET_ID_QUERY = "SELECT DISTINCT(dt.resultSummaryId) FROM Dataset dt WHERE dt.project.id= :projectId AND dt.type IN ('AGGREGATE','IDENTIFICATION') AND dt.resultSummaryId IS NOT NULL";
 
-	private static final String LIST_QUANT_RSM_ID_QUERY = "SELECT DISTINCT(mqc.quantResultSummaryId) FROM MasterQuantitationChannel mqc, Dataset dt WHERE dt.project.id= :projectId AND mqc.dt = dt.id and dt.type IN ('QUANTITATION') AND mqc.quantResultSummaryId IS NOT NULL";
-
+	private static final String LIST_QUANT_RSM_ID_QUERY = "SELECT DISTINCT(mqc.quantResultSummaryId) FROM MasterQuantitationChannel mqc, Dataset dt WHERE dt.project.id= :projectId AND mqc.id = dt.id and dt.type IN ('QUANTITATION') AND mqc.quantResultSummaryId IS NOT NULL";
+																									
 	private static final String LIST_PS_FOR_RSM_QUERY = "SELECT ps FROM ProteinSet ps WHERE ps.resultSummary.id= :rsmId AND ps.isValidated = 'true'";
 
 	private static final int EXPECTED_LINE_LENGTH = 3;
