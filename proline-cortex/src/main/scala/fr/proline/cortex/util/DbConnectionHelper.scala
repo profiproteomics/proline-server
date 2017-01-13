@@ -23,7 +23,7 @@ object DbConnectionHelper extends LazyLogging {
 
       val udsDbProperties = prolineConfig.udsDBConfig.dbConnProperties
 
-      logger.debug("Initializing DataStoreConnectorFactory from UDS Db Properties")
+      logger.trace("Initializing DataStoreConnectorFactory from UDS Db Properties")
 
       m_dsConnectorFactory.asInstanceOf[DataStoreConnectorFactory].initialize(udsDbProperties, "Proline Cortex " + NodeConfig.NODE_ID)
     }

@@ -26,7 +26,7 @@ object WorkDirectoryFactory extends LazyLogging {
 
       addPurgeTimer(workDirectory)
 
-      logger.debug("Temp directory [" + workDirectory.getAbsolutePath + "] created")
+      logger.trace("Temp directory [" + workDirectory.getAbsolutePath + "] created")
 
       workDirectory
     } catch {
