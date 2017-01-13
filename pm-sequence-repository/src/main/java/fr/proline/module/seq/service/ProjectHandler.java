@@ -66,7 +66,7 @@ public class ProjectHandler {
 
 	private static final String LIST_RSM_IN_DATASET_ID_QUERY = "SELECT DISTINCT(dt.resultSummaryId) FROM Dataset dt WHERE dt.project.id= :projectId AND dt.type IN ('AGGREGATE','IDENTIFICATION') AND dt.resultSummaryId IS NOT NULL";
 
-	private static final String LIST_QUANT_RSM_ID_QUERY = "SELECT DISTINCT(mqc.quantResultSummaryId) FROM MasterQuantitationChannel mqc, Dataset dt WHERE dt.project.id= :projectId AND mqc.id = dt.id and dt.type IN ('QUANTITATION') AND mqc.quantResultSummaryId IS NOT NULL";
+	private static final String LIST_QUANT_RSM_ID_QUERY = "SELECT DISTINCT(mqc.quantResultSummaryId) FROM MasterQuantitationChannel mqc, Dataset dt WHERE dt.project.id= :projectId AND mqc.dataset.id = dt.id and dt.type IN ('QUANTITATION') AND mqc.quantResultSummaryId IS NOT NULL";
 																									
 	private static final String LIST_PS_FOR_RSM_QUERY = "SELECT ps FROM ProteinSet ps WHERE ps.resultSummary.id= :rsmId AND ps.isValidated = 'true'";
 
@@ -210,9 +210,8 @@ public class ProjectHandler {
 	 * @param udsEM
 	 * @return
 	 */
-	public static List<Long> retrieveRSMIdToFill(Long projectId, boolean forceUpdate, List<Long> rsmIdsToTest,  EntityManager udsEM){
-		EntityManager msiEM = null;
-		
+	public static List<Long> retrieveRSMIdToFill(Long projectId, boolean forceUpdate, List<Long> rsmIdsToTest,  EntityManager udsEM,  EntityManager msiEM){
+				
 		List<Long> rsmIdsToFill = new ArrayList<>();
 		
 		if(rsmIdsToTest == null || rsmIdsToTest.isEmpty()) {
@@ -565,7 +564,7 @@ public class ProjectHandler {
 							}
 							psIdcount++;
 						} // end protein sets
-						
+						LOG.info("Processed " + psIdcount + " protein sets / " + psIdListSize);
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("--- FOUND MORE THAN 1 Sequence for {} proteins. Use first one  ", nbrManySeqProt);
 							LOG.debug("--- FOUND NO Sequence for {} proteins.", nbrNoSeqProt);

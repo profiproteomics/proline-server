@@ -145,7 +145,7 @@ public final class RetrieveService {
 					//Get data needed by fillXX methods
 					final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(pId);
 					msiEM = msiDbConnector.createEntityManager();					
-					List<Long> rsmIds = ProjectHandler.retrieveRSMIdToFill(pId.longValue(), forceUpdate, null, udsEM);
+					List<Long> rsmIds = ProjectHandler.retrieveRSMIdToFill(pId.longValue(), forceUpdate, null, udsEM, msiEM);
 					rsmIdsPerProject.put(pId,rsmIds);
 					
 					final Map<Long, SEDbInstanceWrapper> seDbInstances = ProjectHandler.retrieveAllSeqDatabases(msiEM);
@@ -199,7 +199,7 @@ public final class RetrieveService {
 			try {
 				final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = new HashMap<>();
 				//Get data needed by fillXX methods 
-				List<Long> rsmIds = ProjectHandler.retrieveRSMIdToFill(projectId, forceUpdate, null, udsEM);
+				List<Long> rsmIds = ProjectHandler.retrieveRSMIdToFill(projectId, forceUpdate, null, udsEM, msiEM);
 				final Map<Long, SEDbInstanceWrapper> seDbInstances = ProjectHandler.retrieveAllSeqDatabases(msiEM);
 				
 				ProjectHandler.fillSEDbIdentifiersBySEDb(projectId, seDbIdentifiers,seDbInstances,  rsmIds);
@@ -242,7 +242,7 @@ public final class RetrieveService {
 		EntityManager msiEM = msiDbConnector.createEntityManager();
 		try { 
 			//Get data needed by fillXX methods 
-			List<Long> finalRsmIds = ProjectHandler.retrieveRSMIdToFill(projectId, forceUpdate, rsmIds, udsEM);
+			List<Long> finalRsmIds = ProjectHandler.retrieveRSMIdToFill(projectId, forceUpdate, rsmIds, udsEM, msiEM);
 			final Map<Long, SEDbInstanceWrapper> seDbInstances = ProjectHandler.retrieveAllSeqDatabases(msiEM);
 	
 	
