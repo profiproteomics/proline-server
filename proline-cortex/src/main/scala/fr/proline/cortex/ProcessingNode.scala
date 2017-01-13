@@ -106,7 +106,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         // Step 1. Directly instantiate the JMS Queue object.
         val serviceRequestQueue = HornetQJMSClient.createQueue(NodeConfig.PROLINE_SERVICE_REQUEST_QUEUE_NAME)
 
-        logger.debug("JMS Queue : " + serviceRequestQueue)
+        logger.trace("JMS Queue : " + serviceRequestQueue)
         val expiredRequestQueue = HornetQJMSClient.createQueue(NodeConfig.PROLINE_EXPIRED_MESSAGE_QUEUE_NAME)
         
 
@@ -125,8 +125,8 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         // Step 3 Directly instantiate the JMS ConnectionFactory object using that TransportConfiguration
         val cf = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF, transportConfiguration) //.asInstanceOf[ConnectionFactory]
        cf.setConsumerWindowSize(0)
-//       cf.setClientFailureCheckPeriod(5000);
        cf.setReconnectAttempts(10);
+        
         // Step 4.Create a JMS Connection
         m_connection = cf.createConnection()
 
@@ -139,7 +139,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
         m_connection.setExceptionListener(exceptionListener)
 
-        logger.info("This Node Id : " + NodeConfig.NODE_ID)
+        logger.info("Running Cortex Processing Node Id : " + NodeConfig.NODE_ID)
 
         initFileSystem()
 
@@ -181,7 +181,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         }
 
         m_connection.start() // Explicitly start connection to begin Consumer reception
-        logger.debug("JMS Connection : " + m_connection + "  started")
+        logger.trace("JMS Connection : " + m_connection + "  started")
       } catch {
 
         case ex: Exception => {
@@ -271,7 +271,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     m_lock.synchronized {
 
       if (m_connection != null) {
-        logger.debug("Closing JMS Connection")
+        logger.trace("Closing JMS Connection")
 
         try {
           m_connection.close()
@@ -283,7 +283,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
       }
 
       if (m_executor != null) {
-        logger.debug("Stopping JMS Consumers Executor")
+        logger.trace("Stopping JMS Consumers Executor")
         m_executor.shutdown()
 
         logger.debug("Waiting " + EXECUTOR_SHUTDOWN_TIMEOUT + " seconds for Executor termination...")
