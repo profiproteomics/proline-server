@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.opencsv.CSVReader;
 
-import fr.proline.core.om.model.msi.Enzyme;
+import fr.profi.chemistry.model.Enzyme;
 import fr.proline.core.om.model.msi.InstrumentConfig;
 import fr.proline.core.om.model.msi.MSISearch;
 import fr.proline.core.om.model.msi.MSMSSearchSettings;
@@ -44,7 +44,6 @@ import fr.proline.module.parser.maxquant.model.IMaxQuantParams;
 import fr.proline.module.parser.maxquant.model.IMsMsParameters;
 import fr.proline.module.parser.maxquant.model.ParameterGroup;
 import fr.proline.module.parser.maxquant.model.ResultSetsDataMapper;
-
 import scala.Option;
 
 
