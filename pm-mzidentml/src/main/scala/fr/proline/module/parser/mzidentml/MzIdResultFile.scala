@@ -20,6 +20,9 @@ import uk.ac.ebi.jmzidml.MzIdentMLElement
 import uk.ac.ebi.jmzidml.model.mzidml.{ Enzyme => MzIdEnzyme, Peptide => MzIdPeptide, _ }
 import uk.ac.ebi.jmzidml.xml.io.MzIdentMLUnmarshaller
 import java.net.URL
+import fr.profi.chemistry.model.Enzyme
+import fr.profi.chemistry.model.EnzymeCleavage
+import fr.profi.chemistry.model.EnzymeProperties
 
 object MzIdResultFile {
   

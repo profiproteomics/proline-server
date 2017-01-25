@@ -105,6 +105,12 @@
       <scope>test</scope>
     </dependency>
 
+   <dependency>
+      <groupId>fr.profi</groupId>
+      <artifactId>ProFI-Proteomics</artifactId>
+      <version>0.2.0-SNAPSHOT</version>
+    </dependency>
+    
     <!-- Tests -->
     <dependency>
       <groupId>junit</groupId>

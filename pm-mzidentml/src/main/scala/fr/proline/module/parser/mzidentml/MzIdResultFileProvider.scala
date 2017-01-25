@@ -6,9 +6,9 @@ import fr.proline.core.om.model.msi.IResultFile
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IResultFileProvider
 import fr.proline.core.om.provider.msi.IResultFileVerifier
-import fr.proline.core.om.model.msi.Enzyme
 import scala.collection.mutable.ArrayBuffer
 import fr.proline.core.om.model.msi.PtmDefinition
+import fr.profi.chemistry.model.Enzyme
 
 object MzIdResultFileProvider {
   final val fileType: String = "mzidentml.mzid"
