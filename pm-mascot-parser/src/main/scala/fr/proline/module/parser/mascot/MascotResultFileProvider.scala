@@ -4,7 +4,7 @@ import java.io.BufferedReader
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileReader
-import com.typesafe.scalalogging.LazyLogging 
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IResultFileProvider
@@ -14,8 +14,8 @@ import fr.profi.util.StringUtils
 import scala.collection.mutable.ArrayBuffer
 import java.io.InputStreamReader
 import java.io.FileInputStream
-
 import fr.proline.module.parser.mascot.MascotDataParser.LATIN_1_CHARSET
+import fr.profi.chemistry.model.Enzyme
 
 object MascotResultFileProviderType {
   final val fileType: String = "mascot.dat"
@@ -221,9 +221,9 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
     val mascotEnzymes = MascotEnzymeParser.getEnzymeDefinitions(fileLocation)
     val enzymes = new ArrayBuffer[Enzyme]
     mascotEnzymes.foreach(e => {
-      val enzymeCleavages = new ArrayBuffer[fr.proline.core.om.model.msi.EnzymeCleavage]
+      val enzymeCleavages = new ArrayBuffer[fr.profi.chemistry.model.EnzymeCleavage]
       e.cleavages.foreach(ec => {
-        enzymeCleavages += new fr.proline.core.om.model.msi.EnzymeCleavage(id = -1, residues = ec.residues, restrictiveResidues = ec.restrict, site = if (ec.isNterm) "N-term" else "C-term")
+        enzymeCleavages += new fr.profi.chemistry.model.EnzymeCleavage(id = -1, residues = ec.residues, restrictiveResidues = ec.restrict, site = if (ec.isNterm) "N-term" else "C-term")
       })
       enzymes += new Enzyme(id = -1,
         name = e.name,
