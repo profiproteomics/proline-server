@@ -698,7 +698,7 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
     logger.debug(" --- parse file ")
     val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_unknownEnzyme.omx")
     val rs = omssaOmxFile.getResultSet(wantDecoy = false)
-    val e: fr.proline.core.om.model.msi.Enzyme = rs.msiSearch.get.searchSettings.usedEnzymes.head
+    val e: fr.profi.chemistry.model.Enzyme = rs.msiSearch.get.searchSettings.usedEnzymes.head
     assert(e.name == "gluc-de")
     assert(e.isSemiSpecific == false)
     assert(e.enzymeCleavages.size == 1)
