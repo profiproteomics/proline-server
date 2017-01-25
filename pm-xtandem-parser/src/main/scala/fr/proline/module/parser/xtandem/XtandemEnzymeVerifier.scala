@@ -12,6 +12,9 @@ import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider  //getEnzyme
 
+import fr.profi.chemistry.model.Enzyme
+import fr.profi.chemistry.model.EnzymeCleavage
+
 //Parser
 import org.xml.sax._
 import org.xml.sax.helpers._

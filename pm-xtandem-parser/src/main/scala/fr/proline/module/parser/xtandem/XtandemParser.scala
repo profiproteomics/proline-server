@@ -7,7 +7,6 @@ import fr.proline.core.om.model.msi.IResultFile
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi.Spectrum
 import scala.collection.mutable.ArrayBuffer
-import fr.proline.core.om.model.msi.Enzyme
 import fr.proline.core.om.model.msi.IonTypes
 import fr.proline.core.om.model.msi.MsQuery
 import fr.proline.core.om.model.msi.MSISearch
@@ -37,6 +36,7 @@ import fr.proline.core.om.model.msi.XTandemImportProperties
 import scala.collection.mutable.HashMap
 import fr.proline.core.om.model.msi.Ms2Query
 import fr.profi.chemistry.model.MolecularConstants
+import fr.profi.chemistry.model.Enzyme
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.SequenceMatch

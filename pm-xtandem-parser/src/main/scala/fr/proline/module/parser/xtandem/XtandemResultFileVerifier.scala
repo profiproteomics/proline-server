@@ -10,16 +10,13 @@ package fr.proline.module.parser.xtandem
 import java.io.File
 import scala.collection.mutable.ArrayBuffer
 import _root_.fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-
-//Parser
 import org.xml.sax._
 import org.xml.sax.helpers._
 import javax.xml.parsers._
-
 import fr.proline.core.om.model.msi.PtmDefinition
-import fr.proline.core.om.model.msi.Enzyme
 import fr.proline.core.om.provider.msi.IResultFileVerifier
 import com.typesafe.scalalogging.LazyLogging
+import fr.profi.chemistry.model.Enzyme
 
 class XtandemResultFileVerifier extends IResultFileVerifier with LazyLogging {
 
