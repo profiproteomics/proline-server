@@ -17,6 +17,8 @@ import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.profi.util.primitives._
 
+import fr.profi.chemistry.model.Enzyme
+
 import matrixscience.NativeLibrariesLoader
 
 object MascotScores extends Enumeration {
