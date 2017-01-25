@@ -11,8 +11,8 @@ import fr.proline.core.om.model.msi.PtmLocation
 import fr.proline.core.om.model.msi.PtmNames
 import fr.proline.core.om.model.msi.PtmEvidence
 import fr.proline.core.om.model.msi.IonTypes
-import fr.proline.core.om.model.msi.Enzyme
-import fr.proline.core.om.model.msi.EnzymeCleavage
+import fr.profi.chemistry.model.Enzyme
+import fr.profi.chemistry.model.EnzymeCleavage
 import fr.proline.core.om.provider.msi.IResultFileVerifier
 import com.typesafe.scalalogging.LazyLogging
 import scala.io.Source
