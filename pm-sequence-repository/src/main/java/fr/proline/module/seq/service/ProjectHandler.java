@@ -231,6 +231,10 @@ public class ProjectHandler {
 
 				// get the properties of the RSM to update
 				ResultSummary rsm = msiEM.find(ResultSummary.class, rsmId);
+				if(rsm==null){
+					LOG.warn("Unable to get Identification Summary with ID "+rsmId);
+					continue;
+				}
 				JsonObject array = getRSMPropertiesAsJsonObject(rsm);
 
 				// test if the RSM is already calculated
@@ -250,7 +254,7 @@ public class ProjectHandler {
 			array = parser.parse(properties).getAsJsonObject();
 		} catch (Exception e) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("error accessing RSM properties for rsm id:" + rsm.getId() +" forcing retrieve ");
+				LOG.trace("error accessing RSM properties for rsm id:" + rsm.getId() +" forcing retrieve ");
 			}
 			array = parser.parse("{}").getAsJsonObject();
 		}
