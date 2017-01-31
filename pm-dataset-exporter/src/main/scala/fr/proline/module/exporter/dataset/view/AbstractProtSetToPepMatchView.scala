@@ -84,7 +84,7 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
         case FIELD_PSM_MODIFICATIONS => peptide.readablePtmString
         case FIELD_PSM_ID => pepMatch.id
         case FIELD_PSM_SCORE => decimalFormat.format(pepMatch.score)
-        case FIELD_PSM_CALCULATED_MASS => dcf6.format(peptide.calculatedMass).toString.toDouble
+        case FIELD_PSM_CALCULATED_MASS => dcf6.format(peptide.calculatedMass)
         case FIELD_PSM_CHARGE => msQueryOpt.map(_.charge).orNull
         case FIELD_PSM_EXPERIMENTAL_MOZ => dcf6.format(msQueryOpt.map(_.moz).orNull)
         case FIELD_PSM_DELTA_MOZ => dcf6.format(pepMatch.deltaMoz)
