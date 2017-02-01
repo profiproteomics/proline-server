@@ -163,6 +163,7 @@ object ExportConfigConstant {
   val FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME = "master_quant_peptide_ion_elution_time"
   val FIELD_MASTER_QUANT_PEPTIDE_ION_CHARGE = "master_quant_peptide_ion_charge"
   val FIELD_MASTER_QUANT_PEPTIDE_ION_FEATURE_ID = "master_quant_peptide_ion_feature_id"
+  val FIELD_MASTER_QUANT_PEPTIDE_ION_MOZ = "master_quant_peptide_ion_moz"
   
   // Some properties shared between quantitation sheets
   val FIELD_PROFILIZER_RATIO = "ratio" // incremental

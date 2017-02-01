@@ -29,6 +29,7 @@ class MasterQuantPeptideIonView(
   
   protected val mqPepIonFieldSet = Set(
     FIELD_MASTER_QUANT_PEPTIDE_ION_ID,
+    FIELD_MASTER_QUANT_PEPTIDE_ION_MOZ,
     FIELD_MASTER_QUANT_PEPTIDE_ION_CHARGE,
     FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME,
     FIELD_MASTER_QUANT_PEPTIDE_ION_FEATURE_ID,
@@ -64,6 +65,7 @@ class MasterQuantPeptideIonView(
       val fieldValue: Any = fieldConfig.id match {
         case FIELD_MASTER_QUANT_PEPTIDE_ION_ID => mqPepIon.id
         case FIELD_MASTER_QUANT_PEPTIDE_ION_CHARGE => mqPepIon.charge
+        case FIELD_MASTER_QUANT_PEPTIDE_ION_MOZ => mqPepIon.unlabeledMoz
         case FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME => dcf2.format(mqPepIon.elutionTime / 60)
         case FIELD_QUANT_PEPTIDE_ION_BEST_SCORE => {
           for (qcId <- quantDs.qcIds; qPepIon <- qPepIonMap.get(qcId) ) {
