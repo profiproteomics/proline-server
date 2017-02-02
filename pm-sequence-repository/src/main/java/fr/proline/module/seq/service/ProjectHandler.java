@@ -228,6 +228,10 @@ public class ProjectHandler {
 
 				// get the properties of the RSM to update
 				ResultSummary rsm = msiEM.find(ResultSummary.class, rsmId);
+				if(rsm==null){
+					LOG.warn("Unable to get Identification Summary with ID "+rsmId);
+					continue;
+				}
 				JsonObject array = getPropertiesAsJsonObject(rsm.getSerializedProperties());
 
 				// test if the RSM is already calculated
