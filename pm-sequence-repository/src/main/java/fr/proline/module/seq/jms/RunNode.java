@@ -117,17 +117,7 @@ public class RunNode {
 
 				MonitoringTopicPublisherRunner serviceMonitoringNotifier = new MonitoringTopicPublisherRunner(m_connection);
 				m_executor.submit(serviceMonitoringNotifier);
-				//NO Single Thread SERVICES
-//
-//				/* Add SingleThreadedServiceRunner */
-//				Set<String> handledSingleThreadedServiceNames = (Set<String>) JavaConversions
-//						.setAsJavaSet(ServiceRegistry.getSingleThreadedServices().keySet());
-//
-//				for (String serviceName : handledSingleThreadedServiceNames) {					
-//					SingleThreadedServiceRunner singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection,
-//							serviceMonitoringNotifier, serviceName,false );
-//					m_executor.submit(singleThreadedServiceRunner);
-//				}
+
 
 				/* Add Parallelizable SeviceRunner */
 				LOG.debug("Starting " + NodeConfig.SERVICE_THREAD_POOL_SIZE() + " Parallelizable ServiceRunners");

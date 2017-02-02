@@ -145,6 +145,10 @@ public final class RetrieveService {
 					if (pId != null) {
 						//Get data needed by fillXX methods
 						final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(pId);
+						if(msiDbConnector == null){
+							LOG.warn("NO database for Project {}",pId);
+							continue;
+						}					
 						msiEM = msiDbConnector.createEntityManager();					
 						List<Long> rsmIds = ProjectHandler.retrieveRSMIdToFill(pId.longValue(), forceUpdate, null, udsEM, msiEM);
 						rsmIdsPerProject.put(pId,rsmIds);
