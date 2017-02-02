@@ -16,6 +16,7 @@ trait IProtSetToToTypicalProtMatchViewFields extends IViewFieldEnumeration {
   val SUBSET_PROTEIN_MATCHES_COUNT = Field("#subset_protein_matches")  
   val COVERAGE = Field("coverage")
   val MW = Field("MW")
+  val OBSERVABLE_PEPTIDES_COUNT = Field("#observable_peptides")
   val SEQUENCES_COUNT = Field("#sequences")
   val SPECIFIC_SEQUENCES_COUNT = Field("#specific_sequences")
   val PEPTIDES_COUNT = Field("#peptides")
@@ -48,6 +49,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends IFixedTableView {
       protSetFields.SUBSET_PROTEIN_MATCHES_COUNT -> protSet.getSubSetProteinMatchIds.length,
       protSetFields.COVERAGE -> "%.1f".format(protMatch.coverage).toDouble,
       protSetFields.MW -> Option(protMatch.protein).flatMap( _.map( _.mass ) ).getOrElse(0.0),
+      protSetFields.OBSERVABLE_PEPTIDES_COUNT -> (if (protMatch.properties.isDefined) protMatch.properties.get.observablePeptideCount else ""),
       protSetFields.SEQUENCES_COUNT -> buildingCtx.allSeqs.distinct.length,
       protSetFields.SPECIFIC_SEQUENCES_COUNT -> buildingCtx.specificSeqs.distinct.length,
       protSetFields.PEPTIDES_COUNT -> buildingCtx.peptideCount,

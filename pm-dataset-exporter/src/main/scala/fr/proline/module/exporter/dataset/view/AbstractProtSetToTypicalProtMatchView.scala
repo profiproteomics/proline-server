@@ -19,6 +19,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends AbstractIdentDatase
     FIELD_PROTEIN_SETS_NB_SUBSET_PROTEIN_MATCHES,
     FIELD_PROTEIN_SETS_COVERAGE,
     FIELD_PROTEIN_SETS_MW,
+    FIELD_PROTEIN_SETS_NB_OBSERVABLE_PEPTIDES,
     FIELD_PROTEIN_SETS_NB_SEQUENCES,
     FIELD_PROTEIN_SETS_NB_SPECIFIC_SEQUENCES,
     FIELD_PROTEIN_SETS_NB_PEPTIDES,
@@ -60,6 +61,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends AbstractIdentDatase
         case FIELD_PROTEIN_SETS_NB_SUBSET_PROTEIN_MATCHES => protSet.getSubSetProteinMatchIds.length
         case FIELD_PROTEIN_SETS_COVERAGE => dcf2.format(protMatchCoverage)
         case FIELD_PROTEIN_SETS_MW => decimalFormat.format(mass)
+        case FIELD_PROTEIN_SETS_NB_OBSERVABLE_PEPTIDES => (if (protMatch.properties.isDefined) protMatch.properties.get.observablePeptideCount else -1)
         case FIELD_PROTEIN_SETS_NB_SEQUENCES => buildingCtx.allSeqs.distinct.length
         case FIELD_PROTEIN_SETS_NB_SPECIFIC_SEQUENCES => if(protSet.isValidated) buildingCtx.specificSeqs.distinct.length else -1
         case FIELD_PROTEIN_SETS_NB_PEPTIDES => buildingCtx.peptideCount

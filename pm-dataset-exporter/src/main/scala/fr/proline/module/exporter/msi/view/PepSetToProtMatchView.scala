@@ -13,6 +13,7 @@ object PepSetToProtMatchViewFields extends IViewFieldEnumeration {
   val PROTEIN_MATCHES_COUNT = Field("#protein_matches")
   val PEPTIDE_MATCHES_COUNT = Field("#peptide_matches")
   val COVERAGE = Field("coverage")
+  val OBSERVABLE_PEPTIDES_COUNT = Field("#observable_peptides")
   
 }
 
@@ -38,6 +39,7 @@ class PepSetToProtMatchView( val identDS: MsiIdentDataSet ) extends IFixedTableV
       fields.GENE_NAME -> protMatch.geneName,
       fields.TAXON_ID -> protMatch.taxonId,
       fields.COVERAGE -> protMatch.coverage,
+      fields.OBSERVABLE_PEPTIDES_COUNT -> (if (protMatch.properties.isDefined) protMatch.properties.get.observablePeptideCount else ""),
       fields.PEPTIDE_MATCHES_COUNT -> protMatch.peptideMatchesCount
     ).map( r => r._1.toString -> r._2)
   }

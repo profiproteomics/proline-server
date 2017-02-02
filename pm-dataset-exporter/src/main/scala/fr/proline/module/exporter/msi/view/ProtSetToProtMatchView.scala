@@ -13,6 +13,7 @@ object ProtSetToProtMatchViewFields extends IViewFieldEnumeration {
   val PEPTIDE_SET_SCORE = Field("peptide_set_score")
   val COVERAGE = Field("coverage")
   val MW = Field("MW")
+  val OBSERVABLE_PEPTIDES_COUNT = Field("#observable_peptides")
   val SEQUENCES_COUNT = Field("#sequences")
   val SPECIFIC_SEQUENCES_COUNT = Field("#specific_sequences")
   val PEPTIDES_COUNT = Field("#peptides")
@@ -42,6 +43,7 @@ class ProtSetToProtMatchView( val identDS: MsiIdentDataSet ) extends IFixedTable
       fields.PEPTIDE_SET_SCORE -> "%.1f".format(peptideSet.score).toDouble,
       fields.COVERAGE -> "%.1f".format(protMatch.coverage).toDouble,
       fields.MW -> Option(protMatch.protein).flatMap( _.map( _.mass ) ).getOrElse(0.0),
+      fields.OBSERVABLE_PEPTIDES_COUNT -> (if (protMatch.properties.isDefined) protMatch.properties.get.observablePeptideCount else ""),
       fields.SEQUENCES_COUNT -> buildingCtx.allSeqs.distinct.length,
       fields.SPECIFIC_SEQUENCES_COUNT -> buildingCtx.specificSeqs.distinct.length,
       fields.PEPTIDES_COUNT -> buildingCtx.peptideCount,
