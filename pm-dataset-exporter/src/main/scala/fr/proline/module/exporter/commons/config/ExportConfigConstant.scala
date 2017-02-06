@@ -93,6 +93,7 @@ object ExportConfigConstant {
   val FIELD_PROTEIN_SETS_NB_SUBSET_PROTEIN_MATCHES = "protein_sets_nb_subset_protein_matches"
   val FIELD_PROTEIN_SETS_COVERAGE = "protein_sets_coverage"
   val FIELD_PROTEIN_SETS_MW = "protein_sets_mw"
+  val FIELD_PROTEIN_SETS_NB_OBSERVABLE_PEPTIDES = "protein_sets_nb_observable_peptides"  
   val FIELD_PROTEIN_SETS_NB_SEQUENCES = "protein_sets_nb_sequences"
   val FIELD_PROTEIN_SETS_NB_SPECIFIC_SEQUENCES = "protein_sets_nb_specific_sequences"
   val FIELD_PROTEIN_SETS_NB_PEPTIDES = "protein_sets_nb_peptides"
