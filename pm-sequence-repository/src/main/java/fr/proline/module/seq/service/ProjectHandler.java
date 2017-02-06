@@ -39,6 +39,7 @@ import fr.proline.module.seq.dto.BioSequenceWrapper;
 import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
 import fr.proline.module.seq.dto.SEDbInstanceWrapper;
 import fr.proline.module.seq.util.HashUtil;
+import fr.proline.module.seq.util.RegExUtil;
 import fr.proline.repository.IDataStoreConnectorFactory;
 import fr.proline.repository.IDatabaseConnector;
 import scala.Some;
@@ -181,9 +182,7 @@ public class ProjectHandler {
 				final long end = System.currentTimeMillis();
 				final long duration = end - start;
 				LOG.info(" Total fillSEDbIdentifiersBySEDb() execution for {} RSM(s) : {} ms ", rsmIds.size(), duration);
-
-			} catch (Exception ex) {
-				LOG.error("Error accessing MSI Db Project #" + projectId, ex);
+			
 			} finally {
 				if (msiEM != null) {
 					try {
@@ -375,6 +374,10 @@ public class ProjectHandler {
 		} // End loop for each Result line
 		return nIdentifiers;
 	}
+	
+	private static int nbrNoSeqProt;
+	private static int nbrManySeqProt;
+
 
 	/**
 	 * Calculate sequence coverage, mass and updates these properties as well as the BioSequence information in msidb.
@@ -407,8 +410,6 @@ public class ProjectHandler {
 					msiTransactionOK = true;
 				} else {
 					LOG.info(" Filling ProteinMatches properties on project {}. Found a total of {} rsm", projectId, rsmIds.size());
-
-					int coveredSequenceLength;
 
 					// for each RSM in data_set.result_summmary_id
 					for (Long rsmId : rsmIds) {
@@ -451,20 +452,24 @@ public class ProjectHandler {
 							pepIdsByProtSetId.get(psId).add(pi.getPeptide().getId());
 						}
 
-						int nbrNoSeqProt = 0;
-						int nbrManySeqProt = 0;
-						
 						// For number of observable peptides computation 
-						Set<Enzyme> enzymes = rsm.getResultSet().getMsiSearch().getSearchSetting().getEnzymes();
-						
+						//VDS : check if exists. TODO : Use chilsMSI to get information!!
+						fr.profi.chemistry.model.Enzyme enzyme = null;
+						if(rsm.getResultSet().getMsiSearch() != null) {
+							Set<Enzyme> enzymes = rsm.getResultSet().getMsiSearch().getSearchSetting().getEnzymes();					
 
-						fr.proline.core.orm.uds.Enzyme ormEnzyme = udsEM.find(fr.proline.core.orm.uds.Enzyme.class, enzymes.iterator().next().getId());
-						List<EnzymeCleavage> cleavages = new ArrayList<>();
-						for (fr.proline.core.orm.uds.EnzymeCleavage c : ormEnzyme.getCleavages()) {
-							cleavages.add(new EnzymeCleavage(c.getId(), c.getSite(), c.getResidues(), (c.getRestrictiveResidues() == null) ? scala.Option.empty() : new Some<String>(c.getRestrictiveResidues())));
+							fr.proline.core.orm.uds.Enzyme ormEnzyme = udsEM.find(fr.proline.core.orm.uds.Enzyme.class, enzymes.iterator().next().getId());
+							List<EnzymeCleavage> cleavages = new ArrayList<>();
+							for (fr.proline.core.orm.uds.EnzymeCleavage c : ormEnzyme.getCleavages()) {
+								cleavages.add(new EnzymeCleavage(c.getId(), c.getSite(), c.getResidues(), (c.getRestrictiveResidues() == null) ? scala.Option.empty() : new Some<String>(c.getRestrictiveResidues())));
+							}
+							enzyme = new fr.profi.chemistry.model.Enzyme(ormEnzyme.getId(), ormEnzyme.getName(), cleavages.toArray(new EnzymeCleavage[0]), new Some<String>(ormEnzyme.getCleavageRegexp()), false, false, scala.Option.empty()); 
 						}
-						fr.profi.chemistry.model.Enzyme enzyme = new fr.profi.chemistry.model.Enzyme(ormEnzyme.getId(), ormEnzyme.getName(), cleavages.toArray(new EnzymeCleavage[0]), new Some<String>(ormEnzyme.getCleavageRegexp()), false, false, scala.Option.empty()); 
-							
+						
+						//reinit counter
+						nbrNoSeqProt = 0;
+						nbrManySeqProt = 0;
+						
 						for (ProteinSet protSet : protSets) {
 
 							coveredSeqLengthByProtMatchList.clear();
@@ -481,107 +486,17 @@ public class ProjectHandler {
 										pepIdsByProtSetId.get(protSet.getId())));
 							}
 
-							// Get bioSequence for all ProteinMatch  				    
-							Map<String, List<BioSequenceWrapper>> result = BioSequenceProvider.findBioSequencesBySEDbIdentValues(allProtMatchesAccession);
-							// get missed descriptions for each protein_match.
-							Map<String, List<SEDbIdentifierWrapper>> resultSedbIdentifiers = BioSequenceProvider.findSEDbyIdentValues(allProtMatchesAccession);
-
-							for (Entry<ProteinMatch, Integer> entry : coveredSeqLengthByProtMatchList.entrySet()) {
-								ProteinMatch protMatch = entry.getKey();
-								coveredSequenceLength = entry.getValue();
-								List<SEDbIdentifierWrapper> sedbIdentifiers = resultSedbIdentifiers.get(protMatch.getAccession());
-								if ((protMatch.getDescription() == null) || (protMatch.getDescription().isEmpty())) {
-									if ((sedbIdentifiers != null) && (sedbIdentifiers.size() >= 1)) {
-										SEDbIdentifierWrapper sedbIdent = sedbIdentifiers.get(0);
-										//sedbIdent description should not be null or empty 
-										if ((sedbIdent != null) && (sedbIdent.getDescription() != null)) {
-											if (sedbIdent.getDescription().trim().length() > 0)
-												protMatch.setDescription(sedbIdent.getDescription());
-										}
-									}
-
-								}
-								List<BioSequenceWrapper> protMatchBioSeqs = result.get(protMatch.getAccession());
-								if ((protMatchBioSeqs == null) || (protMatchBioSeqs.isEmpty())) {
-									nbrNoSeqProt++;
-								    LOG.trace(" ****  FOUND NO Sequence for protein {}", protMatch.getAccession());
-								} else if (protMatchBioSeqs.size() > 1) {
-									nbrManySeqProt++;
-									LOG.trace(" ****  FOUND MORE THAN 1 Sequence for protein {}. Use first one  ", protMatch.getAccession());
-								}
-								
-								if ((protMatchBioSeqs != null) && (protMatchBioSeqs.size() >= 1)) {
-									BioSequenceWrapper bioSeq = protMatchBioSeqs.get(0);
-									int bioSequenceLentgh = bioSeq.getSequence().length();
-									// to avoid the indeterminate form : /0
-									if ((bioSequenceLentgh > 0) && (coveredSequenceLength < bioSequenceLentgh)) {
-
-										//Calculate Coverage and store in MSI
-										double coverage = calculateSequenceCoverage(bioSequenceLentgh, coveredSequenceLength);
-										ProteinSetProteinMatchItem proSetMap = protSetMapByProtMatch.get(protMatch);
-										proSetMap.setCoverage(new Float(coverage));
-										msiEM.merge(proSetMap);
-
-										//Calculate number of observable peptides and store in MSI
-										JsonObject array = getPropertiesAsJsonObject(protMatch.getSerializedProperties());
-										if (!array.has("observable_peptide_count")) {
-											int observablePeptideCount = DigestionUtils.getObservablePeptidesCount(bioSeq.getSequence(), enzyme);
-											LOG.debug(" Saving observable_peptide_count property for proteinMatch {}.", protMatch.getId());
-											array.addProperty("observable_peptide_count", observablePeptideCount);
-											protMatch.setSerializedProperties(array.toString());
-											msiEM.merge(protMatch);
-										}
-										
-										// Save BioSequence
-										BioSequence msiBioSeq = msiEM.find(BioSequence.class, bioSeq.getSequenceId());
-										if (msiBioSeq == null) {
-											msiBioSeq = new BioSequence();
-											msiBioSeq.setAlphabet(Alphabet.AA);
-											msiBioSeq.setId(bioSeq.getSequenceId());
-											msiBioSeq.setLength(bioSeq.getSequence().length());
-											msiBioSeq.setMass(new Double(bioSeq.getMass()).intValue());
-											msiBioSeq.setCrc64(HashUtil.calculateCRC64(bioSeq.getSequence()));
-											msiBioSeq.setPi(new Float(bioSeq.getPI()));
-											msiBioSeq.setSequence(bioSeq.getSequence());
-											msiEM.persist(msiBioSeq);
-										} else {
-											boolean foundMissMatch = false;
-											StringBuffer sb = new StringBuffer(" Following properties don't match with current biosequence with id  ");
-											sb.append(bioSeq.getSequenceId());
-											if (msiBioSeq.getLength() != bioSeq.getSequence().length()) {
-												foundMissMatch = true;
-												sb.append(" sequence length;");
-											}
-
-											if (msiBioSeq.getMass() != new Double(bioSeq.getMass()).intValue()) {
-												foundMissMatch = true;
-												sb.append(" sequence mass (");
-												sb.append(msiBioSeq.getMass());
-												sb.append(" vs ");
-												sb.append(new Double(bioSeq.getMass()).intValue());
-												sb.append(");");
-											}
-
-											if (!msiBioSeq.getSequence().equals(bioSeq.getSequence())) {
-												foundMissMatch = true;
-												sb.append(" sequence;");
-											}
-											if (foundMissMatch)
-												LOG.warn(sb.toString());
-										}
-
-										// Save link between ProteinMatch and BioSeq
-										protMatch.setBioSequenceId(bioSeq.getSequenceId());
-										msiEM.merge(protMatch);
-									}
-								}
-							} // end of proteins list of current protein set
+							//--  Get Wrappers for all ProteinMatches: bioSequence and SEDbIdentifier
+							Map<String,BioSequenceProvider.SEDbIdentifierRelated> protMatchesObjResult = BioSequenceProvider.findSEDbIdentRelatedData(allProtMatchesAccession);														
+							//Update and Save properties
+							updateProteinMatchesProperties(coveredSeqLengthByProtMatchList, msiEM, enzyme, protSetMapByProtMatch, protMatchesObjResult);
 
 							if (psIdcount % 500 == 0) {
 								LOG.info("Processed " + psIdcount + " protein sets / " + psIdListSize);
 							}
 							psIdcount++;
-						} // end protein sets						
+						} // end protein sets
+						
 						LOG.info("Processed " + psIdcount + " protein sets / " + psIdListSize);
 						LOG.debug("--- Number of proteins with MORE THAN 1 Sequence : {}", nbrManySeqProt);
 					    LOG.debug("--- Number of proteins with NO Sequence : {}", nbrNoSeqProt);
@@ -620,6 +535,7 @@ public class ProjectHandler {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+				throw ex; //throw exception to caller  
 			} finally {
 				if (msiEM != null) {
 					try {
@@ -633,6 +549,126 @@ public class ProjectHandler {
 				}
 			}
 		} //End msiDbConnector !=null
+	}
+
+	private static void updateProteinMatchesProperties(
+		Map<ProteinMatch, Integer> coveredSeqLengthByProtMatchList,
+		EntityManager msiEM,	
+		fr.profi.chemistry.model.Enzyme enzyme,
+		Map<ProteinMatch, ProteinSetProteinMatchItem> protSetMapByProtMatch,
+		Map<String,BioSequenceProvider.SEDbIdentifierRelated> seDbIdentsObjects ) {
+		
+		int coveredSequenceLength;
+		
+		// get missed descriptions for each protein_match.
+		for (Entry<ProteinMatch, Integer> entry : coveredSeqLengthByProtMatchList.entrySet()) {	
+			ProteinMatch protMatch = entry.getKey();
+			boolean protMatch2Update = false;
+			String protDescription = protMatch.getDescription();
+			coveredSequenceLength = entry.getValue();
+			BioSequenceProvider.SEDbIdentifierRelated seDbIdents = seDbIdentsObjects.get(protMatch.getAccession());
+			if ( (protDescription == null || protDescription.isEmpty()) && !(seDbIdents ==null)) {
+				List<SEDbIdentifierWrapper> sedbIdentifiers = seDbIdents.getSEDbIdentWrappers();
+				if ((sedbIdentifiers != null) && (sedbIdentifiers.size() >= 1)) {
+					SEDbIdentifierWrapper sedbIdent = sedbIdentifiers.get(0);
+					//sedbIdent description should not be null or empty 
+					if ((sedbIdent != null) && (sedbIdent.getDescription() != null)) {
+						if (sedbIdent.getDescription().trim().length() > 0){
+							protDescription = sedbIdent.getDescription();
+							protMatch.setDescription(protDescription);	
+							protMatch2Update = true;
+						}
+					}
+				}
+			}
+			
+			//Use Description to get GeneName :
+			if((protDescription != null) && (!protDescription.isEmpty())) {
+				String geneName = RegExUtil.getMatchingString(protDescription, ".*GN=([^\\s]+).*");
+				if(geneName != null && !geneName.isEmpty()) {
+					protMatch.setGeneName(geneName);
+					protMatch2Update = true;
+				}		
+			}
+			
+			if(seDbIdents== null ||  seDbIdents.getBioSequenceWrappers() == null ||  seDbIdents.getBioSequenceWrappers().isEmpty()) {
+					nbrNoSeqProt++;
+					LOG.trace(" ****  FOUND NO Sequence for protein {}", protMatch.getAccession());
+			} else {
+				List<BioSequenceWrapper> protMatchBioSeqs = seDbIdents.getBioSequenceWrappers();
+				if (protMatchBioSeqs.size() > 1) {
+					nbrManySeqProt++;
+					LOG.trace(" ****  FOUND MORE THAN 1 Sequence for protein {}. Use first one  ", protMatch.getAccession());
+				}
+							
+				BioSequenceWrapper bioSeq = protMatchBioSeqs.get(0);
+				int bioSequenceLentgh = bioSeq.getSequence().length();
+				// to avoid the indeterminate form : /0
+				if ((bioSequenceLentgh > 0) && (coveredSequenceLength < bioSequenceLentgh)) {
+
+					//Calculate Coverage and store in MSI
+					double coverage = calculateSequenceCoverage(bioSequenceLentgh, coveredSequenceLength);
+					ProteinSetProteinMatchItem proSetMap = protSetMapByProtMatch.get(protMatch);
+					proSetMap.setCoverage(new Float(coverage));
+					msiEM.merge(proSetMap);
+
+					//Calculate number of observable peptides and store in MSI
+					if(enzyme != null) {
+						JsonObject array = getPropertiesAsJsonObject(protMatch.getSerializedProperties());
+						if (!array.has("observable_peptide_count")) {
+							int observablePeptideCount = DigestionUtils.getObservablePeptidesCount(bioSeq.getSequence(), enzyme);
+							LOG.trace(" Saving observable_peptide_count property for proteinMatch {}.", protMatch.getId());
+							array.addProperty("observable_peptide_count", observablePeptideCount);
+							protMatch.setSerializedProperties(array.toString());
+							protMatch2Update = true;
+						}
+					}
+					
+					// Save BioSequence
+					BioSequence msiBioSeq = msiEM.find(BioSequence.class, bioSeq.getSequenceId());
+					if (msiBioSeq == null) {
+						msiBioSeq = new BioSequence();
+						msiBioSeq.setAlphabet(Alphabet.AA);
+						msiBioSeq.setId(bioSeq.getSequenceId());
+						msiBioSeq.setLength(bioSeq.getSequence().length());
+						msiBioSeq.setMass(new Double(bioSeq.getMass()).intValue());
+						msiBioSeq.setCrc64(HashUtil.calculateCRC64(bioSeq.getSequence()));
+						msiBioSeq.setPi(new Float(bioSeq.getPI()));
+						msiBioSeq.setSequence(bioSeq.getSequence());
+						msiEM.persist(msiBioSeq);
+					} else {
+						boolean foundMissMatch = false;
+						StringBuffer sb = new StringBuffer(" Following properties don't match with current biosequence with id  ");
+						sb.append(bioSeq.getSequenceId());
+						if (msiBioSeq.getLength() != bioSeq.getSequence().length()) {
+							foundMissMatch = true;
+							sb.append(" sequence length;");
+						}
+
+						if (msiBioSeq.getMass() != new Double(bioSeq.getMass()).intValue()) {
+							foundMissMatch = true;
+							sb.append(" sequence mass (");
+							sb.append(msiBioSeq.getMass());
+							sb.append(" vs ");
+							sb.append(new Double(bioSeq.getMass()).intValue());
+							sb.append(");");
+						}
+
+						if (!msiBioSeq.getSequence().equals(bioSeq.getSequence())) {
+							foundMissMatch = true;
+							sb.append(" sequence;");
+						}
+						if (foundMissMatch)
+							LOG.warn(sb.toString());
+					}
+
+					// Save link between ProteinMatch and BioSeq
+					protMatch.setBioSequenceId(bioSeq.getSequenceId());
+				}
+			}
+			if(protMatch2Update)
+				msiEM.merge(protMatch);
+		} // end of proteins list of current protein set
 	}
 
 	private static Integer getSeqCoverageForProteinMatch(
