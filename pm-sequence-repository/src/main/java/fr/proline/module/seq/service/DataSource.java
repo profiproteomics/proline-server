@@ -1,5 +1,6 @@
 package fr.proline.module.seq.service;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,6 @@ public interface DataSource {
 
 	public Date getLastModifiedTime();
 
-	public Map<SEDbIdentifierWrapper, String> retrieveSequences(Map<String, List<SEDbIdentifierWrapper>> identByValues);
+	public Map<SEDbIdentifierWrapper, String> retrieveSequences(Map<String, List<SEDbIdentifierWrapper>> identByValues) throws IOException;
 
 }

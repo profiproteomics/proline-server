@@ -73,12 +73,12 @@ public class FastaSource implements DataSource {
 		return result;
 	}
 
-	public Map<SEDbIdentifierWrapper, String> retrieveSequences(final Map<String, List<SEDbIdentifierWrapper>> identByValues) {
+	public Map<SEDbIdentifierWrapper, String> retrieveSequences(final Map<String, List<SEDbIdentifierWrapper>> identByValues) throws IOException {
 		return parseFile(identByValues);
 	}
 
 	/* Private methods */
-	private Map<SEDbIdentifierWrapper, String> parseFile(final Map<String, List<SEDbIdentifierWrapper>> identByValues) {
+	private Map<SEDbIdentifierWrapper, String> parseFile(final Map<String, List<SEDbIdentifierWrapper>> identByValues) throws IOException {
 
 		final String fastaAbsolutePathname = m_fastaFile.getAbsolutePath();
 		final Map<SEDbIdentifierWrapper, String> foundSequences = new HashMap<>();
@@ -165,9 +165,9 @@ public class FastaSource implements DataSource {
 				fastaAbsolutePathname, lineIndex, duration, ((double) (lineIndex * 1000)) / duration,
 				foundSequences.size(), nIdentValues);
 			LOG.info(message);
-		} catch (Exception ex) {
-			LOG.error(String.format("Error reading [%s] current line index: %d", fastaAbsolutePathname,
-				lineIndex), ex);
+//		} catch (Exception ex) {
+//			LOG.error(String.format("Error reading [%s] current line index: %d", fastaAbsolutePathname,
+//				lineIndex), ex);
 		} finally {
 
 			if (br != null) {

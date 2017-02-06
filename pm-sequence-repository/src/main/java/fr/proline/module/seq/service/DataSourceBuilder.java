@@ -36,7 +36,7 @@ public class DataSourceBuilder {
 
 	}
 
-	public DataSource buildFastaSource(final String fastaFileName, final Pattern seDbIdentPattern, final Pattern repositoryIdentPattern) {
+	public DataSource buildFastaSource(final String fastaFileName, final Pattern seDbIdentPattern, final Pattern repositoryIdentPattern) throws Exception {
 
 		if (StringUtils.isEmpty(fastaFileName)) {
 			throw new IllegalArgumentException("Invalid fastaFileName");
@@ -65,7 +65,7 @@ public class DataSourceBuilder {
 		return fastaSource;
 	}
 
-	public List<File> locateFastaFile(final String namePart) {
+	public List<File> locateFastaFile(final String namePart) throws Exception {
 
 		if (StringUtils.isEmpty(namePart)) {
 			throw new IllegalArgumentException("Invalid namePart");
@@ -91,7 +91,7 @@ public class DataSourceBuilder {
 		return result;
 	}
 
-	protected Map<String, List<File>> getFastaFiles() {
+	protected Map<String, List<File>> getFastaFiles() throws Exception {
 		Map<String, List<File>> fastaFiles = null;
 
 		synchronized (m_foundFastaFilesLock) {

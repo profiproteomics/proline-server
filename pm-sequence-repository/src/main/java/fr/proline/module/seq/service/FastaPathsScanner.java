@@ -33,7 +33,7 @@ public class FastaPathsScanner {
 	 *            List of abstract paths to scan. Must not be <code>null</code> or empty and must contains valid path names (existing regular files or
 	 *            directories). If an abstract path is a directory it will be scanned recursively.
 	 */
-	public static Map<String, List<File>> scanPaths(final FastaPathsScanner scanner, final List<String> paths) {
+	public static Map<String, List<File>> scanPaths(final FastaPathsScanner scanner, final List<String> paths) throws Exception {
 
 		if (scanner == null) {
 			throw new IllegalArgumentException("Scanner is null");
@@ -96,7 +96,12 @@ public class FastaPathsScanner {
 						LOG.debug("Scanning [{}]", absolutePathname);
 					}
 
-					scanner.scan(filePath, traversedDirs, foundFastaFiles);
+					try {
+						scanner.scan(filePath, traversedDirs, foundFastaFiles);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						throw new RuntimeException(e);
+					}
 
 					LOG.info("[{}] scan terminated", absolutePathname);
 				}
@@ -110,15 +115,15 @@ public class FastaPathsScanner {
 		/* Wait (blocking) for all futures to complete */
 		for (final Future<?> f : futures) {
 
-			try {
+//			try {
 				f.get();// Return null
-			} catch (Exception ex) {
-				LOG.error("Error trying to get Future result", ex);
-			}
+//			} catch (Exception ex) {
+//				LOG.error("Error trying to get Future result", ex);
+//			}
 
 		}
 
-		try {
+//		try {
 			executor.shutdown();
 
 			if (executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS)) {
@@ -136,9 +141,9 @@ public class FastaPathsScanner {
 				LOG.error("FastaFilesScanner Executor timed out");
 			}
 
-		} catch (Exception ex) {
-			LOG.error("Error ending FastaFilesScanner Executor", ex);
-		}
+//		} catch (Exception ex) {
+//			LOG.error("Error ending FastaFilesScanner Executor", ex);
+//		}
 
 		return result;
 	}
@@ -165,12 +170,13 @@ public class FastaPathsScanner {
 	 *            Abstract file to scan : if it denotes a directory, elements are scanned recursively. Must not be <code>null</code>.
 	 * @param traversedDirs
 	 *            Map of already traversed directories to avoid loop in presence of symbolic links. Must not be <code>null</code>.
+	 * @throws IOException 
 	 * 
 	 */
 	private void scan(
 		final File file,
 		final ConcurrentMap<File, Boolean> traversedDirs,
-		final Map<String, List<File>> foundFastaFiles) {
+		final Map<String, List<File>> foundFastaFiles) throws IOException {
 		assert (file != null) : "scan() file is null";
 		assert (traversedDirs != null) : "scan() traversedDirs Map is null";
 
@@ -181,13 +187,13 @@ public class FastaPathsScanner {
 		} else if (file.isDirectory()) {
 			boolean alreadyTraversed = true;// Don't want to traverse a non canonisable pathname
 
-			try {
+//			try {
 				final File canonicalPathname = file.getCanonicalFile();
 
 				alreadyTraversed = (traversedDirs.put(canonicalPathname, Boolean.TRUE) == Boolean.TRUE);
-			} catch (IOException ioEx) {
-				LOG.error("Error retrieving [" + absolutePathname + "] canonical pathname", ioEx);
-			}
+//			} catch (IOException ioEx) {
+//				LOG.error("Error retrieving [" + absolutePathname + "] canonical pathname", ioEx);
+//			}
 
 			if (alreadyTraversed) {// Do not recurse in UNIX symbolic links
 				LOG.info("Already traversed dir [{}]", absolutePathname);
