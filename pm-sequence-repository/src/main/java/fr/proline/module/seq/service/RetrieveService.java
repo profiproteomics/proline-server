@@ -1,6 +1,5 @@
 package fr.proline.module.seq.service;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +26,7 @@ import fr.proline.repository.IDataStoreConnectorFactory;
 import fr.proline.repository.IDatabaseConnector;
 
 /**
- * Launchs Sequence-Repository retrieve Service as single pass or as scheduled task (timer).
+ * Launch Sequence-Repository retrieve Service as single pass or as scheduled task (timer).
  * 
  * @author LMN & AR & AW
  * 
@@ -106,18 +105,25 @@ public final class RetrieveService {
 			LOG.info("Running \"retrieve task\" every {} hour(s)", params.hourDelay);
 		} else {
 			LOG.info("No given hourDelay : Running a single \"retrieve task\"");
-			if (params.projectId == 0) {
-				retrieveBioSequencesForAllProjects(params.forceUpdate);
-			} else {
-				retrieveBioSequencesForProject(params.projectId, params.forceUpdate);
+			try {
+				if (params.projectId == 0) {
+					retrieveBioSequencesForAllProjects(params.forceUpdate);
+				} else {
+					retrieveBioSequencesForProject(params.projectId, params.forceUpdate);
+				}
+				BioSequenceRetriever.waitExecutorShutdown();
+				System.out.println("\nMain terminated !");
+				System.exit(0);
+			} catch(Exception e){
+				LOG.error("Error running  retrieveBioSequences ", e);
+				System.out.println("\nMain terminated with ERROR");
+				System.exit(1);
 			}
-			BioSequenceRetriever.waitExecutorShutdown();
-			System.out.println("\nMain terminated !");
 		}
 
 	}
 
-	public static void retrieveBioSequencesForAllProjects(boolean forceUpdate) {
+	public static void retrieveBioSequencesForAllProjects(boolean forceUpdate) throws Exception {
 		
 		int totalHandledSEDbIdents = 0;
 		LOG.info("Start new pass on all projects ");
@@ -132,8 +138,8 @@ public final class RetrieveService {
 		EntityManager msiEM = null;
 		try {
 			List<Long> projectIds = getAllProjectIds(udsEM);
-			Map<Long, List<Long>> rsmIdsPerProject = new HashMap();
-			Map<Long, Map<Long, SEDbInstanceWrapper>> seDbInstancesPerProject  = new HashMap();
+			Map<Long, List<Long>> rsmIdsPerProject = new HashMap<Long, List<Long>>();
+			Map<Long, Map<Long, SEDbInstanceWrapper>> seDbInstancesPerProject  = new HashMap<Long, Map<Long, SEDbInstanceWrapper>>();
 			
 			if ((projectIds == null) || projectIds.isEmpty()) {
 				LOG.warn("NO MSI Project found");
@@ -197,7 +203,7 @@ public final class RetrieveService {
 		LOG.info("Total retrieveBioSequencesForAllProjects() execution : {} SEDbIdentifiers handleds in {} ms", totalHandledSEDbIdents, duration);
 	}
 
-	public static void retrieveBioSequencesForProject(final long projectId, boolean forceUpdate) {
+	public static void retrieveBioSequencesForProject(final long projectId, boolean forceUpdate) throws Exception {
 
 		LOG.debug("retrieveBioSequencesForProject running ");
 
@@ -243,7 +249,7 @@ public final class RetrieveService {
 		}
 	}
 
-	public static void retrieveBioSequencesForRsms(final long projectId, List<Long> rsmIds, boolean forceUpdate) {
+	public static void retrieveBioSequencesForRsms(final long projectId, List<Long> rsmIds, boolean forceUpdate)throws Exception {
 
 		LOG.debug("retrieveBioSequencesForRsms running ");
 
