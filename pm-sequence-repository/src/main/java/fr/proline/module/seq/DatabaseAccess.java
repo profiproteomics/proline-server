@@ -193,7 +193,11 @@ public final class DatabaseAccess {
 
 				if (allowCreateUpdateDB) {
 					LOG.info("No ExternalDb for SEQ Db creating a new one");
-					seqDbConnector = createSEQDatabase(udsDbConnector, udsEM);
+					try {
+						seqDbConnector = createSEQDatabase(udsDbConnector, udsEM);
+					} catch (SQLException e) {
+						throw new RuntimeException("Error creating SEQ Db "+e);						
+					}
 				} else {
 					throw new RuntimeException("SEQ Db does not exist");
 				}
@@ -203,7 +207,9 @@ public final class DatabaseAccess {
 				seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
 					ProlineDatabaseType.SEQ, seqDb.toPropertiesMap(udsDbConnector.getDriverType()));
 				if (allowCreateUpdateDB) {
-					DatabaseUpgrader.upgradeDatabase(seqDbConnector,cheksumrepair);
+					int retDBUpgrade = DatabaseUpgrader.upgradeDatabase(seqDbConnector,cheksumrepair);
+					if(retDBUpgrade<0)
+						throw new RuntimeException("Error accessing Seq DB for upgrade");
 				}
 			}		     			
 
@@ -225,7 +231,7 @@ public final class DatabaseAccess {
 	/* TODO Do this in Proline-Admin ? */
 	private static IDatabaseConnector createSEQDatabase(
 		final IDatabaseConnector udsDbConnector,
-		final EntityManager udsEM) {
+		final EntityManager udsEM) throws SQLException {
 		ExternalDb seqDb = null;
 
 		EntityTransaction udsTransac = null;
@@ -281,7 +287,7 @@ public final class DatabaseAccess {
 		return seqDbConnector;
 	}
 
-	private static boolean createPgSEQDatabase(final IDatabaseConnector udsDbConnector) {
+	private static boolean createPgSEQDatabase(final IDatabaseConnector udsDbConnector) throws SQLException {
 		boolean success = false;
 
 		Connection sqlCon = null;
@@ -314,8 +320,8 @@ public final class DatabaseAccess {
 
 			}
 
-		} catch (Exception ex) {
-			LOG.error("Error creating Postgres SEQ Database", ex);
+//		} catch (Exception ex) {
+//			LOG.error("Error creating Postgres SEQ Database", ex);
 		} finally {
 
 			if (sqlCon != null) {
