@@ -18,8 +18,14 @@ public final class TestRetrieveService {
 	}
 
 	public static void main(final String[] args) {
-		RetrieveService.retrieveBioSequencesForProject(PROJECT_ID, false);
-		BioSequenceRetriever.waitExecutorShutdown();
-		System.out.println("\nMain terminated !");
+		try {
+			RetrieveService.retrieveBioSequencesForProject(PROJECT_ID, false);
+			BioSequenceRetriever.waitExecutorShutdown();
+			System.out.println("\nMain terminated !");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 }

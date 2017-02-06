@@ -36,14 +36,13 @@ public final class TestBioSequenceProvider {
 		values.add("###REV###H0QFK6_ECOLI");
 		values.add("K7EIV0_HUMAN");
 		values.add("ZZZ toto");
-
-		final Map<String, List<BioSequenceWrapper>> result = BioSequenceProvider
-				.findBioSequencesBySEDbIdentValues(values);
-
-		for (final Map.Entry<String, List<BioSequenceWrapper>> entry : result.entrySet()) {
+		
+		final Map<String, BioSequenceProvider.SEDbIdentifierRelated> result = BioSequenceProvider.findSEDbIdentRelatedData(values);
+		
+		for (final Map.Entry<String, BioSequenceProvider.SEDbIdentifierRelated> entry : result.entrySet()) {
 			final String seDbIdentValue = entry.getKey();
 
-			final List<BioSequenceWrapper> bioSequences = entry.getValue();
+			final List<BioSequenceWrapper> bioSequences = entry.getValue().getBioSequenceWrappers();
 
 			for (final BioSequenceWrapper bsw : bioSequences) {
 				System.out.println();
