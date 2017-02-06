@@ -11,8 +11,6 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,73 +26,71 @@ public class ListMatchingRules {
     
 	public static void main(final String[] args) {
 
-		DataSourceBuilder dsBuilder = new DataSourceBuilder();
-		Map<String, List<File>> fastaPaths = dsBuilder.getFastaFiles();
-		LOG.info(" ---- Scanning Fasta local path ---- ");
-		Set<Map.Entry<String, List<File>>> entries = fastaPaths.entrySet();
-
-		for (Map.Entry<String, List<File>> entry : entries) {
-
-			String fastaName = entry.getKey();
-			List<File> fastaFiles = entry.getValue();
-
-			ParsingRuleEntry rule = ParsingRuleEntry.getParsingRuleEntry(fastaName);
-			Pattern m_seDbIdentPattern = null;
-			if (rule != null) {
-				LOG.info(" Using rule \"{}\" for \"{}\" ", rule.getProteinAccRegEx(), fastaName);
-				String releaseRegEx = rule.getFastaReleaseRegEx();
-				LOG.info("   Release (using rule \"{}\") = \"{}\" ", releaseRegEx, RegExUtil.parseReleaseVersion(fastaName, releaseRegEx));
-				m_seDbIdentPattern = Pattern.compile(rule.getProteinAccRegEx(), Pattern.CASE_INSENSITIVE);
-			} else {
-				LOG.info(" Using default rule \"{}\" for fasta \"{}\" ", SeqRepoConfig.getInstance().getDefaultProtAccRegEx(), fastaName);
-				m_seDbIdentPattern = Pattern.compile(SeqRepoConfig.getInstance().getDefaultProtAccRegEx(), Pattern.CASE_INSENSITIVE);
-			}
-
-			//Read 3 entries in fasta files using ParsingRuleEntry regEx
-			for (File nextFile : fastaFiles) {
-				BufferedReader br = null;
-				try {
-    				InputStream is = new FileInputStream(nextFile);
-    				 br = new BufferedReader(new InputStreamReader(is, LATIN_1_CHARSET));
-    
-    				String rawLine = br.readLine();
-    				int countEntry = 0;
-    				while (countEntry < 3 && rawLine != null) {
-    
-    					final String trimmedLine = rawLine.trim();
-    					if (!trimmedLine.isEmpty() && trimmedLine.startsWith(">")) { //Found an entry
-    						countEntry++;
-    
-    						final Matcher matcher = m_seDbIdentPattern.matcher(trimmedLine);
-    						if (matcher.find()) {
-    							if (matcher.groupCount() < 1) {
-    								LOG.warn("\t !! No accession group found for entry \"{}\".", trimmedLine);
-    							} else {
-    								final String identValue = matcher.group(1).trim();// SEDbIdentifier value should be trimmed
-    								LOG.info("\t Accession \"{}\" will be used for entry \"{}\".", identValue, trimmedLine);
-    							}
-    						} else {
-    							LOG.warn("\t !! Entry {} don't match specified rule ! ", trimmedLine);
-    						}
-    					} // End entryFound
-    					rawLine = br.readLine();
-    				} // End read some entries
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();				
-				} finally {
-
-					if (br != null) {
-						try {
-							br.close();
-						} catch (IOException exClose) {
-							LOG.error("Error closing [" + nextFile + ']', exClose);
-						}
-					}
-
+		try {
+			DataSourceBuilder dsBuilder = new DataSourceBuilder();
+			Map<String, List<File>> fastaPaths = dsBuilder.getFastaFiles();
+			LOG.info(" ---- Scanning Fasta local path ---- ");
+			Set<Map.Entry<String, List<File>>> entries = fastaPaths.entrySet();
+	
+			for (Map.Entry<String, List<File>> entry : entries) {
+	
+				String fastaName = entry.getKey();
+				List<File> fastaFiles = entry.getValue();
+	
+				ParsingRuleEntry rule = ParsingRuleEntry.getParsingRuleEntry(fastaName);
+				String m_seDbIdentRegEx = null;
+				if (rule != null) {
+					LOG.info(" Using rule \"{}\" for \"{}\" ", rule.getProteinAccRegEx(), fastaName);
+					String releaseRegEx = rule.getFastaReleaseRegEx();
+					LOG.info("   Release (using rule \"{}\") = \"{}\" ", releaseRegEx, RegExUtil.parseReleaseVersion(fastaName, releaseRegEx));
+					m_seDbIdentRegEx = rule.getProteinAccRegEx();
+				} else {
+					LOG.info(" Using default rule \"{}\" for fasta \"{}\" ", SeqRepoConfig.getInstance().getDefaultProtAccRegEx(), fastaName);
+					m_seDbIdentRegEx = SeqRepoConfig.getInstance().getDefaultProtAccRegEx();
 				}
-			} //End go through associated fasta files
-
-		} //End go through fasta paths
+	
+				//Read 3 entries in fasta files using ParsingRuleEntry regEx
+				for (File nextFile : fastaFiles) {
+					BufferedReader br = null;
+					try {
+	    				InputStream is = new FileInputStream(nextFile);
+	    				 br = new BufferedReader(new InputStreamReader(is, LATIN_1_CHARSET));
+	    
+	    				String rawLine = br.readLine();
+	    				int countEntry = 0;
+	    				while (countEntry < 3 && rawLine != null) {
+	    
+	    					final String trimmedLine = rawLine.trim();
+	    					if (!trimmedLine.isEmpty() && trimmedLine.startsWith(">")) { //Found an entry
+	    						countEntry++;
+	    
+	    						String foundEntry = RegExUtil.getMatchingString(trimmedLine, m_seDbIdentRegEx);
+	    						if(foundEntry == null)
+	    							LOG.warn("\t !! No accession group found for entry \"{}\".", trimmedLine);
+	    						else
+	    							LOG.info("\t Accession \"{}\" will be used for entry \"{}\".", foundEntry, trimmedLine);
+	
+	    					} // End entryFound
+	    					rawLine = br.readLine();
+	    				} // End read some entries
+					
+					} finally {
+	
+						if (br != null) {
+							try {
+								br.close();
+							} catch (IOException exClose) {
+								LOG.error("Error closing [" + nextFile + ']', exClose);
+							}
+						}
+	
+					}
+				} //End go through associated fasta files
+	
+			} //End go through fasta paths
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();				
+		} 		
 	}
 }
