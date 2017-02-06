@@ -1,6 +1,7 @@
 package fr.proline.module.seq.service;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,6 +14,7 @@ import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -53,7 +55,6 @@ import fr.proline.repository.IDatabaseConnector;
 
 public final class BioSequenceRetriever {
 
-	public static final Pattern GENERIC_SE_DB_IDENT_PATTERN = Pattern.compile(">(\\S+)");
 
 	/**
 	 * Protect Write Transaction on SEQ Database.
@@ -80,8 +81,10 @@ public final class BioSequenceRetriever {
 	 * 
 	 * @param seDbIdentifiers
 	 * @return Number of handled (created or updated) SEDbIdentifiers.
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
 	 */
-	public static int retrieveBioSequences(final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers) {
+	public static int retrieveBioSequences(final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers) throws Exception {
 		if ((seDbIdentifiers == null) || seDbIdentifiers.isEmpty()) {
 			throw new IllegalArgumentException("Invalid seDbIdentifiers Map");
 		}
@@ -114,6 +117,7 @@ public final class BioSequenceRetriever {
 							if (!(currentThread.getUncaughtExceptionHandler() instanceof ThreadLogger)) {
 								currentThread.setUncaughtExceptionHandler(new ThreadLogger(LOG));
 							}
+							LOG.debug(" GET Identifier from "+seDbInstanceW.getSourcePath());
 							return Integer.valueOf(retrieveBioSequences(seDbInstanceW, seDbIdentsW));
 						}
 
@@ -128,7 +132,7 @@ public final class BioSequenceRetriever {
 			/* Wait (blocking) for all futures to complete */
 			for (final Future<Integer> f : futures) {
 
-				try {
+//				try { //VD : Let the error be thrown to caller.
 
 					final Integer result = f.get();
 					if (result != null) {
@@ -139,10 +143,10 @@ public final class BioSequenceRetriever {
 						}
 
 					}
-
-				} catch (Exception ex) {
-					LOG.error("Error trying to get Future result", ex);
-				}
+//
+//				} catch (Exception ex) {
+//					LOG.error("Error trying to get Future result", ex);
+//				}
 
 			}
 
@@ -156,21 +160,21 @@ public final class BioSequenceRetriever {
 		return totalHandledSEDbIdents;
 	}
 
-	public static boolean waitExecutorShutdown() {
+	public static boolean waitExecutorShutdown() throws Exception {
 		boolean result = false;
 
-		try {
+//		try {
 			EXECUTOR.shutdown();
 			result = EXECUTOR.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS);
-		} catch (Exception ex) {
-			LOG.error("Error shutting-down BioSequenceRetriever EXECUTOR", ex);
-		}
+//		} catch (Exception ex) {
+//			LOG.error("Error shutting-down BioSequenceRetriever EXECUTOR", ex);
+//		}
 
 		return result;
 	}
 
 	/* Private methods */
-	private static int retrieveBioSequences(final SEDbInstanceWrapper seDbInstanceW, final Set<SEDbIdentifierWrapper> seDbIdentifiers) {
+	private static int retrieveBioSequences(final SEDbInstanceWrapper seDbInstanceW, final Set<SEDbIdentifierWrapper> seDbIdentifiers) throws Exception {
 
 		assert (seDbInstanceW != null) : "retrieveBioSequences() seDbInstanceW is null";
 		int nHandledSEDbIdents = 0;
@@ -181,9 +185,9 @@ public final class BioSequenceRetriever {
 			seqEM = seqDb.createEntityManager();
 
 			nHandledSEDbIdents = retrieveBioSequences(seqEM, seDbInstanceW, seDbIdentifiers, true);
-		} catch (Throwable t) {
-			/* Catch all ! */
-			LOG.error("Error loading Sequences from [" + seDbInstanceW.getSourcePath() + ']', t);
+//		} catch (Throwable t) {
+//			/* Catch all ! */
+//			LOG.error("Error loading Sequences from [" + seDbInstanceW.getSourcePath() + ']', t);
 		} finally {
 
 			if (seqEM != null) {
@@ -203,7 +207,7 @@ public final class BioSequenceRetriever {
 		final EntityManager seqEM,
 		final SEDbInstanceWrapper seDbInstanceW,
 		final Set<SEDbIdentifierWrapper> seDbIdentifiers,
-		final boolean doRecurse) {
+		final boolean doRecurse) throws Exception {
 		assert (seDbInstanceW != null) : "retrieveBioSequences() seDbInstanceW is null";
 
 		int nHandledSEDbIdents = 0;
@@ -410,12 +414,13 @@ public final class BioSequenceRetriever {
 
 	/**
 	 * Try to select an existing FASTA file just after expected SEDbInstance release.
+	 * @throws Exception 
 	 * 
 	 */
 	private static File selectBestFile(
 		final String fastaFileName,
 		final String release,
-		final String parsingRuleReleaseRegex) {
+		final String parsingRuleReleaseRegex) throws Exception {
 		assert (fastaFileName != null) : "selectBestFile() fastaFileName is null";
 
 		File result = null;
