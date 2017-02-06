@@ -37,10 +37,12 @@ package object mzidentml {
   
   implicit class RichFilter( filter: Filter ) { 
     def findFilterCvParam( term: PsiMs.Value, paramType: FilterParamType.Value = FilterParamType.INCLUDE ): Option[CvParam] = {
+      
       val paramList = paramType match {
         case FilterParamType.EXCLUDE => filter.getExclude()
         case FilterParamType.INCLUDE => filter.getInclude()
       }
+      if (paramList == null) return None
       
       findCvParam(paramList.getCvParam(), term)
     }

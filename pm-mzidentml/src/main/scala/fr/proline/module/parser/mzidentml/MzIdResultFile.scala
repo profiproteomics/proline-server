@@ -135,7 +135,7 @@ class MzIdResultFile(
       }
     }
     
-    logger.debug("End going through "+msQueryByRef.size+" MSQuery ")
+    logger.debug(msQueryByRef.size + " MS queries have been created !")
     
     msQueryByRef.values.toArray
   }
@@ -321,6 +321,8 @@ class MzIdResultFile(
     val additionalUserParams = additionalParams.getUserParam()
     val searchSettings = if( findUserParam(additionalUserParams,"output_pepxmlfile").isDefined ) {
       
+      logger.debug("Create SearchSettings using 'output_pepxmlfile' section")
+      
       val pepXmlParams = new PepXmlUserParams(additionalUserParams)
       val ms1ErrorTol = pepXmlParams.peptideMassTolerance
       val ms1ErrorTolUnit = MassTolUnit.PPM.toString
@@ -333,8 +335,6 @@ class MzIdResultFile(
           ms2ErrorTolUnit = MassTolUnit.Da.toString
         )
       )
-      
-      logger.debug("Create SearchSettings using 'output_pepxmlfile' section")
       
       SearchSettings(
         id = SearchSettings.generateNewId(),
@@ -355,6 +355,8 @@ class MzIdResultFile(
       )
       
     } else {
+      logger.debug("Create SearchSettings")
+      
       val parentTolParam = specIdentProto.getParentTolerance().getCvParam().get(0)
       val parentTol = parentTolParam.getValue().toDouble
       val parentTolUnit = mzIdTolToProfiTol(parentTolParam.getUnitName)
@@ -372,8 +374,6 @@ class MzIdResultFile(
       }
       
       val maxMC = enzymes.flatMap(_.properties.get.maxMissedCleavages ).headOption.getOrElse(0)
-      
-      logger.debug("Create SearchSettings")
       
       SearchSettings(
         id = SearchSettings.generateNewId(),
@@ -416,7 +416,7 @@ class MzIdResultFile(
     
     val queriesCount = mzIdSpecIdentList.getSpectrumIdentificationResult().size()
     
-    logger.debug("MSI Search Created")
+    logger.debug("MSI search created !")
     
     MSISearch(
       id = MSISearch.generateNewId(),
@@ -437,7 +437,7 @@ class MzIdResultFile(
   
   private lazy val peptideByRef: Map[String,Peptide] = {
     
-    logger.debug("Get Peptide by reference")
+    logger.debug("Get peptide by reference")
     
     val peptideByKey = new HashMap[String,Peptide]()
     
@@ -446,6 +446,8 @@ class MzIdResultFile(
       val newPep = _mzIdPepToPeptide(pepId,mzIdPep)
       val pepKey = newPep.uniqueKey
       val existingPepOpt = peptideByKey.get(newPep.uniqueKey)
+      
+      if (newPep.sequence == "SLVGLIPLYASMTLEPSIIK") println(existingPepOpt)
       
       val pep = if( existingPepOpt.isDefined ) {
         existingPepOpt.get
@@ -540,12 +542,12 @@ class MzIdResultFile(
   
   def getResultSet( wantDecoy: Boolean ): ResultSet = {
     
-    logger.debug("START getResultSet")
+    logger.debug("Load the data into a ResultSet...")
     
     // Important: initialize msQueries !
     val msq = this.msQueries
     
-    logger.debug("msQueries size "+msq.length)
+    logger.debug("Number of MS queries: "+msq.length)
     
     case class MzIdSequenceMatch( id: String, dbSeqRef: String, sequenceMatch: SequenceMatch )
     
@@ -592,7 +594,7 @@ class MzIdResultFile(
       mzIdSeqMatchesByDbSeqRef.getOrElseUpdate(mzIdSeqMatch.dbSeqRef, new ArrayBuffer[MzIdSequenceMatch]) += mzIdSeqMatch
     }
     
-    logger.debug("SeqMatch created ")
+    logger.debug(mzIdSeqMatchesByDbSeqRef.size + " sequence matches have been created !")
     
     val pepMatchesByMzIdSeqMatchId = new HashMap[String,ArrayBuffer[PeptideMatch]]()
     val pepMatches = new ArrayBuffer[PeptideMatch]()
@@ -625,34 +627,46 @@ class MzIdResultFile(
               Array(msiSearch.searchSettings.usedEnzymes.head) // FIXME: handle multiple enzymes
             )
             
-            // Extract the score value for a given search engine
-            val sIDParamGroup = sIdentItem.getParamGroup()
-            val scoreParamOpt = ScoreParamName.values.flatMap( termId => findParam(sIDParamGroup, termId.toString) ).headOption
-            require( scoreParamOpt.isDefined, s"can't find a score value in this spectrum identification item (id=${sIdentItem.getId})")
-
-            val scoreParam = scoreParamOpt.get
-            val scoreParamValue = scoreParam.getValue.toDouble
+            // Get some CV params for this PSM
+            val sIDCvParams = sIdentItem.getCvParam()
             
-            val( pepMatchScore, scoreType ) = ScoreParamName.withName(scoreParam.getName) match {
-              case ScoreParamName.COMET_EVALUE => {
-                (-math.log(scoreParamValue),Scoring.Type.COMET_EVALUE_LOG_SCALED.toString)
-              }
-              case ScoreParamName.MASCOT_SCORE => {
-                (scoreParamValue,Scoring.Type.MASCOT_IONS_SCORE.toString)
-              }
-              case ScoreParamName.MSGF_EVALUE => {
-                (-math.log(scoreParamValue),Scoring.Type.MSGF_EVALUE_LOG_SCALED.toString)
-              }
-              case ScoreParamName.OMSSA_EVALUE => {
-                (-math.log(scoreParamValue),Scoring.Type.OMSSA_EVALUE.toString)
-              }
-              case ScoreParamName.SEQUEST_EXPECT => {
-                (-math.log(scoreParamValue),Scoring.Type.SEQUEST_EXPECT_LOG_SCALED.toString)
+            // Try to extract percolator score
+            // TODO: parse other percolator values and all score information (put them in serialized properties)
+            val percolatorPepOpt = findCvParamValue(sIDCvParams, PsiMs.PercolatorPEP)
+
+            val( pepMatchScore, scoreType ) = if (percolatorPepOpt.isDefined) {
+              (- 10 * math.log10(percolatorPepOpt.get.toDouble), Scoring.Type.PERCOLATOR_PEP_LOG_SCALED.toString)
+            } else {
+              
+              // Extract the score value for a given search engine
+              val sIDParamGroup = sIdentItem.getParamGroup()
+              
+              val scoreParamOpt = ScoreParamName.values.flatMap( termId => findParam(sIDParamGroup, termId.toString) ).headOption
+              require( scoreParamOpt.isDefined, s"can't find a score value in this spectrum identification item (id=${sIdentItem.getId})")
+  
+              val scoreParam = scoreParamOpt.get
+              val scoreParamValue = scoreParam.getValue.toDouble
+              
+              ScoreParamName.withName(scoreParam.getName) match {
+                case ScoreParamName.COMET_EVALUE => {
+                  (-math.log10(scoreParamValue),Scoring.Type.COMET_EVALUE_LOG_SCALED.toString)
+                }
+                case ScoreParamName.MASCOT_SCORE => {
+                  (scoreParamValue,Scoring.Type.MASCOT_IONS_SCORE.toString)
+                }
+                case ScoreParamName.MSGF_EVALUE => {
+                  (-math.log10(scoreParamValue),Scoring.Type.MSGF_EVALUE_LOG_SCALED.toString)
+                }
+                case ScoreParamName.OMSSA_EVALUE => {
+                  (-math.log10(scoreParamValue),Scoring.Type.OMSSA_EVALUE.toString)
+                }
+                case ScoreParamName.SEQUEST_EXPECT => {
+                  (-math.log10(scoreParamValue),Scoring.Type.SEQUEST_EXPECT_LOG_SCALED.toString)
+                }
               }
             }
             
             // --- Convert CV params into peptide match properties ---
-            val sIDCvParams = sIdentItem.getCvParam()
             val matchedPeaksCount = findCvParamValue(sIDCvParams, PsiMs.NumberOfMatchedPeaks).map(_.toInt).getOrElse {
               // TODO: check that we do not count the same peak multiple times
               sIdentItem.getFragmentation.getIonType.map( _.getFragmentArray.head.getValues.length ).sum
@@ -683,7 +697,7 @@ class MzIdResultFile(
             
             val mascotEvalueOpt = findCvParamValue(sIDCvParams, PsiMs.MascotExpectationValue)
             val mascotPropsOpt = mascotEvalueOpt.map { eValue => 
-              PeptideMatchMascotProperties( expectationValue = eValue.toFloat )
+              PeptideMatchMascotProperties( expectationValue = eValue.toDouble )
             }
 
             val omssaPValueOpt = findCvParamValue(sIDCvParams, PsiMs.OMSSAPvalue).map(_.toDouble)
@@ -738,7 +752,9 @@ class MzIdResultFile(
         } // end of spectrum identification items
       } // end of spectrum identification results
     } // end of spectrum identification list
-    logger.debug("ENd  PeptideMatches created ")
+    
+    logger.debug(pepMatches.length + " peptide matches have been created !")
+    
     // Update the bestPeptideMatch attribute of each SequenceMatch
     for( (mzIdSeqMatchId,pepMatches) <- pepMatchesByMzIdSeqMatchId ) {
       val mzIdSeqMatch = mzIdSeqMatchById(mzIdSeqMatchId)
@@ -779,12 +795,12 @@ class MzIdResultFile(
       )
     } toArray
      
-    logger.debug("ENd  Protein Match  created ")
+    logger.debug(protMatches.length + " protein matches have been created !")
     
     ResultSet(
       id = newRsId,
       name = msiSearch.title,
-      peptides = peptideByRef.values.toArray,
+      peptides = peptideByRef.values.toArray.distinct,
       peptideMatches = pepMatches.toArray,
       proteinMatches = protMatches,
       isDecoy = wantDecoy,
