@@ -288,50 +288,51 @@ object MountPointRegistry extends LazyLogging {
 
     /* Load all Mountpoint from "application.conf" file */
 
-    try {
-      val mountPointsConfig = SetupProline.getConfigParams.getConfig(MOUNT_POINTS_KEY)
+    val mountPointsConfig = SetupProline.getConfigParams.getConfig(MOUNT_POINTS_KEY)
+    val invalidPaths = new ArrayBuffer[String]()
+    if (mountPointsConfig.hasPath(RESULT_FILES_DIRECTORY)) {
+      val resultFileMountPoints = mountPointsConfig.getConfig(RESULT_FILES_DIRECTORY)
 
-      if (mountPointsConfig.hasPath(RESULT_FILES_DIRECTORY)) {
-        val resultFileMountPoints = mountPointsConfig.getConfig(RESULT_FILES_DIRECTORY)
-
-        if (resultFileMountPoints.isEmpty) {
-          logger.warn("No MountPoints defined for type [" + RESULT_FILES_DIRECTORY + ']')
-        } else {
-          parseConfig(RESULT_FILES_DIRECTORY, resultFileMountPoints)
-        }
-
+      if (resultFileMountPoints.isEmpty) {
+        logger.warn("No MountPoints defined for type [" + RESULT_FILES_DIRECTORY + ']')
       } else {
-        logger.warn("No MountPoints entry for type [" + RESULT_FILES_DIRECTORY + ']')
+        invalidPaths ++= parseConfig(RESULT_FILES_DIRECTORY, resultFileMountPoints)
       }
 
-      if (mountPointsConfig.hasPath(RAW_FILES_DIRECTORY)) {
-        val rawFileMountPoints = mountPointsConfig.getConfig(RAW_FILES_DIRECTORY)
+    } else {
+      logger.warn("No MountPoints entry for type [" + RESULT_FILES_DIRECTORY + ']')
+    }
 
-        if (rawFileMountPoints.isEmpty) {
-          logger.warn("No MountPoints defined for type [" + RAW_FILES_DIRECTORY + ']')
-        } else {
-          parseConfig(RAW_FILES_DIRECTORY, rawFileMountPoints)
-        }
+    if (mountPointsConfig.hasPath(RAW_FILES_DIRECTORY)) {
+      val rawFileMountPoints = mountPointsConfig.getConfig(RAW_FILES_DIRECTORY)
 
+      if (rawFileMountPoints.isEmpty) {
+        logger.warn("No MountPoints defined for type [" + RAW_FILES_DIRECTORY + ']')
       } else {
-        logger.warn("No MountPoints entry for type [" + RAW_FILES_DIRECTORY + ']')
+        invalidPaths ++= parseConfig(RAW_FILES_DIRECTORY, rawFileMountPoints)
       }
 
-      if (mountPointsConfig.hasPath(MZDB_FILES_DIRECTORY)) {
-        val mzdbFileMountPoints = mountPointsConfig.getConfig(MZDB_FILES_DIRECTORY)
+    } else {
+      logger.warn("No MountPoints entry for type [" + RAW_FILES_DIRECTORY + ']')
+    }
 
-        if (mzdbFileMountPoints.isEmpty) {
-          logger.warn("No MountPoints defined for type [" + MZDB_FILES_DIRECTORY + ']')
-        } else {
-          parseConfig(MZDB_FILES_DIRECTORY, mzdbFileMountPoints)
-        }
+    if (mountPointsConfig.hasPath(MZDB_FILES_DIRECTORY)) {
+      val mzdbFileMountPoints = mountPointsConfig.getConfig(MZDB_FILES_DIRECTORY)
 
+      if (mzdbFileMountPoints.isEmpty) {
+        logger.warn("No MountPoints defined for type [" + MZDB_FILES_DIRECTORY + ']')
       } else {
-        logger.warn("No MountPoints entry for type [" + MZDB_FILES_DIRECTORY + ']')
+        invalidPaths ++= parseConfig(MZDB_FILES_DIRECTORY, mzdbFileMountPoints)
       }
 
-    } catch {
-      case t: Throwable => logger.error("Error initializing MountPointRegistry from \"application.conf\" file", t)
+    } else {
+      logger.warn("No MountPoints entry for type [" + MZDB_FILES_DIRECTORY + ']')
+    }
+
+    if (invalidPaths.length > 0) {
+      val sb = new StringBuilder()
+      invalidPaths.foreach(a => sb.append(a).append("; "))
+      throw new RuntimeException("Specified mount points paths are invalid for " + sb.result())
     }
 
     /* Logg all found MountPoints with full path at Info level */
@@ -350,12 +351,12 @@ object MountPointRegistry extends LazyLogging {
     logger.info(messageBuilder.toString)
   }
 
-  private def parseConfig(directoryType: String, config: Config) {
+  private def parseConfig(directoryType: String, config: Config) : ArrayBuffer[String] = {
     assert(!StringUtils.isEmpty(directoryType), "Invalid directoryType")
     assert((config != null), "Config is null")
 
     val defaultFileSystem = FileSystems.getDefault
-
+    val invalidPathLabels = new ArrayBuffer[String]() 
     val entries = config.entrySet
 
     for (entry <- entries) {
@@ -365,7 +366,9 @@ object MountPointRegistry extends LazyLogging {
 
         if (label == null) {
           logger.error("Label for type [" + directoryType + "] is NULL")
+          invalidPathLabels += label
         } else {
+           invalidPathLabels += label
           logger.error("Invalid label for type [" + directoryType + "] : [" + label + ']')
         }
 
@@ -373,6 +376,7 @@ object MountPointRegistry extends LazyLogging {
         val rawPath = config.getString(label)
 
         if (rawPath == null) {
+          invalidPathLabels += label
           logger.error("Path for type [" + directoryType + "] label [" + label + "] is NULL")
         } else {
 
@@ -387,12 +391,14 @@ object MountPointRegistry extends LazyLogging {
 
               addMountPoint(mountPoint)
             } else {
+              invalidPathLabels += label
               logger.error("Invalid or non-existent path for type [" + directoryType + "] label [" + label + "] : \"" + path + '\"')
             }
 
           } catch {
             case ex: Exception => logger.error("Error handling directory type ["
               + directoryType + "] label [" + label + "] path \"" + rawPath + '\"', ex)
+              invalidPathLabels += label
           }
 
         } // End if (rawPath is not null)
@@ -400,7 +406,7 @@ object MountPointRegistry extends LazyLogging {
       } // End if (label is valid)
 
     } // End loop for each entry
-
+    invalidPathLabels
   }
 
   private def addMountPoint(mountPoint: MountPoint) {

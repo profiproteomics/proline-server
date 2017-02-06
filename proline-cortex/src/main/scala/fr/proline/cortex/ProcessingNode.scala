@@ -183,8 +183,9 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         m_connection.start() // Explicitly start connection to begin Consumer reception
         logger.trace("JMS Connection : " + m_connection + "  started")
       } catch {
+        
 
-        case ex: Exception => {
+        case ex: Throwable => {
           logger.error("Error starting JMS Consumers", ex)
 
           stopJMSConsumers()
