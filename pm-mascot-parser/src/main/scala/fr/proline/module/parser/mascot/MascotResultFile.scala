@@ -219,7 +219,7 @@ class MascotResultFile(
     // Split string if it correspond to a Proteome Discoverer template
     if (fileNameStr.startsWith("File Name: ")) {
       logger.debug(s"Proteome Discoverer template detected, we will keep only the 'File Name' part of: $fileNameStr")
-      val FileNamePattern = "File Name: (.+?);".r
+      val FileNamePattern = "File Name: (.+?);?".r
       val FileNamePattern(pklPath) = fileNameStr
       fileNameStr = pklPath
       logger.debug(s"Extracted peaklist path: $fileNameStr")
