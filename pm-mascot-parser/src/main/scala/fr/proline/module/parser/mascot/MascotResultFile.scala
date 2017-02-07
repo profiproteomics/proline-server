@@ -216,7 +216,6 @@ class MascotResultFile(
   lazy val peaklist: Peaklist = {
     
     var fileNameStr = mascotSearchParams.getFILENAME()
-    logger.info(s"Peaklist file name in Mascot file is: $fileNameStr")
     
     // Split string if it correspond to a Proteome Discoverer template
     if (fileNameStr.startsWith("File Name: ")) {
@@ -224,9 +223,8 @@ class MascotResultFile(
       val FileNamePattern = "File Name: (.+?);?".r
       val FileNamePattern(pklPath) = fileNameStr
       fileNameStr = pklPath
-      logger.debug(s"Extracted peaklist path: $fileNameStr")
     }
-    logger.info(s"Parsed peaklist is: $fileNameStr")
+    logger.info(s"Parsed peaklist file path is: $fileNameStr")
     
     val peaklistFile = new File(fileNameStr)
     val peaklistFileName = peaklistFile.getName
