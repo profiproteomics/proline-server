@@ -72,15 +72,17 @@ class FileUpload extends IRemoteBytesMsgService with IDefaultServiceVersion with
       }catch {
         case se: SecurityException => {
           logger.debug("Unable to create destination folder "+localPath)
-          jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, "Unable to create destination folder "+readFilePath), jsonRequestId)
+          val ex = new Exception("Unable to create destination folder "+readFilePath)
+          jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, ex), jsonRequestId)
         }
       }
     }
       
     if(jsonResponse == null) { //No Previous Error    
       if (!dirPath.isDirectory()) {
-          logger.debug("Invalid destination folder "+localPath)
-        jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, "Invalid destination folder "+readFilePath), jsonRequestId)
+        logger.debug("Invalid destination folder "+localPath)
+        val ex = new Exception("Invalid destination folder "+readFilePath)
+        jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, ex), jsonRequestId)
       } else {
   
         //Read File name
@@ -88,8 +90,9 @@ class FileUpload extends IRemoteBytesMsgService with IDefaultServiceVersion with
         val destFile = new File(dirPath, readFileName)
         if(destFile.exists() && !overwriteFile){
           logger.debug("Destination file already exist in "+localPath+" : " +destFile.getAbsoluteFile)
-          jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, "Destination file already exist"+destFile.getName+" in "+readFilePath), jsonRequestId)
-        } else { 
+          val ex = new Exception(s"Destination file already exist ${destFile.getName} in $readFilePath")
+          jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, ex), jsonRequestId)
+        } else {
           //    if(delFileOnexit)
           //    destFile.deleteOnExit()
         
