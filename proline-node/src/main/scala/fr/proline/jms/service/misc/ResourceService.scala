@@ -52,16 +52,16 @@ class ResourceService extends LazyLogging {
 
     val jmsMessageId = message.getJMSMessageID
 
-    logger.debug("Handling ResourceService JMS Message [" + jmsMessageId + ']')
+    logger.debug(s"Handling ResourceService JMS Message [$jmsMessageId]")
 
     var responseJMSMessage: Message = null
 
-    var jsonRequest :JSONRPC2Request = null
+    var jsonRequest: JSONRPC2Request = null
     var jsonRequestId: java.lang.Object = null
     var jsonResponse: JSONRPC2Response = new JSONRPC2Response(JSONRPC2Error.INVALID_REQUEST, jsonRequestId)
-    var serviceVersionOp : Option[String] = None
-    var serviceSourceOp : Option[String] = None
-    var serviceDescrOp : Option[String] = None
+    var serviceVersionOpt = Option.empty[String]
+    var serviceSourceOpt = Option.empty[String]
+    var serviceDescrOpt = Option.empty[String]
   
     try {
 
@@ -74,27 +74,34 @@ class ResourceService extends LazyLogging {
         jsonResponse.setID(jsonRequestId)
 
         if (Thread.interrupted()) {
-          val errorMessage = "Thread interrupted before calling Service [" + serviceName + ']'
-          logger.warn(errorMessage)
+          val errorMessage = s"Thread interrupted before calling Service [$serviceName]"
+          logger.error(errorMessage)
 
-          jsonResponse.setError(ServiceRunner.buildJSONRPC2Error(SERVICE_ERROR_CODE, errorMessage))
+          jsonResponse.setError(ServiceRunner.buildJSONRPC2Error(SERVICE_ERROR_CODE, new Exception(errorMessage)))
         } else {
           val jmsMessageContext = ServiceRunner.buildJMSMessageContext(message)
           
           val serviceVersion = message.getStringProperty(PROLINE_SERVICE_VERSION_KEY)
-          if  (StringUtils.isNotEmpty(serviceVersion))
-            serviceVersionOp =  Some(serviceVersion) 
-            
+          if (StringUtils.isNotEmpty(serviceVersion))
+            serviceVersionOpt = Some(serviceVersion) 
+          
           val serviceSource = message.getStringProperty(PROLINE_SERVICE_SOURCE_KEY)          
-          if  (StringUtils.isNotEmpty(serviceSource)) 
-            serviceSourceOp = Some(serviceSource) 
+          if (StringUtils.isNotEmpty(serviceSource)) 
+            serviceSourceOpt = Some(serviceSource) 
           
           val serviceDescr = message.getStringProperty(PROLINE_SERVICE_DESCR_KEY)          
-          if  (StringUtils.isNotEmpty(serviceDescr)) 
-            serviceDescrOp = Some(serviceDescr) 
+          if (StringUtils.isNotEmpty(serviceDescr)) 
+            serviceDescrOpt = Some(serviceDescr) 
           
-                        
-          val serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_START, serviceVersionOp, serviceSourceOp, serviceDescrOp)          
+          val serviceEvent = new ServiceEvent(
+            jmsMessageId,
+            jsonRequestId,
+            serviceName,
+            ServiceEvent.EVENT_START, 
+            serviceVersionOpt,
+            serviceSourceOpt,
+            serviceDescrOpt
+          )
           serviceEvent.setComplementaryInfo(requestString)
           serviceMonitoringNotifier.sendNotification(serviceEvent.toJSONRPCNotification(), null)
 
@@ -106,19 +113,19 @@ class ResourceService extends LazyLogging {
 
       } else {
         val errorMessage = "Invalid ResourceService JMS Message type"
-        logger.warn(errorMessage)
+        logger.error(errorMessage)
 
-        jsonResponse.setError(ServiceRunner.buildJSONRPC2Error(MESSAGE_ERROR_CODE, errorMessage))
+        jsonResponse.setError(ServiceRunner.buildJSONRPC2Error(MESSAGE_ERROR_CODE, new Exception(errorMessage) ))
       } // End if (JMS Message is a TextMessage)
 
     } catch {
 
       /* Catch all Throwables */
       case t: Throwable => {
-        val errorMessage = "Error handling ResourceService JMS Message [" + jmsMessageId + ']'
+        val errorMessage = s"Error handling ResourceService JMS Message [$jmsMessageId]"
         logger.error(errorMessage, t)
 
-        jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(MESSAGE_ERROR_CODE, errorMessage, t), jsonRequestId)
+        jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(MESSAGE_ERROR_CODE, t), jsonRequestId)
       }
 
     } finally {
@@ -127,12 +134,20 @@ class ResourceService extends LazyLogging {
       val replyDestination = message.getJMSReplyTo
 
       if (replyDestination == null) {
-        logger.warn("ResourceService JMS Message has no JMSReplyTo Destination : Cannot send JMS Response to Client")
+        logger.warn("ResourceService JMS Message has no 'JMSReplyTo' destination: cannot send JMS response to the client")
       } else {
         var serviceEvent: ServiceEvent = null
 
         if (responseJMSMessage == null) {
-          serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_FAIL, serviceVersionOp, serviceSourceOp, serviceDescrOp)
+          serviceEvent = new ServiceEvent(
+            jmsMessageId,
+            jsonRequestId,
+            serviceName,
+            ServiceEvent.EVENT_FAIL,
+            serviceVersionOpt,
+            serviceSourceOpt,
+            serviceDescrOpt
+          )
 
           responseJMSMessage = session.createTextMessage()
           responseJMSMessage.setJMSCorrelationID(jmsMessageId)
@@ -143,17 +158,25 @@ class ResourceService extends LazyLogging {
 
           responseJMSMessage.asInstanceOf[TextMessage].setText(jsonResponse.toJSONString())
         } else {
-          serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_SUCCESS, serviceVersionOp, serviceSourceOp, serviceDescrOp)
+          serviceEvent = new ServiceEvent(
+            jmsMessageId,
+            jsonRequestId,
+            serviceName,
+            ServiceEvent.EVENT_SUCCESS,
+            serviceVersionOpt,
+            serviceSourceOpt,
+            serviceDescrOpt
+          )
         }
 
         /* Notify */
         serviceEvent.setComplementaryInfo(jsonRequest.toJSONString())
         serviceMonitoringNotifier.sendNotification(serviceEvent.toJSONRPCNotification(), null)
 
-        logger.debug("Sending JMS Response to ResourceService JMS Message [" + jmsMessageId + "] on Destination [" + replyDestination + ']')
+        logger.debug(s"Sending JMS Response to ResourceService JMS Message [$jmsMessageId] on Destination [$replyDestination]")
 
         replyProducer.send(replyDestination, responseJMSMessage)
-        logger.info("JMS Response to ResourceService JMS Message [" + jmsMessageId + "] sent")
+        logger.info(s"JMS Response to ResourceService JMS Message [$jmsMessageId] sent")
       }
 
     }
@@ -161,7 +184,7 @@ class ResourceService extends LazyLogging {
   }
 
   private def service(session: Session, jmsMessageContext: Map[String, Any], req: JSONRPC2Request): ResourceResult = {
-    assert((req != null), "service() req is null")
+    require(req != null, "service() req is null")
 
     val jsonRequestId = req.getID
     val method = req.getMethod
@@ -169,35 +192,34 @@ class ResourceService extends LazyLogging {
     /* Method dispatcher */
     method match {
       case GET_RESOURCE_AS_STREAM_METHOD => getResourceAsStream(session, jmsMessageContext, req)
-
       case _                             => new ResourceResult(null, new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, jsonRequestId))
     }
 
   }
 
   private def getResourceAsStream(session: Session, jmsMessageContext: Map[String, Any], req: JSONRPC2Request): ResourceResult = {
-    assert((session != null), "getResourceAsStream() session is null")
-    assert((req != null), "getResourceAsStream() req is null")
+    require(session != null, "getResourceAsStream() session is null")
+    require(req != null, "getResourceAsStream() req is null")
 
     val jsonRequestId = req.getID
-
     var responseJMSMessage: Message = null
-
     var jsonResponse: JSONRPC2Response = null
 
     /* Extract and check JSON params */
     val namedParams = req.getNamedParams
 
-    var filePath: String = null
-
     val value = namedParams.get(FILE_PATH_PARAM_KEY)
-
-    if (value.isInstanceOf[String]) {
-      filePath = value.asInstanceOf[String]
+    val filePath = value match {
+      case str: String => str
+      case _ => null
     }
 
     if (StringUtils.isEmpty(filePath)) {
-      jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(SERVICE_ERROR_CODE, "Invalid \"" + FILE_PATH_PARAM_KEY + "\" JSON-RPC named param"), jsonRequestId)
+      val errorMsg = s"Invalid '$FILE_PATH_PARAM_KEY' JSON-RPC named param"
+      logger.error(errorMsg)
+      
+      val ex = new Exception(errorMsg)
+      jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(SERVICE_ERROR_CODE, ex), jsonRequestId)
     } else {
       val file = new File(filePath)
 
@@ -211,31 +233,35 @@ class ResourceService extends LazyLogging {
 
           responseJMSMessage = session.createBytesMessage()
 
-          logger.debug("Sending InputStream from File [" + absolutePathname + "] to JMS BytesMessage")
+          logger.debug(s"Sending InputStream from File [$absolutePathname] to JMS BytesMessage")
 
           responseJMSMessage.setObjectProperty(HornetQJMSConstants.JMS_HORNETQ_INPUT_STREAM, br)
         } catch {
 
           case ex: Exception => {
-            val errorMessage = "Error reading [" + absolutePathname + "] InputStream"
+            val errorMessage = s"Error reading [$absolutePathname] InputStream"
             logger.error(errorMessage, ex)
 
             if (br != null) {
               try {
                 br.close()
               } catch {
-                case exClose: IOException => logger.error("Error closing [" + absolutePathname + "] InputStream", exClose)
+                case exClose: IOException => logger.error(s"Error closing [$absolutePathname] InputStream", exClose)
               }
             }
 
-            jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(SERVICE_ERROR_CODE, errorMessage, ex), jsonRequestId)
+            jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(SERVICE_ERROR_CODE, ex), jsonRequestId)
           }
 
         }
 
-        // br is closed by HornetQ JMS implementation ?
+        // TODO: BufferedInputStream is closed by HornetQ JMS implementation ?
       } else {
-        jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(SERVICE_ERROR_CODE, "Unknown [" + filePath + "] file pathname"), jsonRequestId)
+        val errorMsg = s"Unknown '$filePath' file pathname"
+        logger.error(errorMsg)
+        
+        val ex = new Exception(errorMsg)
+        jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(SERVICE_ERROR_CODE, ex), jsonRequestId)
       }
 
     }
@@ -246,6 +272,6 @@ class ResourceService extends LazyLogging {
 }
 
 class ResourceResult(val responseJMSMessage: Message, val jsonResponse: JSONRPC2Response) {
-  require(((responseJMSMessage != null) || (jsonResponse != null)), "ResponseJMSMessage and jsonResponse cannot be both null")
+  require(responseJMSMessage != null || jsonResponse != null, "ResponseJMSMessage and jsonResponse cannot be both null")
 
 }
