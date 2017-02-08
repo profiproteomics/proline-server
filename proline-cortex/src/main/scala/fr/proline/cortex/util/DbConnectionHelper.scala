@@ -3,6 +3,7 @@ package fr.proline.cortex.util
 import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.admin.service.db.SetupProline
+import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.BuildLazyExecutionContext
 import fr.proline.core.orm.util.DataStoreConnectorFactory
@@ -30,7 +31,7 @@ object DbConnectionHelper extends LazyLogging {
 
   }
 
-  def getDataStoreConnectorFactory() = {
+  def getDataStoreConnectorFactory(): IDataStoreConnectorFactory = {
     if (m_dsConnectorFactory == null) {
       initDataStore()
     }
@@ -53,7 +54,7 @@ object DbConnectionHelper extends LazyLogging {
       if ((dbConnector.getOpenConnectionCount == 0) && (dbConnector.getOpenEntityManagerCount == 0)) {
         
         val dbType = dbConnector.getProlineDatabaseType
-        logger.info("db type =  " + dbType)
+        logger.info("Proline database type = " + dbType)
         
         if (dbType == ProlineDatabaseType.LCMS) {
           logger.info(s"Closing database connector for LCMSdb with project id=$projectID (EntityManagerCount equals zero)")
@@ -67,6 +68,46 @@ object DbConnectionHelper extends LazyLogging {
     }
 
     BuildLazyExecutionContext(DbConnectionHelper.getDataStoreConnectorFactory, projectID, useJPA, Some(onConnectionContextClose))
+  }
+
+  // Some reusable try/catch blocks
+  def tryToRollbackDbTransaction(dbCtx: DatabaseConnectionContext) {
+    if (dbCtx != null) {
+      val dbType = dbCtx.getProlineDatabaseType()
+      logger.info(s"Rollbacking $dbType DB transaction")
+
+      try {
+        dbCtx.rollbackTransaction()
+      } catch {
+        case ex: Exception => logger.error(s"Error rollbacking $dbType DB transaction", ex)
+      }
+
+    }
+  }
+
+  def tryToCloseDbContext(dbCtx: DatabaseConnectionContext) {
+    if (dbCtx != null) {
+      val dbType = dbCtx.getProlineDatabaseType()
+      logger.debug(s"Closing $dbType DB SQL context")
+
+      try {
+        dbCtx.close()
+      } catch {
+        case exClose: Exception => logger.error(s"Error closing $dbType DB SQL context", exClose)
+      }
+    }
+  }
+
+  def tryToCloseExecContext(execCtx: IExecutionContext) {
+    if (execCtx != null) {
+      logger.debug("Closing current ExecutionContext")
+
+      try {
+        execCtx.closeAll()
+      } catch {
+        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
+      }
+    }
   }
 
 }
