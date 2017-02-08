@@ -79,7 +79,7 @@ object DbConnectionHelper extends LazyLogging {
       try {
         dbCtx.rollbackTransaction()
       } catch {
-        case ex: Exception => logger.error(s"Error rollbacking $dbType DB transaction", ex)
+        case ex: Exception => logger.error(s"Error while rollbacking $dbType DB transaction", ex)
       }
 
     }
@@ -93,7 +93,7 @@ object DbConnectionHelper extends LazyLogging {
       try {
         dbCtx.close()
       } catch {
-        case exClose: Exception => logger.error(s"Error closing $dbType DB SQL context", exClose)
+        case exClose: Exception => logger.error(s"Error while closing $dbType DB SQL context", exClose)
       }
     }
   }
@@ -105,7 +105,7 @@ object DbConnectionHelper extends LazyLogging {
       try {
         execCtx.closeAll()
       } catch {
-        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
+        case exClose: Exception => logger.error("Error while closing ExecutionContext", exClose)
       }
     }
   }
