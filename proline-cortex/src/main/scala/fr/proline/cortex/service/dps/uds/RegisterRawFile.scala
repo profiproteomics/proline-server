@@ -1,5 +1,7 @@
 package fr.proline.cortex.service.dps.uds
 
+import javax.persistence.EntityManager
+
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
 
@@ -32,72 +34,101 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
     require(paramsRetriever.hasParam(PROCESS_METHOD.RAW_FILE_IDENTIFIER_PARAM), "raw_file_identifier parameter not specified")
     require(paramsRetriever.hasParam(PROCESS_METHOD.INSTRUMENT_ID_PARAM), "instrument_id parameter not specified")
     require(paramsRetriever.hasParam(PROCESS_METHOD.OWNER_ID_PARAM), "owner_id parameter not specified")
-
-    // Create new raw file
-    val udsRawFile = new RawFile()
-    udsRawFile.setIdentifier(paramsRetriever.getString(PROCESS_METHOD.RAW_FILE_IDENTIFIER_PARAM))
-    udsRawFile.setInstrumentId(paramsRetriever.getLong(PROCESS_METHOD.INSTRUMENT_ID_PARAM))
-    udsRawFile.setOwnerId(paramsRetriever.getLong(PROCESS_METHOD.OWNER_ID_PARAM))
-
-    // Parse raw file path if provided
-    if (paramsRetriever.hasParam(PROCESS_METHOD.RAW_FILE_PATH_PARAM)) {
-      val rawFilePath = paramsRetriever.getString(PROCESS_METHOD.RAW_FILE_PATH_PARAM)
-      val rawFile = new java.io.File(rawFilePath)
-
-      udsRawFile.setRawFileDirectory(rawFile.getParent())
-      udsRawFile.setRawFileName(rawFile.getName())
-
-      val rawFileLocalPathname = MountPointRegistry.replacePossibleLabel(rawFilePath).localPathname
-      val rawFileLocal = new java.io.File(rawFileLocalPathname)
-
-      // TODO: try to get this information from the mzDB file (implement a getRuns method in mzdb-access)
-      if (rawFileLocal.exists) udsRawFile.setCreationTimestamp(new java.sql.Timestamp(rawFileLocal.lastModified))
-    }
-
-    // Parse mzDB file path if provided
-    if (paramsRetriever.hasParam(PROCESS_METHOD.MZDB_FILE_PATH_PARAM)) {
-      val mzDbFilePath = paramsRetriever.getString(PROCESS_METHOD.MZDB_FILE_PATH_PARAM)
-      extractMzDbFileMetaData(udsRawFile, mzDbFilePath)
-    }
-
-    val runId = this.registerRawFile(udsRawFile)
-    runId
-  }
-
-  protected def registerRawFile(udsRawFile: RawFile): java.lang.Long = {
-
+    
+    val rawFileIdentifier = paramsRetriever.getString(PROCESS_METHOD.RAW_FILE_IDENTIFIER_PARAM)
+    
     // Retrieve UdsDb context and entity manager
     val udsDbCtx = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
-
-    val runId = try {
-
+    
+    try {
+      val udsEM = udsDbCtx.getEntityManager
+      
       udsDbCtx.beginTransaction()
-
-      val udsEM = udsDbCtx.getEntityManager()
-      udsEM.persist(udsRawFile)
-
-      // Create new run and link it to the raw file
-      val udsRun = new Run()
-      udsRun.setNumber(1)
-      udsRun.setRunStart(0f)
-      udsRun.setRunStop(0f)
-      udsRun.setDuration(0f)
-      udsRun.setRawFile(udsRawFile)
-
-      udsEM.persist(udsRun)
-
+      
+      // Search for this raw file identifier in the UDSdb
+      val existingRawFile = udsEM.find(classOf[RawFile], rawFileIdentifier)
+      
+      // Create new raw file
+      val udsRawFile = if (existingRawFile != null) existingRawFile
+      else {
+        val newRawFile = new RawFile()
+        newRawFile.setIdentifier(rawFileIdentifier)
+        
+        udsEM.persist(newRawFile)
+        
+        newRawFile
+      }
+      
+      udsRawFile.setInstrumentId(paramsRetriever.getLong(PROCESS_METHOD.INSTRUMENT_ID_PARAM))
+      udsRawFile.setOwnerId(paramsRetriever.getLong(PROCESS_METHOD.OWNER_ID_PARAM))
+      
+      // Parse mzDB file path if provided
+      val mzDbFilePathOpt = if (paramsRetriever.hasParam(PROCESS_METHOD.MZDB_FILE_PATH_PARAM)) {
+        val mzDbFilePath = paramsRetriever.getString(PROCESS_METHOD.MZDB_FILE_PATH_PARAM)
+        this._extractMzDbFileMetaData(udsRawFile, mzDbFilePath)
+        Some(mzDbFilePath)
+      } else None
+  
+      // Parse raw file path if provided
+      if (paramsRetriever.hasParam(PROCESS_METHOD.RAW_FILE_PATH_PARAM)) {
+        val rawFilePath = paramsRetriever.getString(PROCESS_METHOD.RAW_FILE_PATH_PARAM)
+        val rawFile = new java.io.File(rawFilePath)
+  
+        udsRawFile.setRawFileDirectory(rawFile.getParent())
+        udsRawFile.setRawFileName(rawFile.getName())
+  
+        val rawFileLocalPathname = MountPointRegistry.replacePossibleLabel(rawFilePath).localPathname
+        val rawFileLocal = new java.io.File(rawFileLocalPathname)
+  
+        // TODO: try to get this information from the mzDB file (implement a getRuns method in mzdb-access)
+        if (rawFileLocal.exists) udsRawFile.setCreationTimestamp(new java.sql.Timestamp(rawFileLocal.lastModified))
+      } else {
+        // Provide a raw file name if no raw file path was provided
+        if (mzDbFilePathOpt.isDefined) {
+          val mzDBFilePath = mzDbFilePathOpt.get
+          val rawFilePath = mzDBFilePath.substring(0, mzDBFilePath.lastIndexOf('.'))
+          val rawFileFake = new java.io.File(rawFilePath)
+          udsRawFile.setRawFileName(rawFileFake.getName)
+        } else {
+          udsRawFile.setRawFileName(rawFileIdentifier)
+        }
+      }
+      
+      // Retrieve the run id
+      val runId = if (existingRawFile != null) {
+        existingRawFile.getRuns.get(0).getId
+      } else {
+        this._attachRunToRawFile(udsRawFile, udsEM)
+      }
+      
       udsDbCtx.commitTransaction()
-
-      udsRun.getId
-
+      
+      return runId
+    
     } finally {
       DbConnectionHelper.tryToCloseDbContext(udsDbCtx)
     }
-
-    runId
+    
   }
 
-  protected def extractMzDbFileMetaData(udsRawFile: RawFile, mzDbFilePath: String): Unit = {
+  private def _attachRunToRawFile(udsRawFile: RawFile, udsEM: EntityManager): java.lang.Long = {
+
+    // Create new run and link it to the raw file
+    val udsRun = new Run()
+    udsRun.setNumber(1)
+    udsRun.setRunStart(0f)
+    udsRun.setRunStop(0f)
+    udsRun.setDuration(0f)
+    udsRun.setRawFile(udsRawFile)
+
+    udsEM.persist(udsRun)
+    
+    udsEM.flush()
+
+    udsRun.getId
+  }
+
+  private def _extractMzDbFileMetaData(udsRawFile: RawFile, mzDbFilePath: String): Unit = {
 
     val mzDbFile = new java.io.File(mzDbFilePath)
     val mzDbFileDir = mzDbFile.getParent()
