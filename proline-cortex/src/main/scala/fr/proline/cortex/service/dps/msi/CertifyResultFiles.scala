@@ -1,20 +1,20 @@
 package fr.proline.cortex.service.dps.msi
 
 import java.io.File
+
 import scala.collection.JavaConversions.mapAsScalaMap
+
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
+
+import fr.profi.util.exception.ExceptionUtils
 import fr.profi.util.StringUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
+
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.core.om.provider.msi.IProteinProvider
-import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
-import fr.proline.core.om.provider.msi.ProteinFakeProvider
-import fr.proline.core.om.provider.msi.SeqDbFakeProvider
+import fr.proline.core.om.provider.msi._
 import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.service.msi.ResultFileCertifier
@@ -23,6 +23,7 @@ import fr.proline.cortex.api.service.dps.msi.ResultFileDescriptorRuleId
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.fs.MountPointRegistry
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
+
 
 /**
  *  Define JMS Service to :
@@ -38,10 +39,13 @@ import fr.proline.jms.service.api.AbstractRemoteProcessingService
  *    Error message if service was not successfull
  */
 class CertifyResultFiles extends AbstractRemoteProcessingService with ICertifyResultFilesService with LazyLogging {
+  
+  private def _mountPointBasedPathToLocalPath(path: String): String =  {
+    MountPointRegistry.replacePossibleLabel(path, Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname
+  }
 
   def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
-
-   require((paramsRetriever != null), "no parameter specified")
+   require(paramsRetriever != null, "no parameter specified")
 
     var processResult: String = null
 
@@ -49,10 +53,11 @@ class CertifyResultFiles extends AbstractRemoteProcessingService with ICertifyRe
     val resultFiles = paramsRetriever.getList(PROCESS_METHOD.RESULT_FILES_PARAM).toArray.map { rfd => deserialize[ResultFileDescriptorRuleId](serialize(rfd)) }
 
     val importerProperties = if (paramsRetriever.hasParam(PROCESS_METHOD.IMPORTER_PROPERTIES_PARAM) == false) Map.empty[String, Any]
+    // TODO: DBO => please, comment what is performed here
     else paramsRetriever.getMap(PROCESS_METHOD.IMPORTER_PROPERTIES_PARAM).map {
       case (a, b) => {
         if (a.endsWith(".file")) {
-          a -> MountPointRegistry.replacePossibleLabel(b.toString(), Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname
+          a -> _mountPointBasedPathToLocalPath(b.toString())
         } else a -> b.asInstanceOf[Any]
       }
     } toMap
@@ -63,14 +68,11 @@ class CertifyResultFiles extends AbstractRemoteProcessingService with ICertifyRe
     try {
       val parserCtx = buildParserContext(execCtx)
 
-      val filesByFormat = resultFiles.groupBy(_.format).mapValues(_.map(rf =>
-        {
-          val localPathname = MountPointRegistry.replacePossibleLabel(rf.path, Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname
+      val filesByFormat = resultFiles.groupBy(_.format).mapValues { resultFiles =>
+        resultFiles.map(rf => new File(_mountPointBasedPathToLocalPath(rf.path)))
+      }
 
-          new File(localPathname)
-        }
-      ))
-
+      // FIXME: DBO => why this is commented ?
 //      for (format <- filesByFormat.keys) {
 //
 //        // Instantiate the appropriate result file provider and register it
@@ -79,52 +81,26 @@ class CertifyResultFiles extends AbstractRemoteProcessingService with ICertifyRe
 //        val rfProvider = rfProviderOpt.get
 //      }
 
-      var certifyResult: Boolean = false
-      val errorMessage = new StringBuilder()
+      // Instantiate the ResultFileCertifier service
+      val rsCertifier = new ResultFileCertifier(
+        executionContext = parserCtx,
+        resultIdentFilesByFormat = filesByFormat,
+        importProperties = importerProperties
+      )
 
-      try {
-        // Instantiate the ResultFileCertifier service
-        val rsCertifier = new ResultFileCertifier(
-          executionContext = parserCtx,
-          resultIdentFilesByFormat = filesByFormat,
-          importProperties = importerProperties
-        )
+      rsCertifier.run()
 
-        rsCertifier.run()
+    } catch {
 
-        certifyResult = true
-      } catch {
-
-        case t: Throwable => {
-          val message = "Error certifying ResultFiles"
-
-          logger.error(message, t)
-
-          errorMessage.append(message).append(" : ").append(t)
-          errorMessage.append(StringUtils.LINE_SEPARATOR)
-
-          errorMessage.append(t.getStackTraceString)
-        }
-
-      }
-
-      processResult = if (certifyResult) {
-        "OK" // ResultFileCertifier success
-      } else {
-        errorMessage.toString // ResultFileCertifier complete abruptly
+      case t: Throwable => {
+        throw ExceptionUtils.wrapThrowable("Error while certifying result files", t, appendCause = true)
       }
 
     } finally {
-
-      try {
-        execCtx.closeAll()
-      } catch {
-        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-      }
-
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
 
-    processResult
+    true
   }
 
   private def buildParserContext(executionContext: IExecutionContext): ProviderDecoratedExecutionContext = {
