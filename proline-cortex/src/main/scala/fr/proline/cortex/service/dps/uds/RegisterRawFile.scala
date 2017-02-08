@@ -49,12 +49,13 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
       val existingRawFile = udsEM.find(classOf[RawFile], rawFileIdentifier)
       
       // Create new raw file
-      val udsRawFile = if (existingRawFile != null) existingRawFile
+      val udsRawFile = if (existingRawFile != null) {
+        logger.warn(s"The raw file '$rawFileIdentifier' is already registered, it's properties (location, owner...) will be updated !")
+        existingRawFile
+      }
       else {
         val newRawFile = new RawFile()
         newRawFile.setIdentifier(rawFileIdentifier)
-        
-        udsEM.persist(newRawFile)
         
         newRawFile
       }
@@ -76,12 +77,15 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
   
         udsRawFile.setRawFileDirectory(rawFile.getParent())
         udsRawFile.setRawFileName(rawFile.getName())
-  
-        val rawFileLocalPathname = MountPointRegistry.replacePossibleLabel(rawFilePath).localPathname
-        val rawFileLocal = new java.io.File(rawFileLocalPathname)
-  
-        // TODO: try to get this information from the mzDB file (implement a getRuns method in mzdb-access)
-        if (rawFileLocal.exists) udsRawFile.setCreationTimestamp(new java.sql.Timestamp(rawFileLocal.lastModified))
+        
+        // If the creation timestamp was not retrieved from the mzDB file
+        if (udsRawFile.getCreationTimestamp == null) {
+          // Try to retrieve this timestamp by accessing raw file meta-data
+          val rawFileLocalPathname = MountPointRegistry.replacePossibleLabel(rawFilePath).localPathname
+          val rawFileLocal = new java.io.File(rawFileLocalPathname)
+          
+          if (rawFileLocal.exists) udsRawFile.setCreationTimestamp(new java.sql.Timestamp(rawFileLocal.lastModified))
+        }
       } else {
         // Provide a raw file name if no raw file path was provided
         if (mzDbFilePathOpt.isDefined) {
@@ -95,15 +99,16 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
       }
       
       // Retrieve the run id
-      val runId = if (existingRawFile != null) {
-        existingRawFile.getRuns.get(0).getId
+      val udsRun = if (existingRawFile != null) {
+        existingRawFile.getRuns.get(0)
       } else {
+        udsEM.persist(udsRawFile)
         this._attachRunToRawFile(udsRawFile, udsEM)
       }
       
       udsDbCtx.commitTransaction()
       
-      return runId
+      return udsRun.getId
     
     } finally {
       DbConnectionHelper.tryToCloseDbContext(udsDbCtx)
@@ -111,7 +116,7 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
     
   }
 
-  private def _attachRunToRawFile(udsRawFile: RawFile, udsEM: EntityManager): java.lang.Long = {
+  private def _attachRunToRawFile(udsRawFile: RawFile, udsEM: EntityManager): Run = {
 
     // Create new run and link it to the raw file
     val udsRun = new Run()
@@ -123,9 +128,7 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
 
     udsEM.persist(udsRun)
     
-    udsEM.flush()
-
-    udsRun.getId
+    udsRun
   }
 
   private def _extractMzDbFileMetaData(udsRawFile: RawFile, mzDbFilePath: String): Unit = {
@@ -150,7 +153,6 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
 
         // Retrieve and set the raw file creation date from the mzDB file if not already set
         if (udsRawFile.getCreationTimestamp() == null) {
-          //val creationDateAsEpochMilli = mzDb.getRuns().get(0).getStartTimestamp().toEpochMilli()
           val creationDate = mzDb.getRuns().get(0).getStartTimestamp()
           if (creationDate != null) {
             val creationDateAsEpochMilli = creationDate.getTime()
