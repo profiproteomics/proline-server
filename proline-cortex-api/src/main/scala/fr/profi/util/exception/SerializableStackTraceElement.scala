@@ -38,13 +38,13 @@ case class SerializableStackTraceElement(
     new StackTraceElement(className,methodName,fileName,lineNumber)
   }
   
-  def toRawString() {
+  def toRawString(): String = {
     val suffix = if (isNativeMethod) "(Native Method)" 
     else if (fileName != null) {
       if (lineNumber >= 0) s"($fileName:$lineNumber)"
       else s"($fileName)"
     } else "(Unknown Source)"
     
-    s"$className.methodName $suffix"
+    s"$className.$methodName $suffix"
   }
 }

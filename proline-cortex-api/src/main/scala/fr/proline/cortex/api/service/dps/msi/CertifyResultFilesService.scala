@@ -13,19 +13,6 @@ import fr.profi.util.reflect.FieldDescription
 
 object CertifyResultFilesService extends ICertifyResultFilesService
 
-case class ResultFileDescriptor(
-  @FieldDescription(
-    content = "The type of the file to be imported (for instance 'mascot.dat', 'omssa.omx', 'xtandem.xml')."
-  )
-  format: String,
-
-  @FieldDescription(content =
-    "The relative path of the file to be imported." +
-    "The server uses a 'mount_points.result_files' label as a prefix to find the corresponding file."
-  )
-  path: String
-)
-
 trait ICertifyResultFilesService extends IMsiService with IDefaultServiceVersion {
   
   /* JMS Service identification */
@@ -59,7 +46,7 @@ trait ICertifyResultFilesService extends IMsiService with IDefaultServiceVersion
     object RESULT_FILES_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "result_files"
       val description = "The list of the result files to be imported."
-      val scalaType = typeOf[Array[ResultFileDescriptor]]
+      val scalaType = typeOf[Array[IResultFileDescriptor]]
     }
     object IMPORTER_PROPERTIES_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "importer_properties"
