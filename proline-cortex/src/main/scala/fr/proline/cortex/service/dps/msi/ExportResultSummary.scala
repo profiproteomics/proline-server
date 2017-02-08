@@ -143,11 +143,7 @@ class ExportResultSummary extends AbstractRemoteProcessingService with IExportRe
       exporter.exportResultSummary(filePath)
 
     } finally {
-      try {
-        execCtx.closeAll()
-      } catch {
-        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-      }
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
 
     Array(filePath)
@@ -192,9 +188,7 @@ class ExportResultSummary extends AbstractRemoteProcessingService with IExportRe
       )
       exportedFiles = ViewSetExporter.exportViewSetToDirectory(viewSet, exportLocation)
     } finally {
-      if (executionContext != null) {
-        executionContext.closeAll()
-      }
+      DbConnectionHelper.tryToCloseExecContext(executionContext)
     }
 
     if (outputFormat == ExportOutputMode.STREAM) {
@@ -238,9 +232,7 @@ class ExportResultSummary extends AbstractRemoteProcessingService with IExportRe
       )
       exportedFiles = ViewSetExporter.exportViewSetToDirectory(viewSet, exportLocation)
     } finally {
-      if (executionContext != null) {
-        executionContext.closeAll()
-      }
+      DbConnectionHelper.tryToCloseExecContext(executionContext)
     }
 
     if (outputFormat == ExportOutputMode.STREAM) {
@@ -279,9 +271,7 @@ class ExportResultSummary extends AbstractRemoteProcessingService with IExportRe
       exporter.runService()
 
     } finally {
-      if (executionContext != null) {
-        executionContext.closeAll()
-      }
+      DbConnectionHelper.tryToCloseExecContext(executionContext)
     }
 
     if (outputFormat == ExportOutputMode.STREAM) {
@@ -368,15 +358,10 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
       exporter.exportResultSummary(filePath)
 
     } finally {
-      try {
-        execCtx.closeAll()
-      } catch {
-        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-      }
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
 
     Array(filePath)
-
   }
 
   def exportToPrideFile(
@@ -403,9 +388,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
       exporter.runService()
 
     } finally {
-      if (executionContext != null) {
-        executionContext.closeAll()
-      }
+      DbConnectionHelper.tryToCloseExecContext(executionContext)
     }
 
     if (outputFormat == ExportOutputMode.STREAM) {
@@ -472,9 +455,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
         }
 
       } finally {
-        if (executionContext != null) {
-          executionContext.closeAll()
-        }
+        DbConnectionHelper.tryToCloseExecContext(executionContext)
       }
     }
 
@@ -518,9 +499,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
         viewSetTemplate = viewSetTemplate)
       exportedFiles = ViewSetExporter.exportViewSetToDirectory(viewSet, exportLocation)
     } finally {
-      if (executionContext != null) {
-        executionContext.closeAll()
-      }
+      DbConnectionHelper.tryToCloseExecContext(executionContext)
     }
 
     if (outputFormat == ExportOutputMode.STREAM) {

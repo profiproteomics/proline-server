@@ -3,6 +3,7 @@ package fr.proline.cortex.service.dps.msi
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
 
+import fr.profi.util.exception.ExceptionUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.DatabaseConnectionContext
@@ -28,7 +29,7 @@ import fr.proline.jms.service.api.AbstractRemoteProcessingService
 
 class FilterRSMProteinSets extends AbstractRemoteProcessingService with IFilterRSMProteinSetsService with LazyLogging {
 
-  def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
+  def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 
     require(paramsRetriever != null, "no parameter specified")
 
@@ -38,9 +39,7 @@ class FilterRSMProteinSets extends AbstractRemoteProcessingService with IFilterR
     val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId)
 
     var msiDbConnectionContext: DatabaseConnectionContext = null
-    var msiDbTransacOk: Boolean = false
 
-    var result: java.lang.Boolean = true
     try {
       val filterConfigs = this.parseProtSetFilters(paramsRetriever)
 
@@ -49,7 +48,6 @@ class FilterRSMProteinSets extends AbstractRemoteProcessingService with IFilterR
         // Begin transaction
         msiDbConnectionContext = execCtx.getMSIDbConnectionContext
         msiDbConnectionContext.beginTransaction()
-        msiDbTransacOk = false
 
         // Instantiate a result set validator
         val rsmFilterer = RSMProteinSetFilterer(
@@ -62,24 +60,16 @@ class FilterRSMProteinSets extends AbstractRemoteProcessingService with IFilterR
 
         //Commit transaction
         msiDbConnectionContext.commitTransaction()
-        msiDbTransacOk = true
       }
     } catch {
-      case ex: Exception => {
-        result = false
-        logger.error("Error running Filter RSM Protein Sets", ex)
-        val msg = if (ex.getCause() != null) { "Error running Filter RSM Protein Sets " + ex.getCause().getMessage() } else { "Error running Filter RSM Protein Sets " + ex.getMessage() }
-        throw new Exception(msg)
+      case t: Throwable => {
+        throw ExceptionUtils.wrapThrowable("Error while filtering the Protein Sets", t, appendCause = true)
       }
     } finally {
-      try {
-        execCtx.closeAll()
-      } catch {
-        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-      }
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
 
-    result
+    true
   }
 
   def parseProtSetFilters(params: NamedParamsRetriever): Option[Seq[IProteinSetFilter]] = {

@@ -67,7 +67,7 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
   protected def registerRawFile(udsRawFile: RawFile): java.lang.Long = {
 
     // Retrieve UdsDb context and entity manager
-    val udsDbCtx: DatabaseConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
+    val udsDbCtx = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
 
     val runId = try {
 
@@ -91,13 +91,7 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
       udsRun.getId
 
     } finally {
-      // Close UdsDb context
-      try {
-        udsDbCtx.close()
-      } catch {
-        case exClose: Exception => logger.error("Error closing UDS Db Context", exClose)
-      }
-
+      DbConnectionHelper.tryToCloseDbContext(udsDbCtx)
     }
 
     runId

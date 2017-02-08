@@ -54,11 +54,7 @@ class ValidateIdentDSInTree extends AbstractRemoteProcessingService with IValida
       )
       
     } finally {
-       try {
-        execCtx.closeAll()
-      } catch {
-        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-      }
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
    
     true.asInstanceOf[Object]

@@ -51,8 +51,8 @@ import fr.proline.jms.service.api.IRemoteJsonRPC2Service
  */
 class UserAccount extends IUserAccountService with IRemoteJsonRPC2Service  with LazyLogging {
   
-  override  def runService(jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any]): JSONRPC2Response = {
-    require((jsonRequest != null), "Req is null")
+  override def runService(jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any]): JSONRPC2Response = {
+    require(jsonRequest != null, "jsonRequest is null")
     
     val requestId = jsonRequest.getID()
     val methodName = jsonRequest.getMethod()
@@ -84,129 +84,109 @@ class UserAccount extends IUserAccountService with IRemoteJsonRPC2Service  with 
     return BuildJSONRPC2Response.forMethodNotFound(requestId)
   }
   
-    /* Define the doCreateUserAccount method : Create User in UDS DB throw Admin service*/
-    def doCreateUserAccount(paramsRetriever: NamedParamsRetriever): Object = {
-
-      require((paramsRetriever != null), "no parameter specified")
-      
-      val userLogin = paramsRetriever.getString(CREATE_METHOD.LOGIN_PARAM)
-      val userPassword = paramsRetriever.getString(CREATE_METHOD.PASSWORD_HASH_PARAM)
-      
-      var result: Long = -1L
-      val udsDbConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
-      
-      try {
-        val userCreator = new CreateUser(udsDbConnectionContext, userLogin, userPassword)
-        userCreator.run()
-        result = userCreator.userId
-      } finally {
-        // TODO: use tryToClose method
-        try {
-          udsDbConnectionContext.close()
-        } catch {
-          case exClose: Exception => logger.error("Error closing UDS Context", exClose)
-        }
-      }
-      
-      result.asInstanceOf[Object]
+  /* Define the doCreateUserAccount method : Create User in UDS DB throw Admin service*/
+  def doCreateUserAccount(paramsRetriever: NamedParamsRetriever): Object = {
+    require(paramsRetriever != null, "no parameter specified")
+    
+    val userLogin = paramsRetriever.getString(CREATE_METHOD.LOGIN_PARAM)
+    val userPassword = paramsRetriever.getString(CREATE_METHOD.PASSWORD_HASH_PARAM)
+    
+    var result: Long = -1L
+    val udsDbConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
+    
+    try {
+      val userCreator = new CreateUser(udsDbConnectionContext, userLogin, userPassword)
+      userCreator.run()
+      result = userCreator.userId
+    } finally {
+      DbConnectionHelper.tryToCloseDbContext(udsDbConnectionContext)
     }
+    
+    result.asInstanceOf[Object]
+  }
   
   
   /* Define the doChangePassword method: change User in UDS DB using OMP service */
-    def doChangePassword(paramsRetriever: NamedParamsRetriever): Object = {
+  def doChangePassword(paramsRetriever: NamedParamsRetriever): Object = {
+    require(paramsRetriever != null, "no parameter specified")
     
-      require((paramsRetriever != null), "no parameter specified")
-      
-      logger.debug("doChangePassword")
-      val userLogin = paramsRetriever.getString(CHANGE_PASSWORD_METHOD.LOGIN_PARAM)
-      val newPassword = paramsRetriever.getString(CHANGE_PASSWORD_METHOD.NEW_PASSWORD_HASH_PARAM)
-      val oldPassword = paramsRetriever.getString(CHANGE_PASSWORD_METHOD.OLD_PASSWORD_HASH_PARAM)
-  
-      var result = false
-      var udsDbConnectionContext: DatabaseConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
-      try {
-        val userUpdator = new UserUpdator(udsDbConnectionContext, userLogin, newPassword, oldPassword)
-        userUpdator.run()
-        result = userUpdator.getUpdateResult
-        if (!result)
-          throw new Exception(" Error updating password : " + userUpdator.getUpdatorResultMessage())
-  
-      } finally {
-        try {
-          udsDbConnectionContext.close()
-        } catch {
-          case exClose: Exception => logger.error("Error closing UDS Context", exClose)
-        }
-      }
-      result.asInstanceOf[Object]
+    val userLogin = paramsRetriever.getString(CHANGE_PASSWORD_METHOD.LOGIN_PARAM)
+    val newPassword = paramsRetriever.getString(CHANGE_PASSWORD_METHOD.NEW_PASSWORD_HASH_PARAM)
+    val oldPassword = paramsRetriever.getString(CHANGE_PASSWORD_METHOD.OLD_PASSWORD_HASH_PARAM)
+
+    var result = false
+    val udsDbConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
+    try {
+      val userUpdator = new UserUpdator(udsDbConnectionContext, userLogin, newPassword, oldPassword)
+      userUpdator.run()
+      result = userUpdator.getUpdateResult
+      if (!result)
+        throw new Exception("Error while updating password: " + userUpdator.getUpdatorResultMessage())
+
+    } finally {
+      DbConnectionHelper.tryToCloseDbContext(udsDbConnectionContext)
     }
     
+    result.asInstanceOf[Object]
+  }
   
-  
-   /* Define the doCreateUserAccount method : Create User in UDS DB throw Admin service*/
+  /* Define the doCreateUserAccount method : Create User in UDS DB throw Admin service*/
   def doAuthenticate(paramsRetriever: NamedParamsRetriever): Object = {
+    require(paramsRetriever != null, "no parameter specified")
     
-      val AUTHENTICATION_CONFIG_KEY = "authentication"
-      val AUTHENTICATION_METHOD_CONFIG_KEY = "method"
+    val AUTHENTICATION_CONFIG_KEY = "authentication"
+    val AUTHENTICATION_METHOD_CONFIG_KEY = "method"
     
-      require(paramsRetriever != null, "no parameter specified")
-      
-      val authMethod = if (SetupProline.getConfigParams.hasPath(AUTHENTICATION_CONFIG_KEY) == false) UserAccountService.UDS_AUTH_METHOD
-      else SetupProline.getConfigParams.getConfig(AUTHENTICATION_CONFIG_KEY).getString(AUTHENTICATION_METHOD_CONFIG_KEY).toUpperCase()
-  
-      val needPgPwd = paramsRetriever.getOptBoolean(AUTHENTICATE_METHOD.RETURN_DB_PASSWORD_PARAM, false)
-  
-      if (needPgPwd) {
-        require(
-          paramsRetriever.hasParam(AUTHENTICATE_METHOD.PUBLIC_KEY_PARAM),
-          "Aunthentication failed : public key should be specified."
-        )
-      }
-  
+    val authMethod = if (SetupProline.getConfigParams.hasPath(AUTHENTICATION_CONFIG_KEY) == false) UserAccountService.UDS_AUTH_METHOD
+    else SetupProline.getConfigParams.getConfig(AUTHENTICATION_CONFIG_KEY).getString(AUTHENTICATION_METHOD_CONFIG_KEY).toUpperCase()
+
+    val needPgPwd = paramsRetriever.getOptBoolean(AUTHENTICATE_METHOD.RETURN_DB_PASSWORD_PARAM, false)
+
+    if (needPgPwd) {
       require(
-        authMethod == UserAccountService.UDS_AUTH_METHOD,
-        "Aunthentication failed: Invalid authentication method specified."
+        paramsRetriever.hasParam(AUTHENTICATE_METHOD.PUBLIC_KEY_PARAM),
+        "Authentication failed: public key should be specified !"
       )
-  
-      var serviceResult: Object = null
-  
-      val udsCtx = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
-      try {
-  
-        val userLogin = paramsRetriever.getString(AUTHENTICATE_METHOD.LOGIN_PARAM)
-        val userPassword = paramsRetriever.getString(AUTHENTICATE_METHOD.PASSWORD_HASH_PARAM)
-        val authenticator = new UserAuthenticator(udsCtx, userLogin, userPassword)
-        authenticator.run()
-        
-        val result = authenticator.getAuthenticateResult
-        
-        if (!result) {
-          throw new Exception(" Authentication Error : " + authenticator.getAuthenticateResultMessage)
-        }
-        else if (!needPgPwd) serviceResult = java.lang.Boolean.TRUE
-        else {
-          val pubKey = paramsRetriever.getString(AUTHENTICATE_METHOD.PUBLIC_KEY_PARAM)
-          
-          if (SetupProline.getConfigParams.hasPath("auth-config") == false ) {
-            throw new Exception(" Authentication Error : No database password configured ")
-          } else {
-            val password = SetupProline.getConfigParams.getConfig("auth-config").getString("password")
-            serviceResult = EncryptionManager.encrypt(password, pubKey)
-          }
-        }
+    }
+
+    require(
+      authMethod == UserAccountService.UDS_AUTH_METHOD,
+      "Authentication failed: provided authentication method is invalid !"
+    )
+
+    var serviceResult: Object = null
+
+    val udsCtx = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
+    try {
+
+      val userLogin = paramsRetriever.getString(AUTHENTICATE_METHOD.LOGIN_PARAM)
+      val userPassword = paramsRetriever.getString(AUTHENTICATE_METHOD.PASSWORD_HASH_PARAM)
+      val authenticator = new UserAuthenticator(udsCtx, userLogin, userPassword)
+      authenticator.run()
       
-      } finally {
-        // TODO: use tryToClose method
-        try {
-          udsCtx.close()
-        } catch {
-          case exClose: Exception => logger.error("Error closing UDS Context", exClose)
+      val result = authenticator.getAuthenticateResult
+      
+      if (!result) {
+        throw new Exception("Authentication Error: " + authenticator.getAuthenticateResultMessage)
+      }
+      else if (!needPgPwd) serviceResult = java.lang.Boolean.TRUE
+      else {
+        val pubKey = paramsRetriever.getString(AUTHENTICATE_METHOD.PUBLIC_KEY_PARAM)
+        
+        if (SetupProline.getConfigParams.hasPath("auth-config") == false ) {
+          throw new Exception("Authentication Error: no database password in configuration file !")
+        } else {
+          val password = SetupProline.getConfigParams.getConfig("auth-config").getString("password")
+          serviceResult = EncryptionManager.encrypt(password, pubKey)
         }
       }
-      
-      serviceResult
+    
+    } finally {
+      DbConnectionHelper.tryToCloseDbContext(udsCtx)
     }
     
+    serviceResult
+  }
   
 
 }

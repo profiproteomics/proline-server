@@ -3,6 +3,7 @@ package fr.proline.cortex.service.dps.msq
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
 
+import fr.profi.util.exception.ExceptionUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.core.algo.msq.ProfilizerConfig
@@ -37,27 +38,19 @@ class ComputeQuantProfiles extends AbstractRemoteProcessingService with ICompute
 
     val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId) // Use JPA context
 
-    var result = true
     try {
       val quantProfilesComputer = QuantProfilesComputer(execCtx, mqcId, quantProfilesConfig)
 
-      this.logger.info("Starting ComputeQuantProfiles WS with Master Quant Channel with id=" + mqcId)
+      this.logger.info("Starting ComputeQuantProfiles WS for Master Quant Channel with id=" + mqcId)
       quantProfilesComputer.run()
     } catch {
-      case ex: Exception => {
-        result = false
-        logger.error("Error runningComputeQuantProfiles", ex)
-        val msg = if (ex.getCause() != null) { "Error running ComputeQuantProfiles " + ex.getCause().getMessage() } else { "Error running ComputeQuantProfiles " + ex.getMessage() }
-        throw new Exception(msg)
+      case t: Throwable => {
+        throw ExceptionUtils.wrapThrowable("Error while running quantitation post-processing", t, appendCause = true)
       }
     } finally {
-      try {
-        execCtx.closeAll()
-      } catch {
-        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-      }
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
 
-    result
+    true
   }
 }

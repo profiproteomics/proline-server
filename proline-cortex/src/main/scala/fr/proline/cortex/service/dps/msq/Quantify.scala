@@ -3,6 +3,7 @@ package fr.proline.cortex.service.dps.msq
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
 
+import fr.profi.util.exception.ExceptionUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.core.om.model.msq.ExperimentalDesign
@@ -57,7 +58,6 @@ class Quantify extends AbstractRemoteProcessingService with IQuantifyService wit
     val providerContext = ProviderDecoratedExecutionContext(execCtx) // Use Object factory
     providerContext.putProvider(classOf[IRunProvider], lcMsRunProvider)
 
-    var result = true
     var quantiId = -1L
     try {
       val quantifier = new Quantifier(
@@ -74,21 +74,14 @@ class Quantify extends AbstractRemoteProcessingService with IQuantifyService wit
       quantiId = quantifier.getQuantitationId
 
     } catch {
-      case ex: Exception => {
-        result = false
-        logger.error("Error running Quantify", ex)
-        val msg = if (ex.getCause() != null) { "Error running Quantify " + ex.getCause().getMessage() } else { "Error running Quantify " + ex.getMessage() }
-        throw new Exception(msg)
+      case t: Throwable => {
+        throw ExceptionUtils.wrapThrowable("Error while quantifying the dataset", t, appendCause = true)
       }
     } finally {
-      try {
-        execCtx.closeAll()
-      } catch {
-        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-      }
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
 
-    return quantiId
+    quantiId
   }
 }
 
@@ -139,7 +132,6 @@ class QuantifyV2_0 extends AbstractRemoteProcessingService with IQuantifyService
     val providerContext = ProviderDecoratedExecutionContext(execCtx) // Use Object factory
     providerContext.putProvider(classOf[IRunProvider], lcMsRunProvider)
 
-    var result = true
     var quantiId = -1L
     try {
       val quantifier = new Quantifier(
@@ -158,20 +150,13 @@ class QuantifyV2_0 extends AbstractRemoteProcessingService with IQuantifyService
       quantiId = quantifier.getQuantitationId
 
     } catch {
-      case ex: Exception => {
-        result = false
-        logger.error("Error running Quantify", ex)
-        val msg = if (ex.getCause() != null) { "Error running Quantify " + ex.getCause().getMessage() } else { "Error running Quantify " + ex.getMessage() }
-        throw new Exception(msg)
+      case t: Throwable => {
+        throw ExceptionUtils.wrapThrowable("Error while quantifying the dataset", t, appendCause = true)
       }
     } finally {
-      try {
-        execCtx.closeAll()
-      } catch {
-        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-      }
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
 
-    return quantiId
+    quantiId
   }
 }

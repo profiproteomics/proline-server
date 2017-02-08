@@ -278,7 +278,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
           m_connection.close()
           logger.info("JMS Connection closed")
         } catch {
-          case exClose: JMSException => logger.error("Error closing JMS Connection", exClose)
+          case exClose: JMSException => logger.error("Error while closing the JMS Connection", exClose)
         }
 
       }

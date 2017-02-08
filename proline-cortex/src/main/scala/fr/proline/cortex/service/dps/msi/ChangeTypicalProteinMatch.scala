@@ -41,7 +41,7 @@ class ChangeTypicalProteinMatch extends AbstractRemoteProcessingService with ICh
     val allRulesBuilder = Seq.newBuilder[TypicalProteinChooserRule]
     var ruleIndex = 1
 
-    val rulesStr = paramsRetriever.getList(PROCESS_METHOD.CHANGE_TYPICAL_RULES_PARAM).toArray().foreach(entry => {
+    val rulesStr = paramsRetriever.getList(PROCESS_METHOD.CHANGE_TYPICAL_RULES_PARAM).toArray().foreach { entry =>
       
       if (ruleIndex > 1) //For logger only
         msgLogBuilder.append(", ")
@@ -62,7 +62,7 @@ class ChangeTypicalProteinMatch extends AbstractRemoteProcessingService with ICh
       allRulesBuilder += new TypicalProteinChooserRule(ruleName, ruleAsMap("rule_on_ac").asInstanceOf[Boolean], ruleAsMap("rule_regex").asInstanceOf[String])
       msgLogBuilder.append("{rule: ").append(ruleName).append(", onAcc: ").append(ruleAsMap("rule_on_ac").asInstanceOf[Boolean]).append(", RegEx: ").append(ruleAsMap("rule_regex").asInstanceOf[String]).append("}")
       ruleIndex += 1
-    })
+    }
 
     msgLogBuilder.append("]")
     logger.info(msgLogBuilder.result)
@@ -70,23 +70,17 @@ class ChangeTypicalProteinMatch extends AbstractRemoteProcessingService with ICh
     val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId)  // Use JPA context
     val typProtChooser = new RSMTypicalProteinChooser(execCtx, resultSummaryId, allRulesBuilder.result)
 
-    var result = true
     try {
-      typProtChooser.run
+      typProtChooser.run()
     } catch {
-      case ex: Exception => {
-        result = false
-        logger.error("Error running Change TYpicalProtien service ExecutionContext", ex)
+      case t: Throwable => {
+        throw new Exception("Can't change the reprensentative protein match in this dataset", t)
       }
     } finally {
-      try {
-        execCtx.closeAll()
-      } catch {
-        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-      }
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
 
-    result
+    true
   }
 
 

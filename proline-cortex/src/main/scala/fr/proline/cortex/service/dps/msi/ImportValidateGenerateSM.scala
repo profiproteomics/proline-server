@@ -9,6 +9,7 @@ import scala.util.matching.Regex
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
 
+import fr.profi.util.exception.ExceptionUtils
 import fr.profi.util.StringUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
@@ -305,41 +306,23 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessingService with IImp
       transactionOk = true
       
      } catch {
-        case ex: Exception => {
-          var msg : String = ""
-          if(!certifyResult ){ // Certify Not finished
-            logger.error("Error certifying ResultFiles in <Import Validate and Spectrum Matches Generator>", ex);
-            val errorMessage = new StringBuilder()
-            errorMessage.append("Error certifying ResultFiles").append(" : ").append(ex)            
-            errorMessage.append(StringUtils.LINE_SEPARATOR)
-            errorMessage.append(ex.getStackTrace)
-            msg = errorMessage.toString()
-          } else {
-            logger.error("Error running Import Validate and Spectrum Matches Generator", ex);
-            msg = if (ex.getCause() != null) { "Error running Spectrum Matches Generator " + ex.getCause().getMessage() } else { "Error running Spectrum Matches Generator " + ex.getMessage() };
-          }
-          throw new Exception(msg)
+        case t: Throwable => {
+          val errorMsgPrefix = "Error while running <Import Validate and Spectrum Matches Generator>"
+          val errorMessage = if (!certifyResult) { // Certify Not finished
+            s"$errorMsgPrefix (certify result files failed)"
+          } else errorMsgPrefix
+          
+          throw ExceptionUtils.wrapThrowable(errorMessage, t, appendCause = true)
         }
 
-    } finally 
-    {
-      if ((msiDbConnectionContext != null) && !transactionOk) {
-        try {
-          msiDbConnectionContext.rollbackTransaction()
-        } catch {
-          case ex: Exception => logger.error("Error rollbacking MSI Db Transaction", ex)
-        }
-      }
-
+    } finally {
       
-      try {
-        execCtx.closeAll()
-      } catch {
-        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
+      if (!transactionOk) {
+        DbConnectionHelper.tryToRollbackDbTransaction(msiDbConnectionContext)
       }
+      
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
-
-    System.gc()
 
     resultImport
   }

@@ -3,6 +3,7 @@ package fr.proline.cortex.service.dps.msi
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
 
+import fr.profi.util.exception.ExceptionUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.cortex.api.service.dps.msi.IGenerateMSDiagReportService
@@ -45,23 +46,14 @@ class GenerateMSDiagReport extends AbstractRemoteProcessingService with IGenerat
     logger.debug("GenerateMSDiagReport WS: report generated !")
 
     /// ************************************
-    var result = true
     try {
-      result = msDiagReportGenerator.runService
+     msDiagReportGenerator.runService
     } catch {
-      case ex: Exception => {
-        result = false
-        logger.error("Error running MSDiag data Generator", ex)
-        val msg = if (ex.getCause() != null) "Error running MSDiag report Generator " + ex.getCause().getMessage()
-        else "Error running MS Diag report Generator " + ex.getMessage()
-        throw new Exception(msg)
+      case t: Throwable => {
+        throw ExceptionUtils.wrapThrowable("Error while generating the MSDiag report", t, appendCause = true)
       }
     } finally {
-      try {
-        execCtx.closeAll()
-      } catch {
-        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-      }
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
 
     msDiagReportGenerator.resultHashMapJson

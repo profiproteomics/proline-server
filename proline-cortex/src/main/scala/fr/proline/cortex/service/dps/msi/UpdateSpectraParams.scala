@@ -47,12 +47,7 @@ class UpdateSpectraParamsV1_0 extends AbstractRemoteProcessingService with IUpda
 
       logger.info(updatedSpectraCount + " spectra updated !")
     } finally {
-
-      try {
-        execCtx.closeAll()
-      } catch {
-        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-      }
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
 
     updatedSpectraCount
@@ -88,24 +83,22 @@ class UpdateSpectraParamsV2_0 extends AbstractRemoteProcessingService with IUpda
     var updatedSpectraCount: Integer = 0
     try {
       
-      //Get peaklistIds for specified ResultSets      
+      //Get peaklistIds for specified ResultSets
        val getPeaklistIDsWork = new JDBCWork() {
   
         override def execute(con: Connection) {
   
           val queryStr = "select msis.peaklist_id from result_set rs, msi_search msis where rs.msi_search_id = msis.id and rs.id IN ("+ rsIds.mkString(",") + ")"
-          val stmt = con.createStatement()          
+          val stmt = con.createStatement()
           stmt.execute(queryStr)
           val sqlResultSet = stmt.getResultSet
           while (sqlResultSet.next) {
             peaklistIdsBuilder += sqlResultSet.getLong(1)
-                        
-          }          
+          }
           stmt.close()
         } // End of jdbcWork anonymous inner class
       }
       execCtx.getMSIDbConnectionContext().doWork(getPeaklistIDsWork, false)
-      
 
        //Get specTitleParsing Rules for specified peaklistSoftware
       val getSpecTitleIdsWork = new JDBCWork() {
@@ -116,8 +109,8 @@ class UpdateSpectraParamsV2_0 extends AbstractRemoteProcessingService with IUpda
           pStmt.setLong(1, peaklistSoftwareId)
           val result = pStmt.executeQuery()
           if (result.next) {
-            specTitleParsingRuleId = result.getLong(1)                       
-          }          
+            specTitleParsingRuleId = result.getLong(1)
+          }
           pStmt.close()
         } // End of jdbcWork anonymous inner class
       }
@@ -131,12 +124,7 @@ class UpdateSpectraParamsV2_0 extends AbstractRemoteProcessingService with IUpda
 
       logger.info(updatedSpectraCount + " spectra updated !")
     } finally {
-
-      try {
-        execCtx.closeAll()
-      } catch {
-        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-      }
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
 
     updatedSpectraCount

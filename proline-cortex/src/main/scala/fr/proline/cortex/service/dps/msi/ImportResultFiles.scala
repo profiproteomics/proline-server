@@ -158,14 +158,8 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessingService
       }
 
     } finally {
-      try {
-        execCtx.closeAll()
-      } catch {
-        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-      }
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
-
-    System.gc()
 
     result
   }

@@ -3,6 +3,7 @@ package fr.proline.cortex.service.dps.msi
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
 
+import fr.profi.util.exception.ExceptionUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.DatabaseConnectionContext
@@ -30,8 +31,6 @@ class DeleteOrphanData extends AbstractRemoteProcessingService with IDeleteOrpha
   def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
     require(paramsRetriever != null, "No parameters specified")
     
-    var deleteResult = false
-    
     val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
     val resultSummaryIds = paramsRetriever.getList(PROCESS_METHOD.RESULT_SUMMARY_IDS_PARAM).toArray.map { rf => deserialize[Long](serialize(rf)) }
     val resultSetIds = paramsRetriever.getList(PROCESS_METHOD.RESULT_SET_IDS_PARAM).toArray.map { rf => deserialize[Long](serialize(rf)) }
@@ -49,22 +48,16 @@ class DeleteOrphanData extends AbstractRemoteProcessingService with IDeleteOrpha
       
       //Commit transaction
       msiDbConnectionContext.commitTransaction()
-    }catch {
-        case ex: Exception => {
-          deleteResult = false
-          msiDbConnectionContext.rollbackTransaction()
-          logger.error("Error while deleting orphan data in MSI", ex)
-          val msg = if (ex.getCause() != null) { "Error while deleting orphan data in MSI " + ex.getCause().getMessage() } else { "Error  while deleting orphan data in MSI " + ex.getMessage() }
-          throw new Exception(msg)
-        }
-      } finally {
-        try {
-          execCtx.closeAll()
-        } catch {
-          case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-        }
+    } catch {
+      case t: Throwable=> {
+        DbConnectionHelper.tryToRollbackDbTransaction(msiDbConnectionContext)
+        
+        throw ExceptionUtils.wrapThrowable("Error while deleting orphan data in MSI", t, appendCause = true)
       }
+    } finally {
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
+    }
 
-    deleteResult
+    true
   }
 }

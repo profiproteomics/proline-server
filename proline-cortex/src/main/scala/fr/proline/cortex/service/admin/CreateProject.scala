@@ -57,13 +57,7 @@ class CreateProject extends AbstractRemoteProcessingService with ICreateProjectS
       new CreateProjectDBs(udsDbConnectionContext, SetupProline.config, prjID).doWork()
 
     } finally {
-
-      try {
-        udsDbConnectionContext.close()
-      } catch {
-        case exClose: Exception => logger.error("Error closing UDS Db Context", exClose)
-      }
-
+      DbConnectionHelper.tryToCloseDbContext(udsDbConnectionContext)
     }
 
     prjID.asInstanceOf[Object]

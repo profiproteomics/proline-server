@@ -73,171 +73,146 @@ abstract class AbstractMergeDatases extends IMergeResultSetsService with IRemote
 
 // TODO: rename this file and the service to MergeDatasets
 class MergeDatasetsV1_0 extends AbstractMergeDatases with IMergeResultSetsServiceV1_0 {
-  
-  
-   def doMergeResultSetProcess(paramsRetriever: NamedParamsRetriever): Object = {
-            
-      require(paramsRetriever != null, "no parameter specified")
-      
-      val projectId = paramsRetriever.getLong(MERGE_RESULT_SETS_METHOD.PROJECT_ID_PARAM)
-      val resultSetIds = paramsRetriever.getList(MERGE_RESULT_SETS_METHOD.RESULT_SET_IDS_PARAM).toArray.map { rf => deserialize[Long](serialize(rf)) }
-  
-      var result: java.lang.Long = -1L
-      var msiDbConnectionContext: DatabaseConnectionContext = null
-      val execCtx =  DbConnectionHelper.createSQLExecutionContext(projectId) 
-  
-      try {
-        logger.info("ResultSet merger service will start")
-  
-        val rsMerger = new ResultSetMerger(
-          execCtx = execCtx,
-          resultSetIds = Some(resultSetIds),
-          resultSets = None,
-          aggregationMode = None
-        )
-  
-        rsMerger.run
-  
-        logger.info("ResultSet merger done")
-  
-        result = rsMerger.mergedResultSet.id
-  
-      } finally {
-        try {
-          execCtx.closeAll()
-        } catch {
-          case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-        }
-      }
-  
-      result
-  }
-   
-   
-   def doMergeResultSummariesProcess(paramsRetriever: NamedParamsRetriever): Object = {
-          
-      require(paramsRetriever != null, "no parameter specified")
-      
-      val projectId = paramsRetriever.getLong(MERGE_RESULT_SUMMARIES_METHOD.PROJECT_ID_PARAM)
-      val resultSummaryIds = paramsRetriever.getList(MERGE_RESULT_SUMMARIES_METHOD.RESULT_SUMMARY_IDS_PARAM).toArray.map { rf => deserialize[Long](serialize(rf)) }
-  
-      var result: RSMMergeResult = new RSMMergeResult()
-      var msiDbConnectionContext: DatabaseConnectionContext = null
-      val execCtx = DbConnectionHelper.createSQLExecutionContext(projectId) 
-  
-      try {
-        logger.info("ResultSummary merger service will start")
-  
-        val rsmMerger = new ResultSummaryMerger(
-          execCtx = execCtx,
-          resultSummaryIds = Some(resultSummaryIds),
-          resultSummaries = None,
-          aggregationMode = None
-        )
-        rsmMerger.run()
-  
-        logger.info("ResultSet merger done")
-  
-        result.targetResultSummaryId = rsmMerger.mergedResultSummary.id
-        result.targetResultSetId = rsmMerger.mergedResultSummary.getResultSetId
-  
-      } finally {
-        try {
-          execCtx.closeAll()
-        } catch {
-          case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-        }
-      }
-  
-      result
+
+  def doMergeResultSetProcess(paramsRetriever: NamedParamsRetriever): Object = {
+    require(paramsRetriever != null, "no parameter specified")
+
+    val projectId = paramsRetriever.getLong(MERGE_RESULT_SETS_METHOD.PROJECT_ID_PARAM)
+    val resultSetIds = paramsRetriever.getList(MERGE_RESULT_SETS_METHOD.RESULT_SET_IDS_PARAM).toArray.map { rf => deserialize[Long](serialize(rf)) }
+
+    var result: java.lang.Long = -1L
+    var msiDbConnectionContext: DatabaseConnectionContext = null
+    val execCtx = DbConnectionHelper.createSQLExecutionContext(projectId)
+
+    try {
+      logger.info("ResultSet merger service will start")
+
+      val rsMerger = new ResultSetMerger(
+        execCtx = execCtx,
+        resultSetIds = Some(resultSetIds),
+        resultSets = None,
+        aggregationMode = None
+      )
+
+      rsMerger.run
+
+      logger.info("ResultSet merger done")
+
+      result = rsMerger.mergedResultSet.id
+
+    } finally {
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
+
+    result
+  }
+
+  def doMergeResultSummariesProcess(paramsRetriever: NamedParamsRetriever): Object = {
+    require(paramsRetriever != null, "no parameter specified")
+
+    val projectId = paramsRetriever.getLong(MERGE_RESULT_SUMMARIES_METHOD.PROJECT_ID_PARAM)
+    val resultSummaryIds = paramsRetriever.getList(MERGE_RESULT_SUMMARIES_METHOD.RESULT_SUMMARY_IDS_PARAM).toArray.map { rf => deserialize[Long](serialize(rf)) }
+
+    var result: RSMMergeResult = new RSMMergeResult()
+    var msiDbConnectionContext: DatabaseConnectionContext = null
+    val execCtx = DbConnectionHelper.createSQLExecutionContext(projectId)
+
+    try {
+      logger.info("ResultSummary merger service will start")
+
+      val rsmMerger = new ResultSummaryMerger(
+        execCtx = execCtx,
+        resultSummaryIds = Some(resultSummaryIds),
+        resultSummaries = None,
+        aggregationMode = None
+      )
+      rsmMerger.run()
+
+      logger.info("ResultSet merger done")
+
+      result.targetResultSummaryId = rsmMerger.mergedResultSummary.id
+      result.targetResultSetId = rsmMerger.mergedResultSummary.getResultSetId
+
+    } finally {
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
+    }
+
+    result
+  }
   
 
 }
 
 class MergeDatasetsV2_0 extends AbstractMergeDatases with IMergeResultSetsServiceV2_0 {
 
-  
   /* Define the MergeResultSets method */
   def doMergeResultSetProcess(paramsRetriever: NamedParamsRetriever): Object = {
-    
-      require((paramsRetriever != null), "no parameter specified")
-      
-      val projectId = paramsRetriever.getLong(MERGE_RESULT_SETS_METHOD.PROJECT_ID_PARAM)
-      val resultSetIds = paramsRetriever.getList(MERGE_RESULT_SETS_METHOD.RESULT_SET_IDS_PARAM).toArray.map { rf => deserialize[Long](serialize(rf)) }
-      val aggregationMode = Option(paramsRetriever.getOptString(MERGE_RESULT_SETS_METHOD.AGGREGATION_MODE_PARAM, true, null)).map(AdditionMode.withName(_))
-  
-      var result: java.lang.Long = -1L
-      var msiDbConnectionContext: DatabaseConnectionContext = null
-      val execCtx =  DbConnectionHelper.createSQLExecutionContext(projectId) 
-  
-      try {
-        logger.info("ResultSet merger service will start")
-  
-        val rsMerger = new ResultSetMerger(
-          execCtx = execCtx,
-          resultSetIds = Some(resultSetIds),
-          resultSets = None, 
-          aggregationMode = aggregationMode
-        )
-  
-        rsMerger.run
-  
-        logger.info("ResultSet merger done")
-  
-        result = rsMerger.mergedResultSet.id
-  
-      } finally {
-        try {
-          execCtx.closeAll()
-        } catch {
-          case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-        }
-      }
-  
-      result
+    require(paramsRetriever != null, "no parameter specified")
+
+    val projectId = paramsRetriever.getLong(MERGE_RESULT_SETS_METHOD.PROJECT_ID_PARAM)
+    val resultSetIds = paramsRetriever.getList(MERGE_RESULT_SETS_METHOD.RESULT_SET_IDS_PARAM).toArray.map { rf => deserialize[Long](serialize(rf)) }
+    val aggregationMode = Option(paramsRetriever.getOptString(MERGE_RESULT_SETS_METHOD.AGGREGATION_MODE_PARAM, true, null)).map(AdditionMode.withName(_))
+
+    var result: java.lang.Long = -1L
+    var msiDbConnectionContext: DatabaseConnectionContext = null
+    val execCtx = DbConnectionHelper.createSQLExecutionContext(projectId)
+
+    try {
+      logger.info("ResultSet merger service will start")
+
+      val rsMerger = new ResultSetMerger(
+        execCtx = execCtx,
+        resultSetIds = Some(resultSetIds),
+        resultSets = None,
+        aggregationMode = aggregationMode
+      )
+
+      rsMerger.run
+
+      logger.info("ResultSet merger done")
+
+      result = rsMerger.mergedResultSet.id
+
+    } finally {
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
-    
-  
-  
+
+    result
+  }
+
   def doMergeResultSummariesProcess(paramsRetriever: NamedParamsRetriever): Object = {
-    
-       require((paramsRetriever != null), "no parameter specified")
-      
-      val projectId = paramsRetriever.getLong(MERGE_RESULT_SUMMARIES_METHOD.PROJECT_ID_PARAM)
-      val resultSummaryIds = paramsRetriever.getList(MERGE_RESULT_SUMMARIES_METHOD.RESULT_SUMMARY_IDS_PARAM).toArray.map { rf => deserialize[Long](serialize(rf)) }
-      val aggregationMode = Option(paramsRetriever.getOptString(MERGE_RESULT_SUMMARIES_METHOD.AGGREGATION_MODE_PARAM, true, null)).map(AdditionMode.withName(_))
-      
-      var result: RSMMergeResult = new RSMMergeResult()
-      var msiDbConnectionContext: DatabaseConnectionContext = null
-      val execCtx = DbConnectionHelper.createSQLExecutionContext(projectId) 
-  
-      try {
-        logger.info("ResultSummary merger service will start")
-  
-        val rsmMerger = new ResultSummaryMerger(
-          execCtx = execCtx,
-          resultSummaryIds = Some(resultSummaryIds),
-          resultSummaries = None, 
-          aggregationMode = aggregationMode
-        )
-        rsmMerger.run()
-  
-        logger.info("ResultSet merger done")
-  
-        result.targetResultSummaryId = rsmMerger.mergedResultSummary.id
-        result.targetResultSetId = rsmMerger.mergedResultSummary.getResultSetId
-  
-      } finally {
-        try {
-          execCtx.closeAll()
-        } catch {
-          case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-        }
-      }
-  
-      result
+    require(paramsRetriever != null, "no parameter specified")
+
+    val projectId = paramsRetriever.getLong(MERGE_RESULT_SUMMARIES_METHOD.PROJECT_ID_PARAM)
+    val resultSummaryIds = paramsRetriever.getList(MERGE_RESULT_SUMMARIES_METHOD.RESULT_SUMMARY_IDS_PARAM).toArray.map { rf => deserialize[Long](serialize(rf)) }
+    val aggregationMode = Option(paramsRetriever.getOptString(MERGE_RESULT_SUMMARIES_METHOD.AGGREGATION_MODE_PARAM, true, null)).map(AdditionMode.withName(_))
+
+    var result: RSMMergeResult = new RSMMergeResult()
+    var msiDbConnectionContext: DatabaseConnectionContext = null
+    val execCtx = DbConnectionHelper.createSQLExecutionContext(projectId)
+
+    try {
+      logger.info("ResultSummary merger service will start")
+
+      val rsmMerger = new ResultSummaryMerger(
+        execCtx = execCtx,
+        resultSummaryIds = Some(resultSummaryIds),
+        resultSummaries = None,
+        aggregationMode = aggregationMode
+      )
+      rsmMerger.run()
+
+      logger.info("ResultSet merger done")
+
+      result.targetResultSummaryId = rsmMerger.mergedResultSummary.id
+      result.targetResultSetId = rsmMerger.mergedResultSummary.getResultSetId
+
+    } finally {
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
+
+    result
+  }
   
 
 }

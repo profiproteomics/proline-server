@@ -230,20 +230,11 @@ class ValidateResultSet extends AbstractRemoteProcessingService with IValidateRe
       result = rsValidator.validatedTargetRsm.id
     } finally {
 
-      if ((msiDbConnectionContext != null) && !msiDbTransacOk) {
-        try {
-          msiDbConnectionContext.rollbackTransaction()
-        } catch {
-          case ex: Exception => logger.error("Error rollbacking MSI Db Transaction", ex)
-        }
+      if (!msiDbTransacOk) {
+        DbConnectionHelper.tryToRollbackDbTransaction(msiDbConnectionContext)
       }
 
-      try {
-        execCtx.closeAll()
-      } catch {
-        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-      }
-
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
 
     result

@@ -129,13 +129,10 @@ class ImportMaxQuantResults extends AbstractRemoteProcessingService with IImport
       logger.debug("Import MaxQuant result done : " + result)
 
     } finally {
-      try {
-        execCtx.closeAll()
-      } catch {
-        case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-      }
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
 
+    // TODO: DBO => please, avoid calling System.gc()
     System.gc()
 
     result

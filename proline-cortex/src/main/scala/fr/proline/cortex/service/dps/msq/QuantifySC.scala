@@ -106,11 +106,7 @@ class QuantifySC extends AbstractRemoteProcessingService with IQuantifySCService
     resultMapBuilder += ("quant_dataset_id" -> quantDsId)
     resultMapBuilder += ("spectral_count_result" -> mqcQuantifier.getResultAsJSON())
 
-    try {
-      execCtx.closeAll()
-    } catch {
-      case exClose: Exception => logger.error("Error closing ExecutionContext", exClose)
-    }
+    DbConnectionHelper.tryToCloseExecContext(execCtx)
 
     resultMapBuilder.result
   }
