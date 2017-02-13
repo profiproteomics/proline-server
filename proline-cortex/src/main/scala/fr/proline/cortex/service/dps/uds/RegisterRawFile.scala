@@ -19,9 +19,10 @@ import fr.proline.jms.service.api.AbstractRemoteProcessingService
  *  Input params:
  *    raw_file_identifier: The identifier of the raw file, defined as its name without the extension.
  *    raw_file_path: The raw file path relative to a managed mount point.
- *    mzdb_file_path:  The mzDB file path relative to a managed mount point.
- *    instrument_id: database id of the instrument on which acquisition was done
- *    owner_id:  id of the project owner associated to the raw file
+ *    mzdb_file_path: The mzDB file path relative to a managed mount point.
+ *    instrument_id: database id of the instrument on which acquisition was done.
+ *    owner_id: id of the project owner associated to the raw file.
+ *    overwrite: If true, the service will overwrite existing raw file information.
  *
  *  Output params:
  *    Boolean for service run status
@@ -35,6 +36,8 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
     require(paramsRetriever.hasParam(PROCESS_METHOD.INSTRUMENT_ID_PARAM), "instrument_id parameter not specified")
     require(paramsRetriever.hasParam(PROCESS_METHOD.OWNER_ID_PARAM), "owner_id parameter not specified")
     
+    val overwriteRawFile = paramsRetriever.getOptBoolean(PROCESS_METHOD.OVERWRITE, false)
+    
     val rawFileIdentifier = paramsRetriever.getString(PROCESS_METHOD.RAW_FILE_IDENTIFIER_PARAM)
     
     // Retrieve UdsDb context and entity manager
@@ -43,15 +46,18 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
     try {
       val udsEM = udsDbCtx.getEntityManager
       
-      udsDbCtx.beginTransaction()
-      
       // Search for this raw file identifier in the UDSdb
       val existingRawFile = udsEM.find(classOf[RawFile], rawFileIdentifier)
       
       // Create new raw file
       val udsRawFile = if (existingRawFile != null) {
-        logger.warn(s"The raw file '$rawFileIdentifier' is already registered, it's properties (location, owner...) will be updated !")
-        existingRawFile
+        if (overwriteRawFile == false) {
+          logger.info(s"The raw file '$rawFileIdentifier' is already registered, but no update will be performed ('overwrite' option set to false) !")
+          return existingRawFile.getRuns.get(0).getId
+        } else {
+          logger.warn(s"The raw file '$rawFileIdentifier' is already registered, it's properties (location, owner...) will be updated !")
+          existingRawFile
+        }
       }
       else {
         val newRawFile = new RawFile()
@@ -59,6 +65,9 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
         
         newRawFile
       }
+      
+      // BEGIN TRANSACTION
+      udsDbCtx.beginTransaction()
       
       udsRawFile.setInstrumentId(paramsRetriever.getLong(PROCESS_METHOD.INSTRUMENT_ID_PARAM))
       udsRawFile.setOwnerId(paramsRetriever.getLong(PROCESS_METHOD.OWNER_ID_PARAM))
@@ -106,6 +115,7 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
         this._attachRunToRawFile(udsRawFile, udsEM)
       }
       
+      // COMMIT TRANSACTION
       udsDbCtx.commitTransaction()
       
       return udsRun.getId
