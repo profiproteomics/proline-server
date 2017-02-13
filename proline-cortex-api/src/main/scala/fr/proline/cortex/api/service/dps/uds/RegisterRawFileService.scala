@@ -67,6 +67,12 @@ trait IRegisterRawFileService extends IUdsService with IDefaultServiceVersion {
       val description = "ID of the project owner associated to the raw file."
       val scalaType = typeOf[Long]
     }
+    object OVERWRITE extends JSONRPC2DefaultMethodParameter {
+      val name = "overwrite"
+      val description = "If true, the service will overwrite existing raw file information." +
+      "If false then no update will be performed."
+      val scalaType = typeOf[Boolean]
+    }
   }
 }
 
