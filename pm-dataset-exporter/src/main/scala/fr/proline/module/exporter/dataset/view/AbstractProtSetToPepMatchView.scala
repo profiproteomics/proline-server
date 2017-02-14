@@ -1,5 +1,7 @@
 package fr.proline.module.exporter.dataset.view
 
+import scala.collection.mutable.ArrayBuffer
+import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
 import fr.proline.module.exporter.commons.config.ExportConfigConstant._
 
@@ -9,6 +11,7 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
     FIELD_PSM_PEPTIDE_ID,
     FIELD_PSM_SEQUENCE,
     FIELD_PSM_MODIFICATIONS,
+    FIELD_PSM_PTM_PROTEIN_POSITIONS,
     FIELD_PSM_ID,
     FIELD_PSM_SCORE,
     FIELD_PSM_CALCULATED_MASS,
@@ -74,6 +77,8 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
       }
     }
     
+    val ptmProtPositions = this._mkReadablePtmString(peptide.ptms, seqMatch.start - 1)
+    
     val recordBuilder = Map.newBuilder[String,Any]
     recordBuilder ++= protMatchRecord
 
@@ -82,6 +87,7 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
         case FIELD_PSM_PEPTIDE_ID => peptide.id
         case FIELD_PSM_SEQUENCE => peptide.sequence
         case FIELD_PSM_MODIFICATIONS => peptide.readablePtmString
+        case FIELD_PSM_PTM_PROTEIN_POSITIONS => ptmProtPositions
         case FIELD_PSM_ID => pepMatch.id
         case FIELD_PSM_SCORE => decimalFormat.format(pepMatch.score)
         case FIELD_PSM_CALCULATED_MASS => dcf6.format(peptide.calculatedMass)
@@ -113,6 +119,25 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
     
     recordBuilder.result()
   }
+  
+  private def _mkReadablePtmString(ptms: Array[LocatedPtm], positionOffset: Int = 0): String = {
+    if (ptms == null) return null
+      
+    val ptmStringBuf = new ArrayBuffer[String]
 
+    for (ptm <- ptms.sortBy(_.seqPosition) ) {
+      val ptmDef = ptm.definition
+      val shortName = ptmDef.names.shortName
+      
+      val seqPos = ptm.seqPosition + positionOffset
+      val ptmConstraint = if (ptm.isNTerm || ptm.isCTerm) ptmDef.location
+      else "" + ptmDef.residue + seqPos
+      
+      ptmStringBuf += s"${shortName} (${ptmConstraint})"
+    }
+
+    ptmStringBuf.mkString("; ")
+  }
+  
 }
 

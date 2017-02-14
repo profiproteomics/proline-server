@@ -127,6 +127,7 @@ object ExportConfigConstant {
   val FIELD_PSM_PEPTIDE_ID = "psm_peptide_id"
   val FIELD_PSM_SEQUENCE = "psm_sequence"
   val FIELD_PSM_MODIFICATIONS = "psm_modifications"
+  val FIELD_PSM_PTM_PROTEIN_POSITIONS = "psm_ptm_protein_positions"
   val FIELD_PSM_ID = "psm_id"
   val FIELD_PSM_SCORE = "psm_score"
   val FIELD_PSM_CALCULATED_MASS = "psm_calculated_mass"
