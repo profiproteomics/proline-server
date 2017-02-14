@@ -41,16 +41,16 @@ class QuantConfigView(
       quantConfig match {
         case lfqConfig: LabelFreeQuantConfig => {
           
-          // TODO: replace the boolean values in lfqConfig by this enum
-          val signalProcStrategy = if(lfqConfig.detectPeakels || lfqConfig.detectFeatures) "Detect LC-MS peaks"
+          // TODO: replace the boolean values in lfqConfig by this enum ???
+          /*val signalProcStrategy = if(lfqConfig.detectPeakels || lfqConfig.detectFeatures) "Detect LC-MS peaks"
           else if (lfqConfig.startFromValidatedPeptides) "Perform XIC of validated peptides"
           else "Perform XIC of MS/MS events"
           
           val deisotopingMode = if (lfqConfig.detectPeakels || !lfqConfig.detectFeatures) "Identification based"
-          else "Unsupervised"
-            
+          else "Unsupervised"*/
+          
           val extractionParams = lfqConfig.extractionParams
-          //val clusteringParams = lfqConfig.clusteringParams
+          val clusteringParams = lfqConfig.clusteringParams
           val alnMethod = AlnMethod.withName(lfqConfig.alnMethodName)
           val alnParams = lfqConfig.alnParams
           val alnFtMappingParams = alnParams.ftMappingParams
@@ -60,11 +60,15 @@ class QuantConfigView(
             
           Array(
             "### QUANTITATION PARAMETERS ###" -> null,
-            "Signal processing strategy" -> signalProcStrategy,
-            "Deisotoping mode" -> deisotopingMode,
+            //"Signal processing strategy" -> signalProcStrategy,
+            //"Deisotoping mode" -> deisotopingMode,
             "Use previous peakel detection" -> lfqConfig.useLastPeakelDetection,
             "Signal extraction tolerance" -> s"${extractionParams.mozTol} ${extractionParams.mozTolUnit}",
             //"" -> lfqConfig.minPeakelDuration
+            "Feature clustering m/z tolerance" -> s"${clusteringParams.mozTol} ${clusteringParams.mozTolUnit}",
+            "Feature clustering time tolerance (sec)" -> clusteringParams.timeTol,
+            "Feature cluster time computation" -> clusteringParams.timeComputation,
+            "Feature cluster intensity computation" -> clusteringParams.intensityComputation,
             "Alignment method" -> lfqConfig.alnMethodName,
             if (alnMethod == AlnMethod.ITERATIVE) "Max. number of alignment iterations" -> alnParams.maxIterations else null,
             "Alignment m/z tolerance" -> s"${alnFtMappingParams.mozTol} ${alnFtMappingParams.mozTolUnit}",
@@ -85,6 +89,13 @@ class QuantConfigView(
     
     val profilizerParams = profilizerConfigOpt.map { profilizerConfig =>
       
+      // Small trick to rename LFQ to "MEDIAN RATIO FITTING" if necessary
+      // Note: the code voluntarily use the enum here to be aware of a potential future change in the enum definition
+      val summarizerMethodOpt = AbundanceSummarizerMethod.maybeNamed(profilizerConfig.abundanceSummarizerMethod)
+      val summarizerMethod = if (summarizerMethodOpt.isEmpty) null
+      else if(summarizerMethodOpt.get == AbundanceSummarizerMethod.LFQ) "MEDIAN RATIO FITTING"
+      else profilizerConfig.abundanceSummarizerMethod
+      
       val mainParams = Array(
         "### POST-PROCESSING PARAMETERS ###" -> null,
         "Use only specific peptides" -> profilizerConfig.useOnlySpecificPeptides,
@@ -93,7 +104,7 @@ class QuantConfigView(
         "Apply profile clustering" -> profilizerConfig.applyProfileClustering,
         if (!profilizerConfig.applyProfileClustering) null
         else profilizerConfig.profileClusteringMethod.map("Profile clustering method" -> _).orNull,
-        "Abundance summarizer method" -> profilizerConfig.abundanceSummarizerMethod
+        "Abundance summarizer method" -> summarizerMethod
       )
       
       val peptideStatConfig = _stringifyProfilizerStatParams(
