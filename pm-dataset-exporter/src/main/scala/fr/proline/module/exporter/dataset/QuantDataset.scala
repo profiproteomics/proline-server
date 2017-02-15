@@ -34,6 +34,13 @@ class QuantDataset(
     qc.id -> identRsmById(qc.identResultSummaryId)
   }
   
+  lazy val qcNameByRsId = {
+    val qcNameById =  this.qcNameById
+    this.identRsmByQcId.map { case (qcId,identRsm) =>
+      identRsm.lazyResultSet.id -> qcNameById(qcId)
+    }
+  }
+  
   lazy val masterQuantChannelId: Long = masterQuantChannel.id
   lazy val qcIds: Array[Long] = masterQuantChannel.quantChannels.map(_.id).toArray
   // TODO: find a better way to discriminate between XIC and SC expDesign

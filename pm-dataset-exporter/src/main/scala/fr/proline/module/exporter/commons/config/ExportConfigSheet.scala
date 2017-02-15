@@ -37,22 +37,22 @@ case class ExportConfigSheet(
 object ExportConfigSheet {
 
   // get full config for information sheet
-  def getInformationSheetExportConfig(): ExportConfigSheet = {
+  def getInformationSheetExportConfig(fromXIC: Boolean): ExportConfigSheet = {
     ExportConfigSheet(
       id = ExportConfigConstant.SHEET_INFORMATION,
       title = "Search settings and infos",
       presentation = ExportConfigConstant.PRESENTATION_SHEET_ROWS,
-      fields = CustomFieldConfigFactory.getInformationSheetFields()
+      fields = CustomFieldConfigFactory.getInformationSheetFields(fromXIC)
     )
   }
 
   // get full config for import sheet
-  def getImportSheetExportConfig(): ExportConfigSheet = {
+  def getImportSheetExportConfig(fromXIC: Boolean): ExportConfigSheet = {
     ExportConfigSheet(
       id = ExportConfigConstant.SHEET_IMPORT,
       title = "Import and filters",
       presentation = ExportConfigConstant.PRESENTATION_SHEET_ROWS,
-      fields = CustomFieldConfigFactory.getImportSheetFields()
+      fields = CustomFieldConfigFactory.getImportSheetFields(fromXIC)
     )
   }
 

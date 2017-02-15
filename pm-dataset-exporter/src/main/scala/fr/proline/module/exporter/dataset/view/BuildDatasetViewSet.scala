@@ -21,6 +21,7 @@ import fr.proline.core.dal.tables.msi.MsiDbMsiSearchTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
 import fr.proline.core.dal.tables.uds.UdsDbProjectTable
+import fr.proline.core.om.model.msi.LazyResultSet
 import fr.proline.core.om.model.msi.LazyResultSummary
 import fr.proline.core.om.model.msi.Ms2Query
 import fr.proline.core.om.provider.msi.impl._
@@ -136,14 +137,14 @@ object BuildDatasetViewSet extends LazyLogging {
     val lazyRsProvider = new SQLLazyResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
 
     // Retrieve the project name
-    val projectName = DoJDBCReturningWork.withEzDBC(udsDbCtx, { udsEzDBC =>
+    val projectName = DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
 
       val sqlQuery = new SelectQueryBuilder1(UdsDbProjectTable).mkSelectQuery { (t, c) =>
         List(t.NAME) -> "WHERE id = ?"
       }
 
       udsEzDBC.selectString(sqlQuery, projectId)
-    })
+    }
 
     if (mode == ExportConfigConstant.MODE_IDENT) {
 
@@ -179,16 +180,10 @@ object BuildDatasetViewSet extends LazyLogging {
           childResultSummaries.sortBy(_.lazyResultSet.descriptor.name)
       }
 
+      // FIXME: DBO => why loading leaves result sets ?
       val leaveResultSetLoader = () => {
         logger.debug("Loading leave result set (merge)...")
-        val leavesRsIds = msiDbHelper.getResultSetLeavesId(lazyRsm.getResultSetId())
-
-        val leavesResultSets = lazyRsProvider.getLazyResultSets(leavesRsIds)
-
-        if (leavesResultSets.filter(lrs => { lrs.descriptor.name == null || lrs.descriptor.name.isEmpty }).length > 0)
-          leavesResultSets.sortBy(_.id) //If no name, use ID should always have one !
-        else
-          leavesResultSets.sortBy(_.descriptor.name)
+        _loadLeavesResultSets(lazyRsm.getResultSetId(), msiDbHelper, lazyRsProvider)
       }
 
       logger.debug("Build IdentDataSet")
@@ -264,24 +259,38 @@ object BuildDatasetViewSet extends LazyLogging {
       // Create a lazy loader of ident RSMs
       val identResultSummariesLoader = () => {
         logger.debug("Loading ident result summaries (quantitation)...")
-        lazyRsmProvider.getLazyResultSummaries(
+        val rsms = lazyRsmProvider.getLazyResultSummaries(
           identRsmIds,
           loadFullResultSet = false,
           linkPeptideSets = false, // TODO: set to true ?
           linkResultSetEntities = false // TODO: set to true ?
         )
+        
+        rsms
       }
-
+      
+      // FIXME: DBO => why loading leaves result sets ?
       val leaveResultSetLoader = () => {
-        logger.debug("Loading leaves result set (quantitation)...")
-        val leavesRsIds = msiDbHelper.getResultSetLeavesId(lazyQuantRSM.lazyResultSummary.getResultSetId())
+        logger.debug("Loading leaves result sets (quantitation)...")
+        val resultSets = _loadLeavesResultSets(lazyQuantRSM.lazyResultSummary.getResultSetId(), msiDbHelper, lazyRsProvider)
+        
+        if (mode == ExportConfigConstant.MODE_QUANT_XIC) {
+          
+          logger.debug("Sorting leaves result sets by quant channel order (quantitation)...")
+          val lazyRsById = resultSets.mapByLong( _.id )
+          
+          // TODO: UDSdb => add a ident_result_set_id column to the quant_channel table ???
+          val rsIdByRsmId = msiDbHelper.getResultSetIdByResultSummaryId(identRsmIds)
+          val sortedResultSets = quantChannels.map { qc =>
+            rsIdByRsmId.get(qc.identResultSummaryId).map( lazyRsById(_) ).orNull
+          }
+          
+          // Check we had not problem to retrieve the result sets corresponding to the quant channels
+          // If we have a problem then we return the result sets in the previous order
+          if (sortedResultSets.exists(_ == null) ) resultSets else sortedResultSets
+          
+        } else resultSets
 
-        val leavesResultSets = lazyRsProvider.getLazyResultSets(leavesRsIds)
-
-        if (leavesResultSets.filter(lrs => { lrs.descriptor.name == null || lrs.descriptor.name.isEmpty }).length > 0)
-          leavesResultSets.sortBy(_.id) //If no name, use ID should always have one !
-        else
-          leavesResultSets.sortBy(_.descriptor.name)
       }
 
       var qcNameById = quantChannels.toLongMapWith(qc => qc.id -> qc.name)
@@ -296,7 +305,7 @@ object BuildDatasetViewSet extends LazyLogging {
         val qcIdByIdentRsmId = quantChannels.toLongMapWith(qc => qc.identResultSummaryId -> qc.id)
 
         // Set QC names as the result file name
-        // FIXME: try to avoid the use of SQL queries, the names should be available directly from the QuantChannel entity
+        // FIXME: DBO => try to avoid the use of SQL queries, the names should be available directly from the QuantChannel entity
         qcNameById = {
 
           val tmpQcNameById = new LongMap[String]()
@@ -318,10 +327,13 @@ object BuildDatasetViewSet extends LazyLogging {
             }
 
           }
-
+          
+          // FIXME: DBO => I think it should be "else if (mode == ExportConfigConstant.MODE_QUANT_SC)"
           if (mode == ExportConfigConstant.MODE_QUANT_SC) {
+            
             DoJDBCWork.withEzDBC(udsDbCtx) { ezDBC =>
 
+              // FIXME: DBO => please don't perform multiple SQL queries, this is killing the performance
               for (qc <- quantChannels) {
                 // get the name
                 val sqlQuery2 = new SelectQueryBuilder2(UdsDbDataSetTable, UdsDbQuantChannelTable).mkSelectQuery { (t1, c1, t2, c2) =>
@@ -383,8 +395,8 @@ object BuildDatasetViewSet extends LazyLogging {
               
               val mqPep = mqPepOpt.get
               
-              if( mqPep.selectionLevel >= 2 ) {
-                for( (qcId,quantPep) <- mqPep.quantPeptideMap ) {
+              if (mqPep.selectionLevel >= 2) {
+                for ((qcId,quantPep) <- mqPep.quantPeptideMap) {
                   if (quantPep.peptideMatchesCount > 0) {
                     pepCountByQcId.getOrElseUpdate(qcId,0)
                     pepCountByQcId(qcId) += 1
@@ -447,6 +459,17 @@ object BuildDatasetViewSet extends LazyLogging {
       this.apply(quantDs, viewSetName, viewSetTemplate, exportConfig)
     }
 
+  }
+  
+  private def _loadLeavesResultSets(rsId: Long, msiDbHelper: MsiDbHelper, lazyRsProvider: SQLLazyResultSetProvider): Array[LazyResultSet] = {
+    
+    val leavesRsIds = msiDbHelper.getResultSetLeavesId(rsId)
+    val leavesResultSets = lazyRsProvider.getLazyResultSets(leavesRsIds)
+
+    if (leavesResultSets.forall(lrs => lrs.descriptor.name != null && lrs.descriptor.name.nonEmpty ))
+      leavesResultSets.sortBy(_.id) //If no name, use ID should always have one !
+    else
+      leavesResultSets.sortBy(_.descriptor.name)
   }
 
   private def _buildBioSequenceLoader(msiDbCtx: MsiDbConnectionContext, lazyRsm: LazyResultSummary) = { () =>

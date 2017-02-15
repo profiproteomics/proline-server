@@ -6,9 +6,10 @@ import ExportConfigConstant._
 object CustomFieldConfigFactory {
 
   // get all fields for information sheet
-  def getInformationSheetFields(): Array[CustomFieldConfig] = {
+  def getInformationSheetFields(fromXIC: Boolean): Array[CustomFieldConfig] = {
     Array(
       CustomFieldConfig(FIELD_INFORMATION_PROJECT_NAME, "project_name"),
+      if (fromXIC) CustomFieldConfig(FIELD_INFORMATION_QUANT_CHANNEL_NAME, "quant_channel_name") else null,
       CustomFieldConfig(FIELD_INFORMATION_RESULT_SET_NAME, "result_set_name"),
       CustomFieldConfig(FIELD_INFORMATION_SEARCH_TITLE, "search_title"),
       CustomFieldConfig(FIELD_INFORMATION_SEARCH_DATE, "search_date"),
@@ -36,12 +37,13 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_INFORMATION_PEPTIDE_MASS_ERROR_TOLERANCE, "peptide_mass_error_tolerance"),
       CustomFieldConfig(FIELD_INFORMATION_FRAGMENT_MASS_ERROR_TOLERANCE, "fragment_mass_error_tolerance"),
       CustomFieldConfig(FIELD_INFORMATION_IS_DECOY, "is_decoy")
-    )
+    ) filter(_ != null) // remove empty fields
   }
 
   // get all fields for import sheet
-  def getImportSheetFields(): Array[CustomFieldConfig] = {
-    Array(
+  def getImportSheetFields(fromXIC: Boolean): Array[CustomFieldConfig] = {
+    
+    val identFields = Array(
       CustomFieldConfig(FIELD_INFORMATION_RESULT_FILE_NAME, "result_file_name"),
       CustomFieldConfig(FIELD_IMPORT_PARAMS, "import_params"),
       CustomFieldConfig(FIELD_IMPORT_PSM_FILTER_EXPECTED_FDR, "psm_filter_expected_fdr"),
@@ -49,6 +51,9 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_IMPORT_PROT_FILTER_EXPECTED_FDR, "prot_filter_expected_fdr"),
       CustomFieldConfig(FIELD_IMPORT_PROT_FILTER, "import_prot_filter") // incremental
     )
+    
+    if (!fromXIC) identFields
+    else Array(CustomFieldConfig(FIELD_INFORMATION_QUANT_CHANNEL_NAME, "quant_channel_name")) ++ identFields
   }
 
   // get all fields for protein sets sheet

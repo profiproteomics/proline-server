@@ -4,13 +4,14 @@ import java.text.SimpleDateFormat
 
 import scala.collection.mutable.ArrayBuffer
 
+import fr.profi.util.collection._
 import fr.proline.core.om.model.msi._
 import fr.proline.module.exporter.api.view._
 import fr.proline.module.exporter.commons.config.ExportConfigConstant._
 import fr.proline.module.exporter.commons.config.ExportConfigSheet
 import fr.proline.module.exporter.commons.config.view.CustomViewFields
 import fr.proline.module.exporter.commons.view.SmartDecimalFormat
-import fr.proline.module.exporter.dataset.IdentDataset
+import fr.proline.module.exporter.dataset._
 
 class MsiSearchExtendedView(
   val identDS: IdentDataset,
@@ -20,15 +21,24 @@ class MsiSearchExtendedView(
 ) extends ICustomTableView {
   
   var viewName = "msi_search"
+  
+  val quantDS = identDS match {
+    case qds: QuantDataset => qds
+    case _ => null
+  }
+  protected val isQuantDS = quantDS != null
+  protected val qcNameByRsId = if (isQuantDS) quantDS.qcNameByRsId else null
+  
   val fieldsTitles = sheetConfig.fields.map(_.title)
   val fields = new CustomViewFields(fieldsTitles)
   
-  case class MyBuildingContext( resultSet: LazyResultSet, msiSearch: MSISearch ) extends IRecordBuildingContext
+  case class MyBuildingContext( resultSet: LazyResultSet, msiSearch: MSISearch) extends IRecordBuildingContext
   def buildRecord( buildingContext: IRecordBuildingContext ): Map[String,Any] = {
     
     val myBuildingContext = buildingContext.asInstanceOf[MyBuildingContext]
     val resultSet = myBuildingContext.resultSet
     val msiSearch = myBuildingContext.msiSearch
+    val qcNameOpt = if (isQuantDS) qcNameByRsId.get(resultSet.id) else None
     val pkl = msiSearch.peakList
     val searchSettings = msiSearch.searchSettings
     val seqDatabases = searchSettings.seqDatabases
@@ -54,6 +64,7 @@ class MsiSearchExtendedView(
     for (fieldConfig <- sheetConfig.fields) {
       val fieldValue: Any = fieldConfig.id match {
         case FIELD_INFORMATION_PROJECT_NAME                  => identDS.projectName
+        case FIELD_INFORMATION_QUANT_CHANNEL_NAME            => qcNameOpt.orNull
         case FIELD_INFORMATION_RESULT_SET_NAME               => resultSet.descriptor.name
         case FIELD_INFORMATION_SEARCH_TITLE                  => msiSearch.title
         case FIELD_INFORMATION_SEARCH_DATE                   => dateFormat.format(msiSearch.date)
@@ -91,7 +102,7 @@ class MsiSearchExtendedView(
   
   def onEachRecord( recordFormatter: Map[String,Any] => Unit ) {
     
-    for( rs <- identDS.leavesResultSets ) {
+    for (rs <- identDS.leavesResultSets) {
       this.formatRecord(MyBuildingContext(rs, rs.msiSearch.get), recordFormatter)
     }
     

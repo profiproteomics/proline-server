@@ -44,6 +44,7 @@ object ExportConfigConstant {
   val SHEET_INFORMATION = "information"
 
   val FIELD_INFORMATION_PROJECT_NAME = "information_project_name"
+  val FIELD_INFORMATION_QUANT_CHANNEL_NAME = "information_quant_channel_name"
   val FIELD_INFORMATION_RESULT_SET_NAME = "information_result_set_name"
   val FIELD_INFORMATION_SEARCH_TITLE = "information_search_title"
   val FIELD_INFORMATION_SEARCH_DATE = "information_search_date"

@@ -42,8 +42,8 @@ object ExportConfig {
     val( fromXIC, fromSC ) = (false, false)
     ExportConfig(
       sheets = Array(
-        ExportConfigSheet.getInformationSheetExportConfig(),
-        ExportConfigSheet.getImportSheetExportConfig(),
+        ExportConfigSheet.getInformationSheetExportConfig(fromXIC),
+        ExportConfigSheet.getImportSheetExportConfig(fromXIC),
         ExportConfigSheet.getProteinSetsSheetExportConfig( fromXIC, fromSC),
         ExportConfigSheet.getProteinMatchesSheetExportConfig(),
         ExportConfigSheet.getBestPeptideMatchesSheetExportConfig(fromXIC, fromSC),
@@ -58,8 +58,8 @@ object ExportConfig {
     val( fromXIC, fromSC ) = (false, true)
     ExportConfig(
       sheets = Array(
-        ExportConfigSheet.getInformationSheetExportConfig(),
-        ExportConfigSheet.getImportSheetExportConfig(),
+        ExportConfigSheet.getInformationSheetExportConfig(fromXIC),
+        ExportConfigSheet.getImportSheetExportConfig(fromXIC),
         ExportConfigSheet.getProteinSetsSheetExportConfig(fromXIC, fromSC),
         ExportConfigSheet.getProteinMatchesSheetExportConfig(),
         ExportConfigSheet.getBestPeptideMatchesSheetExportConfig(fromXIC, fromSC, defaultDisplayed = false),
@@ -74,8 +74,8 @@ object ExportConfig {
     val( fromXIC, fromSC ) = (true, false)
     ExportConfig(
       sheets = Array(
-        ExportConfigSheet.getInformationSheetExportConfig(),
-        ExportConfigSheet.getImportSheetExportConfig(),
+        ExportConfigSheet.getInformationSheetExportConfig(fromXIC),
+        ExportConfigSheet.getImportSheetExportConfig(fromXIC),
         ExportConfigSheet.getQuantConfigSheetExportConfig(),
         ExportConfigSheet.getProteinSetsSheetExportConfig(fromXIC, fromSC),
         ExportConfigSheet.getProteinMatchesSheetExportConfig(defaultDisplayed = false),

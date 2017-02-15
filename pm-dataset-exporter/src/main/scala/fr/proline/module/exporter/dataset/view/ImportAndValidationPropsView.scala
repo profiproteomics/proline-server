@@ -12,7 +12,7 @@ import fr.proline.module.exporter.commons.config.ExportConfigConstant._
 import fr.proline.module.exporter.commons.config.ExportConfigSheet
 import fr.proline.module.exporter.commons.config.view.CustomViewFields
 import fr.proline.module.exporter.commons.view.SmartDecimalFormat
-import fr.proline.module.exporter.dataset.IdentDataset
+import fr.proline.module.exporter.dataset._
 
 class ImportAndValidationPropsView(
   val identDS: IdentDataset,
@@ -23,6 +23,13 @@ class ImportAndValidationPropsView(
 ) extends ICustomTableView with LazyLogging {
 
   var viewName = "import and validation"
+  
+  val quantDS = identDS match {
+    case qds: QuantDataset => qds
+    case _ => null
+  }
+  protected val isQuantDS = quantDS != null
+  protected val qcNameByRsId = if (isQuantDS) quantDS.qcNameByRsId else null
   
   val fields = {
     
@@ -60,6 +67,7 @@ class ImportAndValidationPropsView(
       fieldConfig.id match {
         case FIELD_IMPORT_PSM_FILTER => appendFilterTitles(fieldConfig.title, psmFiltersCount)
         case FIELD_IMPORT_PROT_FILTER => appendFilterTitles(fieldConfig.title, protFiltersCount)
+        case FIELD_INFORMATION_QUANT_CHANNEL_NAME => if (isQuantDS) fieldsTitles += fieldConfig.title
         case other => fieldsTitles += fieldConfig.title
       }
     }
@@ -74,11 +82,12 @@ class ImportAndValidationPropsView(
     val myBuildingContext = buildingContext.asInstanceOf[MyBuildingContext]
     val rsm = myBuildingContext.rsm
     val rs = rsm.lazyResultSet
+    val qcNameOpt = if (isQuantDS) qcNameByRsId.get(rs.id) else None
 
     // FIXME: merged result sets should be named with the name of corresponding dataset  to be passed in IdentDS  
     val fileNameOrRsName = rs.msiSearch.map( _.resultFileName ).getOrElse( rs.descriptor.name )
     val fileName = if( StringUtils.isEmpty(fileNameOrRsName) ) "DATASET_IdentSummary_Id"+rsm.id else fileNameOrRsName
-    logger.debug("Import and validation of file named " + fileName)
+    logger.debug("Exporting 'import and validation' information of dataset named " + fileName)
     
     // *** Get import Parameters
     lazy val importParams = {
@@ -171,6 +180,7 @@ class ImportAndValidationPropsView(
     for (fieldConfig <- sheetConfig.fields) {
       
       val fieldValue: Any = fieldConfig.id match {
+        case FIELD_INFORMATION_QUANT_CHANNEL_NAME => qcNameOpt.getOrElse("-")
         case FIELD_INFORMATION_RESULT_FILE_NAME => fileName
         case FIELD_IMPORT_PARAMS => importParams.mkString("; ")
         case FIELD_IMPORT_PSM_FILTER_EXPECTED_FDR => psmFilterExpectedFdr.getOrElse("-")
@@ -178,7 +188,7 @@ class ImportAndValidationPropsView(
         case FIELD_IMPORT_PROT_FILTER_EXPECTED_FDR => proteinFilterExpectedFdr.getOrElse("-")
         case FIELD_IMPORT_PROT_FILTER => protFilters
       }
-        
+      
       fieldValue match {
         case filters: ArrayBuffer[_] => {
           for (i <- 0 until filters.length) {
