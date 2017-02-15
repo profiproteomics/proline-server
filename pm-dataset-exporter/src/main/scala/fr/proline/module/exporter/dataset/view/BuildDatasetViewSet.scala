@@ -174,7 +174,7 @@ object BuildDatasetViewSet extends LazyLogging {
           linkResultSetEntities = true
         )
 
-        if (childResultSummaries.filter(lrsm => { lrsm.lazyResultSet.descriptor.name == null || lrsm.lazyResultSet.descriptor.name.isEmpty }).length > 0)
+        if (childResultSummaries.exists(lrsm => StringUtils.isEmpty(lrsm.lazyResultSet.descriptor.name)))
           childResultSummaries.sortBy(_.lazyResultSet.id) //If no name, use ID should always have one !
         else
           childResultSummaries.sortBy(_.lazyResultSet.descriptor.name)
@@ -466,7 +466,7 @@ object BuildDatasetViewSet extends LazyLogging {
     val leavesRsIds = msiDbHelper.getResultSetLeavesId(rsId)
     val leavesResultSets = lazyRsProvider.getLazyResultSets(leavesRsIds)
 
-    if (leavesResultSets.forall(lrs => lrs.descriptor.name != null && lrs.descriptor.name.nonEmpty ))
+    if (leavesResultSets.exists(lrs => StringUtils.isEmpty(lrs.descriptor.name)) )
       leavesResultSets.sortBy(_.id) //If no name, use ID should always have one !
     else
       leavesResultSets.sortBy(_.descriptor.name)
