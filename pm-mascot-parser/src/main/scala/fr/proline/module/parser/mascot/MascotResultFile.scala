@@ -233,7 +233,7 @@ class MascotResultFile(
     new Peaklist(
       id = Peaklist.generateNewId,
       fileType = mascotSearchParams.getFORMAT(), // TODO: check file extension first (ex: .raw)
-      path = mascotSearchParams.getFILENAME(),
+      path = fileNameStr,
       rawFileIdentifier = rawFileIdentifier,
       msLevel = 2
     )
