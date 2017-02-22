@@ -137,7 +137,7 @@ public final class RetrieveService {
 		EntityManager udsEM = udsDbConnector.createEntityManager();
 		EntityManager msiEM = null;
 		try {
-			List<Long> projectIds = getAllProjectIds(udsEM);
+			List<Long> projectIds = ProjectHandler.retrieveAllActiveProjectIds(udsEM);
 			Map<Long, List<Long>> rsmIdsPerProject = new HashMap<Long, List<Long>>();
 			Map<Long, Map<Long, SEDbInstanceWrapper>> seDbInstancesPerProject  = new HashMap<Long, Map<Long, SEDbInstanceWrapper>>();
 			
@@ -222,21 +222,25 @@ public final class RetrieveService {
 			EntityManager msiEM = msiDbConnector.createEntityManager();
 			long duration = 0; 
 			try {
-				final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = new HashMap<>();
-				//Get data needed by fillXX methods 
-				List<Long> rsmIds = ProjectHandler.retrieveRSMIdToFill(projectId, forceUpdate, null, udsEM, msiEM);
-				final Map<Long, SEDbInstanceWrapper> seDbInstances = ProjectHandler.retrieveAllSeqDatabases(msiEM);
+				if( ProjectHandler.isProjectActive(projectId, udsEM)){
+
+					final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = new HashMap<>();
+					//Get data needed by fillXX methods 
+					List<Long> rsmIds = ProjectHandler.retrieveRSMIdToFill(projectId, forceUpdate, null, udsEM, msiEM);
+					final Map<Long, SEDbInstanceWrapper> seDbInstances = ProjectHandler.retrieveAllSeqDatabases(msiEM);
+					
+					ProjectHandler.fillSEDbIdentifiersBySEDb(projectId, seDbIdentifiers,seDbInstances,  rsmIds);
+			
+					if (seDbIdentifiers.isEmpty()) {
+						LOG.warn("NO SEDbIdentifier found");
+					} else {
+						totalHandledSEDbIdents = BioSequenceRetriever.retrieveBioSequences(seDbIdentifiers);
+					}
+			
+					ProjectHandler.fillProteinMatchesProperties(projectId, seDbInstances, rsmIds);
+				} else 
+					LOG.warn("Project #{} is not active", projectId);
 				
-				ProjectHandler.fillSEDbIdentifiersBySEDb(projectId, seDbIdentifiers,seDbInstances,  rsmIds);
-		
-				if (seDbIdentifiers.isEmpty()) {
-					LOG.warn("NO SEDbIdentifier found");
-				} else {
-					totalHandledSEDbIdents = BioSequenceRetriever.retrieveBioSequences(seDbIdentifiers);
-				}
-		
-				ProjectHandler.fillProteinMatchesProperties(projectId, seDbInstances, rsmIds);
-		
 				final long end = System.currentTimeMillis();
 				duration = end - start;
 			} finally {
@@ -263,42 +267,46 @@ public final class RetrieveService {
 		final IDataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();		
 		final IDatabaseConnector udsDbConnector = connectorFactory.getUdsDbConnector();
 		final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId);
-		EntityManager udsEM = udsDbConnector.createEntityManager();
-		EntityManager msiEM = msiDbConnector.createEntityManager();
-		try { 
-			//Get data needed by fillXX methods 
-			List<Long> finalRsmIds = ProjectHandler.retrieveRSMIdToFill(projectId, forceUpdate, rsmIds, udsEM, msiEM);
-			final Map<Long, SEDbInstanceWrapper> seDbInstances = ProjectHandler.retrieveAllSeqDatabases(msiEM);
+		
+		if (msiDbConnector == null) {
+			LOG.warn("Project #{} has NO associated MSI Db", projectId);
+		} else {
+			EntityManager udsEM = udsDbConnector.createEntityManager();
+			EntityManager msiEM = msiDbConnector.createEntityManager();
+
+			try {
+				if( ProjectHandler.isProjectActive(projectId, udsEM)){
+			
+					//Get data needed by fillXX methods 
+					List<Long> finalRsmIds = ProjectHandler.retrieveRSMIdToFill(projectId, forceUpdate, rsmIds, udsEM, msiEM);
+					final Map<Long, SEDbInstanceWrapper> seDbInstances = ProjectHandler.retrieveAllSeqDatabases(msiEM);
+			
+			
+					ProjectHandler.fillSEDbIdentifiersBySEDb(projectId, seDbIdentifiers, seDbInstances, finalRsmIds);
+			
+					if (seDbIdentifiers.isEmpty()) {
+						LOG.warn("NO SEDbIdentifier found");
+					} else {
+						totalHandledSEDbIdents = BioSequenceRetriever.retrieveBioSequences(seDbIdentifiers);
+					}
 	
-	
-			ProjectHandler.fillSEDbIdentifiersBySEDb(projectId, seDbIdentifiers, seDbInstances, finalRsmIds);
-	
-			if (seDbIdentifiers.isEmpty()) {
-				LOG.warn("NO SEDbIdentifier found");
-			} else {
-				totalHandledSEDbIdents = BioSequenceRetriever.retrieveBioSequences(seDbIdentifiers);
+					ProjectHandler.fillProteinMatchesProperties(projectId,seDbInstances, rsmIds);
+				} else 
+					LOG.warn("Project #{} is not active", projectId);
+				final long end = System.currentTimeMillis();
+				duration = end - start;
+			} finally {
+				if(udsEM.isOpen())
+					udsEM.close();
+				if(msiEM.isOpen())
+					msiEM.close();	
 			}
-	
-			ProjectHandler.fillProteinMatchesProperties(projectId,seDbInstances, rsmIds);
-	
-			final long end = System.currentTimeMillis();
-			duration = end - start;
-		} finally {
-			if(udsEM.isOpen())
-				udsEM.close();
-			if(msiEM.isOpen())
-				msiEM.close();	
-		}
-		LOG.info("Total retrieveBioSequencesForRsms in Project(#{}) execution : {} SEDbIdentifiers handled in {} ms",
+			LOG.info("Total retrieveBioSequencesForRsms in Project(#{}) execution : {} SEDbIdentifiers handled in {} ms",
 			projectId, totalHandledSEDbIdents, duration);
+		}
 	}
 
-	private static List<Long> getAllProjectIds(EntityManager udsEM) {
 
-		List<Long> projectIds = null;
-		projectIds = ProjectRepository.findAllProjectIds(udsEM);
-		return projectIds;
-	}
 
 }
 

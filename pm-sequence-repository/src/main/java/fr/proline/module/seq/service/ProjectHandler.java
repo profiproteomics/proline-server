@@ -33,6 +33,8 @@ import fr.proline.core.orm.msi.SequenceMatch;
 import fr.proline.core.orm.msi.SequenceMatchPK;
 import fr.proline.core.orm.msi.repository.SequenceMatchRepository;
 import fr.proline.core.orm.pdi.Alphabet;
+import fr.proline.core.orm.uds.Project;
+import fr.proline.core.orm.uds.repository.ProjectRepository;
 import fr.proline.module.seq.BioSequenceProvider;
 import fr.proline.module.seq.DatabaseAccess;
 import fr.proline.module.seq.dto.BioSequenceWrapper;
@@ -254,6 +256,32 @@ public class ProjectHandler {
 		}
 		return array;
 	}
+	
+	
+	/**
+	 * Verify that specified Project is active (no archive was done)
+	 * @param udsEM
+	 * @param projectId
+	 * @return
+	 */
+	public static Boolean isProjectActive(Long pId, final EntityManager udsEM) {		
+		Project p = udsEM.find(Project.class, pId);
+		JsonObject propAsJson = getPropertiesAsJsonObject(p.getSerializedProperties());
+		// test if the Project is already archived
+		return (!propAsJson.has("is_active") || (propAsJson.get("is_active").getAsBoolean()));
+	}
+	
+	/**
+	 * Retrieve Ids of all Project registered in UDS db and which are still active (no archive was done)
+	 * @param udsEM
+	 * @return
+	 */
+	public static List<Long> retrieveAllActiveProjectIds(final EntityManager udsEM) {		
+
+		List<Long> projectIds = null;
+		projectIds = ProjectRepository.findAllActiveProjectIds(udsEM);
+		return projectIds;
+	}
 
 	/**
 	 * Retrieve all MSIdb SeqDatabase of a specified MSidb and returns a map of search engine database instance by msi.SeqDatabase id. Returns null if no
@@ -307,6 +335,7 @@ public class ProjectHandler {
 
 		return result;
 	}
+	
 
 	/**
 	 * Fills the seDbIdentifiers map (mapped by search engine database instance) with a list of protein identifiers. The list of protein identifiers is read
