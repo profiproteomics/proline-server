@@ -34,7 +34,14 @@ public final class BioSequenceProvider {
 	private BioSequenceProvider() {
 	}
 	
-
+	/**
+	 * Create a Map from proteins specified by its value (name/acc..) to a associated SEDbIdentifierRelated
+	 * The SEDbIdentifierRelated contains the List of BioSequenceWrapper for each SEDbIdentier found and the List of SEDbIdentifierWrapper
+	 *  (if one value corresponds to multiple SEDbIdentifier) 
+	 * 
+	 * @param values
+	 * @return
+	 */
 	public static Map<String, SEDbIdentifierRelated> findSEDbIdentRelatedData(final Collection<String> values) {
 		Map<String, SEDbIdentifierRelated> result = null;
 
