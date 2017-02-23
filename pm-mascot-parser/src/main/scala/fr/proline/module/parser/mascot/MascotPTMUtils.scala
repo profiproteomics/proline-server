@@ -22,7 +22,7 @@ object MascotPTMUtils extends LazyLogging  {
 
   val accessedPtms = new ArrayBuffer[PtmDefinition]
   val ptmDefsByMascotModName = new HashMap[String, Array[PtmDefinition]]
-  var mascotServerURL: String = null
+//  var mascotServerURL: String = null
 
   val MascotModRegex = """(.+) \((.+)\)""".r
 
@@ -56,8 +56,8 @@ object MascotPTMUtils extends LazyLogging  {
 
     var modName = mascotMod
 
-    if (mascotServerURL != null) //Read from mascot modification file. 
-      return _getPTMDefsFromModFile(ptmProvider, mascotMod)
+//    if (mascotServerURL != null) //Read from mascot modification file. 
+//      return _getPTMDefsFromModFile(ptmProvider, mascotMod)
 
     //No mascotServerURL : Get PTM information from mascot "name"    
     var posConstraint = ""
@@ -133,7 +133,7 @@ object MascotPTMUtils extends LazyLogging  {
    *
    */
   private def _getPTMDefsFromModFile(ptmProvider: IPTMProvider, ptmsStr: String): Array[PtmDefinition] = {
-    logger.debug(" Use Mascot modification file to get PtmDefinitions")
+//    logger.debug(" Use Mascot modification file to get PtmDefinitions")
     return null
   }
 
