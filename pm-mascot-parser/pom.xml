@@ -18,6 +18,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <core.version>1.1.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
     <version.path>${basedir}/src/main/scala/fr/proline/module/parser/mascot</version.path>
+    <mascot.version>2.5.2</mascot.version>
   </properties>
   <scm>
     <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MascotParser/trunk</connection>
@@ -51,8 +52,8 @@
       msparser.jar dependency is defined via Maven profiles -->
     <dependency>
       <groupId>matrixscience</groupId>
-      <artifactId>MSParser-native-libraries-2.4.00</artifactId>
-      <version>0.2.0-SNAPSHOT</version>
+      <artifactId>MSParser-native-libraries-${mascot.version}</artifactId>
+      <version>0.6.0-SNAPSHOT</version>
     </dependency>
     
     <!-- ProFi Commons -->
@@ -224,7 +225,7 @@
         <dependency>
           <groupId>matrixscience</groupId>
           <artifactId>msparser</artifactId>
-          <version>2.4.00</version>
+          <version>${mascot.version}</version>
           <classifier>Windows_amd64</classifier>
         </dependency>
 
@@ -241,7 +242,7 @@
         <dependency>
           <groupId>matrixscience</groupId>
           <artifactId>msparser</artifactId>
-          <version>2.4.00</version>
+          <version>${mascot.version}</version>
           <classifier>Linux_i386</classifier>
         </dependency>
 
@@ -258,7 +259,7 @@
         <dependency>
           <groupId>matrixscience</groupId>
           <artifactId>msparser</artifactId>
-          <version>2.4.00</version>
+          <version>${mascot.version}</version>
           <classifier>Linux_amd64</classifier>
         </dependency>
 
