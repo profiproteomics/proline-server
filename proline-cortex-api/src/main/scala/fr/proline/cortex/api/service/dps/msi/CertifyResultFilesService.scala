@@ -35,7 +35,7 @@ trait ICertifyResultFilesService extends IMsiService with IDefaultServiceVersion
     val parameters = List(PROJECT_ID_PARAM, RESULT_FILES_PARAM, IMPORTER_PROPERTIES_PARAM)
     val returns =  JSONRPC2MethodResult(
       typeOf[String],
-      "OK if service run successfuly; Error message if service was not successfull"
+      "OK if service ran successfully; Error message if service was not successful"
     )
  
     object PROJECT_ID_PARAM extends JSONRPC2DefaultMethodParameter {
