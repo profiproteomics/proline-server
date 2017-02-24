@@ -7,14 +7,17 @@ import scala.collection.JavaConversions.mapAsScalaMap
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
 
-import fr.profi.util.exception.ExceptionUtils
 import fr.profi.util.StringUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
-
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi._
+import fr.proline.core.om.provider.msi.IPTMProvider
+import fr.proline.core.om.provider.msi.IPeptideProvider
+import fr.proline.core.om.provider.msi.IProteinProvider
+import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
+import fr.proline.core.om.provider.msi.ProteinFakeProvider
+import fr.proline.core.om.provider.msi.SeqDbFakeProvider
 import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.service.msi.ResultFileCertifier
@@ -23,7 +26,6 @@ import fr.proline.cortex.api.service.dps.msi.ResultFileDescriptorRuleId
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.fs.MountPointRegistry
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
-
 
 /**
  *  Define JMS Service to :
@@ -73,6 +75,7 @@ class CertifyResultFiles extends AbstractRemoteProcessingService with ICertifyRe
       }
 
       // FIXME: DBO => why this is commented ?
+      // VDS => Verification are done by ResultFileCertifier
 //      for (format <- filesByFormat.keys) {
 //
 //        // Instantiate the appropriate result file provider and register it
@@ -81,26 +84,45 @@ class CertifyResultFiles extends AbstractRemoteProcessingService with ICertifyRe
 //        val rfProvider = rfProviderOpt.get
 //      }
 
-      // Instantiate the ResultFileCertifier service
-      val rsCertifier = new ResultFileCertifier(
-        executionContext = parserCtx,
-        resultIdentFilesByFormat = filesByFormat,
-        importProperties = importerProperties
-      )
+      var certifyResult: Boolean = false
+      val errorMessage = new StringBuilder()
+      
+      try {
+      
+    	  // Instantiate the ResultFileCertifier service
+    	  val rsCertifier = new ResultFileCertifier(
+          executionContext = parserCtx,
+          resultIdentFilesByFormat = filesByFormat,
+          importProperties = importerProperties
+        )
 
-      rsCertifier.run()
+      	rsCertifier.run()      	
+      	certifyResult = true
+      	
+      } catch {
 
-    } catch {
+        case t: Throwable => {
+          val message = "Error certifying ResultFiles"
 
-      case t: Throwable => {
-        throw ExceptionUtils.wrapThrowable("Error while certifying result files", t, appendCause = true)
+          logger.error(message, t)
+
+          errorMessage.append(message).append(" : ").append(t)
+          errorMessage.append(StringUtils.LINE_SEPARATOR)
+
+          errorMessage.append(t.getStackTraceString)
+        }
+      }
+     processResult = if (certifyResult) {
+        "OK" // ResultFileCertifier success
+      } else {
+        errorMessage.toString // ResultFileCertifier complete abruptly
       }
 
     } finally {
       DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
 
-    true
+    processResult
   }
 
   private def buildParserContext(executionContext: IExecutionContext): ProviderDecoratedExecutionContext = {
