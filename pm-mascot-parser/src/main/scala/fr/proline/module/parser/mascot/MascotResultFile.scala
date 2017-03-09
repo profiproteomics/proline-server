@@ -627,7 +627,7 @@ class MascotResultFile(
 
         // TODO: put in primitives utils
         def toIntOrZero(v: Any): Int = try { toInt(v) } catch { case e: Throwable => 0 }
-        def toFloatOrZero(v: Any): Float = try { toFloat(v) } catch { case e: Throwable => 0f }
+        def toFloatOrMinusOne(v: Any): Float = try { toFloat(v) } catch { case e: Throwable => -1f }
 
         val titleFields = SpectrumTitleFields
 //        val rtRanges = mascotQ.getRetentionTimes.split(",")
@@ -636,10 +636,10 @@ class MascotResultFile(
 
         val (firstRT, lastRT) = {
           if (mascotQ.getRetentionTimes != null) {
-            val rtRanges = mascotQ.getRetentionTimes.split(",")
-            (toFloatOrZero(rtRanges.head.split("-").head.trim)/60.0, toFloatOrZero(rtRanges.last.split("-").last.trim)/60.0)
-          } else (0, 0)
-        } 
+            val rtRanges = mascotQ.getRetentionTimes.split(",").map( _.split("-") )
+            (toFloatOrMinusOne(rtRanges.head.head.trim)/60.0, toFloatOrMinusOne(rtRanges.last.last.trim)/60.0)
+          } else (-1f, -1f)
+        }
         
         val spec = new Spectrum(
           id = Spectrum.generateNewId,
@@ -650,8 +650,8 @@ class MascotResultFile(
           lastCycle = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_CYCLE, 0)),
           firstScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_SCAN, 0)),
           lastScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_SCAN, 0)),
-          firstTime = toFloatOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_TIME, firstRT)),
-          lastTime = toFloatOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_TIME, lastRT)),
+          firstTime = toFloatOrMinusOne(specTitleFieldMap.getOrElse(titleFields.FIRST_TIME, firstRT)),
+          lastTime = toFloatOrMinusOne(specTitleFieldMap.getOrElse(titleFields.LAST_TIME, lastRT)),
           mozList = Some(mozList.toArray),
           intensityList = Some(intensityList.toArray),
           peaksCount = mozList.length,
