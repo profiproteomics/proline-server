@@ -116,6 +116,9 @@ trait JSONRPC2DefaultMethodParameter extends IJSONRPC2MethodParameter {
   var default: Option[String] = None
   
   implicit def param2string( param: this.type ): String = this.name
+  
+  // Override toString method to be sure we return the same value than param2string
+  override def toString(): String = this.name
 }
 
 trait IJSONRPC2MethodParameter extends JSONRPC2Schema {
