@@ -13,7 +13,7 @@ import fr.profi.util.primitives._
 class OmssaListSpectrum(omxFile: File, peaklistId: Long, instrumentConfig: InstrumentConfig, specTitleParsingRule: Option[SpectrumTitleParsingRule], onEachSpectrum: Spectrum => Unit) extends LazyLogging {
 
   private def toIntOrZero(v: Any): Int = try { toInt(v) } catch { case e: Throwable => 0 }
-  private def toFloatOrZero(v: Any): Float = try { toFloat(v) } catch { case e: Throwable => 0f }
+  private def toFloatOrMinusOne(v: Any): Float = try { toFloat(v) } catch { case e: Throwable => -1f }
   val titleFields = SpectrumTitleFields
 
   _parseOmxFile()
@@ -102,8 +102,8 @@ class OmssaListSpectrum(omxFile: File, peaklistId: Long, instrumentConfig: Instr
 				        lastCycle = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_CYCLE, 0)),
 				        firstScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_SCAN, 0)),
 				        lastScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_SCAN, 0)),
-				        firstTime = toFloatOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_TIME, 0f)),
-				        lastTime = toFloatOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_TIME, 0f)),
+				        firstTime = toFloatOrMinusOne(specTitleFieldMap.getOrElse(titleFields.FIRST_TIME, -1f)),
+				        lastTime = toFloatOrMinusOne(specTitleFieldMap.getOrElse(titleFields.LAST_TIME, -1f)),
                         mozList = Some(mozList.toArray),
                         intensityList = Some(intensities),
                         peaksCount = mozList.length,
