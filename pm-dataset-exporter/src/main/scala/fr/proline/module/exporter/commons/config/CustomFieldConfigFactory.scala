@@ -207,6 +207,7 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_QUANT_PEPTIDE_ION_BEST_SCORE, "best_score"), // incremental
       CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PSM_COUNT, "psm_count"), // incremental
       CustomFieldConfig(FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME, "elution_time"), // incremental
+      CustomFieldConfig(FIELD_QUANT_PEPTIDE_ION_CORRECTED_ELUTION_TIME, "corrected_time"), // incremental
       CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE, "raw_abundance"), // incremental
       CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_ABUNDANCE, "abundance"), // incremental
       CustomFieldConfig(FIELD_PROFILIZER_RATIO, "ratio"),

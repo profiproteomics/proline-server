@@ -161,6 +161,7 @@ object ExportConfigConstant {
   // MasterQuantPeptideIon sheet  
   val SHEET_MASTER_QUANT_PEPTIDE_ION = "master_quant_peptide_ion"
   val FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME = "quant_peptide_ion_elution_time" //incremental
+  val FIELD_QUANT_PEPTIDE_ION_CORRECTED_ELUTION_TIME = "quant_peptide_ion_corrected_elution_time" //incremental
   val FIELD_QUANT_PEPTIDE_ION_BEST_SCORE = "quant_peptide_ion_best_score" //incremental
   val FIELD_MASTER_QUANT_PEPTIDE_ION_ID = "master_quant_peptide_ion_id"
   val FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME = "master_quant_peptide_ion_elution_time"

@@ -3,7 +3,9 @@ package fr.proline.module.exporter.dataset.view
 import java.text.SimpleDateFormat
 
 import fr.profi.util.collection._
+import fr.proline.core.om.model.msq.QuantPeptideIon
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
+import fr.proline.module.exporter.commons.config.CustomFieldConfig
 import fr.proline.module.exporter.commons.config.ExportConfigConstant._
 import fr.proline.module.exporter.commons.config.ExportConfigSheet
 import fr.proline.module.exporter.commons.view.SmartDecimalFormat
@@ -21,23 +23,24 @@ class MasterQuantPeptideIonView(
   
   var viewName = "master_quant_peptide_ion"
   
-  // Override getQcFieldSet in order to generate QuantChannel based columns for field FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME
-  override protected def getQcFieldSet() = {
-    val superQcFieldSet = super.getQcFieldSet()
-    superQcFieldSet + FIELD_QUANT_PEPTIDE_ION_BEST_SCORE + FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME
-  }
+  private val qPepIonFieldSet = Set(
+    FIELD_QUANT_PEPTIDE_ION_BEST_SCORE,
+    FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME,
+    FIELD_QUANT_PEPTIDE_ION_CORRECTED_ELUTION_TIME
+  )
   
-  protected val mqPepIonFieldSet = Set(
+  // Override getQcFieldSet in order to generate QuantChannel based columns
+  override protected def getQcFieldSet() =  super.getQcFieldSet() ++ qPepIonFieldSet
+  
+  protected val mqPepIonViewFieldSet = Set(
     FIELD_MASTER_QUANT_PEPTIDE_ION_ID,
     FIELD_MASTER_QUANT_PEPTIDE_ION_MOZ,
     FIELD_MASTER_QUANT_PEPTIDE_ION_CHARGE,
     FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME,
-    FIELD_MASTER_QUANT_PEPTIDE_ION_FEATURE_ID,
-    FIELD_QUANT_PEPTIDE_ION_BEST_SCORE,
-    FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME
-  )
+    FIELD_MASTER_QUANT_PEPTIDE_ION_FEATURE_ID
+  ) ++ qPepIonFieldSet
   
-  protected val mqPepIonFieldsConfigs = sheetConfig.fields.filter( f => mqPepIonFieldSet.contains(f.id) )
+  protected val mqPepIonViewFieldsConfigs = sheetConfig.fields.filter( f => mqPepIonViewFieldSet.contains(f.id) )
   
   protected lazy val identPepMatchById = identDS.childResultSummaries.flatMap { childRsm =>
     childRsm.lazyResultSet.peptideMatchById
@@ -60,25 +63,35 @@ class MasterQuantPeptideIonView(
 
     val recordBuilder = Map.newBuilder[String,Any]
     recordBuilder ++= pepMatchRecord
+    
+    def appendQcValuesToRecord(fieldConfig: CustomFieldConfig)( qcValueFn: (Long,QuantPeptideIon) => Any ): Null = {
+      for (qcId <- quantDs.qcIds; qPepIon <- qPepIonMap.get(qcId) ) {
+        recordBuilder += mkQcFieldTitle(fieldConfig, qcId) -> qcValueFn(qcId, qPepIon)
+      }
+      null
+    }
 
-    for (fieldConfig <- mqPepIonFieldsConfigs) {
+    for (fieldConfig <- mqPepIonViewFieldsConfigs) {
       val fieldValue: Any = fieldConfig.id match {
         case FIELD_MASTER_QUANT_PEPTIDE_ION_ID => mqPepIon.id
         case FIELD_MASTER_QUANT_PEPTIDE_ION_CHARGE => mqPepIon.charge
         case FIELD_MASTER_QUANT_PEPTIDE_ION_MOZ => mqPepIon.unlabeledMoz
         case FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME => dcf2.format(mqPepIon.elutionTime / 60)
         case FIELD_QUANT_PEPTIDE_ION_BEST_SCORE => {
-          for (qcId <- quantDs.qcIds; qPepIon <- qPepIonMap.get(qcId) ) {
+          appendQcValuesToRecord(fieldConfig) { (qcId, qPepIon) =>
             val bestScoreOpt = bestPepMatchIdByQcId.get(qcId).map(identPepMatchById(_).score)
-            recordBuilder += mkQcFieldTitle(fieldConfig, qcId) -> dcf2.format(bestScoreOpt.orNull)
+            dcf2.format(bestScoreOpt.orNull)
           }
-          null
         }
         case FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME => {
-          for (qcId <- quantDs.qcIds; qPepIon <- qPepIonMap.get(qcId) ) {
-            recordBuilder += mkQcFieldTitle(fieldConfig, qcId) -> dcf2.format(qPepIon.elutionTime / 60)
+          appendQcValuesToRecord(fieldConfig) { (qcId, qPepIon) =>
+            dcf2.format(qPepIon.elutionTime / 60)
           }
-          null
+        }
+        case FIELD_QUANT_PEPTIDE_ION_CORRECTED_ELUTION_TIME => {
+          appendQcValuesToRecord(fieldConfig) { (qcId, qPepIon) =>
+            dcf2.format(qPepIon.correctedElutionTime / 60)
+          }
         }
         case FIELD_MASTER_QUANT_PEPTIDE_ION_FEATURE_ID => mqPepIon.lcmsMasterFeatureId.getOrElse(0)
       }
@@ -88,7 +101,7 @@ class MasterQuantPeptideIonView(
     
     recordBuilder.result()
   }
-
+  
   override def onEachRecord(recordFormatter: Map[String, Any] => Unit) {
     
     val rsm = identDS.resultSummary
