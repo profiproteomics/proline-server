@@ -87,6 +87,8 @@ object ExportConfigConstant {
 
   val FIELD_PROTEIN_SETS_ID = "protein_sets_id"
   val FIELD_PROTEIN_SETS_ACCESSION = "protein_sets_accession"
+  val FIELD_PROTEIN_SETS_SAMESETS_ACCESSIONS = "protein_sets_samesets_accessions"
+  val FIELD_PROTEIN_SETS_SUBSETS_ACCESSIONS = "protein_sets_subsets_accessions"
   val FIELD_PROTEIN_SETS_DESCRIPTION = "protein_sets_description"
   val FIELD_PROTEIN_SETS_SCORE = "protein_sets_score"
   val FIELD_PROTEIN_SETS_IS_VALIDATED = "protein_sets_is_validated"
@@ -118,6 +120,7 @@ object ExportConfigConstant {
   // Protein match sheet  
   val SHEET_PROTEIN_MATCH = "protein_match"
   // see  FIELD_PROTEIN_SETS_*
+  val FIELD_PROTEIN_MATCH_GENE_NAME = "protein_match_gene_name"
   val FIELD_PROTEIN_MATCH_IS_TYPICAL_PROTEIN = "protein_match_is_typical_protein"
   val FIELD_PROTEIN_MATCH_IS_SAMESET = "protein_match_is_sameset"
   val FIELD_PROTEIN_MATCH_PEPTIDE_SET_SCORE = "protein_match_peptide_set_score"

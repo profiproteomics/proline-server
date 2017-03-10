@@ -18,21 +18,35 @@ class ProtMatchBuildingContext(
   var protMatch: ProteinMatch
 ) extends IRecordBuildingContext {
 
-  val peptideCount = peptideSet.items.length
-  val allSeqs = new ArrayBuffer[String](peptideCount)
-  val specificSeqs = new ArrayBuffer[String](peptideCount)
-  val specificPeps = new ArrayBuffer[Peptide](peptideCount)
-  val specificPepMatchIds = new ArrayBuffer[Long](peptideCount)
+  val peptidesCount = peptideSet.items.length
+  
+  private val allSeqs = new ArrayBuffer[String](peptidesCount)
+  private val specificNonUniqSeqs = new ArrayBuffer[String](peptidesCount)
+  
+  private val allPepInstances = new ArrayBuffer[PeptideInstance](peptidesCount)
+  private val specificPepInstances = new ArrayBuffer[PeptideInstance](peptidesCount)
+  
+  private var totalLeavesMatchCount = 0
+  private var specificTotalLeavesMatchCount = 0
 
   for (item <- protSet.peptideSet.items) {
     val pepInst = item.peptideInstance
     allSeqs += pepInst.peptide.sequence
+    
+    totalLeavesMatchCount += pepInst.totalLeavesMatchCount
+    
     if (protSet.isValidated && pepInst.isValidProteinSetSpecific) {
-      specificSeqs += pepInst.peptide.sequence
-      specificPeps += pepInst.peptide
-      specificPepMatchIds ++= pepInst.getPeptideMatchIds
+      specificNonUniqSeqs += pepInst.peptide.sequence
+      specificPepInstances += pepInst
+      specificTotalLeavesMatchCount += pepInst.totalLeavesMatchCount
     }
   }
+  
+  val sequencesCount = allSeqs.length
+  val specificSequencesCount = specificNonUniqSeqs.distinct.length
+  val specificPeptidesCount = specificPepInstances.length
+  val peptideMatchesCount = totalLeavesMatchCount
+  val specificPeptideMatchesCount = specificTotalLeavesMatchCount
 
 }
 
