@@ -65,7 +65,7 @@ class ExportConfigManagerTest extends LazyLogging {
     //  reserialize check the conf
     val config = ExportConfigManager.readConfig(configStr)
     assertEquals("All SC export nbSheets", 7, config.sheets.length)
-    assertEquals("All SC export nbFields in ProteinSet sheet ", 22, config.sheets(2).fields.length)
+    assertEquals("All SC export nbFields in ProteinSet sheet ", 25, config.sheets(2).fields.length)
   }
 
   @Test
@@ -74,7 +74,7 @@ class ExportConfigManagerTest extends LazyLogging {
     //  reserialize check the conf
     val config = ExportConfigManager.readConfig(configStr)
     assertEquals("All XIC export nbSheets", 8, config.sheets.length)
-    assertEquals("All XIC export nbFields in ProteinSet sheet ", 25, config.sheets(3).fields.length)
+    assertEquals("All XIC export nbFields in ProteinSet sheet ", 28, config.sheets(3).fields.length)
   }
 
   @Test
