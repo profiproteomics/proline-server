@@ -14,6 +14,7 @@ import fr.proline.admin.service.user.CreateUser
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.service.uds.UserAuthenticator
 import fr.proline.core.service.uds.UserUpdator
+import fr.proline.admin.service.user.ResetPassword
 import fr.proline.cortex.api.service.admin.IUserAccountService
 import fr.proline.cortex.api.service.admin.UserAccountService
 import fr.proline.cortex.util.DbConnectionHelper
@@ -69,6 +70,12 @@ class UserAccount extends IUserAccountService with IRemoteJsonRPC2Service  with 
       case CHANGE_PASSWORD_METHOD.name => {
         val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(jsonRequest)
         val result = doChangePassword(paramsRetriever) // Call service
+        return new ProfiJSONRPC2Response(result, requestId)
+      }
+      
+      case RESET_PASSWORD_METHOD.name => {
+        val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(jsonRequest)
+        val result = doResetPassword(paramsRetriever) // Call service
         return new ProfiJSONRPC2Response(result, requestId)
       }
 
@@ -128,6 +135,29 @@ class UserAccount extends IUserAccountService with IRemoteJsonRPC2Service  with 
     }
     
     result.asInstanceOf[Object]
+  }
+  
+  /* Define the doResetPassword method: Reset User Password in UDS DB throw Admin service */
+  def doResetPassword(paramsRetriever: NamedParamsRetriever): Object =  {
+    require(paramsRetriever != null, "no parameter specified")
+    
+    val userId = paramsRetriever.getLong(RESET_PASSWORD_METHOD.LOGIN_ID_PARAM)
+    val newPassword = paramsRetriever.getString(RESET_PASSWORD_METHOD.NEW_PASSWORD_HASH_PARAM)
+
+    var result = true
+    val udsDbConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
+    try {
+      val resetPassword = new ResetPassword(udsDbConnectionContext, userId, newPassword)
+      resetPassword.run()
+
+
+    } finally {
+      DbConnectionHelper.tryToCloseDbContext(udsDbConnectionContext)
+    }
+    
+    
+    result.asInstanceOf[Object]
+
   }
   
   /* Define the doCreateUserAccount method : Create User in UDS DB throw Admin service*/
