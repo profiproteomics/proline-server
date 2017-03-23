@@ -18,7 +18,7 @@ trait IUserAccountService extends IAdminService with IDefaultServiceVersion {
   this.serviceDescription = Some("Service providing methods for user accounts mangement. ")
   
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(CREATE_METHOD,CHANGE_PASSWORD_METHOD,AUTHENTICATE_METHOD)
+  val methodDefinitions: Seq[IJSONRPC2Method] = List(CREATE_METHOD,CHANGE_PASSWORD_METHOD,RESET_PASSWORD_METHOD,AUTHENTICATE_METHOD)
   
   val UDS_AUTH_METHOD = "UDS_HASH"
   
@@ -72,6 +72,32 @@ trait IUserAccountService extends IAdminService with IDefaultServiceVersion {
       val name = "old_password_hash"
       val description = "The current password hash of the specified user."
       val scalaType = typeOf[String]
+    }
+    object NEW_PASSWORD_HASH_PARAM extends JSONRPC2DefaultMethodParameter {
+      val name = "new_password_hash"
+      val description = "The new password hash of the specified user."
+      val scalaType = typeOf[String]
+    }
+    
+  }
+  
+  object RESET_PASSWORD_METHOD extends JSONRPC2DefaultMethod {
+    
+    // Method description
+    val name = "reset_password"
+    val description = "Reset the password of the specified user."
+    
+    // Configure method interface
+    val parameters = List(LOGIN_ID_PARAM, NEW_PASSWORD_HASH_PARAM)
+    val returns = JSONRPC2MethodResult(
+      typeOf[Boolean],
+      "Boolean for service status."
+    )
+    
+    object LOGIN_ID_PARAM extends JSONRPC2DefaultMethodParameter {
+      val name = "login_id"
+      val description = "The login id of the user whom password will be reset."
+      val scalaType = typeOf[Long]
     }
     object NEW_PASSWORD_HASH_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "new_password_hash"
