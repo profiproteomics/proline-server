@@ -300,7 +300,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
             val errorMessage = s"Unknown '$PROLINE_SERVICE_NAME_KEY' [$serviceName] for $versionAsStr"
 
-            val logMessage = s"##Message##_$jmsMessageId: $errorMessage"
+            val logMessage = s"$errorMessage (JMS Message ID=$jmsMessageId)"
             logger.error(logMessage)
 
             jsonResponse.setError(buildJSONRPC2Error(MESSAGE_ERROR_CODE, new Exception(errorMessage)))
@@ -316,7 +316,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
       } else {
         val errorMessage = "Invalid request, unsupported JMS Message type"
-        val logMessage = s"##Message##_$jmsMessageId: $errorMessage"
+        val logMessage = s"$errorMessage (JMS Message ID=$jmsMessageId)"
         logger.error(logMessage)
 
         jsonResponse.setError(buildJSONRPC2Error(MESSAGE_ERROR_CODE, new Exception(errorMessage)))
@@ -326,7 +326,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
       /* Catch all Throwables */
       case t: Throwable => {
-        val errorMessage = s"##Message##_$jmsMessageId: Error handling Request JMS Message"
+        val errorMessage = s"Error handling Request JMS Message (JMS Message ID=$jmsMessageId)"
         logger.error(errorMessage, t)
 
         jsonResponse = new JSONRPC2Response(buildJSONRPC2Error(MESSAGE_ERROR_CODE, t), jsonRequestId)
@@ -378,7 +378,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
         logger.debug(s"Sending JMS response for JMS request [$jmsMessageId] on destination [$replyDestination]")
 
         replyProducer.send(replyDestination, responseJMSMessage)
-        logger.info("##Message##_"+jmsMessageId+" JMS response to request sent")
+        logger.info(s"JMS response to request sent (JMS Message ID=$jmsMessageId)")
       }
 
     }
@@ -471,7 +471,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
         /* Catch all Throwables */
         case t: Throwable => {
-          val errorMessage = s"Error calling Service [$serviceName]"
+          val errorMessage = s"An error occurred while calling service [$serviceName]"
           logger.error(errorMessage, t)
 
           new JSONRPC2Response(buildJSONRPC2Error(SERVICE_ERROR_CODE, t), jsonRequestId)
