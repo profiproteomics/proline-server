@@ -26,6 +26,8 @@ import fr.proline.cortex.service.dps.uds.GetExportInformation
 import fr.proline.cortex.service.dps.uds.RegisterRawFile
 import fr.proline.cortex.service.misc.FileSystem
 import fr.proline.cortex.service.misc.FileUpload
+//import fr.proline.cortex.service.misc.CancelService
+//import fr.proline.cortex.service.misc.WaitService
 import fr.proline.cortex.service.monitoring.InfoService
 import fr.proline.cortex.service.monitoring.SingleThreadedInfoService
 import fr.proline.cortex.util._
@@ -180,8 +182,8 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
           ServiceManager.addRunnale2FutureEntry(parallelizableSeviceRunner, threadFuture)
         }
 
-        m_connection.start() // Explicitly start connection to begin Consumer reception
-        logger.trace("JMS Connection : " + m_connection + "  started")
+        m_connection.start() // Explicitly start connection to begin Consumer reception        
+        logger.info("*** Proline Cortex successfully started !")
       } catch {
         
 
@@ -226,9 +228,9 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
       ServiceRegistry.addService(new ImportResultFilesDecoyRegExp())
       ServiceRegistry.addService(new ImportResultFilesProtMatchDecoyRule())
       ServiceRegistry.addService(new ImportValidateGenerateSM())
-      logger.info("This node HANDLE Result Files Import")
+      logger.info("This node HANDLES Result Files Import")
     } else {
-      logger.info("This node do NOT handle Result Files Import")
+      logger.info("This node does NOT handle Result Files Import")
     }
 
     /* Parallelizable Service */
