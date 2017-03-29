@@ -183,6 +183,18 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
   }
   
   @Test
+  def testPeaklistValues {
+    val method = getMethod()
+    logger.debug("TEST [" + method + "] STARTS")
+    // this file is a simple search that should be correct (it can be used to verify most of the algorithm)
+    val omssaOmxFile = parseOmxFile("STG_NCSpiste1_OTD_mgfInputFile.omx")
+    val rs = omssaOmxFile.getResultSet(wantDecoy = false)
+    assertEquals(rs.msiSearch.get.peakList.fileType, "Mascot generic")
+    assertEquals(rs.msiSearch.get.peakList.rawFileIdentifier, "STG_NCSpiste1_OTD_standardFile")
+    logger.debug("TEST [" + method + "] OK: parsing is successful")
+  }
+  
+  @Test
   def testBzippedFiles {
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")

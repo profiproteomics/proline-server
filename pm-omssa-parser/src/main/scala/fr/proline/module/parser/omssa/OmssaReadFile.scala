@@ -605,13 +605,21 @@ class OmssaReadFile(val omxFile: File,
   }
 
   private def setPeaklist(peaklistPath: String) = {
-    var peaklistType = "mgf"; // mgf is the default value
-    omssaLoader.spectrumFileTypes.foreach { fileType => if (peaklistPath.matches("." + fileType._2 + "$")) peaklistType = fileType._2 } // look at the file extension
+    val peakListFile = new File(peaklistPath)
     peaklist = new Peaklist(
-      id = Peaklist.generateNewId,
-      fileType = peaklistType,
-      path = if(peaklistPath != "") peaklistPath else parseProperties.get(OmssaParseParams.PEAK_LIST_FILE_PATH).getOrElse("").toString,
-      rawFileIdentifier = parseProperties.get(OmssaParseParams.RAW_FILE_PATH).getOrElse("").toString,
+      id = Peaklist.generateNewId(),
+      fileType = {
+        val extension = peakListFile.getName.split('.').lastOption.getOrElse("")
+        extension.toLowerCase match {
+          case "mgf" => "Mascot generic"
+          case "dta" => "Sequest"
+          case "pkl" => "Micromass"
+          case "xml" => "mzML"
+          case _ => extension
+        }
+      },
+      path = peakListFile.getPath,
+      rawFileIdentifier = peakListFile.getName.split('.').headOption.getOrElse(peakListFile.getName),
       msLevel = 2
     )
   }
