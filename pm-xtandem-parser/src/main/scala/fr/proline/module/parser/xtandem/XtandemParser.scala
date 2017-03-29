@@ -429,10 +429,17 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
       peakList = new Peaklist(
           id = Peaklist.generateNewId(),
           fileType = {
-              val i = inputFile.getName.lastIndexOf('.')
-              if(i > 0) inputFile.getName.substring(i+1) else "mgf"},
+            val extension = inputFile.getName.split('.').lastOption.getOrElse("")
+            extension.toLowerCase match {
+              case "mgf" => "Mascot generic"
+              case "dta" => "Sequest"
+              case "pkl" => "Micromass"
+              case "xml" => "mzML"
+              case _ => extension
+            }
+          },
           path = inputFile.getPath,
-          rawFileIdentifier = inputFile.getName,
+          rawFileIdentifier = inputFile.getName.split('.').headOption.getOrElse(inputFile.getName),
           msLevel = 2,
           peaklistSoftware = this.peaklistSoftware.getOrElse(null)),
       date = new java.util.Date(searchStartTime),

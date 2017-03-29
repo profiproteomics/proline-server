@@ -124,6 +124,10 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     
     assertNotNull(resultSet)
     println("resultSet.peptideMatches.length = " + resultSet.peptideMatches.length)  // Number of <domain> markup
+    
+    assertEquals(resultSet.msiSearch.get.peakList.fileType, "Mascot generic")
+    assertEquals(resultSet.msiSearch.get.peakList.rawFileIdentifier, "test_spectra")
+    
 //    println("resultSet.name = " + resultSet.name)
 //    resultSet.getProteins().foreach(protein => {
 //    println("protein = " + protein)  
