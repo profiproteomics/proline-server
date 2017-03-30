@@ -183,7 +183,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         }
 
         m_connection.start() // Explicitly start connection to begin Consumer reception        
-        logger.info("*** Proline Cortex successfully started !")
+        logger.info(" ************ Proline Cortex successfully started !")
       } catch {
         
 
