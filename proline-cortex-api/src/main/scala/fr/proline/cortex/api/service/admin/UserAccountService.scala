@@ -30,7 +30,7 @@ trait IUserAccountService extends IAdminService with IDefaultServiceVersion {
     val description = "Creates a new user account."
     
     // Configure method interface
-    val parameters = List(LOGIN_PARAM,PASSWORD_HASH_PARAM)
+    val parameters = List(LOGIN_PARAM,PASSWORD_HASH_PARAM,GROUP_USER_PARAM)
     val returns = JSONRPC2MethodResult(
       typeOf[Long],
       description = "The ID of the created user account."
@@ -46,6 +46,13 @@ trait IUserAccountService extends IAdminService with IDefaultServiceVersion {
       val name = "password_hash"
       val description = "The password hash of the new user."
       val scalaType = typeOf[String]
+    }
+    
+    object GROUP_USER_PARAM extends JSONRPC2DefaultMethodParameter {
+      val name = "group_user"
+      val description = "If set to true, the user belongs to the user group, otherwise to the admin group"
+      val scalaType = typeOf[Boolean]
+      optional = true
     }
     
   }
