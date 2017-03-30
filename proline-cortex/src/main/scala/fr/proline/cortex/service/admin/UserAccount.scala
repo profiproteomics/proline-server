@@ -15,6 +15,7 @@ import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.service.uds.UserAuthenticator
 import fr.proline.core.service.uds.UserUpdator
 import fr.proline.admin.service.user.ResetPassword
+import fr.proline.admin.service.user.ModifyUserGroup
 import fr.proline.cortex.api.service.admin.IUserAccountService
 import fr.proline.cortex.api.service.admin.UserAccountService
 import fr.proline.cortex.util.DbConnectionHelper
@@ -79,6 +80,12 @@ class UserAccount extends IUserAccountService with IRemoteJsonRPC2Service  with 
         return new ProfiJSONRPC2Response(result, requestId)
       }
 
+      case MODIFY_USER_GROUP_METHOD.name => {
+        val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(jsonRequest)
+        val result = doModifyUserGroup(paramsRetriever) // Call service
+        return new ProfiJSONRPC2Response(result, requestId)
+      }
+      
       case AUTHENTICATE_METHOD.name => {
         val paramsRetriever = JSONRPC2Utils.buildParamsRetriever(jsonRequest)
         val result = doAuthenticate(paramsRetriever) // Call service
@@ -160,6 +167,31 @@ class UserAccount extends IUserAccountService with IRemoteJsonRPC2Service  with 
     result.asInstanceOf[Object]
 
   }
+  
+    /* Define the doModifyUserGroup method: Modify the User Group of a User in UDS DB throw Admin service */
+  def doModifyUserGroup(paramsRetriever: NamedParamsRetriever): Object =  {
+    require(paramsRetriever != null, "no parameter specified")
+    
+    val userId = paramsRetriever.getLong(MODIFY_USER_GROUP_METHOD.LOGIN_ID_PARAM)
+    val isUserGroup = paramsRetriever.getString(MODIFY_USER_GROUP_METHOD.IS_USER_GROUP)
+
+    var result = true
+    val udsDbConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
+    try {
+      val modifyUserGroup = new ModifyUserGroup(udsDbConnectionContext, userId, isUserGroup)
+      modifyUserGroup.run()
+
+
+    } finally {
+      DbConnectionHelper.tryToCloseDbContext(udsDbConnectionContext)
+    }
+    
+    
+    result.asInstanceOf[Object]
+
+  }
+  
+  
   
   /* Define the doCreateUserAccount method : Create User in UDS DB throw Admin service*/
   def doAuthenticate(paramsRetriever: NamedParamsRetriever): Object = {
