@@ -10,15 +10,11 @@
 
   <appender name="RollingfileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <append>true</append>
-
+   	
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <fileNamePattern>logs/proline_cortex_log.%d{yyyy-MM-dd}.txt</fileNamePattern>
     </rollingPolicy>
-    
-    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-      <maxFileSize>50MB</maxFileSize>
-    </triggeringPolicy>
-    
+
     <encoder>
       <!-- TTCCLayout -->
       <pattern>%date{dd MMM yyyy HH:mm:ss.SSS} [%thread] %-5level %logger{36} %mdc - %msg%n</pattern>
@@ -29,14 +25,10 @@
   <appender name="mzDBRollingAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
   	<append>true</append>
   	
-  	<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>logs/proline_mzdb_log.%d{yyyy-MM-dd}.txt</fileNamePattern>
+ 	  <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+        <fileNamePattern>logs/proline_mzdb_log.%d{yyyy-MM-dd}.%i.txt</fileNamePattern>
+      	<maxFileSize>50MB</maxFileSize> 
     </rollingPolicy>
-
-    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-      <maxFileSize>50MB</maxFileSize>
-    </triggeringPolicy>
-
     <encoder>
       <!-- TTCCLayout -->
       <pattern>%date{dd MMM yyyy HH:mm:ss.SSS} [%thread] %-5level %logger{35} - %msg%n</pattern>
