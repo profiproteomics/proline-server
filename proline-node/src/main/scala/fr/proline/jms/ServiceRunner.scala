@@ -189,7 +189,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
         throw new RuntimeException("No valid selector on [" + NodeConfig.PROLINE_SERVICE_REQUEST_QUEUE_NAME + ']')
       }
 
-      logger.info(s"Consumer selector string:\n$selectorString")
+      logger.debug(s"Consumer selector string:\n$selectorString")
 
       val consumer = session.createConsumer(queue, selectorString)
 

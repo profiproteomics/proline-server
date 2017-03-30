@@ -53,15 +53,13 @@ class MonitoringTopicPublisherRunner(connection: Connection) extends IServiceMon
 
     val prolineNotificationTopic = HornetQJMSClient.createTopic(SERVICE_MONITORING_NOTIFICATION_TOPIC_NAME)
 
-    logger.debug("JMS Topic : " + prolineNotificationTopic)
-
     // Not transacted, AUTO_ACKNOWLEDGE
     val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
 
     try {
       val topicPublisher = session.createProducer(prolineNotificationTopic)
 
-      logger.debug("Entering Notification Topic Publisher send loop [" + currentThread.getName + ']')
+      logger.info("Entering Notification Topic Publisher send loop [" + currentThread.getName + ']'+" for topic "+prolineNotificationTopic)
 
       val nodeId = NodeConfig.NODE_ID
 

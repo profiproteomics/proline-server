@@ -13,7 +13,7 @@ import fr.profi.util.ThreadLogger
 import JMSConstants._
 
 object NodeConfig extends LazyLogging {
-  
+
   /* Singleton "Constructor" and fields declaration
    * Set a ThreadLogger to catch initialization errors */
   private val m_currentThread = Thread.currentThread
@@ -21,7 +21,7 @@ object NodeConfig extends LazyLogging {
   if (!m_currentThread.getUncaughtExceptionHandler.isInstanceOf[ThreadLogger]) {
     m_currentThread.setUncaughtExceptionHandler(new ThreadLogger(logger.underlying.getName))
   }
-  
+
   // -- Property File loader  (jms-config.conf)
   var classLoader = NodeConfig.getClass().getClassLoader()
   private var _jmsConfParams: Config = null
@@ -31,7 +31,7 @@ object NodeConfig extends LazyLogging {
     // Parse config if it not already done
     if (_jmsConfParams == null) {
       synchronized {
-        _jmsConfParams = ConfigFactory.load( "jms-node")
+        _jmsConfParams = ConfigFactory.load("jms-node")
       }
     }
 
@@ -47,8 +47,10 @@ object NodeConfig extends LazyLogging {
   private val JMS_SERVER_PORT_KEY = "jms_server_port"
   private val PROLINE_SERVICE_REQUEST_QUEUE_KEY = "proline_service_request_queue_name"
   private val SERVICE_THREAD_POOL_SIZE_KEY = "service_thread_pool_size"
+  private val MZDB_FILES_POOL_SIZE_KEY = "mzdb_files_pool_size"
   private val ENABLE_IMPORTS_KEY = "enable_imports"
 
+  private val DEFAULT_NBR_MZDB_FILES_IN_PARALLEL = 2
   private val DEFAULT_PROLINE_SERVICE_REQUEST_QUEUE_NAME = "ProlineServiceRequestQueue"
   private val ABSOLUTE_MAX_N_THREADS = 1000
   private val AUTO_MAX_N_THREAD = 20 // Same as AbstractDatabaseConnector.DEFAULT_MAX_POOL_CONNECTIONS
@@ -70,6 +72,8 @@ object NodeConfig extends LazyLogging {
   val SERVICE_THREAD_POOL_SIZE = retrieveThreadPoolSize(m_jmsConfig)
 
   val ENABLE_IMPORTS = retrieveEnableImports(m_jmsConfig)
+
+  val NBR_MZDB_FILES_IN_PARALLEL = retrieveMaxMzdbFilesInParallel(m_jmsConfig)
 
   private def retrieveQueueName(config: Config): String = {
     var queueName: String = null
@@ -102,6 +106,17 @@ object NodeConfig extends LazyLogging {
     }
 
     nThreads
+  }
+
+  private def retrieveMaxMzdbFilesInParallel(config: Config): Int = {
+    var nXicThreads: Int = DEFAULT_NBR_MZDB_FILES_IN_PARALLEL
+
+    if (config.hasPath(MZDB_FILES_POOL_SIZE_KEY)) {
+      nXicThreads = config.getInt(MZDB_FILES_POOL_SIZE_KEY)
+    }
+
+    nXicThreads
+
   }
 
   private def retrieveEnableImports(config: Config): Boolean = {
