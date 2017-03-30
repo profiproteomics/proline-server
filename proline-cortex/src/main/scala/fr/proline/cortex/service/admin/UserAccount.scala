@@ -173,7 +173,7 @@ class UserAccount extends IUserAccountService with IRemoteJsonRPC2Service  with 
     require(paramsRetriever != null, "no parameter specified")
     
     val userId = paramsRetriever.getLong(MODIFY_USER_GROUP_METHOD.LOGIN_ID_PARAM)
-    val isUserGroup = paramsRetriever.getString(MODIFY_USER_GROUP_METHOD.IS_USER_GROUP)
+    val isUserGroup = paramsRetriever.getBoolean(MODIFY_USER_GROUP_METHOD.IS_USER_GROUP)
 
     var result = true
     val udsDbConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
