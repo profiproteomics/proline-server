@@ -18,7 +18,7 @@ trait IUserAccountService extends IAdminService with IDefaultServiceVersion {
   this.serviceDescription = Some("Service providing methods for user accounts mangement. ")
   
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(CREATE_METHOD,CHANGE_PASSWORD_METHOD,RESET_PASSWORD_METHOD,AUTHENTICATE_METHOD)
+  val methodDefinitions: Seq[IJSONRPC2Method] = List(CREATE_METHOD,CHANGE_PASSWORD_METHOD,RESET_PASSWORD_METHOD,AUTHENTICATE_METHOD,MODIFY_USER_GROUP_METHOD)
   
   val UDS_AUTH_METHOD = "UDS_HASH"
   
@@ -110,6 +110,32 @@ trait IUserAccountService extends IAdminService with IDefaultServiceVersion {
       val name = "new_password_hash"
       val description = "The new password hash of the specified user."
       val scalaType = typeOf[String]
+    }
+    
+  }
+  
+  object MODIFY_USER_GROUP_METHOD extends JSONRPC2DefaultMethod {
+    
+    // Method description
+    val name = "modify_user_group"
+    val description = "Modify the user group of the specified user."
+    
+    // Configure method interface
+    val parameters = List(LOGIN_ID_PARAM, IS_USER_GROUP)
+    val returns = JSONRPC2MethodResult(
+      typeOf[Boolean],
+      "Boolean for service status."
+    )
+    
+    object LOGIN_ID_PARAM extends JSONRPC2DefaultMethodParameter {
+      val name = "login_id"
+      val description = "The login id of the user whom password will be reset."
+      val scalaType = typeOf[Long]
+    }
+    object IS_USER_GROUP extends JSONRPC2DefaultMethodParameter {
+      val name = "is_user_group"
+      val description = "True is the new user group of the user is USER."
+      val scalaType = typeOf[Boolean]
     }
     
   }
