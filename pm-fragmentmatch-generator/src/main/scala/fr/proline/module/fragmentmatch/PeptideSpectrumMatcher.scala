@@ -5,7 +5,6 @@ import scala.collection.mutable.StringBuilder
 import scala.util.control.Breaks.break
 import scala.util.control.Breaks.breakable
 import com.typesafe.scalalogging.LazyLogging
-import fr.profi.util.ms.MassTolUnit
 import fr.profi.util.ms.calcMozTolInDalton
 import fr.proline.core.om.model.msi.FragmentMatch
 import fr.proline.core.om.model.msi.FragmentMatchType
