@@ -453,8 +453,12 @@ public class ProjectHandler {
 						final ResultSummary rsm = msiEM.find(ResultSummary.class, rsmId);
 						if(rsm == null) {
 							LOG.warn("Referenced ReultSummary " + rsmId+" was not found in Project !");
+							msiTransactionOK = true;
+							msiEM.getTransaction().rollback();
+							msiEM.clear();
 							continue;
 						}
+						
 						// Get ALL SeqMatches For current RSM
 						List<SequenceMatch> seqMatches = SequenceMatchRepository.findSequenceMatchForResultSet(msiEM, rsm.getResultSet().getId());
 						Map<Long, List<SequenceMatch>> seqMatchesByProteinMatchId = new HashMap<>();
