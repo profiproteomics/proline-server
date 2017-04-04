@@ -97,7 +97,7 @@ class MonitoringTopicPublisherRunner(connection: Connection) extends IServiceMon
 
           case intEx: InterruptedException => {
             goOn = false
-            logger.warn("Notification Topic Publisher send loop interrupted", intEx)
+            logger.warn("Topic Publisher Monitoring was interrupted")
           }
 
           /* Catch all Throwables to run INFINITE loop */
