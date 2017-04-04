@@ -3,12 +3,15 @@ package fr.proline.cortex.api.service.misc
 import scala.reflect.runtime.universe
 import scala.reflect.runtime.universe.typeOf
 
-import fr.proline.cortex.api.fs.FileAttrs
-import fr.proline.cortex.api.fs.MountPoint
-import fr.proline.jms.service.api.IDefaultServiceVersion
+import FileSystemServiceConstants.DIRECTORY_TYPE_PARAM_NAME
+import FileSystemServiceConstants.LABEL_PARAM_NAME
+import FileSystemServiceConstants.LABEL_PATH_PARAM_NAME
 import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
 import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
 import fr.profi.util.jsonrpc.JSONRPC2MethodResult
+import fr.proline.cortex.api.fs.FileAttrs
+import fr.proline.cortex.api.fs.MountPoint
+import fr.proline.jms.service.api.IDefaultServiceVersion
 
 object FileSystemServiceConstants {
   val LABEL_PARAM_NAME = "label"
@@ -20,7 +23,6 @@ object FileSystemService extends IFileSystemService
 
 trait IFileSystemService extends IMiscService with IDefaultServiceVersion {
   
-  import FileSystemServiceConstants._
   
   /* JMS Service identification */
   val serviceLabel = "FileSystem"

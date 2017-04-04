@@ -15,7 +15,7 @@ import javax.jms.BytesMessage
 
 trait IRemoteServiceIdentity {
   
-  /** The namesapce of this service like "proline/dps/msi" */
+  /** The namespace of this service like "proline/dps/msi" */
   val serviceNamespace: String
   
   /** The name of this service like "ImportResultFiles" */
