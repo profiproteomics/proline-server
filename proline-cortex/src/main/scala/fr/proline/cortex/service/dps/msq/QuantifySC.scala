@@ -1,10 +1,8 @@
 package fr.proline.cortex.service.dps.msq
 
 import scala.collection.JavaConversions.asScalaBuffer
-
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.primitives.toLong
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
@@ -18,6 +16,7 @@ import fr.proline.cortex.api.service.dps.msq.IQuantifySCService
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
 import fr.proline.jms.service.api.ISingleThreadedService
+import fr.proline.cortex.service.SingleThreadIdentifierType
 
 /**
  *  Define JMS Service which allows to compute spectral count for proteins of result summaries associated to experimental design's QuantChannel.
@@ -38,8 +37,7 @@ import fr.proline.jms.service.api.ISingleThreadedService
 class QuantifySC extends AbstractRemoteProcessingService with IQuantifySCService with LazyLogging with ISingleThreadedService {
 
   /* JMS Service identification */
-  // TODO: create an enumeration of singleThreadIdentifiers
-  val singleThreadIdent = "quantifySCThread"
+  val singleThreadIdent = SingleThreadIdentifierType.QUANTIFYSC_SINGLETHREAD_IDENT.toString()
 
   def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 

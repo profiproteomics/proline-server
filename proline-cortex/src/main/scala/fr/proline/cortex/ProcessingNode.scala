@@ -4,41 +4,66 @@ import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import javax.jms.Connection
-import javax.jms.ExceptionListener
-import javax.jms.JMSException
+
+import scala.annotation.elidable
+import scala.annotation.elidable.ASSERTION
 import scala.collection.JavaConversions.mutableMapAsJavaMap
 import scala.collection.mutable
+
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.jms.HornetQJMSClient
 import org.hornetq.api.jms.JMSFactoryType
 import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory
 import org.hornetq.core.remoting.impl.netty.TransportConstants
+
 import com.typesafe.scalalogging.LazyLogging
+
 import fr.profi.util.StringUtils
 import fr.profi.util.ThreadLogger
 import fr.proline.cortex.service.admin.CreateProject
 import fr.proline.cortex.service.admin.GetConnectionTemplate
 import fr.proline.cortex.service.admin.UserAccount
-import fr.proline.cortex.service.dps.msi._
-import fr.proline.cortex.service.dps.msq._
+import fr.proline.cortex.service.dps.msi.CertifyResultFiles
+import fr.proline.cortex.service.dps.msi.ChangeTypicalProteinMatch
+import fr.proline.cortex.service.dps.msi.DeleteOrphanData
+import fr.proline.cortex.service.dps.msi.ExportResultSummary
+import fr.proline.cortex.service.dps.msi.ExportResultSummaryV2_0
+import fr.proline.cortex.service.dps.msi.FilterRSMProteinSets
+import fr.proline.cortex.service.dps.msi.GenerateMSDiagReport
+import fr.proline.cortex.service.dps.msi.GenerateSpectrumMatches
+import fr.proline.cortex.service.dps.msi.ImportMaxQuantResults
+import fr.proline.cortex.service.dps.msi.ImportResultFilesDecoyRegExp
+import fr.proline.cortex.service.dps.msi.ImportResultFilesProtMatchDecoyRule
+import fr.proline.cortex.service.dps.msi.ImportValidateGenerateSM
+import fr.proline.cortex.service.dps.msi.MergeDatasetsV1_0
+import fr.proline.cortex.service.dps.msi.MergeDatasetsV2_0
+import fr.proline.cortex.service.dps.msi.UpdateSpectraParamsV1_0
+import fr.proline.cortex.service.dps.msi.UpdateSpectraParamsV2_0
+import fr.proline.cortex.service.dps.msi.ValidateResultSet
+import fr.proline.cortex.service.dps.msq.ComputeQuantProfiles
+import fr.proline.cortex.service.dps.msq.Quantify
+import fr.proline.cortex.service.dps.msq.QuantifySC
+import fr.proline.cortex.service.dps.msq.QuantifyV2_0
 import fr.proline.cortex.service.dps.uds.GetExportInformation
 import fr.proline.cortex.service.dps.uds.RegisterRawFile
+import fr.proline.cortex.service.dps.uds.ValidateIdentDSInTree
 import fr.proline.cortex.service.misc.FileSystem
 import fr.proline.cortex.service.misc.FileUpload
-//import fr.proline.cortex.service.misc.CancelService
-//import fr.proline.cortex.service.misc.WaitService
 import fr.proline.cortex.service.monitoring.InfoService
-import fr.proline.cortex.service.monitoring.SingleThreadedInfoService
-import fr.proline.cortex.util._
-import fr.proline.cortex.util.fs._
-import fr.proline.jms._
-import fr.proline.jms.util.JMSConstants._
-import fr.proline.jms.util._
-import scala.collection.mutable.HashMap
-import java.util.concurrent.Future
+import fr.proline.cortex.util.DbConnectionHelper
+import fr.proline.cortex.util.fs.MountPointRegistry
+import fr.proline.cortex.util.fs.WorkDirectoryRegistry
 import fr.proline.jms.ServiceManager
-import fr.proline.cortex.service.dps.uds.ValidateIdentDSInTree
+import fr.proline.jms.ServiceRegistry
+import fr.proline.jms.ServiceRunner
+import fr.proline.jms.SingleThreadedServiceRunner
+import fr.proline.jms.util.ExpiredMessageConsumer
+import fr.proline.jms.util.JMSConstants.MAX_JMS_SERVER_PORT
+import fr.proline.jms.util.MonitoringTopicPublisherRunner
+import fr.proline.jms.util.NodeConfig
+import javax.jms.Connection
+import javax.jms.ExceptionListener
+import javax.jms.JMSException
 
 
 object ProcessingNode extends LazyLogging {
@@ -221,8 +246,6 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
   private def initServices() {
 
     /* Single-threaded services */
-    // TODO Remove after test
-    ServiceRegistry.addService(new SingleThreadedInfoService())
 
     if (NodeConfig.ENABLE_IMPORTS) {
       ServiceRegistry.addService(new ImportResultFilesDecoyRegExp())

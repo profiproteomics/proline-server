@@ -18,6 +18,7 @@ import fr.proline.jms.service.api.AbstractRemoteProcessingService
 import fr.proline.jms.service.api.ISingleThreadedService
 import fr.proline.jms.util.NodeConfig
 import fr.proline.core.util.CoreConfig
+import fr.proline.cortex.service.SingleThreadIdentifierType
 
 /**
  *  Define JMS Service which allows to creates a new quantitation and perform the corresponding data analysis.
@@ -36,8 +37,7 @@ import fr.proline.core.util.CoreConfig
 class Quantify extends AbstractRemoteProcessingService with IQuantifyService with LazyLogging with ISingleThreadedService {
 
   /* JMS Service identification */
-  // TODO: create an enumeration of singleThreadIdentifiers
-  val singleThreadIdent = "quantifyThread"
+  val singleThreadIdent = SingleThreadIdentifierType.QUANTIFY_SINGLETHREAD_IDENT.toString()
 
   def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 
@@ -112,7 +112,8 @@ class QuantifyV2_0 extends AbstractRemoteProcessingService with IQuantifyService
   /* JMS Service identification */
   override val serviceVersion = "2.0"
   override val isDefaultVersion = false
-  val singleThreadIdent = "quantifyThread"
+  
+  val singleThreadIdent = SingleThreadIdentifierType.IMPORT_SINGLETHREAD_IDENT.toString()
 
   def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 

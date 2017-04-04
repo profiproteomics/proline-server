@@ -6,14 +6,10 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
-
 import scala.collection.mutable.Map
-
 import org.apache.commons.io.FilenameUtils
-
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.helper.UdsDbHelper
@@ -32,6 +28,7 @@ import fr.proline.cortex.util.fs.MountPointRegistry
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
 import fr.proline.jms.service.api.ISingleThreadedService
 import fr.proline.module.parser.maxquant.MaxQuantResultParser
+import fr.proline.cortex.service.SingleThreadIdentifierType
 
 /**
  * Import MaxQuant result file in the MSIdb corresponding to the provided project id
@@ -51,7 +48,7 @@ import fr.proline.module.parser.maxquant.MaxQuantResultParser
 class ImportMaxQuantResults extends AbstractRemoteProcessingService with IImportMaxQuantResultsService with LazyLogging with ISingleThreadedService {
 
   /* JMS Service identification */
-  val singleThreadIdent = "ImportThread"
+  val singleThreadIdent = SingleThreadIdentifierType.IMPORT_SINGLETHREAD_IDENT.toString()
 
   private def buildParserContext(executionContext: IExecutionContext): ProviderDecoratedExecutionContext = {
 

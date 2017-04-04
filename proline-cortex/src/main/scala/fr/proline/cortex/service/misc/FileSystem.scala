@@ -1,21 +1,24 @@
 package fr.proline.cortex.service.misc
 
 import java.io.File
-
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.typesafe.scalalogging.LazyLogging
-
+import fr.profi.util.StringUtils
 import fr.profi.util.jsonrpc.JSONRPC2Utils
 import fr.profi.util.jsonrpc.ProfiJSONRPC2Response
-import fr.profi.util.StringUtils
 import fr.proline.cortex.api.fs.MountPoint
-import fr.proline.cortex.api.service.misc._
+import fr.proline.cortex.api.service.misc.FileSystemServiceConstants.DIRECTORY_TYPE_PARAM_NAME
+import fr.proline.cortex.api.service.misc.FileSystemServiceConstants.LABEL_PARAM_NAME
+import fr.proline.cortex.api.service.misc.FileSystemServiceConstants.LABEL_PATH_PARAM_NAME
+import fr.proline.cortex.api.service.misc.IFileSystemService
 import fr.proline.cortex.util.fs.FileBrowser
 import fr.proline.cortex.util.fs.MountPointRegistry
 import fr.proline.cortex.util.fs.WorkDirectoryRegistry
 import fr.proline.jms.service.api.IRemoteJsonRPC2Service
+import fr.proline.jms.service.api.ISingleThreadedService
+import fr.proline.cortex.service.SingleThreadIdentifierType
 
 /**
  * Define JMS Service to get information on Proline Server FileSystem.
@@ -36,9 +39,11 @@ import fr.proline.jms.service.api.IRemoteJsonRPC2Service
  *       extension_filter : specify a file extension to use as filter
  *
  */
-class FileSystem extends IFileSystemService with IRemoteJsonRPC2Service with LazyLogging {
+class FileSystem extends IFileSystemService with IRemoteJsonRPC2Service with ISingleThreadedService with LazyLogging {
   
-  import FileSystemServiceConstants._
+    /* JMS Service identification */
+  val singleThreadIdent= SingleThreadIdentifierType.SHORT_SERVICES_SINGLETHREAD_IDENT.toString()
+
 
   /* Define the concrete process method */
   def runService(jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any]): JSONRPC2Response = {

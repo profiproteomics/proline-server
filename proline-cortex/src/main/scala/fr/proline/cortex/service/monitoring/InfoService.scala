@@ -2,11 +2,9 @@ package fr.proline.cortex.service.monitoring
 
 import java.net.NetworkInterface
 import java.util.UUID
-
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.StringUtils.LINE_SEPARATOR
 import fr.profi.util.jsonrpc.IJSONRPC2Method
 import fr.proline.jms.ServiceRegistry
@@ -15,6 +13,8 @@ import fr.proline.jms.service.api.IRemoteJsonRPC2Service
 import fr.proline.jms.service.api.IRemoteServiceIdentity
 import fr.proline.jms.util.NodeConfig
 import fr.proline.util.version.VersionHelper
+import fr.proline.jms.service.api.ISingleThreadedService
+import fr.proline.cortex.service.SingleThreadIdentifierType
 
 /**
  * Simple "info" Service :
@@ -22,8 +22,11 @@ import fr.proline.util.version.VersionHelper
  *    Modules Versions for "version" method as a String
  *    and an info string (instance and host IP) an any other method call.
  */
-class InfoService extends IRemoteJsonRPC2Service with IDefaultServiceVersion with LazyLogging {
+class InfoService extends IRemoteJsonRPC2Service with IDefaultServiceVersion with ISingleThreadedService with LazyLogging {
 
+  /* JMS Service identification */
+  val singleThreadIdent= SingleThreadIdentifierType.SHORT_SERVICES_SINGLETHREAD_IDENT.toString()
+    
   /* Constants */
   val SHORT_TAB = "  "
 

@@ -1,13 +1,10 @@
 package fr.proline.cortex.service.dps.msi
 
 import java.io.File
-
 import scala.collection.JavaConversions.mapAsScalaMap
 import scala.util.matching.Regex
-
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.IExecutionContext
@@ -34,6 +31,7 @@ import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.fs.MountPointRegistry
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
 import fr.proline.jms.service.api.ISingleThreadedService
+import fr.proline.cortex.service.SingleThreadIdentifierType
 
 /**
  * Import a result file in the MSIdb corresponding to the provided project id
@@ -52,7 +50,7 @@ import fr.proline.jms.service.api.ISingleThreadedService
 abstract class AbstractImportResultFiles extends AbstractRemoteProcessingService with IImportResultFilesService with ISingleThreadedService with LazyLogging  {
   
   /* JMS Service identification */
-  val singleThreadIdent= "ImportThread"
+  val singleThreadIdent= SingleThreadIdentifierType.IMPORT_SINGLETHREAD_IDENT.toString()
 
   // Methods to be implemented
   protected def parseResultFileDescriptor(rfDescObj: Object): IResultFileDescriptor

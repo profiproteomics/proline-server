@@ -1,14 +1,11 @@
 package fr.proline.cortex.service.dps.msi
 
 import java.io.File
-
 import scala.collection.JavaConversions.mapAsScalaMap
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
-
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.exception.ExceptionUtils
 import fr.profi.util.StringUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
@@ -44,6 +41,7 @@ import fr.proline.cortex.util.fs.MountPointRegistry
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
 import fr.proline.jms.service.api.ISingleThreadedService
 import fr.proline.module.fragmentmatch.service.SpectrumMatchesGenerator
+import fr.proline.cortex.service.SingleThreadIdentifierType
 
 
 
@@ -76,7 +74,7 @@ import fr.proline.module.fragmentmatch.service.SpectrumMatchesGenerator
 class ImportValidateGenerateSM extends AbstractRemoteProcessingService with IImportValidateGenerateSMService with ISingleThreadedService with LazyLogging {
   
   /* JMS Service identification */
-  val singleThreadIdent= "ImportThread"
+  val singleThreadIdent= SingleThreadIdentifierType.IMPORT_SINGLETHREAD_IDENT.toString()
   
   case class ImportedResultFileDesc(path: String, var targetResultSetOpt: Option[ResultSet] = None, var targetResultSetId: Long = -1L)
 

@@ -1,10 +1,8 @@
 package fr.proline.cortex.service.dps.uds
 
 import javax.persistence.EntityManager
-
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.orm.uds.RawFile
 import fr.proline.core.orm.uds.Run
@@ -12,6 +10,8 @@ import fr.proline.cortex.api.service.dps.uds.IRegisterRawFileService
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.fs.MountPointRegistry
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
+import fr.proline.jms.service.api.ISingleThreadedService
+import fr.proline.cortex.service.SingleThreadIdentifierType
 
 /**
  *  Define JMS Service wich allows to register a raw file in UDS database
@@ -27,8 +27,11 @@ import fr.proline.jms.service.api.AbstractRemoteProcessingService
  *  Output params:
  *    Boolean for service run status
  */
-class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawFileService with LazyLogging {
-  
+class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawFileService with ISingleThreadedService  with LazyLogging {
+ 
+  /* JMS Service identification */
+  val singleThreadIdent= SingleThreadIdentifierType.SHORT_SERVICES_SINGLETHREAD_IDENT.toString()
+ 
   def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 
     require(paramsRetriever != null, "no parameter specified")

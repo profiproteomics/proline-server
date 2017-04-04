@@ -4,7 +4,6 @@ import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.jsonrpc.BuildJSONRPC2Response
 import fr.profi.util.jsonrpc.JSONRPC2Utils
 import fr.profi.util.jsonrpc.ProfiJSONRPC2Response
@@ -20,6 +19,8 @@ import fr.proline.cortex.api.service.admin.IUserAccountService
 import fr.proline.cortex.api.service.admin.UserAccountService
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.IRemoteJsonRPC2Service
+import fr.proline.jms.service.api.ISingleThreadedService
+import fr.proline.cortex.service.SingleThreadIdentifierType
 
 /**
  * JMS Service to manage UserAccount. 
@@ -51,7 +52,11 @@ import fr.proline.jms.service.api.IRemoteJsonRPC2Service
  *   Output params : 
  *      Boolean for service status. 
  */
-class UserAccount extends IUserAccountService with IRemoteJsonRPC2Service  with LazyLogging {
+class UserAccount extends IUserAccountService with IRemoteJsonRPC2Service  with ISingleThreadedService  with LazyLogging {
+  
+  /* JMS Service identification */
+  val singleThreadIdent= SingleThreadIdentifierType.SHORT_SERVICES_SINGLETHREAD_IDENT.toString()
+ 
   
   override def runService(jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any]): JSONRPC2Response = {
     require(jsonRequest != null, "jsonRequest is null")
