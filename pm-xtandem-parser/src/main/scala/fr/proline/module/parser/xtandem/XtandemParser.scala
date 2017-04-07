@@ -24,6 +24,7 @@ import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
 import fr.proline.core.om.provider.msi.IProteinProvider
 import fr.proline.core.om.provider.msi.ProteinEmptyFakeProvider
 import fr.proline.core.om.provider.msi.ProteinFakeProvider
+import fr.proline.core.om.model.msi.SpectrumProperties
 import javax.xml.parsers.SAXParserFactory
 import javax.xml.parsers.SAXParser
 import javax.xml.parsers.ParserConfigurationException
@@ -130,6 +131,12 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
           val mozList = trace.gamlXdata.gamlValues.info.split(" ").map(_.toDouble)
           val intensityList = trace.gamlYdata.gamlValues.info.split(" ").map(_.toFloat)
           val parsedTitle = parsingRules.map(_.parseTitle(spectrumTitle)).getOrElse(Map.empty[SpectrumTitleFields.Value, String])
+          val spectrumPropOp =  {
+            val spectrumProp = new SpectrumProperties()
+            spectrumProp.rtInSeconds = Some(groupItem.rt.toFloat)   
+            Some(spectrumProp)
+          } 
+        
           spectrumList += new Spectrum(
               id = Spectrum.generateNewId(),
               title = currentQuery.spectrumTitle,
@@ -145,7 +152,8 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
               intensityList = Some(intensityList),
               peaksCount = mozList.length,
               instrumentConfigId = if (instrumentConfig.isDefined) instrumentConfig.get.id else 0,
-              peaklistId = msiSearch.peakList.id)
+              peaklistId = msiSearch.peakList.id,
+              properties = spectrumPropOp)
         })
         
         // for each protein
