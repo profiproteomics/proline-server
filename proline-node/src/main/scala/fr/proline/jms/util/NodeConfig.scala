@@ -47,10 +47,12 @@ object NodeConfig extends LazyLogging {
   private val JMS_SERVER_PORT_KEY = "jms_server_port"
   private val PROLINE_SERVICE_REQUEST_QUEUE_KEY = "proline_service_request_queue_name"
   private val SERVICE_THREAD_POOL_SIZE_KEY = "service_thread_pool_size"
-  private val MZDB_MAX_PARALLELISM_KEY = "mzdb_max_parallelism" // TODO: remove me (see #15945)
+  private val MZDB_MAX_PARALLELISM_KEY = "mzdb_max_parallelism" // TODO: remove me (see #15945,#15948)
+  private val PEAKELDB_TEMP_DIRECTORY_KEY = "peakeldb_temp_directory" // TODO: remove me (see #15945,#15948)
   private val ENABLE_IMPORTS_KEY = "enable_imports"
 
-  private val DEFAULT_MZDB_MAX_PARALLELISM = 2 // TODO: remove me (see #15945)
+  private val DEFAULT_MZDB_MAX_PARALLELISM = 2 // TODO: remove me (see #15945,#15948)
+  private val DEFAULT_PEAKELDB_TEMP_DIRECTORY = System.getProperty("java.io.tmpdir") // TODO: remove me (see #15945,#15948)
   private val DEFAULT_PROLINE_SERVICE_REQUEST_QUEUE_NAME = "ProlineServiceRequestQueue"
   private val ABSOLUTE_MAX_N_THREADS = 1000
   private val AUTO_MAX_N_THREAD = 20 // Same as AbstractDatabaseConnector.DEFAULT_MAX_POOL_CONNECTIONS
@@ -73,7 +75,8 @@ object NodeConfig extends LazyLogging {
 
   val ENABLE_IMPORTS = retrieveEnableImports(m_jmsConfig)
 
-  val NBR_MZDB_FILES_IN_PARALLEL = retrieveMaxMzdbFilesInParallel(m_jmsConfig)
+  val MZDB_MAX_PARALLELISM = retrieveMzdbMaxParallelism(m_jmsConfig)
+  val PEAKELDB_TEMP_DIRECTORY = retrievePeakeldbTempDirectory(m_jmsConfig)
 
   private def retrieveQueueName(config: Config): String = {
     var queueName: String = null
@@ -108,9 +111,14 @@ object NodeConfig extends LazyLogging {
     nThreads
   }
 
-  private def retrieveMaxMzdbFilesInParallel(config: Config): Int = {
+  private def retrieveMzdbMaxParallelism(config: Config): Int = {
     if (!config.hasPath(MZDB_MAX_PARALLELISM_KEY)) DEFAULT_MZDB_MAX_PARALLELISM
     else config.getInt(MZDB_MAX_PARALLELISM_KEY)
+  }
+  
+  private def retrievePeakeldbTempDirectory(config: Config): String = {
+    if (!config.hasPath(MZDB_MAX_PARALLELISM_KEY)) DEFAULT_PEAKELDB_TEMP_DIRECTORY
+    else config.getString(PEAKELDB_TEMP_DIRECTORY_KEY)
   }
 
   private def retrieveEnableImports(config: Config): Boolean = {
