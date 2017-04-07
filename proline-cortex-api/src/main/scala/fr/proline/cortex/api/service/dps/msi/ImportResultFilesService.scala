@@ -5,6 +5,7 @@ import scala.reflect.runtime.universe.typeOf
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 
+import fr.profi.util.lang.EnhancedEnum
 import fr.proline.jms.service.api.IDefaultServiceVersion
 import fr.proline.jms.service.api.RemoteServiceIdentity
 import fr.profi.util.jsonrpc.IJSONRPC2Method
@@ -12,6 +13,12 @@ import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
 import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
 import fr.profi.util.jsonrpc.JSONRPC2MethodResult
 import fr.profi.util.reflect.FieldDescription
+
+object ResultFileFormat extends EnhancedEnum {
+  val MASCOT_DAT = Value("mascot.dat")
+  val OMSSA_OMX = Value("omssa.omx")
+  val XTANDEM_XML = Value("xtandem.xml")
+}
 
 trait IResultFileDescriptor {
 
