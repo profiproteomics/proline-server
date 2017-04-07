@@ -47,10 +47,10 @@ object NodeConfig extends LazyLogging {
   private val JMS_SERVER_PORT_KEY = "jms_server_port"
   private val PROLINE_SERVICE_REQUEST_QUEUE_KEY = "proline_service_request_queue_name"
   private val SERVICE_THREAD_POOL_SIZE_KEY = "service_thread_pool_size"
-  private val MZDB_FILES_POOL_SIZE_KEY = "mzdb_files_pool_size"
+  private val MZDB_MAX_PARALLELISM_KEY = "mzdb_max_parallelism" // TODO: remove me (see #15945)
   private val ENABLE_IMPORTS_KEY = "enable_imports"
 
-  private val DEFAULT_NBR_MZDB_FILES_IN_PARALLEL = 2
+  private val DEFAULT_MZDB_MAX_PARALLELISM = 2 // TODO: remove me (see #15945)
   private val DEFAULT_PROLINE_SERVICE_REQUEST_QUEUE_NAME = "ProlineServiceRequestQueue"
   private val ABSOLUTE_MAX_N_THREADS = 1000
   private val AUTO_MAX_N_THREAD = 20 // Same as AbstractDatabaseConnector.DEFAULT_MAX_POOL_CONNECTIONS
@@ -109,14 +109,8 @@ object NodeConfig extends LazyLogging {
   }
 
   private def retrieveMaxMzdbFilesInParallel(config: Config): Int = {
-    var nXicThreads: Int = DEFAULT_NBR_MZDB_FILES_IN_PARALLEL
-
-    if (config.hasPath(MZDB_FILES_POOL_SIZE_KEY)) {
-      nXicThreads = config.getInt(MZDB_FILES_POOL_SIZE_KEY)
-    }
-
-    nXicThreads
-
+    if (!config.hasPath(MZDB_MAX_PARALLELISM_KEY)) DEFAULT_MZDB_MAX_PARALLELISM
+    else config.getInt(MZDB_MAX_PARALLELISM_KEY)
   }
 
   private def retrieveEnableImports(config: Config): Boolean = {
