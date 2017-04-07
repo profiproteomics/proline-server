@@ -30,6 +30,7 @@ import fr.proline.core.om.model.msi.ProteinMatch;
 import fr.proline.core.om.model.msi.PtmDefinition;
 import fr.proline.core.om.model.msi.SequenceMatch;
 import fr.proline.core.om.model.msi.Spectrum;
+import fr.proline.core.om.model.msi.SpectrumProperties;
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext;
 import fr.proline.core.om.provider.msi.IPTMProvider;
 import fr.proline.core.om.provider.msi.IPeptideProvider;
@@ -548,6 +549,9 @@ public class MSDataReader {
 				warningMsg.append(" No intensities for scan ").append(title);
 			}
 			
+			
+			SpectrumProperties spectrumProp = new SpectrumProperties(Option.apply(rt));
+							 
 			readSp = new Spectrum(Spectrum.generateNewId(), title,
 			moz, Float.NaN /*Prec Intenity*/, charge, //Precursor data 
 			false, //isSummed, 
@@ -559,7 +563,7 @@ public class MSDataReader {
 			mozList.length,
 			m_instrumentConfig.id(), 
 			m_peaklistSoftware.id(), 
-			Option.empty());	
+			Option.apply(spectrumProp));	
 			spectrumByScan.put(scanNbr, readSp);
 		}
 		return readSp;
