@@ -2,6 +2,7 @@ package fr.proline.cortex.service.dps.msq
 
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
+
 import fr.profi.util.exception.ExceptionUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
@@ -12,13 +13,12 @@ import fr.proline.core.om.provider.lcms.impl.SQLRunProvider
 import fr.proline.core.om.provider.lcms.impl.SQLScanSequenceProvider
 import fr.proline.core.service.uds.Quantifier
 import fr.proline.cortex.api.service.dps.msq.IQuantifyService
+import fr.proline.cortex.service.SingleThreadIdentifierType
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.fs.MountPointPathConverter
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
 import fr.proline.jms.service.api.ISingleThreadedService
 import fr.proline.jms.util.NodeConfig
-import fr.proline.core.util.CoreConfig
-import fr.proline.cortex.service.SingleThreadIdentifierType
 
 /**
  *  Define JMS Service which allows to creates a new quantitation and perform the corresponding data analysis.
@@ -59,8 +59,13 @@ class Quantify extends AbstractRemoteProcessingService with IQuantifyService wit
     val providerContext = ProviderDecoratedExecutionContext(execCtx) // Use Object factory
     providerContext.putProvider(classOf[IRunProvider], lcMsRunProvider)
     
-    //  Get nbr XIC files to process in parallel from NodeConfig     
-    CoreConfig.mzdbMaxParallelism = NodeConfig.NBR_MZDB_FILES_IN_PARALLEL 
+    // TODO: remove me, temporary workarounds used until configuration files have been revised (see #15945,#15948)
+    fr.proline.core.service.lcms.io.ExtractMapSet.setMzdbMaxParallelism(
+      NodeConfig.MZDB_MAX_PARALLELISM
+    )
+    fr.proline.core.service.lcms.io.ExtractMapSet.setTempDirectory(
+      new java.io.File(NodeConfig.PEAKELDB_TEMP_DIRECTORY)
+    )
     
     var quantiId = -1L
     try {
