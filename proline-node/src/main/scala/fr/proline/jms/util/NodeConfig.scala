@@ -117,7 +117,7 @@ object NodeConfig extends LazyLogging {
   }
   
   private def retrievePeakeldbTempDirectory(config: Config): String = {
-    if (!config.hasPath(MZDB_MAX_PARALLELISM_KEY)) DEFAULT_PEAKELDB_TEMP_DIRECTORY
+    if (!config.hasPath(PEAKELDB_TEMP_DIRECTORY_KEY)) DEFAULT_PEAKELDB_TEMP_DIRECTORY
     else config.getString(PEAKELDB_TEMP_DIRECTORY_KEY)
   }
 
