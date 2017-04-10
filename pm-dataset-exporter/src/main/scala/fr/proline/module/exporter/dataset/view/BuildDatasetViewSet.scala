@@ -273,24 +273,19 @@ object BuildDatasetViewSet extends LazyLogging {
       val leaveResultSetLoader = () => {
         logger.debug("Loading leaves result sets (quantitation)...")
         val resultSets = _loadLeavesResultSets(lazyQuantRSM.lazyResultSummary.getResultSetId(), msiDbHelper, lazyRsProvider)
-        
-        if (mode == ExportConfigConstant.MODE_QUANT_XIC) {
-          
-          logger.debug("Sorting leaves result sets by quant channel order (quantitation)...")
-          val lazyRsById = resultSets.mapByLong( _.id )
-          
-          // TODO: UDSdb => add a ident_result_set_id column to the quant_channel table ???
-          val rsIdByRsmId = msiDbHelper.getResultSetIdByResultSummaryId(identRsmIds)
-          val sortedResultSets = quantChannels.map { qc =>
-            rsIdByRsmId.get(qc.identResultSummaryId).map( lazyRsById(_) ).orNull
-          }
-          
-          // Check we had not problem to retrieve the result sets corresponding to the quant channels
-          // If we have a problem then we return the result sets in the previous order
-          if (sortedResultSets.exists(_ == null) ) resultSets else sortedResultSets
-          
-        } else resultSets
 
+        logger.debug("Sorting leaves result sets by quant channel order (quantitation)...")
+        val lazyRsById = resultSets.mapByLong(_.id)
+
+        // TODO: UDSdb => add a ident_result_set_id column to the quant_channel table ???
+        val rsIdByRsmId = msiDbHelper.getResultSetIdByResultSummaryId(identRsmIds)
+        val sortedResultSets = quantChannels.map { qc =>
+          rsIdByRsmId.get(qc.identResultSummaryId).map(lazyRsById(_)).orNull
+        }
+
+        // Check we had not problem to retrieve the result sets corresponding to the quant channels
+        // If we have a problem then we return the result sets in the previous order
+        if (sortedResultSets.exists(_ == null)) resultSets else sortedResultSets         
       }
 
       var qcNameById = quantChannels.toLongMapWith(qc => qc.id -> qc.name)
@@ -305,7 +300,8 @@ object BuildDatasetViewSet extends LazyLogging {
         val qcIdByIdentRsmId = quantChannels.toLongMapWith(qc => qc.identResultSummaryId -> qc.id)
 
         // Set QC names as the result file name
-        // FIXME: DBO => try to avoid the use of SQL queries, the names should be available directly from the QuantChannel entity
+        // FIXME: DBO => try to avoid the use of SQL queries, the names should be available directly from the QuantChannel entity. 
+        //VDS : Should be call only if it's not the case : names not in QuantChannel entity. May search only for missing values! 
         qcNameById = {
 
           val tmpQcNameById = new LongMap[String]()
@@ -328,12 +324,13 @@ object BuildDatasetViewSet extends LazyLogging {
 
           }
           
-          // FIXME: DBO => I think it should be "else if (mode == ExportConfigConstant.MODE_QUANT_SC)"
+          // FIXME: DBO => I think it should be "else if (mode == ExportConfigConstant.MODE_QUANT_SC)" : VDS ?? Test could be removed ! for XIC, sqch name already filled    
           if (mode == ExportConfigConstant.MODE_QUANT_SC) {
             
             DoJDBCWork.withEzDBC(udsDbCtx) { ezDBC =>
 
               // FIXME: DBO => please don't perform multiple SQL queries, this is killing the performance
+              // VDS : May search only for missing values ! 
               for (qc <- quantChannels) {
                 // get the name
                 val sqlQuery2 = new SelectQueryBuilder2(UdsDbDataSetTable, UdsDbQuantChannelTable).mkSelectQuery { (t1, c1, t2, c2) =>
