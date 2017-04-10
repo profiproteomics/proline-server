@@ -64,11 +64,15 @@
   </appender>
 
 
+  <logger name="fr.profi" level="debug"/>
+  <logger name="fr.proline" level="debug"/>
+  
+
   <logger name="fr.profi.mzdb" additivity="false">
     <appender-ref ref="mzDBRollingAppender" />
   </logger>
 
-  <root level="debug">
+  <root level="warn">
     <appender-ref ref="STDOUT" />
     <appender-ref ref="RollingfileAppender" />
     <appender-ref ref="DebugRollingfileAppender" />
