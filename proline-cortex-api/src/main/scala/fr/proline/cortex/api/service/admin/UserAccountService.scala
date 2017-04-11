@@ -30,7 +30,7 @@ trait IUserAccountService extends IAdminService with IDefaultServiceVersion {
     val description = "Creates a new user account."
     
     // Configure method interface
-    val parameters = List(LOGIN_PARAM,PASSWORD_HASH_PARAM,GROUP_USER_PARAM)
+    val parameters = List(LOGIN_PARAM,PASSWORD_HASH_PARAM,IS_USER_GROUP_PARAM)
     val returns = JSONRPC2MethodResult(
       typeOf[Long],
       description = "The ID of the created user account."
@@ -48,8 +48,8 @@ trait IUserAccountService extends IAdminService with IDefaultServiceVersion {
       val scalaType = typeOf[String]
     }
     
-    object GROUP_USER_PARAM extends JSONRPC2DefaultMethodParameter {
-      val name = "group_user"
+    object IS_USER_GROUP_PARAM extends JSONRPC2DefaultMethodParameter {
+      val name = "is_user_group"
       val description = "If set to true, the user belongs to the user group, otherwise to the admin group"
       val scalaType = typeOf[Boolean]
       optional = true
@@ -121,7 +121,7 @@ trait IUserAccountService extends IAdminService with IDefaultServiceVersion {
     val description = "Modify the user group of the specified user."
     
     // Configure method interface
-    val parameters = List(LOGIN_ID_PARAM, IS_USER_GROUP)
+    val parameters = List(LOGIN_ID_PARAM, IS_USER_GROUP_PARAM)
     val returns = JSONRPC2MethodResult(
       typeOf[Boolean],
       "Boolean for service status."
@@ -132,7 +132,7 @@ trait IUserAccountService extends IAdminService with IDefaultServiceVersion {
       val description = "The login id of the user whom password will be reset."
       val scalaType = typeOf[Long]
     }
-    object IS_USER_GROUP extends JSONRPC2DefaultMethodParameter {
+    object IS_USER_GROUP_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "is_user_group"
       val description = "True is the new user group of the user is USER."
       val scalaType = typeOf[Boolean]
