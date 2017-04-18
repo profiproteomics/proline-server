@@ -489,7 +489,7 @@ public class ProjectHandler {
 						}
 
 						// For number of observable peptides computation 
-						//VDS : check if exists. TODO : Use chilsMSI to get information!!
+						//VDS : check if exists. TODO : Use childMSI to get information!!
 						fr.profi.chemistry.model.Enzyme enzyme = null;
 						if(rsm.getResultSet().getMsiSearch() != null) {
 							Set<Enzyme> enzymes = rsm.getResultSet().getMsiSearch().getSearchSetting().getEnzymes();					

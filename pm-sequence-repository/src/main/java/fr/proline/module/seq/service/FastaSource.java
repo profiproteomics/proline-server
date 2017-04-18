@@ -211,9 +211,11 @@ public class FastaSource implements DataSource {
 	private SEDbIdentifierWrapper checkHeader(
 		final String header,
 		final Map<String, List<SEDbIdentifierWrapper>> remainingSEDbIdentifiers) {
+		
 		SEDbIdentifierWrapper foundSEDbIdent = null;
-		String MissedDescription=null;
+		String missedDescription=null;
 		final Matcher matcher = m_seDbIdentPattern.matcher(header);
+		
 		if (matcher.find()) {
 
 			if (matcher.groupCount() < 1) {
@@ -223,7 +225,7 @@ public class FastaSource implements DataSource {
 			final String identValue = matcher.group(1).trim();// SEDbIdentifier value should be trimmed
 			
 			if((header!=null)&&(!header.isEmpty())&&(header.trim().length()>identValue.trim().length())){
-				MissedDescription=header.substring(identValue.length()+1,header.length());
+				missedDescription=header.substring(identValue.length()+1,header.length());
 			}
 			final List<SEDbIdentifierWrapper> possibleIdentifiers = remainingSEDbIdentifiers.get(identValue);
 			if ((possibleIdentifiers != null) && !possibleIdentifiers.isEmpty()) {
@@ -245,14 +247,14 @@ public class FastaSource implements DataSource {
 
 						if (sdi.getDescription() == null) {
 							/* Retrieve first SEDbIdentWrapper without description */
-							if((MissedDescription!=null)&&(!MissedDescription.isEmpty())){
-								foundSEDbIdent = new SEDbIdentifierWrapper(identValue,MissedDescription);
+							if((missedDescription!=null)&&(!missedDescription.isEmpty())){
+								foundSEDbIdent = new SEDbIdentifierWrapper(identValue,missedDescription);
 							}else{
 							foundSEDbIdent = sdi;
 							final int nPossibleIdentifiers = possibleIdentifiers.size();
 							if (nPossibleIdentifiers > 1) {
 								foundSEDbIdent.setInferred(true);
-								LOG.warn(
+								LOG.debug(
 									"There are {} SEDbIdentWrapper (inferred) for [{}] taking first with no description",
 									nPossibleIdentifiers, identValue);
 							}}
@@ -290,7 +292,7 @@ public class FastaSource implements DataSource {
 						messageBuilder.append(LINE_SEPARATOR);
 					}
 
-					LOG.warn(messageBuilder.toString());
+					LOG.debug(messageBuilder.toString());
 
 					/* Retrieve arbitrar first SEDbIdentWrapper */
 					foundSEDbIdent = possibleIdentifiers.get(0);
