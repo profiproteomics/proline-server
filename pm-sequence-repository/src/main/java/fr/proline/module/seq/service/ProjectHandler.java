@@ -85,6 +85,11 @@ public class ProjectHandler {
 		+ " WHERE  pspi.resultSummary.id = :rsmId "
 		+ " AND pspi.peptideInstance= pi "
 		+ " AND ps.resultSummary.id = :rsmId AND ps.isValidated=true AND pspi.peptideSet.proteinSet = ps";
+	
+	private static final String GET_SEQ_MATCH_INFO_FOR_RS_QUERY = "SELECT sm.id.start, sm.id.stop, sm.id.proteinMatchId, sm.id.peptideId "
+		+ "FROM SequenceMatch sm "
+		+ "WHERE sm.resultSetId = :rsId";
+
 
 	/**
 	 * Find all Search Engine protein identifier in all Search Engine protein databases of a specific list of RSM in MSIdb specified by it's projectId.
@@ -460,16 +465,23 @@ public class ProjectHandler {
 							continue;
 						}
 						
-						// Get ALL SeqMatches For current RSM
-						//VDS TODO : Is it better to get all valide protMatch (through proteinSet) and then seqMatch only for these ... 
-						List<SequenceMatch> seqMatches = SequenceMatchRepository.findSequenceMatchForResultSet(msiEM, rsm.getResultSet().getId());
-						Map<Long, List<SequenceMatch>> seqMatchesByProteinMatchId = new HashMap<>();
-						for (SequenceMatch seqMatch : seqMatches) {
-							Long pmId = seqMatch.getId().getProteinMatchId();
-							if (!seqMatchesByProteinMatchId.containsKey(pmId))
-								seqMatchesByProteinMatchId.put(pmId, new ArrayList<SequenceMatch>());
-							seqMatchesByProteinMatchId.get(pmId).add(seqMatch);
-						}
+						// Get SeqMatches informations For current RSM
+						Map<Long, List<SequenceMatchInfo>> seqMatchesInfoByProteinMatchId = new HashMap<>();
+						// Get Info from SeqMatch 
+						final Query getSeqMatchInfoQuery = msiEM.createQuery(GET_SEQ_MATCH_INFO_FOR_RS_QUERY);
+						getSeqMatchInfoQuery.setParameter("rsId", rsm.getResultSet().getId());
+						final List<Object[]> resultSeqMatches = getSeqMatchInfoQuery.getResultList();
+						for (Object[] nextEntry : resultSeqMatches) {
+							int seqMatchStart = (int) nextEntry[0];
+							int seqMatchStop= (int) nextEntry[1];
+							Long seqMatchProtMatchId= (Long) nextEntry[2];
+							Long seqMatchPepId= (Long) nextEntry[3];
+							if (!seqMatchesInfoByProteinMatchId.containsKey(seqMatchProtMatchId))
+								seqMatchesInfoByProteinMatchId.put(seqMatchProtMatchId, new ArrayList<SequenceMatchInfo>());
+							seqMatchesInfoByProteinMatchId.get(seqMatchProtMatchId).add( new SequenceMatchInfo(seqMatchStart, seqMatchStop, seqMatchPepId));
+						} 
+						
+						
 
 						// Get all ProteinSet
 						final Query psQuery = msiEM.createQuery(LIST_PS_FOR_RSM_QUERY);
@@ -521,7 +533,7 @@ public class ProjectHandler {
 								allProtMatchesAccession.add(currentProtMatch.getAccession());
 								protSetMapByProtMatch.put(currentProtMatch, protSet2ProtMatch);
 								coveredSeqLengthByProtMatchList.put(currentProtMatch,
-									getSeqCoverageForProteinMatch(seqMatchesByProteinMatchId, protSet2ProtMatch.getProteinMatch(),
+									getSeqCoverageForProteinMatch(seqMatchesInfoByProteinMatchId, protSet2ProtMatch.getProteinMatch(),
 										pepIdsByProtSetId.get(protSet.getId())));
 							}
 
@@ -711,20 +723,19 @@ public class ProjectHandler {
 	}
 
 	private static Integer getSeqCoverageForProteinMatch(
-		Map<Long, List<SequenceMatch>> seqMatchesByProteinMatchId,
+		Map<Long, List<SequenceMatchInfo>> seqMatchesByProteinMatchId,
 		final ProteinMatch protMatch,
 		List<Long> peptideIds) {
 
 		// variables definition
 		HashSet<Integer> coveredAASet = new HashSet<Integer>();//Set of protein sequence index covered by PeptideMatch	
-		List<SequenceMatch> seqMatches = seqMatchesByProteinMatchId.get(protMatch.getId());
+		List<SequenceMatchInfo> seqMatches = seqMatchesByProteinMatchId.get(protMatch.getId());
 
-		for (SequenceMatch seqMatch : seqMatches) {
-			Long pepId = seqMatch.getId().getPeptideId();
+		for (SequenceMatchInfo seqMatch : seqMatches) {
+			Long pepId = seqMatch.getPeptideId();
 			if (peptideIds.contains(pepId)) {
-				SequenceMatchPK seqMatchKey = seqMatch.getId();
-				int start = seqMatchKey.getStart();
-				int stop = seqMatchKey.getStop();
+				int start = seqMatch.getStart();
+				int stop = seqMatch.getStop();
 				// use set to remove duplicate indexes
 				coveredAASet.addAll(getSequencesIndexes(start, stop));
 			}
@@ -747,4 +758,30 @@ public class ProjectHandler {
 		return (sequenceLength);
 	}
 
+}
+
+class SequenceMatchInfo {
+    private int m_start;
+    private int m_stop;
+    private Long m_peptideId;
+    
+    public SequenceMatchInfo(int start,int stop, Long pepId){
+    	this.m_start = start;
+    	this.m_stop = stop;
+    	this.m_peptideId =  pepId;
+    }
+
+	public int getStart() {
+		return m_start;
+	}
+
+	public int getStop() {
+		return m_stop;
+	}
+
+	public Long getPeptideId() {
+		return m_peptideId;
+	}
+    
+    
 }
