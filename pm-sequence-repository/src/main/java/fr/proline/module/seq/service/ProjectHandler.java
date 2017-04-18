@@ -79,7 +79,7 @@ public class ProjectHandler {
 
 	private static final int EXPECTED_LINE_LENGTH = 3;
 
-	private static final String GET_PEP_INSTANCE_BY_PS_PM_QUERY = "SELECT pi, ps.id "
+	private static final String GET_PEPID_BY_PSID_PM_QUERY = "SELECT pi.peptide.id, ps.id "
 		+ "FROM fr.proline.core.orm.msi.PeptideInstance pi, fr.proline.core.orm.msi.PeptideSetPeptideInstanceItem  pspi, "
 		+ " fr.proline.core.orm.msi.ProteinSet ps "
 		+ " WHERE  pspi.resultSummary.id = :rsmId "
@@ -126,7 +126,7 @@ public class ProjectHandler {
 
 					LOG.info(" Quering SEDbIdentifiers for {} RSM(s) for project #{} ", rsmIds.size(), projectId);
 
-					// VDS - TODO : Use outer join query to get all PM even if not directly linked to SeqDb.... Then treat separatly ! 
+					// VDS - TODO : Use outer join query to get all PM even if not directly linked to SeqDb.... Then treat separately ! 
 					// VDS - TODO 2 : Use HQL Query with "Select new MyObj( pm.acc, ...)  " for  VALIDATED_PM_SDM_FOR_RSMS_QUERY  VALIDATED_PM_FOR_RSMS_QUERY
 
 					//-- Get ALL ProteinMatch count associated to untreatedRsm
@@ -228,6 +228,7 @@ public class ProjectHandler {
 			for (Long rsmId : rsmIdsToTest) {
 
 				// get the properties of the RSM to update
+				//FIXME : Use query to get directly properties instead of getting whole RSM.
 				ResultSummary rsm = msiEM.find(ResultSummary.class, rsmId);
 				if(rsm==null){
 					LOG.warn("Unable to get Identification Summary with ID "+rsmId);
@@ -460,6 +461,7 @@ public class ProjectHandler {
 						}
 						
 						// Get ALL SeqMatches For current RSM
+						//VDS TODO : Is it better to get all valide protMatch (through proteinSet) and then seqMatch only for these ... 
 						List<SequenceMatch> seqMatches = SequenceMatchRepository.findSequenceMatchForResultSet(msiEM, rsm.getResultSet().getId());
 						Map<Long, List<SequenceMatch>> seqMatchesByProteinMatchId = new HashMap<>();
 						for (SequenceMatch seqMatch : seqMatches) {
@@ -477,17 +479,18 @@ public class ProjectHandler {
 
 						//Get All Peptide Ids identified
 						Map<Long, List<Long>> pepIdsByProtSetId = new HashMap<Long, List<Long>>();
-						final Query getPepInstQuery = msiEM.createQuery(GET_PEP_INSTANCE_BY_PS_PM_QUERY);
-						getPepInstQuery.setParameter("rsmId", rsmId);
-						final List<Object[]> resultPepInsts = getPepInstQuery.getResultList();
+						final Query getPepIdQuery = msiEM.createQuery(GET_PEPID_BY_PSID_PM_QUERY);
+						getPepIdQuery.setParameter("rsmId", rsmId);
+						final List<Object[]> resultPepInsts = getPepIdQuery.getResultList();
 						for (Object[] nextEntry : resultPepInsts) {
-							PeptideInstance pi = (PeptideInstance) nextEntry[0];
+							Long pepId = (Long) nextEntry[0];
 							Long psId = (Long) nextEntry[1];
 							if (!pepIdsByProtSetId.containsKey(psId))
 								pepIdsByProtSetId.put(psId, new ArrayList<Long>());
-							pepIdsByProtSetId.get(psId).add(pi.getPeptide().getId());
+							pepIdsByProtSetId.get(psId).add(pepId);
 						}
-
+						
+						
 						// For number of observable peptides computation 
 						//VDS : check if exists. TODO : Use childMSI to get information!!
 						fr.profi.chemistry.model.Enzyme enzyme = null;
