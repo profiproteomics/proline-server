@@ -47,6 +47,7 @@ import fr.proline.cortex.service.dps.msq.QuantifyV2_0
 import fr.proline.cortex.service.dps.uds.GetExportInformation
 import fr.proline.cortex.service.dps.uds.RegisterRawFile
 import fr.proline.cortex.service.dps.uds.ValidateIdentDSInTree
+import fr.proline.cortex.service.misc.CancelService
 import fr.proline.cortex.service.misc.FileSystem
 import fr.proline.cortex.service.misc.FileUpload
 import fr.proline.cortex.service.monitoring.InfoService
@@ -286,7 +287,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new ImportMaxQuantResults())
     //VDS TEST only ! 
 //    ServiceRegistry.addService(new WaitService())
-//    ServiceRegistry.addService(new CancelService())
+    ServiceRegistry.addService(new CancelService())
  }
 
   /**
