@@ -63,7 +63,10 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
   // private values
   private val msQueriesList = new ArrayBuffer[MsQuery]
   private val spectrumList = new ArrayBuffer[Spectrum] // will only be used in the eachSpectrum method
-  
+    //Cache for value to be keep between load and get methods
+  private var _targetResultSetOp : Option[ResultSet] = None
+  private var _decoyResultSetOp : Option[ResultSet] = None
+
   // public values
   val fileLocation: File = xtandemFile
   var hasDecoyResultSet: Boolean = false
@@ -84,7 +87,26 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
     parserContext.getProvider(classOf[IProteinProvider])
   }
 
-  def getResultSet(wantDecoy: Boolean): ResultSet = {
+  
+  override def parseResultSet(wantDecoy: Boolean)  {
+    _loadResultSet(wantDecoy) 
+  }
+
+  override def getResultSet(wantDecoy: Boolean): ResultSet = {
+    if (wantDecoy) {
+      if (!_decoyResultSetOp.isDefined)
+        _loadResultSet(true)
+
+      _decoyResultSetOp.get
+
+    } else {
+      if (!_targetResultSetOp.isDefined)
+        _loadResultSet(false)
+      _targetResultSetOp.get
+    }
+  }
+  
+  def _loadResultSet(wantDecoy: Boolean) {
     
     // parse the xml file
     val factory: SAXParserFactory = SAXParserFactory.newInstance()
@@ -307,7 +329,7 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
     logger.debug("XTandem file parsed, generating final ResultSet")
 
     // return the result set
-    new ResultSet(
+    val loadedRS =  new ResultSet(
       id = ResultSet.generateNewId(),
       name = msiSearch.title,
       peptides = peptideByUniqueKey.values.toArray,
@@ -318,6 +340,11 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
       isValidatedContent = false, 
       msiSearch = Some(msiSearch),
       properties = Some(rsProps)) // store all raw parameters
+    
+    if(wantDecoy)
+      _decoyResultSetOp = Some(loadedRS)
+    else
+      _targetResultSetOp = Some(loadedRS)
   }
   
   // not used anymore
