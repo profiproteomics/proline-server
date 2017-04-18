@@ -74,16 +74,6 @@ class CertifyResultFiles extends AbstractRemoteProcessingService with ICertifyRe
         resultFiles.map(rf => new File(_mountPointBasedPathToLocalPath(rf.path)))
       }
 
-      // FIXME: DBO => why this is commented ?
-      // VDS => Verification are done by ResultFileCertifier
-//      for (format <- filesByFormat.keys) {
-//
-//        // Instantiate the appropriate result file provider and register it
-//        val rfProviderOpt = ResultFileProviderRegistry.get(format)
-//        if (rfProviderOpt.isEmpty) throw new Exception("unsupported result file type: " + format)
-//        val rfProvider = rfProviderOpt.get
-//      }
-
       var certifyResult: Boolean = false
       val errorMessage = new StringBuilder()
       
@@ -97,10 +87,16 @@ class CertifyResultFiles extends AbstractRemoteProcessingService with ICertifyRe
         )
 
       	rsCertifier.run()      	
+      
       	certifyResult = true
       	
       } catch {
 
+        case i : InterruptedException => {
+          errorMessage.append("Service was interrupted")
+          throw i
+        }
+        
         case t: Throwable => {
           val message = "Error certifying ResultFiles"
 
@@ -112,7 +108,8 @@ class CertifyResultFiles extends AbstractRemoteProcessingService with ICertifyRe
           errorMessage.append(t.getStackTraceString)
         }
       }
-     processResult = if (certifyResult) {
+       
+    processResult = if (certifyResult) {
         "OK" // ResultFileCertifier success
       } else {
         errorMessage.toString // ResultFileCertifier complete abruptly
