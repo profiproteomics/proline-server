@@ -817,7 +817,7 @@ class MzIdResultFile(
      
     logger.debug(protMatches.length + " protein matches have been created !")
     
-    ResultSet(
+    val loadedRS = ResultSet(
       id = newRsId,
       name = msiSearch.title,
       peptides = peptideByRef.values.toArray.distinct,
@@ -829,6 +829,11 @@ class MzIdResultFile(
       msiSearch = Some(msiSearch),
       properties = None
     )
+    
+    if(wantDecoy)
+      _decoyResultSetOp = Some(loadedRS)
+    else
+      _targetResultSetOp = Some(loadedRS)
   }
   
   def eachSpectrum( onEachSpectrum: Spectrum => Unit ): Unit = {
