@@ -55,8 +55,12 @@ class MascotResultFile(
   val parserContext: ProviderDecoratedExecutionContext
 ) extends IResultFile with LazyLogging  {
 
+  
   val LOG_SPECTRA_COUNT = 4000 // Print a log for each created spectrum
-
+  //Cache for value to be keep between load and get methods
+  var _targetResultSetOp : Option[ResultSet] = None
+  var _decoyResultSetOp : Option[ResultSet] = None
+  
   // ---- For Java developers ;) : --- Constructor Code 
 
   // Requirements
@@ -65,10 +69,9 @@ class MascotResultFile(
 
   logger.info("Opening Mascot result file : " + fileAbsolutePath)
 
-  require(importProperties != null)
+  require(importProperties != null, "No Mascot Import Properties specified." )
 
   private val m_closeLock = new Object()
-
   private var _isClosed = false // Mutable field guarded by m_closeLock
 
   val parseProperties: Map[MascotParseParams.MascotParseParam, Any] = importProperties.map(entry => MascotParseParams.withName(entry._1) -> entry._2)
@@ -348,7 +351,6 @@ class MascotResultFile(
     )
   }
 
-  // TODO: replace by getMascotResults( wantDecoy: Boolean ): Option[ms_mascotresults]
   private def _buildPepSummary(wantDecoy: Boolean): Option[ms_peptidesummary] = {
 
     if (!hasDecoyResultSet && wantDecoy) return None
@@ -445,6 +447,9 @@ class MascotResultFile(
         }
 
         /* Free memory (reverse order) */
+        _decoyResultSetOp = None 
+        _targetResultSetOp = None
+          
 
         if (_isDecoySummaryLoaded && decoyPepSummary.isDefined) {
           val decoyPepSumValue = decoyPepSummary.get
@@ -491,8 +496,26 @@ class MascotResultFile(
    * Parse specified mascot dat file and return corresponding ResultSet (target or decoy depending on wantDecoy parameter)
    *
    *
-   */
-  def getResultSet(wantDecoy: Boolean): ResultSet = {
+   */  
+  override def parseResultSet(wantDecoy: Boolean)  {
+    _loadResultSet(wantDecoy) 
+  }
+
+  override def getResultSet(wantDecoy: Boolean): ResultSet = {
+    if (wantDecoy) {
+      if (!_decoyResultSetOp.isDefined)
+        _loadResultSet(true)
+
+      _decoyResultSetOp.get
+
+    } else {
+      if (!_targetResultSetOp.isDefined)
+        _loadResultSet(false)
+      _targetResultSetOp.get
+    }
+  }
+  
+  private def _loadResultSet(wantDecoy: Boolean)  {
 
     m_closeLock.synchronized {
 
@@ -556,7 +579,7 @@ class MascotResultFile(
     val rsProps = new ResultSetProperties()
     rsProps.setMascotImportProperties(Some(rsImportProperties))
     logger.info("Loading identification results done in " + (System.currentTimeMillis - start) + " ms");
-    new ResultSet(
+    val loadedRS =  new ResultSet(
       id = rsId,
       name = msiSearch.title,
       peptides = pepMatchesByPep.keySet.toArray,
@@ -568,6 +591,11 @@ class MascotResultFile(
       msiSearch = Some(msiSearch),
       properties = Some(rsProps)
     )
+    
+    if(wantDecoy)
+      _decoyResultSetOp = Some(loadedRS)
+    else
+      _targetResultSetOp = Some(loadedRS)
   }
 
   /**
