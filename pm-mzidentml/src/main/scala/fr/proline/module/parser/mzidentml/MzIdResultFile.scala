@@ -58,7 +58,10 @@ class MzIdResultFile(
   
   lazy val msiSearch: MSISearch = _parseMSISearch()
   private var msQueryByRef = new HashMap[String,MsQuery]()
-
+    //Cache for value to be keep between load and get methods
+  private var _targetResultSetOp : Option[ResultSet] = None
+  private var _decoyResultSetOp : Option[ResultSet] = None
+  
   // FIXME: this may cause some issues if msQueryByInitialId is accessed while msQueryByRef has not been initiated
   // TODO: load msQueryByRef even if a ResultSet has not been loaded yet
   lazy val msQueries: Array[MsQuery] = {
@@ -540,8 +543,25 @@ class MzIdResultFile(
     }
   }
   
-  def getResultSet( wantDecoy: Boolean ): ResultSet = {
+  override def parseResultSet(wantDecoy: Boolean)  {
+    _loadResultSet(wantDecoy) 
+  }
     
+  override def getResultSet(wantDecoy: Boolean): ResultSet = {
+    if (wantDecoy) {
+      if (!_decoyResultSetOp.isDefined)
+        _loadResultSet(true)
+
+      _decoyResultSetOp.get
+
+    } else {
+      if (!_targetResultSetOp.isDefined)
+        _loadResultSet(false)
+      _targetResultSetOp.get
+    }
+  }    
+  
+  def _loadResultSet(wantDecoy: Boolean) {    
     logger.debug("Load the data into a ResultSet...")
     
     // Important: initialize msQueries !
