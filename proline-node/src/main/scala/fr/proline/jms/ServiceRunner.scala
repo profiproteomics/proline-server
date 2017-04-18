@@ -29,6 +29,7 @@ import fr.proline.jms.util.JMSConstants.PROLINE_SERVICE_NAME_KEY
 import fr.proline.jms.util.JMSConstants.PROLINE_SERVICE_SOURCE_KEY
 import fr.proline.jms.util.JMSConstants.PROLINE_SERVICE_VERSION_KEY
 import fr.proline.jms.util.JMSConstants.SERVICE_ERROR_CODE
+import fr.proline.jms.util.JMSConstants.CANCELLED_MSG_ERROR_CODE
 import fr.proline.jms.util.MonitoringTopicPublisherRunner
 import fr.proline.jms.util.NodeConfig
 import javax.jms.BytesMessage
@@ -491,7 +492,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
           val errorMessage = s"Thread interrupted while running service [$serviceName]"
           logger.error(errorMessage, intEx)
 
-          new JSONRPC2Response(buildJSONRPC2Error(SERVICE_ERROR_CODE, intEx), jsonRequestId)
+          new JSONRPC2Response(buildJSONRPC2Error(CANCELLED_MSG_ERROR_CODE, intEx), jsonRequestId)
         }
 
         /* Catch all Throwables */
