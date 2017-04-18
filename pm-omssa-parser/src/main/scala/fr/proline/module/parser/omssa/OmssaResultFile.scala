@@ -141,6 +141,27 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
     msQueryMapBuilder.result()
   }*/
 
+  var _targetResultSetOp : Option[ResultSet] = None
+  var _decoyResultSetOp : Option[ResultSet] = None
+  
+  override def parseResultSet(wantDecoy: Boolean)  {
+    _loadResultSet(wantDecoy) 
+  }
+
+  override def getResultSet(wantDecoy: Boolean): ResultSet = {
+    if (wantDecoy) {
+      if (!_decoyResultSetOp.isDefined)
+        _loadResultSet(true)
+
+      _decoyResultSetOp.get
+
+    } else {
+      if (!_targetResultSetOp.isDefined)
+        _loadResultSet(false)
+      _targetResultSetOp.get
+    }
+  }
+  
   /**
    * Create from the omx file a MSISearch with all associated information :
    * Peaklist, Enzyme, SeqDatabase and SearchSettings
@@ -155,7 +176,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   /**
    * Parse specified OMSSA omx file and return corresponding ResultSet
    */
-  def getResultSet(wantDecoy: Boolean): ResultSet = {
+  private def _loadResultSet(wantDecoy: Boolean)  {
 
     logger.debug("hasDecoyResultSet=" + hasDecoyResultSet + " && wantDecoy=" + wantDecoy)
     if (!hasDecoyResultSet && wantDecoy) {
@@ -192,7 +213,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
     logger.info("Create ResultSet for " + (if (wantDecoy) "decoy" else "target") + " entries with " + allPepMatches.length + " peptide matches identifying " + protMatches.size + " proteins")
 
     logger.info("ResultSet created with fasta db: "+msiSearch.searchSettings.seqDatabases(0).toString)
-    new ResultSet(
+     val loadedRS = new ResultSet(
       id = rsId,
       name = this.msiSearch.title,
       peptides = pepMatchesByPep.keySet.toArray,
@@ -204,6 +225,11 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
       msiSearch = Some(msiSearch),
       properties = Some(rsProps)
     )
+    
+    if(wantDecoy)
+      _decoyResultSetOp = Some(loadedRS)
+    else
+      _targetResultSetOp = Some(loadedRS)
   }
 
   private var pepToPeptideMatches: HashMap[Peptide, ArrayBuffer[PeptideMatch]] = null
