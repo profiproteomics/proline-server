@@ -35,6 +35,7 @@ import fr.proline.cortex.service.dps.msi.ImportMaxQuantResults
 import fr.proline.cortex.service.dps.msi.ImportResultFilesDecoyRegExp
 import fr.proline.cortex.service.dps.msi.ImportResultFilesProtMatchDecoyRule
 import fr.proline.cortex.service.dps.msi.ImportValidateGenerateSM
+import fr.proline.cortex.service.dps.msi.IdentifyPtmSites
 import fr.proline.cortex.service.dps.msi.MergeDatasetsV1_0
 import fr.proline.cortex.service.dps.msi.MergeDatasetsV2_0
 import fr.proline.cortex.service.dps.msi.UpdateSpectraParamsV1_0
@@ -65,6 +66,7 @@ import fr.proline.jms.util.NodeConfig
 import javax.jms.Connection
 import javax.jms.ExceptionListener
 import javax.jms.JMSException
+import fr.proline.core.service.msi.RsmPTMSitesIdentifier
 
 
 object ProcessingNode extends LazyLogging {
@@ -285,6 +287,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new DeleteOrphanData())
     ServiceRegistry.addService(new QuantifyV2_0())
     ServiceRegistry.addService(new ImportMaxQuantResults())
+    ServiceRegistry.addService(new IdentifyPtmSites())
     //VDS TEST only ! 
 //    ServiceRegistry.addService(new WaitService())
     ServiceRegistry.addService(new CancelService())
