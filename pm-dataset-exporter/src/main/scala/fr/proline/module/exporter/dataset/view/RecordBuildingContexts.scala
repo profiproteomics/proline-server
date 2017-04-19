@@ -42,7 +42,7 @@ class ProtMatchBuildingContext(
     }
   }
   
-  val sequencesCount = allSeqs.length
+  val sequencesCount = allSeqs.distinct.length
   val specificSequencesCount = specificNonUniqSeqs.distinct.length
   val specificPeptidesCount = specificPepInstances.length
   val peptideMatchesCount = totalLeavesMatchCount
