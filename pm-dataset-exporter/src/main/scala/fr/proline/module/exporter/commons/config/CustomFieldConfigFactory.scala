@@ -63,8 +63,8 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_PROTEIN_SETS_ID, "protein_set_id"),
       CustomFieldConfig(FIELD_PROTEIN_SETS_ACCESSION, "accession"),
       CustomFieldConfig(FIELD_PROTEIN_MATCH_GENE_NAME, "gene_name"),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_SAMESETS_ACCESSIONS, "samesets_accessions", true), // TODO: false ?
-      CustomFieldConfig(FIELD_PROTEIN_SETS_SUBSETS_ACCESSIONS, "subsets_accessions", true), // TODO: false ?
+      CustomFieldConfig(FIELD_PROTEIN_SETS_SAMESETS_ACCESSIONS, "samesets_accessions", false),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_SUBSETS_ACCESSIONS, "subsets_accessions", false), 
       CustomFieldConfig(FIELD_PROTEIN_SETS_DESCRIPTION, "description"),
       CustomFieldConfig(FIELD_PROTEIN_SETS_SCORE, "protein_set_score"),
       CustomFieldConfig(FIELD_PROTEIN_SETS_IS_VALIDATED, "is_validated"),
