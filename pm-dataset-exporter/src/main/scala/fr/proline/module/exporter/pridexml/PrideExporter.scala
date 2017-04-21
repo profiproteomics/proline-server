@@ -587,24 +587,26 @@ class PrideExporter(
   private def _buildFragmentMatches(pepItem: PeptideItem, spectrumMatch: SpectrumMatch) = {
     val fragMatches = spectrumMatch.fragMatches
 
-    fragMatches.foreach(fragMatch => {
+    if(fragMatches != null) {
+      fragMatches.foreach(fragMatch => {
 
-      val fragmentIon = new FragmentIon()
-      fragmentIon.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_PROD_ION_CHARGE_ACC, PrideSchemaConstants.PRIDE_CV_PROD_ION_CHARGE_NAME, fragMatch.charge.toString))
-      fragmentIon.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_PROD_ION_MZ_ACC, PrideSchemaConstants.PRIDE_CV_PROD_ION_MZ_NAME, fragMatch.moz.toString))
+        val fragmentIon = new FragmentIon()
+        fragmentIon.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_PROD_ION_CHARGE_ACC, PrideSchemaConstants.PRIDE_CV_PROD_ION_CHARGE_NAME, fragMatch.charge.toString))
+        fragmentIon.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_PROD_ION_MZ_ACC, PrideSchemaConstants.PRIDE_CV_PROD_ION_MZ_NAME, fragMatch.moz.toString))
 
-      if (fragMatch.intensity != Float.NaN)
-        fragmentIon.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_PROD_ION_I_ACC, PrideSchemaConstants.PRIDE_CV_PROD_ION_I_NAME, fragMatch.intensity.toString))
+        if (fragMatch.intensity != Float.NaN)
+          fragmentIon.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_PROD_ION_I_ACC, PrideSchemaConstants.PRIDE_CV_PROD_ION_I_NAME, fragMatch.intensity.toString))
 
-      val serie = fragMatch.ionSeries
-    	  
-	  val (cvIonAcc, cvIonName)  = FragmentMatchMapper.getPrideCVforIonSerie(serie.toString)
-      fragmentIon.getCvParam().add(CvParam(cvIonAcc, cvIonName, fragMatch.aaPosition.toString))           
-      fragmentIon.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_PROD_ION_MASS_ERR_ACC, PrideSchemaConstants.PRIDE_CV_PROD_ION_MASS_ERR_NAME,(fragMatch.calculatedMoz-fragMatch.moz).toString))
-      
-      
-      pepItem.getFragmentIon().add(fragmentIon)
-    }) //END Go trough fragment matches
+        val serie = fragMatch.ionSeries
+          
+      val (cvIonAcc, cvIonName)  = FragmentMatchMapper.getPrideCVforIonSerie(serie.toString)
+        fragmentIon.getCvParam().add(CvParam(cvIonAcc, cvIonName, fragMatch.aaPosition.toString))           
+        fragmentIon.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_PROD_ION_MASS_ERR_ACC, PrideSchemaConstants.PRIDE_CV_PROD_ION_MASS_ERR_NAME,(fragMatch.calculatedMoz-fragMatch.moz).toString))
+        
+        
+        pepItem.getFragmentIon().add(fragmentIon)
+      }) //END Go trough fragment matches
+    }
 
   }
   
