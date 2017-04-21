@@ -9,7 +9,7 @@ import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.algo.msi.filtering.IProteinSetFilter
 import fr.proline.core.algo.msi.validation.BuildProteinSetFilter
-import fr.proline.core.service.msi.RSMProteinSetFilterer
+import fr.proline.core.service.msi.RsmProteinSetFilterer
 import fr.proline.cortex.api.service.dps.msi.FilterConfig
 import fr.proline.cortex.api.service.dps.msi.IFilterRSMProteinSetsService
 import fr.proline.cortex.util.DbConnectionHelper
@@ -27,7 +27,7 @@ import fr.proline.jms.service.api.AbstractRemoteProcessingService
  *    Boolean for service run status
  */
 
-class FilterRSMProteinSets extends AbstractRemoteProcessingService with IFilterRSMProteinSetsService with LazyLogging {
+class FilterRsmProteinSets extends AbstractRemoteProcessingService with IFilterRSMProteinSetsService with LazyLogging {
 
   def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 
@@ -50,7 +50,7 @@ class FilterRSMProteinSets extends AbstractRemoteProcessingService with IFilterR
         msiDbConnectionContext.beginTransaction()
 
         // Instantiate a result set validator
-        val rsmFilterer = RSMProteinSetFilterer(
+        val rsmFilterer = RsmProteinSetFilterer(
           execCtx = execCtx,
           targetRsmId = resultSummaryId,
           protSetFilters = filterConfigs.get

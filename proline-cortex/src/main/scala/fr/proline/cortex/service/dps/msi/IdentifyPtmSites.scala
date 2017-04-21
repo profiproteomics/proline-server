@@ -8,7 +8,7 @@ import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.algo.msi.filtering.IProteinSetFilter
-import fr.proline.core.service.msi.RsmPTMSitesIdentifier
+import fr.proline.core.service.msi.RsmPtmSitesIdentifier
 import fr.proline.cortex.api.service.dps.msi.FilterConfig
 import fr.proline.cortex.api.service.dps.msi.IFilterRSMProteinSetsService
 import fr.proline.cortex.api.service.dps.msi.IIdentifyPtmSitesService
@@ -46,7 +46,7 @@ class IdentifyPtmSites extends AbstractRemoteProcessingService with IIdentifyPtm
         msiDbConnectionContext.beginTransaction()
 
         // Instantiate a Ptm sites identifier
-        val ptmSitesIdentifier = new RsmPTMSitesIdentifier(
+        val ptmSitesIdentifier = new RsmPtmSitesIdentifier(
           execContext = execCtx,
           resultSummaryId = resultSummaryId,
           force = force

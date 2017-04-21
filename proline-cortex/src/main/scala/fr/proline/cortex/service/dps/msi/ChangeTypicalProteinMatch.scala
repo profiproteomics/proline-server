@@ -8,7 +8,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.algo.msi.TypicalProteinChooserRule
-import fr.proline.core.service.msi.RSMTypicalProteinChooser
+import fr.proline.core.service.msi.RsmTypicalProteinChooser
 import fr.proline.cortex.api.service.dps.msi.IChangeRepresentativeProteinMatchService
 import fr.proline.cortex.api.service.dps.msi.RepresentativeProteinMatchRule
 import fr.proline.cortex.util.DbConnectionHelper
@@ -68,7 +68,7 @@ class ChangeTypicalProteinMatch extends AbstractRemoteProcessingService with ICh
     logger.info(msgLogBuilder.result)
     
     val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId)  // Use JPA context
-    val typProtChooser = new RSMTypicalProteinChooser(execCtx, resultSummaryId, allRulesBuilder.result)
+    val typProtChooser = new RsmTypicalProteinChooser(execCtx, resultSummaryId, allRulesBuilder.result)
 
     try {
       typProtChooser.run()

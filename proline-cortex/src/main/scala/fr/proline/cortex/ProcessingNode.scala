@@ -28,7 +28,7 @@ import fr.proline.cortex.service.dps.msi.ChangeTypicalProteinMatch
 import fr.proline.cortex.service.dps.msi.DeleteOrphanData
 import fr.proline.cortex.service.dps.msi.ExportResultSummary
 import fr.proline.cortex.service.dps.msi.ExportResultSummaryV2_0
-import fr.proline.cortex.service.dps.msi.FilterRSMProteinSets
+import fr.proline.cortex.service.dps.msi.FilterRsmProteinSets
 import fr.proline.cortex.service.dps.msi.GenerateMSDiagReport
 import fr.proline.cortex.service.dps.msi.GenerateSpectrumMatches
 import fr.proline.cortex.service.dps.msi.ImportMaxQuantResults
@@ -66,7 +66,7 @@ import fr.proline.jms.util.NodeConfig
 import javax.jms.Connection
 import javax.jms.ExceptionListener
 import javax.jms.JMSException
-import fr.proline.core.service.msi.RsmPTMSitesIdentifier
+import fr.proline.core.service.msi.RsmPtmSitesIdentifier
 
 
 object ProcessingNode extends LazyLogging {
@@ -276,7 +276,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new GetExportInformation())
     ServiceRegistry.addService(new GenerateSpectrumMatches())
     ServiceRegistry.addService(new GenerateMSDiagReport())
-    ServiceRegistry.addService(new FilterRSMProteinSets())
+    ServiceRegistry.addService(new FilterRsmProteinSets())
     ServiceRegistry.addService(new ComputeQuantProfiles())
     ServiceRegistry.addService(new Quantify())
     ServiceRegistry.addService(new QuantifySC())
