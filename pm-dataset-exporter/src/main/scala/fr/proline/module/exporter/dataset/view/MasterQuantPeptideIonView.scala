@@ -59,7 +59,7 @@ class MasterQuantPeptideIonView(
     
     val mqPepIon = mqPepBuildingCtx.masterQuantPeptideIon
     val qPepIonMap = mqPepIon.quantPeptideIonMap
-    val bestPepMatchIdByQcId = mqPepIon.properties.get.getBestPeptideMatchIdMap()
+    val bestPepMatchIdByQcIdOpt = mqPepIon.properties.map(_.getBestPeptideMatchIdMap())
 
     val recordBuilder = Map.newBuilder[String,Any]
     recordBuilder ++= pepMatchRecord
@@ -79,7 +79,7 @@ class MasterQuantPeptideIonView(
         case FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME => dcf2.format(mqPepIon.elutionTime / 60)
         case FIELD_QUANT_PEPTIDE_ION_BEST_SCORE => {
           appendQcValuesToRecord(fieldConfig) { (qcId, qPepIon) =>
-            val bestScoreOpt = bestPepMatchIdByQcId.get(qcId).map(identPepMatchById(_).score)
+            val bestScoreOpt = bestPepMatchIdByQcIdOpt.flatMap(_.get(qcId).map(identPepMatchById(_).score))
             dcf2.format(bestScoreOpt.orNull)
           }
         }
