@@ -66,13 +66,15 @@ sub term2hash {
   my $id = $term->id();
   my $name = defined $term->name() ? $term->name : '';
 	$name =~ s/\t/ /g;
-	$name =~ s/\\/\\\\/g;
+    # WARNING: this has been commented because it causes issues for X!Tandem
+    # Note that we edited manually the psi-ms_terms.json to remove the \ from X\!Tandem
+	#$name =~ s/\\/\\\\/g;
 	
 	my $def = '';
   if( defined $term->def->text ) {
 		$def = $term->def->text;
 		$def =~ s/\"/&quote/g;
-		$def =~ s/\\/\\\\/g;
+		#$def =~ s/\\/\\\\/g;
 		$def =~ s/&quote/\\"/g;
 	}
 	

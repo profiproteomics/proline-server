@@ -1,34 +1,33 @@
 package fr.proline.module.parser.mzidentml
 
 import java.io.File
+import java.net.URL
+
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+
 import com.typesafe.scalalogging.LazyLogging
+
+import uk.ac.ebi.jmzidml.model.mzidml.{ Peptide => MzIdPeptide, _ }
+import uk.ac.ebi.jmzidml.xml.io.MzIdentMLUnmarshaller
+
+import fr.profi.chemistry.model.Enzyme
+import fr.profi.chemistry.model.EnzymeCleavage
+import fr.profi.chemistry.model.EnzymeProperties
 import fr.profi.cv._
 import fr.profi.obo.PsiMs
 import fr.profi.util.ms.MassTolUnit
 import fr.profi.util.primitives._
-import fr.proline.core.om.builder.PtmDefinitionBuilder
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msi.IResultFile
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.orm.msi.Scoring
-import uk.ac.ebi.jmzidml.MzIdentMLElement
-import uk.ac.ebi.jmzidml.model.mzidml.{ Enzyme => MzIdEnzyme, Peptide => MzIdPeptide, _ }
-import uk.ac.ebi.jmzidml.xml.io.MzIdentMLUnmarshaller
-import java.net.URL
-import fr.profi.chemistry.model.Enzyme
-import fr.profi.chemistry.model.EnzymeCleavage
-import fr.profi.chemistry.model.EnzymeProperties
 
 object MzIdResultFile {
-  
   def apply( fileLocationURL: URL,parserContext: ProviderDecoratedExecutionContext) : MzIdResultFile = {
-    val f : File = new File( fileLocationURL.toURI());
-    new MzIdResultFile(f , parserContext)
+    new MzIdResultFile(new File(fileLocationURL.toURI()) , parserContext)
   }
 }
 
@@ -57,7 +56,7 @@ class MzIdResultFile(
   val msLevel: Int = 2
   
   lazy val msiSearch: MSISearch = _parseMSISearch()
-  private var msQueryByRef = new HashMap[String,MsQuery]()
+  private val msQueryByRef = new HashMap[String,MsQuery]()
     //Cache for value to be keep between load and get methods
   private var _targetResultSetOp : Option[ResultSet] = None
   private var _decoyResultSetOp : Option[ResultSet] = None
@@ -128,9 +127,7 @@ class MzIdResultFile(
               properties = msQueryPropsOpt
             )
             
-            msQueryByRef.synchronized {
-              msQueryByRef(spectrumID) = tmpMsQuery
-            }
+            msQueryByRef(spectrumID) = tmpMsQuery
             
             tmpMsQuery
           }
@@ -143,7 +140,8 @@ class MzIdResultFile(
     msQueryByRef.values.toArray
   }
   
-  val hasDecoyResultSet: Boolean = false // FIXME: is it possible to infer this value ???
+  private var _hasDecoyResultSet = false
+  def hasDecoyResultSet: Boolean = _hasDecoyResultSet // FIXME: is it possible to infer this value ???
   val hasMs2Peaklist: Boolean = true
   
   //var instrumentConfig: Option[InstrumentConfig] = None
@@ -275,7 +273,7 @@ class MzIdResultFile(
       // Parse PTM location
       // FIXME: enable me when ABRF study is over (files converted from PepXML contain weird specificities)
       //val location = PtmLocation.ANYWHERE
-      val location = if( modSpecRulesCvParamsOpt.isEmpty ) PtmLocation.ANYWHERE
+      val location = if (modSpecRulesCvParamsOpt.isEmpty) PtmLocation.ANYWHERE
       else {
         val cvParams = modSpecRulesCvParamsOpt.get
         
@@ -434,7 +432,7 @@ class MzIdResultFile(
       userName = "",
       userEmail = "",
       searchedSequencesCount = seqDbs.map(_.searchedSequencesCount).sum
-    )   
+    )
     
   }
   
@@ -449,8 +447,6 @@ class MzIdResultFile(
       val newPep = _mzIdPepToPeptide(pepId,mzIdPep)
       val pepKey = newPep.uniqueKey
       val existingPepOpt = peptideByKey.get(newPep.uniqueKey)
-      
-      if (newPep.sequence == "SLVGLIPLYASMTLEPSIIK") println(existingPepOpt)
       
       val pep = if( existingPepOpt.isDefined ) {
         existingPepOpt.get
@@ -492,24 +488,30 @@ class MzIdResultFile(
       require( unimodId != 1001460, "can't deal with unknown modifications" )
       
       //val modId = if( unimodId != 1001460 ) unimodId else (mzIdMod.getMonoisotopicMassDelta() * 100).toInt
-      val putativePtmDefs = ptmDefsByUnimodId(unimodId)
-      val loc = mzIdMod.getLocation()
-      val resOpt = mzIdMod.getResidues().headOption
+      val putativePtmDefsOpt = ptmDefsByUnimodId.get(unimodId)
+      require( putativePtmDefsOpt.nonEmpty, "can't find unimod PTM with id = " + unimodId )
       
-      val residue = if(resOpt.isEmpty) {
-        if (loc == 0) '\0'
-        else pepSeq.charAt(loc-1)
-      }
-      else if (resOpt.get.isEmpty || resOpt.get == ".") '\0'
-      else resOpt.get.charAt(0)
-      
-      val ptmDefOpt = putativePtmDefs.find(_.residue == residue)
-      require( ptmDefOpt.isDefined, s"can't find PTM for unimodId=$unimodId residue=$residue" )
-      
-      val ptmDef = ptmDefOpt.get
+      val putativePtmDefs = putativePtmDefsOpt.get
       val mzIdSeqPos = mzIdMod.getLocation().toInt
       // Set seqPos to -1 if C-term, else set it to mzIdSeqPos
-      val seqPos = if( mzIdSeqPos == seqLen + 1 ) -1 else mzIdSeqPos
+      val seqPos = if (mzIdSeqPos == seqLen + 1) -1 else mzIdSeqPos
+      
+      val ptmDef = if (putativePtmDefs.length == 1) putativePtmDefs.head
+      else {
+        val resOpt = mzIdMod.getResidues().headOption
+  
+        val residue = if (seqPos == 0 || seqPos == -1) '\0' // No residue for N-term/C-term mods
+        else if (resOpt.isEmpty) pepSeq.charAt(mzIdSeqPos - 1) // Infer residue from sequence
+        else if (resOpt.get.isEmpty || resOpt.get == ".") '\0' // No residue if empty string or "."
+        else resOpt.get.charAt(0) // Extract residue character from string
+        
+        val ptmDefs = putativePtmDefs.filter(_.residue == residue)
+        val ptmDefsCount = ptmDefs.length
+        require( ptmDefsCount < 2, s"multiple PTMs found for for unimodId=$unimodId residue=$residue location=$mzIdSeqPos")
+        require( ptmDefsCount == 1, s"can't find PTM for unimodId=$unimodId residue=$residue location=$mzIdSeqPos" )
+        
+        ptmDefs.head
+      }
       
       /*println(pepSeq)
       println(unimodId)
@@ -544,9 +546,9 @@ class MzIdResultFile(
   }
   
   override def parseResultSet(wantDecoy: Boolean)  {
-    _loadResultSet(wantDecoy) 
+    _loadResultSet(wantDecoy)
   }
-    
+
   override def getResultSet(wantDecoy: Boolean): ResultSet = {
     if (wantDecoy) {
       if (!_decoyResultSetOp.isDefined)
@@ -559,9 +561,9 @@ class MzIdResultFile(
         _loadResultSet(false)
       _targetResultSetOp.get
     }
-  }    
+  }
   
-  def _loadResultSet(wantDecoy: Boolean) {    
+  def _loadResultSet(wantDecoy: Boolean) {
     logger.debug("Load the data into a ResultSet...")
     
     // Important: initialize msQueries !
@@ -577,44 +579,49 @@ class MzIdResultFile(
     val mzIdSeqMatchesByDbSeqRef = new HashMap[String,ArrayBuffer[MzIdSequenceMatch]]()
    
     // Get the list of PeptideEvidence elements matching the wantDecoy provided parameter
-    for( mzIdPepEvidence <- mzIdSeqCollection.getPeptideEvidence();
-         isDecoy = mzIdPepEvidence.isIsDecoy();
-         if( wantDecoy == isDecoy )
-    ) {
+    var seqMatchesCount = 0
+    for(mzIdPepEvidence <- mzIdSeqCollection.getPeptideEvidence()) {
+      val isDecoy = mzIdPepEvidence.isIsDecoy()
+      if (!this._hasDecoyResultSet && isDecoy) this._hasDecoyResultSet = true
       
-      val peptide = peptideByRef.get(mzIdPepEvidence.getPeptideRef())
-      val (start,end) = if( mzIdPepEvidence.getStart() != null ) {
-        (mzIdPepEvidence.getStart().toInt,mzIdPepEvidence.getEnd().toInt)
-      } else {
-        ( 1, peptide.get.sequence.length )
+      if (wantDecoy == isDecoy) {
+      
+        val peptide = peptideByRef.get(mzIdPepEvidence.getPeptideRef())
+        val (start,end) = if( mzIdPepEvidence.getStart() != null ) {
+          (mzIdPepEvidence.getStart().toInt,mzIdPepEvidence.getEnd().toInt)
+        } else {
+          ( 1, peptide.get.sequence.length )
+        }
+        
+        val seqMatch = new SequenceMatch(
+          start = start,
+          end = end,
+          residueBefore = mzIdPepEvidence.getPre().charAt(0),
+          residueAfter = mzIdPepEvidence.getPost().charAt(0),
+          isDecoy = isDecoy,
+          peptide = peptide,
+          bestPeptideMatch = None, // set below in a separate loop
+          resultSetId = newRsId
+        )
+        
+        seqMatchesCount += 1
+        
+        // TODO: import the following values
+        // TODO: add frame to SequenceMatch or ProteinMatch OM ???
+        /*      
+        mzIdPepEvidence.getDBSequenceRef()
+        mzIdPepEvidence.getFrame()
+        mzIdPepEvidence.getTranslationTableRef()
+        */
+        
+        val mzIdSeqMatch = MzIdSequenceMatch( mzIdPepEvidence.getId(), mzIdPepEvidence.getDBSequenceRef, seqMatch)
+        
+        mzIdSeqMatchById += mzIdSeqMatch.id -> mzIdSeqMatch
+        mzIdSeqMatchesByDbSeqRef.getOrElseUpdate(mzIdSeqMatch.dbSeqRef, new ArrayBuffer[MzIdSequenceMatch]) += mzIdSeqMatch
       }
-      
-      val seqMatch = new SequenceMatch(
-        start = start,
-        end = end,
-        residueBefore = mzIdPepEvidence.getPre().charAt(0),
-        residueAfter = mzIdPepEvidence.getPost().charAt(0),
-        isDecoy = isDecoy,
-        peptide = peptide,
-        bestPeptideMatch = None, // set below in a separate loop
-        resultSetId = newRsId
-      )
-      
-      // TODO: import the following values
-      // TODO: add frame to SequenceMatch or ProteinMatch OM ???
-      /*      
-      mzIdPepEvidence.getDBSequenceRef()
-      mzIdPepEvidence.getFrame()
-      mzIdPepEvidence.getTranslationTableRef()
-      */
-      
-      val mzIdSeqMatch = MzIdSequenceMatch( mzIdPepEvidence.getId(), mzIdPepEvidence.getDBSequenceRef, seqMatch)
-      
-      mzIdSeqMatchById += mzIdSeqMatch.id -> mzIdSeqMatch
-      mzIdSeqMatchesByDbSeqRef.getOrElseUpdate(mzIdSeqMatch.dbSeqRef, new ArrayBuffer[MzIdSequenceMatch]) += mzIdSeqMatch
     }
     
-    logger.debug(mzIdSeqMatchesByDbSeqRef.size + " sequence matches have been created !")
+    logger.debug(s"$seqMatchesCount sequence matches have been created !")
     
     val pepMatchesByMzIdSeqMatchId = new HashMap[String,ArrayBuffer[PeptideMatch]]()
     val pepMatches = new ArrayBuffer[PeptideMatch]()
@@ -631,9 +638,11 @@ class MzIdResultFile(
           val msQuery = msQueryByRef(spectrumID)
           
           // Retrieve the corresponding sequence matches
-          val pepMatchMzIdSeqMatches = sIdentItem.getPeptideEvidenceRef().map( ref => mzIdSeqMatchById(ref.getPeptideEvidenceRef) )
+          val pepMatchMzIdSeqMatches = sIdentItem.getPeptideEvidenceRef()
+            .withFilter( ref => mzIdSeqMatchById.contains(ref.getPeptideEvidenceRef) )
+            .map( ref => mzIdSeqMatchById(ref.getPeptideEvidenceRef) )
           
-          if( pepMatchMzIdSeqMatches.isEmpty == false || 1 == 1 ) {
+          if (pepMatchMzIdSeqMatches.nonEmpty) {
             
             // FIXME: handle PMF data (null peptideRef ???)
             val peptide = peptideByRef(sIdentItem.getPeptideRef())
@@ -663,7 +672,7 @@ class MzIdResultFile(
               
               val scoreParamOpt = ScoreParamName.values.flatMap( termId => findParam(sIDParamGroup, termId.toString) ).headOption
               require( scoreParamOpt.isDefined, s"can't find a score value in this spectrum identification item (id=${sIdentItem.getId})")
-  
+              
               val scoreParam = scoreParamOpt.get
               val scoreParamValue = scoreParam.getValue.toDouble
               
@@ -682,6 +691,9 @@ class MzIdResultFile(
                 }
                 case ScoreParamName.SEQUEST_EXPECT => {
                   (-math.log10(scoreParamValue),Scoring.Type.SEQUEST_EXPECT_LOG_SCALED.toString)
+                }
+                case ScoreParamName.XTANDEM_EVALUE => {
+                  (-math.log10(scoreParamValue),Scoring.Type.XTANDEM_EXPECT_LOG_SCALED.toString)
                 }
               }
             }
@@ -782,13 +794,13 @@ class MzIdResultFile(
     }
     
     // Convert DBSequence elements into ProteinMatch entities
-    val protMatches = mzIdSeqCollection.getDBSequence().map { mzIdDbSeq =>
-      
-      val proteinOpt = Option( mzIdDbSeq.getSeq() ).map( new Protein( _ ) )
-      val seqDb = seqDbByRef(mzIdDbSeq.getSearchDatabaseRef())
+    val protMatches = mzIdSeqCollection.getDBSequence().withFilter(s => mzIdSeqMatchesByDbSeqRef.contains(s.getId)).map { mzIdDbSeq =>
       
       val mzIdSeqMatches = mzIdSeqMatchesByDbSeqRef(mzIdDbSeq.getId)
       val pepMatchesCount = mzIdSeqMatches.flatMap( s => pepMatchesByMzIdSeqMatchId(s.id) ).distinct.length
+      
+      val proteinOpt = Option( mzIdDbSeq.getSeq() ).map( new Protein( _ ) )
+      val seqDb = seqDbByRef(mzIdDbSeq.getSearchDatabaseRef())
       
       val distinctMzIdSeqMatches = mzIdSeqMatches.groupBy { mzSm =>
         val seqMatch = mzSm.sequenceMatch
@@ -805,7 +817,7 @@ class MzIdResultFile(
         description = protMatchDesc,
         sequenceMatches = distinctMzIdSeqMatches.map(_.sequenceMatch),
         peptideMatchesCount = pepMatchesCount,
-        //isDecoy = isDecoy, // TODO: can we compute this value ???
+        isDecoy = wantDecoy, // TODO: can we compute this value ???
         protein = proteinOpt,
         taxonId = protMatchTaxonId,
         // FIXME: remove the scoreType when the MSIdb ALLOWS NULL for this field

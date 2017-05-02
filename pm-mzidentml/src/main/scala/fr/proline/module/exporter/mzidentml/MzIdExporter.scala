@@ -1,70 +1,27 @@
 package fr.proline.module.exporter.mzidentml
 
 import java.io.ByteArrayInputStream
+
 import java.io.FileWriter
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-
-import com.typesafe.scalalogging.LazyLogging
-
-import fr.profi.cv.BuildCvParam
-import fr.profi.cv.BuildParamList
-import fr.profi.cv.BuildUserParam
-import fr.profi.cv.ControlledVocabulary
-import fr.profi.cv.ParamMaker
-import fr.profi.cv.PsiCvParam
-import fr.profi.obo.PsiMs
-import fr.profi.obo.UnitTerm
-import fr.profi.util.ms.MassTolUnit
-import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.DoJDBCReturningWork
-import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.dal.helper.PsDbHelper
-import fr.proline.core.om.model.msi.Ms2Query
-import fr.proline.core.om.model.msi.PtmDefinition
-import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.om.model.msi.SequenceMatch
-import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
 import javax.xml.bind.JAXBContext
 import javax.xml.bind.JAXBElement
 import javax.xml.parsers.SAXParserFactory
-import uk.ac.ebi.jmzidml.model.mzidml.Affiliation
-import uk.ac.ebi.jmzidml.model.mzidml.AnalysisProtocolCollection
-import uk.ac.ebi.jmzidml.model.mzidml.AnalysisSoftware
-import uk.ac.ebi.jmzidml.model.mzidml.AnalysisSoftwareList
-import uk.ac.ebi.jmzidml.model.mzidml.AuditCollection
-import uk.ac.ebi.jmzidml.model.mzidml.CvList
-import uk.ac.ebi.jmzidml.model.mzidml.DBSequence
-import uk.ac.ebi.jmzidml.model.mzidml.{ Enzyme => MzIdEnzyme }
-import uk.ac.ebi.jmzidml.model.mzidml.Enzymes
-import uk.ac.ebi.jmzidml.model.mzidml.{ FileFormat => MzIdFileFormat}
-import uk.ac.ebi.jmzidml.model.mzidml.{ FragmentationTable=> MzIdFragmentationTable}
-import uk.ac.ebi.jmzidml.model.mzidml.Inputs
-import uk.ac.ebi.jmzidml.model.mzidml.MassTable
-import uk.ac.ebi.jmzidml.model.mzidml.Modification
-import uk.ac.ebi.jmzidml.model.mzidml.ModificationParams
-import uk.ac.ebi.jmzidml.model.mzidml.Organization
-import uk.ac.ebi.jmzidml.model.mzidml.{ Peptide => MzIdPeptide }
-import uk.ac.ebi.jmzidml.model.mzidml.PeptideEvidence
-import uk.ac.ebi.jmzidml.model.mzidml.PeptideEvidenceRef
-import uk.ac.ebi.jmzidml.model.mzidml.PeptideHypothesis
-import uk.ac.ebi.jmzidml.model.mzidml.Person
-import uk.ac.ebi.jmzidml.model.mzidml.ProteinAmbiguityGroup
-import uk.ac.ebi.jmzidml.model.mzidml.ProteinDetectionHypothesis
-import uk.ac.ebi.jmzidml.model.mzidml.ProteinDetectionProtocol
-import uk.ac.ebi.jmzidml.model.mzidml.{ Provider => MzIdProvider }
-import uk.ac.ebi.jmzidml.model.mzidml.SearchDatabase
-import uk.ac.ebi.jmzidml.model.mzidml.SearchModification
-import uk.ac.ebi.jmzidml.model.mzidml.SequenceCollection
-import uk.ac.ebi.jmzidml.model.mzidml.SourceFile
-import uk.ac.ebi.jmzidml.model.mzidml.SpectraData
-import uk.ac.ebi.jmzidml.model.mzidml.SpectrumIDFormat
-import uk.ac.ebi.jmzidml.model.mzidml.SpectrumIdentificationItem
-import uk.ac.ebi.jmzidml.model.mzidml.SpectrumIdentificationItemRef
-import uk.ac.ebi.jmzidml.model.mzidml.SpectrumIdentificationProtocol
-import uk.ac.ebi.jmzidml.model.mzidml.SpectrumIdentificationResult
-import uk.ac.ebi.jmzidml.model.mzidml.Tolerance
+
+import scala.collection.mutable.{ ArrayBuffer, HashMap, LongMap }
+
+import com.typesafe.scalalogging.LazyLogging
+
+import fr.profi.cv._
+import fr.profi.obo._
+import fr.profi.util.collection._
+import fr.proline.context.IExecutionContext
+import fr.proline.core.dal.DoJDBCReturningWork
+import fr.proline.core.dal.helper.{ MsiDbHelper, PsDbHelper }
+import fr.proline.core.om.model.msi._
+import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
+
+import uk.ac.ebi.jmzidml.model.mzidml.{ Enzyme => MzIdEnzyme, Peptide => MzIdPeptide, _ }
 import uk.ac.ebi.jmzidml.model.utils.ModelConstants
 import uk.ac.ebi.jmzidml.xml.io.MzIdentMLMarshaller
 
@@ -95,22 +52,20 @@ object MzIdExporter {
   }
 
   def _loadResultSummary(rsmId: Long, execContext: IExecutionContext): ResultSummary = {
-
     val rsmProvider = new SQLResultSummaryProvider(execContext.getMSIDbConnectionContext(), execContext.getPSDbConnectionContext(), execContext.getUDSDbConnectionContext())
     val rsm = rsmProvider.getResultSummary(rsmId, true).get
     rsm
   }
 
-  def _getUnimodIdByPtmId(execContext: IExecutionContext): Map[Long, Long] = {
-    val unimodIdByPtmId = DoJDBCReturningWork.withEzDBC(execContext.getPSDbConnectionContext(), { psEzDBC =>
-      new PsDbHelper(psEzDBC).getUnimodIdByPtmId()
-    })
+  def _getUnimodIdByPtmId(execContext: IExecutionContext): LongMap[Long] = {
+    val unimodIdByPtmId = DoJDBCReturningWork.withEzDBC(execContext.getPSDbConnectionContext()) { psEzDBC =>
+      new PsDbHelper(psEzDBC).getUnimodIdByPtmId().toLongMap()
+    }
 
     unimodIdByPtmId
-
   }
 
-  def _getSpectrumNumberById(execContext: IExecutionContext, rsId: Long): Map[Long, Int] = {
+  def _getSpectrumNumberById(execContext: IExecutionContext, rsId: Long): LongMap[Int] = {
 
     val msiDbHelper = new MsiDbHelper(execContext.getMSIDbConnectionContext())
 
@@ -119,13 +74,12 @@ object MzIdExporter {
 
     // TODO: use peaklist_relation instead ?
     val msiIds = msiDbHelper.getResultSetsMsiSearchIds(Array(rsId))
-    val pklIds = DoJDBCReturningWork.withEzDBC(execContext.getMSIDbConnectionContext(), { msiEzDBC =>
+    val pklIds = DoJDBCReturningWork.withEzDBC(execContext.getMSIDbConnectionContext()) { msiEzDBC =>
       msiEzDBC.selectLongs("SELECT peaklist_id FROM msi_search WHERE id IN (" + msiIds.mkString(",") + ")")
-    })
+    }
 
     // TODO: find another way to have this map
-    val specNumById = msiDbHelper.getSpectrumNumberById(pklIds)
-    specNumById.toMap[Long, Int]
+    msiDbHelper.getSpectrumNumberById(pklIds)
   }
 
 }
@@ -136,9 +90,10 @@ object MzIdExporter {
  */
 class MzIdExporter(
   rsm: ResultSummary,
-  unimodIdByPtmId: Map[Long, Long],
-  spectrumNumberByIdOpt: Option[Map[Long, Int]] = None,
-  executionContextOpt: Option[IExecutionContext] = None) extends ParamMaker with LazyLogging {
+  unimodIdByPtmId: LongMap[Long],
+  spectrumNumberByIdOpt: Option[LongMap[Int]] = None,
+  executionContextOpt: Option[IExecutionContext] = None
+) extends ParamMaker with LazyLogging {
 
   def this(rsmId: Long, executionContext: IExecutionContext) {
     this(MzIdExporter._loadResultSummary(rsmId, executionContext), MzIdExporter._getUnimodIdByPtmId(executionContext), None, Some(executionContext))
@@ -156,7 +111,7 @@ class MzIdExporter(
   }
 
   // TODO LMN : May not work for merged ResultSet (refs #7486)
-  require((optionalMsiSearch != null) && optionalMsiSearch.isDefined, "ResultSet #" + rsId + " has no associated MSI Search")
+  require(optionalMsiSearch != null && optionalMsiSearch.isDefined, "ResultSet #" + rsId + " has no associated MSI Search")
 
   val msiSearch = optionalMsiSearch.get
   val searchSettings = msiSearch.searchSettings
@@ -345,15 +300,15 @@ class MzIdExporter(
     // Note: the jmzidentml API doesn't allows to set the refs of the spectrumIdentificationProtocol/List
     //       but need the real objects which will be problematic for large datasets
     val analysisCollecNode =
-      <AnalysisCollection>
-        <SpectrumIdentification id="SI" spectrumIdentificationProtocol_ref="SIP" spectrumIdentificationList_ref="SIL_1" activityDate="2008-06-23T19:39:34">
-          <InputSpectra spectraData_ref={ spectraDataId }/>
-          <SearchDatabaseRef searchDatabase_ref={ searchDatabaseIds(0) }/>
-        </SpectrumIdentification>
-        <ProteinDetection id="PD_1" proteinDetectionProtocol_ref={ protDetectProtoId } proteinDetectionList_ref="PDL_1" activityDate="2009-08-18T18:03:11">
-          <InputSpectrumIdentifications spectrumIdentificationList_ref="SIL_1"/>
-        </ProteinDetection>
-      </AnalysisCollection>
+    <AnalysisCollection>
+      <SpectrumIdentification id="SI" spectrumIdentificationProtocol_ref="SIP"  spectrumIdentificationList_ref="SIL_1" activityDate="2008-06-23T19:39:34">
+        <InputSpectra spectraData_ref={ spectraDataId } />
+        <SearchDatabaseRef searchDatabase_ref={ searchDatabaseIds(0) } />
+      </SpectrumIdentification>
+      <ProteinDetection id="PD_1" proteinDetectionProtocol_ref={protDetectProtoId} proteinDetectionList_ref="PDL_1" activityDate="2009-08-18T18:03:11">
+        <InputSpectrumIdentifications spectrumIdentificationList_ref="SIL_1"/>
+      </ProteinDetection>
+    </AnalysisCollection>
 
     writer.write(analysisCollecNode + "\n")
 
@@ -370,7 +325,9 @@ class MzIdExporter(
 
     writer.write(
       mzIdMarshaller.createSpectrumIdentificationListStartTag(
-        "SIL_1", null, msiSearch.searchedSequencesCount.toLong) + "\n")
+        "SIL_1", null, msiSearch.searchedSequencesCount.toLong
+      ) + "\n"
+    )
 
     //FragmentationTable table = unmarshaller.unmarshal(MzIdentMLElement.FragmentationTable.getXpath());
     mzIdMarshaller.marshal(this._buildFragmentationTable(), writer)
@@ -402,7 +359,8 @@ class MzIdExporter(
         val specIdentItem = new SpectrumIdentificationItem()
         specIdentItem.setId("SII_" + pepMatch.id)
         specIdentItem.setCalculatedMassToCharge(
-          expMoz - pepMatch.deltaMoz)
+          expMoz - pepMatch.deltaMoz
+        )
         //specIdentItem.setCalculatedPI(value) // for PMF ???
         specIdentItem.setChargeState(charge)
         specIdentItem.setExperimentalMassToCharge(expMoz)
@@ -439,12 +397,15 @@ class MzIdExporter(
           val mascotProps = mascotPropsOpt.get
 
           psmParams.add(
-            PsiCvParam(PsiMs.MascotScore, pepMatch.score.toString))
+            PsiCvParam(PsiMs.MascotScore, pepMatch.score.toString)
+          )
 
           psmParams.add(
             PsiCvParam(
               PsiMs.MascotExpectationValue,
-              mascotProps.getExpectationValue.toString))
+              mascotProps.getExpectationValue.toString
+            )
+          )
           // TODO: export other thresholds
 
           val pepEvList = specIdentItem.getPeptideEvidenceRef()
@@ -519,14 +480,17 @@ class MzIdExporter(
 
         val protHypoCvParams = protDetectHypo.getCvParam()
         protHypoCvParams.add(
-          PsiCvParam(PsiMs.MascotScore, protMatch.score.toString))
+          PsiCvParam(PsiMs.MascotScore, protMatch.score.toString)
+        )
         protHypoCvParams.add(
-          PsiCvParam(PsiMs.SequenceCoverage, protMatch.coverage.toString))
+          PsiCvParam(PsiMs.SequenceCoverage, protMatch.coverage.toString)
+        )
         /*protHypoCvParams.add(
           makeCvParam("MS:1001097", "distinct peptide sequences", psiCV, pepSeqs.distinct.length.toString)
         )*/
         protHypoCvParams.add(
-          PsiCvParam(PsiMs.ConfidentDistinctPeptideSequences, confidentPepSeqs.distinct.length.toString))
+          PsiCvParam(PsiMs.ConfidentDistinctPeptideSequences, confidentPepSeqs.distinct.length.toString)
+        )
 
         protDetectHypoList.add(protDetectHypo)
       }
@@ -587,7 +551,8 @@ class MzIdExporter(
     searchEngine.setVersion(searchSettings.softwareVersion)
 
     val softCvParamByName = Map("Mascot" -> PsiCvParam(PsiMs.Mascot),
-      "OMSSA" -> PsiCvParam(PsiMs.OMSSA))
+      "OMSSA" -> PsiCvParam(PsiMs.OMSSA)
+    )
     val softCvParamOpt = softCvParamByName.get(softName)
     require(softCvParamOpt != None, "unsupported search engine '" + softName + "'")
 
@@ -595,7 +560,8 @@ class MzIdExporter(
 
     val contactRole = ContactRole(
       matrixScienceContact, // TODO: retrieve the right one
-      Role(PsiCvParam(PsiMs.SoftwareVendor)))
+      Role(PsiCvParam(PsiMs.SoftwareVendor))
+    )
     contactRole.setContact(matrixScienceContact) // TODO: retrieve the right one
 
     searchEngine.setContactRole(contactRole)
@@ -615,12 +581,14 @@ class MzIdExporter(
   }
 
   // TODO: query for this value in the exporter constructor
-  protected def _buildProvider(): MzIdProvider = {
+  protected def _buildProvider(): Provider = {
     Provider(
       "PROVIDER",
       ContactRole(
         profiContact,
-        Role(PsiCvParam(PsiMs.Programmer))))
+        Role(PsiCvParam(PsiMs.Programmer))
+      )
+    )
   }
 
   protected lazy val dbSeqByProtMatchId = {
@@ -719,7 +687,6 @@ class MzIdExporter(
         _pepEvidenceBySeqMatch += seqMatch -> pepEv
       }
     }
-
   }
 
   protected def _buildSequenceCollection(): SequenceCollection = {
@@ -738,7 +705,6 @@ class MzIdExporter(
     }
 
     seqCollec
-
   }
 
   protected def _buildAnalysisProtocolCollection(): AnalysisProtocolCollection = {
@@ -768,10 +734,12 @@ class MzIdExporter(
     if (searchSettings.msmsSearchSettings != None) {
       specIdentProto.setFragmentTolerance(this._buildFragmentTolerance().get)
       specIdentProto.setSearchType(
-        makeParamGroup(PsiCvParam(PsiMs.MsmsSearch)))
+        makeParamGroup(PsiCvParam(PsiMs.MsmsSearch))
+      )
     } else {
       specIdentProto.setSearchType(
-        makeParamGroup(PsiCvParam(PsiMs.PmfSearch)))
+        makeParamGroup(PsiCvParam(PsiMs.PmfSearch))
+      )
     }
 
     specIdentProto.getMassTable().add(this._buildMassTable)
@@ -781,7 +749,8 @@ class MzIdExporter(
 
     specIdentProto.setParentTolerance(this._buildParentTolerance())
     specIdentProto.setThreshold(
-      Threshold(List(PsiCvParam(PsiMs.MascotSigThreshold, "0.05"))))
+      Threshold(List(PsiCvParam(PsiMs.MascotSigThreshold, "0.05")))
+    )
 
     specIdentProto
   }
@@ -835,7 +804,7 @@ class MzIdExporter(
 
     val tolUnit = MassTolUnit.string2unit(ms2Settings.get.ms2ErrorTolUnit)
     val tolUnitCv = tolUnit match {
-      case MassTolUnit.Da => UnitTerm.Dalton // CvParamUnit("UO:0000221","dalton")
+      case MassTolUnit.Da  => UnitTerm.Dalton // CvParamUnit("UO:0000221","dalton")
       case MassTolUnit.mmu => UnitTerm.Milli // FIXME: this term is currently missing in the Unit Ontology
       case MassTolUnit.PPM => UnitTerm.PartsPerMillion // CvParamUnit("UO:0000169","parts per million")
     }
@@ -846,12 +815,16 @@ class MzIdExporter(
       PsiCvParam(
         PsiMs.SearchTolerancePlusValue,
         tolUnitCv,
-        tolValue))
+        tolValue
+      )
+    )
     tol.getCvParam().add(
       PsiCvParam(
         PsiMs.SearchToleranceMinusValue,
         tolUnitCv,
-        tolValue))
+        tolValue
+      )
+    )
 
     Some(tol)
   }
@@ -861,7 +834,7 @@ class MzIdExporter(
     // TODO: use MassTolUnit enum when also used in MSIdb (check PPM case)
     val tolUnit = searchSettings.ms1ErrorTolUnit match {
       case "ppm" => UnitTerm.PartsPerMillion //CvParamUnit("UO:0000169","parts per million")
-      case "Da" => UnitTerm.Dalton //CvParamUnit("UO:0000221","dalton")
+      case "Da"  => UnitTerm.Dalton //CvParamUnit("UO:0000221","dalton")
     }
 
     val tolValue = searchSettings.ms1ErrorTol.toString
@@ -870,12 +843,16 @@ class MzIdExporter(
       PsiCvParam(
         PsiMs.SearchTolerancePlusValue,
         tolUnit,
-        tolValue))
+        tolValue
+      )
+    )
     tol.getCvParam().add(
       PsiCvParam(
         PsiMs.SearchToleranceMinusValue,
         tolUnit,
-        tolValue))
+        tolValue
+      )
+    )
 
     tol
   }
@@ -909,14 +886,16 @@ class MzIdExporter(
       Residue(code = "U", mass = 150.95363f),
       Residue(code = "V", mass = 99.068414f),
       Residue(code = "W", mass = 186.079313f),
-      Residue(code = "Y", mass = 163.063329f))
+      Residue(code = "Y", mass = 163.063329f)
+    )
     residues.foreach(residueList.add(_))
 
     val ambiguousResList = massTable.getAmbiguousResidue()
     val ambiguousResidues = List(
       AmbiguousResidue("B", List(PsiCvParam(PsiMs.AlternateSingleLetterCodes, "D N"))),
       AmbiguousResidue("Z", List(PsiCvParam(PsiMs.AlternateSingleLetterCodes, "E Q"))),
-      AmbiguousResidue("X", List(PsiCvParam(PsiMs.AlternateSingleLetterCodes, "A C D E F G H I K L M N O P Q R S T U V W Y"))))
+      AmbiguousResidue("X", List(PsiCvParam(PsiMs.AlternateSingleLetterCodes, "A C D E F G H I K L M N O P Q R S T U V W Y")))
+    )
     ambiguousResidues.foreach(ambiguousResList.add(_))
 
     massTable
@@ -937,7 +916,8 @@ class MzIdExporter(
       mod.getResidues().add(modRes)
 
       mod.getCvParam().add(
-        BuildCvParam("UNIMOD:" + unimodIdByPtmId(ptmDef.ptmId), ptmDef.names.shortName, ControlledVocabulary.unimodCV))
+        BuildCvParam("UNIMOD:" + unimodIdByPtmId(ptmDef.ptmId), ptmDef.names.shortName, ControlledVocabulary.unimodCV)
+      )
 
       //mod.getSpecificityRules()
 
@@ -976,7 +956,10 @@ class MzIdExporter(
           PsiCvParam(PsiMs.MascotRequireBoldRed, "0"),
           PsiCvParam(PsiMs.MascotUseUnigeneClustering, "false"),
           PsiCvParam(PsiMs.MascotIncludeErrorTolerantMatches, "1"),
-          PsiCvParam(PsiMs.MascotShowDecoyMatches, "0"))))
+          PsiCvParam(PsiMs.MascotShowDecoyMatches, "0")
+        )
+      )
+    )
 
     pdp
   }
@@ -992,7 +975,10 @@ class MzIdExporter(
       BuildParamList(
         List(
           BuildUserParam("expected_peptides_fdr", "5.0", "xsd:float"),
-          BuildUserParam("expected_protein_sets_fdr", "1.0", "xsd:float"))))
+          BuildUserParam("expected_protein_sets_fdr", "1.0", "xsd:float")
+        )
+      )
+    )
 
     pdp
   }
@@ -1006,11 +992,12 @@ class MzIdExporter(
     val sourceFile = new SourceFile()
     sourceFile.setId("SF_" + msiSearch.id)
     sourceFile.setLocation(
-      msiSearch.resultFileDirectory + "/" + msiSearch.resultFileName)
+      msiSearch.resultFileDirectory + "/" + msiSearch.resultFileName
+    )
     //sourceFile.setExternalFormatDocumentation(value)
 
     // FIXME: retrieve the right file format
-    val sourcefileFormat = new MzIdFileFormat()
+    val sourcefileFormat = new FileFormat()
     sourcefileFormat.setCvParam(PsiCvParam(PsiMs.MascotDATFormat))
     sourceFile.setFileFormat(sourcefileFormat)
 
@@ -1023,14 +1010,15 @@ class MzIdExporter(
     //specData.setExternalFormatDocumentation(value)
 
     // FIXME: retrieve the right file format
-    val specFileFormat = new MzIdFileFormat()
+    val specFileFormat = new FileFormat()
     specFileFormat.setCvParam(PsiCvParam(PsiMs.MascotMGFFormat))
     specData.setFileFormat(specFileFormat)
 
     // FIXME: retrieve the right format
     val specIDFormat = new SpectrumIDFormat()
     specIDFormat.setCvParam(
-      PsiCvParam(PsiMs.MultiplePeakListNativeIDFormat))
+      PsiCvParam(PsiMs.MultiplePeakListNativeIDFormat)
+    )
     specData.setSpectrumIDFormat(specIDFormat)
 
     inputs.getSpectraData().add(specData)
@@ -1038,14 +1026,15 @@ class MzIdExporter(
     inputs
   }
 
-  protected def _buildFragmentationTable(): MzIdFragmentationTable = {
+  protected def _buildFragmentationTable(): FragmentationTable = {
 
     FragmentationTable(
       List(
         Measure("m_mz", List(PsiCvParam(PsiMs.ProductIonMz))),
         Measure("m_intensity", List(PsiCvParam(PsiMs.ProductIonIntensity))),
-        Measure("m_error", List(PsiCvParam.withAlternativeUnit(PsiMs.ProductIonMzError, PsiMs.Mz)))))
-
+        Measure("m_error", List(PsiCvParam.withAlternativeUnit(PsiMs.ProductIonMzError, PsiMs.Mz)))
+      )
+    )
   }
-
+  
 }

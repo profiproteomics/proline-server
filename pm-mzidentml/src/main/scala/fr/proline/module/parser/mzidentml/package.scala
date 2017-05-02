@@ -84,11 +84,12 @@ package object mzidentml {
   }
   
   object ScoreParamName extends Enumeration {
-    val COMET_EVALUE = Value( PsiCvParam(PsiMs.CometExpectationValue).getName() )    
+    val COMET_EVALUE = Value( PsiCvParam(PsiMs.CometExpectationValue).getName() )
     val MASCOT_SCORE = Value( PsiCvParam(PsiMs.MascotScore).getName() )
     val MSGF_EVALUE = Value( PsiCvParam(PsiMs.MSGFEValue).getName() )
-    val OMSSA_EVALUE = Value( PsiCvParam(PsiMs.OMSSAEvalue).getName() )    
+    val OMSSA_EVALUE = Value( PsiCvParam(PsiMs.OMSSAEvalue).getName() )
     val SEQUEST_EXPECT = Value( "expect" ) // Sequest + PeptideProphet expectation value
+    val XTANDEM_EVALUE = Value( PsiCvParam(PsiMs.XTandemExpect).getName() )
   }
   
   object PepXmlUserParams {
