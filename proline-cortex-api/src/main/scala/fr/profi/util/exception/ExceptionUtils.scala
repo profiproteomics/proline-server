@@ -7,7 +7,10 @@ object ExceptionUtils {
     val message = if (appendCause == false) {
       newMessage
     } else {
-      val cause = Option(throwable.getMessage).orElse(Option(throwable.getCause.getMessage)).orNull
+      val cause = Option(throwable.getMessage)
+        .orElse(Option(throwable.getCause).map(_.getMessage))
+        .orNull
+      
       if (cause != null) s"$newMessage because $cause" else newMessage
     }
     
