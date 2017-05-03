@@ -28,6 +28,7 @@ object ExportConfigConstant {
   val MODE_IDENT = "IDENT"
   val MODE_QUANT_SC = "QUANT_SC"
   val MODE_QUANT_XIC = "QUANT_XIC"
+  val MODE_QUANT_TAGGING = "QUANT_TAGGING"
 
   // Decimal separator
   val DECIMAL_SEPARATOR_COMMA: Char = ','
