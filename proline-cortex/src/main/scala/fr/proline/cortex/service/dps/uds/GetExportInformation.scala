@@ -75,6 +75,9 @@ object DatasetUtil {
           if (quantMethodType == QuantMethodType.LABEL_FREE.toString() && abundanceUnit == AbundanceUnit.SPECTRAL_COUNTS.toString()) {
             mode = ExportConfigConstant.MODE_QUANT_SC
           }
+          else if (abundanceUnit == AbundanceUnit.REPORTER_ION_INTENSITY) {
+            mode = ExportConfigConstant.MODE_QUANT_TAGGING
+          }
         }
       }
     } finally {
