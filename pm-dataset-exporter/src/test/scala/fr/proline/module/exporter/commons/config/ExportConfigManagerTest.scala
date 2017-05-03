@@ -52,7 +52,7 @@ class ExportConfigManagerTest extends LazyLogging {
 
   @Test
   def testGetAllConfigurationForIdentificationExport() {
-    val configStr = ExportConfigManager.getFullConfigForIdentificationExport()
+    val configStr = ExportConfig.toJSON(ExportConfig.getIdentificationFullExportConfig())
     //  reserialize check the conf
     val config = ExportConfigManager.readConfig(configStr)
     assertEquals("All Ident export nbSheets", 7, config.sheets.length)
@@ -61,7 +61,7 @@ class ExportConfigManagerTest extends LazyLogging {
 
   @Test
   def testGetAllConfigurationForSCExport() {
-    val configStr = ExportConfigManager.getFullConfigForSCExport()
+    val configStr = ExportConfig.toJSON(ExportConfig.getSCExportFullConfig())
     //  reserialize check the conf
     val config = ExportConfigManager.readConfig(configStr)
     assertEquals("All SC export nbSheets", 7, config.sheets.length)
@@ -70,7 +70,7 @@ class ExportConfigManagerTest extends LazyLogging {
 
   @Test
   def testGetAllConfigurationForXICExport() {
-    val configStr = ExportConfigManager.getFullConfigForXicExport()
+    val configStr = ExportConfig.toJSON(ExportConfig.getXicExportFullConfig())
     //  reserialize check the conf
     val config = ExportConfigManager.readConfig(configStr)
     assertEquals("All XIC export nbSheets", 8, config.sheets.length)
@@ -100,7 +100,7 @@ class ExportConfigManagerTest extends LazyLogging {
   @Test
   def testCheckTitleIdent() {
 
-    val configStr = ExportConfigManager.getFullConfigForIdentificationExport()
+    val configStr = ExportConfig.toJSON(ExportConfig.getIdentificationFullExportConfig())
     //  reserialize check the conf
     val config = ExportConfigManager.readConfig(configStr)
     //val check: Boolean = ExportConfigManager.checkTitle(config)
@@ -111,7 +111,7 @@ class ExportConfigManagerTest extends LazyLogging {
   @Test
   def testCheckTitleSC() {
 
-    val configStr = ExportConfigManager.getFullConfigForSCExport()
+    val configStr = ExportConfig.toJSON(ExportConfig.getSCExportFullConfig())
     //  reserialize check the conf
     val config = ExportConfigManager.readConfig(configStr)
     //val check: Boolean = ExportConfigManager.checkTitle(config)
@@ -122,7 +122,7 @@ class ExportConfigManagerTest extends LazyLogging {
   @Test
   def testCheckTitleXIC() {
 
-    val configStr = ExportConfigManager.getFullConfigForXicExport()
+    val configStr = ExportConfig.toJSON(ExportConfig.getXicExportFullConfig())
     //  reserialize check the conf
     val config = ExportConfigManager.readConfig(configStr)
     //val check: Boolean = ExportConfigManager.checkTitle(config)

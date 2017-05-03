@@ -86,4 +86,23 @@ object ExportConfig {
       )
     )
   }
+  
+  // get all config for IsobaricTagging export
+  def getIsobaricTaggingExportFullConfig(): ExportConfig = {
+    val( fromXIC, fromSC ) = (true, false)
+    ExportConfig(
+      sheets = Array(
+        ExportConfigSheet.getInformationSheetExportConfig(fromXIC),
+        ExportConfigSheet.getImportSheetExportConfig(fromXIC),
+        ExportConfigSheet.getQuantConfigSheetExportConfig(),
+        ExportConfigSheet.getProteinSetsSheetExportConfig(fromXIC, fromSC),
+        ExportConfigSheet.getProteinMatchesSheetExportConfig(defaultDisplayed = false),
+        ExportConfigSheet.getMasterQuantPeptidesSheetExportConfig(),
+        ExportConfigSheet.getMasterQuantPepIonsSheetSheetExportConfig(),
+        ExportConfigSheet.getMasterQuantRepIonsSheetSheetExportConfig(),
+        ExportConfigSheet.getStatisticsSheetExportConfig(defaultDisplayed = false)
+      )
+    )
+  }
+  
 }

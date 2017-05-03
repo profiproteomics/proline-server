@@ -125,6 +125,17 @@ object ExportConfigSheet {
       defaultDisplayed = false
     )
   }
+  
+  // get full config for masterQuantReporterIon
+  def getMasterQuantRepIonsSheetSheetExportConfig(): ExportConfigSheet = {
+    ExportConfigSheet(
+      id = ExportConfigConstant.SHEET_MASTER_QUANT_REPORTER_ION,
+      title = "Quantified reporter ions",
+      presentation = ExportConfigConstant.PRESENTATION_SHEET_COLUMNS,
+      fields = CustomFieldConfigFactory.getPeptideMatchesSheetFields(fromXIC = true, fromSC = false),
+      defaultDisplayed = false
+    )
+  }
 
   // get full config for stat sheet
   def getStatisticsSheetExportConfig(defaultDisplayed: Boolean = true): ExportConfigSheet = {

@@ -21,12 +21,7 @@ object ExportConfigManager extends LazyLogging {
   def getFullExportConfigAsJson(mode: String): String = {
     logger.debug("getFullExportConfigAsJson")
     
-    if (mode == MODE_QUANT_SC)
-      getFullConfigForSCExport()
-    else if (mode == MODE_QUANT_XIC)
-      getFullConfigForXicExport()
-    else
-      getFullConfigForIdentificationExport()
+    ExportConfig.toJSON(this.getFullExportConfig(mode))
   }
   
   // returns the ExportConfig corresponding to the given mode
@@ -37,26 +32,10 @@ object ExportConfigManager extends LazyLogging {
       ExportConfig.getSCExportFullConfig()
     else if (mode == MODE_QUANT_XIC)
       ExportConfig.getXicExportFullConfig()
+    else if (mode == MODE_QUANT_TAGGING)
+      ExportConfig.getIsobaricTaggingExportFullConfig()
     else
       ExportConfig.getIdentificationFullExportConfig()
-  }
-
-  // returns a json string with all  configuration for identification export
-  def getFullConfigForIdentificationExport(): String = {
-    logger.debug("getFullConfigForIdentificationExport")
-    ExportConfig.toJSON(ExportConfig.getIdentificationFullExportConfig())
-  }
-
-  // returns a json string with all configuration for SC export
-  def getFullConfigForSCExport(): String = {
-    logger.debug("getFullConfigForSCExport")
-    ExportConfig.toJSON(ExportConfig.getSCExportFullConfig())
-  }
-
-  // returns a json string with all configuration for XIC export
-  def getFullConfigForXicExport(): String = {
-    logger.debug("getFullConfigForXicExport")
-    ExportConfig.toJSON(ExportConfig.getXicExportFullConfig())
   }
 
   // for a given json with all configuration for a dataset, returns the corresponding default json string  
@@ -71,7 +50,7 @@ object ExportConfigManager extends LazyLogging {
       bestProfile = fullConfig.dataExport.bestProfile
     )
     val defaultSheetsAndFields = fullConfig.sheets.withFilter(_.defaultDisplayed).map(_.copyWithDefaultFields())
-    
+
     val confObj = ExportConfig(
       format = fullConfig.format,
       decimalSeparator = fullConfig.decimalSeparator,
@@ -79,18 +58,17 @@ object ExportConfigManager extends LazyLogging {
       dataExport = exportConfigData,
       sheets = defaultSheetsAndFields
     )
-      
+
     confObj
   }
-  
+
   def getDefaultExportConfigAsJson(mode: String): String = {
     logger.debug("getDefaultExportConfigAsJson")
-    
+
     val defaultConfig = getDefaultExportConfig(mode)
 
     // to JSON
     ExportConfig.toJSON(defaultConfig)
   }
-
 
 }

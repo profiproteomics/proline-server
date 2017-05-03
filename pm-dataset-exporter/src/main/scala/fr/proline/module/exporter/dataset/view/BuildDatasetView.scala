@@ -58,6 +58,9 @@ object BuildDatasetView {
         case ExportConfigConstant.SHEET_MASTER_QUANT_PEPTIDE_ION => {
           mapBuilder += (MASTER_QUANT_PEPTIDE_ION -> { ds: IdentDataset => new MasterQuantPeptideIonView(ds, sheet, dateFormat, smartDecimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
         }
+        case ExportConfigConstant.SHEET_MASTER_QUANT_REPORTER_ION => {
+          mapBuilder += (MASTER_QUANT_REPORTER_ION -> { ds: IdentDataset => new MasterQuantReporterIonView(ds, sheet, dateFormat, smartDecimalFormat, titleSep, exportAllProteinSet, exportBestProfile) })
+        }
         case ExportConfigConstant.SHEET_STAT => {
           mapBuilder += (STATISTICS -> { ds: IdentDataset => new StatisticsView(ds.resultSummary, sheet, dateFormat, decimalFormat) })
         }

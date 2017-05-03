@@ -162,7 +162,7 @@ object ExportConfigConstant {
   val FIELD_PSM_QUANT_ELUTION_TIME = "psm_quant_elution_time"
   val FIELD_PSM_QUANT_SELECTION_LEVEL = "psm_quant_selection_level"
 
-  // MasterQuantPeptideIon sheet  
+  // MasterQuantPeptideIon sheet
   val SHEET_MASTER_QUANT_PEPTIDE_ION = "master_quant_peptide_ion"
   val FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME = "quant_peptide_ion_elution_time" //incremental
   val FIELD_QUANT_PEPTIDE_ION_CORRECTED_ELUTION_TIME = "quant_peptide_ion_corrected_elution_time" //incremental
@@ -172,6 +172,9 @@ object ExportConfigConstant {
   val FIELD_MASTER_QUANT_PEPTIDE_ION_CHARGE = "master_quant_peptide_ion_charge"
   val FIELD_MASTER_QUANT_PEPTIDE_ION_FEATURE_ID = "master_quant_peptide_ion_feature_id"
   val FIELD_MASTER_QUANT_PEPTIDE_ION_MOZ = "master_quant_peptide_ion_moz"
+  
+  // MasterQuantReporterIon sheet
+  val SHEET_MASTER_QUANT_REPORTER_ION = "master_quant_reporter_ion"
   
   // Some properties shared between quantitation sheets
   val FIELD_PROFILIZER_RATIO = "ratio" // incremental

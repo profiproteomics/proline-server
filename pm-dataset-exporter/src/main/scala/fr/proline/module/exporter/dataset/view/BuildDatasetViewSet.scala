@@ -247,7 +247,8 @@ object BuildDatasetViewSet extends LazyLogging {
       // Load the quant RSM
       logger.debug(s"Loading quant result summary #$rsmId...")
 
-      val quantRsmProvider = new SQLLazyQuantResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
+      val loadReporterIons = (mode == ExportConfigConstant.MODE_QUANT_TAGGING)
+      val quantRsmProvider = new SQLLazyQuantResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx, loadReporterIons)
       val lazyQuantRSM = quantRsmProvider.getLazyQuantResultSummaries(
         dsId,
         Seq(quantRsmId),

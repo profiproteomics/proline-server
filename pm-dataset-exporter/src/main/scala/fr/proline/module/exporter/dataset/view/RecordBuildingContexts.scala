@@ -4,12 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
 
 import fr.proline.core.om.model.msi._
-import fr.proline.core.om.model.msq.ComputedRatio
-import fr.proline.core.om.model.msq.MasterQuantPeptide
-import fr.proline.core.om.model.msq.MasterQuantPeptideIon
-import fr.proline.core.om.model.msq.MasterQuantProteinSet
-import fr.proline.core.om.model.msq.MasterQuantProteinSetProfile
-import fr.proline.core.om.model.msq.QuantComponent
+import fr.proline.core.om.model.msq._
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
 
 class ProtMatchBuildingContext(
@@ -121,5 +116,27 @@ class MasterQuantPeptideIonBuildingContext(
   groupSetupNumber
 ) {
   override def getQuantComponentMap(): LongMap[_ <: QuantComponent] = masterQuantPeptideIon.quantPeptideIonMap
+  override def getRatios(): Option[List[Option[ComputedRatio]]] = None
+}
+
+class MasterQuantReporterIonBuildingContext(
+  pepMatch: PeptideMatch,
+  protMatch: ProteinMatch,
+  seqMatch: SequenceMatch,
+  protMatchBuildingCtx: Option[ProtMatchBuildingContext],
+  masterQuantPeptide: MasterQuantPeptide,
+  masterQuantPeptideIon: MasterQuantPeptideIon,
+  val masterQuantReporterIon: MasterQuantReporterIon,
+  groupSetupNumber: Int
+) extends MasterQuantPeptideIonBuildingContext(
+  pepMatch,
+  protMatch,
+  seqMatch,
+  protMatchBuildingCtx,
+  masterQuantPeptide,
+  masterQuantPeptideIon,
+  groupSetupNumber
+) {
+  override def getQuantComponentMap(): LongMap[_ <: QuantComponent] = masterQuantReporterIon.quantReporterIonMap
   override def getRatios(): Option[List[Option[ComputedRatio]]] = None
 }
