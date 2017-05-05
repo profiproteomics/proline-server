@@ -112,13 +112,21 @@ object NodeConfig extends LazyLogging {
   }
 
   private def retrieveMzdbMaxParallelism(config: Config): Int = {
-    if (!config.hasPath(MZDB_MAX_PARALLELISM_KEY)) DEFAULT_MZDB_MAX_PARALLELISM
+    val maxParallelism = if (!config.hasPath(MZDB_MAX_PARALLELISM_KEY)) DEFAULT_MZDB_MAX_PARALLELISM
     else config.getInt(MZDB_MAX_PARALLELISM_KEY)
+    
+    logger.info(s"$MZDB_MAX_PARALLELISM_KEY=$maxParallelism")
+    
+    maxParallelism
   }
   
   private def retrievePeakeldbTempDirectory(config: Config): String = {
-    if (!config.hasPath(PEAKELDB_TEMP_DIRECTORY_KEY)) DEFAULT_PEAKELDB_TEMP_DIRECTORY
+    val peakeldbTempDirectory = if (!config.hasPath(PEAKELDB_TEMP_DIRECTORY_KEY)) DEFAULT_PEAKELDB_TEMP_DIRECTORY
     else config.getString(PEAKELDB_TEMP_DIRECTORY_KEY)
+    
+    logger.info(s"$PEAKELDB_TEMP_DIRECTORY_KEY=$peakeldbTempDirectory")
+    
+    peakeldbTempDirectory
   }
 
   private def retrieveEnableImports(config: Config): Boolean = {
