@@ -100,7 +100,7 @@ class MzIdResultFile(
               PsiMs.MascotHomologyThreshold
             )
             
-            val msQueryPropsOpt = if( filterCvParams(sIRCvParams,msQueryPropsTermIds).length == 0 ) None
+            val msQueryPropsOpt = if( filterCvParams(sIRCvParams,msQueryPropsTermIds).isEmpty ) None
             else {
               // TODO: parse other properties for other kind of search engines
               val msQueryDbSearchProps = Some( MsQueryDbSearchProperties(
@@ -689,6 +689,9 @@ class MzIdResultFile(
                 case ScoreParamName.OMSSA_EVALUE => {
                   (-math.log10(scoreParamValue),Scoring.Type.OMSSA_EVALUE.toString)
                 }
+                case ScoreParamName.PEPTIDE_SHAKER_SCORE => {
+                  (scoreParamValue,Scoring.Type.PEPTIDE_SHAKER_PSM_SCORE.toString)
+                }
                 case ScoreParamName.SEQUEST_EXPECT => {
                   (-math.log10(scoreParamValue),Scoring.Type.SEQUEST_EXPECT_LOG_SCALED.toString)
                 }
@@ -740,17 +743,23 @@ class MzIdResultFile(
               )
             }
             
+            // Search for PhosphoRS information
+            val phosphoRsScoreCvParams = filterCvParams(sIDCvParams,Set(PsiMs.PhosphoRSScore))
+            val phosphoRsScoresAsStr = phosphoRsScoreCvParams.map(_.getValue).mkString(";")
+            val ptmSitePropsOpt = Some(PeptideMatchPtmSiteProperties(phosphoRsString = Some(phosphoRsScoresAsStr)))
+            
             // TODO: add properties for other search engines or use object trees ???
             val pepMatchProps = PeptideMatchProperties(
               mascotProperties = mascotPropsOpt,
-              omssaProperties = omssaPropsOpt
+              omssaProperties = omssaPropsOpt,
+              ptmSiteProperties = ptmSitePropsOpt
             )
             
             // Convert the SpectrumIdentificationItem element into a PeptideMatch
             val pepMatch = new PeptideMatch(
               id = PeptideMatch.generateNewId,
               rank = sIdentItem.getRank(),
-              score = pepMatchScore.toFloat,            
+              score = pepMatchScore.toFloat,
               scoreType = PeptideMatchScoreType.withName(scoreType),
               charge = msQuery.charge,
               deltaMoz = deltaMoz.toFloat, // exp - calc

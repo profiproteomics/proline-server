@@ -20,9 +20,11 @@ package object mzidentml {
     val INCLUDE = Value("INCLUDE")    
   }
   
-  implicit class RichDatabaseFilters( dbFilters: DatabaseFilters ) {
-    require( dbFilters != null, "dbFilters is null" )
+  implicit class RichDatabaseFilters( val dbFilters: DatabaseFilters ) extends AnyVal {
+    
     def findFilter( termId: PsiMsTermId.Value ): Option[Filter] = {
+      require( dbFilters != null, "dbFilters is null" )
+      
       dbFilters.getFilter().find(_.getFilterType.getCvParam.getAccession == termId.toString)
     }
     
@@ -35,7 +37,7 @@ package object mzidentml {
     }
   }
   
-  implicit class RichFilter( filter: Filter ) { 
+  implicit class RichFilter( val filter: Filter ) extends AnyVal { 
     def findFilterCvParam( term: PsiMs.Value, paramType: FilterParamType.Value = FilterParamType.INCLUDE ): Option[CvParam] = {
       
       val paramList = paramType match {
@@ -88,6 +90,7 @@ package object mzidentml {
     val MASCOT_SCORE = Value( PsiCvParam(PsiMs.MascotScore).getName() )
     val MSGF_EVALUE = Value( PsiCvParam(PsiMs.MSGFEValue).getName() )
     val OMSSA_EVALUE = Value( PsiCvParam(PsiMs.OMSSAEvalue).getName() )
+    val PEPTIDE_SHAKER_SCORE = Value( PsiCvParam(PsiMs.PeptideShakerPSMScore).getName() )
     val SEQUEST_EXPECT = Value( "expect" ) // Sequest + PeptideProphet expectation value
     val XTANDEM_EVALUE = Value( PsiCvParam(PsiMs.XTandemExpect).getName() )
   }
