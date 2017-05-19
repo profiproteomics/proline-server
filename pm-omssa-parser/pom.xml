@@ -16,7 +16,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>2.0.0.a-SNAPSHOT</core.version>
+    <core.version>1.2.0-SNAPSHOT</core.version>
     <version.path>${basedir}/src/main/scala/fr/proline/module/parser/omssa</version.path>
   </properties>
 	<scm>
