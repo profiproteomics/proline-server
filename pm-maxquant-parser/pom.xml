@@ -96,6 +96,6 @@
 		</pluginManagement>
   </build>
   <scm>
-  	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MaxQuantParser/trunk</connection>
+  	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MaxQuantParser/branches/0.2.0-RCandidates</connection>
   </scm>
 </project>
