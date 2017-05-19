@@ -62,7 +62,7 @@
   	</dependency>
   </dependencies>
   <properties>
-  	<core.version>2.0.0.a-SNAPSHOT</core.version>
+  	<core.version>1.2.0-SNAPSHOT</core.version>
   </properties>
   <build>
   	<pluginManagement>
