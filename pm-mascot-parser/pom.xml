@@ -16,7 +16,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>1.1.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
+    <core.version>2.0.0.a-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
     <version.path>${basedir}/src/main/scala/fr/proline/module/parser/mascot</version.path>
     <mascot.version>2.5.2</mascot.version>
   </properties>
@@ -45,7 +45,7 @@
     <dependency>
       <groupId>fr.proline.unimod</groupId>
       <artifactId>UnimodUnmarshaller</artifactId>
-      <version>0.10.0-SNAPSHOT</version>
+      <version>0.11.0-SNAPSHOT</version>
     </dependency>
 
     <!-- Mascot Parser native libraries (for all OSes, loaded at runtime) 
@@ -60,17 +60,17 @@
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Java</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
+      <version>0.6.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Scala</artifactId>
-      <version>0.6.0-SNAPSHOT</version>
+      <version>0.7.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.profi</groupId>
       <artifactId>ProFI-Proteomics</artifactId>
-      <version>0.2.0-SNAPSHOT</version>
+      <version>0.3.0-SNAPSHOT</version>
     </dependency>
 
     <!-- Proline -->
@@ -92,7 +92,7 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>PM-FragmentMatchGenerator</artifactId>
-      <version>0.6.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+      <version>0.7.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
     </dependency>
     <!-- Tests -->
     <dependency>
