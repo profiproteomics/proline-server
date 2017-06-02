@@ -33,8 +33,10 @@ trait IRegisterRawFileService extends IUdsService with IDefaultServiceVersion {
       RAW_FILE_PATH_PARAM,
       MZDB_FILE_PATH_PARAM,
       INSTRUMENT_ID_PARAM,
-      OWNER_ID_PARAM
+      OWNER_ID_PARAM,
+      OVERWRITE
     )
+    
     val returns = JSONRPC2MethodResult(
       typeOf[Long],
       "The ID of the run corresponding the the newly registered raw/mzDB pair."
