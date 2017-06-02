@@ -157,6 +157,7 @@ object ExportConfigConstant {
   val FIELD_PSM_RESIDUE_AFTER = "psm_residue_after"
   val FIELD_PSM_PTM_SCORE = "psm_ptm_score"
   val FIELD_PSM_PTM_SITES_CONFIDENCE = "psm_ptm_sites_confidence"
+  val FIELD_PSM_PHOSPHO_RS_RESULT = "psm_phospho_rs_result"
 
   val FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID = "psm_master_quant_peptide_id"
   val FIELD_PSM_QUANT_ELUTION_TIME = "psm_quant_elution_time"

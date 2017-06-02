@@ -99,8 +99,9 @@ object ExportConfig {
         ExportConfigSheet.getProteinMatchesSheetExportConfig(defaultDisplayed = false),
         ExportConfigSheet.getMasterQuantPeptidesSheetExportConfig(),
         ExportConfigSheet.getMasterQuantPepIonsSheetSheetExportConfig(),
-        ExportConfigSheet.getMasterQuantRepIonsSheetSheetExportConfig(),
-        ExportConfigSheet.getStatisticsSheetExportConfig(defaultDisplayed = false)
+        ExportConfigSheet.getMasterQuantRepIonsSheetSheetExportConfig()
+        // FIXME: re-enable me when the NPE is fixed
+        //ExportConfigSheet.getStatisticsSheetExportConfig(defaultDisplayed = false)
       )
     )
   }

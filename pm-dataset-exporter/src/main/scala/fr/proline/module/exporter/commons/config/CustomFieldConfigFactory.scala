@@ -159,7 +159,8 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_PSM_RESIDUE_BEFORE, "residue_before"),
       CustomFieldConfig(FIELD_PSM_RESIDUE_AFTER, "residue_after"),
       CustomFieldConfig(FIELD_PSM_PTM_SCORE, "ptm_score"),
-      CustomFieldConfig(FIELD_PSM_PTM_SITES_CONFIDENCE, "ptm_sites_confidence")
+      CustomFieldConfig(FIELD_PSM_PTM_SITES_CONFIDENCE, "ptm_sites_confidence"),
+      CustomFieldConfig(FIELD_PSM_PHOSPHO_RS_RESULT, "phosphors_result", defaultDisplayed = false)
     ).filter( _ != null )
     
     fieldsBuffer ++= getProteinSetsSheetFields(false, false, false)

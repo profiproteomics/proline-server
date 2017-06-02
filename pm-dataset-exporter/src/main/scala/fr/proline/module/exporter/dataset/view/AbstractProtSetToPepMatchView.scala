@@ -35,7 +35,8 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
     FIELD_PSM_RESIDUE_BEFORE,
     FIELD_PSM_RESIDUE_AFTER,
     FIELD_PSM_PTM_SCORE,
-    FIELD_PSM_PTM_SITES_CONFIDENCE
+    FIELD_PSM_PTM_SITES_CONFIDENCE,
+    FIELD_PSM_PHOSPHO_RS_RESULT
   )
   
   protected val pepMatchFieldsConfigs = sheetConfig.fields.filter( f => pepMatchFieldSet.contains(f.id) )
@@ -112,6 +113,7 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
         case FIELD_PSM_RESIDUE_AFTER => if (seqMatch.residueAfter == '\0') '-' else seqMatch.residueAfter
         case FIELD_PSM_PTM_SCORE => ptmScoreOpt.map( dcf2.format(_) ).orNull
         case FIELD_PSM_PTM_SITES_CONFIDENCE => ptmSitesOpt.orNull
+        case FIELD_PSM_PHOSPHO_RS_RESULT => ptmSitePropsOpt.flatMap( _.phosphoRsString ).orNull
       }
       
       recordBuilder += fieldConfig.title -> fieldValue

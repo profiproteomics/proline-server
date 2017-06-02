@@ -63,12 +63,12 @@ class MasterQuantReporterIonView(
     val recordBuilder = Map.newBuilder[String,Any]
     recordBuilder ++= pepMatchRecord
     
-    def appendQcValuesToRecord(fieldConfig: CustomFieldConfig)( qcValueFn: (Long,QuantReporterIon) => Any ): Null = {
+    /*def appendQcValuesToRecord(fieldConfig: CustomFieldConfig)( qcValueFn: (Long,QuantReporterIon) => Any ): Null = {
       for (qcId <- quantDs.qcIds; qRepIon <- qRepIonMap.get(qcId) ) {
         recordBuilder += mkQcFieldTitle(fieldConfig, qcId) -> qcValueFn(qcId, qRepIon)
       }
       null
-    }
+    }*/
 
     for (fieldConfig <- mqRepIonViewFieldsConfigs) {
       val fieldValue: Any = fieldConfig.id match {
