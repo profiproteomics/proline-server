@@ -18,7 +18,7 @@
   </properties>
   
   <scm>
-  	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-JMS-Components/Proline-Cortex/trunc</connection>
+  	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-JMS-Components/Proline-Cortex/trunk</connection>
   </scm>
   <dependencies>
 
