@@ -16,6 +16,7 @@ import fr.profi.util.reflect.FieldDescription
 
 object ResultFileFormat extends EnhancedEnum {
   val MASCOT_DAT = Value("mascot.dat")
+  val MZIDENTML_MZID = Value("mzidentml.mzid")
   val OMSSA_OMX = Value("omssa.omx")
   val XTANDEM_XML = Value("xtandem.xml")
 }
