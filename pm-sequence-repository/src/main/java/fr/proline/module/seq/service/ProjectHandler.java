@@ -23,15 +23,13 @@ import fr.profi.chemistry.model.EnzymeCleavage;
 import fr.profi.util.StringUtils;
 import fr.proline.core.orm.msi.BioSequence;
 import fr.proline.core.orm.msi.Enzyme;
-import fr.proline.core.orm.msi.PeptideInstance;
+import fr.proline.core.orm.msi.MsiSearch;
 import fr.proline.core.orm.msi.ProteinMatch;
 import fr.proline.core.orm.msi.ProteinSet;
 import fr.proline.core.orm.msi.ProteinSetProteinMatchItem;
 import fr.proline.core.orm.msi.ResultSummary;
 import fr.proline.core.orm.msi.SeqDatabase;
-import fr.proline.core.orm.msi.SequenceMatch;
-import fr.proline.core.orm.msi.SequenceMatchPK;
-import fr.proline.core.orm.msi.repository.SequenceMatchRepository;
+import fr.proline.core.orm.msi.repository.ResultSetRepository;
 import fr.proline.core.orm.pdi.Alphabet;
 import fr.proline.core.orm.uds.Project;
 import fr.proline.core.orm.uds.repository.ProjectRepository;
@@ -504,16 +502,38 @@ public class ProjectHandler {
 						
 						
 						// For number of observable peptides computation 
-						//VDS : check if exists. TODO : Use childMSI to get information!!
 						fr.profi.chemistry.model.Enzyme enzyme = null;
-						if(rsm.getResultSet().getMsiSearch() != null) {
-							Set<Enzyme> enzymes = rsm.getResultSet().getMsiSearch().getSearchSetting().getEnzymes();					
-
-							fr.proline.core.orm.uds.Enzyme ormEnzyme = udsEM.find(fr.proline.core.orm.uds.Enzyme.class, enzymes.iterator().next().getId());
+						MsiSearch msiSearch = rsm.getResultSet().getMsiSearch();
+						Set<Enzyme> sameEnzymes = null;
+						boolean isSameEnzyme = true;
+						
+						if(msiSearch == null){							
+							//Look in child and verify same enzyme was used for all child
+							List<Long> childSearchesIds = ResultSetRepository.findChildMsiSearchIdsForResultSet(msiEM, rsm.getResultSet().getId());														
+							for(Long childMsiSearchId : childSearchesIds){
+								MsiSearch childMsiSearch = msiEM.find(MsiSearch.class, childMsiSearchId);
+								Set<Enzyme> enzymes = childMsiSearch.getSearchSetting().getEnzymes();	
+								if(sameEnzymes == null)
+									sameEnzymes = enzymes;
+								if(!sameEnzymes.equals(enzymes)){
+									isSameEnzyme = false;
+									break;
+								}									
+							}
+						} else {
+							sameEnzymes = msiSearch.getSearchSetting().getEnzymes();	
+						}
+						
+						if(!isSameEnzyme){
+							LOG.warn("Can't get Enzyme for Merged ResultSet as child don't have the same Enzyme ! "); 
+						} else {
+							//VDS TODO : Why use first 						}
+							fr.proline.core.orm.uds.Enzyme ormEnzyme = udsEM.find(fr.proline.core.orm.uds.Enzyme.class, sameEnzymes.iterator().next().getId());
 							List<EnzymeCleavage> cleavages = new ArrayList<>();
 							for (fr.proline.core.orm.uds.EnzymeCleavage c : ormEnzyme.getCleavages()) {
 								cleavages.add(new EnzymeCleavage(c.getId(), c.getSite(), c.getResidues(), (c.getRestrictiveResidues() == null) ? scala.Option.empty() : new Some<String>(c.getRestrictiveResidues())));
 							}
+												
 							enzyme = new fr.profi.chemistry.model.Enzyme(ormEnzyme.getId(), ormEnzyme.getName(), cleavages.toArray(new EnzymeCleavage[0]), new Some<String>(ormEnzyme.getCleavageRegexp()), false, false, scala.Option.empty()); 
 						}
 						
@@ -582,9 +602,9 @@ public class ProjectHandler {
 				try {
 					if (!msiTransactionOK)
 						msiEM.getTransaction().rollback();
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
+				} catch (Exception e) {					
 					e.printStackTrace();
+					LOG.error("Error RollingBack MSI Db Project #" + projectId, e);
 				}
 				throw ex; //throw exception to caller  
 			} finally {
