@@ -2,7 +2,6 @@ package fr.proline.jms.service.api
 
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
-
 import fr.profi.util.jsonrpc.BuildJSONRPC2Response
 import fr.profi.util.jsonrpc.IJSONRPC2Method
 import fr.profi.util.jsonrpc.JSONRPC2ServiceDescription
@@ -11,7 +10,9 @@ import fr.profi.util.jsonrpc.JSONRPC2ServiceEnvelope.enumToString
 import fr.profi.util.jsonrpc.JSONRPC2ServiceTransport
 import fr.profi.util.jsonrpc.JSONRPC2ServiceTransport.enumToString
 import javax.jms.BytesMessage
-
+import javax.jms.Message
+import javax.jms.Session
+ 
 
 trait IRemoteServiceIdentity {
   
@@ -82,12 +83,41 @@ object RemoteServiceIdentity {
   val PROCESS_METHOD_NAME = "process"
 }
 
+/**
+ * Interface for services
+ *  - consuming of TextMessage
+ *  - returning an object type
+ */
 trait IRemoteJsonRPC2Service extends IRemoteServiceIdentity {
   
   // Define the "runSevice" method which must be implemented by child classes
-  // Note: exceptions are caught by the ServiceRunner to return an error properly
+  /**
+   * Implementing class should implement this runService method if the returned object in
+   * a JSONRPC2Response Object which will be integrated to replied Message
+   * Note: exceptions are caught by the ServiceRunner to return an error properly
+   * 
+   */
   def runService(jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any]): JSONRPC2Response
+  
+}
 
+
+/**
+ * Interface for services
+ *  - consuming of TextMessage
+ *  - returning an a complete jms Message Object which will be replied as it is
+ */
+trait IRemoteCompleteJsonRPC2Service extends IRemoteServiceIdentity {
+
+  /**
+   * Implementing class should implement this runService method :  the returned object is
+   * a complete jms Message Object which will be replied as it is
+   * Note: exceptions are caught by the ServiceRunner to return an error properly
+   * 
+   */
+  def runService(session: Session, jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any]): Message
+  
+ 
 }
 
 
