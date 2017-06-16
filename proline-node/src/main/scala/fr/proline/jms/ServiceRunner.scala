@@ -1,14 +1,11 @@
 package fr.proline.jms
 
 import java.util.concurrent.Future
-
 import scala.collection.mutable
-
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.StringUtils
 import fr.profi.util.ThreadLogger
 import fr.profi.util.exception.SerializableStackTraceElement
@@ -40,12 +37,22 @@ import javax.jms.MessageProducer
 import javax.jms.Queue
 import javax.jms.Session
 import javax.jms.TextMessage
+import fr.proline.jms.service.api.IRemoteCompleteJsonRPC2Service
+import fr.proline.jms.util.JMSConstants
 
 object ServiceRunner extends LazyLogging {
 
   /* Constants */
 
   /* Static methods */
+  
+  def buildJMSMsgFromJSONRPC2Response(session: Session, jsonResponse: JSONRPC2Response, jmsMessageContext: Map[String, Any]) : Message = {
+    val responseJMSMessage: Message = session.createTextMessage()    
+    responseJMSMessage.setJMSCorrelationID(jmsMessageContext.get(JMSConstants.JMSCorrelationID).toString())
+    responseJMSMessage.asInstanceOf[TextMessage].setText(jsonResponse.toJSONString())
+    return responseJMSMessage
+  }
+  
   def buildJSONRPC2Error(code: Int, t: Throwable): JSONRPC2Error = {
     
     val stackTrace = t.getStackTrace.map { traceElem =>
@@ -109,6 +116,7 @@ object ServiceRunner extends LazyLogging {
   }
 
   def buildJMSMessageContext(message: Message): Map[String, Any] = {
+
     require(message != null, "message is null")
 
     val mutableMap = mutable.Map.empty[String, Any]
@@ -268,13 +276,20 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
     logger.debug(s"Handling Request JMS Message [$jmsMessageId]")
 
     var jsonRequestId: java.lang.Object = null
-    var jsonResponse: JSONRPC2Response = new JSONRPC2Response(JSONRPC2Error.INVALID_REQUEST, jsonRequestId)
     
     var serviceName: String = null
     var serviceVersion: String = null
     var requestString : String = null
-    val isTxtMsg = message.isInstanceOf[TextMessage]
+    val isTxtMsg = message.isInstanceOf[TextMessage] //Specify if received Message is a TextMessage
+    var jmsMessageContext : Map[String, Any] = null
     
+    
+    var isCompleteService = false //Specify if returned service object is a Response or a complete final Message
+    var jmsResponseMsg : Message = null //returned Message in case isCompleteService
+    var jsonResponse: JSONRPC2Response = new JSONRPC2Response(JSONRPC2Error.INVALID_REQUEST, jsonRequestId) // returned Response in case !isCompleteService
+    
+  
+
     try {
 
       if (isTxtMsg || message.isInstanceOf[BytesMessage]) {
@@ -311,10 +326,16 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
           val serviceInstanceOpt = getServiceInstance(serviceName, serviceVersion)
 
           if (serviceInstanceOpt.isDefined) {
-            val jmsMessageContext = buildJMSMessageContext(message)
+            jmsMessageContext = buildJMSMessageContext(message)
+            var jmsResponseMsg : Message = null
 
             if (isTxtMsg) {
-              jsonResponse = callTextMsgService(jmsMessageContext, jsonRequest, serviceInstanceOpt.get.asInstanceOf[IRemoteJsonRPC2Service])
+              if(serviceInstanceOpt.get.isInstanceOf[IRemoteCompleteJsonRPC2Service]) {
+                isCompleteService = true
+                jmsResponseMsg = callCompleteTextMsgService(session, jmsMessageContext, jsonRequest, serviceInstanceOpt.get.asInstanceOf[IRemoteCompleteJsonRPC2Service])                
+              } else 
+                jsonResponse = callTextMsgService(jmsMessageContext, jsonRequest, serviceInstanceOpt.get.asInstanceOf[IRemoteJsonRPC2Service])
+                
             } else {
               jsonResponse = callBytesMsgService(jmsMessageContext, message.asInstanceOf[BytesMessage], serviceInstanceOpt.get.asInstanceOf[IRemoteBytesMsgService])
             }
@@ -358,6 +379,11 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
       }
 
     } finally {
+      
+//      if(isCompleteService){
+//        //Don't need to create Message, already done !
+//        945452
+//      } else {
 
       /* In all cases, try to send a JSON Response to the JMS source Client */
       val replyDestination = message.getJMSReplyTo
@@ -366,9 +392,14 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
         logger.warn("Request JMS Message has no 'JMSReplyTo' destination: cannot send JSON response to the client")
       } else {
 
-        if (jsonResponse == null) {
+        if ((!isCompleteService && jsonResponse == null) || (isCompleteService && jmsResponseMsg !=null )) {
           jsonResponse = new JSONRPC2Response(JSONRPC2Error.INTERNAL_ERROR, jsonRequestId)
+          if(isCompleteService){
+            isCompleteService = false // continue assuming Message should be created            
+          }
         }
+        
+        val success = ((!isCompleteService && jsonResponse.indicatesSuccess) || isCompleteService)
 
         /* Notify */
         val serviceSource = message.getStringProperty(PROLINE_SERVICE_SOURCE_KEY)
@@ -379,9 +410,9 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
         
         val serviceVersionOpt = if (StringUtils.isNotEmpty(serviceVersion)) Some(serviceVersion) else None 
 
-        val serviceEvent = if (jsonResponse.indicatesSuccess) { // no error
-
-          if (jsonResponse.getResult == null) {
+        val serviceEvent = if (success) { // no error
+        
+          if (!isCompleteService && jsonResponse.getResult == null) {
             new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_FAIL, serviceVersionOpt, serviceSourceOpt, serviceDescrOpt)
           } else {
             new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_SUCCESS, serviceVersionOpt, serviceSourceOpt, serviceDescrOpt)
@@ -396,10 +427,8 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
         
         serviceMonitoringNotifier.sendNotification(serviceEvent.toJSONRPCNotification(), null)
 
-        val responseJMSMessage = session.createTextMessage()
-        responseJMSMessage.setJMSCorrelationID(jmsMessageId)
-        responseJMSMessage.setText(jsonResponse.toJSONString())
-
+        val responseJMSMessage = if(isCompleteService) jmsResponseMsg else buildJMSMsgFromJSONRPC2Response(session, jsonResponse, jmsMessageContext)
+       
         logger.debug(s"Sending JMS response for JMS request [$jmsMessageId] on destination [$replyDestination]")
 
         replyProducer.send(replyDestination, responseJMSMessage)
@@ -445,6 +474,81 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
     )
 
   }
+  
+    
+  private def callCompleteTextMsgService(session: Session, jmsMessageContext: Map[String, Any], jsonRequest: JSONRPC2Request, serviceInstance: IRemoteCompleteJsonRPC2Service): Message = {
+    require(serviceInstance != null, "callService() serviceInstance is null")
+    require(jsonRequest != null, "callService() jsonRequest is null")
+
+    val serviceName = serviceInstance.serviceName
+    var jsonErrResponse: JSONRPC2Response = null
+    var retMessage:Message = null
+    val jsonRequestId = jsonRequest.getID
+     
+    if (Thread.interrupted()) {
+      val errorMessage = s"Thread interrupted before calling Service [$serviceName]"
+      logger.error(errorMessage)
+
+      jsonErrResponse = new JSONRPC2Response(buildJSONRPC2Error(SERVICE_ERROR_CODE, new Exception(errorMessage)), jsonRequest.getID)
+    } else {
+
+      try {
+        
+        val serviceVersionOpt = _getNonEmptyProperty(jmsMessageContext, PROLINE_SERVICE_VERSION_KEY).orElse(Some("default"))
+        val serviceSourceOpt = _getNonEmptyProperty(jmsMessageContext, PROLINE_SERVICE_SOURCE_KEY)
+        val serviceDescrOpt = _getNonEmptyProperty(jmsMessageContext, PROLINE_SERVICE_DESCR_KEY)
+       
+        
+        val jmsMessageIdValue = jmsMessageContext.getOrElse(JMSMessageID, null)
+        val jmsMessageId = jmsMessageIdValue match {
+          case str: String => str
+          case _ => throw new Exception(s"Invalid JMS Message ID $jmsMessageIdValue")
+        }
+        
+        val emptyLine = System.lineSeparator()+System.lineSeparator()
+        logger.info(s"$emptyLine Calling service [${serviceInstance.serviceName}] with JSON Request [$jsonRequest] (##Message##_$jmsMessageId)")
+
+        /* Notify */
+        val serviceEvent = new ServiceEvent(jmsMessageId, jsonRequestId, serviceName, ServiceEvent.EVENT_START, serviceVersionOpt,serviceSourceOpt, serviceDescrOpt)
+        serviceEvent.setComplementaryInfo(jsonRequest.toJSONString())     
+        serviceMonitoringNotifier.sendNotification(serviceEvent.toJSONRPCNotification(), null)
+        
+        retMessage = serviceInstance.runService(session, jsonRequest, jmsMessageContext)
+        
+        
+      } catch {
+
+        case intEx: InterruptedException => {
+          val errorMessage = s"Thread interrupted while running service [$serviceName]"
+          logger.error(errorMessage, intEx)
+
+          jsonErrResponse = new JSONRPC2Response(buildJSONRPC2Error(CANCELLED_MSG_ERROR_CODE, intEx), jsonRequestId)
+        }
+
+        /* Catch all Throwables */
+        case t: Throwable => {
+          val errorMessage = s"An error occurred while calling service [$serviceName]"
+          logger.error(errorMessage, t)
+
+          jsonErrResponse = new JSONRPC2Response(buildJSONRPC2Error(SERVICE_ERROR_CODE, t), jsonRequestId)
+        }
+
+      }
+
+    } // End else Thread is not interrupted
+    
+     if(retMessage == null) {
+       if(jsonErrResponse == null){//Should never be the case !
+        jsonErrResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, new  RuntimeException("Unknow Error in ProlineResourceService")), jsonRequestId)
+      }
+      retMessage =  ServiceRunner.buildJMSMsgFromJSONRPC2Response(session, jsonErrResponse,jmsMessageContext)
+    }
+    
+     retMessage
+  }
+    
+       
+  
   
   private def _getNonEmptyProperty(jmsMessageContext: Map[String, Any], propertyKey: String): Option[String] = {
     jmsMessageContext.get(propertyKey).map(_.asInstanceOf[String]).filter(StringUtils.isNotEmpty)
