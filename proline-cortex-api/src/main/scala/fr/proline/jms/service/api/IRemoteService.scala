@@ -38,6 +38,12 @@ trait IRemoteServiceIdentity {
   val isDefaultVersion: Boolean = false
   
   /**
+   * True if this service need to be linked to execution node. False by default.
+   * This occurs when the service is related to resources.
+   */
+  val isNodeSpecific: Boolean = false
+  
+  /**
    * Fully qualified service path like "proline/dps/msi/ImportResultFiles".
    */
   // TODO: rename to servicePath or serviceFullName
