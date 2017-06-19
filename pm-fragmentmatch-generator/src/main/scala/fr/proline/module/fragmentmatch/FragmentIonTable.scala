@@ -38,6 +38,8 @@ object FragmentIonTable {
     text
   }
 
+  val atoms = AtomTable(BiomoleculeAtomTable.atoms)
+  
   val aminoAcids = {
     val hmBuilder = HashMap.newBuilder[Char, AminoAcidResidue]
     val aa = AminoAcidTable(HumanAminoAcidTable.aminoAcids)
@@ -70,7 +72,6 @@ object FragmentIonTable {
     hmBuilder.result
   }
 
-  val atoms = AtomTable(BiomoleculeAtomTable.atoms)
   val H2O = 2 * atoms.getAtom("H").monoMass + atoms.getAtom("O").monoMass
   val NH3 = 3 * atoms.getAtom("H").monoMass + atoms.getAtom("N").monoMass
   val CO = atoms.getAtom("C").monoMass + atoms.getAtom("O").monoMass
@@ -131,7 +132,11 @@ class FragmentIonTable(peptide: Peptide,
     }
     
     if (currentFragmentIonTypes.contains("x"))  addSeries(_table, "x", currentFragmentIonTypes.getCharge("x"), new Fragment(0.0, reversePosition, cterPtmNLMasse))
-    if (currentFragmentIonTypes.contains("z"))  addSeries(_table, "z", currentFragmentIonTypes.getCharge("z"), new Fragment(0.0, reversePosition, cterPtmNLMasse))
+    if (currentFragmentIonTypes.contains("z")) {
+      addSeries(_table, "z", currentFragmentIonTypes.getCharge("z"), new Fragment(0.0, reversePosition, cterPtmNLMasse))
+      addSeries(_table, "z+1", currentFragmentIonTypes.getCharge("z"), new Fragment(0.0, reversePosition, cterPtmNLMasse))
+      addSeries(_table, "z+2", currentFragmentIonTypes.getCharge("z"), new Fragment(0.0, reversePosition, cterPtmNLMasse))
+    }
     
     position += 1
     reversePosition -= 1
@@ -182,7 +187,11 @@ class FragmentIonTable(peptide: Peptide,
       }
 
       if (currentFragmentIonTypes.contains("x"))  addSeries(_table, "x", currentFragmentIonTypes.getCharge("x"), new Fragment(yFragmentMz + FragmentIonTable.CO, reversePosition, cterPtmNLMasse))
-      if (currentFragmentIonTypes.contains("z"))  addSeries(_table, "z", currentFragmentIonTypes.getCharge("z"), new Fragment(yFragmentMz - FragmentIonTable.NH3, reversePosition, cterPtmNLMasse))
+      if (currentFragmentIonTypes.contains("z"))  {
+        addSeries(_table, "z", currentFragmentIonTypes.getCharge("z"), new Fragment(yFragmentMz - FragmentIonTable.NH3, reversePosition, cterPtmNLMasse))
+        addSeries(_table, "z+1", currentFragmentIonTypes.getCharge("z"), new Fragment(yFragmentMz - FragmentIonTable.NH3 + FragmentIonTable.atoms.getAtom("H").monoMass, reversePosition, cterPtmNLMasse))
+        addSeries(_table, "z+2", currentFragmentIonTypes.getCharge("z"), new Fragment(yFragmentMz - FragmentIonTable.NH3 + 2*FragmentIonTable.atoms.getAtom("H").monoMass, reversePosition, cterPtmNLMasse))
+      }
 
       position += 1 
       reversePosition -= 1

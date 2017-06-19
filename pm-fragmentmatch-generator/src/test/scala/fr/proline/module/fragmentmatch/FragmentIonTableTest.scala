@@ -99,11 +99,23 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with StrictLogging
       sequence = peptideSequence,
       ptms = null,
       calculatedMass = Peptide.calcMass(peptideSequence))
-
     val currentFragmentIonTypes = new FragmentIons(ionTypeB = true, ionTypeY = true, chargeForIonsB = 2, chargeForIonsY = 2)
-
     val table = new FragmentIonTable(peptide, currentFragmentIonTypes)
 
+    logger.debug(table.toString)
+  }
+
+    @Test
+  def testSimpleFragmentationTestZSerie() = {
+
+    val peptideSequence = "VHISEPEPEVKHESLLEK"
+    val peptide = new Peptide(
+      id = Peptide.generateNewId,
+      sequence = peptideSequence,
+      ptms = null,
+      calculatedMass = Peptide.calcMass(peptideSequence))
+    val currentFragmentIonTypes = new FragmentIons(ionTypeC = true, ionTypeY = true, ionTypeZ = true, chargeForIonsC = 2, chargeForIonsY = 2, chargeForIonsZ = 2)
+    val table = new FragmentIonTable(peptide, currentFragmentIonTypes)
     logger.debug(table.toString)
   }
 

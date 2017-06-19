@@ -63,8 +63,8 @@ class PeptideSpectrumMatcherMascot(
   def getFragmentIonTypes(peptideMatch: PeptideMatch, charge: Int): FragmentIons = {
     if(instrumentConfig.fragmentationRules.isDefined && !instrumentConfig.fragmentationRules.get.isEmpty) {
       val currentFragmentIonTypes = new FragmentIons()
-	  instrumentConfig.fragmentationRules.get.foreach(fr => currentFragmentIonTypes.setIonTypeAndCharge(mascotFragmentationSeries(fr.description), charge))
-	  currentFragmentIonTypes
+	    instrumentConfig.fragmentationRules.get.foreach(fr => currentFragmentIonTypes.setIonTypeAndCharge(mascotFragmentationSeries(fr.description), charge))
+	    currentFragmentIonTypes
     } else {
       new FragmentIons(ionTypeB = true, ionTypeY = true, chargeForIonsB = charge, chargeForIonsY = charge)
     }
