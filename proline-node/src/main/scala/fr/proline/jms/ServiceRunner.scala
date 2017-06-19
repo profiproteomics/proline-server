@@ -100,14 +100,24 @@ object ServiceRunner extends LazyLogging {
       buff.append("((").append(PROLINE_SERVICE_NAME_KEY)
       buff.append(" = \'").append(service.serviceName).append("\') AND (")
       buff.append(PROLINE_SERVICE_VERSION_KEY)
-      buff.append(" = \'").append(service.serviceVersion).append("\'))")
+      buff.append(" = \'").append(service.serviceVersion).append("\')")
+      if(service.isNodeSpecific){ //Add node ID in condition
+        buff.append(" AND (").append(PROLINE_NODE_ID_KEY)
+        buff.append(" = \'").append(NodeConfig.NODE_ID).append("\')")
+      }        
+      buff.append(")") //close condition
 
       if (service.isDefaultVersion) {
         buff.append(" OR ")
         buff.append("((").append(PROLINE_SERVICE_NAME_KEY)
         buff.append(" = \'").append(service.serviceName).append("\') AND (")
         buff.append(PROLINE_SERVICE_VERSION_KEY)
-        buff.append(" IS NULL))")
+        buff.append(" IS NULL)")
+        if(service.isNodeSpecific){ //Add node ID in condition
+          buff.append(" AND (").append(PROLINE_NODE_ID_KEY)
+          buff.append(" = \'").append(NodeConfig.NODE_ID).append("\')")
+        }   
+        buff.append(")") //close condition
       }
       
     } // End loop for each service
@@ -170,13 +180,15 @@ object ServiceRunner extends LazyLogging {
 /**
  * Builds JMS Consumer to run {{{IRemoteServiceIdentity}}} on given JMS {{{Queue}}}.
  */
-class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotifier: IServiceMonitoringNotifier) extends Runnable with LazyLogging {
+class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotifier: IServiceMonitoringNotifier, logConsumerSelector: Boolean) extends Runnable with LazyLogging {
 
   import ServiceRunner._
 
   /* Constructor checks */
   require(queue != null, "Queue is null")
   require(connection != null, "Connection is null")
+  
+  var selectorString:String = ""
 
   /* Concrete Runnable.run() method */
   def run() {
@@ -192,13 +204,14 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
     try {
       // Step 6. Create a JMS Message Consumer (Consumer MUST be confined in current Thread)
-      val selectorString = buildSelectorString()
+      selectorString = buildSelectorString()
 
       if (StringUtils.isEmpty(selectorString)) {
         throw new RuntimeException("No valid selector on [" + NodeConfig.PROLINE_SERVICE_REQUEST_QUEUE_NAME + ']')
       }
-
-      logger.debug(s"Consumer selector string:\n$selectorString")
+      
+      if(logConsumerSelector)
+        logger.debug(s"Consumer selector string:\n$selectorString")
 
       val consumer = session.createConsumer(queue, selectorString)
 
@@ -616,7 +629,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 }
 
 class SingleThreadedServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotifier: MonitoringTopicPublisherRunner, serviceIdent: String, useThreadIdent: Boolean = false)
-  extends ServiceRunner(queue, connection, serviceMonitoringNotifier) {
+  extends ServiceRunner(queue, connection, serviceMonitoringNotifier, true) {
 
   import ServiceRunner._
 
