@@ -34,14 +34,16 @@ import javax.jms.Session
 
 
 
-trait IProlineResourceService extends IRemoteServiceIdentity with LazyLogging  {
+trait IProlineResourceService extends IRemoteServiceIdentity with IDefaultServiceVersion with LazyLogging  {
  
     /* JMS Service identification */
-  val serviceNamespace = "proline/dps/misc"
+  val serviceNamespace = "proline/misc"
+
   // TODO: rename to MergeDataSetsService
   val serviceLabel = "ProlineResourceService"
-  val serviceVersion =RemoteServiceIdentity.defaultVersion
   
+  override val isNodeSpecific = true
+   
   this.serviceDescription = Some(
     "Return the specified file from Proiline File System either by using the absolute path or by trying to use Prolibe Mount Point."
   )
