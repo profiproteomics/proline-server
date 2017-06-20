@@ -340,12 +340,12 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
           if (serviceInstanceOpt.isDefined) {
             jmsMessageContext = buildJMSMessageContext(message)
-            var jmsResponseMsg : Message = null
 
             if (isTxtMsg) {
               if(serviceInstanceOpt.get.isInstanceOf[IRemoteCompleteJsonRPC2Service]) {
                 isCompleteService = true
-                jmsResponseMsg = callCompleteTextMsgService(session, jmsMessageContext, jsonRequest, serviceInstanceOpt.get.asInstanceOf[IRemoteCompleteJsonRPC2Service])                
+                jmsResponseMsg = callCompleteTextMsgService(session, jmsMessageContext, jsonRequest, serviceInstanceOpt.get.asInstanceOf[IRemoteCompleteJsonRPC2Service])
+
               } else 
                 jsonResponse = callTextMsgService(jmsMessageContext, jsonRequest, serviceInstanceOpt.get.asInstanceOf[IRemoteJsonRPC2Service])
                 
@@ -405,7 +405,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
         logger.warn("Request JMS Message has no 'JMSReplyTo' destination: cannot send JSON response to the client")
       } else {
 
-        if ((!isCompleteService && jsonResponse == null) || (isCompleteService && jmsResponseMsg !=null )) {
+        if ((!isCompleteService && jsonResponse == null) || (isCompleteService && jmsResponseMsg ==null )) {
           jsonResponse = new JSONRPC2Response(JSONRPC2Error.INTERNAL_ERROR, jsonRequestId)
           if(isCompleteService){
             isCompleteService = false // continue assuming Message should be created            
