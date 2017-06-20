@@ -5,8 +5,6 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-import scala.annotation.elidable
-import scala.annotation.elidable.ASSERTION
 import scala.collection.JavaConversions.mutableMapAsJavaMap
 import scala.collection.mutable
 
@@ -31,11 +29,11 @@ import fr.proline.cortex.service.dps.msi.ExportResultSummaryV2_0
 import fr.proline.cortex.service.dps.msi.FilterRsmProteinSets
 import fr.proline.cortex.service.dps.msi.GenerateMSDiagReport
 import fr.proline.cortex.service.dps.msi.GenerateSpectrumMatches
+import fr.proline.cortex.service.dps.msi.IdentifyPtmSites
 import fr.proline.cortex.service.dps.msi.ImportMaxQuantResults
 import fr.proline.cortex.service.dps.msi.ImportResultFilesDecoyRegExp
 import fr.proline.cortex.service.dps.msi.ImportResultFilesProtMatchDecoyRule
 import fr.proline.cortex.service.dps.msi.ImportValidateGenerateSM
-import fr.proline.cortex.service.dps.msi.IdentifyPtmSites
 import fr.proline.cortex.service.dps.msi.MergeDatasetsV1_0
 import fr.proline.cortex.service.dps.msi.MergeDatasetsV2_0
 import fr.proline.cortex.service.dps.msi.UpdateSpectraParamsV1_0
@@ -51,6 +49,7 @@ import fr.proline.cortex.service.dps.uds.ValidateIdentDSInTree
 import fr.proline.cortex.service.misc.CancelService
 import fr.proline.cortex.service.misc.FileSystem
 import fr.proline.cortex.service.misc.FileUpload
+import fr.proline.cortex.service.misc.ProlineResourceService
 import fr.proline.cortex.service.monitoring.InfoService
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.fs.MountPointRegistry
@@ -66,7 +65,7 @@ import fr.proline.jms.util.NodeConfig
 import javax.jms.Connection
 import javax.jms.ExceptionListener
 import javax.jms.JMSException
-import fr.proline.core.service.msi.RsmPtmSitesIdentifier
+
 
 
 object ProcessingNode extends LazyLogging {
@@ -205,9 +204,11 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         logger.debug("Starting " + NodeConfig.SERVICE_THREAD_POOL_SIZE + " Parallelizable ServiceRunners")
 
         for (i <- 1 to NodeConfig.SERVICE_THREAD_POOL_SIZE) {
-          val parallelizableSeviceRunner = new ServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier)
+          val logSelector = if(i==1) true else false
+          val parallelizableSeviceRunner = new ServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier,logSelector)
           val threadFuture = m_executor.submit(parallelizableSeviceRunner)
           ServiceManager.addRunnale2FutureEntry(parallelizableSeviceRunner, threadFuture)
+             
         }
 
         m_connection.start() // Explicitly start connection to begin Consumer reception        
@@ -288,8 +289,10 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new QuantifyV2_0())
     ServiceRegistry.addService(new ImportMaxQuantResults())
     ServiceRegistry.addService(new IdentifyPtmSites())
+    ServiceRegistry.addService(new ProlineResourceService())
     //VDS TEST only ! 
 //    ServiceRegistry.addService(new WaitService())
+//    ServiceRegistry.addService(new ValidateResultSetV2()) //VD TEST
     ServiceRegistry.addService(new CancelService())
  }
 
