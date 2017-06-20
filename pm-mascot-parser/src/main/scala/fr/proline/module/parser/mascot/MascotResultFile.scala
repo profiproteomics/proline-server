@@ -666,9 +666,11 @@ class MascotResultFile(
           if (mascotQ.getRetentionTimes != null) {
             val rtRanges = mascotQ.getRetentionTimes.split(",").map( _.split("-") )
             val firstRTinSec = toFloatOrMinusOne(rtRanges.head.head.trim)
-            val spectrumProp = new SpectrumProperties()
-            spectrumProp.rtInSeconds = Some(firstRTinSec) 
-            spectrumPropOp = Some(spectrumProp)
+            if(firstRTinSec > -1f) {
+              val spectrumProp = new SpectrumProperties()
+              spectrumProp.rtInSeconds = Some(firstRTinSec) 
+              spectrumPropOp = Some(spectrumProp)
+            }
             (firstRTinSec/60.0f, toFloatOrMinusOne(rtRanges.last.last.trim)/60.0f)
           } else (-1f, -1f)
         }
