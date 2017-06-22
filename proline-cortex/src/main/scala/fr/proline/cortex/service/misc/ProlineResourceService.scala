@@ -76,7 +76,7 @@ trait IProlineResourceService extends IRemoteServiceIdentity with IDefaultServic
 class ProlineResourceService extends IProlineResourceService with IRemoteCompleteJsonRPC2Service with LazyLogging  {
 
   
-  override def runService(session: Session, jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any]): Message= {  
+  override def runService(jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any],session: Session): Message= {  
     require((jsonRequest != null), "Req is null")
     require((session != null), "No session specified to create return message")
     
