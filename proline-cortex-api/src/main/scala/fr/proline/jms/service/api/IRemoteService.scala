@@ -121,7 +121,7 @@ trait IRemoteCompleteJsonRPC2Service extends IRemoteServiceIdentity {
    * Note: exceptions are caught by the ServiceRunner to return an error properly
    * 
    */
-  def runService(session: Session, jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any]): Message
+  def runService(jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any],session: Session): Message
   
  
 }
