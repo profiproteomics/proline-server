@@ -526,7 +526,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
         serviceEvent.setComplementaryInfo(jsonRequest.toJSONString())     
         serviceMonitoringNotifier.sendNotification(serviceEvent.toJSONRPCNotification(), null)
         
-        retMessage = serviceInstance.runService(session, jsonRequest, jmsMessageContext)
+        retMessage = serviceInstance.runService(jsonRequest, jmsMessageContext,session)
         
         
       } catch {
