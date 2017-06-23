@@ -9,6 +9,7 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.core.om.model.msi.InstrumentConfig
 import fr.proline.core.om.model.msi.Peptide
+import fr.proline.core.om.model.msi.IonTypes
 
 class PeptideSpectrumMatcherMascot(
   val spectraByIds: Map[Long, Spectrum],
@@ -43,7 +44,12 @@ class PeptideSpectrumMatcherMascot(
     for (idx <- 0 until nlString.size) {
     	if(nlString.charAt(idx) != '0') {
     	  val ptm = peptideMatch.peptide.ptms.find(_.seqPosition == (idx))
-    	  ptmNeutralLosses += (ptm.get -> ptm.get.definition.neutralLosses(nlString.charAt(idx).asDigit - 1).monoMass)
+    	  val index = nlString.charAt(idx).asDigit
+    	  val ptmEvidence = ptm.get.definition.ptmEvidences(index)
+    	  if(ptmEvidence.ionType  == IonTypes.NeutralLoss || ptmEvidence.ionType  == IonTypes.PepNeutralLoss)
+    	    ptmNeutralLosses += (ptm.get -> ptmEvidence.monoMass)
+  	    else
+  	      throw new Exception("Can not find NeutralLosses for "+peptideMatch.peptide.sequence+" PTM at "+idx)
     	}
     }
     ptmNeutralLosses.toMap
