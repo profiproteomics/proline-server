@@ -281,7 +281,7 @@ object BuildDatasetViewSet extends LazyLogging {
         // TODO: UDSdb => add a ident_result_set_id column to the quant_channel table ???
         val rsIdByRsmId = msiDbHelper.getResultSetIdByResultSummaryId(identRsmIds)
         val sortedResultSets = quantChannels.map { qc =>
-          rsIdByRsmId.get(qc.identResultSummaryId).map(lazyRsById(_)).orNull
+            rsIdByRsmId.get(qc.identResultSummaryId).map(lazyRsById.getOrElse(_, null))orNull
         }
 
         // Check we had not problem to retrieve the result sets corresponding to the quant channels
