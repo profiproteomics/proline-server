@@ -697,12 +697,13 @@ public class ProjectHandler {
 					
 					// Save BioSequence
 					BioSequence msiBioSeq = msiEM.find(BioSequence.class, bioSeq.getSequenceId());
+					int nmass = (int)Math.round(bioSeq.getMass());
 					if (msiBioSeq == null) {
 						msiBioSeq = new BioSequence();
 						msiBioSeq.setAlphabet(Alphabet.AA);
 						msiBioSeq.setId(bioSeq.getSequenceId());
 						msiBioSeq.setLength(bioSeq.getSequence().length());
-						msiBioSeq.setMass(new Double(bioSeq.getMass()).intValue());
+						msiBioSeq.setMass(nmass);
 						msiBioSeq.setCrc64(HashUtil.calculateCRC64(bioSeq.getSequence()));
 						msiBioSeq.setPi(new Float(bioSeq.getPI()));
 						msiBioSeq.setSequence(bioSeq.getSequence());
@@ -716,12 +717,12 @@ public class ProjectHandler {
 							sb.append(" sequence length;");
 						}
 
-						if (msiBioSeq.getMass() != new Double(bioSeq.getMass()).intValue()) {
+						if (msiBioSeq.getMass() != nmass) {
 							foundMissMatch = true;
 							sb.append(" sequence mass (");
 							sb.append(msiBioSeq.getMass());
 							sb.append(" vs ");
-							sb.append(new Double(bioSeq.getMass()).intValue());
+							sb.append(nmass);
 							sb.append(");");
 						}
 
