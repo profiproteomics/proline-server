@@ -8,7 +8,6 @@ import java.sql.Statement;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.sql.DataSource;
 
@@ -19,6 +18,7 @@ import fr.proline.core.orm.uds.ExternalDb;
 import fr.proline.core.orm.uds.repository.ExternalDbRepository;
 import fr.proline.core.orm.util.DStoreCustomPoolConnectorFactory;
 import fr.proline.module.seq.config.DBProlineConfig;
+import fr.proline.repository.AbstractDatabaseConnector;
 import fr.proline.repository.DatabaseConnectorFactory;
 import fr.proline.repository.DatabaseUpgrader;
 import fr.proline.repository.DriverType;
@@ -58,9 +58,10 @@ public final class DatabaseAccess {
 
 			if (!result.isInitialized()) {
 				/* Initialization holding INITIALIZATION_LOCK */
-				DBProlineConfig.forcePropertiesFileReload();
+				DBProlineConfig.forcePropertiesFileReload();				
 				final Map<Object, Object> udsDbConfigProperties = DBProlineConfig.getInstance().getUDSProperties();
-
+				Integer maxPoolConnection = DBProlineConfig.getInstance().getMaxPoolConnection();				
+				udsDbConfigProperties.put(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY, maxPoolConnection);
 				if (udsDbConfigProperties.isEmpty()) {
 					throw new IllegalArgumentException("No valid UDS Db Properties");
 				} else {
@@ -103,6 +104,8 @@ public final class DatabaseAccess {
 					if (udsDbProperties == null || udsDbProperties.isEmpty()) {
 						throw new IllegalArgumentException("No valid UDS Db Properties");
 					} else {
+						Integer maxPoolConnection = DBProlineConfig.getInstance().getMaxPoolConnection();				
+						udsDbProperties.put(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY, maxPoolConnection);
 						LOG.debug("Initializing DataStoreConnectorFactory from [{}] properties",
 							udsDbProperties);
 						((DStoreCustomPoolConnectorFactory) result).initialize(udsDbProperties, "SequenceRepository");
@@ -204,8 +207,11 @@ public final class DatabaseAccess {
 
 			} else {
 				boolean cheksumrepair=false;
-				seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
-					ProlineDatabaseType.SEQ, seqDb.toPropertiesMap(udsDbConnector.getDriverType()));
+				Map<Object,Object> dbProperties  = seqDb.toPropertiesMap(udsDbConnector.getDriverType());
+				Integer maxPoolConnection = DBProlineConfig.getInstance().getMaxPoolConnection();				
+				dbProperties.put(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY, maxPoolConnection);
+				
+				seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(ProlineDatabaseType.SEQ, dbProperties);
 				if (allowCreateUpdateDB) {
 					int retDBUpgrade = DatabaseUpgrader.upgradeDatabase(seqDbConnector,cheksumrepair);
 					if(retDBUpgrade<0)
@@ -278,8 +284,12 @@ public final class DatabaseAccess {
 		IDatabaseConnector seqDbConnector = null;
         boolean cheksumrepair=false;
 		if (transacOK && (seqDb != null)) {
+			Map<Object,Object> dbProperties  = seqDb.toPropertiesMap();
+			Integer maxPoolConnection = DBProlineConfig.getInstance().getMaxPoolConnection();				
+			dbProperties.put(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY, maxPoolConnection);
+			
 			seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
-				ProlineDatabaseType.SEQ, seqDb.toPropertiesMap());
+				ProlineDatabaseType.SEQ, dbProperties);
 
 			DatabaseUpgrader.upgradeDatabase(seqDbConnector,cheksumrepair);
 		}
