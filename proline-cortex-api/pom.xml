@@ -5,11 +5,11 @@
   <parent>
     <groupId>fr.proline</groupId>
     <artifactId>ProFI-Pom</artifactId>
-    <version>0.3.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+    <version>0.3.0</version> <!-- Snapshot Trunk version -->
   </parent>
   
   <artifactId>Proline-Cortex-API</artifactId>
-  <version>0.4.0-SNAPSHOT</version>
+  <version>0.4.0</version>
   
   <name>${project.artifactId}</name>
   <description>Proline Cortex API (services, methods and parameters)</description>
@@ -20,7 +20,7 @@
   </properties>
   
   <scm>
-    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-JMS-Components/Proline-Cortex-API/branches/0.4.0-RCandidates</connection>
+    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-JMS-Components/Proline-Cortex-API/tags/0.4.0</connection>
   </scm>
   
   <dependencies>
@@ -64,7 +64,7 @@
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Scala</artifactId>
-      <version>0.6.0-SNAPSHOT</version>
+      <version>0.6.0</version>
     </dependency>
 
     <!-- Test -->
