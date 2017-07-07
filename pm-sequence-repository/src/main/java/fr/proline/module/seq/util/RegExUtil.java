@@ -29,7 +29,7 @@ public class RegExUtil {
     
     			result = matcher.group(1).trim();
     		} else {
-    			LOG.warn("Cannot parse fastaFileName [{}] with \"{}\" Regex", fastaFileName,
+    			LOG.warn("Cannot parse release version for fastaFileName [{}] with \"{}\" Regex", fastaFileName,
     				releasePattern.pattern());
     		}
 		}
