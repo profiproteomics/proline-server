@@ -1,7 +1,6 @@
 package fr.proline.module.seq.service;
 
 import java.io.File;
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;

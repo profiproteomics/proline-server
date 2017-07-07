@@ -18,7 +18,6 @@ import com.beust.jcommander.Parameter;
 
 import ch.qos.logback.classic.Level;
 import fr.profi.util.ThreadLogger;
-import fr.proline.core.orm.uds.repository.ProjectRepository;
 import fr.proline.module.seq.DatabaseAccess;
 import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
 import fr.proline.module.seq.dto.SEDbInstanceWrapper;
