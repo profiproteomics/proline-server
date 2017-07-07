@@ -4,11 +4,11 @@
   <parent>
     <artifactId>ProFI-Pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.3.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    <version>0.3.0</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>PM-MascotParser</artifactId>
-  <version>0.6.0-SNAPSHOT</version>
+  <version>0.6.0</version>
 
   <name>${project.artifactId}</name>
   <description>Proline Module which parse a Mascot result file and store its result in databases</description>
@@ -16,12 +16,12 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>1.1.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
+    <core.version>1.1.0</core.version>  <!-- Snapshot Trunk version -->
     <version.path>${basedir}/src/main/scala/fr/proline/module/parser/mascot</version.path>
     <mascot.version>2.5.2</mascot.version>
   </properties>
   <scm>
-    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MascotParser/branches/0.6.0-RCandidates</connection>
+    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MascotParser/tags/0.6.0</connection>
   </scm>
 
 
@@ -45,7 +45,7 @@
     <dependency>
       <groupId>fr.proline.unimod</groupId>
       <artifactId>UnimodUnmarshaller</artifactId>
-      <version>0.10.0-SNAPSHOT</version>
+      <version>0.10.0</version>
     </dependency>
 
     <!-- Mascot Parser native libraries (for all OSes, loaded at runtime) 
@@ -60,17 +60,17 @@
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Java</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
+      <version>0.5.0</version>
     </dependency>
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Scala</artifactId>
-      <version>0.6.0-SNAPSHOT</version>
+      <version>0.6.0</version>
     </dependency>
     <dependency>
       <groupId>fr.profi</groupId>
       <artifactId>ProFI-Proteomics</artifactId>
-      <version>0.2.0-SNAPSHOT</version>
+      <version>0.2.0</version>
     </dependency>
 
     <!-- Proline -->
@@ -92,7 +92,7 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>PM-FragmentMatchGenerator</artifactId>
-      <version>0.6.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+      <version>0.6.0</version>  <!-- Snapshot Trunk version -->
     </dependency>
     <!-- Tests -->
     <dependency>
