@@ -9,6 +9,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 import fr.proline.core.orm.uds.ExternalDb;
+import fr.proline.repository.AbstractDatabaseConnector;
 import fr.proline.repository.ConnectionMode;
 import fr.proline.repository.DriverType;
 import fr.proline.repository.ProlineDatabaseType;
@@ -22,6 +23,7 @@ public class DBProlineConfig {
 	private static DBProlineConfig instance;
 	private Config m_dbProlineConfig = null;
 	private ExternalDb m_udsExternalDB = null;
+	private Integer m_maxPoolConnection = null;
 	
 	private DBProlineConfig(){
 		m_dbProlineConfig = ConfigFactory.load( "application");
@@ -37,9 +39,25 @@ public class DBProlineConfig {
 	
 	public static void forcePropertiesFileReload(){
 		synchronized (CONFIGURATION_LOCK) {
-			if(instance != null)
+			if(instance != null){
 				instance.m_udsExternalDB = null;
+				instance.m_maxPoolConnection = null;
+			}
 		}
+	}
+	
+	public Integer getMaxPoolConnection(){
+		synchronized (CONFIGURATION_LOCK) {
+			 if(m_maxPoolConnection ==null) {
+				 Config prolineConfig = m_dbProlineConfig.getConfig("proline-config");	
+				 if(prolineConfig.hasPath("max-pool-connection"))
+					 m_maxPoolConnection = Integer.valueOf( prolineConfig.getInt("max-pool-connection"));
+				 else 
+					 m_maxPoolConnection = Math.max(1, AbstractDatabaseConnector.DEFAULT_MAX_POOL_CONNECTIONS/2); //moitie moins que le serveur...
+			 }				
+		 }
+		
+		return m_maxPoolConnection;				
 	}
 	
 	private void initUDSProperties(){
