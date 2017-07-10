@@ -24,6 +24,7 @@ import fr.proline.repository.DatabaseUpgrader;
 import fr.proline.repository.DriverType;
 import fr.proline.repository.IDataStoreConnectorFactory;
 import fr.proline.repository.IDatabaseConnector;
+import fr.proline.repository.IDatabaseConnector.ConnectionPoolType;
 import fr.proline.repository.ProlineDatabaseType;
 
 /**
@@ -67,7 +68,7 @@ public final class DatabaseAccess {
 				} else {
 					LOG.debug("Initializing DataStoreConnectorFactory using properties [{}] ",
 						udsDbConfigProperties);
-					((DStoreCustomPoolConnectorFactory) result).initialize(udsDbConfigProperties, "SequenceRepository");
+					((DStoreCustomPoolConnectorFactory) result).initialize(udsDbConfigProperties, "SequenceRepository", ConnectionPoolType.SIMPLE_POOL_MANAGEMENT);
 				}
 			}
 			connectorFactory = result;
@@ -108,7 +109,7 @@ public final class DatabaseAccess {
 						udsDbProperties.put(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY, maxPoolConnection);
 						LOG.debug("Initializing DataStoreConnectorFactory from [{}] properties",
 							udsDbProperties);
-						((DStoreCustomPoolConnectorFactory) result).initialize(udsDbProperties, "SequenceRepository");
+						((DStoreCustomPoolConnectorFactory) result).initialize(udsDbProperties, "SequenceRepository", ConnectionPoolType.SIMPLE_POOL_MANAGEMENT);
 					}
 				} else {
 					LOG.warn("DataStoreConnectorFactory was already initialized. Properties [{}] was ignore", udsDbProperties);
@@ -211,7 +212,7 @@ public final class DatabaseAccess {
 				Integer maxPoolConnection = DBProlineConfig.getInstance().getMaxPoolConnection();				
 				dbProperties.put(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY, maxPoolConnection);
 				
-				seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(ProlineDatabaseType.SEQ, dbProperties);
+				seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(ProlineDatabaseType.SEQ, dbProperties, ConnectionPoolType.SIMPLE_POOL_MANAGEMENT);
 				if (allowCreateUpdateDB) {
 					int retDBUpgrade = DatabaseUpgrader.upgradeDatabase(seqDbConnector,cheksumrepair);
 					if(retDBUpgrade<0)
@@ -289,7 +290,7 @@ public final class DatabaseAccess {
 			dbProperties.put(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY, maxPoolConnection);
 			
 			seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
-				ProlineDatabaseType.SEQ, dbProperties);
+				ProlineDatabaseType.SEQ, dbProperties, ConnectionPoolType.SIMPLE_POOL_MANAGEMENT);
 
 			DatabaseUpgrader.upgradeDatabase(seqDbConnector,cheksumrepair);
 		}
