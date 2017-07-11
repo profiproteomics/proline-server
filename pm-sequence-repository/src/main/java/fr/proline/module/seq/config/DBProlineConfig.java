@@ -48,7 +48,7 @@ public class DBProlineConfig {
 	
 	public Integer getMaxPoolConnection(){
 		synchronized (CONFIGURATION_LOCK) {
-			 if(m_maxPoolConnection ==null) {
+			 if(m_maxPoolConnection ==null && m_dbProlineConfig.hasPath("proline-config")) {
 				 Config prolineConfig = m_dbProlineConfig.getConfig("proline-config");	
 				 if(prolineConfig.hasPath("max-pool-connection"))
 					 m_maxPoolConnection = Integer.valueOf( prolineConfig.getInt("max-pool-connection"));

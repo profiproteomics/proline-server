@@ -60,12 +60,12 @@ public final class DatabaseAccess {
 			if (!result.isInitialized()) {
 				/* Initialization holding INITIALIZATION_LOCK */
 				DBProlineConfig.forcePropertiesFileReload();				
-				final Map<Object, Object> udsDbConfigProperties = DBProlineConfig.getInstance().getUDSProperties();
-				Integer maxPoolConnection = DBProlineConfig.getInstance().getMaxPoolConnection();				
-				udsDbConfigProperties.put(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY, maxPoolConnection);
+				final Map<Object, Object> udsDbConfigProperties = DBProlineConfig.getInstance().getUDSProperties();				
 				if (udsDbConfigProperties.isEmpty()) {
 					throw new IllegalArgumentException("No valid UDS Db Properties");
 				} else {
+					Integer maxPoolConnection = DBProlineConfig.getInstance().getMaxPoolConnection();				
+					udsDbConfigProperties.put(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY, maxPoolConnection);
 					LOG.debug("Initializing DataStoreConnectorFactory using properties [{}] ",
 						udsDbConfigProperties);
 					((DStoreCustomPoolConnectorFactory) result).initialize(udsDbConfigProperties, "SequenceRepository", ConnectionPoolType.SIMPLE_POOL_MANAGEMENT);
@@ -105,8 +105,10 @@ public final class DatabaseAccess {
 					if (udsDbProperties == null || udsDbProperties.isEmpty()) {
 						throw new IllegalArgumentException("No valid UDS Db Properties");
 					} else {
-						Integer maxPoolConnection = DBProlineConfig.getInstance().getMaxPoolConnection();				
-						udsDbProperties.put(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY, maxPoolConnection);
+						if(!udsDbProperties.containsKey(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY)){
+							Integer maxPoolConnection = DBProlineConfig.getInstance().getMaxPoolConnection();				
+							udsDbProperties.put(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY, maxPoolConnection);
+						}
 						LOG.debug("Initializing DataStoreConnectorFactory from [{}] properties",
 							udsDbProperties);
 						((DStoreCustomPoolConnectorFactory) result).initialize(udsDbProperties, "SequenceRepository", ConnectionPoolType.SIMPLE_POOL_MANAGEMENT);
