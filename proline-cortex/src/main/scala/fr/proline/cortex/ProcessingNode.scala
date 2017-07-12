@@ -42,6 +42,7 @@ import fr.proline.cortex.service.dps.msi.ValidateResultSet
 import fr.proline.cortex.service.dps.msq.ComputeQuantProfiles
 import fr.proline.cortex.service.dps.msq.Quantify
 import fr.proline.cortex.service.dps.msq.QuantifySC
+import fr.proline.cortex.service.dps.msq.QuantifySC_V02
 import fr.proline.cortex.service.dps.msq.QuantifyV2_0
 import fr.proline.cortex.service.dps.uds.GetExportInformation
 import fr.proline.cortex.service.dps.uds.RegisterRawFile
@@ -281,6 +282,8 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new ComputeQuantProfiles())
     ServiceRegistry.addService(new Quantify())
     ServiceRegistry.addService(new QuantifySC())
+    ServiceRegistry.addService(new QuantifySC_V02())
+    
     ServiceRegistry.addService(new UserAccount())
     ServiceRegistry.addService(new GetConnectionTemplate())
     ServiceRegistry.addService(new CreateProject())
