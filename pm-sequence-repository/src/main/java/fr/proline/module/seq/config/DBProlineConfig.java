@@ -1,11 +1,13 @@
 package fr.proline.module.seq.config;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
 
 import fr.proline.core.orm.uds.ExternalDb;
@@ -62,29 +64,32 @@ public class DBProlineConfig {
 	
 	private void initUDSProperties(){
 		m_udsExternalDB = new ExternalDb();		
-		
-		Config prolineConfig = m_dbProlineConfig.getConfig("proline-config");		
-		String driverType = prolineConfig.getString("driver-type");
-		
-		Config driverConfig = m_dbProlineConfig.getConfig(driverType + "-config");
-		Config driverConnectionConfig = driverConfig.getConfig("connection-properties");
-		DriverType driver = DriverType.valueOf(driverType.toUpperCase());
-		m_udsExternalDB.setDriverType(driver);		
-		
-		Config dbConfig = m_dbProlineConfig.getConfig("uds-db").getConfig("connection-properties");
-		m_udsExternalDB.setDbName(dbConfig.getString("dbName"));
-		
-		Config authConfig = m_dbProlineConfig.getConfig("auth-config");
-		m_udsExternalDB.setDbPassword(authConfig.getString("password"));
-		m_udsExternalDB.setDbUser(authConfig.getString("user"));
-		
-		Config hostConfig = m_dbProlineConfig.getConfig("host-config");
-		m_udsExternalDB.setHost(hostConfig.getString("host"));
-		if(hostConfig.hasPath("port"))
-			m_udsExternalDB.setPort(hostConfig.getInt("port"));
-		
-		m_udsExternalDB.setType(ProlineDatabaseType.UDS);
-		m_udsExternalDB.setConnectionMode(ConnectionMode.valueOf(driverConnectionConfig.getString("connectionMode").toUpperCase()));		
+		try {
+			Config prolineConfig = m_dbProlineConfig.getConfig("proline-config");		
+			String driverType = prolineConfig.getString("driver-type");
+			
+			Config driverConfig = m_dbProlineConfig.getConfig(driverType + "-config");
+			Config driverConnectionConfig = driverConfig.getConfig("connection-properties");
+			DriverType driver = DriverType.valueOf(driverType.toUpperCase());
+			m_udsExternalDB.setDriverType(driver);		
+			
+			Config dbConfig = m_dbProlineConfig.getConfig("uds-db").getConfig("connection-properties");
+			m_udsExternalDB.setDbName(dbConfig.getString("dbName"));
+			
+			Config authConfig = m_dbProlineConfig.getConfig("auth-config");
+			m_udsExternalDB.setDbPassword(authConfig.getString("password"));
+			m_udsExternalDB.setDbUser(authConfig.getString("user"));
+			
+			Config hostConfig = m_dbProlineConfig.getConfig("host-config");
+			m_udsExternalDB.setHost(hostConfig.getString("host"));
+			if(hostConfig.hasPath("port"))
+				m_udsExternalDB.setPort(hostConfig.getInt("port"));
+			
+			m_udsExternalDB.setType(ProlineDatabaseType.UDS);
+			m_udsExternalDB.setConnectionMode(ConnectionMode.valueOf(driverConnectionConfig.getString("connectionMode").toUpperCase()));
+		} catch (ConfigException ce){
+			LOG.warn(" No UDS configuration found ! ");
+		}
 	}
 
 	public Map<Object, Object> getUDSProperties() {
@@ -93,7 +98,12 @@ public class DBProlineConfig {
 			 if(m_udsExternalDB ==null)
 				 initUDSProperties();				
 		 }
-		 result = m_udsExternalDB.toPropertiesMap();
+		 try {
+			 result = m_udsExternalDB.toPropertiesMap();
+		 } catch(Exception e){
+			 LOG.warn(" Error getting UDS External DB properties.");
+			 result = new HashMap<Object, Object>();
+		 }
 		 return result;
 	}
 	
