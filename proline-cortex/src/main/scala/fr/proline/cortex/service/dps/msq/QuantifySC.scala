@@ -55,7 +55,7 @@ class QuantifySC extends AbstractRemoteProcessingService with IQuantifySCService
     val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
     val refRSMId = paramsRetriever.getLong(PROCESS_METHOD.REF_RSM_ID_PARAM)
     val refDSId = paramsRetriever.getLong(PROCESS_METHOD.REF_DS_ID_PARAM)
-    val pepRedRSMIds: Seq[Long] = if (paramsRetriever.hasParam(PROCESS_METHOD.PEPTIDE_REF_RSM_IDS_PARAM)) paramsRetriever.getList(PROCESS_METHOD.PEPTIDE_REF_RSM_IDS_PARAM).toSeq.map(toLong(_)) else Seq.empty[Long]
+    val pepRedRSMIds: Array[Long] = if (paramsRetriever.hasParam(PROCESS_METHOD.PEPTIDE_REF_RSM_IDS_PARAM)) paramsRetriever.getList(PROCESS_METHOD.PEPTIDE_REF_RSM_IDS_PARAM).toArray.map(toLong(_)) else Array.empty[Long]
 
     val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId) // Use JPA context
     val udsDbCtx = execCtx.getUDSDbConnectionContext()
@@ -140,7 +140,7 @@ class QuantifySC_V02 extends AbstractRemoteProcessingService with IQuantifySCSer
     require((paramsRetriever != null), "no parameter specified")
 
     val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
-    val pepRedRSMIds: Seq[Long] = if (paramsRetriever.hasParam(PROCESS_METHOD.PEPTIDE_REF_RSM_IDS_PARAM)) paramsRetriever.getList(PROCESS_METHOD.PEPTIDE_REF_RSM_IDS_PARAM).toSeq.map(toLong(_)) else Seq.empty[Long]
+    val pepRedRSMIds: Array[Long] = if (paramsRetriever.hasParam(PROCESS_METHOD.PEPTIDE_REF_RSM_IDS_PARAM)) paramsRetriever.getList(PROCESS_METHOD.PEPTIDE_REF_RSM_IDS_PARAM).toArray.map(toLong(_)) else Array.empty[Long]
 
     val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId) // Use JPA context
     val udsDbCtx = execCtx.getUDSDbConnectionContext()
@@ -159,7 +159,7 @@ class QuantifySC_V02 extends AbstractRemoteProcessingService with IQuantifySCSer
     val qm =  QuantitationMethodRepository.findQuantMethodForTypeAndAbundanceUnit(udsEM, QuantMethodType.LABEL_FREE.toString(), AbundanceUnit.SPECTRAL_COUNTS.toString())
     val spectralCountConfig : java.util.Map[String,Object]  = new HashMap[String,Object]()
     spectralCountConfig.put("ident_result_summary_id",expDesign.masterQuantChannels(0).identResultSummaryId)
-    spectralCountConfig.put("ident_dataset_id",expDesign.masterQuantChannels(0).identDatasetId)
+    spectralCountConfig.put("ident_dataset_id",expDesign.masterQuantChannels(0).identDatasetId.get.toString())
     spectralCountConfig.put("weights_ref_rsm_ids",pepRedRSMIds)
 
     var quantiId = -1L
