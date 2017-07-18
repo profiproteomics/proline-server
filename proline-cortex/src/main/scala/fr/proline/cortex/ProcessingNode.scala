@@ -4,18 +4,14 @@ import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-
 import scala.collection.JavaConversions.mutableMapAsJavaMap
 import scala.collection.mutable
-
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.jms.HornetQJMSClient
 import org.hornetq.api.jms.JMSFactoryType
 import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory
 import org.hornetq.core.remoting.impl.netty.TransportConstants
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.StringUtils
 import fr.profi.util.ThreadLogger
 import fr.proline.cortex.service.admin.CreateProject
@@ -66,6 +62,7 @@ import fr.proline.jms.util.NodeConfig
 import javax.jms.Connection
 import javax.jms.ExceptionListener
 import javax.jms.JMSException
+import fr.proline.cortex.service.dps.msi.ValidateResultSetV2
 
 
 
@@ -295,7 +292,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new ProlineResourceService())
     //VDS TEST only ! 
 //    ServiceRegistry.addService(new WaitService())
-//    ServiceRegistry.addService(new ValidateResultSetV2()) //VD TEST
+    ServiceRegistry.addService(new ValidateResultSetV2()) 
     ServiceRegistry.addService(new CancelService())
  }
 
