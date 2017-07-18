@@ -78,6 +78,46 @@ trait IValidateResultSetService extends IMsiService with IDefaultServiceVersion 
   }
 }
 
+trait IValidateResultSetServiceV2 extends IMsiService  {
+
+  /* JMS Service identification */
+  val serviceLabel = "ValidateResultSet"
+  this.serviceDescription = Some("Filters and validates a Result Set for a given set of rules and eventually propagate the validation to child ResultSets")
+  val serviceVersion= "2.0"
+   
+  // List the handled methods
+  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+
+  object PROCESS_METHOD extends JSONRPC2DefaultMethod with IValidateResultSetServiceParams {
+
+    // Method description
+    val name = RemoteServiceIdentity.PROCESS_METHOD_NAME
+    val description = serviceDescription.get
+    
+    // Configure service interface
+    val parameters = List(
+      PROJECT_ID_PARAM,
+      RESULT_SET_ID_PARAM,
+      DESCRIPTION_PARAM,
+      USE_TD_COMPETITION_PARAM,
+      PEP_MATCH_FILTERS_PARAM,
+      PEP_MATCH_VALIDATOR_CONFIG_PARAM,
+      PEP_SET_SCORE_TYPE_PARAM,
+      PROT_SET_FILTERS_PARAM,
+      PROT_SET_VALIDATOR_CONFIG_PARAM,
+      PROPAGATE_PEP_MATCH_VALIDATION_PARAM,
+      PROPAGATE_PROT_SET_VALIDATION_PARAM
+    )
+    val returns = JSONRPC2MethodResult(
+      description = "The generated ResultSummary ID.",
+      scalaType = typeOf[Long]
+    )
+
+  }
+}
+
+
+
 trait IValidateResultSetServiceParams {
   object PROJECT_ID_PARAM extends JSONRPC2DefaultMethodParameter {
     val name = "project_id"
@@ -132,4 +172,17 @@ trait IValidateResultSetServiceParams {
     val scalaType = typeOf[ProtSetValidatorConfig]
     optional = true
   }
+  object PROPAGATE_PROT_SET_VALIDATION_PARAM extends JSONRPC2DefaultMethodParameter {
+    val name = "propagate_prot_set_filters"
+    val description = "specify if protein set filters should be propagated to child resultset."
+    val scalaType = typeOf[Boolean]
+    optional = true
+  }
+  object PROPAGATE_PEP_MATCH_VALIDATION_PARAM extends JSONRPC2DefaultMethodParameter {
+    val name = "propagate_pep_match_filters"
+    val description = "specify if peptide matches filters should be propagated to child resultset."
+    val scalaType = typeOf[Boolean]
+    optional = true
+  }
+  
 }
