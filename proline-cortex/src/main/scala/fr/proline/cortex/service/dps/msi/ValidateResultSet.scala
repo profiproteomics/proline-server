@@ -1,10 +1,8 @@
 package fr.proline.cortex.service.dps.msi
 
 import scala.Array.canBuildFrom
-
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.DatabaseConnectionContext
@@ -34,6 +32,9 @@ import fr.proline.cortex.api.service.dps.msi.ProtSetValidatorConfig
 import fr.proline.cortex.api.service.dps.msi.ValidateResultSetService
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
+import fr.proline.cortex.api.service.dps.msi.IValidateResultSetServiceV2
+import scala.collection.immutable.HashMap
+
 
 /**
  *  Define JMS Service which validates ResultSet and creates appropriates ResultSummaries.
@@ -229,6 +230,89 @@ class ValidateResultSet extends AbstractRemoteProcessingService with IValidateRe
       msiDbTransacOk = true
 
       result = rsValidator.validatedTargetRsm.id
+    } finally {
+
+      if (!msiDbTransacOk) {
+        DbConnectionHelper.tryToRollbackDbTransaction(msiDbConnectionContext)
+      }
+
+      DbConnectionHelper.tryToCloseExecContext(execCtx)
+    }
+
+    result
+  }
+
+}
+
+class ValidateResultSetV2 extends AbstractRemoteProcessingService with IValidateResultSetServiceV2 with LazyLogging {
+
+  def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
+    require(paramsRetriever != null, "No Parameters specified")
+
+    val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
+    val resultSetId = paramsRetriever.getLong(PROCESS_METHOD.RESULT_SET_ID_PARAM)
+    val propagatePSMFilters = if(paramsRetriever.hasParam(PROCESS_METHOD.PROPAGATE_PEP_MATCH_VALIDATION_PARAM)) paramsRetriever.getBoolean(PROCESS_METHOD.PROPAGATE_PEP_MATCH_VALIDATION_PARAM) else false
+    val propagateProtSetFilters = if(paramsRetriever.hasParam(PROCESS_METHOD.PROPAGATE_PROT_SET_VALIDATION_PARAM)) paramsRetriever.getBoolean(PROCESS_METHOD.PROPAGATE_PROT_SET_VALIDATION_PARAM) else false
+
+    var result: HashMap[Long, Long] = null
+
+    var msiDbConnectionContext: DatabaseConnectionContext = null
+    var msiDbTransacOk: Boolean = false
+
+    val execCtx =  DbConnectionHelper.createSQLExecutionContext(projectId) 
+
+    try {
+      val validationConfig = ValidateResultSet.parseValidationConfig(paramsRetriever)
+
+      // Use peptide match validator as sorter if provided, else use default ScorePSM         
+      val sorter: IPeptideMatchSorter =
+        if (validationConfig.pepMatchValidator.isDefined
+          && validationConfig.pepMatchValidator.get.validationFilter.isInstanceOf[IPeptideMatchSorter])
+          validationConfig.pepMatchValidator.get.validationFilter.asInstanceOf[IPeptideMatchSorter]
+        else if (validationConfig.pepMatchPreFilters.isDefined) {
+          var foundSorter: IPeptideMatchSorter = null
+          var index = 0
+          while (foundSorter == null && index < validationConfig.pepMatchPreFilters.get.size) {
+            if (validationConfig.pepMatchPreFilters.get(index).isInstanceOf[IPeptideMatchSorter]) {
+              foundSorter = validationConfig.pepMatchPreFilters.get(index).asInstanceOf[IPeptideMatchSorter]
+            }
+            index = index +1 
+          }
+          if (foundSorter == null)
+            foundSorter = new ScorePSMFilter()
+          foundSorter
+        } else {
+          new ScorePSMFilter()
+        }
+
+      // Begin transaction
+      msiDbConnectionContext = execCtx.getMSIDbConnectionContext
+      msiDbConnectionContext.beginTransaction() // Start a transaction on MSI Db
+      msiDbTransacOk = false
+
+      // Instantiate a result set validator
+      val rsValidator = ResultSetValidator(
+        execContext = execCtx,
+        targetRsId = resultSetId,
+        tdAnalyzer = validationConfig.tdAnalyzer,
+        pepMatchPreFilters = validationConfig.pepMatchPreFilters,
+        pepMatchValidator = validationConfig.pepMatchValidator,
+        protSetFilters = validationConfig.protSetFilters,
+        protSetValidator = validationConfig.protSetValidator,
+        inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+        peptideSetScoring = Some(validationConfig.pepSetScoring.getOrElse(PepSetScoring.MASCOT_STANDARD_SCORE)),
+        storeResultSummary = true,
+        propagatePSMValidation= propagatePSMFilters,
+        propagateProtSetValidation= propagateProtSetFilters
+      )
+
+      rsValidator.run()
+
+      // Commit transaction
+      msiDbConnectionContext.commitTransaction()
+      msiDbTransacOk = true
+
+      result = rsValidator.targetRSMIdPerRsId
     } finally {
 
       if (!msiDbTransacOk) {
