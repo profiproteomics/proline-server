@@ -92,8 +92,8 @@ public class ProjectHandler {
 	/**
 	 * Find all Search Engine protein identifier in all Search Engine protein databases of a specific list of RSM in MSIdb specified by it's projectId.
 	 * 
-	 * @param projectId
-	 * @param seDbIdentifiersBySeDbInstance
+	 * @param projectId project ID
+	 * @param seDbIdentifiersBySeDbInstance ProteinMatches accession (SEDbIdentifierWrapper) by SearchEntry database (SEDbInstanceWrapper)
 	 * @param rsmIds : RSM to consider 
 	 */
 	@SuppressWarnings("unchecked")
@@ -193,23 +193,31 @@ public class ProjectHandler {
 					try {
 						LOG.debug(" CLOSE MSI Db EntityManager for project #" + projectId);
 						msiEM.close();
-						udsEM.close();
 					} catch (Exception exClose) {
 						LOG.error("Error closing MSI Db EntityManager", exClose);
+					}
+				}
+				if(udsEM != null) {
+					try {
+						LOG.debug(" CLOSE UDS Db EntityManager ");
+						udsEM.close();
+					} catch (Exception exClose) {
+						LOG.error("Error closing UDS Db EntityManager", exClose);
 					}
 				}
 			}
 		} // End no MSIDb connector
 	}
 
-	@SuppressWarnings("unchecked")
+
 	/**
-	 * 
+	 *
 	 * @param projectId : Project to get RSM to fill for
 	 * @param forceUpdate : retrieve information even if previously done
-	 * @param rsmIdsToTest : specify of subset of RSM of specific project to test : test if should fill data 
-	 * @param udsEM
-	 * @return
+	 * @param rsmIdsToTest : specify of subset of RSM of specific project to test : test if should fill data
+	 * @param udsEM : entityManager for UDS
+	 * @param msiEM : entityManager for MSI of specified project
+	 * @return list of RSM IDs to be taken into account
 	 */
 	public static List<Long> retrieveRSMIdToFill(Long projectId, boolean forceUpdate, List<Long> rsmIdsToTest, EntityManager udsEM, EntityManager msiEM) {
 
@@ -264,11 +272,11 @@ public class ProjectHandler {
 	
 	/**
 	 * Verify that specified Project is active (no archive was done)
-	 * @param udsEM
-	 * @param projectId
-	 * @return
+	 * @param udsEM: entityManager for UDS
+	 * @param pId projectId
+	 * @return true if project with specified ID is still active
 	 */
-	public static Boolean isProjectActive(Long pId, final EntityManager udsEM) {		
+	static Boolean isProjectActive(Long pId, final EntityManager udsEM) {
 		Project p = udsEM.find(Project.class, pId);
 		JsonObject propAsJson = getPropertiesAsJsonObject(p.getSerializedProperties());
 		// test if the Project is already archived
@@ -277,10 +285,10 @@ public class ProjectHandler {
 	
 	/**
 	 * Retrieve Ids of all Project registered in UDS db and which are still active (no archive was done)
-	 * @param udsEM
-	 * @return
+	 * @param udsEM: entityManager for UDS
+	 * @return list of IDs of project still active
 	 */
-	public static List<Long> retrieveAllActiveProjectIds(final EntityManager udsEM) {		
+	static List<Long> retrieveAllActiveProjectIds(final EntityManager udsEM) {
 
 		List<Long> projectIds = null;
 		projectIds = ProjectRepository.findAllActiveProjectIds(udsEM);
@@ -291,10 +299,10 @@ public class ProjectHandler {
 	 * Retrieve all MSIdb SeqDatabase of a specified MSidb and returns a map of search engine database instance by msi.SeqDatabase id. Returns null if no
 	 * SeqDabase found.
 	 * 
-	 * @param msiEM
+	 * @param msiEM: entityManager for MSI associated to current project
 	 * @return a map of all SEDatabase Instance of a specified MSIdb or null if no SeqDatabase found.
 	 */
-	public static Map<Long, SEDbInstanceWrapper> retrieveAllSeqDatabases(final EntityManager msiEM) {
+	static Map<Long, SEDbInstanceWrapper> retrieveAllSeqDatabases(final EntityManager msiEM) {
 
 		Map<Long, SEDbInstanceWrapper> result = null;
 
@@ -326,7 +334,7 @@ public class ProjectHandler {
 						} else {
 							final SEDbInstanceWrapper seDbInstanceW = new SEDbInstanceWrapper(trimmedName, null,
 								fastaFilePath);
-							result.put(Long.valueOf(seqDbId), seDbInstanceW);
+							result.put(seqDbId, seDbInstanceW);
 						} // End if (fastaFilePath is valid)
 
 					} // End if (trimmedName is valid)
@@ -345,9 +353,9 @@ public class ProjectHandler {
 	 * Fills the seDbIdentifiers map (mapped by search engine database instance) with a list of protein identifiers. The list of protein identifiers is read
 	 * from the specified list of Object arrays.
 	 * 
-	 * @param lines
-	 * @param seDbInstances
-	 * @param seDbIdentifiers
+	 * @param lines : List of object representing the result of SQL query... To be redefine
+	 * @param seDbInstances : list of search engine database referenced by their ID
+	 * @param seDbIdentifiers : Map (current and to fill) proteinMatches identifiers by the databank to with theu are associated
 	 * @return the number of protein identifiers added to the map.
 	 */
 	private static int fillSEDbIdentifiers(
@@ -410,14 +418,12 @@ public class ProjectHandler {
 	
 	private static int nbrNoSeqProt;
 	private static int nbrManySeqProt;
-
+	private static int nbrBioSeqMissMatch;
 
 	/**
 	 * Calculate sequence coverage, mass and updates these properties as well as the BioSequence information in msidb.
-	 * 
-	 * @param projectId
+	 *
 	 * @param rsmIds : RSMs to consider
-	 * @param forceUpdate
 	 */
 	@SuppressWarnings("unchecked")
 	public static void fillProteinMatchesProperties(final long projectId, final Map<Long, SEDbInstanceWrapper> seDbInstances, final List<Long> rsmIds) {
@@ -425,7 +431,7 @@ public class ProjectHandler {
 		final IDataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();
 		final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId);
 		final IDatabaseConnector udsDbConnector = connectorFactory.getUdsDbConnector();
-		Map<ProteinMatch, Integer> coveredSeqLengthByProtMatchList = new HashMap<ProteinMatch, Integer>();
+		Map<ProteinMatch, Integer> coveredSeqLengthByProtMatchList = new HashMap<>();
 		if (msiDbConnector == null) {
 			LOG.warn("Project #{} has NO associated MSI Db", projectId);
 		} else {
@@ -540,7 +546,8 @@ public class ProjectHandler {
 						//reinit counter
 						nbrNoSeqProt = 0;
 						nbrManySeqProt = 0;
-						
+						nbrBioSeqMissMatch =0;
+
 						for (ProteinSet protSet : protSets) {
 
 							coveredSeqLengthByProtMatchList.clear();
@@ -570,7 +577,8 @@ public class ProjectHandler {
 						
 						LOG.info("Processed " + psIdcount + " protein sets / " + psIdListSize);
 						LOG.debug("--- Number of proteins with MORE THAN 1 Sequence : {}", nbrManySeqProt);
-					    LOG.debug("--- Number of proteins with NO Sequence : {}", nbrNoSeqProt);
+						LOG.debug("--- Number of proteins with NO Sequence : {}", nbrNoSeqProt);
+						LOG.debug("--- Number of proteins with NO Sequence : {}", nbrBioSeqMissMatch);
 
 						//Save RSM Property
 						JsonObject array = getPropertiesAsJsonObject(rsm.getSerializedProperties());
@@ -730,8 +738,10 @@ public class ProjectHandler {
 							foundMissMatch = true;
 							sb.append(" sequence;");
 						}
-						if (foundMissMatch)
-							LOG.warn(sb.toString());
+						if (foundMissMatch) {
+							nbrBioSeqMissMatch++;
+							LOG.trace(sb.toString());
+						}
 					}
 
 					// Save link between ProteinMatch and BioSeq
