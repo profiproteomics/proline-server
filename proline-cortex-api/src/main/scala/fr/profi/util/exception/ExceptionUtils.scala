@@ -11,10 +11,13 @@ object ExceptionUtils {
         .orElse(Option(throwable.getCause).map(_.getMessage))
         .orNull
       
-      if (cause != null) s"$newMessage because $cause" else newMessage
+      if (cause != null) s"$newMessage because $cause" else s"$newMessage ($throwable)"
     }
     
-    new Exception(message, throwable)
+    val exception = new Exception(message, throwable)
+    exception.setStackTrace(throwable.getStackTrace)
+    
+    exception
   }
   
 }
