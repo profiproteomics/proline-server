@@ -128,7 +128,7 @@ class MergeDatasetsV1_0 extends AbstractMergeDatases with IMergeResultSetsServic
       )
       rsmMerger.run()
 
-      logger.info("ResultSet merger done")
+      logger.info("ResultSummary merger done")
 
       result.targetResultSummaryId = rsmMerger.mergedResultSummary.id
       result.targetResultSetId = rsmMerger.mergedResultSummary.getResultSetId
@@ -202,7 +202,7 @@ class MergeDatasetsV2_0 extends AbstractMergeDatases with IMergeResultSetsServic
       )
       rsmMerger.run()
 
-      logger.info("ResultSet merger done")
+      logger.info("ResultSummary merger done")
 
       result.targetResultSummaryId = rsmMerger.mergedResultSummary.id
       result.targetResultSetId = rsmMerger.mergedResultSummary.getResultSetId

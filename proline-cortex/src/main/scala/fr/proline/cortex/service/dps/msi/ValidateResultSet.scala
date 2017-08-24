@@ -185,7 +185,7 @@ class ValidateResultSet extends AbstractRemoteProcessingService with IValidateRe
       val validationConfig = ValidateResultSet.parseValidationConfig(paramsRetriever)
 
       // Use peptide match validator as sorter if provided, else use default ScorePSM         
-      val sorter: IPeptideMatchSorter =
+      /*val sorter: IPeptideMatchSorter =
         if (validationConfig.pepMatchValidator.isDefined
           && validationConfig.pepMatchValidator.get.validationFilter.isInstanceOf[IPeptideMatchSorter])
           validationConfig.pepMatchValidator.get.validationFilter.asInstanceOf[IPeptideMatchSorter]
@@ -203,7 +203,7 @@ class ValidateResultSet extends AbstractRemoteProcessingService with IValidateRe
           foundSorter
         } else {
           new ScorePSMFilter()
-        }
+        }*/
 
       // Begin transaction
       msiDbConnectionContext = execCtx.getMSIDbConnectionContext
