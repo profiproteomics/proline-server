@@ -237,7 +237,7 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessingService with IImp
           peaklistSoftwareId = peaklistSoftwareId,
           importerProperties = importerProperties,
           acDecoyRegex = acDecoyRegex,
-          saveSpectrumMatch = false
+          storeSpectrumMatches = false
         )
         rsImporter.run()
 

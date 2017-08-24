@@ -94,7 +94,7 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessingService
       }
     } toMap
 
-    val saveSpectrumMatches = if (params.hasParam(SAVE_SPECTRUM_MATCHES_PARAM) == false) false
+    val storeSpectrumMatches = if (params.hasParam(SAVE_SPECTRUM_MATCHES_PARAM) == false) false
     else params.getBoolean(SAVE_SPECTRUM_MATCHES_PARAM)
 
     logger.info("Params : " + serialize(params))
@@ -142,7 +142,7 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessingService
           peaklistSoftwareId = peaklistSoftwareId,
           importerProperties = importerProperties,
           acDecoyRegex = acDecoyRegex,
-          saveSpectrumMatch = saveSpectrumMatches
+          storeSpectrumMatches = storeSpectrumMatches
         )
         rsImporter.run()
 
