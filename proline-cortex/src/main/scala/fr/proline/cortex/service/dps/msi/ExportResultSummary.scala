@@ -131,18 +131,21 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
       case ExportFileFormat.PRIDE        => require(rsmIdentifiers.size == 1, "Could export only one Result into Pride format")
       case ExportFileFormat.SPECTRA_LIST => require(rsmIdentifiers.size == 1, "Could export only one Result into Spectra List")
     }
-    val fileName = paramsRetriever.getOptString("file_name", null)
+    var fileName = paramsRetriever.getOptString("file_name", null)
+    if (StringUtils.isEmpty(fileName)) {
+      fileName = "DatasetExport-" + UUID.randomUUID().toString 
+    }
     val fileDirectory = this.parseFileDirectory(paramsRetriever)
 
     val extraParamsAsOptStr = Option(paramsRetriever.getOptMap("extra_params", true, null)).map(serialize(_))
     val extraParams = extraParamsAsOptStr.map(deserialize[Map[String, Object]](_))
-    val outputParams = ExportOutputMode.withName(paramsRetriever.getOptString("output_mode", "FILE"))
+    val outputMode = ExportOutputMode.withName(paramsRetriever.getOptString("output_mode", "FILE"))
 
     fileFormat match {
-      case ExportFileFormat.MZIDENTML    => exportToMzIdentML(rsmIdentifiers(0), fileName, fileDirectory, outputParams, extraParams)
-      case ExportFileFormat.TEMPLATED    => exportToTemplatedFile(rsmIdentifiers, fileName, fileDirectory, outputParams, extraParams)
-      case ExportFileFormat.PRIDE        => exportToPrideFile(rsmIdentifiers(0), fileName, fileDirectory, outputParams, extraParams)
-      case ExportFileFormat.SPECTRA_LIST => exportToSpectraList(rsmIdentifiers(0), fileName, fileDirectory, outputParams, extraParams)
+      case ExportFileFormat.MZIDENTML    => exportToMzIdentML(rsmIdentifiers(0), fileName, fileDirectory, outputMode, extraParams)
+      case ExportFileFormat.TEMPLATED    => exportToTemplatedFile(rsmIdentifiers, fileName, fileDirectory, outputMode, extraParams)
+      case ExportFileFormat.PRIDE        => exportToPrideFile(rsmIdentifiers(0), fileName, fileDirectory, outputMode, extraParams)
+      case ExportFileFormat.SPECTRA_LIST => exportToSpectraList(rsmIdentifiers(0), fileName, fileDirectory, outputMode, extraParams)
     }
   }
 
