@@ -5,7 +5,7 @@
   <parent>
     <groupId>fr.proline</groupId>
     <artifactId>ProFI-Pom</artifactId>
-    <version>0.3.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+    <version>0.4.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
   </parent>
   
   <artifactId>Proline-Cortex-API</artifactId>
@@ -24,6 +24,16 @@
   </scm>
   
   <dependencies>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+       <!-- Version inherited from ProFI-Pom ${jackson.version} -->
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <!-- Version inherited from ProFI-Pom ${jackson.version} -->
+    </dependency>
   
     <!-- Scala -->
     <dependency>
@@ -31,14 +41,14 @@
       <artifactId>scala-library</artifactId>
       <!-- Version inherited from ProFI-Pom ${scala-library.version} -->
     </dependency>
-    
-    <!-- Serialization -->
+
     <dependency>
-      <groupId>com.fasterxml.jackson.module</groupId>
-      <artifactId>jackson-module-scala_${scala.version}</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
-    </dependency>
-    
+      <groupId>com.typesafe.scala-logging</groupId>
+      <artifactId>scala-logging_${scala.version}</artifactId>
+    <!-- Version inherited from ProFI-Pom -->
+  </dependency>
+  <!-- Serialization -->
+
     <!-- JSON-RPC -->
     <dependency>
       <groupId>com.thetransactioncompany</groupId>
@@ -66,7 +76,11 @@
       <artifactId>ProFI-Commons-Scala</artifactId>
       <version>0.7.0-SNAPSHOT</version>
     </dependency>
-
+    <dependency>
+      <groupId>fr.proline.util</groupId>
+      <artifactId>ProFI-Commons-Java</artifactId>
+      <version>0.6.0-SNAPSHOT</version>
+    </dependency>
     <!-- Test -->
     <dependency>
       <groupId>junit</groupId>
@@ -75,12 +89,6 @@
       <scope>test</scope>
     </dependency>
 
-    <dependency>
-      <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_${scala.version}</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
-      <scope>test</scope>
-    </dependency>
     
   </dependencies>
   
