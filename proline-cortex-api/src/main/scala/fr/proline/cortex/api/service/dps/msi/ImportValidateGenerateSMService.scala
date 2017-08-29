@@ -31,7 +31,6 @@ trait IImportValidateGenerateSMService extends IImportResultFilesServiceParams w
     val description = "Import a result file, validate data and optionnaly generate Spectrum Matches for the validated PSMs." 
 
     val returns = JSONRPC2MethodResult(
-      // TODO: create a case class for these parameters
       typeOf[Array[ImportedResultFile]],
       "List of ImportedResultFile: path of imported file and id of created target RS."
     )
