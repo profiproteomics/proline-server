@@ -3,7 +3,7 @@
   <parent>
     <groupId>fr.proline</groupId>
     <artifactId>ProFI-Pom</artifactId>
-    <version>0.3.0-SNAPSHOT</version>
+    <version>0.4.0-SNAPSHOT</version>
   </parent>
   <artifactId>PM-MaxQuantParser</artifactId>
   <version>0.3.0-SNAPSHOT</version>
@@ -53,12 +53,26 @@
   	<dependency>
   		<groupId>commons-io</groupId>
   		<artifactId>commons-io</artifactId>
-  		<version>2.4</version>
+  		<version>2.5</version>
   	</dependency>
   	<dependency>
   		<groupId>com.opencsv</groupId>
   		<artifactId>opencsv</artifactId>
-  		<version>3.5</version>
+  		<version>4.0</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>fr.profi</groupId>
+  		<artifactId>ProFI-Proteomics</artifactId>
+  		<version>0.3.0-SNAPSHOT</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.scala-lang</groupId>
+  		<artifactId>scala-library</artifactId>
+  	</dependency>
+  	<dependency>
+  		<groupId>fr.proline</groupId>
+  		<artifactId>Proline-Databases</artifactId>
+  		<version>${core.version}</version>
   	</dependency>
   </dependencies>
   <properties>
