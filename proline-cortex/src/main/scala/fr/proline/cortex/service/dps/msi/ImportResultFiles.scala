@@ -1,37 +1,25 @@
 package fr.proline.cortex.service.dps.msi
 
 import java.io.File
-import scala.collection.JavaConversions.mapAsScalaMap
-import scala.util.matching.Regex
+
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-import fr.profi.util.serialization.ProfiJson.deserialize
-import fr.profi.util.serialization.ProfiJson.serialize
+import fr.profi.util.serialization.ProfiJson.{deserialize, serialize}
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.helper.UdsDbHelper
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.core.om.provider.msi.IProteinProvider
-import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
-import fr.proline.core.om.provider.msi.ProteinFakeProvider
-import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
-import fr.proline.core.om.provider.msi.SeqDbFakeProvider
-import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
-import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
+import fr.proline.core.om.provider.msi._
+import fr.proline.core.om.provider.msi.impl.{SQLPTMProvider, SQLPeptideProvider}
 import fr.proline.core.service.msi.ResultFileImporter
-import fr.proline.cortex.api.service.dps.msi.ImportedResultFile
-import fr.proline.cortex.api.service.dps.msi.IImportResultFilesService
-import fr.proline.cortex.api.service.dps.msi.IImportResultFilesServiceV1_0
-import fr.proline.cortex.api.service.dps.msi.IImportResultFilesServiceV2_0
-import fr.proline.cortex.api.service.dps.msi.IResultFileDescriptor
-import fr.proline.cortex.api.service.dps.msi.ResultFileDescriptorRuleId
-import fr.proline.cortex.api.service.dps.msi.ResultFileDescriptorsDecoyRegExp
+import fr.proline.cortex.api.service.dps.msi._
+import fr.proline.cortex.service.SingleThreadIdentifierType
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.fs.MountPointRegistry
-import fr.proline.jms.service.api.AbstractRemoteProcessingService
-import fr.proline.jms.service.api.ISingleThreadedService
-import fr.proline.cortex.service.SingleThreadIdentifierType
+import fr.proline.jms.service.api.{AbstractRemoteProcessingService, ISingleThreadedService}
+
+import scala.collection.JavaConversions.mapAsScalaMap
+import scala.language.postfixOps
+import scala.util.matching.Regex
 
 /**
  * Import a result file in the MSIdb corresponding to the provided project id

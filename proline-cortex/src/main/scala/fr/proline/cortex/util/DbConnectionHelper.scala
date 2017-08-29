@@ -14,7 +14,7 @@ import fr.proline.repository.ProlineDatabaseType
 
 object DbConnectionHelper extends LazyLogging {
 
-  private var m_dsConnectorFactory: IDataStoreConnectorFactory = null
+  private var m_dsConnectorFactory: IDataStoreConnectorFactory = _
 
   def initDataStore() {
     m_dsConnectorFactory = DataStoreConnectorFactory.getInstance()
@@ -39,11 +39,11 @@ object DbConnectionHelper extends LazyLogging {
   }
 
   def createJPAExecutionContext(projectID: Long): IExecutionContext = {
-    createExecutionContext(projectID, true)
+    createExecutionContext(projectID, useJPA = true)
   }
 
   def createSQLExecutionContext(projectID: Long): IExecutionContext = {
-    createExecutionContext(projectID, false)
+    createExecutionContext(projectID, useJPA = false)
   }
 
   private def createExecutionContext(projectID: Long, useJPA: Boolean): IExecutionContext = {
@@ -67,13 +67,13 @@ object DbConnectionHelper extends LazyLogging {
 
     }
 
-    BuildLazyExecutionContext(DbConnectionHelper.getDataStoreConnectorFactory, projectID, useJPA, Some(onConnectionContextClose))
+    BuildLazyExecutionContext(DbConnectionHelper.getDataStoreConnectorFactory(), projectID, useJPA, Some(onConnectionContextClose))
   }
 
   // Some reusable try/catch blocks
   def tryToRollbackDbTransaction(dbCtx: DatabaseConnectionContext) {
     if (dbCtx != null) {
-      val dbType = dbCtx.getProlineDatabaseType()
+      val dbType = dbCtx.getProlineDatabaseType
       logger.info(s"Rollbacking $dbType DB transaction")
 
       try {
@@ -87,7 +87,7 @@ object DbConnectionHelper extends LazyLogging {
 
   def tryToCloseDbContext(dbCtx: DatabaseConnectionContext) {
     if (dbCtx != null) {
-      val dbType = dbCtx.getProlineDatabaseType()
+      val dbType = dbCtx.getProlineDatabaseType
       logger.debug(s"Closing $dbType DB SQL context")
 
       try {
