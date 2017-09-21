@@ -1,23 +1,36 @@
 package fr.proline.module.parser.mascot
 
 import java.io.File
-import java.lang.System
-import java.net.URLDecoder
 
 import scala.Array.canBuildFrom
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
 
 import com.typesafe.scalalogging.LazyLogging
 
 import fr.profi.chemistry.model.Enzyme
-import fr.profi.util.primitives._
+import fr.profi.util.primitives.toFloat
+import fr.profi.util.primitives.toFloatOrMinusOne
+import fr.profi.util.primitives.toIntOrZero
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
-import fr.proline.core.om.model.msi._
+import fr.proline.core.om.model.msi.IResultFile
+import fr.proline.core.om.model.msi.MSISearch
+import fr.proline.core.om.model.msi.MSMSSearchSettings
+import fr.proline.core.om.model.msi.MascotImportProperties
+import fr.proline.core.om.model.msi.Ms2Query
+import fr.proline.core.om.model.msi.MsQuery
+import fr.proline.core.om.model.msi.MsQueryDbSearchProperties
+import fr.proline.core.om.model.msi.MsQueryProperties
+import fr.proline.core.om.model.msi.Peaklist
+import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.model.msi.ResultSetProperties
+import fr.proline.core.om.model.msi.SearchSettings
+import fr.proline.core.om.model.msi.SeqDatabase
+import fr.proline.core.om.model.msi.Spectrum
+import fr.proline.core.om.model.msi.SpectrumMatch
+import fr.proline.core.om.model.msi.SpectrumProperties
+import fr.proline.core.om.model.msi.SpectrumTitleFields
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.core.om.provider.msi.IProteinProvider
 import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
 import matrix_science.msparser.ms_inputquery
 import matrix_science.msparser.ms_mascotresfile

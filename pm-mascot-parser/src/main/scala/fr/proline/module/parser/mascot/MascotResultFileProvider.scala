@@ -3,7 +3,6 @@ package fr.proline.module.parser.mascot
 import java.io.BufferedReader
 import java.io.ByteArrayInputStream
 import java.io.File
-import java.io.FileReader
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
