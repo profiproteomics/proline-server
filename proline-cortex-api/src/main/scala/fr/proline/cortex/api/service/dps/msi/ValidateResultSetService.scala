@@ -1,16 +1,14 @@
 package fr.proline.cortex.api.service.dps.msi
 
-import scala.reflect.runtime.universe
-import scala.reflect.runtime.universe.typeOf
-
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-
-import fr.proline.jms.service.api.IDefaultServiceVersion
-import fr.proline.jms.service.api.RemoteServiceIdentity
 import fr.profi.util.jsonrpc.IJSONRPC2Method
 import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
 import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
 import fr.profi.util.jsonrpc.JSONRPC2MethodResult
+import fr.proline.jms.service.api.IDefaultServiceVersion
+import fr.proline.jms.service.api.RemoteServiceIdentity
+
+import scala.reflect.runtime.universe.typeOf
 
 case class FilterConfig(
   parameter: String,
@@ -109,8 +107,8 @@ trait IValidateResultSetServiceV2 extends IMsiService  {
       PROPAGATE_PROT_SET_VALIDATION_PARAM
     )
     val returns = JSONRPC2MethodResult(
-      description = "The generated ResultSummary ID.",
-      scalaType = typeOf[Long]
+      description = "The generated ResultSummary IDs.",
+      scalaType = typeOf[AnyRef]
     )
 
   }
