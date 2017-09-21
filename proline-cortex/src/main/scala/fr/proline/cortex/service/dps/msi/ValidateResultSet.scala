@@ -1,6 +1,5 @@
 package fr.proline.cortex.service.dps.msi
 
-import scala.Array.canBuildFrom
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.serialization.ProfiJson.deserialize
@@ -8,9 +7,7 @@ import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.algo.msi.InferenceMethod
 import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
-import fr.proline.core.algo.msi.filtering.IPeptideMatchSorter
 import fr.proline.core.algo.msi.filtering.IProteinSetFilter
-import fr.proline.core.algo.msi.filtering.pepmatch.ScorePSMFilter
 import fr.proline.core.algo.msi.scoring.PepSetScoring
 import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
 import fr.proline.core.algo.msi.validation.BuildOptimizablePeptideMatchFilter
@@ -27,12 +24,14 @@ import fr.proline.core.service.msi.ResultSetValidator
 import fr.proline.core.service.msi.ValidationConfig
 import fr.proline.cortex.api.service.dps.msi.FilterConfig
 import fr.proline.cortex.api.service.dps.msi.IValidateResultSetService
+import fr.proline.cortex.api.service.dps.msi.IValidateResultSetServiceV2
 import fr.proline.cortex.api.service.dps.msi.PepMatchValidatorConfig
 import fr.proline.cortex.api.service.dps.msi.ProtSetValidatorConfig
 import fr.proline.cortex.api.service.dps.msi.ValidateResultSetService
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
-import fr.proline.cortex.api.service.dps.msi.IValidateResultSetServiceV2
+
+import scala.Array.canBuildFrom
 import scala.collection.immutable.HashMap
 
 
@@ -184,27 +183,6 @@ class ValidateResultSet extends AbstractRemoteProcessingService with IValidateRe
     try {
       val validationConfig = ValidateResultSet.parseValidationConfig(paramsRetriever)
 
-      // Use peptide match validator as sorter if provided, else use default ScorePSM         
-      /*val sorter: IPeptideMatchSorter =
-        if (validationConfig.pepMatchValidator.isDefined
-          && validationConfig.pepMatchValidator.get.validationFilter.isInstanceOf[IPeptideMatchSorter])
-          validationConfig.pepMatchValidator.get.validationFilter.asInstanceOf[IPeptideMatchSorter]
-        else if (validationConfig.pepMatchPreFilters.isDefined) {
-          var foundSorter: IPeptideMatchSorter = null
-          var index = 0
-          while (foundSorter == null && index < validationConfig.pepMatchPreFilters.get.size) {
-            if (validationConfig.pepMatchPreFilters.get(index).isInstanceOf[IPeptideMatchSorter]) {
-              foundSorter = validationConfig.pepMatchPreFilters.get(index).asInstanceOf[IPeptideMatchSorter]
-            }
-            index = index +1 
-          }
-          if (foundSorter == null)
-            foundSorter = new ScorePSMFilter()
-          foundSorter
-        } else {
-          new ScorePSMFilter()
-        }*/
-
       // Begin transaction
       msiDbConnectionContext = execCtx.getMSIDbConnectionContext
       msiDbConnectionContext.beginTransaction() // Start a transaction on MSI Db
@@ -264,27 +242,6 @@ class ValidateResultSetV2 extends AbstractRemoteProcessingService with IValidate
     try {
       val validationConfig = ValidateResultSet.parseValidationConfig(paramsRetriever)
 
-      // Use peptide match validator as sorter if provided, else use default ScorePSM         
-      val sorter: IPeptideMatchSorter =
-        if (validationConfig.pepMatchValidator.isDefined
-          && validationConfig.pepMatchValidator.get.validationFilter.isInstanceOf[IPeptideMatchSorter])
-          validationConfig.pepMatchValidator.get.validationFilter.asInstanceOf[IPeptideMatchSorter]
-        else if (validationConfig.pepMatchPreFilters.isDefined) {
-          var foundSorter: IPeptideMatchSorter = null
-          var index = 0
-          while (foundSorter == null && index < validationConfig.pepMatchPreFilters.get.size) {
-            if (validationConfig.pepMatchPreFilters.get(index).isInstanceOf[IPeptideMatchSorter]) {
-              foundSorter = validationConfig.pepMatchPreFilters.get(index).asInstanceOf[IPeptideMatchSorter]
-            }
-            index = index +1 
-          }
-          if (foundSorter == null)
-            foundSorter = new ScorePSMFilter()
-          foundSorter
-        } else {
-          new ScorePSMFilter()
-        }
-
       // Begin transaction
       msiDbConnectionContext = execCtx.getMSIDbConnectionContext
       msiDbConnectionContext.beginTransaction() // Start a transaction on MSI Db
@@ -302,7 +259,7 @@ class ValidateResultSetV2 extends AbstractRemoteProcessingService with IValidate
         inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
         peptideSetScoring = Some(validationConfig.pepSetScoring.getOrElse(PepSetScoring.MASCOT_STANDARD_SCORE)),
         storeResultSummary = true,
-        propagatePSMValidation= propagatePSMFilters,
+        propagatePepMatchValidation= propagatePSMFilters,
         propagateProtSetValidation= propagateProtSetFilters
       )
 
