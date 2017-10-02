@@ -2,7 +2,7 @@ package fr.proline.module.exporter.dataset.view
 
 import java.text.SimpleDateFormat
 
-import fr.profi.util.collection._
+import fr.proline.core.om.model.msi.SequenceMatch
 import fr.proline.module.exporter.commons.config.ExportConfigSheet
 import fr.proline.module.exporter.commons.view.SmartDecimalFormat
 import fr.proline.module.exporter.dataset.IdentDataset
@@ -47,7 +47,7 @@ class ProtSetToBestPepMatchView(
         )
         
         // We group sequence matches by peptide id because a given protein may have the same peptide at different locations
-        val seqMatchesByPepId = reprProtMatch.sequenceMatches.groupBy(_.getPeptideId)
+        val seqMatchesByPepId: Map[Long, Array[SequenceMatch]] = reprProtMatch.sequenceMatches.groupBy(_.getPeptideId)
 
         for (
           pepInst <- protSet.peptideSet.getPeptideInstances.sortBy(_.peptide.calculatedMass);
