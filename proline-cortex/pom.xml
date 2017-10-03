@@ -400,7 +400,8 @@
           	<id>scala-version-generation</id>
             <phase>generate-sources</phase>
             <configuration>
-      	</configuration>
+              <skip>false</skip>
+      	   </configuration>
           </execution>
         </executions>
       </plugin>
