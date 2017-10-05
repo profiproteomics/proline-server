@@ -41,11 +41,10 @@ trait IProlineResourceService extends IRemoteServiceIdentity with IDefaultServic
 
   // TODO: rename to MergeDataSetsService
   val serviceLabel = "ProlineResourceService"
-  
-  override val isNodeSpecific = true
+
    
   this.serviceDescription = Some(
-    "Return the specified file from Proiline File System either by using the absolute path or by trying to use Prolibe Mount Point."
+    "Return the specified file from Proline File System either by using the absolute path or by trying to use Proline Mount Point. If using absolute path a unique Noide should be running or absolute path should be the same on all nodes. Use can use ResourceService to specify a node."
   )
   
   val methodDefinitions: Seq[IJSONRPC2Method] = List(GET_RESOURCE_METHOD)
