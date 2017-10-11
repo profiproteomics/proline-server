@@ -681,12 +681,12 @@ public class ProjectHandler {
 				}
 							
 				BioSequenceWrapper bioSeq = protMatchBioSeqs.get(0);
-				int bioSequenceLentgh = bioSeq.getSequence().length();
+				int bioSequenceLenght = bioSeq.getSequence().length();
 				// to avoid the indeterminate form : /0
-				if ((bioSequenceLentgh > 0) && (coveredSequenceLength < bioSequenceLentgh)) {
+				if ((bioSequenceLenght > 0) && (coveredSequenceLength <= bioSequenceLenght)) {
 
 					//Calculate Coverage and store in MSI
-					double coverage = calculateSequenceCoverage(bioSequenceLentgh, coveredSequenceLength);
+					double coverage = calculateSequenceCoverage(bioSequenceLenght, coveredSequenceLength);
 					ProteinSetProteinMatchItem proSetMap = protSetMapByProtMatch.get(protMatch);
 					proSetMap.setCoverage(new Float(coverage));
 					msiEM.merge(proSetMap);
