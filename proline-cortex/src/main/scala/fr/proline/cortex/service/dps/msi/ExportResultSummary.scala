@@ -133,6 +133,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
     }
     
     var fileName = paramsRetriever.getOptString("file_name", null)
+    // Don't set default name in case of tempateds : may have more thant one and returned filename format is used by Studio.  
     if ( !fileFormat.equals(ExportFileFormat.TEMPLATED) && StringUtils.isEmpty(fileName)) { 
       fileName = "DatasetExport-" + UUID.randomUUID().toString 
     }
