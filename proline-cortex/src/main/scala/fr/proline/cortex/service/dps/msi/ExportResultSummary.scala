@@ -131,8 +131,9 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
       case ExportFileFormat.PRIDE        => require(rsmIdentifiers.size == 1, "Could export only one Result into Pride format")
       case ExportFileFormat.SPECTRA_LIST => require(rsmIdentifiers.size == 1, "Could export only one Result into Spectra List")
     }
+    
     var fileName = paramsRetriever.getOptString("file_name", null)
-    if (StringUtils.isEmpty(fileName)) {
+    if ( !fileFormat.equals(ExportFileFormat.TEMPLATED) && StringUtils.isEmpty(fileName)) { 
       fileName = "DatasetExport-" + UUID.randomUUID().toString 
     }
     val fileDirectory = this.parseFileDirectory(paramsRetriever)
