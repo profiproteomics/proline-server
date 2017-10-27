@@ -33,6 +33,7 @@ import fr.proline.core.om.provider.msi.ProteinEmptyFakeProvider
 import fr.proline.core.om.provider.msi.ProteinFakeProvider
 import javax.xml.parsers.SAXParser
 import javax.xml.parsers.SAXParserFactory
+import fr.proline.core.om.model.msi.PtmLocation
 
 class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedExecutionContext, val importProperties: Map[String, Any]) extends DefaultHandler with IResultFile with LazyLogging {
 
@@ -72,7 +73,6 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
   private var resultBioml: XTBioml = null
   private lazy val xtandemSettings = new XtandemSettings(resultBioml, parserContext, instrumentConfig, peaklistSoftware)
   lazy val msiSearch: MSISearch = xtandemSettings.msiSearchOpt.get
-//  lazy val ionSeries = xtandemSettings.ionSeries
   lazy val hasDecoyResultSet = xtandemSettings.hasDecoyResultSet
   lazy val hasMs2Peaklist = xtandemSettings.hasMs2Peaklist
   
@@ -184,21 +184,25 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
               // define uniqueKey
               val key = peptideItem.seq+"%"+peptideItem.aaMarkupList.map(aa => aa.typeMU.toString+(aa.at-peptideItem.start+1)).mkString("")
               // get or create peptide
-              val peptide = peptideByUniqueKey.getOrElse(key, {
-                val locatedPtms = getLocatedPtms(peptideItem)
-                val peptideFromDatabase = {
+              val peptide = {
+                if(!peptideByUniqueKey.isDefinedAt(key)) {
+                  // search for the peptide in the database
+                  val locatedPtms = getLocatedPtms(peptideItem)
                   val tmpPeptide = {
-                    try { pepProvider.getPeptide(peptideItem.seq, locatedPtms) }
-                    catch { case e: javax.persistence.NonUniqueResultException => None } // only possible during junit tests
+                    try {
+                      pepProvider.getPeptide(peptideItem.seq, locatedPtms).get
+                    } catch {
+                      // create it if it's not found
+                      case e: javax.persistence.NonUniqueResultException =>
+                        new Peptide(sequence = peptideItem.seq, ptms = locatedPtms)
+                      case e: java.util.NoSuchElementException => 
+                        new Peptide(sequence = peptideItem.seq, ptms = locatedPtms)
+                    }
                   }
-                  if(!tmpPeptide.isDefined || tmpPeptide.get == null) {
-                    new Peptide(sequence = peptideItem.seq, ptms = locatedPtms)
-                  } else
-                    tmpPeptide.get
+                  peptideByUniqueKey += (key -> tmpPeptide)
                 }
-                peptideByUniqueKey += (key -> peptideFromDatabase)
-                peptideFromDatabase
-              })
+                peptideByUniqueKey.get(key).get
+              }
               
               // new SequenceMatch
               val residueBefore = if(peptideItem.pre.isEmpty) '-' else peptideItem.pre.toCharArray. last
@@ -226,7 +230,6 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
                   score = peptideItem.hyperScore.toFloat, // also keep Evalue somewhere !
                   scoreType = PeptideMatchScoreType.XTANDEM_HYPERSCORE,
                   charge = currentQuery.charge,
-//                  deltaMoz = ((peptideItem.mh + (currentQuery.charge - 1) * MolecularConstants.PROTON_MASS) / currentQuery.charge - currentQuery.moz).toFloat,
                   deltaMoz = peptideItem.delta.toFloat / currentQuery.charge,
                   isDecoy = isDecoy,
                   peptide = peptide,
@@ -244,7 +247,16 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
               // get or create ProteinMatch and store it with a unique key
               if(!proteinMatchesPerUniqueKey.isDefinedAt(proteinAccessKey)) {
                 // get protein first
-                val protein = protProvider.getProtein(accession, seqDatabaseOpt).getOrElse(new Protein(id = Protein.generateNewId(), sequence = proteinItem.peptide.info))
+                val proteinOpt = {
+                  val p = protProvider.getProtein(accession, seqDatabaseOpt)
+                  if(p.isDefined) {
+                    p
+                  } else if(!proteinItem.peptide.info.isEmpty()) {
+                    Some(new Protein(sequence = proteinItem.peptide.info))
+                  } else {
+                    None
+                  }
+                }
                 // create a protein match
                 proteinMatchesPerUniqueKey.put(proteinAccessKey, new ProteinMatch(
                     id = ProteinMatch.generateNewId(),
@@ -253,7 +265,7 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
                     peptideMatchesCount = 0, 
                     scoreType = PeptideMatchScoreType.XTANDEM_HYPERSCORE.toString(),
                     isDecoy = isDecoy,
-                    protein = if(protein.sequence.isEmpty()) None else Some(protein),
+                    protein = proteinOpt,
                     seqDatabaseIds = Array(seqDatabaseOpt.id)))
                 sequenceMatchesPerUniqueKey.put(proteinAccessKey, new ArrayBuffer[SequenceMatch])
               }
@@ -294,23 +306,24 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
     proteinMatchesPerUniqueKey.foreach{ case (key, proteinMatch) => {
       val accession = key._1
       val seqDbId = key._2
-      if(proteinMatches.contains(accession)) {
-        // update this protein match
-        val finalProteinMatch = proteinMatches.get(accession).get
-        // add seqDbId if not already present
-        if(!finalProteinMatch.seqDatabaseIds.contains(seqDbId)) {
-          finalProteinMatch.seqDatabaseIds = finalProteinMatch.seqDatabaseIds ++ Array(seqDbId)
-        }
-        // add sequence matches
-        proteinMatch.sequenceMatches.foreach(seqMatch => {
-          if(!finalProteinMatch.sequenceMatches.contains(seqMatch)) {
-            finalProteinMatch.sequenceMatches = finalProteinMatch.sequenceMatches ++ Array(seqMatch)
-          }
-        })
-      } else {
-        // first occurence of the protein match, add it to the list
-        proteinMatches.put(accession, proteinMatchesPerUniqueKey(key))
+      // get the ProteinMatch
+      val finalProteinMatch = if(proteinMatches.isDefinedAt(accession)) proteinMatches.get(accession).get else proteinMatchesPerUniqueKey(key)
+      // add seqDbId if not already present
+      if(!finalProteinMatch.seqDatabaseIds.contains(seqDbId)) {
+        finalProteinMatch.seqDatabaseIds = finalProteinMatch.seqDatabaseIds ++ Array(seqDbId)
       }
+      // add sequence matches
+      proteinMatch.sequenceMatches.foreach(seqMatch => {
+        if(!finalProteinMatch.sequenceMatches.contains(seqMatch)) {
+          finalProteinMatch.sequenceMatches = finalProteinMatch.sequenceMatches ++ Array(seqMatch)
+        }
+      })
+      // Update Protein Match score
+      finalProteinMatch.sequenceMatches.foreach(seqMatch => {
+        finalProteinMatch.score += seqMatch.bestPeptideMatch.get.score
+      })
+      // put or update the item in the map
+      proteinMatches.put(accession, finalProteinMatch)
     }}
     
     logger.debug("XTandem file parsed, generating final ResultSet")
@@ -345,23 +358,37 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
   
   def close() {}
   
+  private def ptmMatch(ptmDef: PtmDefinition, ptmMass: Double, ptmPosition: Int, ptmResidue: Char, peptideStart: Int, peptideEnd: Int, peptidePre: String, peptidePost: String): Boolean = {
+    var ptmOpt: Option[PtmDefinition] = None
+    if(ptmDef.ptmEvidences.count(e => { scala.math.abs(ptmMass - e.monoMass) <= XtandemPtmVerifier.ptmMonoMassMargin }) > 0) {
+      PtmLocation.withName(ptmDef.location) match {
+        case PtmLocation.ANY_C_TERM => if(ptmPosition == peptideEnd) ptmOpt = Some(ptmDef)
+        case PtmLocation.ANY_N_TERM => if(ptmPosition == peptideStart) ptmOpt = Some(ptmDef)
+        case PtmLocation.PROT_N_TERM => {
+          // Protein N-Terminal should be in position 1, or position 2 if previous aa is [M
+          if(ptmPosition == 1 || (ptmPosition == 2 && peptidePre.equals("[M"))) ptmOpt = Some(ptmDef)
+          // X!Tandem also seems to allow a PROT_N_TERM acetylation on the third aa of the protein, I don't know why...
+        }
+        case PtmLocation.PROT_C_TERM => if(ptmPosition == peptideEnd && peptidePost.equals("]")) ptmOpt = Some(ptmDef)
+        case PtmLocation.ANYWHERE => if(ptmDef.residue == '\0' || ptmResidue == ptmDef.residue) ptmOpt = Some(ptmDef)
+      }
+    }
+    ptmOpt.isDefined
+  }
+  
   private def getLocatedPtms(peptide: XTDomain): Array[LocatedPtm] = {
     val locatedPtms: ArrayBuffer[LocatedPtm] = new ArrayBuffer[LocatedPtm]
     for (aam <- peptide.aaMarkupList) {
       val ptmResidue: Char = aam.typeMU
       val ptmPosition: Int = aam.at // WARNING: it's the position on the protein, not the position on the peptide !!
       val ptmMass: Double = aam.modified
-
+      
       var _ptm: Option[PtmDefinition] = None
       // First  : search among fixedPTM
-      _ptm = msiSearch.searchSettings.fixedPtmDefs.filter(ptmDef => {
-        (ptmDef.residue == '\0' || ptmDef.residue == ptmResidue) && ptmDef.ptmEvidences.count(e => { scala.math.abs(ptmMass - e.monoMass) <= XtandemPtmVerifier.ptmMonoMassMargin }) > 0
-      }).headOption
+      _ptm = msiSearch.searchSettings.fixedPtmDefs.filter(ptmDef => ptmMatch(ptmDef, ptmMass, ptmPosition, ptmResidue, peptide.start, peptide.end, peptide.pre, peptide.post)).headOption
       // Second  : search among variablePTM
       if (!_ptm.isDefined) {
-        _ptm = msiSearch.searchSettings.variablePtmDefs.filter(ptmDef => {
-          (ptmDef.residue == '\0' || ptmDef.residue == ptmResidue) && ptmDef.ptmEvidences.count(e => { scala.math.abs(ptmMass - e.monoMass) <= XtandemPtmVerifier.ptmMonoMassMargin }) > 0
-        }).headOption
+        _ptm = msiSearch.searchSettings.variablePtmDefs.filter(ptmDef => ptmMatch(ptmDef, ptmMass, ptmPosition, ptmResidue, peptide.start, peptide.end, peptide.pre, peptide.post)).headOption
       }
       if (_ptm.isDefined) {
         _ptm.get.ptmEvidences.filter(e => e.ionType.equals(IonTypes.Precursor) && scala.math.abs(ptmMass - e.monoMass) <= XtandemPtmVerifier.ptmMonoMassMargin).foreach(e => {
@@ -377,7 +404,8 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
           }
         })
       } else {
-        logger.debug("PTM not found for residue '"+ptmResidue+"' at position '"+ptmPosition+"' and mass '"+ptmMass+"'")
+        // quit if the ptm does not exist ?
+        logger.error("PTM with mass "+ptmMass+" on peptide "+peptide.seq+" (residue "+ptmResidue+" at position "+ptmPosition+" and pre="+peptide.pre+") does not match with any PTM in the Proline database")
       }
     }
     locatedPtms.toArray

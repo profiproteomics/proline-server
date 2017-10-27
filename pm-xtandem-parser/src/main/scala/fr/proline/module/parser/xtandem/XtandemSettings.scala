@@ -128,8 +128,8 @@ case class XtandemSettings(resultBioml: XTBioml, parserContext: ProviderDecorate
   lazy val searchSettingsOpt: Option[SearchSettings] = {
     val ms1ChargeStates = List.range(1, settings.getOrElse("spectrum, maximum parent charge", "4").toInt + 1).map(_+"+").mkString(", ")
     val ms1ErrorTolMinusOrPlus = settings.getOrElse("spectrum, parent monoisotopic mass error minus", settings.getOrElse("spectrum, parent monoisotopic mass error plus", 0.0))
-    val ms1ToleranceUnit = settings.getOrElse("spectrum, parent monoisotopic mass error units", "Da")
-    val ms2ToleranceUnit = settings.getOrElse("spectrum, fragment monoisotopic mass error units", "Da")
+    val ms1ToleranceUnit = settings.getOrElse("spectrum, parent monoisotopic mass error units", "Daltons")
+    val ms2ToleranceUnit = settings.getOrElse("spectrum, fragment monoisotopic mass error units", "Daltons")
     
     Some(new SearchSettings(
         id = SearchSettings.generateNewId(),
@@ -150,7 +150,7 @@ case class XtandemSettings(resultBioml: XTBioml, parserContext: ProviderDecorate
           new MSMSSearchSettings(
             ms2ChargeStates = ms1ChargeStates, // not an actual setting, using MS1 value instead
             ms2ErrorTol = settings.getOrElse("spectrum, fragment monoisotopic mass error", 0).toString.toDouble,
-            ms2ErrorTolUnit = if(ms1ToleranceUnit.equals("Daltons")) "Da" else "ppm"))))
+            ms2ErrorTolUnit = if(ms2ToleranceUnit.equals("Daltons")) "Da" else "ppm"))))
   }
   
   lazy val msiSearchOpt: Option[MSISearch] = {

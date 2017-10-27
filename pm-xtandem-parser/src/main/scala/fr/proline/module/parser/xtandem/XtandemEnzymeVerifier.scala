@@ -43,10 +43,8 @@ object XTandemEnzymeVerifier extends LazyLogging {
     for (i <- 0 until commaParts.length) {
       commaParts(i) match {
         // most probable cases
-        case "[RK]|{P}" => enzymes += new Enzyme(id = -1, name = "Trypsin", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "KR", restrictiveResidues = Some("P"))))
-        case "[KR]|{P}" => enzymes += new Enzyme(id = -1, name = "Trypsin", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "KR", restrictiveResidues = Some("P"))))
-        case "[KR]" => enzymes += new Enzyme(id = -1, name = "Trypsin/P", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "KR", restrictiveResidues = None)))
-        case "[RK]" => enzymes += new Enzyme(id = -1, name = "Trypsin/P", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "KR", restrictiveResidues = None)))
+        case "[RK]|{P}" | "[KR]|{P}" => enzymes += new Enzyme(id = -1, name = "Trypsin", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "KR", restrictiveResidues = Some("P"))))
+        case "[RK]" | "[KR]" | "[RK]|[X]" | "[KR]|[X]" | "[RK]|[_]" | "[KR]|[_]" => enzymes += new Enzyme(id = -1, name = "Trypsin/P", isSemiSpecific = false, enzymeCleavages = Array(new EnzymeCleavage(id = -1, site = "C-term", residues = "KR", restrictiveResidues = None)))
         // all other cases
         case _ => 
           residue = ""
@@ -73,7 +71,7 @@ object XTandemEnzymeVerifier extends LazyLogging {
           val enzyme = findEnzyme(allEnzymesArray, residue, restrictiveResidue, site, isSemiSpecific)
           if(!enzyme.isEmpty) {
             enzymes += enzyme.get 
-          }
+          } // else throw exception ?
       }
     } 
     enzymes.toArray
