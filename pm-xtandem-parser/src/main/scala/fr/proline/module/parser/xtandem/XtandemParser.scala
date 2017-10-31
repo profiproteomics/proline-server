@@ -359,17 +359,24 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
   def close() {}
   
   private def ptmMatch(ptmDef: PtmDefinition, ptmMass: Double, ptmPosition: Int, ptmResidue: Char, peptideStart: Int, peptideEnd: Int, peptidePre: String, peptidePost: String): Boolean = {
+    /*
+     	X!Tandem does not only check the first aminoacid, but does it like this:
+    		1. test the peptide with and without N-terminal acetylation;
+    		2. remove the N-terminal residue;
+    		3. test the new peptide with and without N-terminal acetylation;
+    		4. remove the N-terminal residue; and
+    		5. test the new peptide with and without N-terminal acetylation.
+			From information I had in GPMDB at the time, it seemed that some protein N-terminal sequences had a tendency to lose 
+			both the M1 and X2 residues, especially when X2 was a bit bulkier, e.g., L or V. The loss of the X2 residue usually 
+			wasn't complete: the protein would end up with a slightly ragged N-terminus.
+     */
     var ptmOpt: Option[PtmDefinition] = None
     if(ptmDef.ptmEvidences.count(e => { scala.math.abs(ptmMass - e.monoMass) <= XtandemPtmVerifier.ptmMonoMassMargin }) > 0) {
       PtmLocation.withName(ptmDef.location) match {
         case PtmLocation.ANY_C_TERM => if(ptmPosition == peptideEnd) ptmOpt = Some(ptmDef)
         case PtmLocation.ANY_N_TERM => if(ptmPosition == peptideStart) ptmOpt = Some(ptmDef)
-        case PtmLocation.PROT_N_TERM => {
-          // Protein N-Terminal should be in position 1, or position 2 if previous aa is [M
-          if(ptmPosition == 1 || (ptmPosition == 2 && peptidePre.equals("[M"))) ptmOpt = Some(ptmDef)
-          // X!Tandem also seems to allow a PROT_N_TERM acetylation on the third aa of the protein, I don't know why...
-        }
-        case PtmLocation.PROT_C_TERM => if(ptmPosition == peptideEnd && peptidePost.equals("]")) ptmOpt = Some(ptmDef)
+        case PtmLocation.PROT_N_TERM => if(ptmPosition <= 3 && peptidePre.startsWith("[")) ptmOpt = Some(ptmDef)
+        case PtmLocation.PROT_C_TERM => if(ptmPosition == peptideEnd && peptidePost.endsWith("]")) ptmOpt = Some(ptmDef)
         case PtmLocation.ANYWHERE => if(ptmDef.residue == '\0' || ptmResidue == ptmDef.residue) ptmOpt = Some(ptmDef)
       }
     }
@@ -404,7 +411,7 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
           }
         })
       } else {
-        // quit if the ptm does not exist ?
+        // TODO quit if the ptm does not exist ?
         logger.error("PTM with mass "+ptmMass+" on peptide "+peptide.seq+" (residue "+ptmResidue+" at position "+ptmPosition+" and pre="+peptide.pre+") does not match with any PTM in the Proline database")
       }
     }
