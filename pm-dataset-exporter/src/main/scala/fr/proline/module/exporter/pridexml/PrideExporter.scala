@@ -520,7 +520,34 @@ class PrideExporter(
 	        val peptideMatch = rsm.resultSet.get.getPeptideMatchById.get(pepInstance.bestPeptideMatchId).get
 	        
 	        val peptideItem = new PeptideItem()
-	        peptideItem.setSequence(pepInstance.peptide.sequence)
+          // Replace X, B and Z  with corresponding AA used for matching
+          val finalSeq =  if(peptideMatch.properties.isDefined && peptideMatch.properties.get.getMascotProperties.isDefined && peptideMatch.properties.get.getMascotProperties.get.ambiguityString.isDefined)
+            {
+              val originalSeq = pepInstance.peptide.sequence
+              logger.trace(" Will Change seq for "+originalSeq)
+              try {
+                val ambiguityString = peptideMatch.properties.get.getMascotProperties.get.ambiguityString.get //formatted as 14,X,E for SIYGLTTDEAVVAXEEAK
+                val parsedAmbiguity = ambiguityString.split(",")
+                var tempFinalSeq = originalSeq
+                var i = 0
+                while(i < parsedAmbiguity.length) {
+                  val genericCharIndex = Integer.parseInt(parsedAmbiguity(i))
+                  val char2ReplaceWith: String = parsedAmbiguity(i+2)
+                  val sb = new StringBuilder(tempFinalSeq.substring(0,genericCharIndex-1)).append(char2ReplaceWith).append(tempFinalSeq.substring(genericCharIndex))
+                  tempFinalSeq = sb.toString()
+                  i = i+3
+                }
+                logger.trace(" Change seq to "+tempFinalSeq)
+                tempFinalSeq
+
+              } catch {
+                case e: Exception => originalSeq
+              }
+
+            } else { // finalSeq equals to original sequence
+              pepInstance.peptide.sequence
+            }
+	        peptideItem.setSequence(finalSeq)
 	        peptideItem.setStart(BigInteger.valueOf(seqMatch.start))
 	        peptideItem.setEnd(BigInteger.valueOf(seqMatch.end))
 	        //TODO getBest peptideMatch then Query then Spectrum.Id
