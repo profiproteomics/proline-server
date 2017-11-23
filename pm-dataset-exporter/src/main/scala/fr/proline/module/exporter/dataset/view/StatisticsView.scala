@@ -2,14 +2,14 @@ package fr.proline.module.exporter.dataset.view
 
 import java.text.{DecimalFormat, SimpleDateFormat}
 
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.LongMap
+
 import fr.proline.core.om.model.msi._
 import fr.proline.module.exporter.api.view.IFormLikeView
 import fr.proline.module.exporter.commons.config.ExportConfigConstant._
 import fr.proline.module.exporter.commons.config.ExportConfigSheet
 import fr.proline.module.exporter.commons.config.view.CustomViewFields
-
-import scala.collection.{immutable, mutable}
-import scala.collection.mutable.ArrayBuffer
 
 class StatisticsView(
   val rsm: LazyResultSummary,
@@ -33,12 +33,10 @@ class StatisticsView(
     // TODO: get validated ResultSet
     val rs = rsm.lazyResultSet
     val pepMatches = rs.peptideMatches
-    //VD Workaround for #17405
-    val nullMsQueryExist = (pepMatches.filter(_.msQuery==null).length >0)
-    val allPrecursorCharges: List[Int] = if(!nullMsQueryExist) { pepMatches
-      .groupBy(pm => pm.peptide.uniqueKey + '%' + pm.msQuery.charge)
-      .map(_._2.head.msQuery.charge)
-      .toList } else List.empty[Int]
+    val allPrecursorCharges = pepMatches
+      .groupBy(pm => pm.peptide.uniqueKey + '%' + pm.charge)
+      .map(_._2.head.charge)
+      .toList
 
     val allZCount = allPrecursorCharges.length
     val z2Count = allPrecursorCharges.count(_ == 2)
@@ -54,7 +52,7 @@ class StatisticsView(
     val( singlePepProtSets, multiPepProtSets ) = validatedProtSets.partition(_.peptideSet.items.length == 1 )
 
     // --- Group specific peptide sequences by protein sets ---
-    val speSeqsByProtSet = new mutable.LongMap[ArrayBuffer[String]](rsm.proteinSets.length)
+    val speSeqsByProtSet = new LongMap[ArrayBuffer[String]](rsm.proteinSets.length)
 
     for (
       protSet <- validatedProtSets;
@@ -79,10 +77,10 @@ class StatisticsView(
       val fieldValue: Any = fieldConfig.id match {
         case FIELD_STAT_PSM_VALIDATION => psmValResultsAsStr
         case FIELD_STAT_NB_TOTAL_PSMS => pepMatches.length
-        case FIELD_STAT_NB_TOTAL_PRECURSORS => if(nullMsQueryExist) "NA" else allZCount
-        case FIELD_STAT_NB_Z2_PRECURSORS => if(nullMsQueryExist) "NA" else z2Count
-        case FIELD_STAT_NB_Z3_PRECURSORS => if(nullMsQueryExist) "NA" else z3Count
-        case FIELD_STAT_NB_Z4PLUS_PRECURSORS => if(nullMsQueryExist) "NA" else z4PlusCount
+        case FIELD_STAT_NB_TOTAL_PRECURSORS => allZCount
+        case FIELD_STAT_NB_Z2_PRECURSORS => z2Count
+        case FIELD_STAT_NB_Z3_PRECURSORS => z3Count
+        case FIELD_STAT_NB_Z4PLUS_PRECURSORS => z4PlusCount
         case FIELD_STAT_NB_PEPTIDES => pepCount
         case FIELD_STAT_NB_MODIFIED_PEPTIDES => modPepCount
         case FIELD_STAT_NB_UNMODIFIED_PEPTIDES => unmodPepCount
