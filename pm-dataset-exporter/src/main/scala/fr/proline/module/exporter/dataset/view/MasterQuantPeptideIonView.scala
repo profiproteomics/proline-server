@@ -42,7 +42,7 @@ class MasterQuantPeptideIonView(
   
   protected val mqPepIonViewFieldsConfigs = sheetConfig.fields.filter( f => mqPepIonViewFieldSet.contains(f.id) )
   
-  protected lazy val identPepMatchById = identDS.childResultSummaries.flatMap { childRsm =>
+  protected lazy val childPepMatchById = identDS.childResultSummaries.flatMap { childRsm =>
     childRsm.lazyResultSet.peptideMatchById
   } toLongMap()
 
@@ -79,7 +79,7 @@ class MasterQuantPeptideIonView(
         case FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME => dcf2.format(mqPepIon.elutionTime / 60)
         case FIELD_QUANT_PEPTIDE_ION_BEST_SCORE => {
           appendQcValuesToRecord(fieldConfig) { (qcId, qPepIon) =>
-            val bestScoreOpt = bestPepMatchIdByQcIdOpt.flatMap(_.get(qcId).map(identPepMatchById(_).score))
+            val bestScoreOpt = bestPepMatchIdByQcIdOpt.flatMap(_.get(qcId).map(childPepMatchById(_).score))
             dcf2.format(bestScoreOpt.orNull)
           }
         }
@@ -156,8 +156,19 @@ class MasterQuantPeptideIonView(
 
             for (mqPep <- mqPepOpt; mqPepIon <- mqPep.masterQuantPeptideIons) {
               
+              // DBO: WORKAROUND FOR issues #15834, #17582
+              val bestPeptMatchId = mqPepIon.bestPeptideMatchId.get
+              val parentPepMatchOpt = pepMatchById.get(bestPeptMatchId)
+              val parentOrChildBestPepMatchOpt = if (parentPepMatchOpt.isDefined) parentPepMatchOpt
+              else childPepMatchById.get(bestPeptMatchId)
+              
+              assert(
+                parentOrChildBestPepMatchOpt.isDefined,
+                s"Can't retrieve the best peptide match with ID = $bestPeptMatchId" 
+              )
+              
               val quantRecordBuildingCtx = new MasterQuantPeptideIonBuildingContext(
-                pepMatch = pepMatchById(mqPepIon.bestPeptideMatchId.get),
+                pepMatch = parentOrChildBestPepMatchOpt.get,
                 protMatch = reprProtMatch,
                 seqMatch = seqMatchByPepId(peptideId),
                 protMatchBuildingCtx = Some(protMatchBuildingCtx),
