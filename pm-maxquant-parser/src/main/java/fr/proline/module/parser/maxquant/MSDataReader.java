@@ -508,7 +508,7 @@ public class MSDataReader {
 			Double moz = Double.parseDouble(valByHeader.get(MOZ_HEADER));
 			Integer charge = Integer.valueOf(valByHeader.get(CHARGE_HEADER));			
 			query =  new Ms2Query(Ms2Query.generateNewId(), initialId, 
-				moz, charge, spectrum.title(), spectrum.id(), Option.empty());
+				moz, charge, spectrum.title(), spectrum.id(), 0L, Option.empty());
 		}
 		return query;
 	}
