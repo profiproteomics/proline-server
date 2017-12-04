@@ -1,11 +1,11 @@
 package fr.proline.module.parser.mascot
 
-import java.io.File
+import java.io._
 
 import scala.Array.canBuildFrom
 import scala.collection.mutable.ArrayBuffer
 
-import com.typesafe.scalalogging.LazyLogging
+import com.typesafe.scalalogging.StrictLogging
 
 import fr.profi.chemistry.model.Enzyme
 import fr.profi.util.primitives.toFloat
@@ -66,9 +66,8 @@ class MascotResultFile(
   val fileLocation: File,
   val importProperties: Map[String, Any], // TODO: use the MascotImportProperties class instead ???
   val parserContext: ProviderDecoratedExecutionContext
-) extends IResultFile with LazyLogging  {
+) extends IResultFile with StrictLogging {
 
-  
   val LOG_SPECTRA_COUNT = 4000 // Print a log for each created spectrum
   //Cache for value to be keep between load and get methods
   var _targetResultSetOp : Option[ResultSet] = None
@@ -563,7 +562,7 @@ class MascotResultFile(
 
     val pepSummary = _getPepSummary(wantDecoy)
 
-    var dataParser: MascotDataParser = new MascotDataParser(
+    val dataParser = new MascotDataParser(
       pepSummary,
       mascotResFile,
       msiSearch.searchSettings,
@@ -583,7 +582,7 @@ class MascotResultFile(
 
     // --- Create final ResultSet issued from Mascot Result File
     val pepMatchesByPep = dataParser.getPeptideMatchesByPeptide
-    var allPepMatches = pepMatchesByPep.values.flatMap { p => p } toArray
+    val allPepMatches = pepMatchesByPep.values.flatten.toArray
 
     val protMatches = dataParser.getProteinMatches
     logger.debug("Parser has gone through " + pepMatchesByPep.size + " Peptides creating " + allPepMatches.length + " PeptideMatches")
@@ -617,77 +616,251 @@ class MascotResultFile(
    *
    */
   def eachSpectrum(onEachSpectrum: Spectrum => Unit): Unit = {
-
-    val querybyInitialId = msQueryByInitialId
-    logger.info("Start iterate over MSQueries")
-
-    var count = 0
-
-    for ((initialId, msq) <- querybyInitialId) { // Go through each Query
-
-      val mozList = new ArrayBuffer[Double]
-      val intensityList = new ArrayBuffer[Float]
-
-      // Extract peak data
-      val mascotQ = new ms_inputquery(mascotResFile, initialId)
-
-      try {
-
-        /*for( j <- 1 to mascotQ.getNumberOfPeaks(1) ) {
-        mozList += mascotQ.getPeakMass(1,j)
-        intensityList += mascotQ.getPeakIntensity(1,j).toFloat
-      }*/
-
-        // --- Parse peaks --- //
-        val msqIonsString = mascotQ.getStringIons1
-        if (msqIonsString.isEmpty == false) {
-
-          val peaksAsStr = msqIonsString.split(",")
-          val peaks = new ArrayBuffer[Tuple2[Double, Float]](peaksAsStr.length)
-
-          peaksAsStr.foreach { peakAsStr =>
-            val values = peakAsStr.split(":")
-            if( values.length >= 2 ) {
-              peaks += (values(0).toDouble -> values(1).toFloat)
-            }
-          }
-
-          // Sort peaks by moz and build moz and intensity lists
-          peaks.sortBy(_._1).foreach { peak =>
-            mozList += peak._1
-            intensityList += peak._2
-          }
-
+    
+    val queryByInitialId = msQueryByInitialId
+    
+    val peaklistId = peaklist.id
+    val instConfigId = if (instrumentConfig.isDefined) instrumentConfig.get.id else 0
+    
+    logger.info("Iterating MSQueries spectra...")
+    
+    val bufferSize = 1000
+    val querySectionQueue = new java.util.concurrent.LinkedBlockingQueue[Option[MascotQuerySection]](2 * bufferSize)
+    var isLastSection = false
+    var readSpectraCount = 0
+    
+    // Perform asynchronous IO
+    import scala.concurrent.ExecutionContext.Implicits.global
+    scala.concurrent.Future {
+      
+      this.eachQuerySection(this.fileLocation) { msqSection =>
+        
+        readSpectraCount += 1
+        
+        if ((readSpectraCount % LOG_SPECTRA_COUNT) == 0) {
+          logger.debug(s"$readSpectraCount spectra have been read...")
         }
         
-        if (mozList.isEmpty) {
-          logger.debug("Spectrum of query#" + initialId + " is empty")
+        querySectionQueue.put(Some(msqSection))
+        
+      } // ends eachQuerySection
+      
+      querySectionQueue.synchronized {
+        isLastSection = true
+        querySectionQueue.put(None) // add a None value to stop the queue monitoring
+      }
+      
+    } onComplete {
+      case scala.util.Success(r) => {
+        logger.debug(s"All spectra ($readSpectraCount) have been read!")
+      }
+      case scala.util.Failure(t) => {
+        try {
+          // Notify querySectionQueue that we stopped to read spectra
+          querySectionQueue.clear()
+          querySectionQueue.put(None)
+        } finally {
+          throw t
         }
+      }
+    }
+    
+    val sectionBuffer = new ArrayBuffer[MascotQuerySection](bufferSize)
+    val spectrumQueue = new java.util.concurrent.LinkedBlockingQueue[Option[Spectrum]](2 * bufferSize)
+    var isLastSpectrum = false
+    
+    scala.concurrent.Future {
+      def parseSectionBufferInParallel() {
+        sectionBuffer.par.foreach { section =>
+          val spectrum = section.toSpectrum(queryByInitialId, instConfigId, peaklistId)
+          spectrumQueue.put(Some(spectrum))
+        }
+        sectionBuffer.clear()
+      }
+      
+      logger.debug("Parse spectra in parallel...")
+      
+      while (isLastSection == false || !querySectionQueue.isEmpty()) {
+        
+        val sectionOpts = new java.util.ArrayList[Option[MascotQuerySection]]
+        sectionOpts.add(querySectionQueue.take()) // wait here
+        querySectionQueue.drainTo(sectionOpts)
+        
+        val sectionOptsIter = sectionOpts.iterator()
+        while (sectionOptsIter.hasNext()) {
+          val sectionOpt = sectionOptsIter.next
+          if (sectionOpt.isDefined) {
+            sectionBuffer += sectionOpt.get
+            if (sectionBuffer.length == bufferSize) {
+              parseSectionBufferInParallel()
+            }
+          }
+        }
+      }
+      
+      logger.debug("Parse last buffer of spectra...")
+      
+      // Parse last buffer
+      parseSectionBufferInParallel()
+      
+      isLastSpectrum = true
+      spectrumQueue.put(None) // add a None value to stop the queue monitoring
+      
+    } onComplete {
+      case scala.util.Success(r) => {
+        logger.debug(s"All spectra ($readSpectraCount) have been parsed!")
+      }
+      case scala.util.Failure(t) => {
+        try {
+          // Notify spectrumQueue that we stopped to parse spectra
+          spectrumQueue.clear()
+          spectrumQueue.put(None)
+        } finally {
+          throw t
+        }
+      }
+    }
+    
+    while (isLastSpectrum == false || !spectrumQueue.isEmpty()) {
+      
+      val spectraOpts = new java.util.ArrayList[Option[Spectrum]]
+      spectraOpts.add(spectrumQueue.take()) // wait here
+      spectrumQueue.drainTo(spectraOpts)
+      
+      val spectraOptsIter = spectraOpts.iterator()
+      while (spectraOptsIter.hasNext()) {
+        val spectrumOpt = spectraOptsIter.next
+        if (spectrumOpt.isDefined) {
+          onEachSpectrum( spectrumOpt.get )
+        }
+      }
+    }
+    
+    logger.debug(s"End of eachSpectrum method!")
+    
+    ()
+  }
 
-        // Retrieve spectrum title and instrument config id
-        val spectrumTitle = msq.asInstanceOf[Ms2Query].spectrumTitle
-        val instConfigId = if (instrumentConfig.isDefined) instrumentConfig.get.id else 0
+  //Nothing to do during parse !
+  def eachSpectrumMatch(wantDecoy: Boolean, onEachSpectrumMatch: SpectrumMatch => Unit): Unit = {}
 
+  //** Some pieces of code used to parse manually the Mascot query sections **//
+  private val MASCOT_MULTIPART_BOUNDARY = "--gc0p4Jq0M2Yt08jU534c0p"
+  private val MASCOT_MULTIPART_EOF = "--gc0p4Jq0M2Yt08jU534c0p--"
+  private val MASCOT_INDEX_SECTION_LINE = """Content-Type: application/x-Mascot; name="index""""
+  private val MASCOT_FIRST_QUERY_KEY = "query1="
+  
+  object MascotQuerySection {
+    val QUERY_NUM = "query_num"
+    val TITLE = "title"
+    val RTINSECONDS = "rtinseconds"
+    val INDEX = "index"
+    val CHARGE = "charge"
+    val MASS_MIN = "mass_min"
+    val MASS_MAX = "mass_max"
+    val INT_MIN = "int_min"
+    val INT_MAX = "int_max"
+    val NUM_VALS = "num_vals"
+    val NUM_USED1 = "num_used1"
+    val IONS1 = "Ions1"
+  }
+  
+  class MascotQuerySection(val underlyingMap: scala.collection.Map[String,String]) {
+    
+    import MascotQuerySection._
+    
+    lazy val queryNumber = underlyingMap(QUERY_NUM).toInt
+    lazy val title = java.net.URLDecoder.decode(underlyingMap(TITLE), MascotDataParser.LATIN_1_CHARSET)
+    lazy val rtRangeInSeconds = if (!underlyingMap.contains(RTINSECONDS)) None
+    else {
+      val rtInSecondsAsStr = underlyingMap(RTINSECONDS)
+      val rtRange = if (rtInSecondsAsStr.contains("-")) {
+        val rtRangeParts = rtInSecondsAsStr.split("-")
+        (rtRangeParts(0).toFloat, rtRangeParts(1).toFloat)
+      } else {
+        val rt = underlyingMap(RTINSECONDS).toFloat
+        (rt,rt)
+      }
+      Some(rtRange)
+    }
+    lazy val index = underlyingMap(INDEX).toInt
+    def charge = underlyingMap(CHARGE)
+    lazy val mass_min = underlyingMap(MASS_MIN).toDouble
+    lazy val mass_max = underlyingMap(MASS_MAX).toDouble
+    lazy val int_min = underlyingMap(INT_MIN).toInt
+    lazy val int_max = underlyingMap(INT_MAX).toInt
+    lazy val num_vals = underlyingMap(NUM_VALS).toInt
+    lazy val num_used1 = underlyingMap(NUM_USED1).toInt
+    def ions1 = underlyingMap(IONS1)
+    
+    def toSpectrum(
+      queryByInitialId: Map[Int, MsQuery],
+      instrumentConfigId: Long,
+      peaklistId: Long
+    ): Spectrum = {
+      
+      val initialId = this.queryNumber
+      val msq = queryByInitialId(initialId)
+      
+      // --- Peaks parsing --- //
+      val msqIonsString = this.ions1
+      val peaksAsStr = if (msqIonsString.isEmpty) Array.empty[String]
+      else msqIonsString.split(",")
+      
+      val peaksCount = peaksAsStr.length
+      if (peaksCount == 0) {
+        logger.debug(s"Spectrum of query#$initialId is empty")
+      }
+      
+      val indices = new Array[Int](peaksCount)
+      val mozList = new Array[Double](peaksCount)
+      val intensityList = new Array[Float](peaksCount)
+      
+      var i = 0
+      while (i < peaksCount) {
+        val peakAsStr = peaksAsStr(i)
+        val values = peakAsStr.split(":")
+        assert( values.length >= 2, s"Invalid number fo values for peak string $peakAsStr")
+        
+        indices(i) = i
+        mozList(i) = values(0).toDouble
+        intensityList(i) = values(1).toFloat
+        i += 1
+      }
+      
+      val sortedIndices = indices.sortBy(mozList(_))
+      val sortedMozList = new Array[Double](peaksCount)
+      val sortedIntensityList = new Array[Float](peaksCount)
+      
+      i = 0
+      while (i < peaksCount) {
+        val mascotPeakIdx = sortedIndices(i)
+        sortedMozList(i) = mozList(mascotPeakIdx)
+        sortedIntensityList(i) = intensityList(mascotPeakIdx)
+        i += 1
+      }
+      
+        // Retrieve some spectrum meta-data
+        val spectrumTitle = this.title
         val specTitleFieldMapOpt = if (peaklistSoftware.isDefined) peaklistSoftware.get.specTitleParsingRule.map(_.parseTitle(spectrumTitle)) else None
         val specTitleFieldMap = specTitleFieldMapOpt.getOrElse(Map.empty[SpectrumTitleFields.Value, String])
 
-
         val titleFields = SpectrumTitleFields
-        var spectrumPropOp : Option[SpectrumProperties] = None
+        var spectrumPropOpt = Option.empty[SpectrumProperties]
         
         val (firstRT, lastRT) = {
-          if (mascotQ.getRetentionTimes != null) {
-            val rtRanges = mascotQ.getRetentionTimes.split(",").map( _.split("-") )
-            val firstRTinSec = toFloatOrMinusOne(rtRanges.head.head.trim)
-            if(firstRTinSec > -1f) {
-              val spectrumProp = new SpectrumProperties()
-              spectrumProp.rtInSeconds = Some(firstRTinSec) 
-              spectrumPropOp = Some(spectrumProp)
-            }
-            (firstRTinSec/60.0f, toFloatOrMinusOne(rtRanges.last.last.trim)/60.0f)
-          } else (-1f, -1f)
+          if (this.rtRangeInSeconds.isEmpty) (-1f, -1f)
+          else {
+            val rtRangeInSeconds = this.rtRangeInSeconds.get
+            
+            val spectrumProp = new SpectrumProperties()
+            spectrumProp.rtInSeconds = Some(rtRangeInSeconds._1)
+            spectrumPropOpt = Some(spectrumProp)
+            
+            (rtRangeInSeconds._1/60.0f, rtRangeInSeconds._2/60.0f)
+          }
         }
-                        
+        
         val spec = new Spectrum(
           id = Spectrum.generateNewId,
           title = spectrumTitle,
@@ -699,39 +872,118 @@ class MascotResultFile(
           lastScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_SCAN, 0)),
           firstTime = toFloatOrMinusOne(specTitleFieldMap.getOrElse(titleFields.FIRST_TIME, firstRT)),
           lastTime = toFloatOrMinusOne(specTitleFieldMap.getOrElse(titleFields.LAST_TIME, lastRT)),
-          mozList = Some(mozList.toArray),
-          intensityList = Some(intensityList.toArray),
+          mozList = Some(sortedMozList),
+          intensityList = Some(sortedIntensityList),
           peaksCount = mozList.length,
-          instrumentConfigId = instConfigId,          
+          instrumentConfigId = instrumentConfigId,
           peaklistId = peaklist.id,
-          properties = spectrumPropOp
+          properties = spectrumPropOpt
         )
-
-        count += 1
-
-        if ((count % LOG_SPECTRA_COUNT) == 0) {
-          logger.debug("Created Spectra: " + count)
-        }
-
-        onEachSpectrum(spec)
-
+    
+      spec
+    }
+  }
+    
+  def eachQuerySection(file: File)(onEachSection: MascotQuerySection => Unit): Unit = {
+    require(file != null && file.isFile, "Provided file is null or invalid")
+    
+    def newBufferedReader(inputStream: InputStream): BufferedReader = {
+      new BufferedReader(
+        new InputStreamReader(
+          inputStream,
+          // Force ANSI ISO-8859-1 to read Mascot .dat files
+          MascotDataParser.LATIN_1_CHARSET
+        )
+      )
+    }
+    
+    def tryWithBufferedReader( bfr: BufferedReader)(unsafeFn: => Unit) = {
+      try {
+        unsafeFn
       } finally {
-        /* Free memory in finally block */
-
+  
         try {
-          mascotQ.delete()
+          bfr.close()
         } catch {
-          case t: Throwable => logger.error("Error deleting mascotQ", t)
+          case t: Throwable => {
+            logger.error(s"Error closing reader of file ${file.getAbsolutePath}", t)
+          }
         }
+      }
+    }
+    
+    // Create a reader that reads lines reversely
+    val revBfr = newBufferedReader(new fr.profi.util.io.FastReverseLineInputStream(file))
 
-      } // End of try - finally block
+    // Search for the line number of the first query
+    var firstQueryLineNumber = 0
+    tryWithBufferedReader(revBfr) {
+      var line = revBfr.readLine()
+      var eof = false
+      
+      while (eof == false) {
+        if (line == null || line == MASCOT_INDEX_SECTION_LINE) {
+          eof = true
+        }
+        else if (line.startsWith(MASCOT_FIRST_QUERY_KEY)) {
+          firstQueryLineNumber = line.split("=").last.toInt
+        }
+        line = revBfr.readLine()
+      }
+    }
+    assert(firstQueryLineNumber > 0, "Can't parse query1 line number")
+    
+    this.logger.debug(s"Line number of query1 in Mascot result file is $firstQueryLineNumber")
+    
+    // Create a new reader positioned at this offset, then read the file line by line
+    val bfr = newBufferedReader(new FileInputStream(file))
+
+    val section = new collection.mutable.HashMap[String,String]()
+    section.sizeHint(20)
+
+    tryWithBufferedReader(bfr) {
+      var lineNumber = 1
+      var line = bfr.readLine()
+      var eof = false
+      var isInsideQueriesSection = false
+      
+      while (eof == false) {
+        
+        if (line == null) {
+          eof = true
+        }
+        else if (isInsideQueriesSection == false && lineNumber == firstQueryLineNumber) {
+          isInsideQueriesSection = true
+        }
+        else if (isInsideQueriesSection) {
+
+          if (line == MASCOT_MULTIPART_EOF || line == MASCOT_INDEX_SECTION_LINE) {
+            eof = true
+          }
+          else if (line == MASCOT_MULTIPART_BOUNDARY) {
+            if (section.contains(MascotQuerySection.QUERY_NUM)) {
+              onEachSection(new MascotQuerySection(section.clone()))
+              section.clear()
+            } else {
+              logger.warn("Found a query section without 'query_num' field => skip it!")
+            }
+          }
+          else if (line.startsWith("Content-Type")) {
+            val queryNumAsStr = line.split("query").last.dropRight(1)
+            section.put(MascotQuerySection.QUERY_NUM, queryNumAsStr)
+          }
+          else if (line.nonEmpty) {
+            val lineParts = line.split('=')
+            section.put(lineParts(0), lineParts(1))
+          }
+        }
+        
+        lineNumber += 1
+        line = bfr.readLine()
+      }
 
     }
-
+    
     ()
   }
-
-  //Nothing to do duriug parse !
-  def eachSpectrumMatch(wantDecoy: Boolean, onEachSpectrumMatch: SpectrumMatch => Unit): Unit = {}
-
 }
