@@ -68,7 +68,7 @@ public final class DatabaseAccess {
 					udsDbConfigProperties.put(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY, maxPoolConnection);
 					LOG.debug("Initializing DataStoreConnectorFactory using properties [{}] ",
 						udsDbConfigProperties);
-					((DStoreCustomPoolConnectorFactory) result).initialize(udsDbConfigProperties, "SequenceRepository", ConnectionPoolType.SIMPLE_POOL_MANAGEMENT);
+					((DStoreCustomPoolConnectorFactory) result).initialize(udsDbConfigProperties, "SequenceRepository"); //VDS #16961, ConnectionPoolType.SIMPLE_POOL_MANAGEMENT);
 				}
 			}
 			connectorFactory = result;
@@ -111,7 +111,7 @@ public final class DatabaseAccess {
 						}
 						LOG.debug("Initializing DataStoreConnectorFactory from [{}] properties",
 							udsDbProperties);
-						((DStoreCustomPoolConnectorFactory) result).initialize(udsDbProperties, "SequenceRepository", ConnectionPoolType.SIMPLE_POOL_MANAGEMENT);
+						((DStoreCustomPoolConnectorFactory) result).initialize(udsDbProperties, "SequenceRepository"); //VDS #16961, ConnectionPoolType.SIMPLE_POOL_MANAGEMENT);
 					}
 				} else {
 					LOG.warn("DataStoreConnectorFactory was already initialized. Properties [{}] was ignore", udsDbProperties);
@@ -130,7 +130,7 @@ public final class DatabaseAccess {
 	/**
 	 * Retrieve current SEQ DatabaseConnector instance.
 	 * 
-	 * @param allowCreateDB
+	 * @param allowCreateUpdateDB
 	 *            <code>true</code> if called by service (lazy initialization of SEQ Database) or <code>false</code> if called by client (provider use)
 	 * @return SEQ DatabaseConnector or <code>null</code> if DatabaseConnector cannot be initialized
 	 */
@@ -155,7 +155,7 @@ public final class DatabaseAccess {
 	/**
 	 * Retrieve current SEQ DatabaseConnector instance.
 	 * 
-	 * @param allowCreateDB
+	 * @param allowCreateUpdateDB
 	 *            <code>true</code> if called by service (lazy initialization of SEQ Database) or <code>false</code> if called by client (provider use)
 	 * @param udsDbProperties
 	 *            Properties to use to create UDSConnector
@@ -214,7 +214,8 @@ public final class DatabaseAccess {
 				Integer maxPoolConnection = DBProlineConfig.getInstance().getMaxPoolConnection();				
 				dbProperties.put(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY, maxPoolConnection);
 				
-				seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(ProlineDatabaseType.SEQ, dbProperties, ConnectionPoolType.SIMPLE_POOL_MANAGEMENT);
+				//VDS #16961 seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(ProlineDatabaseType.SEQ, dbProperties, ConnectionPoolType.SIMPLE_POOL_MANAGEMENT);
+				seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(ProlineDatabaseType.SEQ, dbProperties);
 				if (allowCreateUpdateDB) {
 					int retDBUpgrade = DatabaseUpgrader.upgradeDatabase(seqDbConnector,cheksumrepair);
 					if(retDBUpgrade<0)
@@ -290,9 +291,9 @@ public final class DatabaseAccess {
 			Map<Object,Object> dbProperties  = seqDb.toPropertiesMap();
 			Integer maxPoolConnection = DBProlineConfig.getInstance().getMaxPoolConnection();				
 			dbProperties.put(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY, maxPoolConnection);
-			
-			seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(
-				ProlineDatabaseType.SEQ, dbProperties, ConnectionPoolType.SIMPLE_POOL_MANAGEMENT);
+
+			//VDS #16961 seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance( ProlineDatabaseType.SEQ, dbProperties, ConnectionPoolType.SIMPLE_POOL_MANAGEMENT);
+			seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance( ProlineDatabaseType.SEQ, dbProperties);
 
 			DatabaseUpgrader.upgradeDatabase(seqDbConnector,cheksumrepair);
 		}
