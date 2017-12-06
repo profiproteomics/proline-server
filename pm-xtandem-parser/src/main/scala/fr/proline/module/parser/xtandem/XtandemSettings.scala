@@ -185,7 +185,7 @@ case class XtandemSettings(resultBioml: XTBioml, parserContext: ProviderDecorate
       jobNumber = 0,
       userName = "",
       userEmail = "",
-      queriesCount = settings.getOrElse("total spectra used", "0").toString.toInt,
+      queriesCount = settings.getOrElse("modelling, total spectra used", "0").toString.toInt,
       searchedSequencesCount = nbProteinUsed)
     Some(msiSearch)
   }
