@@ -446,10 +446,10 @@ class MascotDataParser(
     val pepVarPtm = createPeptidePtmFromVarPtm(mascotPeptide, ptmProvider)
     pepVarAndFixedPtm ++= pepVarPtm
     pepVarAndFixedPtm ++= createPeptidePtmFromFixedPtm(mascotPeptide)
-    val varPtmsAsArray = pepVarAndFixedPtm.toArray[LocatedPtm]
+    val ptmsAsArray = pepVarAndFixedPtm.toArray[LocatedPtm]
 
     // 1. retrieve peptide from pepByUniqueKey
-    val uniqueKey = pepSeq + "%" + Peptide.makePtmString(varPtmsAsArray)
+    val uniqueKey = pepSeq + "%" + Peptide.makePtmString(ptmsAsArray)
     var currentPep = pepByUniqueKey.get(uniqueKey)
     var storeInMap = false
 
@@ -464,7 +464,7 @@ class MascotDataParser(
       // FIXME: include fixed PTMs
       currentPep = Some(new Peptide(
         sequence = pepSeq,
-        ptms = varPtmsAsArray,
+        ptms = ptmsAsArray,
         calculatedMass = mascotPeptide.getMrCalc()
       ))
     }
@@ -672,7 +672,6 @@ class MascotDataParser(
 
     for ((peptideMatch, varPtms) <- assignments) {
 
-      // DBO: why compute the minus values => it could be done in the calcConfidence function
       val confidence = calcConfidence(-firstRankPepMatchScore, -peptideMatch.score)
 
       // Update peptide match confidence

@@ -770,7 +770,6 @@ class MascotResultFile(
     import MascotQuerySection._
     
     lazy val queryNumber = underlyingMap(QUERY_NUM).toInt
-    lazy val title = java.net.URLDecoder.decode(underlyingMap(TITLE), MascotDataParser.LATIN_1_CHARSET)
     lazy val rtRangeInSeconds = if (!underlyingMap.contains(RTINSECONDS)) None
     else {
       val rtInSecondsAsStr = underlyingMap(RTINSECONDS)
@@ -841,7 +840,7 @@ class MascotResultFile(
       }
       
         // Retrieve some spectrum meta-data
-        val spectrumTitle = this.title
+        val spectrumTitle = msq.asInstanceOf[Ms2Query].spectrumTitle
         val specTitleFieldMapOpt = if (peaklistSoftware.isDefined) peaklistSoftware.get.specTitleParsingRule.map(_.parseTitle(spectrumTitle)) else None
         val specTitleFieldMap = specTitleFieldMapOpt.getOrElse(Map.empty[SpectrumTitleFields.Value, String])
 
