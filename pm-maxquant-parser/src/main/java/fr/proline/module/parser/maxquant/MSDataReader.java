@@ -285,7 +285,7 @@ public class MSDataReader {
 												null, //set all or no seqDbs ?
 												null, // geneName
 												0, //score
-												"maxquant:score", //score type
+												"andromeda:score", //score type
 												0f, //cov	erage
 												0, // FIXME: assign the right number for peptideMatchesCount
 												allSeqMatches, //sequenceMatches,
