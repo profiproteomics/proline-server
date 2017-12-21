@@ -21,7 +21,7 @@
     <mascot.version>2.5.2</mascot.version>
   </properties>
   <scm>
-    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MascotParser/trunk</connection>
+    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MascotParser/branches/0.7.0-RCandidates</connection>
   </scm>
 
 
