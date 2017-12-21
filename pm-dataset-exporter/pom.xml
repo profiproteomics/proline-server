@@ -20,7 +20,7 @@
      <version.path>${basedir}/src/main/scala/fr/proline/module/exporter/api</version.path>
   </properties>
 	<scm>
-	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-DatasetExporter/trunk </connection>
+	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-DatasetExporter/branches/0.7.0-RCandidates </connection>
 	</scm>
 
 
