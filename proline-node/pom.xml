@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>Proline-Node</artifactId>
-  <version>0.4.0-SNAPSHOT</version>
+  <version>0.5.0-SNAPSHOT</version>
   
   <name>${project.artifactId}</name>
   <description>A base project to assist the creation of Proline-Cortex nodes (JMS consumers)</description>
