@@ -16,7 +16,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>1.2.0-SNAPSHOT</core.version>
+    <core.version>2.0.0.a-SNAPSHOT</core.version>
     <version.path>${basedir}/src/main/scala/fr/proline/module/parser/omssa</version.path>
   </properties>
 	<scm>
@@ -95,12 +95,12 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>PM-FragmentMatchGenerator</artifactId>
-      <version>0.7.0-SNAPSHOT</version>
+      <version>0.8.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.profi</groupId>
       <artifactId>ProFI-Proteomics</artifactId>
-      <version>0.3.0-SNAPSHOT</version>
+      <version>0.4.0-SNAPSHOT</version>
     </dependency>
     <!-- Testing -->
     <dependency>
