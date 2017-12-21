@@ -9,7 +9,7 @@
   </parent>
   
   <artifactId>Proline-Cortex-API</artifactId>
-  <version>0.5.0-SNAPSHOT</version>
+  <version>0.6.0-SNAPSHOT</version>
   
   <name>${project.artifactId}</name>
   <description>Proline Cortex API (services, methods and parameters)</description>
