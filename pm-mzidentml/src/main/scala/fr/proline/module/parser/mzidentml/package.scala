@@ -95,6 +95,9 @@ package object mzidentml {
     val XTANDEM_EVALUE = Value( PsiCvParam(PsiMs.XTandemExpect).getName() )
   }
   
+  
+  case class PepXmlVariableMod( mass: Double, residue: String, a: Int, b: Int, extraIndices: Option[Array[Int]] = None )
+  
   object PepXmlUserParams {
     val fixedModificationKeys = Array(
       "add_A_alanine",
@@ -122,6 +125,7 @@ package object mzidentml {
       "add_S_serine",
       "add_T_threonine",
       "add_U_user_amino_acid",
+      "add_U_celenocysteinee",
       "add_V_valine",
       "add_W_tryptophan",
       "add_X_user_amino_acid",
@@ -138,8 +142,10 @@ package object mzidentml {
       "use_Y_ions",
       "use_Z_ions"      
     )
+    
+    val variableModKeys = ((1 to 6).map( "variable_mod" + _) ++ (1 to 9).map( "variable_mod0" + _)).toArray
   }
-  
+
   class PepXmlUserParams( userParams: java.util.List[UserParam] ) {
     
     val paramMap = userParamsToStringMap(userParams)
@@ -147,19 +153,23 @@ package object mzidentml {
     val activationMethod = paramMap.getString("activation_method")
     
     val usedIonSeries = PepXmlUserParams.ionSeriesKeys.map( k => k -> paramMap.getBoolean(k) ).toMap
-    val useSparseMatrix = paramMap.getBoolean("use_sparse_matrix")
+    val useSparseMatrixOpt = paramMap.getBooleanOption("use_sparse_matrix")
     
-    val fixedModifications = PepXmlUserParams.fixedModificationKeys.map( k => k -> paramMap.getDouble(k) ).toMap
-    val variableCTerminus = paramMap.getDouble("variable_C_terminus")
-    val variableCTerminusDistance = paramMap.getInt("variable_C_terminus_distance")
-    val variableNTerminus = paramMap.getDouble("variable_N_terminus")
-    val variableNTerminusDistance = paramMap.getInt("variable_N_terminus_distance")
-    val variableMod1 = _parseVariableMod(paramMap.getString("variable_mod1"))
+    val fixedModifications = PepXmlUserParams.fixedModificationKeys.map( k => k -> paramMap.getDoubleOption(k) ).toMap.withFilter(_._2.isDefined).map(kv => kv._1 -> kv._2.get)
+    val variableCTerminusOpt = paramMap.getDoubleOption("variable_C_terminus")
+    val variableCTerminusDistanceOpt = paramMap.getIntOption("variable_C_terminus_distance")
+    val variableNTerminusOpt = paramMap.getDoubleOption("variable_N_terminus")
+    val variableNTerminusDistanceOpt = paramMap.getIntOption("variable_N_terminus_distance")
+    
+    val variableMods: Array[PepXmlVariableMod] = PepXmlUserParams.variableModKeys.flatMap { modKey =>
+      paramMap.getStringOption(modKey).map(_parseVariableMod(_))
+    }
+    /*val variableMod1 = _parseVariableMod(paramMap.getString("variable_mod1"))
     val variableMod2 = _parseVariableMod(paramMap.getString("variable_mod2"))
     val variableMod3 = _parseVariableMod(paramMap.getString("variable_mod3"))
     val variableMod4 = _parseVariableMod(paramMap.getString("variable_mod4"))
     val variableMod5 = _parseVariableMod(paramMap.getString("variable_mod5"))
-    val variableMod6 = _parseVariableMod(paramMap.getString("variable_mod6"))
+    val variableMod6 = _parseVariableMod(paramMap.getString("variable_mod6"))*/
     
     val allowedMissedCleavage = paramMap.getInt("allowed_missed_cleavage")
     val clearMzRange = _parseDoubleRange(paramMap.getString("clear_mz_range"))
@@ -199,7 +209,8 @@ package object mzidentml {
     val skipResearching = paramMap.getBoolean("skip_researching")
     val spectrumBatchSize = paramMap.getInt("spectrum_batch_size")
     val theoreticalFragmentIons = paramMap.getInt("theoretical_fragment_ions")
-    val targetDecoyApproach = paramMap.getBoolean("TargetDecoyApproach")
+    val targetDecoyApproachOpt = paramMap.getBooleanOption("TargetDecoyApproach")
+    /*
     val minIsotopeError = paramMap.getInt("MinIsotopeError")
     val maxIsotopeError = paramMap.getInt("MaxIsotopeError")
     val fragmentMethod = paramMap.getString("FragmentMethod")
@@ -210,7 +221,7 @@ package object mzidentml {
     val minPepLength = paramMap.getInt("MinPepLength")
     val maxPepLength = paramMap.getInt("MaxPepLength")
     val minCharge = paramMap.getInt("MinCharge")
-    val maxCharge = paramMap.getInt("MaxCharge")
+    val maxCharge = paramMap.getInt("MaxCharge")*/
     
     private def _parseDoubleRange(rangeAsStr: String): (Double,Double) = {
       val strArray = rangeAsStr.split(" ")
@@ -222,12 +233,18 @@ package object mzidentml {
       (strArray.head.toInt,strArray.last.toInt)
     }
     
-    case class VariableMod( mass: Double, residue: String, a: Int, b: Int )
-    private def _parseVariableMod(varModAsStr: String): VariableMod = {
+    private def _parseVariableMod(varModAsStr: String): PepXmlVariableMod = {
       val strArray = varModAsStr.split(" ")
-      VariableMod(strArray(0).toDouble,strArray(1), strArray(2).toInt, strArray(3).toInt )
+      if (strArray.length == 4) {
+        PepXmlVariableMod(strArray(0).toDouble,strArray(1), strArray(2).toInt, strArray(3).toInt )
+      } else if (strArray.length == 7) {
+        val extraIndices = strArray.takeRight(3).map(_.toInt)
+        PepXmlVariableMod(strArray(0).toDouble,strArray(1), strArray(2).toInt, strArray(3).toInt, extraIndices = Some(extraIndices) )
+      } else {
+        throw new Exception(s"Can't parse PepXML variable mod: $varModAsStr")
+      }
     }
-      
+    
     /*
      <AdditionalSearchParams>
         <cvParam cvRef="MS" accession="MS:1001211" name="parent mass type mono" value=""/>

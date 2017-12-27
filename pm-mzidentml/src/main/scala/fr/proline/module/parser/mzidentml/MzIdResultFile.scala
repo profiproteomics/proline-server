@@ -203,24 +203,15 @@ class MzIdResultFile(
     val areEnzymesIndependant = mzIdEnzymes.isIndependent()
     
     val enzymes = new ArrayBuffer[Enzyme]
+    var enzymeNumber = 0
     mzIdEnzymes.getEnzyme().map { mzidEnzyme =>
+      enzymeNumber += 1
       
-      val mzIdEnzName = mzidEnzyme.getEnzymeName()
-      val enzymeName = if( mzIdEnzName == null) mzidEnzyme.getName()
-      else {
-        if( mzIdEnzName.getCvParam().size() > 0 ) {
-          mzIdEnzName.getCvParam().get(0).getName()
-        }
-        else {
-          mzIdEnzName.getUserParam().get(0).getValue()
-        }
-      }
-      
-      val siteRegexp = mzidEnzyme.getSiteRegexp()
-      val cleavage = if( siteRegexp != null ) {
+      val siteRegexpOpt = Option(mzidEnzyme.getSiteRegexp)
+      val cleavage = if (siteRegexpOpt.isDefined) {
         
         val SiteRegexExtractor = """.+?([A-Z]+).+([A-Z]+).*""".r
-        val SiteRegexExtractor(residues,restrictiveResidues) = siteRegexp
+        val SiteRegexExtractor(residues,restrictiveResidues) = siteRegexpOpt.get
         
         EnzymeCleavage(
           id = EnzymeCleavage.generateNewId(),
@@ -236,6 +227,24 @@ class MzIdResultFile(
           restrictiveResidues =  None 
         )
       }
+      
+      val enzymeNameOpt = Option(mzidEnzyme.getEnzymeName()).flatMap { mzIdEnzName =>
+        val name = if (mzIdEnzName.getCvParam().size() > 0) mzIdEnzName.getCvParam().get(0).getName
+        else if (mzIdEnzName.getUserParam().size() > 0) {
+          val firstUserParam = mzIdEnzName.getUserParam().get(0)
+          Option(firstUserParam.getValue).getOrElse(firstUserParam.getName)
+        }
+        else null
+        
+        Option(name)
+      }
+      
+      val enzymeName = enzymeNameOpt
+        .orElse(Option(mzidEnzyme.getName))
+        .orElse(siteRegexpOpt)
+        .getOrElse(s"Enzyme #$enzymeNumber")
+      
+      logger.info("Used enzyme is: " + enzymeName)
       
       enzymes += Enzyme(
         id = Enzyme.generateNewId(),
@@ -347,7 +356,7 @@ class MzIdResultFile(
         ms1ChargeStates = "",
         ms1ErrorTol = ms1ErrorTol,
         ms1ErrorTolUnit = ms1ErrorTolUnit,
-        isDecoy = pepXmlParams.targetDecoyApproach,
+        isDecoy = pepXmlParams.targetDecoyApproachOpt.getOrElse(false), // TODO: can we infer this information ?
         usedEnzymes = enzymes.groupBy(_.name).map(_._2.head).toArray,
         variablePtmDefs = varPtms.toArray,
         fixedPtmDefs = fixedPtms.toArray,
@@ -407,11 +416,17 @@ class MzIdResultFile(
     val resultFileLocation = new java.io.File( sourceFilePath )*/
     
     val mzIdSpectraData = mzIdInputs.getSpectraData().get(0)
+    val rawFileIdentifierOpt = Option(mzIdSpectraData.getName).orElse {
+      Option(mzIdSpectraData.getLocation()).map { location =>
+        new java.io.File(location).getName
+      }
+    }.map(_.split("\\.").head)
+    
     val peaklist = Peaklist(
       id = Peaklist.generateNewId,
       fileType = Option(mzIdSpectraData.getFileFormat).map(_.getCvParam().getValue()).getOrElse(""),
       path = mzIdSpectraData.getLocation(),
-      rawFileIdentifier = "",
+      rawFileIdentifier = rawFileIdentifierOpt.getOrElse(""),
       msLevel = 2 // TODO: parse from SearchType
     )
     
@@ -817,7 +832,7 @@ class MzIdResultFile(
       } map { _._2.head } toArray
       
       val dbSeqCvParams = mzIdDbSeq.getCvParam()
-      val protMatchDesc = findCvParamValue(dbSeqCvParams, PsiMs.ProteinDescription).get
+      val protMatchDesc = findCvParamValue(dbSeqCvParams, PsiMs.ProteinDescription).getOrElse("")
       val protMatchTaxonId = findCvParamValue(dbSeqCvParams, PsiMs.TaxonomyNCBITaxID).map(_.toInt).getOrElse(0)
       
       ProteinMatch(
