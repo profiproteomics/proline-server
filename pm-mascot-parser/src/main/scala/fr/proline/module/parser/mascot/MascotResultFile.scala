@@ -770,18 +770,13 @@ class MascotResultFile(
     import MascotQuerySection._
     
     lazy val queryNumber = underlyingMap(QUERY_NUM).toInt
-    lazy val rtRangeInSeconds = if (!underlyingMap.contains(RTINSECONDS)) None
+    lazy val rtRangeInSeconds: Option[(Float, Float)] = if (!underlyingMap.contains(RTINSECONDS)) None
     else {
       val rtInSecondsAsStr = underlyingMap(RTINSECONDS)
-      val rtRange = if (rtInSecondsAsStr.contains("-")) {
-        val rtRangeParts = rtInSecondsAsStr.split("-")
-        (rtRangeParts(0).toFloat, rtRangeParts(1).toFloat)
-      } else {
-        val rt = underlyingMap(RTINSECONDS).toFloat
-        (rt,rt)
-      }
-      Some(rtRange)
+      val rtRanges = rtInSecondsAsStr.split(",").map( _.split("-") )
+      Some(toFloatOrMinusOne(rtRanges.head.head.trim), toFloatOrMinusOne(rtRanges.last.last.trim))
     }
+
     lazy val index = underlyingMap(INDEX).toInt
     def charge = underlyingMap(CHARGE)
     lazy val mass_min = underlyingMap(MASS_MIN).toDouble
