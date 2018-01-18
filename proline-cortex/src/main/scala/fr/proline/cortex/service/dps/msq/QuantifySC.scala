@@ -43,6 +43,7 @@ import fr.proline.core.om.model.msq.AbundanceUnit
  *  Output params :
  *    Boolean for service run status
  */
+@deprecated
 class QuantifySC extends AbstractRemoteProcessingService with IQuantifySCService with LazyLogging with ISingleThreadedService {
 
   /* JMS Service identification */
