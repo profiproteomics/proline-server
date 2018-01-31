@@ -4,6 +4,7 @@ import java.io._
 
 import scala.Array.canBuildFrom
 import scala.collection.mutable.ArrayBuffer
+import scala.concurrent._
 
 import com.typesafe.scalalogging.StrictLogging
 
@@ -629,9 +630,19 @@ class MascotResultFile(
     var isLastSection = false
     var readSpectraCount = 0
     
+    def stopSectionQueueMonitoring() {
+      querySectionQueue.synchronized {
+        // Notify querySectionQueue that we stopped to read spectra
+        querySectionQueue.clear()
+        querySectionQueue.put(None)
+      }
+      
+      isLastSection = true
+    }
+    
     // Perform asynchronous IO
-    import scala.concurrent.ExecutionContext.Implicits.global
-    scala.concurrent.Future {
+    import ExecutionContext.Implicits.global
+    Future {
       
       this.eachQuerySection(this.fileLocation) { msqSection =>
         
@@ -656,9 +667,9 @@ class MascotResultFile(
       }
       case scala.util.Failure(t) => {
         try {
-          // Notify querySectionQueue that we stopped to read spectra
-          querySectionQueue.clear()
-          querySectionQueue.put(None)
+          logger.error("An error has been caught while reading spectra...")
+          
+          stopSectionQueueMonitoring()
         } finally {
           throw t
         }
@@ -669,7 +680,10 @@ class MascotResultFile(
     val spectrumQueue = new java.util.concurrent.LinkedBlockingQueue[Option[Spectrum]](2 * bufferSize)
     var isLastSpectrum = false
     
-    scala.concurrent.Future {
+    val endOfParsingPromise = Promise[Unit]()
+    
+    Future {
+      
       def parseSectionBufferInParallel() {
         sectionBuffer.par.foreach { section =>
           val spectrum = section.toSpectrum(queryByInitialId, instConfigId, peaklistId)
@@ -698,10 +712,12 @@ class MascotResultFile(
         }
       }
       
-      logger.debug("Parse last buffer of spectra...")
-      
-      // Parse last buffer
-      parseSectionBufferInParallel()
+      if (sectionBuffer.nonEmpty) {
+        logger.debug("Parse last buffer of spectra...")
+        
+        // Parse last buffer
+        parseSectionBufferInParallel()
+      }
       
       isLastSpectrum = true
       spectrumQueue.put(None) // add a None value to stop the queue monitoring
@@ -709,15 +725,20 @@ class MascotResultFile(
     } onComplete {
       case scala.util.Success(r) => {
         logger.debug(s"All spectra ($readSpectraCount) have been parsed!")
+        endOfParsingPromise.success()
       }
       case scala.util.Failure(t) => {
-        try {
-          // Notify spectrumQueue that we stopped to parse spectra
-          spectrumQueue.clear()
-          spectrumQueue.put(None)
-        } finally {
-          throw t
-        }
+        logger.error("An error has been caught while parsing spectra...")
+        
+        // Stop sectionQueue monitoring
+        stopSectionQueueMonitoring()
+        
+        // Notify spectrumQueue that we stopped to parse spectra
+        spectrumQueue.clear()
+        spectrumQueue.put(None)
+        isLastSpectrum = true
+        
+        endOfParsingPromise.failure(t)
       }
     }
     
@@ -735,6 +756,8 @@ class MascotResultFile(
         }
       }
     }
+    
+    scala.concurrent.Await.result(endOfParsingPromise.future,duration.Duration.Inf)
     
     logger.debug(s"End of eachSpectrum method!")
     
@@ -779,13 +802,13 @@ class MascotResultFile(
 
     lazy val index = underlyingMap(INDEX).toInt
     def charge = underlyingMap(CHARGE)
-    lazy val mass_min = underlyingMap(MASS_MIN).toDouble
-    lazy val mass_max = underlyingMap(MASS_MAX).toDouble
-    lazy val int_min = underlyingMap(INT_MIN).toInt
-    lazy val int_max = underlyingMap(INT_MAX).toInt
-    lazy val num_vals = underlyingMap(NUM_VALS).toInt
-    lazy val num_used1 = underlyingMap(NUM_USED1).toInt
-    def ions1 = underlyingMap(IONS1)
+    lazy val mass_min = underlyingMap.get(MASS_MIN).map(_.toDouble)
+    lazy val mass_max = underlyingMap.get(MASS_MAX).map(_.toDouble)
+    lazy val int_min = underlyingMap.get(INT_MIN).map(_.toInt)
+    lazy val int_max = underlyingMap.get(INT_MAX).map(_.toInt)
+    lazy val num_vals = underlyingMap.get(NUM_VALS).map(_.toInt)
+    lazy val num_used1 = underlyingMap.get(NUM_USED1).map(_.toInt)
+    def ions1 = underlyingMap.get(IONS1)
     
     def toSpectrum(
       queryByInitialId: Map[Int, MsQuery],
@@ -797,13 +820,14 @@ class MascotResultFile(
       val msq = queryByInitialId(initialId)
       
       // --- Peaks parsing --- //
-      val msqIonsString = this.ions1
-      val peaksAsStr = if (msqIonsString.isEmpty) Array.empty[String]
-      else msqIonsString.split(",")
+      val msqIonsStringOpt = this.ions1
+      
+      val peaksAsStr = if (msqIonsStringOpt.isEmpty || msqIonsStringOpt.get.isEmpty) Array.empty[String]
+      else msqIonsStringOpt.get.split(",")
       
       val peaksCount = peaksAsStr.length
       if (peaksCount == 0) {
-        logger.debug(s"Spectrum of query#$initialId is empty")
+        logger.debug(s"Spectrum of query #$initialId is empty")
       }
       
       val indices = new Array[Int](peaksCount)
