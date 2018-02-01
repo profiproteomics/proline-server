@@ -1,11 +1,9 @@
 package fr.proline.module.parser.mascot
 
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.ArrayBuilder
 import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.LazyLogging
-
-import fr.proline.core.om.builder.PtmDefinitionBuilder
+import fr.profi.chemistry.model.MolecularConstants
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
@@ -13,16 +11,12 @@ import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.core.om.provider.msi.IProteinProvider
 import fr.proline.core.om.provider.msi.ProteinEmptyFakeProvider
 import fr.proline.core.om.provider.msi.ProteinFakeProvider
-
-import matrix_science.msparser.ms_mascotresfile
-import matrix_science.msparser.ms_peptide
-import matrix_science.msparser.ms_peptidesummary
-import matrix_science.msparser.vectori
-import matrix_science.msparser.VectorString
+import matrix_science.msparser.{VectorString, ms_mascotresfile, ms_peptide, ms_peptidesummary, ms_searchparams, vectori}
 
 object MascotDataParser {
 
   val LATIN_1_CHARSET = "ISO-8859-1"
+  val PEPTIDE_ISOTOPE_SHIFT=1.00335
 
 }
 
@@ -30,6 +24,7 @@ class MascotDataParser(
   val pepSummary: ms_peptidesummary,
   val mascotResFile: ms_mascotresfile,
   val searchSettings: SearchSettings,
+  val mascotSearchParams: ms_searchparams,
   val msQueryByInitialId: Map[Int, MsQuery],
   val parserContext: ProviderDecoratedExecutionContext,
   val isDecoy: Boolean) extends LazyLogging {
@@ -111,12 +106,13 @@ class MascotDataParser(
         // Check that the peptide is not empty
         if (currentMSPep.getAnyMatch()) {
 
-          val (parsedPep, varPtms) = getOrCreatePeptide(currentMSPep, ptmProvider, pepProvider)
-
-          // --- Retrieve some properties values --- //
+          val (parsedPep: Peptide, varPtms: Seq[LocatedPtm]) = getOrCreatePeptide(currentMSPep, ptmProvider, pepProvider)
 
           val pepMatchScore = currentMSPep.getIonsScore().floatValue()
+
+          // --- Retrieve some properties values for PeptideMatchProperties --- //
           val pepMatchExpectValue = pepSummary.getPeptideExpectationValue(pepMatchScore, q)
+          val isotopeErr = currentMSPep.getNum13C(mascotSearchParams.getTOL,mascotSearchParams.getTOLU,mascotSearchParams.getMASS)
 
           // Create peptide match Mascot properties
           val pepMatchMascotProps = new PeptideMatchMascotProperties(expectationValue = pepMatchExpectValue)
@@ -142,15 +138,26 @@ class MascotDataParser(
             pepMatchMascotProps.setAmbiguityString(Some(ambiguityStr))
           }
 
-          val pepMatchProps = new PeptideMatchProperties(mascotProperties = Some(pepMatchMascotProps))
+          val pepMatchProps = new PeptideMatchProperties(mascotProperties = Some(pepMatchMascotProps), isotopeOffset=Some(isotopeErr))
+
+          val pepMatchCharge =  currentMSPep.getCharge
+          // Calculate deltaMoz using isotopeErr
+          val calculatedDeltaMoz : Float = if(isotopeErr == 0) {
+            (currentMSPep.getDelta() / query.charge).toFloat
+          } else {
+            val calcMoz = ( currentMSPep.getMrCalc + (isotopeErr * MascotDataParser.PEPTIDE_ISOTOPE_SHIFT) + (pepMatchCharge * MolecularConstants.PROTON_MASS)) / pepMatchCharge
+            val newDelta = (query.moz - calcMoz).toFloat
+            logger.trace(" ----- Changed deltaMoz from "+((currentMSPep.getDelta() / query.charge).toFloat)+" TO "+newDelta+" for "+ currentMSPep.getPeptideStr(false))
+            newDelta
+          }
 
           val pepMatch = new PeptideMatch(
             id = PeptideMatch.generateNewId,
             rank = k,
             score = pepMatchScore,
             scoreType = PeptideMatchScoreType.MASCOT_IONS_SCORE,
-            charge = currentMSPep.getCharge,
-            deltaMoz = (currentMSPep.getDelta() / query.charge).toFloat, // getDelta returns expMass - calcMass
+            charge = pepMatchCharge,
+            deltaMoz = calculatedDeltaMoz, // getDelta returns expMass - calcMass
             isDecoy = isDecoy,
             peptide = parsedPep,
             missedCleavage = currentMSPep.getMissedCleavages(),
@@ -169,10 +176,10 @@ class MascotDataParser(
 
         }
 
-      } // End go through current query Peptide
+      } // End go through current query Peptides
       
       // then compute ptm site probability property
-      val pepMatchesBySequence = queryPepMatches.groupBy { e => e._1.peptide.sequence }
+      val pepMatchesBySequence: Map[String, ArrayBuffer[(PeptideMatch, Seq[LocatedPtm])]] = queryPepMatches.groupBy { e => e._1.peptide.sequence }
       for (matches <- pepMatchesBySequence.valuesIterator) {
         computeRelativeProbabilities(matches)
       }
@@ -194,7 +201,6 @@ class MascotDataParser(
     for (foundPepOpt <- foundPeps; fPep <- foundPepOpt) {
 
       val uniqueKey = fPep.uniqueKey
-      logger.trace("Search pep " + uniqueKey + "  => " + uniqueKey)
 
       // Replace old peptide definition by the new one in the map pepByUniqueKey
       val oldPep = pepByUniqueKey.put(uniqueKey, fPep).get
