@@ -157,7 +157,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
     fileDir: String,
     outputFormat: ExportOutputMode.Value,
     extraParams: Option[Map[String, Any]]
-  ): Array[String] = {
+  ): Object = {
 
     // require(rsmIdentifiers.length == 1, "can only export one RSM at a time for the mzIdentML file format")
 
@@ -176,7 +176,15 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
       DbConnectionHelper.tryToCloseExecContext(execCtx)
     }
 
-    Array(filePath)
+    if (outputFormat == ExportOutputMode.STREAM) {
+      // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
+      val resultMap = new HashMap[String, Object]()
+      resultMap.put("file_paths", Seq(filePath))
+      resultMap.put(JMSConstants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
+      resultMap
+    } else {
+      Seq(filePath)
+    }
   }
 
   def exportToPrideFile(
