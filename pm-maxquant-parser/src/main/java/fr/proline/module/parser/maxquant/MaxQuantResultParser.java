@@ -3,11 +3,10 @@ package fr.proline.module.parser.maxquant;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import fr.proline.core.om.model.lcms.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +20,7 @@ import fr.proline.core.om.model.msi.InstrumentConfig;
 import fr.proline.core.om.model.msi.MsQuery;
 import fr.proline.core.om.model.msi.Peaklist;
 import fr.proline.core.om.model.msi.PeaklistSoftware;
+import fr.proline.core.om.model.msi.Peptide;
 import fr.proline.core.om.model.msi.PeptideMatch;
 import fr.proline.core.om.model.msi.PtmDefinition;
 import fr.proline.core.om.model.msi.ResultSet;
@@ -49,23 +49,36 @@ public class MaxQuantResultParser extends IServiceWrapper {
 	private Long m_instrumConfigId;
 	private Long m_peaklistSoftwareId;
 	private String m_resultFolder;
-	
+	private String m_accessionRegexp;
+
 	//Created value to return !
 	private StringBuffer m_warningMsg;	
-	private List<Long> m_resultSetsIds;
+	private Map<String, Long> m_rsIdByName;
+	private Map<String, Peptide> m_peptideByModSequence;
 	
-	public MaxQuantResultParser(ProviderDecoratedExecutionContext parserContext, Long instrumConfigId,Long peaklistSoftwareId, String resultFolder ){
+	
+	public MaxQuantResultParser(ProviderDecoratedExecutionContext parserContext, Long instrumConfigId, Long peaklistSoftwareId, String resultFolder ){
+		this(parserContext,instrumConfigId, peaklistSoftwareId, "*", resultFolder);
+	}
+
+	public MaxQuantResultParser(ProviderDecoratedExecutionContext parserContext, Long instrumConfigId, String accessionRegexp, String resultFolder ){
+		this(parserContext, instrumConfigId, getMaxQuantPeakListSoftwareId(parserContext), accessionRegexp, resultFolder);
+	}
+
+	public MaxQuantResultParser(ProviderDecoratedExecutionContext parserContext, Long instrumConfigId, Long peaklistSoftwareId, String accessionRegexp, String resultFolder ){
 		m_parserContext = parserContext;
 		m_instrumConfigId = instrumConfigId;
 		m_peaklistSoftwareId = peaklistSoftwareId;
-		m_resultFolder = resultFolder;					
+		m_resultFolder = resultFolder;
+		m_accessionRegexp = accessionRegexp;
 	}
-	
+
+
+
 	@Override
 	public boolean runService() {
 		
 		logger.info("Running MaxQuant Parser on "+m_resultFolder);
-		m_resultSetsIds = new ArrayList<Long>();
 		m_warningMsg = new StringBuffer();
 		
 		MsiDbConnectionContext msiDbCtx = m_parserContext.getMSIDbConnectionContext();
@@ -95,7 +108,7 @@ public class MaxQuantResultParser extends IServiceWrapper {
 			ISeqDatabaseProvider seqDbProvider= m_parserContext.getProvider(ISeqDatabaseProvider.class);
 			IPTMProvider ptmProvider= m_parserContext.getProvider(IPTMProvider.class);
 			ExperimentPropertiesReader propReader = new ExperimentPropertiesReader(m_resultFolder, seqDbProvider, ptmProvider, instrumentConfigOpt.get(), peaklistSoft);
-			Map<String, Long> rsIdByName = propReader.getResultSetIds();		
+			m_rsIdByName = propReader.getResultSetIds();		
 			
 			SearchSettings ss = propReader.getSearchSettings();
 			PtmDefinition[] varPtms = ss.variablePtmDefs();
@@ -106,15 +119,18 @@ public class MaxQuantResultParser extends IServiceWrapper {
 			//Parse ResultSet data : queries to protein matches
 			logger.info("Parse and create ResultSet MS Data ");
 			MSDataReader dataReader = new MSDataReader(m_resultFolder, m_parserContext, instrumentConfigOpt.get(), peaklistSoft);
-			ResultSetsDataMapper rsMapper= dataReader.parseMSData2ResulSets(rsIdByName, allPtms, m_warningMsg);
+			ResultSetsDataMapper rsMapper= dataReader.parseMSData2ResulSets(m_rsIdByName, allPtms, m_accessionRegexp, m_warningMsg);
+			m_peptideByModSequence = dataReader.getPeptidesByMQModifiedSequence();
 			
 			logger.info("Create Experiment properties ");
 			List<ResultSet> resultSets = propReader.parseAndCreateResultSetParams(rsMapper);
 								
 			logger.info("Storing ResultSets");
 			storerContext = StorerContext.apply(m_parserContext);
-			m_resultSetsIds = storeResultSets(resultSets, instrumentConfigOpt.get(), rsMapper, storerContext);
-			logger.info("Storing ResultSets DONE "+m_resultSetsIds);
+			
+			m_rsIdByName = storeResultSets(resultSets, instrumentConfigOpt.get(), rsMapper, storerContext);
+			
+			logger.info("Storing ResultSets DONE "+m_rsIdByName.values());
 			// Commit transaction if it was initiated locally
 			if (localMSITransaction) {
 				msiDbCtx.commitTransaction();
@@ -146,8 +162,173 @@ public class MaxQuantResultParser extends IServiceWrapper {
 		
 	}
 	
-	public List<Long> getCreatedResultSetIds(){
-		return m_resultSetsIds;	
+	
+	public MapSet buildMapSet(String name, Map<String, Long> runIdByrsName, Map<String, Long> pseudoScanIdByrsName) {
+		
+		PeptidesDataReader peptidesReader = new PeptidesDataReader(m_resultFolder, m_peptideByModSequence);
+		Long start = System.currentTimeMillis();
+		peptidesReader.parseQuantitationData(m_rsIdByName, m_warningMsg);
+		logger.info("Peptides parsed in "+(System.currentTimeMillis() - start)+" ms");
+		
+		long mapSetId = MapSet.generateNewId();
+		int mapNumber = 0;
+		
+		PeakPickingSoftware pps = new PeakPickingSoftware(-1L,"MaxQuant","","MaxQuant", Option.empty());
+
+		List<ProcessedMap> processedMaps = new ArrayList<>();
+        Map<String, List<Feature>> processedFeatureByIon = new HashMap<>();
+
+		for (String rsName: m_rsIdByName.keySet()) {
+			
+			Long mapId = RawMap.generateNewId();
+			List<Feature> features = peptidesReader.getFeaturesByRSName().get(rsName);
+			List<Feature>  processedFeatures = new ArrayList<>(features.size());
+
+			Map<String, List<Feature>> featuresByPeptideId = features.stream().collect(Collectors.groupingBy(f -> f.relations().peptideId()+"_"+f.charge(), Collectors.mapping((Feature f) -> f, Collectors.toList())));
+
+			for (Map.Entry<String, List<Feature>> e : featuresByPeptideId.entrySet()) {
+                List<Feature> peptideFeatures = e.getValue();
+
+                for (Feature f : peptideFeatures) {
+					f.relations().rawMapId_$eq(mapId);
+					f.relations().firstScanId_$eq(pseudoScanIdByrsName.get(rsName));
+					f.relations().lastScanId_$eq(pseudoScanIdByrsName.get(rsName));
+					f.relations().apexScanId_$eq(pseudoScanIdByrsName.get(rsName));
+				}
+
+				if (peptideFeatures.size() == 1) {
+                    Feature feature = peptideFeatures.get(0);
+                    processedFeatures.add(feature);
+                    MapUtils.insertOrUpdate(processedFeatureByIon, e.getKey(), feature);
+                } else {
+				    logger.debug("Build a cluster feature");
+                    Feature feature = clusterizeFeatures(peptideFeatures, pseudoScanIdByrsName.get(rsName));
+                    //f.relations().processedMapId_$eq(mapId);
+                    processedFeatures.add(feature);
+                    peptideFeatures.forEach(f -> f.isClusterized_$eq(true));
+                    MapUtils.insertOrUpdate(processedFeatureByIon, e.getKey(), feature);
+                }
+			}
+
+
+			RawMap map = new RawMap(
+					mapId, 
+					rsName, 
+					true,
+					new java.util.Date(), 
+					features.toArray(new Feature[features.size()]),
+					Option.empty(), 
+					runIdByrsName.get(rsName), 
+					pps,
+					"",
+					Option.empty(),
+					Option.empty(),
+					Option.empty());
+			
+			processedMaps.add(map.toProcessedMap(mapNumber++, mapSetId, processedFeatures.toArray(new Feature[processedFeatures.size()])));
+			
+		}
+		
+		List<Feature> masterFeatures = new ArrayList<>(processedFeatureByIon.size());
+
+		Long masterMapId = ProcessedMap.generateNewId();
+		for(List<Feature> childFt : processedFeatureByIon.values()) {
+			Feature bestFt = childFt.stream().max((ft1,ft2) -> Double.compare(ft1.intensity(), ft2.intensity())).get();
+			Feature masterFt = bestFt.toMasterFeature(Feature.generateNewId(), childFt.toArray(new Feature[childFt.size()]));
+			masterFt.relations().peptideId_$eq(bestFt.relations().peptideId());
+			masterFeatures.add(masterFt);
+			if (childFt.size() > 2) {
+				logger.info("More than 2 Features for this master Feature for peptideId: "+masterFt.relations().peptideId());
+				for (Feature f : childFt) {
+					logger.info("PeptideId: "+f.relations().peptideId() +" Feature "+f.apexIntensity()+ " proc map:"+f.relations().processedMapId()+", scan: "+f.relations().firstScanInitialId());
+				}
+				
+				
+			}
+		}
+		
+		ProcessedMap masterMap = new ProcessedMap(
+				masterMapId, 
+				"masterMap", 
+				true, 
+				new java.util.Date(), 
+				masterFeatures.toArray(new Feature[masterFeatures.size()]), 
+				Option.empty(), 
+				mapNumber++, 
+				new java.util.Date(),
+				true,
+				false,
+				mapSetId,
+				null, // rawMapReferences
+				"",
+				Option.empty(),
+				Option.empty(),
+				false,
+				1.0f,
+				Option.empty(),
+				Option.empty());
+		
+		return new MapSet(MapSet.generateNewId(), name, new java.util.Date(), processedMaps.toArray(new ProcessedMap[processedMaps.size()]), masterMap, 0, null, Option.empty());
+	}
+
+
+    private Feature clusterizeFeatures(List<Feature> peptideFeatures, Long pseudoScanId) {
+
+	    peptideFeatures.sort((f1, f2) -> Float.compare(f1.elutionTime(), f2.elutionTime()));
+        Feature prototype = peptideFeatures.get(0);
+        Feature firstFt = peptideFeatures.get(0);
+        Feature lastFt = peptideFeatures.get(peptideFeatures.size()-1);
+        float intensity = (float)peptideFeatures.stream().mapToDouble(f -> f.apexIntensity()).sum();
+        int ms2Count = peptideFeatures.stream().mapToInt(f -> f.ms2Count()).sum();
+        int ms1Count = peptideFeatures.stream().mapToInt(f -> f.ms1Count()).sum();
+
+        //create a cluster of features
+        return new Feature(
+                Feature.generateNewId(),
+                prototype.moz(),
+                prototype.charge(),
+                prototype.elutionTime(),
+                intensity,
+                intensity,
+                prototype.duration(),
+                0.0f,
+                ms1Count,
+                ms2Count,
+                false,
+                Option.empty(),
+                new FeatureRelations(
+                        null,
+                        1,
+                        Option.empty(),
+                        null,
+                        firstFt.relations().firstScanInitialId(),
+                        lastFt.relations().lastScanInitialId(),
+                        prototype.relations().apexScanInitialId(), //TODO : expected value is apexScanInitialId,
+						pseudoScanId,
+						pseudoScanId,
+						pseudoScanId,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        -1,
+                        prototype.relations().peptideId()
+                ),
+                null,
+                peptideFeatures.toArray(new Feature[peptideFeatures.size()]),
+                null,
+                Option.empty(),
+                Option.empty(),
+                Option.empty(),
+                false,
+                2,
+                Option.empty());
+    }
+
+    public Map<Long, String> getCreatedResultSetIds(){
+		return m_rsIdByName.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
 	}
 	
 	public String getWarningMessage(){
@@ -209,21 +390,20 @@ public class MaxQuantResultParser extends IServiceWrapper {
 		 return pklSoft;
 	 }
 	
-	private List<Long> storeResultSets(List<ResultSet> resultSets, InstrumentConfig instrumentConfig,ResultSetsDataMapper rsMapper, StorerContext storerContext){
-		ArrayList<Long> rsIds = new ArrayList<>();
+	private Map<String,Long> storeResultSets(List<ResultSet> resultSets, InstrumentConfig instrumentConfig,ResultSetsDataMapper rsMapper, StorerContext storerContext){
+		Map<String,Long> rsIdbyName = new HashMap<>();
 		DatabaseConnectionContext msiDbContext = m_parserContext.getMSIDbConnectionContext();
 		IRsStorer rsStorer = RsStorer.apply(msiDbContext,true);
 
 		SQLMsiSearchWriter.insertInstrumentConfig(instrumentConfig, storerContext);
-			
-		
+					
 		for(ResultSet nextRS : resultSets){
 			Long rsId = storeResultFile(nextRS, rsMapper, storerContext, rsStorer);
-			rsIds.add(rsId);
+			rsIdbyName.put(nextRS.name(), rsId);
 		}
 			
-				
-		return rsIds;		
+
+		return rsIdbyName;		
 	}
 
 	private Long storeResultFile(ResultSet nextRS, ResultSetsDataMapper rsMapper, StorerContext storerContext,IRsStorer rsStorer) {
@@ -263,5 +443,13 @@ public class MaxQuantResultParser extends IServiceWrapper {
 	    
 	    
 		return rsId;
+	}
+
+	private static Long getMaxQuantPeakListSoftwareId(ProviderDecoratedExecutionContext parserContext) {
+		fr.proline.core.om.provider.uds.impl.SQLPeaklistSoftwareProvider udsPklSoftProvider = new fr.proline.core.om.provider.uds.impl.SQLPeaklistSoftwareProvider(parserContext.getUDSDbConnectionContext());
+		Option<PeaklistSoftware> udsPklSoftOpt = udsPklSoftProvider.getPeaklistSoftware("MaxQuant", null);
+		if(udsPklSoftOpt.isEmpty())
+			throw new RuntimeException("can't find a peaklist software for MaxQuant software");
+		return udsPklSoftOpt.get().id();
 	}
 }

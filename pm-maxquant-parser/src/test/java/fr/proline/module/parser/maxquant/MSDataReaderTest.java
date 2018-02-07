@@ -57,7 +57,9 @@ public class MSDataReaderTest {
 		
 		StringBuffer warningMsg = new StringBuffer();
 		MSDataReader dataReader = new MSDataReader(folderURL, m_pec, ic,ps);
-		ResultSetsDataMapper rsMapper= dataReader.parseMSData2ResulSets(rsidByName, allPtms, warningMsg);
+		Long start = System.currentTimeMillis();
+		ResultSetsDataMapper rsMapper= dataReader.parseMSData2ResulSets(rsidByName, allPtms, "(.*)\\|", warningMsg);
+		logger.info("MS parsed in "+(System.currentTimeMillis() - start)+" ms");
 		Assert.assertEquals(0,warningMsg.length());
 		Assert.assertNotNull(rsMapper);
 		Assert.assertNotNull(rsMapper.getPeptideMatchesForRs("OVEMB150205_12"));
@@ -93,7 +95,7 @@ public class MSDataReaderTest {
 		
 		StringBuffer warningMsg = new StringBuffer();
 		MSDataReader dataReader = new MSDataReader(folderURL, m_pec, ic,ps);
-		ResultSetsDataMapper rsMapper= dataReader.parseMSData2ResulSets(rsidByName, allPtms, warningMsg);
+		ResultSetsDataMapper rsMapper= dataReader.parseMSData2ResulSets(rsidByName, allPtms, "(.*)\\|", warningMsg);
 		Assert.assertNotEquals(0,warningMsg.length());
 		logger.info(" Warning Msg: "+warningMsg.toString());
 		Assert.assertNotNull(rsMapper);

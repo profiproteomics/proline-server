@@ -421,7 +421,7 @@ public class ExperimentPropertiesReader {
 		return msiSearch;
 	}
 	
-	private Map<String, Integer>  getQueriesCount(){
+	private Map<String, Integer> getQueriesCount(){
 		File summFile = new File(m_mqResultFileFolder, SUMMARY_FILENAME);
 		CSVReader reader  = null;
 		Map<String, Integer> queriesCountByRS = new HashMap<>();

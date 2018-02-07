@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,35 +41,36 @@ import scala.Option;
 
 public class MSDataReader {
 
-	protected static Logger logger = LoggerFactory.getLogger(MSDataReader.class);
+    public static final int MAX_ACCESSION_LENGTH = 100;
+    protected static Logger logger = LoggerFactory.getLogger(MSDataReader.class);
 
-	protected final static String MQ_MSDATA_FILENAME = "combined/txt/msms.txt";
+	private final static String MQ_MSDATA_FILENAME = "combined/txt/msms.txt";
 
 	//MSMS file header
-	protected final static String RS_NAME_HEADER = "Raw file";
-	protected final static String SCAN_NBR_HEADER = "Scan number";
-	protected final static String SEQ_HEADER = "Sequence";
-	protected final static String MASS_HEADER = "Mass";
-	protected final static String MISSED_CLEAVAGES_HEADER = "Missed cleavages";
-	protected final static String CHARGE_HEADER = "Charge";
-	protected final static String NBR_MATCHES_HEADER = "Number of Matches";
-	protected final static String TYPE_HEADER = "Type";
-	protected final static String PTMS_HEADER = "Modifications";
-	protected final static String PROTEINS_HEADER = "Proteins";
-	protected final static String MASSES_HEADER = "Masses";
-	protected final static String INTENSITIES_HEADER = "Intensities";
-	protected final static String MOZ_HEADER = "m/z";
-	protected final static String RT_HEADER = "Retention time";
-	protected final static String MSMS_ID_HEADER = "id";
-	protected final static String MOD_SEQ_HEADER = "Modified sequence";
-	protected final static String SCORE_HEADER = "Score";
+	private final static String RS_NAME_HEADER = "Raw file";
+	private final static String SCAN_NBR_HEADER = "Scan number";
+	private final static String SEQ_HEADER = "Sequence";
+	private final static String MASS_HEADER = "Mass";
+	private final static String MISSED_CLEAVAGES_HEADER = "Missed cleavages";
+	private final static String CHARGE_HEADER = "Charge";
+	private final static String NBR_MATCHES_HEADER = "Number of Matches";
+	private final static String TYPE_HEADER = "Type";
+	private final static String PTMS_HEADER = "Modifications";
+	private final static String PROTEINS_HEADER = "Proteins";
+	private final static String MASSES_HEADER = "Masses";
+	private final static String INTENSITIES_HEADER = "Intensities";
+	private final static String MOZ_HEADER = "m/z";
+	private final static String RT_HEADER = "Retention time";
+	private final static String MSMS_ID_HEADER = "id";
+	private final static String MOD_SEQ_HEADER = "Modified sequence";
+	private final static String SCORE_HEADER = "Score";
 	//	protected final static String FRAGMENTATION_HEADER = "Fragmentation";
 	//	protected final static String MSn_ANALYZER_HEADER = "Mass analyzer";
 	//	protected final static String SCAN_INDEX_HEADER = "Scan index";
 	//	protected final static String ENZYME_HEADER = "Enzyme";
 
 	
-	protected static String[] headerOfInterest = {SCORE_HEADER,MSMS_ID_HEADER, RS_NAME_HEADER, SCAN_NBR_HEADER, SEQ_HEADER,MOD_SEQ_HEADER, MASS_HEADER, MISSED_CLEAVAGES_HEADER, CHARGE_HEADER,
+	private static String[] headerOfInterest = {SCORE_HEADER,MSMS_ID_HEADER, RS_NAME_HEADER, SCAN_NBR_HEADER, SEQ_HEADER,MOD_SEQ_HEADER, MASS_HEADER, MISSED_CLEAVAGES_HEADER, CHARGE_HEADER,
 			NBR_MATCHES_HEADER, TYPE_HEADER, PTMS_HEADER, PROTEINS_HEADER, MASSES_HEADER, INTENSITIES_HEADER, MOZ_HEADER,RT_HEADER };
 
 	private ProviderDecoratedExecutionContext m_parserContext;
@@ -76,38 +79,36 @@ public class MSDataReader {
 	private InstrumentConfig m_instrumentConfig;
 	private PeaklistSoftware m_peaklistSoftware;
 	  
-	private HashMap<String, Peptide> pepByUniqueKey;
-		 
-	public MSDataReader(URL folderURL, ProviderDecoratedExecutionContext parserContext,  InstrumentConfig instrumentConfig, PeaklistSoftware peaklistSoftware) {
-		m_parserContext = parserContext;
-		
+	private HashMap<String, Peptide> m_pepByUniqueKey;
+
+	private static File URLtoFile(URL folderURL) {
 		try {
-			m_msmsFile = new File(new File(folderURL.toURI()),MQ_MSDATA_FILENAME);
-	
+			return new File(new File(folderURL.toURI()),MQ_MSDATA_FILENAME);
 		} catch (URISyntaxException uriE) {
-			throw new RuntimeException(" Error reading parameters file : "+uriE.getMessage());
+			throw new RuntimeException("Error reading parameters file : "+uriE.getMessage());
 		}
-		if(!m_msmsFile.exists())
-			throw new RuntimeException("No msms file defined. Can't load MQ result");
-		
-		m_rsMapper = new ResultSetsDataMapper();
-		m_peaklistSoftware = peaklistSoftware;
-		m_instrumentConfig = instrumentConfig;
-		pepByUniqueKey = new HashMap<String, Peptide>();
+	}
+	
+	public MSDataReader(URL msmsFileURL, ProviderDecoratedExecutionContext parserContext,  InstrumentConfig instrumentConfig, PeaklistSoftware peaklistSoftware) {
+		this(URLtoFile(msmsFileURL), parserContext, instrumentConfig, peaklistSoftware);
 	}
 	
 	public MSDataReader(String mqFolder, ProviderDecoratedExecutionContext parserContext,  InstrumentConfig instrumentConfig, PeaklistSoftware peaklistSoftware) {
+		this(new File(mqFolder,MQ_MSDATA_FILENAME), parserContext, instrumentConfig, peaklistSoftware);
+	}
+
+	private MSDataReader(File msmsFile, ProviderDecoratedExecutionContext parserContext,  InstrumentConfig instrumentConfig, PeaklistSoftware peaklistSoftware) {
 		m_parserContext = parserContext;
-		m_msmsFile = new File(mqFolder,MQ_MSDATA_FILENAME);
+		m_msmsFile = msmsFile;
 		if(!m_msmsFile.exists())
 			throw new RuntimeException("No msms file defined. Can't load MQ result");
 		m_rsMapper = new ResultSetsDataMapper();
 		m_peaklistSoftware = peaklistSoftware;
 		m_instrumentConfig = instrumentConfig;
-		pepByUniqueKey = new HashMap<String, Peptide>();
+		m_pepByUniqueKey = new HashMap<String, Peptide>();
 	}
 
-	public ResultSetsDataMapper parseMSData2ResulSets(Map<String, Long> rsIdByName, PtmDefinition[] allPtms, StringBuffer warningMsg) {
+	public ResultSetsDataMapper parseMSData2ResulSets(Map<String, Long> rsIdByName, PtmDefinition[] allPtms, String accessionRegexp, StringBuffer warningMsg) {
 				
 		CSVReader reader = null;
 		m_rsMapper.resetMaps();
@@ -161,7 +162,7 @@ public class MSDataReader {
 				PeptideMatch pepMatch = createPepMatch(peptide,query,rsIdByName, valByHeader);
 				m_rsMapper.addPeptideMatches(rsName, pepMatch);
 				
-				List<ProteinMatch> protMatches = getOrCreateProteinMatches(rsIdByName, valByHeader, pepMatch);
+				List<ProteinMatch> protMatches = getOrCreateProteinMatches(rsIdByName, valByHeader, pepMatch, accessionRegexp);
 				m_rsMapper.addProteinMatchesToPepMatch(rsName, pepMatch.id(), protMatches);				
 				
 				nextRow = reader.readNext();
@@ -190,6 +191,11 @@ public class MSDataReader {
 		return m_rsMapper;
 	}
 
+	
+	public Map<String, Peptide> getPeptidesByMQModifiedSequence() {
+		return m_pepByUniqueKey;
+	}
+	
 	private void calculatePepMatchRank(Map<String, Long> rsIdByName) {
 		Iterator<String> rsNameIt = rsIdByName.keySet().iterator();
 		while(rsNameIt.hasNext()){
@@ -229,7 +235,7 @@ public class MSDataReader {
 		} //end for each RS		
 	}
 
-	private List<ProteinMatch> getOrCreateProteinMatches(Map<String, Long> rsIdByName, Map<String, String> valByHeader,PeptideMatch pepMatch) {
+	private List<ProteinMatch> getOrCreateProteinMatches(Map<String, Long> rsIdByName, Map<String, String> valByHeader,PeptideMatch pepMatch, String accessionRegexp) {
 		String allProtNameAndDesc = valByHeader.get(PROTEINS_HEADER);
 		String rsName = valByHeader.get(RS_NAME_HEADER);
 		String[] protNameAndDecrArr = allProtNameAndDesc.split(";");
@@ -246,13 +252,22 @@ public class MSDataReader {
 		for(String nextProt : protNameAndDecrArr){
 			String pName =  nextProt;
 			String pDesc =  "";
-			int pipeIndex = nextProt.indexOf('|');
-			if(pipeIndex>0){
-				pName =  nextProt.substring(0,pipeIndex);
-				pDesc =  nextProt.substring(pipeIndex+1);
+
+			Pattern pattern = Pattern.compile(accessionRegexp);
+			Matcher m = pattern.matcher(nextProt);
+			if (m.find()) {
+				pName = m.group(1);
+				if (m.groupCount() > 1) {
+					pDesc = m.group(2);
+				} else if (m.end(1) < nextProt.length()){
+					pDesc = nextProt.substring(m.end(1) + 1);
+				}
 			}
-			
-		
+
+            // cut pName after 100 char to avoid db storage error
+            if (pName.length() > MAX_ACCESSION_LENGTH)
+                pName = pName.substring(0, (MAX_ACCESSION_LENGTH-1-3))+"...";
+
 			ProteinMatch currentProtMatch = null;
 			for(ProteinMatch pm : allProtMatches){
 				if(pm.accession().equals(pName)){ //same accession ProteinMatch already created !
@@ -376,120 +391,29 @@ public class MSDataReader {
 		
 		if(!ptmsString.equalsIgnoreCase("Unmodified")){
 			
-			Map<PtmDefinition, Integer> countByPtmDefs = new HashMap<>();
-			Map<String,PtmDefinition> ptmDefByAbv = new HashMap<>();
-
-			//Parse modification 
-			//"Acetyl (Protein N-term),2 Oxidation (M)" => 3 Modif
-			Integer ptmCount = 0;
-			String[] ptmsAsString=ptmsString.split(",");
-			for(String nextPtmString : ptmsAsString){
-				int indexSpace = nextPtmString.indexOf(" ");
-				if(indexSpace>0){
-					String beforeSapce =  nextPtmString.substring(0, indexSpace);
-					if(beforeSapce.matches("\\d+$")){
-						String ptmName = nextPtmString.substring(indexSpace+1);
-						List<PtmDefinition> foundPtmDefs = PTMUtils.parsePTMString(ptmProvider, ptmName);
-						PtmDefinition ptmDef = null;
-						if(foundPtmDefs!=null && !foundPtmDefs.isEmpty())
-							ptmDef = foundPtmDefs.get(0); 
-						else{
-							warningMsg.append("No PTM found for ").append(ptmName).append("\n");
-						}
-						Integer count = Integer.valueOf(beforeSapce);
-						countByPtmDefs.put(ptmDef,count );
-						ptmCount+=count;
-						ptmDefByAbv.put(ptmName.substring(0,2).toLowerCase(),ptmDef);
-						
-					} else { //No count of PTM: directly PTM readable string
-						List<PtmDefinition> foundPtmDefs = PTMUtils.parsePTMString(ptmProvider, nextPtmString);
-						PtmDefinition ptmDef = null;
-						if(foundPtmDefs!=null && !foundPtmDefs.isEmpty())
-							ptmDef = foundPtmDefs.get(0); 					
-						else{
-							warningMsg.append("No PTM found for ").append(nextPtmString).append("\n");
-						}
-						countByPtmDefs.put(ptmDef,1);
-						ptmCount+=1;
-						ptmDefByAbv.put(nextPtmString.substring(0,2).toLowerCase(),ptmDef);
-					}
-				} else { // no space in ptm name
-					List<PtmDefinition> foundPtmDefs = PTMUtils.parsePTMString(ptmProvider, nextPtmString);
-					PtmDefinition ptmDef = null;
-					if(foundPtmDefs!=null && !foundPtmDefs.isEmpty())
-						ptmDef = foundPtmDefs.get(0); 		
-					else{
-						warningMsg.append("No PTM found for ").append(nextPtmString).append("\n");
-					}				
-					countByPtmDefs.put(ptmDef,1);
-					ptmCount+=1;
-					ptmDefByAbv.put(nextPtmString.substring(0,2).toLowerCase(),ptmDef);
-				} //end no space found
-			} // for each ptm
-			
-			
-			// --- For location, see modified seq : _(ac)ADKM(ox)DM(ox)SIDDIIK_
-						
-			char[] aas = modSeq.substring(1,modSeq.length()-1).toCharArray();
-			int seqIndex =0;
-			boolean inAbvModif=false;
-			int locPtmsIndex =0;
-			LocatedPtm[] allLocPtms = new LocatedPtm[ptmCount];
-			StringBuilder abvModifBuilder =new StringBuilder();
-			
-			int locationCount = 0;
-			for(char aa : aas){
-				if(aa=='('){
-					inAbvModif = true;
-					abvModifBuilder = new StringBuilder();
-				} else if(aa==')'){
-					String abv = abvModifBuilder.toString().toLowerCase();
-					PtmDefinition ptmdef = ptmDefByAbv.get(abv); 	
-					if(ptmdef == null){
-						logger.warn( "UNABLE to GET PTM DEF for " +abv+" :: "+seq+" ; modification-> "+ptmsString);
-						warningMsg.append( "UNABLE to get PTM definition for " ).append(abv).append("in peptide ").append(seq);
-						warningMsg.append(" - ").append(ptmsString).append("\n");
-					} else {
-						allLocPtms[locPtmsIndex] = LocatedPtm.apply(ptmdef, seqIndex);
-						locPtmsIndex++;
-						locationCount++;
-					}
-					inAbvModif=false;
-				} else if(inAbvModif){
-					abvModifBuilder.append(aa);					
-				} else {
-					seqIndex++;
-				}
-			}
-			
-			if(locationCount!=ptmCount){
-				warningMsg.append("Unable to get location for all PTMs for peptide " ).append(seq).append("- ").append(ptmsString).append(" peptide IGNORED ");
-				logger.warn("!!!! Unable to get location for all PTMs for peptide "+seq+" ; modification-> "+ptmsString+". peptide IGNORED ");
-				return null;
-			} 
-			
-			String uniquePepkey = seq+"%"+Peptide.makePtmString(allLocPtms);	
-			
-			//See if peptide allready  defined			
-			if(pepByUniqueKey.containsKey(uniquePepkey))
-				peptide = pepByUniqueKey.get(uniquePepkey);
+			//See if peptide already  defined			
+			if(m_pepByUniqueKey.containsKey(modSeq))
+				peptide = m_pepByUniqueKey.get(modSeq);
 			else {
 				//Read from datastore if exist
+				LocatedPtm[] allLocPtms = getLocatedPtmsFromModifiedSequence(modSeq, ptmsString, ptmProvider, warningMsg);
+				if (allLocPtms == null) {
+					return null;
+				}
 				Option<Peptide> pepOpt = pepProvider.getPeptide(seq, allLocPtms);				
 				peptide = (pepOpt.isDefined()) ? pepOpt.get() :  new Peptide(seq,allLocPtms,Peptide.calcMass(seq));
-				pepByUniqueKey.put(uniquePepkey, peptide);	
+				m_pepByUniqueKey.put(modSeq, peptide);	
 			}
 		 	
 		} else {
 			//No Ptms defined for this peptide
 			LocatedPtm[] emptyLocPtms = new LocatedPtm[0];
-			String uniquePepkey = seq+"%";
-			if(pepByUniqueKey.containsKey(uniquePepkey))
-				peptide = pepByUniqueKey.get(uniquePepkey);
+			if(m_pepByUniqueKey.containsKey(modSeq))
+				peptide = m_pepByUniqueKey.get(modSeq);
 			else {
 				Option<Peptide> pepOpt = pepProvider.getPeptide(seq, emptyLocPtms);
 				peptide = (pepOpt.isDefined()) ? pepOpt.get() :  new Peptide(seq,emptyLocPtms,Peptide.calcMass(seq));
-				pepByUniqueKey.put(uniquePepkey, peptide);
+				m_pepByUniqueKey.put(modSeq, peptide);
 			}
 		}
 							
@@ -497,6 +421,102 @@ public class MSDataReader {
 			
 	}
 
+	private LocatedPtm[] getLocatedPtmsFromModifiedSequence(String modSeq, String ptmsString, IPTMProvider ptmProvider, StringBuffer warningMsg) {
+		
+		Map<PtmDefinition, Integer> countByPtmDefs = new HashMap<>();
+		Map<String,PtmDefinition> ptmDefByAbv = new HashMap<>();
+		
+		//Parse modification 
+		//"Acetyl (Protein N-term),2 Oxidation (M)" => 3 Modif
+		Integer ptmCount = 0;
+		String[] ptmsAsString=ptmsString.split(",");
+		for(String nextPtmString : ptmsAsString){
+			int indexSpace = nextPtmString.indexOf(" ");
+			if(indexSpace>0){
+				String beforeSapce =  nextPtmString.substring(0, indexSpace);
+				if(beforeSapce.matches("\\d+$")){
+					String ptmName = nextPtmString.substring(indexSpace+1);
+					List<PtmDefinition> foundPtmDefs = PTMUtils.parsePTMString(ptmProvider, ptmName);
+					PtmDefinition ptmDef = null;
+					if(foundPtmDefs!=null && !foundPtmDefs.isEmpty())
+						ptmDef = foundPtmDefs.get(0); 
+					else{
+						warningMsg.append("No PTM found for ").append(ptmName).append("\n");
+					}
+					Integer count = Integer.valueOf(beforeSapce);
+					countByPtmDefs.put(ptmDef,count );
+					ptmCount+=count;
+					ptmDefByAbv.put(ptmName.substring(0,2).toLowerCase(),ptmDef);
+					
+				} else { //No count of PTM: directly PTM readable string
+					List<PtmDefinition> foundPtmDefs = PTMUtils.parsePTMString(ptmProvider, nextPtmString);
+					PtmDefinition ptmDef = null;
+					if(foundPtmDefs!=null && !foundPtmDefs.isEmpty())
+						ptmDef = foundPtmDefs.get(0); 					
+					else{
+						warningMsg.append("No PTM found for ").append(nextPtmString).append("\n");
+					}
+					countByPtmDefs.put(ptmDef,1);
+					ptmCount+=1;
+					ptmDefByAbv.put(nextPtmString.substring(0,2).toLowerCase(),ptmDef);
+				}
+			} else { // no space in ptm name
+				List<PtmDefinition> foundPtmDefs = PTMUtils.parsePTMString(ptmProvider, nextPtmString);
+				PtmDefinition ptmDef = null;
+				if(foundPtmDefs!=null && !foundPtmDefs.isEmpty())
+					ptmDef = foundPtmDefs.get(0); 		
+				else{
+					warningMsg.append("No PTM found for ").append(nextPtmString).append("\n");
+				}				
+				countByPtmDefs.put(ptmDef,1);
+				ptmCount+=1;
+				ptmDefByAbv.put(nextPtmString.substring(0,2).toLowerCase(),ptmDef);
+			} //end no space found
+		} // for each ptm
+		
+		
+		// --- For location, see modified seq : _(ac)ADKM(ox)DM(ox)SIDDIIK_
+					
+		char[] aas = modSeq.substring(1,modSeq.length()-1).toCharArray();
+		int seqIndex = 0;
+		boolean inAbvModif = false;
+		int locPtmsIndex = 0;
+		LocatedPtm[] allLocPtms = new LocatedPtm[ptmCount];
+		StringBuilder abvModifBuilder =new StringBuilder();
+		int locationCount = 0;
+		
+		for(char aa : aas){
+			if(aa=='('){
+				inAbvModif = true;
+				abvModifBuilder = new StringBuilder();
+			} else if(aa==')'){
+				String abv = abvModifBuilder.toString().toLowerCase();
+				PtmDefinition ptmdef = ptmDefByAbv.get(abv); 	
+				if(ptmdef == null){
+					logger.warn( "UNABLE to GET PTM DEF for " +abv+" :: "+modSeq+" ; modification-> "+ptmsString);
+					warningMsg.append( "UNABLE to get PTM definition for " ).append(abv).append("in peptide ").append(modSeq);
+					warningMsg.append(" - ").append(ptmsString).append("\n");
+				} else {
+					allLocPtms[locPtmsIndex] = LocatedPtm.apply(ptmdef, seqIndex);
+					locPtmsIndex++;
+					locationCount++;
+				}
+				inAbvModif=false;
+			} else if(inAbvModif){
+				abvModifBuilder.append(aa);					
+			} else {
+				seqIndex++;
+			}
+		}
+		
+		if(locationCount!=ptmCount){
+			warningMsg.append("Unable to get location for all PTMs for peptide " ).append(modSeq).append("- ").append(ptmsString).append(" peptide IGNORED ");
+			logger.warn("!!!! Unable to get location for all PTMs for peptide "+modSeq+" ; modification-> "+ptmsString+". peptide IGNORED ");
+			return null;
+		} 
+		
+		return allLocPtms;
+	}
 
 	private Ms2Query getOrCreateMSQuery(Map<Integer, Ms2Query> queryByInitialId, Spectrum spectrum, Map<String, String> valByHeader) {
 		Integer initialId = Integer.valueOf(valByHeader.get(MSMS_ID_HEADER));
