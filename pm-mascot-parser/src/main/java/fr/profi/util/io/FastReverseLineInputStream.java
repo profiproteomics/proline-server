@@ -31,7 +31,7 @@ public class FastReverseLineInputStream extends InputStream {
 	}
 
 	public FastReverseLineInputStream(File file, int bufferSize, int maxLineBytes) throws IOException {
-	    this.maxLineBytes = maxLineBytes;
+		this.maxLineBytes = getAdaptedSize(file.length(), maxLineBytes);
 	    in = new RandomAccessFile(file, "r");
 	    currentFilePos = file.length() - 1;
 	    in.seek(currentFilePos);
@@ -41,10 +41,17 @@ public class FastReverseLineInputStream extends InputStream {
 	    currentLine = new byte[maxLineBytes];
 	    currentLine[0] = 0xA;
 	
-	    this.bufferSize = bufferSize;
+	    this.bufferSize = getAdaptedSize(file.length(), bufferSize);
 	    buffer = new byte[bufferSize];
 	    fillBuffer();
 	    fillLineBuffer();
+	}
+	
+	private int getAdaptedSize(long fileLength, int defaultSize) {
+		// the size should never be bigger than twice the file length
+	    if(defaultSize * 2 > fileLength)
+	      return 1024;
+	    return defaultSize;
 	}
 
 	@Override

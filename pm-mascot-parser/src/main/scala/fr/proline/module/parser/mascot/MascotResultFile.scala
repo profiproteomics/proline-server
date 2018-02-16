@@ -4,35 +4,16 @@ import java.io._
 
 import scala.Array.canBuildFrom
 import scala.collection.mutable.ArrayBuffer
-
+import scala.concurrent._
 import com.typesafe.scalalogging.StrictLogging
-
 import fr.profi.chemistry.model.Enzyme
 import fr.profi.util.primitives.toFloat
 import fr.profi.util.primitives.toFloatOrMinusOne
 import fr.profi.util.primitives.toIntOrZero
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
-import fr.proline.core.om.model.msi.IResultFile
-import fr.proline.core.om.model.msi.MSISearch
-import fr.proline.core.om.model.msi.MSMSSearchSettings
-import fr.proline.core.om.model.msi.MascotImportProperties
-import fr.proline.core.om.model.msi.Ms2Query
-import fr.proline.core.om.model.msi.MsQuery
-import fr.proline.core.om.model.msi.MsQueryDbSearchProperties
-import fr.proline.core.om.model.msi.MsQueryProperties
-import fr.proline.core.om.model.msi.Peaklist
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.model.msi.ResultSetProperties
-import fr.proline.core.om.model.msi.SearchSettings
-import fr.proline.core.om.model.msi.SeqDatabase
-import fr.proline.core.om.model.msi.Spectrum
-import fr.proline.core.om.model.msi.SpectrumMatch
-import fr.proline.core.om.model.msi.SpectrumProperties
-import fr.proline.core.om.model.msi.SpectrumTitleFields
+import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
-import matrix_science.msparser.ms_inputquery
 import matrix_science.msparser.ms_mascotresfile
 import matrix_science.msparser.ms_mascotresults
 import matrix_science.msparser.ms_peptidesummary
@@ -167,7 +148,7 @@ class MascotResultFile(
     val nbrQueries: Int = mascotResFile.getNumQueries()
 
     def getMsQueryDbSearchProps(pepSummaryOpt: Option[ms_peptidesummary], msQueryNum: Int) = {
-      if (pepSummaryOpt == None) None
+      if (pepSummaryOpt.isEmpty) None
       else {
         val pepSum = pepSummaryOpt.get
         val ht = mascotResFile.getSectionValueDouble(ms_mascotresfile.SEC_SUMMARY, "qplughole" + msQueryNum).toFloat
@@ -265,22 +246,21 @@ class MascotResultFile(
    */
   lazy val msiSearch: MSISearch = {
 
-    // Get MSISearch information : Retrieve peak list, search parameters...
+    //******  Get MSISearch information : Retrieve peak list, search parameters...
     logger.info("Parse Marcot Search Settings information ...")
 
-    val ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
     val searchParams = mascotSearchParams
 
     val nbrSearchedQueries = mascotResFile.getNumSeqsAfterTax(0) //Get num of seq in all dbs after taxonomy filter
 
-    // Verify used SeqDatabases specified for Mascot Search exist, else Stop and throw an exception
-    var nbrDBs = searchParams.getNumberOfDatabases()
+    //--- 1. Verify used SeqDatabases specified for Mascot Search exist, else Stop and throw an exception
+    val nbrDBs = searchParams.getNumberOfDatabases()
     logger.debug("Search for " + nbrDBs + " Sequences database(s) used in Mascot result file")
 
-    var seqDbs = new Array[SeqDatabase](nbrDBs)
+    val seqDbs = new Array[SeqDatabase](nbrDBs)
     for (dbIndex <- 1 until (nbrDBs + 1)) {
-      var dbName = searchParams.getDB(dbIndex)
-      var filePath = mascotResFile.getFastaPath(dbIndex)
+      val dbName = searchParams.getDB(dbIndex)
+      val filePath = mascotResFile.getFastaPath(dbIndex)
 
       val seqDbProvider = parserContext.getProvider(classOf[ISeqDatabaseProvider])
       var usedSeqSDb = seqDbProvider.getSeqDatabase(dbName, filePath)
@@ -316,11 +296,15 @@ class MascotResultFile(
       }
     }
 
-    // Create Peaklist & Enzymes
+    //--- 2. Create Enzymes & Search Settings
     val enzymes = Array(new Enzyme(searchParams.getCLE()))
 
-    //Create MSISearch regrouping all these information   
-    var sSettings: SearchSettings = new SearchSettings(
+    // Get C13 properties
+//    val isotopeOffRange: Array[Int] = Array(0,searchParams.getPEP_ISOTOPE_ERROR)
+//    val ssProperties = new SearchSettingsProperties( isotopeOffsetRange = isotopeOffRange)
+
+    //Create MSISearch regrouping all these information
+    val sSettings: SearchSettings = new SearchSettings(
       id = SearchSettings.generateNewId(),
       softwareName = "Mascot",
       softwareVersion = mascotResFile.getMascotVer(),
@@ -346,10 +330,11 @@ class MascotResultFile(
       )
     }
 
+    ////--- 3. Create peaklist (lazy) & MsiSearch
     val nbQueries = mascotResFile.getNumQueries()
     new MSISearch(
       id = MSISearch.generateNewId(),
-      resultFileName = fileLocation.getName(), //mascotResFile.getFileName(),
+      resultFileName = fileLocation.getName(),
       searchSettings = sSettings,
       peakList = peaklist,
       title = searchParams.getCOM(),
@@ -629,9 +614,19 @@ class MascotResultFile(
     var isLastSection = false
     var readSpectraCount = 0
     
+    def stopSectionQueueMonitoring() {
+      querySectionQueue.synchronized {
+        // Notify querySectionQueue that we stopped to read spectra
+        querySectionQueue.clear()
+        querySectionQueue.put(None)
+      }
+
+      isLastSection = true
+    }
+
     // Perform asynchronous IO
-    import scala.concurrent.ExecutionContext.Implicits.global
-    scala.concurrent.Future {
+    import ExecutionContext.Implicits.global
+    Future {
       
       this.eachQuerySection(this.fileLocation) { msqSection =>
         
@@ -656,9 +651,9 @@ class MascotResultFile(
       }
       case scala.util.Failure(t) => {
         try {
-          // Notify querySectionQueue that we stopped to read spectra
-          querySectionQueue.clear()
-          querySectionQueue.put(None)
+          logger.error("An error has been caught while reading spectra...")
+
+          stopSectionQueueMonitoring()
         } finally {
           throw t
         }
@@ -669,7 +664,10 @@ class MascotResultFile(
     val spectrumQueue = new java.util.concurrent.LinkedBlockingQueue[Option[Spectrum]](2 * bufferSize)
     var isLastSpectrum = false
     
-    scala.concurrent.Future {
+    val endOfParsingPromise = Promise[Unit]()
+
+    Future {
+
       def parseSectionBufferInParallel() {
         sectionBuffer.par.foreach { section =>
           val spectrum = section.toSpectrum(queryByInitialId, instConfigId, peaklistId)
@@ -698,10 +696,12 @@ class MascotResultFile(
         }
       }
       
-      logger.debug("Parse last buffer of spectra...")
-      
-      // Parse last buffer
-      parseSectionBufferInParallel()
+      if (sectionBuffer.nonEmpty) {
+        logger.debug("Parse last buffer of spectra...")
+
+        // Parse last buffer
+        parseSectionBufferInParallel()
+      }
       
       isLastSpectrum = true
       spectrumQueue.put(None) // add a None value to stop the queue monitoring
@@ -709,15 +709,20 @@ class MascotResultFile(
     } onComplete {
       case scala.util.Success(r) => {
         logger.debug(s"All spectra ($readSpectraCount) have been parsed!")
+        endOfParsingPromise.success()
       }
       case scala.util.Failure(t) => {
-        try {
-          // Notify spectrumQueue that we stopped to parse spectra
-          spectrumQueue.clear()
-          spectrumQueue.put(None)
-        } finally {
-          throw t
-        }
+        logger.error("An error has been caught while parsing spectra...")
+
+        // Stop sectionQueue monitoring
+        stopSectionQueueMonitoring()
+
+        // Notify spectrumQueue that we stopped to parse spectra
+        spectrumQueue.clear()
+        spectrumQueue.put(None)
+        isLastSpectrum = true
+
+        endOfParsingPromise.failure(t)
       }
     }
     
@@ -736,6 +741,8 @@ class MascotResultFile(
       }
     }
     
+    scala.concurrent.Await.result(endOfParsingPromise.future,duration.Duration.Inf)
+
     logger.debug(s"End of eachSpectrum method!")
     
     ()
@@ -779,13 +786,13 @@ class MascotResultFile(
 
     lazy val index = underlyingMap(INDEX).toInt
     def charge = underlyingMap(CHARGE)
-    lazy val mass_min = underlyingMap(MASS_MIN).toDouble
-    lazy val mass_max = underlyingMap(MASS_MAX).toDouble
-    lazy val int_min = underlyingMap(INT_MIN).toInt
-    lazy val int_max = underlyingMap(INT_MAX).toInt
-    lazy val num_vals = underlyingMap(NUM_VALS).toInt
-    lazy val num_used1 = underlyingMap(NUM_USED1).toInt
-    def ions1 = underlyingMap(IONS1)
+    lazy val mass_min = underlyingMap.get(MASS_MIN).map(_.toDouble)
+    lazy val mass_max = underlyingMap.get(MASS_MAX).map(_.toDouble)
+    lazy val int_min = underlyingMap.get(INT_MIN).map(_.toInt)
+    lazy val int_max = underlyingMap.get(INT_MAX).map(_.toInt)
+    lazy val num_vals = underlyingMap.get(NUM_VALS).map(_.toInt)
+    lazy val num_used1 = underlyingMap.get(NUM_USED1).map(_.toInt)
+    def ions1 = underlyingMap.get(IONS1)
     
     def toSpectrum(
       queryByInitialId: Map[Int, MsQuery],
@@ -797,13 +804,14 @@ class MascotResultFile(
       val msq = queryByInitialId(initialId)
       
       // --- Peaks parsing --- //
-      val msqIonsString = this.ions1
-      val peaksAsStr = if (msqIonsString.isEmpty) Array.empty[String]
-      else msqIonsString.split(",")
+      val msqIonsStringOpt = this.ions1
+
+      val peaksAsStr = if (msqIonsStringOpt.isEmpty || msqIonsStringOpt.get.isEmpty) Array.empty[String]
+      else msqIonsStringOpt.get.split(",")
       
       val peaksCount = peaksAsStr.length
       if (peaksCount == 0) {
-        logger.debug(s"Spectrum of query#$initialId is empty")
+        logger.debug(s"Spectrum of query #$initialId is empty")
       }
       
       val indices = new Array[Int](peaksCount)
@@ -894,6 +902,8 @@ class MascotResultFile(
     def tryWithBufferedReader( bfr: BufferedReader)(unsafeFn: => Unit) = {
       try {
         unsafeFn
+      } catch {
+        case e: Exception => e.printStackTrace()
       } finally {
   
         try {
@@ -906,7 +916,30 @@ class MascotResultFile(
       }
     }
     
+//    def extractFirstQueryLineNumber(bufferSize: Int, maxLineBytes: Int): Int = {
+//      val revBfr = if(bufferSize == 0 || maxLineBytes == 0) {
+//        newBufferedReader(new fr.profi.util.io.FastReverseLineInputStream(file))
+//      } else {
+//        newBufferedReader(new fr.profi.util.io.FastReverseLineInputStream(file, bufferSize, maxLineBytes))
+//      }
+//      var firstQueryLineNumber = 0
+//      tryWithBufferedReader(revBfr) {
+//        var line = revBfr.readLine()
+//        var eof = false
+//        while (eof == false) {
+//          if (line == null || line == MASCOT_INDEX_SECTION_LINE) {
+//            eof = true
+//          } else if (line.startsWith(MASCOT_FIRST_QUERY_KEY)) {
+//            firstQueryLineNumber = line.split("=").last.toInt
+//          }
+//          line = revBfr.readLine()
+//        }
+//      }
+//      firstQueryLineNumber
+//    }
+    
     // Create a reader that reads lines reversely
+//    var firstQueryLineNumber = extractFirstQueryLineNumber(0, 0)
     val revBfr = newBufferedReader(new fr.profi.util.io.FastReverseLineInputStream(file))
 
     // Search for the line number of the first query
@@ -925,6 +958,10 @@ class MascotResultFile(
         line = revBfr.readLine()
       }
     }
+//    if(firstQueryLineNumber == 0) {
+//      logger.info("ABU failed to parse query1 line number, retry with smaller buffer")
+//      firstQueryLineNumber = extractFirstQueryLineNumber(1024, 1024)
+//    }
     assert(firstQueryLineNumber > 0, "Can't parse query1 line number")
     
     this.logger.debug(s"Line number of query1 in Mascot result file is $firstQueryLineNumber")
