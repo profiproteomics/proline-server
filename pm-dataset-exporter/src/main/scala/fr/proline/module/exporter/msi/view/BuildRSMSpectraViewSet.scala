@@ -108,8 +108,10 @@ object BuildRSMSpectraViewSet extends LazyLogging {
     }
 
     logger.debug(" spectrumIdByPepMatchId  " + spectrumIdByPepMatchId.size)
-    if(spectrumIdByPepMatchId.size != validatedPepMatchIdsSet.size)
-      logger.warn(" *** Some spectra are missing for RSM "+rsm.id+" !!!!")
+    if(spectrumIdByPepMatchId.size != validatedPepMatchIdsSet.size) {
+      logger.warn(" *** Some spectra are missing for RSM " + rsm.id + " !!!!")
+      //      throw new IllegalArgumentException(" Some spectrum are missing ! Unable to get spectrum matches !") //VDS Should we stop export ?
+    }
     
     val spectra = spectrumProvider.getSpectra(spectrumIdByPepMatchId.values.toSeq)
     val spectrumByPepMathID = spectrumIdByPepMatchId.map(entry => { entry._1 -> spectra.filter(_.id == entry._2).head }).toMap
@@ -130,9 +132,11 @@ object BuildRSMSpectraViewSet extends LazyLogging {
     })
 
     logger.debug(" spectrumMatchesByPeptMatchId  " + spectrumMatchesByPeptMatchId.size)
-    if(spectrumMatchesByPeptMatchId.size != validatedPepMatchIdsSet.size)
-      logger.warn(" *** Some spectrum Matches are missing for RSM "+rsm.id+" !!!!")
-      
+    if(spectrumMatchesByPeptMatchId.size != validatedPepMatchIdsSet.size) {
+      logger.warn(" *** Some spectrum Matches are missing for RSM " + rsm.id + " !!!!")
+      throw new IllegalArgumentException(" Some spectrum matches are missing ! Execute Generate Spectrum Matches first !")
+    }
+
     return apply(IdentWithSpectrumDataSet( rsm, sharedPepMatchIds.toSet.toArray, spectrumByPepMathID, spectrumMatchesByPeptMatchId, mqPepByPepId ), viewSetName, viewSetTemplate, null)
 
   }
