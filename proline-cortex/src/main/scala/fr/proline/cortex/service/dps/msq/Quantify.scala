@@ -79,6 +79,9 @@ class Quantify extends AbstractRemoteProcessingService with IQuantifyService wit
         quantConfigAsMap = quantConfigAsMap
       )
       quantifier.run()
+      
+      // Run the garbage collector
+      System.gc()
 
       quantiId = quantifier.getQuantitationId
 
