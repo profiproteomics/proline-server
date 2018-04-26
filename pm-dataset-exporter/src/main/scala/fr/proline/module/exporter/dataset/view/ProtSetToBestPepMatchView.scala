@@ -59,21 +59,18 @@ class ProtSetToBestPepMatchView(
           
           val peptideId = pepInst.peptide.id
           val bestPepMatch = pepInst.peptideMatches.maxBy(_.score)
+          val mqPepOpt = Option(quantDs).flatMap( _.mqPepByPepId.get(peptideId) )
 
-          val pepMatchBuildingCtx = new PepMatchBuildingContext(
-            pepMatch = bestPepMatch,
-            isInSubset = false,
-            protMatch = reprProtMatch,
-            seqMatch = seqMatch,
-            protMatchBuildingCtx = Some(protMatchBuildingCtx)
-          )
-          
-          val buildingContext = if (!isQuantDs) pepMatchBuildingCtx
-          else {
-            val mqPepOpt = quantDs.mqPepByPepId.get(peptideId)
-            
-            if (mqPepOpt.isEmpty) pepMatchBuildingCtx
-            else {
+          val buildingContext =  { if (!isQuantDs || mqPepOpt.isEmpty) {
+            new PepMatchBuildingContext(
+              pepMatch = bestPepMatch,
+              isInSubset = false,
+              protMatch = reprProtMatch,
+              seqMatch = seqMatch,
+              protMatchBuildingCtx = Some(protMatchBuildingCtx)
+            )
+
+          } else {
               new MasterQuantPeptideBuildingContext(
                 pepMatch = bestPepMatch,
                 protMatch = reprProtMatch,
