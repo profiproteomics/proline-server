@@ -150,6 +150,13 @@ trait IImportResultFilesServiceParams {
     val description = "The id of the project used for data importation."
     val scalaType = typeOf[Long]
   }
+  object FRAGMENTATION_RULE_SET_ID_PARAM extends JSONRPC2DefaultMethodParameter {
+    val name = "fragmentation_rule_set_id"
+    val description = "The id in the datastore of the fragmentation rule set used for result file acquisition."
+    val scalaType = typeOf[Long]
+    optional = true
+  }
+
 
 }
 
@@ -174,7 +181,8 @@ trait IImportResultFilesServiceV1_0 extends IImportResultFilesService with IDefa
       INSTRUMENT_CONFIG_ID_PARAM,
       PEAKLIST_SOFTWARE_ID_PARAM,
       SAVE_SPECTRUM_MATCHES_PARAM,
-      IMPORTER_PROPERTIES_PARAM
+      IMPORTER_PROPERTIES_PARAM,
+      FRAGMENTATION_RULE_SET_ID_PARAM
     )
     val returns = JSONRPC2MethodResult(
       // TODO: create a case class for these parameters
@@ -211,7 +219,8 @@ trait IImportResultFilesServiceV2_0 extends IImportResultFilesService {
       INSTRUMENT_CONFIG_ID_PARAM,
       PEAKLIST_SOFTWARE_ID_PARAM,
       SAVE_SPECTRUM_MATCHES_PARAM,
-      IMPORTER_PROPERTIES_PARAM
+      IMPORTER_PROPERTIES_PARAM,
+      FRAGMENTATION_RULE_SET_ID_PARAM
     )
     val returns = JSONRPC2MethodResult(
       // TODO: create a case class for these parameters
@@ -227,3 +236,43 @@ trait IImportResultFilesServiceV2_0 extends IImportResultFilesService {
   }
 }
 
+//
+//object ImportResultFilesServiceV3_0 extends IImportResultFilesServiceV3_0
+//
+//trait IImportResultFilesServiceV3_0 extends IImportResultFilesService  {
+//
+//  val serviceVersion = "3.0"
+//
+//  // List the handled methods
+//  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+//
+//
+//  object PROCESS_METHOD extends JSONRPC2DefaultMethod with IImportResultFilesServiceParams {
+//
+//    // Method description
+//    val name = RemoteServiceIdentity.PROCESS_METHOD_NAME
+//    val description = "Import a result file in the MSIdb corresponding to the provided project id."
+//
+//    // Configure method interface
+//    val parameters = List(
+//      IMPORT_PROJECT_ID_PARAM,
+//      RESULT_FILES_PARAM_V1_0,
+//      INSTRUMENT_CONFIG_ID_PARAM,
+//      PEAKLIST_SOFTWARE_ID_PARAM,
+//      FRAGMENTATION_RULE_SET_ID_PARAM,
+//      SAVE_SPECTRUM_MATCHES_PARAM,
+//      IMPORTER_PROPERTIES_PARAM
+//    )
+//    object RESULT_FILES_PARAM_V1_0 extends JSONRPC2DefaultMethodParameter {
+//      val name = "result_files"
+//      val description = "The list of the result files to be imported."
+//      val scalaType = typeOf[Array[ResultFileDescriptorsDecoyRegExp]]
+//    }
+//    val returns = JSONRPC2MethodResult(
+//      // TODO: create a case class for these parameters
+//      typeOf[Array[ImportedResultFile]],
+//      "List of ImportedResultFile: path of imported file and id of created target RS."
+//    )
+//
+//  }
+//}

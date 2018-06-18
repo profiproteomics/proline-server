@@ -91,7 +91,8 @@ trait IImportMaxQuantResultsServiceV2 extends IMsiService  {
       PROJECT_ID_PARAM,
       RESULT_FILES_DIR_PARAM,
       INSTRUMENT_CONFIG_ID_PARAM,
-
+      FRAGMENTATION_RULE_SET_ID_PARAM,
+      ACCESSION_REGEXP_PARAM,
       IMPORT_QUANT_RESULTS_PARAM
     )
     val returns = JSONRPC2MethodResult(
@@ -131,7 +132,12 @@ trait IImportMaxQuantResultsServiceV2 extends IMsiService  {
       val scalaType = typeOf[Boolean]
       optional = true
     }
+    object FRAGMENTATION_RULE_SET_ID_PARAM extends JSONRPC2DefaultMethodParameter {
+      val name = "fragmentation_rule_set_id"
+      val description = "The id in the datastore of the fragmentation rule set used for result file acquisition."
+      val scalaType = typeOf[Long]
+      optional = true
+    }
 
   }
 }
-
