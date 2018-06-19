@@ -1,6 +1,5 @@
 package fr.proline.cortex.api.service.dps.msq
 
-import scala.reflect.runtime.universe
 import scala.reflect.runtime.universe.typeOf
 
 import fr.proline.jms.service.api.IDefaultServiceVersion

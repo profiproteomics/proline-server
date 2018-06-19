@@ -1,6 +1,5 @@
 package fr.proline.cortex.api.service.dps.msi
 
-import scala.reflect.runtime.universe
 import scala.reflect.runtime.universe.typeOf
 
 import fr.proline.jms.service.api.IDefaultServiceVersion
@@ -95,6 +94,7 @@ trait IImportMaxQuantResultsServiceV2 extends IMsiService  {
       ACCESSION_REGEXP_PARAM,
       IMPORT_QUANT_RESULTS_PARAM
     )
+
     val returns = JSONRPC2MethodResult(
       // TODO: create a case class for these parameters
       typeOf[Map[String, Any]],
