@@ -73,12 +73,14 @@ public class FastaSource implements DataSource {
 		return result;
 	}
 
-	public Map<SEDbIdentifierWrapper, String> retrieveSequences(final Map<String, List<SEDbIdentifierWrapper>> identByValues) throws IOException {
+	public Map<SEDbIdentifierWrapper, String> retrieveSequences(
+			final Map<String, List<SEDbIdentifierWrapper>> identByValues) throws IOException {
 		return parseFile(identByValues);
 	}
 
 	/* Private methods */
-	private Map<SEDbIdentifierWrapper, String> parseFile(final Map<String, List<SEDbIdentifierWrapper>> identByValues) throws IOException {
+	private Map<SEDbIdentifierWrapper, String> parseFile(final Map<String, List<SEDbIdentifierWrapper>> identByValues)
+			throws IOException {
 
 		final String fastaAbsolutePathname = m_fastaFile.getAbsolutePath();
 		final Map<SEDbIdentifierWrapper, String> foundSequences = new HashMap<>();
@@ -99,9 +101,9 @@ public class FastaSource implements DataSource {
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug(
-					"Reading [{}] Searching {} distinct SEDbIdentifier.values with \"{}\" SEDbIdent and {} RepositoryIdent Regex",
-					fastaAbsolutePathname, nIdentValues, m_seDbIdentPattern.pattern(),
-					(m_repositoryIdentPattern == null) ? "NO" : '\"' + m_repositoryIdentPattern.pattern() + '\"');
+						"Reading [{}] Searching {} distinct SEDbIdentifier.values with \"{}\" SEDbIdent and {} RepositoryIdent Regex",
+						fastaAbsolutePathname, nIdentValues, m_seDbIdentPattern.pattern(),
+						(m_repositoryIdentPattern == null) ? "NO" : '\"' + m_repositoryIdentPattern.pattern() + '\"');
 			}
 
 			final long start = System.currentTimeMillis();
@@ -116,8 +118,11 @@ public class FastaSource implements DataSource {
 						/* Fasta header */
 
 						if (readingSEDbIdentifier != null) {
-							addSequence(readingSEDbIdentifier, sequenceBuilder, foundSequences, remainingSEDbIdentifiers);
-							readingSEDbIdentifier = null;// Reset current readingSeDbIdentifier and sequence
+							addSequence(readingSEDbIdentifier, sequenceBuilder, foundSequences,
+									remainingSEDbIdentifiers);
+							readingSEDbIdentifier = null;// Reset current
+															// readingSeDbIdentifier
+															// and sequence
 							sequenceBuilder = null;
 						}
 
@@ -138,7 +143,9 @@ public class FastaSource implements DataSource {
 					} else {
 						/* Continuing sequence */
 
-						if (sequenceBuilder != null) {// Reading readingSEDbIdentifier sequence
+						if (sequenceBuilder != null) {// Reading
+														// readingSEDbIdentifier
+														// sequence
 							sequenceBuilder.append(trimmedLine);
 						}
 
@@ -161,13 +168,13 @@ public class FastaSource implements DataSource {
 			final long duration = end - start;
 
 			final String message = String.format(
-				"[%s] %d lines parsed in %d ms (%,.1f lines/s) found %d sequences on %d",
-				fastaAbsolutePathname, lineIndex, duration, ((double) (lineIndex * 1000)) / duration,
-				foundSequences.size(), nIdentValues);
+					"[%s] %d lines parsed in %d ms (%,.1f lines/s) found %d sequences on %d", fastaAbsolutePathname,
+					lineIndex, duration, ((double) (lineIndex * 1000)) / duration, foundSequences.size(), nIdentValues);
 			LOG.info(message);
-//		} catch (Exception ex) {
-//			LOG.error(String.format("Error reading [%s] current line index: %d", fastaAbsolutePathname,
-//				lineIndex), ex);
+			// } catch (Exception ex) {
+			// LOG.error(String.format("Error reading [%s] current line index:
+			// %d", fastaAbsolutePathname,
+			// lineIndex), ex);
 		} finally {
 
 			if (br != null) {
@@ -183,15 +190,17 @@ public class FastaSource implements DataSource {
 		return foundSequences;
 	}
 
-	private static void addSequence(
-		final SEDbIdentifierWrapper readingSEDbIdentifier,
-		final StringBuilder sequenceBuilder,
-		final Map<SEDbIdentifierWrapper, String> foundSequences,
-		final Map<String, List<SEDbIdentifierWrapper>> remainingSEDbIdentifiers) {
+	private static void addSequence(final SEDbIdentifierWrapper readingSEDbIdentifier,
+			final StringBuilder sequenceBuilder, final Map<SEDbIdentifierWrapper, String> foundSequences,
+			final Map<String, List<SEDbIdentifierWrapper>> remainingSEDbIdentifiers) {
 
 		final String identValue = readingSEDbIdentifier.getValue();
 		String normalizedSequence = sequenceBuilder.toString().toUpperCase();
-
+		/* Remove eventual white spaces */
+		if (normalizedSequence.contains(" ")) {
+			LOG.info("White spaces will be replaced by '' in the Sequence.");
+			normalizedSequence = normalizedSequence.replaceAll("\\s+", "");
+		}
 		/* Remove potential '*' char (translation stop marker) */
 		final int starIndex = normalizedSequence.indexOf('*');
 		if (starIndex != -1) {
@@ -200,7 +209,6 @@ public class FastaSource implements DataSource {
 
 		if (PeptideUtils.checkSequence(normalizedSequence)) {
 			foundSequences.put(readingSEDbIdentifier, normalizedSequence);
-
 			remainingSEDbIdentifiers.remove(identValue);
 		} else {
 			LOG.warn("Invalid Sequence for [{}] :\n{}", identValue, normalizedSequence);
@@ -208,28 +216,29 @@ public class FastaSource implements DataSource {
 
 	}
 
-	private SEDbIdentifierWrapper checkHeader(
-		final String header,
-		final Map<String, List<SEDbIdentifierWrapper>> remainingSEDbIdentifiers) {
-		
+	private SEDbIdentifierWrapper checkHeader(final String header,
+			final Map<String, List<SEDbIdentifierWrapper>> remainingSEDbIdentifiers) {
+
 		SEDbIdentifierWrapper foundSEDbIdent = null;
-		String missedDescription=null;
+		String missedDescription = null;
 		final Matcher matcher = m_seDbIdentPattern.matcher(header);
-		
+
 		if (matcher.find()) {
 
 			if (matcher.groupCount() < 1) {
 				throw new IllegalArgumentException("Invalid SEDbIdentifier Regex");
 			}
 
-			final String identValue = matcher.group(1).trim();// SEDbIdentifier value should be trimmed
-			
-			if((header!=null)&&(!header.isEmpty())&&(header.trim().length()>identValue.trim().length())){
-				missedDescription=header.substring(identValue.length()+1,header.length());
+			final String identValue = matcher.group(1).trim();// SEDbIdentifier
+																// value should
+																// be trimmed
+
+			if ((header != null) && (!header.isEmpty()) && (header.trim().length() > identValue.trim().length())) {
+				missedDescription = header.substring(identValue.length() + 1, header.length());
 			}
 			final List<SEDbIdentifierWrapper> possibleIdentifiers = remainingSEDbIdentifiers.get(identValue);
 			if ((possibleIdentifiers != null) && !possibleIdentifiers.isEmpty()) {
-				
+
 				for (final SEDbIdentifierWrapper sdi : possibleIdentifiers) {
 					final String description = sdi.getDescription();
 					if ((description != null) && header.contains(description)) {
@@ -246,21 +255,26 @@ public class FastaSource implements DataSource {
 					for (final SEDbIdentifierWrapper sdi : possibleIdentifiers) {
 
 						if (sdi.getDescription() == null) {
-							/* Retrieve first SEDbIdentWrapper without description */
-							if((missedDescription!=null)&&(!missedDescription.isEmpty())){
-								foundSEDbIdent = new SEDbIdentifierWrapper(identValue,missedDescription);
-							}else{
-							foundSEDbIdent = sdi;
-							final int nPossibleIdentifiers = possibleIdentifiers.size();
-							if (nPossibleIdentifiers > 1) {
-								foundSEDbIdent.setInferred(true);
-								LOG.debug(
-									"There are {} SEDbIdentWrapper (inferred) for [{}] taking first with no description",
-									nPossibleIdentifiers, identValue);
-							}}
+							/*
+							 * Retrieve first SEDbIdentWrapper without
+							 * description
+							 */
+							if ((missedDescription != null) && (!missedDescription.isEmpty())) {
+								foundSEDbIdent = new SEDbIdentifierWrapper(identValue, missedDescription);
+							} else {
+								foundSEDbIdent = sdi;
+								final int nPossibleIdentifiers = possibleIdentifiers.size();
+								if (nPossibleIdentifiers > 1) {
+									foundSEDbIdent.setInferred(true);
+									LOG.debug(
+											"There are {} SEDbIdentWrapper (inferred) for [{}] taking first with no description",
+											nPossibleIdentifiers, identValue);
+								}
+							}
 
 							break;
-						} // End if (current SEDbIdentWrapper description is null)
+						} // End if (current SEDbIdentWrapper description is
+							// null)
 
 					} // End second loop for each possibleIdentifiers
 
@@ -273,8 +287,7 @@ public class FastaSource implements DataSource {
 					messageBuilder.append("] taking first SEDbIdentWrapper (inferred)");
 					messageBuilder.append(LINE_SEPARATOR);
 
-					messageBuilder
-							.append("Parsed FASTA Header, then expected SEDbIdentWrapper descriptions :");
+					messageBuilder.append("Parsed FASTA Header, then expected SEDbIdentWrapper descriptions :");
 					messageBuilder.append(LINE_SEPARATOR);
 
 					messageBuilder.append(header);
