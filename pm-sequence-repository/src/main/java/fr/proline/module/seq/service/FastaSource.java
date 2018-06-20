@@ -196,9 +196,9 @@ public class FastaSource implements DataSource {
 
 		final String identValue = readingSEDbIdentifier.getValue();
 		String normalizedSequence = sequenceBuilder.toString().toUpperCase();
-		/* Remove eventual white spaces */
+		/* Remove eventual white spaces from the sequence */
 		if (normalizedSequence.contains(" ")) {
-			LOG.info("White spaces will be replaced by '' in the Sequence.");
+			LOG.info("White spaces will be replaced by '' in the Sequence for [{}].",identValue);
 			normalizedSequence = normalizedSequence.replaceAll("\\s+", "");
 		}
 		/* Remove potential '*' char (translation stop marker) */
