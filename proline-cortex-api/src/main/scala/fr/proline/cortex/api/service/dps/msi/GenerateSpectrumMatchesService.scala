@@ -71,6 +71,12 @@ trait IGenerateSpectrumMatchesService extends IMsiService with IDefaultServiceVe
       val scalaType = typeOf[Array[Long]]
       optional = true
     }
+    object FRAGMENTATION_RULE_SET_ID_PARAM extends JSONRPC2DefaultMethodParameter {
+      val name = "fragmentation_rule_set_id"
+      val description = "The id in the datastore of the fragmentation rule set used to generate spectrum matches, if different from result set settings."
+      val scalaType = typeOf[Long]
+      optional = true
+    }
   }
 }
 
