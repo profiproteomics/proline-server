@@ -196,7 +196,7 @@ public class FastaSource implements DataSource {
 
 		final String identValue = readingSEDbIdentifier.getValue();
 		String normalizedSequence = sequenceBuilder.toString().toUpperCase();
-		/* Remove eventual white spaces from the sequence */
+		/* Remove white spaces from sequence */
 		if (normalizedSequence.contains(" ")) {
 			LOG.info("White spaces will be replaced by '' in the Sequence for [{}].",identValue);
 			normalizedSequence = normalizedSequence.replaceAll("\\s+", "");
@@ -209,6 +209,7 @@ public class FastaSource implements DataSource {
 
 		if (PeptideUtils.checkSequence(normalizedSequence)) {
 			foundSequences.put(readingSEDbIdentifier, normalizedSequence);
+
 			remainingSEDbIdentifiers.remove(identValue);
 		} else {
 			LOG.warn("Invalid Sequence for [{}] :\n{}", identValue, normalizedSequence);
