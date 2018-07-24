@@ -42,7 +42,8 @@ trait IGenerateSpectrumMatchesService extends IMsiService with IDefaultServiceVe
       RESULT_SET_ID_PARAM,
       RESULT_SUMMARY_ID_PARAM,
       PEPTIDE_MATCH_IDS_PARAM,
-      FORCE_INSERT_PARAM
+      FORCE_INSERT_PARAM,
+      FRAGMENTATION_RULE_SET_ID_PARAM
     )
     val returns = JSONRPC2MethodResult(
       typeOf[Boolean],
