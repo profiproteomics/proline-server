@@ -10,15 +10,20 @@ import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
 import fr.profi.util.jsonrpc.JSONRPC2MethodResult
 
 
-object QuantifyService extends IQuantifyService
-
-trait IQuantifyService extends IMsqService with IDefaultServiceVersion {
-
+trait IAbstractQuantifyService extends IMsqService {
   /* JMS Service identification */
   val serviceLabel = "Quantify"
   this.serviceDescription = Some(
     "Creates a new quantitation and perform the corresponding data analysis."
   )
+
+}
+
+object QuantifyService extends IQuantifyService //VDS : utile ?
+
+trait IQuantifyService extends IAbstractQuantifyService with IDefaultServiceVersion {
+
+  /* JMS Service identification */
 
   // List the handled methods
   val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
@@ -74,5 +79,10 @@ trait IQuantifyService extends IMsqService with IDefaultServiceVersion {
       val scalaType = typeOf[Map[String, Any]]
     }
   }
+}
+
+trait IQuantifyServiceV3 extends IQuantifyService  {
+  override val serviceVersion = "3.0"
+  override val isDefaultVersion = false
 }
 
