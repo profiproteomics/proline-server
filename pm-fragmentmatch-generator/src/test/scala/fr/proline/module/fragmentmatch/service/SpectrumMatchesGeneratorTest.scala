@@ -1,31 +1,32 @@
 package fr.proline.module.fragmentmatch.service
 
-import org.junit.After
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
-import org.junit.Before
-import org.junit.Test
+import java.sql.Connection
+
 import com.typesafe.scalalogging.StrictLogging
+import fr.profi.util.serialization.CustomDoubleJacksonSerializer
+import fr.profi.util.serialization.ProfiJSMSerialization
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
+import fr.proline.core.dal.BuildMsiDbConnectionContext
+import fr.proline.core.dal.BuildUdsDbConnectionContext
+import fr.proline.core.om.model.msi.SpectrumMatch
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.repository.DriverType
-import scala.collection.mutable.ArrayBuffer
 import fr.proline.repository.util.JDBCWork
-import java.sql.Connection
-import fr.profi.util.serialization.ProfiJSMSerialization
-import fr.profi.util.serialization.CustomDoubleJacksonSerializer
-import fr.proline.core.om.model.msi.SpectrumMatch
-import fr.proline.core.dal.BuildUdsDbConnectionContext
-import fr.proline.core.dal.BuildDbConnectionContext
-import fr.proline.core.dal.BuildMsiDbConnectionContext
+import org.junit.After
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
+import org.junit.Before
+import org.junit.Test
+
+import scala.collection.mutable.ArrayBuffer
 
 class SpectrumMatchesGeneratorTest extends AbstractMultipleDBTestCase with StrictLogging {
 
@@ -35,29 +36,27 @@ class SpectrumMatchesGeneratorTest extends AbstractMultipleDBTestCase with Stric
   val targetRSId = 2
   val decoyRSId = Option.empty[Int]
 
-  var executionContext: IExecutionContext = null
-  var rsProvider: IResultSetProvider = null
+  var executionContext: IExecutionContext = _
+  var rsProvider: IResultSetProvider = _
 
-  protected var generatorService : SpectrumMatchesGenerator = null
+  
+  protected var generatorService : SpectrumMatchesGenerator = _
 
   @Before
   @throws(classOf[Exception])
-  def setUp() = {
+  def setUp(): Unit = {
 
     logger.info("Initializing DBs")
     super.initDBsDBManagement(driverType)
-
+    
     //Load Data
-    pdiDBTestCase.loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml")
-    psDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/ps-db.xml")    
     msiDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/msi-db.xml")
     udsDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/uds-db.xml")
 
-    logger.info("PDI, PS, MSI and UDS dbs succesfully initialized !")
+    logger.info(" MSI and UDS dbs succesfully initialized !")
 
-    val (execContext, rsProv) = buildSQLContext()
-    executionContext = execContext
-    generatorService = new SpectrumMatchesGenerator(executionContext, targetRSId, None, None, true)
+    executionContext = buildSQLContext()
+    generatorService = new SpectrumMatchesGenerator(executionContext, targetRSId, None, None, None, true)
   }
 
   @After
@@ -66,27 +65,23 @@ class SpectrumMatchesGeneratorTest extends AbstractMultipleDBTestCase with Stric
     super.tearDown()
   }
 
-  def buildSQLContext() = {
-    val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
-    val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
-    val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
-    val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
+  def buildSQLContext(): IExecutionContext = {
+    val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector(), useJPA = false)
+    val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), useJPA = false)
+    val executionContext = PeptideCacheExecutionContext(new BasicExecutionContext(1, udsDbCtx,  msiDbCtx, null))
     val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
-    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx))
-    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx))
+    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(PeptideCacheExecutionContext(executionContext)))
+    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(msiDbCtx))
 
-    val rsProvider = new SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
-
-    (parserContext, rsProvider)
+   parserContext
   }
 
   @Test
-  def testGenerateSpectrumMatch() = {
+  def testGenerateSpectrumMatch(): Unit = {
     try {
-      generatorService = new SpectrumMatchesGenerator(executionContext, targetRSId, None, None, false)
-      val result = generatorService.runService
+      generatorService = new SpectrumMatchesGenerator(executionContext, targetRSId, None, None, None, false)
+      val result = generatorService.runService()
       assertTrue(result)
 
       //Read Back Spectrum info
@@ -111,7 +106,7 @@ class SpectrumMatchesGeneratorTest extends AbstractMultipleDBTestCase with Stric
 	        }
 	        
 	        
-	      	var query2 = "SELECT clob_data FROM object_tree WHERE id = " + associatedObjectTreeId + " ; "
+	      	val query2 = "SELECT clob_data FROM object_tree WHERE id = " + associatedObjectTreeId + " ; "
 			val stmt2 = con.createStatement()
 			val sqlResultSet2 = stmt2.executeQuery(query2)
 			if (sqlResultSet2.next) {
@@ -123,7 +118,7 @@ class SpectrumMatchesGeneratorTest extends AbstractMultipleDBTestCase with Stric
 	      }
       } // End of jdbcWork anonymous inner class
       
-      executionContext.getMSIDbConnectionContext().doWork(getExistingMatchesWork, false)
+      executionContext.getMSIDbConnectionContext.doWork(getExistingMatchesWork, false)
       this.logger.debug(" ------ RESULt BEFORE Serialisation  => "+spectrumAsString)
       val resultSpMa =CustomSerializer.deserialize[SpectrumMatch](spectrumAsString)    		  
       this.logger.info(" ---------  RESULt AFTER Serialisation  => "+resultSpMa.fragMatches)
@@ -132,7 +127,7 @@ class SpectrumMatchesGeneratorTest extends AbstractMultipleDBTestCase with Stric
 
       case ex: Exception => {
 
-        val msg = if (ex.getCause() != null) { "Error running Spectrum Matches Generator " + ex.getCause().getMessage() } else { "Error running Spectrum Matches Generator " + ex.getMessage() }
+        val msg = if (ex.getCause != null) { "Error running Spectrum Matches Generator " + ex.getCause.getMessage } else { "Error running Spectrum Matches Generator " + ex.getMessage }
         fail(msg)
 
       }
@@ -140,54 +135,50 @@ class SpectrumMatchesGeneratorTest extends AbstractMultipleDBTestCase with Stric
   }
   
     @Test
-  def testGenerateExistingSpectrumMatch() = {
+  def testGenerateExistingSpectrumMatch(): Unit = {
     try {
       
       val pepMIds = new ArrayBuffer[Long]()
       pepMIds += 348L
       
-      generatorService = new SpectrumMatchesGenerator(executionContext, targetRSId, None, Some(pepMIds.toArray), false)
-      val result = generatorService.runService
+      generatorService = new SpectrumMatchesGenerator(executionContext, targetRSId, None, Some(pepMIds.toArray), None, false)
+      val result = generatorService.runService()
       assertTrue(result)
       
-      generatorService = new SpectrumMatchesGenerator(executionContext, targetRSId, None, None, false)
-      val result2 = generatorService.runService
+      generatorService = new SpectrumMatchesGenerator(executionContext, targetRSId, None, None, None, false)
+      val result2 = generatorService.runService()
       assertTrue(result2)
 
     } catch {
 
-      case ex: Exception => {
-
-        val msg = if (ex.getCause() != null) { "Error running Spectrum Matches Generator " + ex.getCause().getMessage() } else { "Error running Spectrum Matches Generator " + ex.getMessage() }
+      case ex: Exception =>
+        val msg = if (ex.getCause != null) { "Error running Spectrum Matches Generator " + ex.getCause.getMessage } else { "Error running Spectrum Matches Generator " + ex.getMessage }
         fail(msg)
 
-      }
     }
-    }
+  }
 
     @Test
-  def testForceGenerateSpectrumMatch() = {
+  def testForceGenerateSpectrumMatch(): Unit = {
     try {
       
       val pepMIds = new ArrayBuffer[Long]()
       pepMIds += 348L
       
-      generatorService = new SpectrumMatchesGenerator(executionContext, targetRSId, None, Some(pepMIds.toArray), false)
-      val result = generatorService.runService
+      generatorService = new SpectrumMatchesGenerator(executionContext, targetRSId, None, Some(pepMIds.toArray), None, false)
+      val result = generatorService.runService()
       assertTrue(result)
       
-      generatorService = new SpectrumMatchesGenerator(executionContext, targetRSId, None, None, true)
-      val result2 = generatorService.runService
+      generatorService = new SpectrumMatchesGenerator(executionContext, targetRSId, None, None, None, true)
+      val result2 = generatorService.runService()
       assertTrue(result2)
 
     } catch {
 
-      case ex: Exception => {
-
-        val msg = if (ex.getCause() != null) { "Error running Spectrum Matches Generator " + ex.getCause().getMessage() } else { "Error running Spectrum Matches Generator " + ex.getMessage() }
+      case ex: Exception =>
+        val msg = if (ex.getCause != null) { "Error running Spectrum Matches Generator " + ex.getCause.getMessage } else { "Error running Spectrum Matches Generator " + ex.getMessage }
         fail(msg)
 
-      }
     }
   }
 
