@@ -1,24 +1,28 @@
 package fr.proline.module.fragmentmatch
 
-import scala.Array.canBuildFrom
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
 import fr.profi.util.MathUtils
+import fr.proline.core.om.model.msi.FragmentationRuleSet
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.Spectrum
-import fr.proline.core.om.model.msi.InstrumentConfig
+import fr.proline.module.fragmentmatch.service.SpectrumMatchesGenerator
 
-class PeptideSpectrumMatcherXtandem(
-  val spectraByIds: Map[Long, Spectrum],
-  val ms2ErrorTol: Double,
-  val ms2ErrorTolUnitStr: String,
-  val instrumentConfig: InstrumentConfig) extends PeptideSpectrumMatcher {
+import scala.Array.canBuildFrom
+import scala.collection.mutable.ArrayBuffer
+
+case class PeptideSpectrumMatcherXtandem(
+  spectraByIds: Map[Long, Spectrum],
+  ms2ErrorTol: Double,
+  ms2ErrorTolUnitStr: String,
+  fragmentationRuleSet2Use: Option[FragmentationRuleSet],
+  fragRuleSetSource : FragmentationRuleSetSource.Value) extends PeptideSpectrumMatcher {
 
   logger.debug("Generation of spectrum match(es) for Xtandem data")
-  if(!instrumentConfig.fragmentationRules.isDefined || instrumentConfig.fragmentationRules.get.isEmpty) {
-    logger.warn("No fragmentation rules found for instrument '"+instrumentConfig.name+"', only 'b' and 'y' ion series will be considered")
-  }
+  if(fragRuleSetSource.equals(FragmentationRuleSetSource.DEFAULT))
+    logger.warn("Default fragmentation rules will be used : "+SpectrumMatchesGenerator.DEFAULT_FRS_NAME)
+  if(fragRuleSetSource.equals(FragmentationRuleSetSource.NONE))
+    logger.warn("No fragmentation rules defined, only 'b' and 'y' ion series will be considered")
+
   
   def getUsedPeaks(peptideMatch: PeptideMatch): Array[Peak] = {
     val spectrum = spectraByIds(peptideMatch.getMs2Query.spectrumId)
@@ -49,30 +53,16 @@ class PeptideSpectrumMatcherXtandem(
   }
 
   def getFragmentIonTypes(peptideMatch: PeptideMatch, charge: Int): FragmentIons = {
-    if(instrumentConfig.fragmentationRules.isDefined && !instrumentConfig.fragmentationRules.get.isEmpty) {
+    if(!fragRuleSetSource.equals(FragmentationRuleSetSource.NONE) ) {
       val currentFragmentIonTypes = new FragmentIons()
-	  instrumentConfig.fragmentationRules.get.foreach(fr => currentFragmentIonTypes.setIonTypeAndCharge(xtandemFragmentationSeries(fr.description), charge))
-	  currentFragmentIonTypes
+      fragmentationRuleSet2Use.get.fragmentationRules.foreach(fr => currentFragmentIonTypes.setIonTypeAndCharge(convertFragmentationSeries(fr.description), charge))
+	    currentFragmentIonTypes
     } else {
       new FragmentIons(ionTypeB = true, ionTypeY = true, chargeForIonsB = charge, chargeForIonsY = charge)
     }
   }
   
-  private def xtandemFragmentationSeries(serie: String): String = {
-    // all possible series : a ; a-NH3 ; a-H2O ; b ; b-NH3 ; b-H2O ; c ; d ; v ; w ; x ; y ; y-NH3 ; y-H2O ; z ; z+1 ; z+2 ; ya ; yb ; immonium
-    // series not considered so far : d ; v ; w ; ya ; yb ; immonium
-    if(Array("a", "a-NH3", "a-H2O").contains(serie)) return "a"
-    else if(Array("b", "b-NH3", "b-H2O").contains(serie)) return "b"
-    else if(Array("y", "y-NH3", "y-H2O").contains(serie)) return "y"
-    else if(Array("c").contains(serie)) return "c"
-    else if(Array("x").contains(serie)) return "x"
-    else if(Array("z", "z+1", "z+2").contains(serie)) return "z"
-    else {
-      logger.info("Ion serie ["+serie+"] not considered")
-      return ""
-    }
-  }
-  
+
   private def xtandemLikePeaksSelection(peptideMatch: PeptideMatch, allPeaks: Array[Peak], usedPeaksCount: Int): Array[Peak] = {
     
     var usedPeaks = new ArrayBuffer[Peak](usedPeaksCount + 2)
@@ -168,5 +158,4 @@ class PeptideSpectrumMatcherXtandem(
 //    usedPeaks.filter(p => (p.moz > 0.0 && p.moz < Double.MaxValue))
     usedPeaks.toArray
   }
-
 }
