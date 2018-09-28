@@ -35,8 +35,7 @@ class XtandemRFImporterTest extends AbstractMultipleDBTestCase {
 //VDS Still needed    SQLPeptideProvider.clear() // Clear peptide cache between tests
 
     //Load Data
-    pdiDBTestCase.loadDataSet("/default_datasets/Proteins_Dataset.xml")
-    msiDBTestCase.loadDataSet("/default_datasets/Init_Dataset.xml")
+     msiDBTestCase.loadDataSet("/default_datasets/Init_Dataset.xml")
     udsDBTestCase.loadDataSet("/default_datasets/UDS_Simple_Dataset.xml")
     logger.info("Dbs succesfully initialized")
 
@@ -44,7 +43,7 @@ class XtandemRFImporterTest extends AbstractMultipleDBTestCase {
 
   def buildJPAContext() = {
     val executionContext = BuildLazyExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
-    val rsProvider = new ORMResultSetProvider(executionContext.getMSIDbConnectionContext, executionContext.getPDIDbConnectionContext)
+    val rsProvider = new ORMResultSetProvider(executionContext.getMSIDbConnectionContext)
     parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
     assertNotNull(parserContext)
     (executionContext, rsProvider)

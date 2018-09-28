@@ -2,10 +2,12 @@ package fr.proline.module.parser.xtandem
 
 import java.io.File
 import java.util.Date
+
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.chemistry.model.Enzyme
+import fr.proline.core.om.model.msi.FragmentationRuleSet
 import fr.proline.core.om.model.msi.InstrumentConfig
 import fr.proline.core.om.model.msi.MSISearch
 import fr.proline.core.om.model.msi.MSMSSearchSettings
@@ -19,16 +21,19 @@ import fr.proline.core.om.model.msi.XTandemImportProperties
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
+import fr.proline.core.om.provider.msi.SeqDbEmptyFakeProvider
 
 object XtandemSettings {
   def getFastaFile(value: String): File = new File(value.replaceAll(".pro$", "")) // xtandem may append ".pro" to a fasta file
 }
 
 case class XtandemSettings(resultBioml: XTBioml, parserContext: ProviderDecoratedExecutionContext, 
-    instrumentConfig: Option[InstrumentConfig] = None, peaklistSoftware: Option[PeaklistSoftware] = None) extends LazyLogging {
-  
+    instrumentConfig: Option[InstrumentConfig] = None,  fragmentationRuleSetOpt : Option[FragmentationRuleSet] = None, peaklistSoftware: Option[PeaklistSoftware] = None) extends LazyLogging {
+
+  //TODO : Verify if specified FragmentationRuleSet corresponds to XTandem parameters !
+
   private lazy val ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
-  private lazy val seqDbProvider = parserContext.getProvider(classOf[ISeqDatabaseProvider])
+  private lazy val seqDbProvider = if(parserContext.hasProvider(classOf[ISeqDatabaseProvider])) parserContext.getProvider(classOf[ISeqDatabaseProvider]) else SeqDbEmptyFakeProvider
   
   private lazy val settings: Map[String, String] = {
     val _settings = new HashMap[String, String]
@@ -145,7 +150,8 @@ case class XtandemSettings(resultBioml: XTBioml, parserContext: ProviderDecorate
         variablePtmDefs = variablePtmDefs,
         fixedPtmDefs = fixedPtmDefs,
         seqDatabases = fastaFiles.toArray,
-        instrumentConfig = instrumentConfig.getOrElse(null), // not available at this moment
+        instrumentConfig = instrumentConfig.getOrElse(null), // specified by caller  - not available at this moment
+        fragmentationRuleSet = fragmentationRuleSetOpt, // specified by caller. TODO read it from parameters ?
         msmsSearchSettings = Some(
           new MSMSSearchSettings(
             ms2ChargeStates = ms1ChargeStates, // not an actual setting, using MS1 value instead

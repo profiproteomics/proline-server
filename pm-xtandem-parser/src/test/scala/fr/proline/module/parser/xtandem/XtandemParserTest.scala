@@ -44,13 +44,11 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
   def initabu() {
     try {
     super.initDBsDBManagement(driverType)
-    pdiDBTestCase.loadDataSet("/default_datasets/Proteins_Dataset.xml")
     msiDBTestCase.loadDataSet("/default_datasets/Init_Dataset.xml")
     udsDBTestCase.loadDataSet("/default_datasets/UDS_Simple_Dataset.xml")
     val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, true) // default: false
-    val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true) // default: true
     val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), true) // default: false
-    val executionContext = new BasicExecutionContext(1, udsDbCtx, pdiDbCtx, msiDbCtx, null)
+    val executionContext = new BasicExecutionContext(1, udsDbCtx, msiDbCtx, null)
     parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
     assertNotNull(parserContext)
     }  catch {
@@ -67,20 +65,17 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
 
     //Load Data
     logger.info("Initializing Dbs")
-//    psDBTestCase.loadDataSet("/default_datasets/Unimod_Dataset.xml")
-    pdiDBTestCase.loadDataSet("/default_datasets/Proteins_Dataset.xml")
     msiDBTestCase.loadDataSet("/default_datasets/Init_Dataset.xml")
 
-    logger.info("PS, PDI and MSI dbs succesfully initialized")
+    logger.info(" MSI dbs succesfully initialized")
 
     udsDBTestCase.loadDataSet("/default_datasets/UDS_Simple_Dataset.xml")
     logger.info("UDS db succesfully initialized")
 
     val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, true) // default: false
-    val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true) // default: true
     val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), true) // default: false
 
-    val executionContext = new BasicExecutionContext(1, udsDbCtx, pdiDbCtx, msiDbCtx, null)
+    val executionContext = new BasicExecutionContext(1, udsDbCtx, msiDbCtx, null)
 
     parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
