@@ -13,7 +13,6 @@ import fr.profi.util.primitives.toIntOrZero
 import fr.proline.core.algo.msi.validation.MascotValidationHelper
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
 import matrix_science.msparser.ms_mascotresfile
 import matrix_science.msparser.ms_mascotresults
 import matrix_science.msparser.ms_peptidesummary
@@ -50,6 +49,7 @@ class MascotResultFile(
 ) extends IResultFile with StrictLogging {
 
   val LOG_SPECTRA_COUNT = 4000 // Print a log for each created spectrum
+
   //Cache for value to be keep between load and get methods
   var _targetResultSetOp : Option[ResultSet] = None
   var _decoyResultSetOp : Option[ResultSet] = None
@@ -261,8 +261,20 @@ class MascotResultFile(
     for (dbIndex <- 1 until (nbrDBs + 1)) {
       val dbName = searchParams.getDB(dbIndex)
       val filePath = mascotResFile.getFastaPath(dbIndex)
-
-      val seqDbProvider = parserContext.getProvider(classOf[ISeqDatabaseProvider])
+      
+      seqDbs.update(
+        dbIndex - 1,
+        new SeqDatabase(
+          id = SeqDatabase.generateNewId,
+          name = dbName,
+          filePath = filePath,
+          sequencesCount = mascotResFile.getNumSeqs(dbIndex),
+          releaseDate = new java.util.Date
+//            version = version
+        )
+      )
+//VDS TODO : Is this needed ?
+      /*val seqDbProvider = parserContext.getProvider(classOf[ISeqDatabaseProvider])
       var usedSeqSDb = seqDbProvider.getSeqDatabase(dbName, filePath)
 
       logger.debug("Sequence database " + dbIndex + ": " + dbName + ", " + filePath + " found ? = " + usedSeqSDb)
@@ -270,7 +282,7 @@ class MascotResultFile(
         seqDbs.update(dbIndex - 1, usedSeqSDb.get)
       else {
         val msg = "Sequence database used for identification does not exist in Proline datastore...."
-        logger.warn(msg)
+        logger.warn(msg)*/
         
 //        val version = if(filePath.lastIndexOf(dbName) != -1) {         
 //        	var versionBuilder = filePath.substring(filePath.lastIndexOf(dbName)+dbName.length())
@@ -281,19 +293,6 @@ class MascotResultFile(
 //                 
 //			versionBuilder
 //        } else ""
-        
-        seqDbs.update(
-          dbIndex - 1,
-          new SeqDatabase(
-            id = SeqDatabase.generateNewId,
-            name = dbName,
-            filePath = filePath,
-            sequencesCount = mascotResFile.getNumSeqs(dbIndex),
-            releaseDate = new java.util.Date
-//            version = version
-          )
-        )
-      }
     }
 
     //--- 2. Create Enzymes & Search Settings
@@ -319,6 +318,7 @@ class MascotResultFile(
       fixedPtmDefs = ptmHelper.fixedPtmDefsByModName.values.toArray.flatten,
       seqDatabases = seqDbs,
       instrumentConfig = instrumentConfig.orNull,
+      fragmentationRuleSet = fragmentationRuleSet,
       properties = Some(ssProperties)
     )
 
@@ -607,7 +607,7 @@ class MascotResultFile(
     val queryByInitialId = msQueryByInitialId
 
     val peaklistId = peaklist.id
-    val instConfigId = if (instrumentConfig.isDefined) instrumentConfig.get.id else 0
+    val fragRuleSetIdOpt = if (fragmentationRuleSet.isDefined) Some(fragmentationRuleSet.get.id) else None
 
     logger.info("Iterating MSQueries spectra...")
 
@@ -672,7 +672,7 @@ class MascotResultFile(
 
       def parseSectionBufferInParallel() {
         sectionBuffer.par.foreach { section =>
-          val spectrum = section.toSpectrum(queryByInitialId, instConfigId, peaklistId)
+          val spectrum = section.toSpectrum(queryByInitialId, fragRuleSetIdOpt, peaklistId)
           spectrumQueue.put(Some(spectrum))
         }
         sectionBuffer.clear()
@@ -798,7 +798,7 @@ class MascotResultFile(
 
     def toSpectrum(
       queryByInitialId: Map[Int, MsQuery],
-      instrumentConfigId: Long,
+      fragmentationRuleSetIdOpt: Option[Long],
       peaklistId: Long
     ): Spectrum = {
 
@@ -879,7 +879,7 @@ class MascotResultFile(
           mozList = Some(sortedMozList),
           intensityList = Some(sortedIntensityList),
           peaksCount = mozList.length,
-          instrumentConfigId = instrumentConfigId,
+          fragmentationRuleSetId = fragmentationRuleSetIdOpt,
           peaklistId = peaklist.id,
           properties = spectrumPropOpt
         )

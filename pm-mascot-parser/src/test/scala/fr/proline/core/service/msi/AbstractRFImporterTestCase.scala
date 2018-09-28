@@ -1,17 +1,25 @@
 package fr.proline.core.service.msi
 
-import java.sql.{ Connection, SQLException }
-import org.junit.Ignore
-import org.junit.Assert.assertTrue
-import fr.proline.context.{ BasicExecutionContext, DatabaseConnectionContext, IExecutionContext }
-import fr.proline.core.dal._
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.{ IPTMProvider, IPeptideProvider }
-import fr.proline.core.om.provider.msi.impl.{ ORMResultSetProvider, SQLPTMProvider, SQLPeptideProvider, SQLResultSetProvider }
-import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.repository.DriverType
-import javax.persistence.EntityManager
 import java.io.File
+import javax.persistence.EntityManager
+
+import fr.proline.context.BasicExecutionContext
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.context.IExecutionContext
+import fr.proline.core.dal.AbstractMultipleDBTestCase
+import fr.proline.core.dal._
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.provider.msi.IResultSetProvider
+import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
+import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
+import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
+import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import fr.proline.core.om.provider.msi.IPTMProvider
+import fr.proline.core.om.provider.msi.IPeptideProvider
+import fr.proline.repository.DriverType
+import org.junit.Assert.assertTrue
+import org.junit.Ignore
 
 
 @Ignore
@@ -26,58 +34,52 @@ trait AbstractRFImporterTestCase extends AbstractMultipleDBTestCase   {
   this.beforeAllTests()
 
   @throws(classOf[Exception])
-  def setUp() = {
+  def setUp(): Unit = {
     logger.info("Initializing Dbs")
     super.initDBsDBManagement(driverType)
     logger.info("initDBsDBManagement DONE")
 
-
-    //Load Data
-    logger.info("pdiDBTestCase.loadDataSet")
-    pdiDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/Proteins_Dataset.xml")
     logger.info("msiDBTestCase.loadDataSet")
     msiDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/Init_Dataset.xml")
 
-    logger.info("PDI and MSI dbs succesfully initialized")
+    logger.info("MSI db succesfully initialized")
   }
 
 
-  def buildSQLContext() = {
-    val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
-    val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
+  def buildSQLContext(): (IExecutionContext, IResultSetProvider) = {
+    val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector(), useJPA = false)
+    val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), useJPA = false)
 
-    val executionContext = new BasicExecutionContext(1, udsDbCtx, pdiDbCtx,  msiDbCtx, null)
+    val executionContext = PeptideCacheExecutionContext(new BasicExecutionContext(1, udsDbCtx,  msiDbCtx, null))
 
     val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
-    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(msiDbCtx, this.peptideCache))
+    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(PeptideCacheExecutionContext(executionContext)))
     parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(msiDbCtx))
 
-    val rsProvider = new SQLResultSetProvider(msiDbCtx, udsDbCtx, this.peptideCache)
+    val rsProvider = new SQLResultSetProvider(PeptideCacheExecutionContext(executionContext))
 
     (parserContext, rsProvider)
   }
 
-  def buildSQLContextForJPA() = {
-    val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
-    val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(2), false)
+  def buildSQLContextForJPA():(IExecutionContext, IResultSetProvider) = {
+    val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector(), useJPA = false)
+    val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(2), useJPA = false)
 
-    val executionContext = BuildLazyExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
+    val executionContext = BuildLazyExecutionContext(dsConnectorFactoryForTest, 1, useJPA = true) // Full JPA
     val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
-    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(msiDbCtx, this.peptideCache))
+    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(PeptideCacheExecutionContext(parserContext)))
     parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(msiDbCtx))
 
-    val rsProvider = new SQLResultSetProvider(msiDbCtx, udsDbCtx, this.peptideCache)
+    val rsProvider = new SQLResultSetProvider(PeptideCacheExecutionContext(executionContext))
 
     (parserContext, rsProvider)
   }
 
-  def buildJPAContext() = {
-    val executionContext = BuildLazyExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
-    val rsProvider = new ORMResultSetProvider(executionContext.getMSIDbConnectionContext, executionContext.getPDIDbConnectionContext)
+  def buildJPAContext():(IExecutionContext, IResultSetProvider) = {
+    val executionContext = BuildLazyExecutionContext(dsConnectorFactoryForTest, 1, useJPA = true) // Full JPA
+    val rsProvider = new ORMResultSetProvider(executionContext.getMSIDbConnectionContext)
 
     (executionContext, rsProvider)
   }
@@ -86,7 +88,7 @@ trait AbstractRFImporterTestCase extends AbstractMultipleDBTestCase   {
   protected def importDatFile(localExecutionContext: IExecutionContext, datFileClassPath: String, decoyRegExp: String): Long = {
     logger.debug(" --- Load Mascot file [" + datFileClassPath + ']')
 
-    val beforePeptideMatch = getPeptideMatchCount
+    val beforePeptideMatch = getPeptideMatchCount()
 
     val datFile = new File(getClass.getResource(datFileClassPath).toURI)
     val datAbsolutePathname = datFile.getAbsolutePath
@@ -111,7 +113,7 @@ trait AbstractRFImporterTestCase extends AbstractMultipleDBTestCase   {
 
     logger.debug("ResultFile [" + datAbsolutePathname + "] imported as TARGET ResultSet Id: " + rsId)
 
-    val afterPeptideMatch = getPeptideMatchCount
+    val afterPeptideMatch = getPeptideMatchCount()
 
     logger.info("TOTAL PeptideMatches created : " + (afterPeptideMatch - beforePeptideMatch))
 

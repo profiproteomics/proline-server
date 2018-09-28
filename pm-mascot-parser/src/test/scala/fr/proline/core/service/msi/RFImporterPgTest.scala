@@ -1,14 +1,17 @@
 package fr.proline.core.service.msi
 
 import java.io.File
+
 import org.junit._
 import org.junit.After
-import org.junit.Assert.{ assertNotNull, assertTrue }
+import org.junit.Assert.{assertNotNull, assertTrue}
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.repository.DriverType
 import javax.persistence.FlushModeType
+
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.context.IExecutionContext
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 
 @Test /* Manual PostgreSQL Test */
 class RFImporterPgTest extends AbstractRFImporterTestCase {
@@ -19,7 +22,7 @@ class RFImporterPgTest extends AbstractRFImporterTestCase {
   
   @Before
   @throws(classOf[Exception])
-  override def setUp() = {
+  override def setUp(): Unit = {
 
     super.setUp()
 
@@ -28,25 +31,28 @@ class RFImporterPgTest extends AbstractRFImporterTestCase {
     logger.info("UDS db succesfully initialized")
 
     updateMsiPeptideSequence()
-    val (execContext, rsP) = buildJPAContext
+    val (execContext, rsP) = buildJPAContext()
     executionContext = execContext
     rsProvider = rsP
   }
 
   @After
   override def tearDown() {
-	  if (executionContext != null) executionContext.closeAll()
+    if (executionContext != null) {
+      PeptideCacheExecutionContext(executionContext).getPeptideCache().clear()
+      executionContext.closeAll()
+    }
     super.tearDown()
   }
 
-  @Ignore
-  def testRFIwithSQL() = {
+  @Ignore /* Manual PostgreSQL Test */
+  def testRFIwithSQL(): Unit = {
 
     assertNotNull(executionContext)
 
     try {
       logger.debug(" --- Get File " + _datFileName)
-      var datFile: File = new File(getClass.getResource(_datFileName).toURI)
+      val datFile: File = new File(getClass.getResource(_datFileName).toURI)
 
       val propertiedBuilder = Map.newBuilder[String, Any]
       propertiedBuilder += ("ion.score.cutoff" -> 0.5)
@@ -83,8 +89,8 @@ class RFImporterPgTest extends AbstractRFImporterTestCase {
 
   }
 
-  @Ignore
-  def runRFIwithJPA() = {
+  @Ignore  /* Manual PostgreSQL Test */
+  def runRFIwithJPA(): Unit = {
 
     assertNotNull(executionContext)
 
@@ -96,7 +102,7 @@ class RFImporterPgTest extends AbstractRFImporterTestCase {
       msiEm.setFlushMode(FlushModeType.COMMIT)
 
       logger.debug(" --- Get File " + _datFileName)
-      var datFile: File = new File(getClass.getResource(_datFileName).toURI)
+      val datFile: File = new File(getClass.getResource(_datFileName).toURI)
 
       val propertiedBuilder = Map.newBuilder[String, Any]
       propertiedBuilder += ("ion.score.cutoff" -> 0.5)

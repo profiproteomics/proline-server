@@ -1,11 +1,14 @@
 package fr.proline.core.service.msi
 
 import java.io.File
-import org.junit.{ Before, Ignore, Test }
+
+import org.junit.{Before, Test}
 import org.junit.After
 import org.junit.Assert._
 import fr.proline.repository.DriverType
 import fr.proline.context.IExecutionContext
+import fr.proline.core.dbunit.JInit_Dataset
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.IResultSetProvider
 
 @Test
@@ -17,33 +20,37 @@ class RFImporterH2SQLTest extends AbstractRFImporterTestCase {
 
   @Before
   @throws(classOf[Exception])
-  override def setUp() = {
+  override def setUp(): Unit = {
 
     super.setUp()
 
     _datFileName = "/dat_samples/STR_F122817_Mascot_v2.3.dat"
+    msiDBTestCase.loadDataSet(JInit_Dataset.msiDbDatasetPath)
     udsDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml")
-    logger.info("UDS db succesfully initialized")
-    val (execContext, rsP) = buildJPAContext
+    logger.info("MSI and UDS db succesfully initialized")
+    val (execContext, rsP) = buildJPAContext()
     executionContext = execContext
     rsProvider = rsP
   }
 
   @After
   override def tearDown() {
-    if (executionContext != null) executionContext.closeAll()
+    if (executionContext != null) {
+      PeptideCacheExecutionContext(executionContext).getPeptideCache().clear()
+      executionContext.closeAll()
+    }
     super.tearDown()
   }
 
   @Test
-  def testRFIwithSQL() = {
+  def testRFIwithSQL(): Unit = {
 
 
     assertNotNull(executionContext)
 
     try {
       logger.debug(" --- Get File " + _datFileName)
-      var datFile: File = new File(RFImporterH2SQLTest.this.getClass.getResource(_datFileName).toURI)
+      val datFile: File = new File(RFImporterH2SQLTest.this.getClass.getResource(_datFileName).toURI)
 
       val propertiedBuilder = Map.newBuilder[String, Any]
       propertiedBuilder += ("ion.score.cutoff" -> 0.5)

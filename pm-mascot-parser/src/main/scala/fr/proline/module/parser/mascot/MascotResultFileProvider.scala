@@ -3,18 +3,20 @@ package fr.proline.module.parser.mascot
 import java.io.BufferedReader
 import java.io.ByteArrayInputStream
 import java.io.File
+import java.io.FileInputStream
+import java.io.InputStreamReader
+
 import com.typesafe.scalalogging.LazyLogging
+import fr.profi.chemistry.model.Enzyme
+import fr.profi.util.StringUtils
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IResultFileProvider
 import fr.proline.core.om.provider.msi.IResultFileVerifier
-import fr.proline.unimod.UnimodUnmarshaller
-import fr.profi.util.StringUtils
-import scala.collection.mutable.ArrayBuffer
-import java.io.InputStreamReader
-import java.io.FileInputStream
 import fr.proline.module.parser.mascot.MascotDataParser.LATIN_1_CHARSET
-import fr.profi.chemistry.model.Enzyme
+import fr.proline.unimod.UnimodUnmarshaller
+
+import scala.collection.mutable.ArrayBuffer
 
 object MascotResultFileProviderType {
   final val fileType: String = "mascot.dat"

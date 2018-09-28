@@ -2,12 +2,10 @@ package fr.proline.module.parser.mascot
 
 import java.io.File
 import java.io.FileInputStream
-import java.io.InputStream
+
 
 import scala.io.Source
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.io.RichBufferedSource
 import fr.profi.util.regex.RegexUtils.RichString
 import fr.proline.core.om.model.msi.ChargeConstraint
@@ -15,11 +13,14 @@ import fr.proline.core.om.model.msi.FragmentIonRequirement
 import fr.proline.core.om.model.msi.FragmentIonSeries
 import fr.proline.core.om.model.msi.Fragmentation
 import fr.proline.core.om.model.msi.FragmentationRule
+import fr.proline.core.om.model.msi.FragmentationRuleSet
 import fr.proline.core.om.model.msi.Instrument
 import fr.proline.core.om.model.msi.InstrumentConfig
 import fr.proline.core.om.model.msi.RequiredSeries
 import fr.proline.core.om.model.msi.RequiredSeriesQualityLevel._
 import fr.proline.module.parser.mascot.MascotDataParser.LATIN_1_CHARSET
+
+import scala.collection.mutable
 
 /**
  * @author David Bouyssie
@@ -27,17 +28,51 @@ import fr.proline.module.parser.mascot.MascotDataParser.LATIN_1_CHARSET
  */
 object MascotFragmentationRuleParser extends LazyLogging  {
 
-  def getInstrumentConfigurations(fileLocation: File): Array[InstrumentConfig] = {
+  val mascotInfoPerFile = new mutable.HashMap[File, (Array[FragmentationRuleSet],Array[InstrumentConfig])]()
+
+  def getFragmentationRuleSets(fileLocation: File): Array[FragmentationRuleSet] = {
     require((fileLocation != null) && fileLocation.isFile, "Invalid fileLocation")
+    if(!mascotInfoPerFile.contains(fileLocation))
+      loadInfoFromFile(fileLocation)
+    mascotInfoPerFile(fileLocation)._1
+  }
+
+  def getInstrumentConfigs(fileLocation: File): Array[InstrumentConfig] = {
+    require((fileLocation != null) && fileLocation.isFile, "Invalid fileLocation")
+    if(!mascotInfoPerFile.contains(fileLocation))
+      loadInfoFromFile(fileLocation)
+    mascotInfoPerFile(fileLocation)._2
+  }
+
+  def loadInfoFromFile(fileLocation: File)  {
 
     val absolutePathname = fileLocation.getAbsolutePath
 
     val is = new FileInputStream(fileLocation)
-
+    val fragRuleSets = Array.newBuilder[FragmentationRuleSet]
+    val instConfigs = Array.newBuilder[InstrumentConfig]
     try {
-      getInstrumentConfigurations(is)
-    } finally {
+           // Force ANSI ISO-8859-1 to read Mascot .dat files
+      Source.fromInputStream(is, LATIN_1_CHARSET).eachLine("*", block => {
 
+        val lines = block.split("\r\n")
+        val titleLine = lines.find(_ =~ "^title:.+")
+
+        if (titleLine.isDefined) {
+          val instrumentType = titleLine.get.split(":")(1)
+
+        val ruleNumbers: Array[Int] = lines.filter { _ =~ """^\d+.+""" }.map{ l => (l =# """^(\d+).+""").get.group(1).toInt }
+
+          val (fragmentationRuleSet, instConfig) = this._buildFragmentationRuleSetAndInstConfig(instrumentType, ruleNumbers)
+          if (fragmentationRuleSet.isDefined) fragRuleSets += fragmentationRuleSet.get
+          if (instConfig.isDefined) instConfigs += instConfig.get
+        }
+
+        ()
+      })
+
+    } finally {
+      mascotInfoPerFile += (fileLocation -> (fragRuleSets.result(),instConfigs.result()))
       try {
         is.close()
       } catch {
@@ -48,44 +83,18 @@ object MascotFragmentationRuleParser extends LazyLogging  {
 
   }
 
-  def getInstrumentConfigurations(inputStream: InputStream): Array[InstrumentConfig] = {
-
-    val instrumentConfigs = Array.newBuilder[InstrumentConfig]
-
-    // Force ANSI ISO-8859-1 to read Mascot .dat files
-    Source.fromInputStream(inputStream, LATIN_1_CHARSET).eachLine("*", block => {
-
-      val lines = block.split("\r\n")
-      val titleLine = lines.find(_ =~ "^title:.+")
-
-      if (titleLine != None) {
-        val instrumentType = titleLine.get.split(":")(1)
-
-        val ruleNumbers = lines.filter { _ =~ """^\d+.+""" }
-          .map { l => (l =# """^(\d+).+""").get.group(1).toInt }
-
-        val instConfig = this._buildInstrumentConfig(instrumentType, ruleNumbers)
-        if (instConfig != None) instrumentConfigs += instConfig.get
-      }
-
-      ()
-    })
-
-    instrumentConfigs.result
-  }
-
-  private def _buildInstrumentConfig(
+  private def _buildFragmentationRuleSetAndInstConfig(
     instrumentType: String,
     ruleNumbers: Array[Int]
-  ): Option[InstrumentConfig] = {
+  ): (Option[FragmentationRuleSet], Option[InstrumentConfig]) = {
 
-    // Define some vars
+        // Define some vars
     var analyzers = ("", "")
     var (instSource, activationType) = ("ESI", "CID")
-
+//
     // Retrieve source
     val instrumentParts = instrumentType.split("-")
-    if (instrumentParts.length == 1) return None // skip Default and All
+    if (instrumentParts.length == 1) return (None, None) // skip Default and All
     else {
 
       if (instrumentParts(0) == "ESI" || instrumentParts(0) == "MALDI") instSource = instrumentParts(0)
@@ -109,21 +118,28 @@ object MascotFragmentationRuleParser extends LazyLogging  {
       source = instSource
     )
 
+    // Create new instrument config
+    val instrumentConfig = new InstrumentConfig(
+      id = InstrumentConfig.generateNewId(),
+      name = instrumentType,
+      instrument = instrument,
+      ms1Analyzer = analyzers._1,
+      msnAnalyzer = analyzers._2,
+      activationType = activationType
+    )
+
     // Retrieve fragmentation rules of the instrument configuration
     val fragRules = MascotFragmentation.rules
     val instFragRules = ruleNumbers.map(i => fragRules(i - 1))
 
     // Create new instrument config
-    val instrumentConfig = new InstrumentConfig(
-      id = InstrumentConfig.generateNewId(),
-      instrument = instrument,
-      ms1Analyzer = analyzers._1,
-      msnAnalyzer = analyzers._2,
-      activationType = activationType,
-      fragmentationRules = Some(instFragRules)
+    val fragRuleSet = new FragmentationRuleSet(
+      id = FragmentationRuleSet.generateNewId(),
+      name = instrumentType,
+      fragmentationRules = instFragRules
     )
 
-    Some(instrumentConfig)
+    ( Some(fragRuleSet), Some(instrumentConfig))
   }
 
 }

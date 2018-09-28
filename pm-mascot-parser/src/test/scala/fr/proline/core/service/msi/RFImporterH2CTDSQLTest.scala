@@ -2,16 +2,15 @@ package fr.proline.core.service.msi
 
 import java.io.File
 
-import org.junit.After
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
-
 import fr.proline.context.IExecutionContext
+import fr.proline.core.dbunit.JInit_Dataset
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.repository.DriverType
+import org.junit.After
+import org.junit.Assert
+import org.junit.Before
+import org.junit.Test
 
 @Test
 class RFImporterH2CTDSQLTest extends AbstractRFImporterTestCase {
@@ -22,29 +21,29 @@ class RFImporterH2CTDSQLTest extends AbstractRFImporterTestCase {
     
   @Before
   @throws( classOf[Exception] )
-  override def setUp() = {
+  override def setUp(): Unit = {
     super.setUp()
     _datFileName = "/dat_samples/STR_F136482_CTD.dat"
     udsDBTestCase.loadDataSet( "/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml" )
     logger.info( "UDS db succesfully initialized" )
-    msiDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/Unimod_Dataset.xml")
+    msiDBTestCase.loadDataSet(JInit_Dataset.msiDbDatasetPath)
     logger.info("MSI db succesfully initialized")
-    val (execContext, rsP) = buildJPAContext
+    val (execContext, rsP) = buildJPAContext()
     executionContext = execContext
     rsProvider = rsP
   }
   
   @After
   override def tearDown() {
-    if (executionContext != null) executionContext.closeAll()
+    if (executionContext != null)  executionContext.closeAll()
     super.tearDown()
   }
   
   @Test
-  def testRFIwithSQL() = {
+  def testRFIwithSQL(): Unit = {
   
     logger.debug( " --- Get File " + _datFileName )
-    var datFile: File = new File( this.getClass.getResource( _datFileName ).toURI )
+    val datFile: File = new File( this.getClass.getResource( _datFileName ).toURI )
     
     val propertiedBuilder = Map.newBuilder[String, Any]
     propertiedBuilder += ( "ion.score.cutoff" -> 0.5 )

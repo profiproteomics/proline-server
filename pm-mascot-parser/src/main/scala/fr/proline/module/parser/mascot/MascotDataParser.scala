@@ -70,12 +70,6 @@ class MascotDataParser(
     //Get Necessary providers : for peptide, protein and ptms
     val pepProvider = parserContext.getProvider(classOf[IPeptideProvider])
     val ptmProvider = parserContext.getProvider(classOf[IPTMProvider])
-    val protProvider = if(parserContext.getProvider(classOf[IProteinProvider]) == null || 
-      parserContext.getProvider(classOf[IProteinProvider]).isInstanceOf[ProteinEmptyFakeProvider]  ) {
-    	   ProteinFakeProvider //Fake provider should at least create Fake Proteins, not None
-    } else {
-		   parserContext.getProvider(classOf[IProteinProvider])
-    }
     
     // parsed data
     val bestPepMatchByPepKey = new HashMap[String, PeptideMatch]()
@@ -217,14 +211,7 @@ class MascotDataParser(
     // Determine best peptide match for each peptide
     logger.debug("Determining the best PeptideMatch for each Peptide...")
     for ((pep, pepMatches) <- pepToPeptideMatches) {
-
-      var bestPepMatch = pepMatches(0)
-      for (i <- 1 until pepMatches.length) {
-        val nextPepMatch = pepMatches(i)
-        if ((bestPepMatch.score < nextPepMatch.score) || ((bestPepMatch.score == nextPepMatch.score) && (bestPepMatch.id < nextPepMatch.id)))
-          bestPepMatch = nextPepMatch
-      }
-
+      val bestPepMatch = PeptideMatch.getBestOnScoreDeltaMoZ(pepMatches.toArray)
       // currentMSPep.getAmbiguityString() + "%"+
       bestPepMatchByPepKey.update(pep.uniqueKey, bestPepMatch)
     }
@@ -271,8 +258,8 @@ class MascotDataParser(
             val protOpt = if (protAccSeqDbToProteinWrapper.contains(protWrapperKey)) {
               protAccSeqDbToProteinWrapper.get(protWrapperKey).get.wrappedProt
             } else {
-              // Try to get Protein from repository
-              val tmpProtOpt = protProvider.getProtein(protAcc.get(indProt), seqDbs(0))
+              // TODO: Try to get Protein from repository
+              val tmpProtOpt = None
               protAccSeqDbToProteinWrapper += protWrapperKey -> new ProteinWrapper(dbs.get(indProt), protAcc.get(indProt), tmpProtOpt)
               
               tmpProtOpt
@@ -307,7 +294,7 @@ class MascotDataParser(
                 peptideMatchesCount = 0,
                 scoreType = "mascot:standard score",
                 isDecoy = isDecoy,
-                protein = (if (protOpt == None) null else protOpt), //If prot is None => No protein is defined not protein not retrieve !
+                protein =protOpt, //If prot is None => No protein is defined not protein not retrieve !
                 seqDatabaseIds = seqDbIds,
                 resultSetId = rsId
               )
