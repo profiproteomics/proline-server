@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
+<!DOCTYPE dataset SYSTEM "pdi-dataset.dtd">
 <dataset>
   <TAXON ID="1" SCIENTIFIC_NAME="root" RANK="no rank" IS_ACTIVE="1" PARENT_TAXON_ID="1"/>
   <TAXON ID="131567" SCIENTIFIC_NAME="cellular organisms" RANK="no rank" IS_ACTIVE="1" PARENT_TAXON_ID="1"/>

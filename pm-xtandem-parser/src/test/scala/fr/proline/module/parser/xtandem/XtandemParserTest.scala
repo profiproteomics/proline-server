@@ -39,15 +39,35 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
   var parserContext: ProviderDecoratedExecutionContext = null
 
   /***   CONNECTION TO DB   ***/
+
+//    @Before
+  def initabu() {
+    try {
+    super.initDBsDBManagement(driverType)
+    pdiDBTestCase.loadDataSet("/default_datasets/Proteins_Dataset.xml")
+    msiDBTestCase.loadDataSet("/default_datasets/Init_Dataset.xml")
+    udsDBTestCase.loadDataSet("/default_datasets/UDS_Simple_Dataset.xml")
+    val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, true) // default: false
+    val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true) // default: true
+    val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), true) // default: false
+    val executionContext = new BasicExecutionContext(1, udsDbCtx, pdiDbCtx, msiDbCtx, null)
+    parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
+    assertNotNull(parserContext)
+    }  catch {
+      case e: Exception =>
+        logger.error("TEST [initabu] in error", e)
+        throw e
+    }
+  }
   
   @Before
   def init() {
-        logger.debug("Test initialization")
+    logger.debug("Test initialization")
     super.initDBsDBManagement(driverType)
 
     //Load Data
     logger.info("Initializing Dbs")
-    psDBTestCase.loadDataSet("/default_datasets/Unimod_Dataset.xml")
+//    psDBTestCase.loadDataSet("/default_datasets/Unimod_Dataset.xml")
     pdiDBTestCase.loadDataSet("/default_datasets/Proteins_Dataset.xml")
     msiDBTestCase.loadDataSet("/default_datasets/Init_Dataset.xml")
 
@@ -58,13 +78,11 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
 
     val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, true) // default: false
     val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true) // default: true
-    val psDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, true) // default: false
     val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), true) // default: false
 
-    val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
+    val executionContext = new BasicExecutionContext(1, udsDbCtx, pdiDbCtx, msiDbCtx, null)
 
     parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
-    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx))
 
     assertNotNull(parserContext)
   }
@@ -217,6 +235,7 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
   
   @Test
   def XtandemResultFileProviderTest {
+//    try {
 	  val file : File = new File(getClass.getResource("/xtandemResultFile/output.2014_11_18_11_46_01.t.xml").toURI)
     logger.info("Start XtandemResultFileProviderTest")
     val myXtandemResultFileProvider = new XtandemResultFileProvider
@@ -229,6 +248,11 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
         throw e
     }
     logger.info("End XtandemResultFileProviderTest")
+//    } catch {
+//      case e: Exception =>
+//        logger.error("TEST [XtandemResultFileProviderTest] in error", e)
+//        throw e
+//    }
   }
   
 //  @Test after clear DB

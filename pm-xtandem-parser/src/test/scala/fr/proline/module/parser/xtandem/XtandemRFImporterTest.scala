@@ -8,7 +8,7 @@ import org.junit.Before
 import org.junit.Test
 
 import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.core.dal.BuildExecutionContext
+import fr.proline.core.dal.BuildLazyExecutionContext
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
@@ -32,10 +32,9 @@ class XtandemRFImporterTest extends AbstractMultipleDBTestCase {
     logger.info("Initializing Dbs")
     super.initDBsDBManagement(driverType)
 
-    SQLPeptideProvider.clear() // Clear peptide cache between tests
+//VDS Still needed    SQLPeptideProvider.clear() // Clear peptide cache between tests
 
     //Load Data
-    psDBTestCase.loadDataSet("/default_datasets/Unimod_Dataset.xml")
     pdiDBTestCase.loadDataSet("/default_datasets/Proteins_Dataset.xml")
     msiDBTestCase.loadDataSet("/default_datasets/Init_Dataset.xml")
     udsDBTestCase.loadDataSet("/default_datasets/UDS_Simple_Dataset.xml")
@@ -44,21 +43,20 @@ class XtandemRFImporterTest extends AbstractMultipleDBTestCase {
   }
 
   def buildJPAContext() = {
-    val executionContext = BuildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
-    val rsProvider = new ORMResultSetProvider(executionContext.getMSIDbConnectionContext, executionContext.getPSDbConnectionContext, executionContext.getPDIDbConnectionContext)
+    val executionContext = BuildLazyExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
+    val rsProvider = new ORMResultSetProvider(executionContext.getMSIDbConnectionContext, executionContext.getPDIDbConnectionContext)
     parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
-    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(executionContext.getPSDbConnectionContext()))
     assertNotNull(parserContext)
     (executionContext, rsProvider)
   }
 
   override def tearDown() {
 
-    try {
-      SQLPeptideProvider.clear() // Clear peptide cache between tests
-    } finally {
-      super.tearDown()
-    }
+//    try {
+//      SQLPeptideProvider.clear() // Clear peptide cache between tests
+//    } finally {
+//      super.tearDown()
+//    }
 
   }
 
