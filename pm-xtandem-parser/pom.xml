@@ -4,7 +4,7 @@
   <parent>
     <artifactId>ProFI-Pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.4.0-SNAPSHOT</version>
+    <version>0.4.0</version>
   </parent>
 
   <artifactId>PM-XtandemParser</artifactId>
@@ -16,7 +16,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>1.3.0-SNAPSHOT</core.version>
+    <core.version>2.0.1-SNAPSHOT</core.version>
     <version.path>${basedir}/src/main/scala/fr/proline/module/parser/xtandem</version.path>
   </properties>
 	<scm>
