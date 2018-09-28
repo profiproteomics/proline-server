@@ -61,7 +61,7 @@ class UnknownPTMException() extends Exception("A peptide matched with an unknown
  * Create an OmssaResultFile to parse specified OMSSA identification result file.
  *
  * @param fileLocation :  OMSSA identification result file to parse (omx file)
- * @param providerKey key to use to get correct data provider from provider factory
+ * @param parserContext to get correct data provider from provider factory
  * @param importProperties : parameters to use for parsing. Allowed values are those specified by OmssaParseParams. Should not be null.
  *
  */
@@ -110,7 +110,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   val hasMs2Peaklist: Boolean = true // an OMSSA omx  file may not have spectra and search params included
 
   // read omssa file
-  val fileReader = new OmssaReadFile(omxFile, parseProperties, omssaLoader, /*peaklist,*/ parserContext)
+  val fileReader = new OmssaReadFile(omxFile, parseProperties, omssaLoader, instrumentConfig, fragmentationRuleSet,/*peaklist,*/ parserContext)
   val hasDecoyResultSet = false
   val omssaSettingsInHashTable = fileReader.omssaSettingsInHashTable
 
@@ -169,6 +169,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   lazy val msiSearch: MSISearch = {
     val search: MSISearch = fileReader.getMsiSearch
     search.searchSettings.instrumentConfig = this.instrumentConfig.getOrElse(null)
+    search.searchSettings.fragmentationRuleSet = this.fragmentationRuleSet
     search
   }
   def getMSISearch: MSISearch = msiSearch
@@ -259,7 +260,6 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
     val searchPeps = pepsToSearch.result
 
     var pepProvider = parserContext.getProvider(classOf[IPeptideProvider])
-    var protProvider = parserContext.getProvider(classOf[fr.proline.core.om.provider.msi.IProteinProvider])
     val pepByUniqueKey = fileReader.getPeptideByUniqueKey
     val foundPep = pepProvider.getPeptidesAsOptionsBySeqAndPtms(searchPeps)
     logger.debug(" Found Pep in PS : " + foundPep.filter(_.isDefined).size)
@@ -337,8 +337,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
             prot = protAccSeqDbToProteinWrapper.get(protWrapperKey).get.wrappedProt
           } else {
             // Try to get Protein from repository
-            prot = protProvider.getProtein(protMatch.accession, seqDbs(0))
-            protAccSeqDbToProteinWrapper += protWrapperKey -> new ProteinWrapper(seqDbs(0).id, protMatch.accession, prot)
+            protAccSeqDbToProteinWrapper += protWrapperKey -> new ProteinWrapper(seqDbs(0).id, protMatch.accession, None)
           }
           val currentSeqMatch = peptideMatchProteinMatchToSequenceMatch(bestPepMatch.id, protMatch.id)
           // Create SequenceMatch and ProteinMatch, if necessary, for current Matched Protein
@@ -400,12 +399,12 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   }
 
   def eachSpectrum(onEachSpectrum: Spectrum => Unit): Unit = {
-
+    val fragRuleSetId = if(fragmentationRuleSet.isDefined) Some(fragmentationRuleSet.get.id) else None
     logger.info("eachSpectrum(" + omxFile.getAbsolutePath() + ")")
     new OmssaListSpectrum(
         omxFile, 
-        peaklist.id, 
-        this.instrumentConfig.getOrElse(null), 
+        peaklist.id,
+        fragRuleSetId,
         if(this.peaklistSoftware.isDefined) this.peaklistSoftware.get.specTitleParsingRule else None, 
         onEachSpectrum
     )

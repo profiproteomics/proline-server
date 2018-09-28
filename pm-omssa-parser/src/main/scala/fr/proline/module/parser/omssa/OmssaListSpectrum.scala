@@ -1,16 +1,21 @@
 package fr.proline.module.parser.omssa
 
-import com.typesafe.scalalogging.LazyLogging
-import scala.collection.mutable.ArrayBuffer
 import java.io.File
 import javax.xml.stream.XMLInputFactory
-import org.codehaus.staxmate.in.{ SMHierarchicCursor, SMInputCursor }
-import org.codehaus.staxmate.SMInputFactory
-import fr.proline.core.om.model.msi.{ Spectrum, InstrumentConfig, SpectrumTitleFields, SpectrumTitleParsingRule }
+
+import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.primitives._
+import fr.proline.core.om.model.msi.Spectrum
+import fr.proline.core.om.model.msi.SpectrumTitleFields
+import fr.proline.core.om.model.msi.SpectrumTitleParsingRule
+import org.codehaus.staxmate.SMInputFactory
+import org.codehaus.staxmate.in.SMHierarchicCursor
+import org.codehaus.staxmate.in.SMInputCursor
+
+import scala.collection.mutable.ArrayBuffer
 //import fr.proline.repository.DatabaseContext
 
-class OmssaListSpectrum(omxFile: File, peaklistId: Long, instrumentConfig: InstrumentConfig, specTitleParsingRule: Option[SpectrumTitleParsingRule], onEachSpectrum: Spectrum => Unit) extends LazyLogging {
+class OmssaListSpectrum(omxFile: File, peaklistId: Long, fragmentationRuleSetId : Option[Long], specTitleParsingRule: Option[SpectrumTitleParsingRule], onEachSpectrum: Spectrum => Unit) extends LazyLogging {
 
   private def toIntOrZero(v: Any): Int = try { toInt(v) } catch { case e: Throwable => 0 }
   private def toFloatOrMinusOne(v: Any): Float = try { toFloat(v) } catch { case e: Throwable => -1f }
@@ -88,7 +93,7 @@ class OmssaListSpectrum(omxFile: File, peaklistId: Long, instrumentConfig: Instr
                       var intensities: Array[Float] = new Array[Float](intensityList.length)
                       for (i <- 0 until intensityList.length) { intensities(i) = intensityList(i) / scale }
                       // creating the spectrum
-                      val instConfigId = if (instrumentConfig != null) instrumentConfig.id else 0
+
                       val specTitleFieldMap = specTitleParsingRule.map(_.parseTitle(spectrumTitle)).getOrElse(Map.empty[SpectrumTitleFields.Value, String])
                       val spec = new Spectrum(
                         id = Spectrum.generateNewId,
@@ -98,16 +103,16 @@ class OmssaListSpectrum(omxFile: File, peaklistId: Long, instrumentConfig: Instr
 //                        isSummed = false,
 //                        properties = None,
                         precursorCharge = precursorCharge,
-				        firstCycle = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_CYCLE, 0)),
-				        lastCycle = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_CYCLE, 0)),
-				        firstScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_SCAN, 0)),
-				        lastScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_SCAN, 0)),
-				        firstTime = toFloatOrMinusOne(specTitleFieldMap.getOrElse(titleFields.FIRST_TIME, -1f)),
-				        lastTime = toFloatOrMinusOne(specTitleFieldMap.getOrElse(titleFields.LAST_TIME, -1f)),
+                        firstCycle = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_CYCLE, 0)),
+                        lastCycle = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_CYCLE, 0)),
+                        firstScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_SCAN, 0)),
+                        lastScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_SCAN, 0)),
+                        firstTime = toFloatOrMinusOne(specTitleFieldMap.getOrElse(titleFields.FIRST_TIME, -1f)),
+                        lastTime = toFloatOrMinusOne(specTitleFieldMap.getOrElse(titleFields.LAST_TIME, -1f)),
                         mozList = Some(mozList.toArray),
                         intensityList = Some(intensities),
                         peaksCount = mozList.length,
-                        instrumentConfigId = instConfigId,
+                        fragmentationRuleSetId = fragmentationRuleSetId, //specified by caller. TODO : Read it from parameters ?
                         peaklistId = peaklistId
                       )
                       // calling the function that will process the spectrum
