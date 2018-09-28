@@ -29,7 +29,8 @@ object XTandemEnzymeVerifier extends LazyLogging {
   def extractEnzymesFromXTandemString(parserContext: ProviderDecoratedExecutionContext, enzymesAsString: String, isSemiSpecific: Boolean): Array[Enzyme] = {
     val enzymes = new ArrayBuffer[Enzyme]
     
-    val msiSearchProvider = new SQLMsiSearchProvider(parserContext.getUDSDbConnectionContext(), parserContext.getMSIDbConnectionContext(), parserContext.getPSDbConnectionContext())
+//    val msiSearchProvider = new SQLMsiSearchProvider(parserContext.getUDSDbConnectionContext(), parserContext.getMSIDbConnectionContext(), parserContext.getPSDbConnectionContext())
+    val msiSearchProvider = new SQLMsiSearchProvider(parserContext.getUDSDbConnectionContext(), parserContext.getMSIDbConnectionContext())
     val commaParts: Array[String] = enzymesAsString.split(",")
     val inputParametersEnzymeCount = commaParts.length
     if(inputParametersEnzymeCount == 0) {

@@ -63,7 +63,7 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
   
   // set Providers
   private lazy val pepProvider = parserContext.getProvider(classOf[IPeptideProvider])
-  private lazy val protProvider = if (parserContext.getProvider(classOf[IProteinProvider]) == null ||
+  private lazy val protProvider = if ( !parserContext.hasProvider(classOf[IProteinProvider])  ||
     parserContext.getProvider(classOf[IProteinProvider]).isInstanceOf[ProteinEmptyFakeProvider]) {
     ProteinFakeProvider //Fake provider should at least create Fake Proteins, not None
   } else {
@@ -71,7 +71,7 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
   }
   
   private var resultBioml: XTBioml = null
-  private lazy val xtandemSettings = new XtandemSettings(resultBioml, parserContext, instrumentConfig, peaklistSoftware)
+  private lazy val xtandemSettings = new XtandemSettings(resultBioml, parserContext, instrumentConfig, fragmentationRuleSet, peaklistSoftware)
   lazy val msiSearch: MSISearch = xtandemSettings.msiSearchOpt.get
   lazy val hasDecoyResultSet = xtandemSettings.hasDecoyResultSet
   lazy val hasMs2Peaklist = xtandemSettings.hasMs2Peaklist
@@ -114,6 +114,7 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
     
     // get search settings
     val rsProps = xtandemSettings.resultSetProperties
+    val fragmentationRuleSetIdOpt = if (fragmentationRuleSet.isDefined) Some(fragmentationRuleSet.get.id) else None
 
     // for each GroupModel (spectrum)
     resultBioml.groupModelList.foreach(groupItem => {
@@ -123,7 +124,7 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
         var spectrumTitle = spectrumItem.note.info
         // xtandem adds RTINSECONDS to the title if it finds it in the spectrum header
         if(spectrumTitle.contains("RTINSECONDS=")) {
-          spectrumTitle = spectrumTitle.substring(0, spectrumTitle.indexOf("RTINSECONDS="));
+          spectrumTitle = spectrumTitle.substring(0, spectrumTitle.indexOf("RTINSECONDS="))
         }
         // instantiate query
         // problem with xtandem: not all queries are written in the output file :(
@@ -160,7 +161,7 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
               mozList = Some(mozList), 
               intensityList = Some(intensityList),
               peaksCount = mozList.length,
-              instrumentConfigId = if (instrumentConfig.isDefined) instrumentConfig.get.id else 0,
+              fragmentationRuleSetId = fragmentationRuleSetIdOpt,//Specified by user. TODO: Read it or verify it corresponds to peptideItem.fragmentMatches
               peaklistId = msiSearch.peakList.id,
               properties = spectrumPropOp)
         })
@@ -169,7 +170,7 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
         spectrumItem.proteinList.foreach(proteinItem => {
           // fix long accession names
           val userPattern = properties.get("protein.parsing.rule").get.toString
-          val accession = proteinItem.note.info match {
+          val accession:String = proteinItem.note.info match {
             case userPattern.r(accession) => accession // user pattern, may not work
             case defaultProteinParsingRule.r(accession) => accession // default pattern: extract string until first space character
             case _ => proteinItem.note.info // keep description if everything else failed (or maybe accession ?)
