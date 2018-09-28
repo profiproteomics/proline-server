@@ -12,7 +12,7 @@ import org.junit.Assert
  *
  */
 @Test
-class MascotPTMDefiitionTest extends LazyLogging {
+class MascotPTMDefinitionTest extends LazyLogging {
 
 	@Before
   def init() {

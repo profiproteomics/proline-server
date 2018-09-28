@@ -30,6 +30,8 @@ class RFImporterH2JPATest extends AbstractRFImporterTestCase {
     _datFileName = "/dat_samples/STR_F122817_Mascot_v2.3.dat"
     udsDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml")
     logger.info("UDS db succesfully initialized")
+    msiDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/Unimod_Dataset.xml")
+    logger.info("MSI db succesfully initialized")
      val (execContext, rsPr) = buildJPAContext
     executionContext = execContext
     rsProvider = rsPr

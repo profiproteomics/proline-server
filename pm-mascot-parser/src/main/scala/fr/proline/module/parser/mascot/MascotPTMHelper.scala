@@ -1,13 +1,14 @@
 package fr.proline.module.parser.mascot
 
-import com.typesafe.scalalogging.LazyLogging 
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.model.msi.PtmDefinition
-import fr.proline.core.om.provider.msi.IPTMProvider
 import scala.collection.mutable
 import scala.collection.mutable.HashMap
-import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ListBuffer
+
+import com.typesafe.scalalogging.LazyLogging
+
+import fr.proline.core.om.model.msi.PtmDefinition
+import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.core.om.provider.msi.IPTMProvider
 
 
 class MascotPTMHelper(val parserContext: ProviderDecoratedExecutionContext) extends LazyLogging  {

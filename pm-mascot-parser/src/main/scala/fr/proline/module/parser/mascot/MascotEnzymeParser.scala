@@ -1,12 +1,16 @@
 package fr.proline.module.parser.mascot
 
-import java.io.{ InputStream, File, FileInputStream }
-import scala.io.Source
-import scala.collection.mutable.ArrayBuffer
-import fr.profi.util.io._
-import fr.profi.util.regex.RegexUtils._
-import com.typesafe.scalalogging.LazyLogging 
+import java.io.File
+import java.io.FileInputStream
+import java.io.InputStream
 
+import scala.collection.mutable.ArrayBuffer
+import scala.io.Source
+
+import com.typesafe.scalalogging.LazyLogging
+
+import fr.profi.util.io.RichBufferedSource
+import fr.profi.util.regex.RegexUtils.RichString
 import fr.proline.module.parser.mascot.MascotDataParser.LATIN_1_CHARSET
 
 /**

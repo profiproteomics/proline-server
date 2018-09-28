@@ -1,12 +1,24 @@
 package fr.proline.module.parser.mascot
 
-import java.io.{ InputStream, File, FileInputStream }
-import scala.io.Source
-import fr.proline.core.om.model.msi._
-import fr.profi.util.regex.RegexUtils._
-import fr.profi.util.io._
-import com.typesafe.scalalogging.LazyLogging 
+import java.io.File
+import java.io.FileInputStream
+import java.io.InputStream
 
+import scala.io.Source
+
+import com.typesafe.scalalogging.LazyLogging
+
+import fr.profi.util.io.RichBufferedSource
+import fr.profi.util.regex.RegexUtils.RichString
+import fr.proline.core.om.model.msi.ChargeConstraint
+import fr.proline.core.om.model.msi.FragmentIonRequirement
+import fr.proline.core.om.model.msi.FragmentIonSeries
+import fr.proline.core.om.model.msi.Fragmentation
+import fr.proline.core.om.model.msi.FragmentationRule
+import fr.proline.core.om.model.msi.Instrument
+import fr.proline.core.om.model.msi.InstrumentConfig
+import fr.proline.core.om.model.msi.RequiredSeries
+import fr.proline.core.om.model.msi.RequiredSeriesQualityLevel._
 import fr.proline.module.parser.mascot.MascotDataParser.LATIN_1_CHARSET
 
 /**
@@ -118,7 +130,7 @@ object MascotFragmentationRuleParser extends LazyLogging  {
 
 object MascotFragmentation {
   
-  import RequiredSeriesQualityLevel._
+  
 
   val rules: Array[FragmentationRule] = {
 

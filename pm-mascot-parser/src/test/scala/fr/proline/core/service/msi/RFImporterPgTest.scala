@@ -27,7 +27,7 @@ class RFImporterPgTest extends AbstractRFImporterTestCase {
     udsDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml")
     logger.info("UDS db succesfully initialized")
 
-    updatePsPeptideSequence()
+    updateMsiPeptideSequence()
     val (execContext, rsP) = buildJPAContext
     executionContext = execContext
     rsProvider = rsP
@@ -133,10 +133,10 @@ class RFImporterPgTest extends AbstractRFImporterTestCase {
 
   }
 
-  private def updatePsPeptideSequence() {
-    val psDbConnector = psDBTestCase.getConnector
+  private def updateMsiPeptideSequence() {
+    val msiDbConnector = msiDBTestCase.getConnector
 
-    val con = psDbConnector.getDataSource.getConnection
+    val con = msiDbConnector.getDataSource.getConnection
 
     try {
       val stm = con.createStatement()

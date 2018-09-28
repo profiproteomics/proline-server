@@ -3,7 +3,6 @@ package fr.proline.core.service.msi
 import java.sql.{ Connection, SQLException }
 import org.junit.Ignore
 import org.junit.Assert.assertTrue
-
 import fr.proline.context.{ BasicExecutionContext, DatabaseConnectionContext, IExecutionContext }
 import fr.proline.core.dal._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
@@ -13,6 +12,7 @@ import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.repository.DriverType
 import javax.persistence.EntityManager
 import java.io.File
+
 
 @Ignore
 trait AbstractRFImporterTestCase extends AbstractMultipleDBTestCase   {
@@ -31,43 +31,30 @@ trait AbstractRFImporterTestCase extends AbstractMultipleDBTestCase   {
     super.initDBsDBManagement(driverType)
     logger.info("initDBsDBManagement DONE")
 
-    SQLPeptideProvider.clear() // Clear peptide cache between tests
 
     //Load Data
-    logger.info("psDBTestCase.loadDataSet")
-    psDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/Unimod_Dataset.xml")
     logger.info("pdiDBTestCase.loadDataSet")
     pdiDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/Proteins_Dataset.xml")
     logger.info("msiDBTestCase.loadDataSet")
     msiDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/Init_Dataset.xml")
 
-    logger.info("PS, PDI and MSI dbs succesfully initialized")
+    logger.info("PDI and MSI dbs succesfully initialized")
   }
 
-  override def tearDown() {
-
-    try {
-      SQLPeptideProvider.clear() // Clear peptide cache between tests
-    } finally {
-      super.tearDown()
-    }
-
-  }
 
   def buildSQLContext() = {
     val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
     val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
     val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
 
-    val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
+    val executionContext = new BasicExecutionContext(1, udsDbCtx, pdiDbCtx,  msiDbCtx, null)
 
     val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
-    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx))
-    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx))
+    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(msiDbCtx, this.peptideCache))
+    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(msiDbCtx))
 
-    val rsProvider = new SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
+    val rsProvider = new SQLResultSetProvider(msiDbCtx, udsDbCtx, this.peptideCache)
 
     (parserContext, rsProvider)
   }
@@ -75,23 +62,22 @@ trait AbstractRFImporterTestCase extends AbstractMultipleDBTestCase   {
   def buildSQLContextForJPA() = {
     val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
     val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
     val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(2), false)
 
-    val executionContext = BuildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
+    val executionContext = BuildLazyExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
     val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
-    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx))
-    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx))
+    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(msiDbCtx, this.peptideCache))
+    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(msiDbCtx))
 
-    val rsProvider = new SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
+    val rsProvider = new SQLResultSetProvider(msiDbCtx, udsDbCtx, this.peptideCache)
 
     (parserContext, rsProvider)
   }
 
   def buildJPAContext() = {
-    val executionContext = BuildExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
-    val rsProvider = new ORMResultSetProvider(executionContext.getMSIDbConnectionContext, executionContext.getPSDbConnectionContext, executionContext.getPDIDbConnectionContext)
+    val executionContext = BuildLazyExecutionContext(dsConnectorFactoryForTest, 1, true) // Full JPA
+    val rsProvider = new ORMResultSetProvider(executionContext.getMSIDbConnectionContext, executionContext.getPDIDbConnectionContext)
 
     (executionContext, rsProvider)
   }
@@ -163,14 +149,14 @@ trait AbstractRFImporterTestCase extends AbstractMultipleDBTestCase   {
   def countPsPeptide(executionContext: IExecutionContext): Long = {
     var peptideCount: Long = -1L
 
-    val psDb = executionContext.getPSDbConnectionContext
+    val msiDb = executionContext.getMSIDbConnectionContext
 
-    val con = psDb.getConnection
+    val con = msiDb.getConnection
 
     if (con != null) {
-      peptideCount = countPsPeptideSQL(psDb)
-    } else if (psDb.isJPA) {
-      peptideCount = countPsPeptideJPA(psDb.getEntityManager)
+      peptideCount = countPsPeptideSQL(msiDb)
+    } else if (msiDb.isJPA) {
+      peptideCount = countPsPeptideJPA(msiDb.getEntityManager)
     }
 
     logger.debug("Found PS Peptide count : " + peptideCount)
@@ -182,41 +168,11 @@ trait AbstractRFImporterTestCase extends AbstractMultipleDBTestCase   {
     ProlineEzDBC( dbCtx ).selectLong("SELECT COUNT(*) from Peptide")
   }
 
-  /*private def countPsPeptideSQL(con: Connection): Long = {
-    var peptideCount: Long = -1L
-
-    val stm = con.createStatement()
-
-    try {
-      val rs = stm.executeQuery("SELECT COUNT(*) from Peptide")
-
-      while ((peptideCount == -1L) && rs.next()) {
-        val obj = rs.getObject(1) // 1st column
-
-        if (obj.isInstanceOf[java.lang.Long]) {
-          peptideCount = obj.asInstanceOf[java.lang.Long].longValue
-        }
-
-      }
-
-      rs.close()
-    } finally {
-
-      try {
-        stm.close() // Also closes current ResultSet object
-      } catch {
-        case exClose: SQLException => logger.error("Error closing count statement", exClose)
-      }
-
-    }
-
-    peptideCount
-  }*/
-
+ 
   private def countPsPeptideJPA(em: EntityManager): Long = {
     var peptideCount: Long = -1L
 
-    val query = em.createQuery("select count(*) from fr.proline.core.orm.ps.Peptide")
+    val query = em.createQuery("select count(*) from fr.proline.core.orm.msi.Peptide")
 
     val obj = query.getSingleResult
 

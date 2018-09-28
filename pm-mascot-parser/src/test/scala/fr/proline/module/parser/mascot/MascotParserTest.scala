@@ -25,6 +25,9 @@ import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.om.provider.msi.ProteinFakeProvider
 import fr.proline.core.om.provider.msi.SeqDbFakeProvider
 import junit.framework.Assert
+import fr.proline.core.dal.MSIDatabaseTestCase
+import fr.proline.repository.DriverType
+import fr.proline.context.MsiDbConnectionContext
 
 @Test
 class MascotParserTest extends LazyLogging { // }extends DatabaseTestCase {
@@ -33,7 +36,7 @@ class MascotParserTest extends LazyLogging { // }extends DatabaseTestCase {
 
   var file: File = null
 
-  var psDBTestCase: DatabaseTestCase = null
+  var msiDBTestCase: DatabaseTestCase = null
 
   @Before
   def init() {
@@ -41,25 +44,25 @@ class MascotParserTest extends LazyLogging { // }extends DatabaseTestCase {
     logger.debug("Start Logging Debug ")
 
     // Init PS db connexion
-    psDBTestCase = new PSDatabaseTestCase()
-    psDBTestCase.initDatabase()
-    psDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/Unimod_Dataset.xml")
+    msiDBTestCase = new MSIDatabaseTestCase(DriverType.H2)
+    msiDBTestCase.initDatabase()
+    msiDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/Unimod_Dataset.xml")
   }
 
   @After
   def closeResources() {
 
-    if (psDBTestCase != null) {
-      psDBTestCase.tearDown()
+    if (msiDBTestCase != null) {
+      msiDBTestCase.tearDown()
     }
-    SQLPeptideProvider.clear()
+    
   }
 
   @Test
   def testReadDatFile() = {
-    val psDbCtx = new DatabaseConnectionContext(psDBTestCase.getConnector)
+    val msiDbCtx = new MsiDbConnectionContext(msiDBTestCase.getConnector)
 
-    val executionContext = new BasicExecutionContext(null, null, psDbCtx, null, null)
+    val executionContext = new BasicExecutionContext(1,null, null, msiDbCtx, null)
 
     try {
       val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
@@ -170,13 +173,6 @@ class MascotParserTest extends LazyLogging { // }extends DatabaseTestCase {
 
   }
 
-  class PSDatabaseTestCase extends DatabaseTestCase {
-    override def getProlineDatabaseType() = ProlineDatabaseType.PS
-    override def getPropertiesFileName() : String = { 
-      "db_settings/h2/db_ps.properties"
-     }
-    
-  }
 
   class PDIDatabaseTestCase extends DatabaseTestCase {
     override def getProlineDatabaseType() = ProlineDatabaseType.PDI

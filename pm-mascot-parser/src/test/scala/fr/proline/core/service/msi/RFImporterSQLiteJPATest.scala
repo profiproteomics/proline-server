@@ -92,10 +92,6 @@ class RFImporterSQLiteJPATest extends AbstractRFImporterTestCase {
     val (execContext, rsP) = buildJPAContext
     executionContext = execContext
     rsProvider = rsP
-    // Remove existing external DB connections
-
-    //val udsSqlHelper = new SQLQueryHelper( dbManagerForTest.asInstanceOf[DatabaseManager].getMsiDbConnector(1) ).ezDBC
-    //sys.error( "" + udsSqlHelper.selectInt("select count(*) from scoring") )
   }
 
   @After
@@ -142,8 +138,6 @@ class RFImporterSQLiteJPATest extends AbstractRFImporterTestCase {
       val rsBack: ResultSet = rsBackOp.get
       assertNotNull(rsBack)
 
-      //msiEzDBC.connection.close()
-      //psEzDBC.connection.close()
 
       // Other verifs....
 

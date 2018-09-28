@@ -2,16 +2,15 @@ package fr.proline.module.parser.mascot
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import scala.util.matching.Regex
-import com.typesafe.scalalogging.LazyLogging 
 
-import fr.profi.util.regex.RegexUtils._
-import fr.proline.core.om.builder.PtmDefinitionBuilder
+import com.typesafe.scalalogging.LazyLogging
+
+import fr.profi.util.regex.RegexUtils.RichString
+import fr.proline.core.om.model.msi.IonTypes
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmEvidence
-import fr.proline.core.om.model.msi.PtmNames
 import fr.proline.core.om.model.msi.PtmLocation
-import fr.proline.core.om.model.msi.IonTypes
+import fr.proline.core.om.model.msi.PtmNames
 import fr.proline.core.om.provider.msi.IPTMProvider
 
 // TODO conception a revoir : cet objet est un singleton qui garde un etat des resultats de recherche alors
@@ -22,7 +21,6 @@ object MascotPTMUtils extends LazyLogging  {
 
   val accessedPtms = new ArrayBuffer[PtmDefinition]
   val ptmDefsByMascotModName = new HashMap[String, Array[PtmDefinition]]
-//  var mascotServerURL: String = null
 
   val MascotModRegex = """(.+) \((.+)\)""".r
 
@@ -56,8 +54,7 @@ object MascotPTMUtils extends LazyLogging  {
 
     var modName = mascotMod
 
-//    if (mascotServerURL != null) //Read from mascot modification file. 
-//      return _getPTMDefsFromModFile(ptmProvider, mascotMod)
+
 
     //No mascotServerURL : Get PTM information from mascot "name"    
     var posConstraint = ""
@@ -128,14 +125,6 @@ object MascotPTMUtils extends LazyLogging  {
     ptmDefsAsArray
   }
 
-  /**
-   * FIXME : Get PTMs definition from mascot modification file (more information could be retrieve using ms_modification)
-   *
-   */
-  private def _getPTMDefsFromModFile(ptmProvider: IPTMProvider, ptmsStr: String): Array[PtmDefinition] = {
-//    logger.debug(" Use Mascot modification file to get PtmDefinitions")
-    return null
-  }
 
   /**
    * Parse posConstraintAsStr containing the list of residues and/or location where a PTM could be applied
