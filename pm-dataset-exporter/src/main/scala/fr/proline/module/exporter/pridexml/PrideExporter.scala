@@ -637,14 +637,69 @@ class PrideExporter(
 
   }
   
+//  protected def _buildModification(ptm: LocatedPtm): ModificationItem = {
+//    val mod = new ModificationItem()
+//    mod.setModLocation(BigInteger.valueOf(ptm.seqPosition))
+//    mod.setModDatabase("MOD")
+//    mod.setModAccession(UnimodToPSIPtmMap.map(ptm.definition.unimodId).getAccession())
+//    mod.getModMonoDelta().add(ptm.monoMass.toString)
+//    mod.getModAvgDelta().add(ptm.averageMass.toString)
+//    mod
+//  }
+
+
   protected def _buildModification(ptm: LocatedPtm): ModificationItem = {
     val mod = new ModificationItem()
     mod.setModLocation(BigInteger.valueOf(ptm.seqPosition))
     mod.setModDatabase("MOD")
-    mod.setModAccession(UnimodToPSIPtmMap.map(ptm.definition.unimodId).getAccession())
     mod.getModMonoDelta().add(ptm.monoMass.toString)
     mod.getModAvgDelta().add(ptm.averageMass.toString)
+
+    if(UnimodToPSIPtmMap.map.get(ptm.definition.unimodId).isDefined){
+      mod.setModAccession(UnimodToPSIPtmMap.map(ptm.definition.unimodId).getAccession())
+    } else {
+      val acc = getPSIAccessionFor(ptm: LocatedPtm)
+      if(acc == null){
+        logger.error("No PSI MOD Found for PTM "+ptm.definition.names)
+        throw new Exception("No PSI MOD Found for PTM "+ptm.definition.names)
+      }
+      mod.setModAccession(acc)
+    }
     mod
   }
+
+  object MorePSIPtms extends Enumeration {
+    case class Ptm2PSI (name: String, psiMod: String) extends Val(name){
+      //
+      //    def withAcc(acc: String): Ptm2PSI = {
+      //      if(acc.equals( LABEL_13C6_15N2_K.name)) {
+      //       LABEL_13C6_15N2_K
+      //      } else if(acc.equals( LABEL_13C6_15N2_K.name)) {
+      //        LABEL_13C6_15N4_R
+      //      }
+      //    }
+    }
+
+    val LABEL_13C6_15N2_K = Ptm2PSI("LABEL_13C6_15N2_K","MOD:00582")
+    val LABEL_13C6_15N4_R= Ptm2PSI("LABEL_13C6_15N4_R", "MOD:00587")
+    val DIMETHYL_KR= Ptm2PSI("Dimethyl RK", "MOD:00429")
+    val DIMETHYL= Ptm2PSI("Dimethyl", "MOD:00429")
+    val METHYL_KRH= Ptm2PSI("Methyl KRH", "MOD:00658")
+    val METHYL_KR= Ptm2PSI("Methyl KR", "MOD:00658")
+    val METHYLKR= Ptm2PSI("MethylKR", "MOD:00658")
+    val PHOSPHO_GOOD= Ptm2PSI("Phosphogood", "MOD:00696") //VDS TO BE REMOVED
+
+
+    implicit def valueToMorePSIPtms(v: Value): Ptm2PSI = v.asInstanceOf[Ptm2PSI]
+  }
+
+  def getPSIAccessionFor(ptm: LocatedPtm): String = {
+    try {
+      MorePSIPtms.withName(ptm.definition.names.shortName).psiMod
+    } catch {
+      case e: NoSuchElementException => { null }
+    }
+  }
+
 
 }
