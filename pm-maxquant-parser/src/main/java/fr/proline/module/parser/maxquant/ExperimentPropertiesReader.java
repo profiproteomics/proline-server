@@ -18,6 +18,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import fr.proline.core.om.model.msi.FragmentationRuleSet;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,16 +97,18 @@ public class ExperimentPropertiesReader {
 	private IPTMProvider m_ptmProvider;
 	private InstrumentConfig m_instrumentConfig;
 	private PeaklistSoftware m_peaklistSoftware;
+	private Option<FragmentationRuleSet>  m_fragmentationRuleSetOpt;
 	private File m_mqResultFileFolder;
 	private Map<String, Long>  m_rsIdByName;
 	private IMaxQuantParams m_mqParams = null;
 	private SearchSettings m_globalSearchSettings;
 	
-	public ExperimentPropertiesReader(URL folderURL, ISeqDatabaseProvider seqDbProvider, IPTMProvider ptmProvider, InstrumentConfig instrumentConfig, PeaklistSoftware peaklistSoftware) {
+	public ExperimentPropertiesReader(URL folderURL, ISeqDatabaseProvider seqDbProvider, IPTMProvider ptmProvider, InstrumentConfig instrumentConfig, Option<FragmentationRuleSet> fragRuleSetOpt, PeaklistSoftware peaklistSoftware) {
 		m_seqDbProvider = seqDbProvider;
 		m_ptmProvider = ptmProvider;
 		m_instrumentConfig = instrumentConfig;
 		m_peaklistSoftware = peaklistSoftware;
+		m_fragmentationRuleSetOpt = fragRuleSetOpt;
 		try {
 			m_mqResultFileFolder = new File(folderURL.toURI());
 			initReader();
@@ -116,11 +119,12 @@ public class ExperimentPropertiesReader {
 	}
 
 	
-	public ExperimentPropertiesReader(String mqFolder, ISeqDatabaseProvider seqDbProvider, IPTMProvider ptmProvider, InstrumentConfig instrumentConfig, PeaklistSoftware peaklistSoftware) {
+	public ExperimentPropertiesReader(String mqFolder, ISeqDatabaseProvider seqDbProvider, IPTMProvider ptmProvider, InstrumentConfig instrumentConfig, Option<FragmentationRuleSet> fragRuleSetOpt, PeaklistSoftware peaklistSoftware) {
 		m_seqDbProvider = seqDbProvider;
 		m_ptmProvider = ptmProvider;
 		m_instrumentConfig = instrumentConfig;
 		m_peaklistSoftware = peaklistSoftware;
+		m_fragmentationRuleSetOpt = fragRuleSetOpt;
 
 		m_mqResultFileFolder = new File(mqFolder);
 		initReader();
@@ -224,7 +228,7 @@ public class ExperimentPropertiesReader {
 		Map<String, Integer> qCountByRS = getQueriesCount();
 		
 		for(String nextFilePath : m_mqParams.getFilePaths()){
-			ResultSetProperties rsProp = new ResultSetProperties(Option.apply("SEPARATED"), null, null,null);
+			ResultSetProperties rsProp = new ResultSetProperties(Option.apply("SEPARATED"), null, null, null,null);
 			MSISearch nextMSI = createMSISearch(nextFilePath, creationDate, m_peaklistSoftware, qCountByRS );
 			
 			String rsName = FilenameUtils.getBaseName(nextFilePath);
@@ -347,7 +351,8 @@ public class ExperimentPropertiesReader {
 			enzymes, 
 			varPtms.toArray(new PtmDefinition[varPtms.size()]), fixedPtms.toArray(new PtmDefinition[fixedPtms.size()]), 
 			seqDbsList.toArray(new SeqDatabase[seqDbsList.size()]),
-			m_instrumentConfig, Option.apply(ssProp), 
+			m_instrumentConfig, m_fragmentationRuleSetOpt,
+			Option.apply(ssProp),
 			Option.empty(), // PMFSearchSettings
 			Option.empty());//SearchSettingsProperties
 					

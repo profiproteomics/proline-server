@@ -4,6 +4,8 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Map;
 
+import fr.proline.core.om.model.msi.FragmentationRule;
+import fr.proline.core.om.model.msi.FragmentationRuleSet;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -24,6 +26,7 @@ import fr.proline.module.parser.maxquant.model.ResultSetsDataMapper;
 import fr.proline.module.parser.maxquant.util.TestPTMProvider;
 import fr.proline.module.parser.maxquant.util.TestPeptideProvider;
 import fr.proline.module.parser.maxquant.util.TestSeqdDBProvider;
+import scala.Option;
 
 public class MSDataReaderTest {
 
@@ -32,7 +35,7 @@ public class MSDataReaderTest {
 	
 	@BeforeClass
 	public static void setUp(){
-		BasicExecutionContext ec = new BasicExecutionContext(null, null, null, null, null);
+		BasicExecutionContext ec = new BasicExecutionContext(1, null, null, null);
 		m_pec = ProviderDecoratedExecutionContext.apply(ec);
 		m_pec.putProvider(IPTMProvider.class, new TestPTMProvider());
 		m_pec.putProvider(IPeptideProvider.class, new TestPeptideProvider());
@@ -46,7 +49,9 @@ public class MSDataReaderTest {
 		InstrumentConfig ic = new InstrumentConfig(-1, new Instrument(-1, "test", "", null) , "FTMS", "FTMS", "CID");
 		PeaklistSoftware ps = new PeaklistSoftware(-1,"test ","1.0", null,null);
 		URL folderURL = this.getClass().getResource(folder);
-		ExperimentPropertiesReader reader = new ExperimentPropertiesReader(folderURL,m_pec.getProvider(ISeqDatabaseProvider.class),m_pec.getProvider(IPTMProvider.class), ic, ps);
+		FragmentationRuleSet frs = new FragmentationRuleSet(-1,"test",  new FragmentationRule[0]);
+
+		ExperimentPropertiesReader reader = new ExperimentPropertiesReader(folderURL,m_pec.getProvider(ISeqDatabaseProvider.class),m_pec.getProvider(IPTMProvider.class), ic, Option.apply(frs), ps);
 		Map<String, Long> rsidByName = reader.getResultSetIds();
 				
 		SearchSettings ss = reader.getSearchSettings();
@@ -56,7 +61,7 @@ public class MSDataReaderTest {
 		System.arraycopy(fixedPtms, 0, allPtms, varPtms.length, fixedPtms.length);
 		
 		StringBuffer warningMsg = new StringBuffer();
-		MSDataReader dataReader = new MSDataReader(folderURL, m_pec, ic,ps);
+		MSDataReader dataReader = new MSDataReader(folderURL, m_pec, -1l, ps);
 		Long start = System.currentTimeMillis();
 		ResultSetsDataMapper rsMapper= dataReader.parseMSData2ResulSets(rsidByName, allPtms, "(.*)\\|", warningMsg);
 		logger.info("MS parsed in "+(System.currentTimeMillis() - start)+" ms");
@@ -84,7 +89,8 @@ public class MSDataReaderTest {
 		InstrumentConfig ic = new InstrumentConfig(-1, new Instrument(-1, "test", "", null) , "FTMS", "FTMS", "CID");
 		PeaklistSoftware ps = new PeaklistSoftware(-1,"test ","1.0", null,null);
 		URL folderURL = this.getClass().getResource(folder);
-		ExperimentPropertiesReader reader = new ExperimentPropertiesReader(folderURL,m_pec.getProvider(ISeqDatabaseProvider.class),m_pec.getProvider(IPTMProvider.class), ic, ps);
+		FragmentationRuleSet frs = new FragmentationRuleSet(-1,"test",  new FragmentationRule[0]);
+		ExperimentPropertiesReader reader = new ExperimentPropertiesReader(folderURL,m_pec.getProvider(ISeqDatabaseProvider.class),m_pec.getProvider(IPTMProvider.class), ic,  Option.apply(frs), ps);
 		Map<String, Long> rsidByName = reader.getResultSetIds();
 				
 		SearchSettings ss = reader.getSearchSettings();
@@ -94,7 +100,7 @@ public class MSDataReaderTest {
 		System.arraycopy(fixedPtms, 0, allPtms, varPtms.length, fixedPtms.length);
 		
 		StringBuffer warningMsg = new StringBuffer();
-		MSDataReader dataReader = new MSDataReader(folderURL, m_pec, ic,ps);
+		MSDataReader dataReader = new MSDataReader(folderURL, m_pec, -1l,ps);
 		ResultSetsDataMapper rsMapper= dataReader.parseMSData2ResulSets(rsidByName, allPtms, "(.*)\\|", warningMsg);
 		Assert.assertNotEquals(0,warningMsg.length());
 		logger.info(" Warning Msg: "+warningMsg.toString());
