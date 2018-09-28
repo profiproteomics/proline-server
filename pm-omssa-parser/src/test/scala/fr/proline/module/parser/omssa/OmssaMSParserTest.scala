@@ -54,7 +54,6 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
 
     //Load Data
     logger.info("Initializing Dbs")
-    psDBTestCase.loadDataSet("/default_datasets/Unimod_Dataset.xml")
     pdiDBTestCase.loadDataSet("/default_datasets/Proteins_Dataset.xml")
     msiDBTestCase.loadDataSet("/default_datasets/Init_Dataset.xml")
 
@@ -65,15 +64,11 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
 
     val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, true) // default: false
     val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true) // default: true
-    val psDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, true) // default: false
     val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), true) // default: false
 
-    val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
+    val executionContext = new BasicExecutionContext(1L, udsDbCtx, pdiDbCtx, msiDbCtx, null)
 
     parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
-
-    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx))
-    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx))
 
     Assert.assertNotNull(parserContext)
   }
@@ -215,7 +210,7 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")
 
-    val storer = fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer(parserContext.getPSDbConnectionContext())
+    val storer = fr.proline.core.om.storer.msi.BuildPtmDefinitionStorer(parserContext.getMSIDbConnectionContext)
     val resultFileProvider = new OmssaResultFileProvider
     val verifier = resultFileProvider.getResultFileVerifier
 
@@ -250,7 +245,7 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")
 
-    val storer = fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer(parserContext.getPSDbConnectionContext)
+    val storer = fr.proline.core.om.storer.msi.BuildPtmDefinitionStorer(parserContext.getMSIDbConnectionContext)
     val resultFileProvider = new OmssaResultFileProvider
     val verifier = resultFileProvider.getResultFileVerifier
     val ptms = verifier.getPtmDefinitions(new File(Thread.currentThread.getContextClassLoader.getResource("omssa_config/usermods.xml").getPath()), propertiesBuilder.result)

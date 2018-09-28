@@ -505,7 +505,7 @@ class OmssaReadFile(val omxFile: File,
    */
   private def parseMSISearch(nbSpectra: Int, seqDbProvider: ISeqDatabaseProvider) = {
     // prepare variables
-    val msiSearchProvider = new SQLMsiSearchProvider(parserContext.getUDSDbConnectionContext(), parserContext.getMSIDbConnectionContext(), parserContext.getPSDbConnectionContext())
+    val msiSearchProvider = new SQLMsiSearchProvider(parserContext.getUDSDbConnectionContext(), parserContext.getMSIDbConnectionContext())
     val msLevel = 2
     val msVarPtms = new ArrayBuffer[PtmDefinition]()
     val msFixedPtms = new ArrayBuffer[PtmDefinition]()
