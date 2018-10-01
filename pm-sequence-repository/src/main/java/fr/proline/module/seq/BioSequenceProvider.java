@@ -64,64 +64,7 @@ public final class BioSequenceProvider {
 		}
 		return result;
 	}
-	
-	public static Map<String, SEDbIdentifierRelated> findSEDbIdentRelatedData(final String seDbName,final Collection<String> values) {
-		Map<String, SEDbIdentifierRelated> result = null;
 
-		/* Client / Provider side */
-		final IDatabaseConnector seqDb = DatabaseAccess.getSEQDatabaseConnector(false);
-
-		EntityManager seqEM = seqDb.createEntityManager();
-
-		try {
-			result = findSEDbIdentRelated(seqEM, seDbName,values);
-		} finally {
-
-			if (seqEM != null) {
-				try {
-					seqEM.close();
-				} catch (Exception exClose) {
-					LOG.error("Error closing SEQ Db EntityManager", exClose);
-				}
-			}
-		}
-		return result;
-	}
-	private static Map<String, SEDbIdentifierRelated> findSEDbIdentRelated(final EntityManager seqEM,final String seDbName, final Collection<String> values) {
-		
-		final Map<String, SEDbIdentifierRelated> result= new HashMap<>();
-		
-		final List<SEDbIdentifier> seDbIdentifiers = SEDbIdentifierRepository.findSEDbIdentBySEDbNameAndValues(seqEM, seDbName, values);				
-		if ((seDbIdentifiers != null) && !seDbIdentifiers.isEmpty()) {
-
-			for (final SEDbIdentifier seDbIdent : seDbIdentifiers) {
-				
-				final String key = seDbIdent.getValue();// Should not be null
-				if ((key!= null) && (!key.isEmpty())) {
-					final String Description = seDbIdent.getDescription();//could be null
-					
-					SEDbIdentifierRelated seIdentObjects =result.get(key);
-					if(seIdentObjects== null) {
-						seIdentObjects = new SEDbIdentifierRelated();
-						result.put(key, seIdentObjects);
-					}
-					
-					//-- Get BioSequenceWrapper
-					List<BioSequenceWrapper> bioSequences = seIdentObjects.getBioSequenceWrappers();										
-
-					final BioSequenceWrapper bioSequenceW = buildBioSequenceWrapper(seDbIdent);
-					bioSequences.add(bioSequenceW);
-					
-					//-- Get SEDbIdentifierWrapper
-					List<SEDbIdentifierWrapper> sedDbid =  seIdentObjects.getSEDbIdentWrappers();					
-					SEDbIdentifierWrapper SEDbIdentWrap=new SEDbIdentifierWrapper(key, Description);
-					sedDbid.add(SEDbIdentWrap);
-				}
-			} //End go through seDbIdentifiers	
-		}
-		
-		return result;
-	}
 
 	private static Map<String, SEDbIdentifierRelated> findSEDbIdentRelated(final EntityManager seqEM, final Collection<String> values) {
 		

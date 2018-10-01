@@ -457,7 +457,7 @@ public class ProjectHandler {
 		final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId);
 		final IDatabaseConnector udsDbConnector = connectorFactory.getUdsDbConnector();
 		Map<ProteinMatch, Integer> coveredSeqLengthByProtMatchList = new HashMap<>();
-		Set<String> seDbNames = new HashSet<>();
+
 		if (msiDbConnector == null) {
 			LOG.warn("Project #{} has NO associated MSI Db", projectId);
 		} else {
@@ -478,9 +478,7 @@ public class ProjectHandler {
 					fillMsiSeqDBRelease(msiEM,seDbInstances);
 
 					LOG.info(" Filling ProteinMatches properties on project {}. Found a total of {} rsm", projectId, rsmIds.size());
-					for (Entry<Long, SEDbInstanceWrapper>  entry : seDbInstances.entrySet()) {
-						seDbNames.add(entry.getValue().getName());
-					}
+
 					// for each RSM in data_set.result_summmary_id
 					for (Long rsmId : rsmIds) {
 						final long start = System.currentTimeMillis();
@@ -594,11 +592,10 @@ public class ProjectHandler {
 									getSeqCoverageForProteinMatch(seqMatchesInfoByProteinMatchId, protSet2ProtMatch.getProteinMatch(),
 										pepIdsByProtSetId.get(protSet.getId())));
 							}
-							Map<String,BioSequenceProvider.SEDbIdentifierRelated> protMatchesObjResult = new HashMap<>();
+
 							//--  Get Wrappers for all ProteinMatches: bioSequence and SEDbIdentifier
-							for(String seDbName:seDbNames) {
-								 protMatchesObjResult = BioSequenceProvider.findSEDbIdentRelatedData(seDbName,allProtMatchesAccession);
-							}
+							Map<String,BioSequenceProvider.SEDbIdentifierRelated> protMatchesObjResult = BioSequenceProvider.findSEDbIdentRelatedData(allProtMatchesAccession);
+
 
 							//Update and Save properties
 							updateProteinMatchesProperties(coveredSeqLengthByProtMatchList, msiEM, enzyme, protSetMapByProtMatch, protMatchesObjResult);
