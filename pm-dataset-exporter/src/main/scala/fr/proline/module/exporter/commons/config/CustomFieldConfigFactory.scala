@@ -63,8 +63,8 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_PROTEIN_SETS_ID, "protein_set_id"),
       CustomFieldConfig(FIELD_PROTEIN_SETS_ACCESSION, "accession"),
       CustomFieldConfig(FIELD_PROTEIN_MATCH_GENE_NAME, "gene_name"),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_SAMESETS_ACCESSIONS, "samesets_accessions", false),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_SUBSETS_ACCESSIONS, "subsets_accessions", false), 
+      CustomFieldConfig(FIELD_PROTEIN_SETS_SAMESETS_ACCESSIONS, "samesets_accessions", defaultDisplayed = false),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_SUBSETS_ACCESSIONS, "subsets_accessions", defaultDisplayed = false),
       CustomFieldConfig(FIELD_PROTEIN_SETS_DESCRIPTION, "description"),
       CustomFieldConfig(FIELD_PROTEIN_SETS_SCORE, "protein_set_score"),
       CustomFieldConfig(FIELD_PROTEIN_SETS_IS_VALIDATED, "is_validated"),
@@ -97,7 +97,7 @@ object CustomFieldConfigFactory {
       this._appendProfilizerFields(fieldsBuffer)
     }
 
-    return fieldsBuffer.toArray
+    fieldsBuffer.toArray
   }
   
   private def _appendProfilizerFields( fieldsBuffer: ArrayBuffer[CustomFieldConfig] ) {
@@ -163,7 +163,7 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_PSM_PHOSPHO_RS_RESULT, "phosphors_result", defaultDisplayed = false)
     ).filter( _ != null )
     
-    fieldsBuffer ++= getProteinSetsSheetFields(false, false, false)
+    fieldsBuffer ++= getProteinSetsSheetFields(fromProtein = false, fromXIC = false, fromSC = false)
 
     if (fromXIC || fromSC) {
       fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id")
@@ -205,7 +205,7 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_MASTER_QUANT_PEPTIDE_ION_FEATURE_ID, "master_quant_peptide_ion_feature_id")
     )
     
-    fieldsBuffer ++= getProteinSetsSheetFields(false, false, false)
+    fieldsBuffer ++= getProteinSetsSheetFields(fromProtein = false, fromXIC = false, fromSC = false)
     
     fieldsBuffer ++= Array(
       CustomFieldConfig(FIELD_QUANT_PEPTIDE_ION_BEST_SCORE, "best_score"), // incremental

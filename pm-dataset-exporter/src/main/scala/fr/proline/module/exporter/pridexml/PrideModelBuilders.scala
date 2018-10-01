@@ -1,7 +1,6 @@
 package fr.proline.module.exporter.pridexml
 
 import uk.ac.ebi.pride.jaxb.model._
-import uk.ac.ebi.pride.jaxb.xml.marshaller.PrideXmlMarshallerFactory
 import uk.ac.ebi.pride.jaxb.xml.unmarshaller.PrideXmlUnmarshallerFactory
 
 
@@ -72,8 +71,8 @@ object CvParam {
   }
    
    def apply(xmlString: String): uk.ac.ebi.pride.jaxb.model.CvParam = {     
-	val pof = PrideXmlUnmarshallerFactory.getInstance();
-    val unmarshaller = pof.initializeUnmarshaller();
+	  val pof = PrideXmlUnmarshallerFactory.getInstance()
+    val unmarshaller = pof.initializeUnmarshaller()
     val cvp =  unmarshaller.unmarshal(xmlString, classOf[CvParam])
     cvp
   }

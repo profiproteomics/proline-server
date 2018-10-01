@@ -1,20 +1,17 @@
 package fr.proline.module.exporter.dataset
 
-import scala.collection.JavaConversions._
-import scala.collection.mutable.LongMap
 import fr.profi.util.collection._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
-import fr.proline.core.algo.msq.config.IQuantConfig
-import fr.proline.core.algo.msq.config.profilizer.ProfilizerConfig
-import fr.proline.core.orm.uds.{ MasterQuantitationChannel => UdsMasterQuantChannel }
+
+import scala.collection.mutable.LongMap
 
 class QuantDataset(
   override val projectName: String,
   val quantRSM: LazyQuantResultSummary,
   val expDesign: Option[ExperimentalDesign],
-  val quantConfigAndMethod: Option[(IQuantConfig,IQuantMethod)],
-  val profilizerConfig: Option[ProfilizerConfig],
+  val quantConfigAndMethod: Option[(String,IQuantMethod)],
+  val profilizerConfig: Option[String],
   val masterQuantChannel: MasterQuantChannel,
   val groupSetupNumber: Int,
   override protected val loadChildResultSummaries: () => Array[LazyResultSummary],

@@ -53,7 +53,7 @@ class ProtSetToProtMatchView(
     recordBuilder.result()
   }
 
-  override def onEachRecord(recordFormatter: Map[String, Any] => Unit) {
+  override def formatView(recordFormatter: Map[String, Any] => Unit) {
 
     val rsm = identDS.resultSummary
     val rs = rsm.lazyResultSet

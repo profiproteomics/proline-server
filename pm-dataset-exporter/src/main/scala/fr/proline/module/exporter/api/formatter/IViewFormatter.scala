@@ -1,8 +1,6 @@
 package fr.proline.module.exporter.api.formatter
 
 import java.io.File
-import java.io.FileOutputStream
-import java.io.OutputStream
 
 import fr.proline.module.exporter.api.context.IViewSetCreationContext
 import fr.proline.module.exporter.api.template.IFileExtensionEnumeration

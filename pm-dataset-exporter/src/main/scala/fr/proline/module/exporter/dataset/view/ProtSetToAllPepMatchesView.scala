@@ -22,7 +22,7 @@ class ProtSetToAllPepMatchesView(
   override var viewName = "all_prot_set_peptide_matches"
   
   // TODO: factorize this code with ProtSetToBestPepMatchView in AbsractProtSetToPepMatchView (onEachPeptideMatch method)
-  override def onEachRecord(recordFormatter: Map[String, Any] => Unit) {
+  override def formatView(recordFormatter: Map[String, Any] => Unit) {
 
     val rsm = identDS.resultSummary
     val rs = rsm.lazyResultSet

@@ -1,15 +1,13 @@
 package fr.proline.module.exporter.pridexml
 
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.proline.api.service.IService
 import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.helper.MsiDbHelper
-import fr.proline.core.dal.helper.PsDbHelper
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.IResultSummaryProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
-import fr.proline.core.om.provider.msi.impl.SQLSpectrumProvider
+
 
 class PrideExporterService (
   execCtx: IExecutionContext,
@@ -19,19 +17,17 @@ class PrideExporterService (
 
   def runService(): Boolean = {
 
-    require(!execCtx.isJPA(), "SQL connextion should be provided")
-    val udsSQLCtx = execCtx.getUDSDbConnectionContext()
-    val psSQLCtx = execCtx.getPSDbConnectionContext()
-    val msiSQLCtx = execCtx.getMSIDbConnectionContext()
-    
-    val rsmProvider = getResultSummaryProvider(execCtx)
-    val rsm = rsmProvider.getResultSummary(resultSummaryId, true).get
+    require(!execCtx.isJPA, "SQL connextion should be provided")
+    val udsSQLCtx = execCtx.getUDSDbConnectionContext
+    val msiSQLCtx = execCtx.getMSIDbConnectionContext
 
-    val unimodIdByPtmId = DoJDBCReturningWork.withEzDBC(psSQLCtx, { psEzDBC =>
-      new PsDbHelper(psEzDBC).getUnimodIdByPtmId()
-    })
+    val rsmProvider = getResultSummaryProvider(execCtx)
+    val rsm = rsmProvider.getResultSummary(resultSummaryId, loadResultSet = true).get
 
     val msiDbHelper = new MsiDbHelper(msiSQLCtx)
+    val unimodIdByPtmId = msiDbHelper.getUnimodIdByPtmId()
+
+
 
     //VDS : Not used !
     // TODO: use peaklist_relation instead ?
@@ -49,9 +45,7 @@ class PrideExporterService (
     // TODO Retrieve a ResultSetProvider from a decorated ExecutionContext ?
   private def getResultSummaryProvider(execContext: IExecutionContext): IResultSummaryProvider = {
 		  
-    new SQLResultSummaryProvider(execContext.getMSIDbConnectionContext,
-      execContext.getPSDbConnectionContext,
-      execContext.getUDSDbConnectionContext)
+    new SQLResultSummaryProvider(PeptideCacheExecutionContext(execContext))
   }
 
 }

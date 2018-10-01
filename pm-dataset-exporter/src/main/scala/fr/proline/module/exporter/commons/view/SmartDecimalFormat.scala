@@ -26,10 +26,10 @@ class SmartDecimalFormat(val decimalFormat: DecimalFormat ) {
     var( isDouble, isFloat, isInt, isLong ) = (false,false,false,false)
     
     val isNaN = value match {
-      case d: Double => isDouble = true; d.isNaN()
-      case f: Float => isFloat = true; f.isNaN()
-      case i: Int => isInt = true; i.isNaN()
-      case l: Long => isLong = true; l.isNaN()
+      case d: Double => isDouble = true; d.isNaN
+      case f: Float => isFloat = true; f.isNaN
+      case i: Int => isInt = true; i.isNaN
+      case l: Long => isLong = true; l.isNaN
       case _ => false
     }
     
@@ -39,7 +39,7 @@ class SmartDecimalFormat(val decimalFormat: DecimalFormat ) {
       value
     } else {
       // DBO: why ????
-      if (this.decimalFormat.getDecimalFormatSymbols.getDecimalSeparator() == ExportConfigConstant.DECIMAL_SEPARATOR_DOT) {
+      if (this.decimalFormat.getDecimalFormatSymbols.getDecimalSeparator == ExportConfigConstant.DECIMAL_SEPARATOR_DOT) {
         decimalFormat.format(value).toDouble
       } else {
         decimalFormat.format(value)

@@ -18,7 +18,7 @@ class InfoXLSXTemplate(
     
     val selectedFieldsOrFields: Seq[String] = {
       if( selectedFields.isDefined ) selectedFields.get
-      else view.getFieldsNames
+      else view.getFieldsNames()
     }
     
     // Retrieve workbook
@@ -90,7 +90,7 @@ class InfoXLSXTemplate(
     // Iterate over records to append them to the worksheet
     // Each new record is a new column    
     
-    view.onEachRecord( record => {
+    view.formatView(record => {
       
       colIdx += 1
       rowIdx = 0

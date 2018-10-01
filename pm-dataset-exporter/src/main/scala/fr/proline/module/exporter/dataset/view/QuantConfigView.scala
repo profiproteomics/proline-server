@@ -2,19 +2,15 @@ package fr.proline.module.exporter.dataset.view
 
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.LongMap
-import fr.profi.util.collection._
+
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.core.algo.lcms._
 import fr.proline.core.algo.msq.config._
 import fr.proline.core.algo.msq.config.profilizer._
-import fr.proline.core.om.model.msi._
-import fr.proline.core.om.model.msq.IQuantMethod
 import fr.proline.module.exporter.api.view._
-import fr.proline.module.exporter.commons.config.ExportConfigConstant._
-import fr.proline.module.exporter.commons.config.ExportConfigSheet
-import fr.proline.module.exporter.commons.config.view.CustomViewFields
 import fr.proline.module.exporter.dataset._
+
+import scala.collection.mutable.ArrayBuffer
 
 class QuantConfigView(
   val quantDs: QuantDataset,
@@ -22,109 +18,59 @@ class QuantConfigView(
   val dateFormat: SimpleDateFormat,
   val decimalFormat: DecimalFormat
 ) extends IFormLikeView {
-  
-  private val quantConfigAndMethodOpt = quantDs.quantConfigAndMethod
-  private val profilizerConfigOpt = quantDs.profilizerConfig
 
   var viewName = "quant_config"
+  private var developerDictionnary = Map("aln" -> "alignment", "config" -> "", "params" -> "", "tol" -> "tolerance", "ft" -> "feature")
 
-  // TODO: update the IFormLikeView trait to use List[Tuple2] instead of Map 
-  def getFieldValueMap() = _fieldValuePairs.toMap
-  def getFieldsNames() = _fieldValuePairs.map(_._1)
-
+  private val quantConfigAndMethodOpt = quantDs.quantConfigAndMethod
+  private val profilizerConfigOpt = quantDs.profilizerConfig
   private val _fieldValuePairs = {
-    
-    val quantConfigParams = if (quantConfigAndMethodOpt.isEmpty) Array.empty[(String,Any)]
-    else {
-      val (quantConfig, quantMethod ) = quantConfigAndMethodOpt.get
-      
-      quantConfig match {
-        case lfqConfig: LabelFreeQuantConfig => {
-          
-          // TODO: replace the boolean values in lfqConfig by this enum ???
-          /*val signalProcStrategy = if(lfqConfig.detectPeakels || lfqConfig.detectFeatures) "Detect LC-MS peaks"
-          else if (lfqConfig.startFromValidatedPeptides) "Perform XIC of validated peptides"
-          else "Perform XIC of MS/MS events"
-          
-          val deisotopingMode = if (lfqConfig.detectPeakels || !lfqConfig.detectFeatures) "Identification based"
-          else "Unsupervised"*/
-          
-          val extractionParams = lfqConfig.extractionParams
-          val clusteringParams = lfqConfig.clusteringParams
-          val alnMethod = AlnMethod.withName(lfqConfig.alnMethodName)
-          val alnParams = lfqConfig.alnParams
-          val alnFtMappingParams = alnParams.ftMappingParams
-          val alnSmoothingMethod = AlnSmoothing.withName(alnParams.smoothingMethodName)
-          val alnSmoothingParams = alnParams.smoothingParams
-          val ftMappingParams = lfqConfig.ftMappingParams
-            
-          Array(
-            "### QUANTITATION PARAMETERS ###" -> null,
-            //"Signal processing strategy" -> signalProcStrategy,
-            //"Deisotoping mode" -> deisotopingMode,
-            "Use previous peakel detection" -> lfqConfig.useLastPeakelDetection,
-            "Signal extraction tolerance" -> s"${extractionParams.mozTol} ${extractionParams.mozTolUnit}",
-            //"" -> lfqConfig.minPeakelDuration
-            "Feature clustering m/z tolerance" -> s"${clusteringParams.mozTol} ${clusteringParams.mozTolUnit}",
-            "Feature clustering time tolerance (sec)" -> clusteringParams.timeTol,
-            "Feature cluster time computation" -> clusteringParams.timeComputation,
-            "Feature cluster intensity computation" -> clusteringParams.intensityComputation,
-            "Alignment method" -> lfqConfig.alnMethodName,
-            if (alnMethod == AlnMethod.ITERATIVE) "Max. number of alignment iterations" -> alnParams.maxIterations else null,
-            "Alignment m/z tolerance" -> s"${alnFtMappingParams.mozTol} ${alnFtMappingParams.mozTolUnit}",
-            "Alignment time tolerance (sec)" -> alnFtMappingParams.timeTol,
-            "Alignment smoothing method" -> alnParams.smoothingMethodName,
-            if (alnSmoothingMethod == AlnSmoothing.TIME_WINDOW) "Alignment time interval (sec)" -> alnSmoothingParams.minWindowLandmarks else null,
-            "Alignment window size" -> alnSmoothingParams.windowSize,
-            "Alignment window overlap (%)" -> alnSmoothingParams.windowOverlap,
-            "Match between runs m/z tolerance" -> s"${ftMappingParams.mozTol} ${ftMappingParams.mozTolUnit}",
-            "Match between runs time tolerance (sec)" -> ftMappingParams.timeTol,
-            lfqConfig.normalizationMethod.map( "Intensity normalization method" -> _ ).orNull
-          )
-          
-        }
-        case _ => Array.empty[(String,Any)]
-      }
+
+    val quantConfigParams = if (quantConfigAndMethodOpt.isEmpty) {
+      Array.empty[(String, Any)]
+    } else {
+      val (quantConfigStr, quantMethod ) = quantConfigAndMethodOpt.get
+      val quantConfigAsMap = ProfiJson.deserialize[Map[String,Any]](quantConfigStr)
+      _stringifyMap(quantConfigAsMap, developerDictionnary)
     }
-    
+
     val profilizerParams = profilizerConfigOpt.map { profilizerConfig =>
-      
-      // Small trick to rename LFQ to "MEDIAN RATIO FITTING" if necessary
-      // Note: the code voluntarily use the enum here to be aware of a potential future change in the enum definition
-      val summarizerMethodOpt = AbundanceSummarizerMethod.maybeNamed(profilizerConfig.abundanceSummarizerMethod)
-      val summarizerMethod = if (summarizerMethodOpt.isEmpty) null
-      else if(summarizerMethodOpt.get == AbundanceSummarizerMethod.LFQ) "MEDIAN RATIO FITTING"
-      else profilizerConfig.abundanceSummarizerMethod
-      
-      val mainParams = Array(
-        "### POST-PROCESSING PARAMETERS ###" -> null,
-        "Use only specific peptides" -> profilizerConfig.useOnlySpecificPeptides,
-        "Discard miss cleaved peptides" -> profilizerConfig.discardMissedCleavedPeptides,
-        "Discard oxidized peptides" -> profilizerConfig.discardOxidizedPeptides,
-        "Apply profile clustering" -> profilizerConfig.applyProfileClustering,
-        if (!profilizerConfig.applyProfileClustering) null
-        else profilizerConfig.profileClusteringMethod.map("Profile clustering method" -> _).orNull,
-        "Abundance summarizer method" -> summarizerMethod
-      )
-      
-      val peptideStatConfig = _stringifyProfilizerStatParams(
-        "### POST-PROCESSING PARAMETERS AT PEPTIDE LEVEL ###",
-        " on peptides",
-        profilizerConfig.peptideStatConfig
-      )
-      val proteinStatConfig = _stringifyProfilizerStatParams(
-        "### POST-PROCESSING PARAMETERS AT PROTEIN LEVEL ###",
-        " on proteins",
-        profilizerConfig.proteinStatConfig
-      )
-      
-      mainParams ++ peptideStatConfig ++ proteinStatConfig
-      
+      _stringifyMap(ProfiJson.deserialize[Map[String,Any]](profilizerConfig), developerDictionnary)
     }.getOrElse( Array() )
-    
+
     (quantConfigParams ++ profilizerParams).filter(_ != null) // remove null entries
   }
+
+
+  // TODO: update the IFormLikeView trait to use List[Tuple2] instead of Map
+  def getFieldValueMap(): Map[String, Any] = _fieldValuePairs.toMap
+
+  def getFieldsNames(): Array[String] = _fieldValuePairs.map(_._1)
   
+  def _stringifyMap(map : Map[String, Any], dictionnary: Map[String, String] = Map()): Array[(String, Any)] = {
+
+    var strings = ArrayBuffer[(String, Any)]()
+    var tmpMap = collection.mutable.Map[String, Any]()
+
+    map.foreach { case(key, value) =>
+      if (map.contains(key+"_unit")) {
+        tmpMap += (key -> (value.toString +" "+map(key+"_unit")))
+      } else if (!key.endsWith("_unit") ) {
+        tmpMap += (key -> value)
+      }
+    }
+
+    tmpMap.foreach { case (key, value) =>
+      val modifiedKey = key.replace('_',' ').split("\\W+").map(w => dictionnary.getOrElse(w, w)).mkString(" ").trim().replaceAll("\\s{2,}", " ")
+      val str = value match {
+        case m:Map[String, Any] => _stringifyMap(m, dictionnary).map{ case(e1, e2) => (modifiedKey+" "+e1, e2) }
+        case _ => Array((modifiedKey, value.toString))
+      }
+      strings ++= str
+    }
+    strings.toArray
+  }
+
   private def _stringifyProfilizerStatParams(label: String, suffix: String, statConfig: ProfilizerStatConfig): Array[(String,Any)] = {
     val params = Array(
       "Apply normalization" -> statConfig.applyNormalization,
@@ -137,7 +83,7 @@ class QuantConfigView(
       "T-Test p-value threshold" -> decimalFormat.format(statConfig.statTestsAlpha),
       "Apply Z-Test" -> statConfig.applyZTest
     ).withFilter( _ != null).map( kv => (kv._1 + suffix, kv._2) )
-    
+
     Array(label -> null) ++ params
   }
 

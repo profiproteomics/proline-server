@@ -1,42 +1,39 @@
 package fr.proline.module.exporter.dataset.view
 
-import scala.collection.JavaConversions._
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.LongMap
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.jdbc.easy._
 import fr.profi.util.StringUtils
 import fr.profi.util.collection._
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.context.MsiDbConnectionContext
 import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.DoJDBCWork
+import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
+import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.helper.UdsDbHelper
 import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.SelectQueryBuilder2
 import fr.proline.core.dal.tables.SelectQueryBuilder3
 import fr.proline.core.dal.tables.msi.MsiDbMsiSearchTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
 import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
+import fr.proline.core.dal.tables.uds.UdsDbDataSetTable
 import fr.proline.core.dal.tables.uds.UdsDbProjectTable
+import fr.proline.core.dal.tables.uds.UdsDbQuantChannelTable
 import fr.proline.core.om.model.msi.LazyResultSet
 import fr.proline.core.om.model.msi.LazyResultSummary
-import fr.proline.core.om.model.msi.Ms2Query
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.impl._
 import fr.proline.core.om.provider.msq.impl._
-import fr.proline.module.exporter.api.template._
 import fr.proline.module.exporter.api.template.ViewWithTemplate
+import fr.proline.module.exporter.api.template._
 import fr.proline.module.exporter.commons.config._
 import fr.proline.module.exporter.commons.view.ViewSet
 import fr.proline.module.exporter.dataset._
 import fr.proline.module.exporter.dataset.template._
-import java.sql.Connection
-import fr.proline.repository.util.JDBCWork
-import fr.proline.core.dal.tables.uds.UdsDbDataSetTable
-import fr.proline.core.dal.tables.uds.UdsDbQuantChannelTable
-import fr.proline.core.dal.tables.SelectQueryBuilder2
+
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.LongMap
 
 object BuildDatasetViewSet extends LazyLogging {
 
@@ -129,12 +126,11 @@ object BuildDatasetViewSet extends LazyLogging {
     exportConfig: ExportConfig
   ): ViewSet = {
 
-    val udsDbCtx = executionContext.getUDSDbConnectionContext()
-    val psDbCtx = executionContext.getPSDbConnectionContext()
-    val msiDbCtx = executionContext.getMSIDbConnectionContext()
+    val udsDbCtx = executionContext.getUDSDbConnectionContext
+    val msiDbCtx = executionContext.getMSIDbConnectionContext
     val msiDbHelper = new MsiDbHelper(msiDbCtx)
-    val lazyRsmProvider = new SQLLazyResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx)
-    val lazyRsProvider = new SQLLazyResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
+    val lazyRsmProvider = new SQLLazyResultSummaryProvider(PeptideCacheExecutionContext(executionContext))
+    val lazyRsProvider = new SQLLazyResultSetProvider(PeptideCacheExecutionContext(executionContext))
 
     // Retrieve the project name
     val projectName = DoJDBCReturningWork.withEzDBC(udsDbCtx) { udsEzDBC =>
@@ -207,7 +203,7 @@ object BuildDatasetViewSet extends LazyLogging {
       // Retrieve masterQuantChannelId
       val udsDbHelper = new UdsDbHelper(udsDbCtx)
       val masterQcIds = udsDbHelper.getMasterQuantChannelIdsForQuantId(dsId)
-      require(masterQcIds.isEmpty == false, "can't retrieve master quant channels for quantitation id=" + dsId)
+      require(!masterQcIds.isEmpty, "can't retrieve master quant channels for quantitation id=" + dsId)
 
       // FIXME: how to deal with other MQC ids
       val masterQuantChannelId = masterQcIds.head
@@ -217,8 +213,13 @@ object BuildDatasetViewSet extends LazyLogging {
         // Load the quant config and the profilizer config
         val quantConfigProvider = new SQLQuantConfigProvider(udsDbCtx)
         val profilizerConfigProvider = new SQLProfilizerConfigProvider(udsDbCtx)
-        
-        (quantConfigProvider.getQuantConfigAndMethod(dsId),profilizerConfigProvider.getProfilizerConfig(dsId))
+        val quantConfigAsStringOpt = quantConfigProvider.getQuantConfigAsString(dsId)
+        val quantConfigAndMethod = if (quantConfigAsStringOpt.isDefined) {
+          Some(quantConfigAsStringOpt.get._1, quantConfigAsStringOpt.get._3)
+        } else {
+          None
+        }
+        (quantConfigAndMethod,profilizerConfigProvider.getProfilizerConfigAsString(dsId))
       }
 
       // Load the experimental design
@@ -247,8 +248,8 @@ object BuildDatasetViewSet extends LazyLogging {
       // Load the quant RSM
       logger.debug(s"Loading quant result summary #$rsmId...")
 
-      val loadReporterIons = (mode == ExportConfigConstant.MODE_QUANT_TAGGING)
-      val quantRsmProvider = new SQLLazyQuantResultSummaryProvider(msiDbCtx, psDbCtx, udsDbCtx, loadReporterIons)
+      val loadReporterIons = mode == ExportConfigConstant.MODE_QUANT_TAGGING
+      val quantRsmProvider = new SQLLazyQuantResultSummaryProvider(PeptideCacheExecutionContext(executionContext), loadReporterIons)
       val lazyQuantRSM = quantRsmProvider.getLazyQuantResultSummaries(
         dsId,
         Seq(quantRsmId),
@@ -286,7 +287,7 @@ object BuildDatasetViewSet extends LazyLogging {
 
         // Check we had not problem to retrieve the result sets corresponding to the quant channels
         // If we have a problem then we return the result sets in the previous order
-        if (sortedResultSets.exists(_ == null)) resultSets else sortedResultSets         
+        if (sortedResultSets.exists(_ == null)) resultSets else sortedResultSets
       }
 
       var qcNameById = quantChannels.toLongMapWith(qc => qc.id -> qc.name)
@@ -381,7 +382,7 @@ object BuildDatasetViewSet extends LazyLogging {
         
         for( mqProtSet <- mqProtSets ) {
           
-          val pepInsts = mqProtSet.proteinSet.peptideSet.getPeptideInstances
+          val pepInsts = mqProtSet.proteinSet.peptideSet.getPeptideInstances()
           
           val pepCountByQcId = new LongMap[Int](qcCount)
           
@@ -479,7 +480,7 @@ object BuildDatasetViewSet extends LazyLogging {
     val protIds = new ArrayBuffer[Long](protMatches.length)
 
     for (protMatch <- protMatches) {
-      val protId = protMatch.getProteinId
+      val protId = protMatch.getProteinId()
       if (protId > 0) {
         protIds += protId
       }

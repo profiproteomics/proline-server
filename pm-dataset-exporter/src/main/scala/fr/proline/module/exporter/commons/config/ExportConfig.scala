@@ -7,13 +7,13 @@ import fr.profi.util.serialization._
  * It has global parameters and different ExportSheetConfig
  */
 case class ExportConfig(
-  val format: String = ExportConfigConstant.FORMAT_XLSX, // cf FORMAT_XLSX or FORMAT_TSV
-  val decimalSeparator: Char = ExportConfigConstant.DECIMAL_SEPARATOR_DOT,
-  val dateFormat: String = ExportConfigConstant.DATE_FORMAT_HOUR,
-  val titleSeparator: String = ExportConfigConstant.SEPARATOR_INCREMENTAL_TITLE_UNDERSCORE,
-  val dataExport: ExportConfigData = ExportConfigData.getDefaultConfig(),
-  val sheets: Array[ExportConfigSheet] = Array(), // sorted by positions
-  val modificationFormat: String = ExportConfigConstant.MODIFICATION_FORMAT_FIRST_THREE_LETTERS
+  format: String = ExportConfigConstant.FORMAT_XLSX, // cf FORMAT_XLSX or FORMAT_TSV
+  decimalSeparator: Char = ExportConfigConstant.DECIMAL_SEPARATOR_DOT,
+  dateFormat: String = ExportConfigConstant.DATE_FORMAT_HOUR,
+  titleSeparator: String = ExportConfigConstant.SEPARATOR_INCREMENTAL_TITLE_UNDERSCORE,
+  dataExport: ExportConfigData = ExportConfigData.getDefaultConfig(),
+  sheets: Array[ExportConfigSheet] = Array(), // sorted by positions
+  modificationFormat: String = ExportConfigConstant.MODIFICATION_FORMAT_FIRST_THREE_LETTERS
   ) {
 
   val formatValues: Array[String] = ExportConfigConstant.FORMAT_VALUES

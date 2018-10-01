@@ -1,11 +1,8 @@
 package fr.proline.module.exporter.commons.config
 
-import scala.io.Source
-
+import com.typesafe.scalalogging.LazyLogging
 import org.junit.Assert.assertEquals
 import org.junit.Test
-
-import com.typesafe.scalalogging.LazyLogging
 
 class ExportConfigManagerTest extends LazyLogging {
 

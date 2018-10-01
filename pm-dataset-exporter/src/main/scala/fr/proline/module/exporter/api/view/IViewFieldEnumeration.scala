@@ -1,7 +1,7 @@
 package fr.proline.module.exporter.api.view
 
 trait IViewFieldEnumeration extends Enumeration {
-  val thisenum = this
+  val thisenum: IViewFieldEnumeration = this
   
   //def values: Seq[Field] = thisenum.values
   

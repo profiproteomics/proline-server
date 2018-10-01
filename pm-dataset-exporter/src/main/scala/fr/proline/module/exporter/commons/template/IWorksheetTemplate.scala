@@ -10,7 +10,11 @@ import fr.proline.module.exporter.commons.formatter.ViewFormatterType
 trait IWorksheetTemplate extends IViewTemplate {
   
   final val formatterType = ViewFormatterType.SPREADSHEET
-  
+  final val maxCellSize = 32767
+  final val maxRowsNbr = 1048576
+  final val maxColsNbr = 16384
+
+
   def newWorksheet(view: IDataView, workbookCreationContext: WorkbookContext)
   
   protected def setCellValue(cell: Cell, record: Map[String, Any], field: String): Int = {
@@ -24,10 +28,12 @@ trait IWorksheetTemplate extends IViewTemplate {
       case d: Double   => cell.setCellValue(d)
       case num: Number => cell.setCellValue(num.doubleValue)
       case s: String => {
-        if (!s.isEmpty()){ // blank cell if isEmpty
-        	cell.setCellValue(s)
-        }
         colSize = s.length()
+        if (!s.isEmpty){ // blank cell if isEmpty
+          val cellVal = if(colSize>=maxCellSize) { s.substring(0,maxCellSize-3).concat("...")} else s
+        	cell.setCellValue(cellVal)
+        }
+
       }
       case a: Any => {
         cell.setCellValue(a.toString)
