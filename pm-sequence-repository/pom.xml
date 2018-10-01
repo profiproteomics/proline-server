@@ -10,16 +10,16 @@
 	</parent>
 
 	<artifactId>PM-SequenceRepository</artifactId>
-	<version>0.8.0.a-SNAPSHOT</version>
+	<version>0.8.0-SNAPSHOT</version>
 
 	<name>PM-SequenceRepository</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<core.version>2.0.0.a-SNAPSHOT</core.version>
+		<core.version>2.0.1-SNAPSHOT</core.version>
 	</properties>
 	<scm>
-		<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-SequenceRepository/branches/0.8.0.a-RemPS</connection>
+		<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-SequenceRepository/trunk</connection>
 	</scm>
 
 
@@ -54,12 +54,12 @@
 		<dependency>
 			<groupId>fr.profi</groupId>
 			<artifactId>ProFI-Proteomics</artifactId>
-			<version>0.3.0</version>
+			<version>0.4.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>fr.proline.util</groupId>
 			<artifactId>ProFI-Commons-Java</artifactId>
-			<version>0.6.0</version>
+			<version>0.7.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>fr.proline</groupId>
@@ -148,7 +148,7 @@
 		<dependency>
 			<groupId>fr.proline</groupId>
 			<artifactId>Proline-Node</artifactId>
-			<version>0.4.0</version>
+			<version>0.5.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.spec.javax.jms</groupId>
