@@ -5695,5 +5695,27 @@
       "name" : "terabyte",
       "id" : "UO:0000332",
       "definition" : "An information unit which is equal to 1000 gigabytes."
+   },
+   {
+      "is_a" : [
+         "UO:0000002"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "milli unified atomic mass unit",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "millidalton",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "mDa",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "mmu",
+      "id" : "UO:0010009",
+      "definition" : "A mass unit which is equal to 1/12 the mass of 12C"
    }
 ]

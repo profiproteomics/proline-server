@@ -15,7 +15,7 @@ import uk.ac.ebi.jmzidml.xml.io.MzIdentMLUnmarshaller
 import fr.profi.chemistry.model.Enzyme
 import fr.profi.chemistry.model.EnzymeCleavage
 import fr.profi.chemistry.model.EnzymeProperties
-import fr.profi.cv._
+
 import fr.profi.obo.PsiMs
 import fr.profi.util.ms.MassTolUnit
 import fr.profi.util.primitives._
@@ -361,7 +361,9 @@ class MzIdResultFile(
         variablePtmDefs = varPtms.toArray,
         fixedPtmDefs = fixedPtms.toArray,
         seqDatabases = seqDbs,
-        instrumentConfig = instrumentConfig.getOrElse(null)
+        instrumentConfig = instrumentConfig.getOrElse(null),
+        fragmentationRuleSet = this.fragmentationRuleSet
+
       )
       
     } else {
@@ -400,7 +402,8 @@ class MzIdResultFile(
         variablePtmDefs = varPtms.toArray,
         fixedPtmDefs = fixedPtms.toArray,
         seqDatabases = seqDbs,
-        instrumentConfig = instrumentConfig.getOrElse(null)
+        instrumentConfig = instrumentConfig.getOrElse(null),
+        fragmentationRuleSet = this.fragmentationRuleSet
       )
     }
     
@@ -882,7 +885,7 @@ class MzIdResultFile(
           
           // Retrieve spectrum title and instrument config id
           val spectrumTitle = ms2Query.spectrumTitle
-          val instConfigId = if (instrumentConfig.isDefined) instrumentConfig.get.id else 0
+          val fragmentationRuleSetIdOpt = if (fragmentationRuleSet.isDefined) Some(fragmentationRuleSet.get.id) else None
       
           val specTitleFieldMapOpt = if (peaklistSoftware.isEmpty) None
           else peaklistSoftware.get.specTitleParsingRule.map(_.parseTitle(spectrumTitle))
@@ -910,7 +913,7 @@ class MzIdResultFile(
             mozList = None,
             intensityList = None,
             peaksCount = 0,
-            instrumentConfigId = instConfigId,
+            fragmentationRuleSetId = fragmentationRuleSetIdOpt,
             peaklistId = msiSearch.peakList.id
           )
           

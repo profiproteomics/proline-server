@@ -1,11 +1,9 @@
 package fr.profi.cv
 
-import scala.collection.mutable.HashMap
-
 import fr.profi.obo._
-
-import uk.ac.ebi.jmzidml.model.mzidml.Cv
 import uk.ac.ebi.jmzidml.model.mzidml.CvParam
+
+import scala.collection.mutable.HashMap
 
 object PsiCvParam extends ParamMaker {
   

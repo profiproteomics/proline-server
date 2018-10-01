@@ -38,7 +38,7 @@ class MzIdResultFileProvider extends IResultFileProvider with IResultFileVerifie
    def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): Seq[PtmDefinition] = {
        logger.debug("MzIdentML Parser, call getPtmDefinitions : Return EMPTY")  
        val ptmDefs = Seq.empty[PtmDefinition]        
-       return ptmDefs
+       ptmDefs
    }
    
    def isValid(fileLocation: File, importProperties: Map[String, Any]) : Boolean = {

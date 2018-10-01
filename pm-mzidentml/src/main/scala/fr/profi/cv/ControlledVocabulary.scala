@@ -14,10 +14,10 @@ object ControlledVocabulary {
   private def _ontologyToCv( ontology: Ontology ): Cv = {
     
     val cv = new Cv()  
-    cv.setUri(PsiMsOntology.sourceUrl)
-    cv.setVersion(PsiMsOntology.dataVersion)
-    cv.setId(PsiMsOntology.id)
-    cv.setFullName(PsiMsOntology.name)
+    cv.setUri(ontology.sourceUrl)
+    cv.setVersion(ontology.dataVersion)
+    cv.setId(ontology.id)
+    cv.setFullName(ontology.name)
     
     cv
   }
