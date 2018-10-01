@@ -24,7 +24,7 @@ import fr.proline.jms.service.api.ISingleThreadedService
 class GetConnectionTemplate extends AbstractRemoteProcessingService with IGetConnectionTemplateService with ISingleThreadedService  with LazyLogging {
   
   /* JMS Service identification */
-  val singleThreadIdent= SingleThreadIdentifierType.SHORT_SERVICES_SINGLETHREAD_IDENT.toString()
+  val singleThreadIdent: String = SingleThreadIdentifierType.SHORT_SERVICES_SINGLETHREAD_IDENT.toString
  
 
   def doProcess(paramsRetriever: NamedParamsRetriever): Any = {

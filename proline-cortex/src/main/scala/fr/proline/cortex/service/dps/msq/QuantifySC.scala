@@ -47,11 +47,11 @@ import fr.proline.core.om.model.msq.AbundanceUnit
 class QuantifySC extends AbstractRemoteProcessingService with IQuantifySCService with LazyLogging with ISingleThreadedService {
 
   /* JMS Service identification */
-  val singleThreadIdent = SingleThreadIdentifierType.QUANTIFYSC_SINGLETHREAD_IDENT.toString()
+  val singleThreadIdent: String = SingleThreadIdentifierType.QUANTIFYSC_SINGLETHREAD_IDENT.toString
 
   def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 
-    require((paramsRetriever != null), "no parameter specified")
+    require(paramsRetriever != null, "no parameter specified")
 
     val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
     val refRSMId = paramsRetriever.getLong(PROCESS_METHOD.REF_RSM_ID_PARAM)
@@ -59,8 +59,8 @@ class QuantifySC extends AbstractRemoteProcessingService with IQuantifySCService
     val pepRedRSMIds: Array[Long] = if (paramsRetriever.hasParam(PROCESS_METHOD.PEPTIDE_REF_RSM_IDS_PARAM)) paramsRetriever.getList(PROCESS_METHOD.PEPTIDE_REF_RSM_IDS_PARAM).toArray.map(toLong(_)) else Array.empty[Long]
 
     val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId) // Use JPA context
-    val udsDbCtx = execCtx.getUDSDbConnectionContext()
-    val udsEM = udsDbCtx.getEntityManager()
+    val udsDbCtx = execCtx.getUDSDbConnectionContext
+    val udsEM = udsDbCtx.getEntityManager
 
     val simplifiedExpDesign = deserialize[SimplifiedExperimentalDesign](serialize(paramsRetriever.getMap(PROCESS_METHOD.EXPERIMENTAL_DESIGN_PARAM)))
 
@@ -72,7 +72,7 @@ class QuantifySC extends AbstractRemoteProcessingService with IQuantifySCService
 
     // Register quantitation in the UDSdb
     val expDesign = simplifiedExpDesign.toExperimentalDesign()   
-    val qm =  QuantitationMethodRepository.findQuantMethodForTypeAndAbundanceUnit(udsEM, QuantitationMethod.Type.LABEL_FREE.toString(), "spectral_counts")
+    val qm =  QuantitationMethodRepository.findQuantMethodForTypeAndAbundanceUnit(udsEM, QuantitationMethod.Type.LABEL_FREE.toString, "spectral_counts")
     
     val quantiCreator = new CreateSCQuantitation(
       executionContext = execCtx,
@@ -134,18 +134,18 @@ class QuantifySC extends AbstractRemoteProcessingService with IQuantifySCService
 class QuantifySC_V02 extends AbstractRemoteProcessingService with IQuantifySCService_V2 with LazyLogging with ISingleThreadedService {
 
   /* JMS Service identification */
-  val singleThreadIdent = SingleThreadIdentifierType.QUANTIFYSC_SINGLETHREAD_IDENT.toString()
+  val singleThreadIdent: String = SingleThreadIdentifierType.QUANTIFYSC_SINGLETHREAD_IDENT.toString
 
   def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 
-    require((paramsRetriever != null), "no parameter specified")
+    require(paramsRetriever != null, "no parameter specified")
 
     val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
     val pepRedRSMIds: Array[Long] = if (paramsRetriever.hasParam(PROCESS_METHOD.PEPTIDE_REF_RSM_IDS_PARAM)) paramsRetriever.getList(PROCESS_METHOD.PEPTIDE_REF_RSM_IDS_PARAM).toArray.map(toLong(_)) else Array.empty[Long]
 
     val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId) // Use JPA context
-    val udsDbCtx = execCtx.getUDSDbConnectionContext()
-    val udsEM = udsDbCtx.getEntityManager()
+    val udsDbCtx = execCtx.getUDSDbConnectionContext
+    val udsEM = udsDbCtx.getEntityManager
 
     val simplifiedExpDesign = deserialize[SimplifiedExperimentalDesign](serialize(paramsRetriever.getMap(PROCESS_METHOD.EXPERIMENTAL_DESIGN_PARAM)))
 
@@ -157,10 +157,8 @@ class QuantifySC_V02 extends AbstractRemoteProcessingService with IQuantifySCSer
 
     // Register quantitation in the UDSdb
     val expDesign = simplifiedExpDesign.toExperimentalDesign()   
-    val qm =  QuantitationMethodRepository.findQuantMethodForTypeAndAbundanceUnit(udsEM, QuantMethodType.LABEL_FREE.toString(), AbundanceUnit.SPECTRAL_COUNTS.toString())
+    val qm =  QuantitationMethodRepository.findQuantMethodForTypeAndAbundanceUnit(udsEM, QuantMethodType.LABEL_FREE.toString, AbundanceUnit.SPECTRAL_COUNTS.toString)
     val spectralCountConfig : java.util.Map[String,Object]  = new HashMap[String,Object]()
-    spectralCountConfig.put("ident_result_summary_id",expDesign.masterQuantChannels(0).identResultSummaryId)
-    spectralCountConfig.put("ident_dataset_id",expDesign.masterQuantChannels(0).identDatasetId.get.toString())
     spectralCountConfig.put("weights_ref_rsm_ids",pepRedRSMIds)
 
     var quantiId = -1L

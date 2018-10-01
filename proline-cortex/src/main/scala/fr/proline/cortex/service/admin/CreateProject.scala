@@ -32,14 +32,14 @@ class CreateProject extends AbstractRemoteProcessingService with ICreateProjectS
 
   def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 
-    require((paramsRetriever != null), "no parameter specified")
+    require(paramsRetriever != null, "no parameter specified")
     require(paramsRetriever.hasParam(PROCESS_METHOD.NAME_PARAM) && paramsRetriever.hasParam(PROCESS_METHOD.OWNER_ID_PARAM), "Project name and owner requiered")
 
     val description = paramsRetriever.getOptString(PROCESS_METHOD.DESCRIPTION_PARAM, true, "")
     val name = paramsRetriever.getString(PROCESS_METHOD.NAME_PARAM)
     var prjID: Long = -1L
     
-    val udsDbConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
+    val udsDbConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory().getUdsDbConnector)
 
     try {
       

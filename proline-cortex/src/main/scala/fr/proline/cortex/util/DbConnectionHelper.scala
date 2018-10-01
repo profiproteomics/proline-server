@@ -1,7 +1,6 @@
 package fr.proline.cortex.util
 
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.proline.admin.service.db.SetupProline
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
@@ -15,7 +14,7 @@ import fr.proline.repository.ProlineDatabaseType
 object DbConnectionHelper extends LazyLogging {
 
   private var m_dsConnectorFactory: IDataStoreConnectorFactory = _
-
+  
   def initDataStore() {
     m_dsConnectorFactory = DataStoreConnectorFactory.getInstance()
 

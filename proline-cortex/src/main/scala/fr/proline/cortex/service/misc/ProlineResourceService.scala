@@ -4,33 +4,30 @@ import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
-
-import scala.reflect.runtime.universe
-import scala.reflect.runtime.universe.typeOf
-
-import org.hornetq.api.jms.HornetQJMSConstants
+import javax.jms.Message
+import javax.jms.Session
 
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.StringUtils
+import fr.profi.util.jsonrpc.BuildJSONRPC2Response
 import fr.profi.util.jsonrpc.IJSONRPC2Method
 import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
 import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
 import fr.profi.util.jsonrpc.JSONRPC2MethodResult
 import fr.profi.util.jsonrpc.JSONRPC2Utils
-import fr.profi.util.jsonrpc.BuildJSONRPC2Response
 import fr.proline.cortex.util.fs.MountPointRegistry
 import fr.proline.jms.ServiceRunner
 import fr.proline.jms.service.api.IDefaultServiceVersion
 import fr.proline.jms.service.api.IRemoteCompleteJsonRPC2Service
 import fr.proline.jms.service.api.IRemoteServiceIdentity
-import fr.proline.jms.service.api.RemoteServiceIdentity
 import fr.proline.jms.util.JMSConstants
-import javax.jms.Message
-import javax.jms.Session
+import org.hornetq.api.jms.HornetQJMSConstants
+
+import scala.reflect.runtime.universe
+import scala.reflect.runtime.universe.typeOf
 
 
 
@@ -66,7 +63,7 @@ trait IProlineResourceService extends IRemoteServiceIdentity with IDefaultServic
     object FILE_PATH_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "file_path"
       val description = "The path, absolute or usinf mount point, of the resource to get."
-      val scalaType = typeOf[String]
+      val scalaType: universe.Type = typeOf[String]
     }
   }
 }
@@ -76,12 +73,12 @@ class ProlineResourceService extends IProlineResourceService with IRemoteComplet
 
   
   override def runService(jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any],session: Session): Message= {  
-    require((jsonRequest != null), "Req is null")
-    require((session != null), "No session specified to create return message")
+    require(jsonRequest != null, "Req is null")
+    require(session != null, "No session specified to create return message")
     
-    val requestId = jsonRequest.getID()
-    val methodName = jsonRequest.getMethod()
-    var responseJMSMessage : javax.jms.Message = null;
+    val requestId = jsonRequest.getID
+    val methodName = jsonRequest.getMethod
+    var responseJMSMessage : javax.jms.Message = null
     
     /* Method dispatch */
     methodName match {
@@ -98,8 +95,7 @@ class ProlineResourceService extends IProlineResourceService with IRemoteComplet
       }
     }
 
-    return ServiceRunner.buildJMSMsgFromJSONRPC2Response(session, BuildJSONRPC2Response.forMethodNotFound(requestId),jmsMessageContext)
-      
+    ServiceRunner.buildJMSMsgFromJSONRPC2Response(session, BuildJSONRPC2Response.forMethodNotFound(requestId),jmsMessageContext)     
   }
   
   

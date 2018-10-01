@@ -6,7 +6,7 @@ import fr.proline.core.om.provider.ProlineManagedDirectoryType
 object MountPointPathConverter extends IProlinePathConverter {
 
   def prolinePathToAbsolutePath(prolineResourcePath: String, dirType: ProlineManagedDirectoryType.Value): String = {    
-    MountPointRegistry.replacePossibleLabel( prolineResourcePath, Some( dirType.toString().toLowerCase() ) ).localPathname
+    MountPointRegistry.replacePossibleLabel( prolineResourcePath, Some( dirType.toString.toLowerCase() ) ).localPathname
   }
 
 

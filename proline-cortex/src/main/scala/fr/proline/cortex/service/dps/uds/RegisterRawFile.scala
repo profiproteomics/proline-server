@@ -30,7 +30,7 @@ import fr.proline.cortex.service.SingleThreadIdentifierType
 class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawFileService with ISingleThreadedService  with LazyLogging {
  
   /* JMS Service identification */
-  val singleThreadIdent= SingleThreadIdentifierType.SHORT_SERVICES_SINGLETHREAD_IDENT.toString()
+  val singleThreadIdent: String = SingleThreadIdentifierType.SHORT_SERVICES_SINGLETHREAD_IDENT.toString
  
   def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 
@@ -44,7 +44,7 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
     val rawFileIdentifier = paramsRetriever.getString(PROCESS_METHOD.RAW_FILE_IDENTIFIER_PARAM)
     
     // Retrieve UdsDb context and entity manager
-    val udsDbCtx = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
+    val udsDbCtx = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory().getUdsDbConnector)
     
     try {
       val udsEM = udsDbCtx.getEntityManager
@@ -54,7 +54,7 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
       
       // Create new raw file
       val udsRawFile = if (existingRawFile != null) {
-        if (overwriteRawFile == false) {
+        if (!overwriteRawFile) {
           logger.info(s"The raw file '$rawFileIdentifier' is already registered, but no update will be performed ('overwrite' option set to false) !")
           return existingRawFile.getRuns.get(0).getId
         } else {
@@ -72,7 +72,6 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
       // BEGIN TRANSACTION
       udsDbCtx.beginTransaction()
       
-      udsRawFile.setInstrumentId(paramsRetriever.getLong(PROCESS_METHOD.INSTRUMENT_ID_PARAM))
       udsRawFile.setOwnerId(paramsRetriever.getLong(PROCESS_METHOD.OWNER_ID_PARAM))
       
       // Parse mzDB file path if provided
@@ -87,8 +86,8 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
         val rawFilePath = paramsRetriever.getString(PROCESS_METHOD.RAW_FILE_PATH_PARAM)
         val rawFile = new java.io.File(rawFilePath)
   
-        udsRawFile.setRawFileDirectory(rawFile.getParent())
-        udsRawFile.setRawFileName(rawFile.getName())
+        udsRawFile.setRawFileDirectory(rawFile.getParent)
+        udsRawFile.setRawFileName(rawFile.getName)
         
         // If the creation timestamp was not retrieved from the mzDB file
         if (udsRawFile.getCreationTimestamp == null) {
@@ -121,7 +120,7 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
       // COMMIT TRANSACTION
       udsDbCtx.commitTransaction()
       
-      return udsRun.getId
+      udsRun.getId
     
     } finally {
       DbConnectionHelper.tryToCloseDbContext(udsDbCtx)
@@ -147,8 +146,8 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
   private def _extractMzDbFileMetaData(udsRawFile: RawFile, mzDbFilePath: String): Unit = {
 
     val mzDbFile = new java.io.File(mzDbFilePath)
-    val mzDbFileDir = mzDbFile.getParent()
-    val mzDbFileName = mzDbFile.getName()
+    val mzDbFileDir = mzDbFile.getParent
+    val mzDbFileName = mzDbFile.getName
     udsRawFile.setMzDbFileDirectory(mzDbFileDir)
     udsRawFile.setMzDbFileName(mzDbFileName)
 
@@ -161,14 +160,14 @@ class RegisterRawFile extends AbstractRemoteProcessingService with IRegisterRawF
 
       try {
         // Retrieve and set the sample name
-        val sampleName = mzDb.getSamples().get(0).getName()
+        val sampleName = mzDb.getSamples.get(0).getName
         udsRawFile.setSampleName(sampleName)
 
         // Retrieve and set the raw file creation date from the mzDB file if not already set
-        if (udsRawFile.getCreationTimestamp() == null) {
-          val creationDate = mzDb.getRuns().get(0).getStartTimestamp()
+        if (udsRawFile.getCreationTimestamp == null) {
+          val creationDate = mzDb.getRuns.get(0).getStartTimestamp
           if (creationDate != null) {
-            val creationDateAsEpochMilli = creationDate.getTime()
+            val creationDateAsEpochMilli = creationDate.getTime
             udsRawFile.setCreationTimestamp(new java.sql.Timestamp(creationDateAsEpochMilli))
           }
 

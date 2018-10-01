@@ -14,13 +14,13 @@ object WorkDirectoryFactory extends LazyLogging {
   /**
    * Creates a temporary ProlineWork directory. Old files ( > 24 hours) are purged every hour.
    */
-  lazy val prolineWorkDirectory = createProlineWorkDirectory()
+  lazy val prolineWorkDirectory: File = createProlineWorkDirectory()
 
   private def createProlineWorkDirectory(): File = {
 
     try {
       val workPath = Files.createTempDirectory("ProlineWork_")
-      val workDirectory = workPath.toFile()
+      val workDirectory = workPath.toFile
 
       addShutdownHook(workDirectory)
 
@@ -44,7 +44,7 @@ object WorkDirectoryFactory extends LazyLogging {
   }
 
   private def addShutdownHook(tempDirectory: File) {
-    assert(((tempDirectory != null) && tempDirectory.isDirectory), "addShutdownHook() invalid tempDirectory")
+    assert((tempDirectory != null) && tempDirectory.isDirectory, "addShutdownHook() invalid tempDirectory")
 
     val target = new Runnable() {
 
@@ -75,7 +75,7 @@ object WorkDirectoryFactory extends LazyLogging {
 
     val hook = new Thread(target, "Thread-Shutdown-DeleteTempDir")
     hook.setPriority(Thread.NORM_PRIORITY)
-    hook.setUncaughtExceptionHandler(new ThreadLogger(logger.underlying.getName()))
+    hook.setUncaughtExceptionHandler(new ThreadLogger(logger.underlying.getName))
 
     Runtime.getRuntime.addShutdownHook(hook)
   }
@@ -90,16 +90,16 @@ object WorkDirectoryFactory extends LazyLogging {
 
 class TempDirectoryPurgeTask(tempDirectory: File) extends TimerTask with LazyLogging {
 
-  val PURGE_DELAY = TimeUnit.HOURS.toMillis(24)
+  val PURGE_DELAY: Long = TimeUnit.HOURS.toMillis(24)
 
   /* Constructor checks */
-  assert(((tempDirectory != null) && tempDirectory.isDirectory), "TempDirectoryPurgeTask() invalid tempDirectory")
+  assert((tempDirectory != null) && tempDirectory.isDirectory, "TempDirectoryPurgeTask() invalid tempDirectory")
 
   def run() {
     val currentThread = Thread.currentThread
 
-    if (!(currentThread.getUncaughtExceptionHandler.isInstanceOf[ThreadLogger])) {
-      currentThread.setUncaughtExceptionHandler(new ThreadLogger(logger.underlying.getName()))
+    if (!currentThread.getUncaughtExceptionHandler.isInstanceOf[ThreadLogger]) {
+      currentThread.setUncaughtExceptionHandler(new ThreadLogger(logger.underlying.getName))
     }
 
     val now = System.currentTimeMillis
@@ -115,7 +115,7 @@ class TempDirectoryPurgeTask(tempDirectory: File) extends TimerTask with LazyLog
         if (fileOrDir.lastModified + PURGE_DELAY < now) {
           val fileAbsolutePathname = fileOrDir.getAbsolutePath
           
-          if( fileOrDir.isFile() ) {
+          if( fileOrDir.isFile ) {
             val result = fileOrDir.delete()
   
             if (result) {

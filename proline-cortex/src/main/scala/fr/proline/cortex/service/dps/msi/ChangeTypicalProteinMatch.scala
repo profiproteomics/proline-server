@@ -32,7 +32,7 @@ class ChangeTypicalProteinMatch extends AbstractRemoteProcessingService with ICh
 
   def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 
-    require((paramsRetriever != null), "no parameter specified")
+    require(paramsRetriever != null, "no parameter specified")
 
     val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
     val resultSummaryId = paramsRetriever.getLong(PROCESS_METHOD.RESULT_SUMMARY_ID_PARAM)
@@ -41,7 +41,7 @@ class ChangeTypicalProteinMatch extends AbstractRemoteProcessingService with ICh
     val allRulesBuilder = Seq.newBuilder[TypicalProteinChooserRule]
     var ruleIndex = 1
 
-    val rulesStr = paramsRetriever.getList(PROCESS_METHOD.CHANGE_TYPICAL_RULES_PARAM).toArray().foreach { entry =>
+    paramsRetriever.getList(PROCESS_METHOD.CHANGE_TYPICAL_RULES_PARAM).toArray().foreach { entry =>
       
       if (ruleIndex > 1) //For logger only
         msgLogBuilder.append(", ")

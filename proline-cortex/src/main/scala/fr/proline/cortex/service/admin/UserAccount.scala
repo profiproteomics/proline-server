@@ -13,8 +13,8 @@ import fr.proline.admin.service.user.CreateUser
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.service.uds.UserAuthenticator
 import fr.proline.core.service.uds.UserUpdator
-import fr.proline.admin.service.user.ResetPassword
-import fr.proline.admin.service.user.ModifyUserGroup
+import fr.proline.admin.service.user.ChangePassword
+import fr.proline.admin.service.user.ChangeUserGroup
 import fr.proline.cortex.api.service.admin.IUserAccountService
 import fr.proline.cortex.api.service.admin.UserAccountService
 import fr.proline.cortex.util.DbConnectionHelper
@@ -55,14 +55,14 @@ import fr.proline.cortex.service.SingleThreadIdentifierType
 class UserAccount extends IUserAccountService with IRemoteJsonRPC2Service  with ISingleThreadedService  with LazyLogging {
   
   /* JMS Service identification */
-  val singleThreadIdent= SingleThreadIdentifierType.SHORT_SERVICES_SINGLETHREAD_IDENT.toString()
+  val singleThreadIdent: String = SingleThreadIdentifierType.SHORT_SERVICES_SINGLETHREAD_IDENT.toString
  
   
   override def runService(jsonRequest: JSONRPC2Request, jmsMessageContext: Map[String, Any]): JSONRPC2Response = {
     require(jsonRequest != null, "jsonRequest is null")
     
-    val requestId = jsonRequest.getID()
-    val methodName = jsonRequest.getMethod()
+    val requestId = jsonRequest.getID
+    val methodName = jsonRequest.getMethod
 
     /* Method dispatch */
     methodName match {
@@ -100,7 +100,7 @@ class UserAccount extends IUserAccountService with IRemoteJsonRPC2Service  with 
       case _ => return BuildJSONRPC2Response.forMethodNotFound(requestId)
     }
 
-    return BuildJSONRPC2Response.forMethodNotFound(requestId)
+    BuildJSONRPC2Response.forMethodNotFound(requestId)
   }
   
   /* Define the doCreateUserAccount method : Create User in UDS DB throw Admin service*/
@@ -112,7 +112,7 @@ class UserAccount extends IUserAccountService with IRemoteJsonRPC2Service  with 
     val isGroupUser = paramsRetriever.getOptBoolean(CREATE_METHOD.IS_USER_GROUP_PARAM, true)
     
     var result: Long = -1L
-    val udsDbConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
+    val udsDbConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory().getUdsDbConnector)
     
     try {
       val userCreator = new CreateUser(udsDbConnectionContext, userLogin, userPassword, isGroupUser)
@@ -135,11 +135,11 @@ class UserAccount extends IUserAccountService with IRemoteJsonRPC2Service  with 
     val oldPassword = paramsRetriever.getString(CHANGE_PASSWORD_METHOD.OLD_PASSWORD_HASH_PARAM)
 
     var result = false
-    val udsDbConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
+    val udsDbConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory().getUdsDbConnector)
     try {
       val userUpdator = new UserUpdator(udsDbConnectionContext, userLogin, newPassword, oldPassword)
       userUpdator.run()
-      result = userUpdator.getUpdateResult
+      result = userUpdator.getUpdateResult()
       if (!result)
         throw new Exception("Error while updating password: " + userUpdator.getUpdatorResultMessage())
 
@@ -157,10 +157,10 @@ class UserAccount extends IUserAccountService with IRemoteJsonRPC2Service  with 
     val userId = paramsRetriever.getLong(RESET_PASSWORD_METHOD.LOGIN_ID_PARAM)
     val newPassword = paramsRetriever.getString(RESET_PASSWORD_METHOD.NEW_PASSWORD_HASH_PARAM)
 
-    var result = true
-    val udsDbConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
+    val result = true
+    val udsDbConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory().getUdsDbConnector)
     try {
-      val resetPassword = new ResetPassword(udsDbConnectionContext, userId, newPassword)
+      val resetPassword = new ChangePassword(udsDbConnectionContext, userId, Some(newPassword))
       resetPassword.run()
 
 
@@ -180,10 +180,10 @@ class UserAccount extends IUserAccountService with IRemoteJsonRPC2Service  with 
     val userId = paramsRetriever.getLong(MODIFY_USER_GROUP_METHOD.LOGIN_ID_PARAM)
     val isUserGroup = paramsRetriever.getBoolean(MODIFY_USER_GROUP_METHOD.IS_USER_GROUP_PARAM)
 
-    var result = true
-    val udsDbConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
+    val result = true
+    val udsDbConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory().getUdsDbConnector)
     try {
-      val modifyUserGroup = new ModifyUserGroup(udsDbConnectionContext, userId, isUserGroup)
+      val modifyUserGroup = new ChangeUserGroup(udsDbConnectionContext, Set(userId), isUserGroup)
       modifyUserGroup.run()
 
 
@@ -205,7 +205,7 @@ class UserAccount extends IUserAccountService with IRemoteJsonRPC2Service  with 
     val AUTHENTICATION_CONFIG_KEY = "authentication"
     val AUTHENTICATION_METHOD_CONFIG_KEY = "method"
     
-    val authMethod = if (SetupProline.getConfigParams.hasPath(AUTHENTICATION_CONFIG_KEY) == false) UserAccountService.UDS_AUTH_METHOD
+    val authMethod = if (!SetupProline.getConfigParams.hasPath(AUTHENTICATION_CONFIG_KEY)) UserAccountService.UDS_AUTH_METHOD
     else SetupProline.getConfigParams.getConfig(AUTHENTICATION_CONFIG_KEY).getString(AUTHENTICATION_METHOD_CONFIG_KEY).toUpperCase()
 
     val needPgPwd = paramsRetriever.getOptBoolean(AUTHENTICATE_METHOD.RETURN_DB_PASSWORD_PARAM, false)
@@ -224,7 +224,7 @@ class UserAccount extends IUserAccountService with IRemoteJsonRPC2Service  with 
 
     var serviceResult: Object = null
 
-    val udsCtx = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory.getUdsDbConnector())
+    val udsCtx = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory().getUdsDbConnector)
     try {
 
       val userLogin = paramsRetriever.getString(AUTHENTICATE_METHOD.LOGIN_PARAM)
@@ -232,7 +232,7 @@ class UserAccount extends IUserAccountService with IRemoteJsonRPC2Service  with 
       val authenticator = new UserAuthenticator(udsCtx, userLogin, userPassword)
       authenticator.run()
       
-      val result = authenticator.getAuthenticateResult
+      val result = authenticator.getAuthenticateResult()
       
       if (!result) {
         throw new Exception("Authentication Error: " + authenticator.getAuthenticateResultMessage)
@@ -241,7 +241,7 @@ class UserAccount extends IUserAccountService with IRemoteJsonRPC2Service  with 
       else {
         val pubKey = paramsRetriever.getString(AUTHENTICATE_METHOD.PUBLIC_KEY_PARAM)
         
-        if (SetupProline.getConfigParams.hasPath("auth-config") == false ) {
+        if (!SetupProline.getConfigParams.hasPath("auth-config") ) {
           throw new Exception("Authentication Error: no database password in configuration file !")
         } else {
           val password = SetupProline.getConfigParams.getConfig("auth-config").getString("password")

@@ -7,6 +7,7 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.serialization.ProfiJson.{deserialize, serialize}
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.helper.UdsDbHelper
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi._
 import fr.proline.core.om.provider.msi.impl.{SQLPTMProvider, SQLPeptideProvider}
@@ -38,7 +39,7 @@ import scala.util.matching.Regex
 abstract class AbstractImportResultFiles extends AbstractRemoteProcessingService with IImportResultFilesService with ISingleThreadedService with LazyLogging  {
   
   /* JMS Service identification */
-  val singleThreadIdent= SingleThreadIdentifierType.IMPORT_SINGLETHREAD_IDENT.toString()
+  val singleThreadIdent: String = SingleThreadIdentifierType.IMPORT_SINGLETHREAD_IDENT.toString
 
   // Methods to be implemented
   protected def parseResultFileDescriptor(rfDescObj: Object): IResultFileDescriptor
@@ -48,18 +49,18 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessingService
   private def buildParserContext(executionContext: IExecutionContext): ProviderDecoratedExecutionContext = {
 
     // Register some providers
-    val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
+    val parserContext = ProviderDecoratedExecutionContext(PeptideCacheExecutionContext(executionContext)) // Use Object factory
     //parserContext.putProvider(classOf[IPeptideProvider], PeptideFakeProvider)
 
     // TODO: use real protein and seqDb providers
     parserContext.putProvider(classOf[IProteinProvider], ProteinFakeProvider)
     parserContext.putProvider(classOf[ISeqDatabaseProvider], SeqDbFakeProvider)
 
-    val psSQLCtx = executionContext.getPSDbConnectionContext
-    val sqlPTMProvider = new SQLPTMProvider(psSQLCtx)
+    val msiSQLCtx = executionContext.getMSIDbConnectionContext
+    val sqlPTMProvider = new SQLPTMProvider(msiSQLCtx)
     parserContext.putProvider(classOf[IPTMProvider], sqlPTMProvider)
 
-    val sqlPepProvider = new SQLPeptideProvider(psSQLCtx)
+    val sqlPepProvider = new SQLPeptideProvider(PeptideCacheExecutionContext(parserContext))
     parserContext.putProvider(classOf[IPeptideProvider], sqlPepProvider)
 
     parserContext
@@ -73,17 +74,17 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessingService
     val resultFiles = params.getList(RESULT_FILES_PARAM).toArray.map { rfd => parseResultFileDescriptor(rfd) }
     val instrumentConfigId = params.getLong(INSTRUMENT_CONFIG_ID_PARAM)
     val peaklistSoftwareId = params.getLong(PEAKLIST_SOFTWARE_ID_PARAM)
-    val importerProperties = if (params.hasParam(IMPORTER_PROPERTIES_PARAM) == false) Map.empty[String, Any]
+    val importerProperties = if (!params.hasParam(IMPORTER_PROPERTIES_PARAM)) Map.empty[String, Any]
     else params.getMap(IMPORTER_PROPERTIES_PARAM).map {
       case (a, b) => {
         if (a.endsWith(".file")) {
-          a -> MountPointRegistry.replacePossibleLabel(b.toString(), Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname
+          a -> MountPointRegistry.replacePossibleLabel(b.toString, Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname
         } else a -> b.asInstanceOf[Any]
       }
     } toMap
 
-    val storeSpectrumMatches = if (params.hasParam(SAVE_SPECTRUM_MATCHES_PARAM) == false) false
-    else params.getBoolean(SAVE_SPECTRUM_MATCHES_PARAM)
+    val storeSpectrumMatches = if (!params.hasParam(SAVE_SPECTRUM_MATCHES_PARAM)) false else params.getBoolean(SAVE_SPECTRUM_MATCHES_PARAM)
+    val fragmentationRuleSetIdOpt = if(params.hasParam(FRAGMENTATION_RULE_SET_ID_PARAM)) Some(params.getLong(FRAGMENTATION_RULE_SET_ID_PARAM)) else None
 
     logger.info("Params : " + serialize(params))
 
@@ -97,7 +98,7 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessingService
 
     try {
       val parserCtx = this.buildParserContext(execCtx)
-      val udsDbCtx = execCtx.getUDSDbConnectionContext()
+      val udsDbCtx = execCtx.getUDSDbConnectionContext
 
       val udsDbHelper = new UdsDbHelper(udsDbCtx)
       val decoyRegexById = udsDbHelper.getProteinMatchDecoyRegexById()
@@ -130,7 +131,8 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessingService
           peaklistSoftwareId = peaklistSoftwareId,
           importerProperties = importerProperties,
           acDecoyRegex = acDecoyRegex,
-          storeSpectrumMatches = storeSpectrumMatches
+          storeSpectrumMatches = storeSpectrumMatches,
+          fragmentationRuleSetId = fragmentationRuleSetIdOpt
         )
         rsImporter.run()
 

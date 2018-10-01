@@ -49,7 +49,7 @@ class ValidateIdentDSInTree extends AbstractRemoteProcessingService with IValida
         execCtx,
         parentDsIds,
         mergeResultSets,
-        false, //useTdCompet : DEPRECATED 
+        useTdCompetition = false, //useTdCompet : DEPRECATED
         validationConfig
       )
       

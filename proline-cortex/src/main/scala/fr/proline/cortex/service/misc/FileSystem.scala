@@ -42,7 +42,7 @@ import fr.proline.cortex.service.SingleThreadIdentifierType
 class FileSystem extends IFileSystemService with IRemoteJsonRPC2Service with ISingleThreadedService with LazyLogging {
   
     /* JMS Service identification */
-  val singleThreadIdent= SingleThreadIdentifierType.SHORT_SERVICES_SINGLETHREAD_IDENT.toString()
+  val singleThreadIdent: String = SingleThreadIdentifierType.SHORT_SERVICES_SINGLETHREAD_IDENT.toString
 
 
   /* Define the concrete process method */
@@ -76,7 +76,7 @@ class FileSystem extends IFileSystemService with IRemoteJsonRPC2Service with ISi
         require(!StringUtils.isEmpty(directoryType), "Invalid \"" + DIRECTORY_TYPE_PARAM_NAME + "\" parameter")
 
         // Do not return real absolute path to client
-        val mountPoints = MountPointRegistry.retrieveMountPointsByType(directoryType, false)
+        val mountPoints = MountPointRegistry.retrieveMountPointsByType(directoryType, withAbsolutePath = false)
 
         new ProfiJSONRPC2Response(mountPoints, requestId)
       }
@@ -89,17 +89,17 @@ class FileSystem extends IFileSystemService with IRemoteJsonRPC2Service with ISi
         require(StringUtils.isNotEmpty(label), "Invalid \"" + LABEL_PARAM_NAME + "\" parameter")
 
         // Do not return real absolute path to client
-        val mountPoints = MountPointRegistry.retrieveMountPointsByLabel(label, false)
+        val mountPoints = MountPointRegistry.retrieveMountPointsByLabel(label, withAbsolutePath = false)
 
         new ProfiJSONRPC2Response(mountPoints, requestId)
       }
 
       case RETRIEVE_DIRECTORY_CONTENT_METHOD.name => {
-        return retrieveDirectoryContent(jsonRequest)
+        retrieveDirectoryContent(jsonRequest)
       }
 
       // Method name not supported
-      case _ => return new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, requestId)
+      case _ => new JSONRPC2Response(JSONRPC2Error.METHOD_NOT_FOUND, requestId)
     }
 
   }
@@ -145,7 +145,7 @@ class FileSystem extends IFileSystemService with IRemoteJsonRPC2Service with ISi
 
     // Check that the directory exists and is not a file
     // TODO: return a specific exception
-    if (dir.isDirectory == false) {
+    if (!dir.isDirectory) {
       logger.error(s"Directory ${localPath.localPathname} cannot be found")
       require(dir.isDirectory, errorMessage)
     }

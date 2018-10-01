@@ -3,14 +3,13 @@ package fr.proline.cortex.service.dps.msi
 import java.io.File
 
 import scala.collection.JavaConversions.mapAsScalaMap
-
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.StringUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.IExecutionContext
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
@@ -54,12 +53,12 @@ class CertifyResultFiles extends AbstractRemoteProcessingService with ICertifyRe
     val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
     val resultFiles = paramsRetriever.getList(PROCESS_METHOD.RESULT_FILES_PARAM).toArray.map { rfd => deserialize[ResultFileDescriptorRuleId](serialize(rfd)) }
 
-    val importerProperties = if (paramsRetriever.hasParam(PROCESS_METHOD.IMPORTER_PROPERTIES_PARAM) == false) Map.empty[String, Any]
+    val importerProperties = if (!paramsRetriever.hasParam(PROCESS_METHOD.IMPORTER_PROPERTIES_PARAM)) Map.empty[String, Any]
     // TODO: DBO => please, comment what is performed here
     else paramsRetriever.getMap(PROCESS_METHOD.IMPORTER_PROPERTIES_PARAM).map {
       case (a, b) => {
         if (a.endsWith(".file")) {
-          a -> _mountPointBasedPathToLocalPath(b.toString())
+          a -> _mountPointBasedPathToLocalPath(b.toString)
         } else a -> b.asInstanceOf[Any]
       }
     } toMap
@@ -131,11 +130,11 @@ class CertifyResultFiles extends AbstractRemoteProcessingService with ICertifyRe
     parserContext.putProvider(classOf[IProteinProvider], ProteinFakeProvider)
     parserContext.putProvider(classOf[ISeqDatabaseProvider], SeqDbFakeProvider)
 
-    val psSQLCtx = executionContext.getPSDbConnectionContext
-    val sqlPTMProvider = new SQLPTMProvider(psSQLCtx)
+    val msiSQLCtx = executionContext.getMSIDbConnectionContext
+    val sqlPTMProvider = new SQLPTMProvider(msiSQLCtx)
     parserContext.putProvider(classOf[IPTMProvider], sqlPTMProvider)
 
-    val sqlPepProvider = new SQLPeptideProvider(psSQLCtx)
+    val sqlPepProvider = new SQLPeptideProvider(PeptideCacheExecutionContext(parserContext))
     parserContext.putProvider(classOf[IPeptideProvider], sqlPepProvider)
 
     parserContext

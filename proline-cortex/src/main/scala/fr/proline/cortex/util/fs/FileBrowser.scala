@@ -23,7 +23,7 @@ import fr.proline.cortex.api.fs._
 object FileBrowser extends LazyLogging {
 
   def getDirectories(localPathname: String, mountPoint: Option[MountPoint], rule: String, maxDepth: Int = 1): Seq[DirAttrs] = {
-    require((localPathname != null), "LocalPathname is null")
+    require(localPathname != null, "LocalPathname is null")
 
     var dirSeqBuilder = Seq.newBuilder[DirAttrs]
 
@@ -43,7 +43,7 @@ object FileBrowser extends LazyLogging {
   }
 
   def getDirectoryContent(localPathname: String, mountPoint: Option[MountPoint], rule: String): Seq[FileOrDirAttrs] = {
-    require((localPathname != null), "LocalPathname is null")
+    require(localPathname != null, "LocalPathname is null")
 
     var fileOrDirSeqBuilder = Seq.newBuilder[FileOrDirAttrs]
 
@@ -69,16 +69,15 @@ object FileBrowser extends LazyLogging {
     maxDepth: Int = 1,
     callback: FileOrDirAttrs => Unit): Unit = {
 
-    require((localPathname != null), "LocalPathname is null")
-    require((mountPoint != null), "MountPoint Option is null")
+    require(localPathname != null, "LocalPathname is null")
+    require(mountPoint != null, "MountPoint Option is null")
 
-    require((maxDepth >= 1), "MaxDepth can't be lower than 1")
+    require(maxDepth >= 1, "MaxDepth can't be lower than 1")
 
     logger.debug("LocalPathname \"" + localPathname + "\" | mountPoint " + mountPoint + " | maxDepth: " + maxDepth)
 
     // Create root dir
     val rootDir = new File(localPathname)
-    val rootDirPath = rootDir.toPath
 
     // Convert rule into a regex
     val regexAsStr = _ruleToRegexAsStr(rule)
@@ -99,7 +98,7 @@ object FileBrowser extends LazyLogging {
         override def visitFile(currentPath: Path, attrs: BasicFileAttributes): FileVisitResult = {
 
           if (onlyDirs && !attrs.isDirectory) {
-            return FileVisitResult.CONTINUE
+            FileVisitResult.CONTINUE
           } else {
 
             // Retrieve the file name
@@ -190,9 +189,9 @@ object FileBrowser extends LazyLogging {
   }
 
   // Convert rule as string into a regex
-  private def _ruleToRegex(rule: String): Option[Regex] = {
-    this._ruleToRegexAsStr(rule).map(_.r)
-  }
+//  private def _ruleToRegex(rule: String): Option[Regex] = {
+//    this._ruleToRegexAsStr(rule).map(_.r)
+//  }
 
   private def _ruleToRegexAsStr(rule: String): Option[String] = {
 

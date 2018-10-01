@@ -2,15 +2,9 @@ package fr.proline.cortex.service.dps.msi
 
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.exception.ExceptionUtils
-import fr.profi.util.serialization.ProfiJson.deserialize
-import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.algo.msi.filtering.IProteinSetFilter
 import fr.proline.core.service.msi.RsmPtmSitesIdentifier
-import fr.proline.cortex.api.service.dps.msi.FilterConfig
-import fr.proline.cortex.api.service.dps.msi.IFilterRSMProteinSetsService
 import fr.proline.cortex.api.service.dps.msi.IIdentifyPtmSitesService
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.AbstractRemoteProcessingService

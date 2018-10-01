@@ -98,7 +98,7 @@ class UpdateSpectraParamsV2_0 extends AbstractRemoteProcessingService with IUpda
           stmt.close()
         } // End of jdbcWork anonymous inner class
       }
-      execCtx.getMSIDbConnectionContext().doWork(getPeaklistIDsWork, false)
+      execCtx.getMSIDbConnectionContext.doWork(getPeaklistIDsWork, false)
 
        //Get specTitleParsing Rules for specified peaklistSoftware
       val getSpecTitleIdsWork = new JDBCWork() {

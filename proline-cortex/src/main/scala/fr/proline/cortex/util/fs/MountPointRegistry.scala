@@ -51,7 +51,7 @@ object MountPointRegistry extends LazyLogging {
    * Return hard-coded Proline directory types (result_files, raw_files, mzdb_files).
    */
   def retrieveAllDirectoryTypes(): Array[String] = {
-    return Array(RESULT_FILES_DIRECTORY, RAW_FILES_DIRECTORY, MZDB_FILES_DIRECTORY)
+    Array(RESULT_FILES_DIRECTORY, RAW_FILES_DIRECTORY, MZDB_FILES_DIRECTORY)
   }
 
   /**
@@ -66,9 +66,9 @@ object MountPointRegistry extends LazyLogging {
       for (entry <- m_mountPointsPerType; mp <- entry._2) {
 
         if (withAbsolutePath) {
-          result += (mp.copy()) // Alway return a clone
+          result += mp.copy() // Alway return a clone
         } else {
-          result += (mp.copy(path = ""))
+          result += mp.copy(path = "")
         }
 
       }
@@ -93,14 +93,14 @@ object MountPointRegistry extends LazyLogging {
       if (optionalListPerType.isDefined) {
         val listPerType = optionalListPerType.get
 
-        if ((listPerType != null) && !listPerType.isEmpty) {
+        if ((listPerType != null) && listPerType.nonEmpty) {
 
           for (mp <- listPerType) {
 
             if (withAbsolutePath) {
-              result += (mp.copy()) // Alway return a clone
+              result += mp.copy() // Alway return a clone
             } else {
-              result += (mp.copy(path = ""))
+              result += mp.copy(path = "")
             }
 
           } // End loop for each mp
@@ -129,14 +129,14 @@ object MountPointRegistry extends LazyLogging {
       if (optionalListPerLabel.isDefined) {
         val listPerLabel = optionalListPerLabel.get
 
-        if ((listPerLabel != null) && !listPerLabel.isEmpty) {
+        if ((listPerLabel != null) && listPerLabel.nonEmpty) {
 
           for (mp <- listPerLabel) {
 
             if (withAbsolutePath) {
-              result += (mp.copy()) // Alway return a clone
+              result += mp.copy() // Alway return a clone
             } else {
-              result += (mp.copy(path = ""))
+              result += mp.copy(path = "")
             }
 
           } // End loop for each mp
@@ -229,18 +229,18 @@ object MountPointRegistry extends LazyLogging {
    */
   def replacePossibleLabel(originPathname: String, directoryTypeHint: Option[String] = None): LocalPath = {
     require(!StringUtils.isEmpty(originPathname), "Invalid originPathname")
-    require((directoryTypeHint != null), "DirectoryTypeHint Option is null")
+    require(directoryTypeHint != null, "DirectoryTypeHint Option is null")
 
     var localPathname: String = originPathname
     var foundMountPoint: Option[MountPoint] = None
 
     val pathParts = FileUtils.splitFilePath(originPathname)
-    if (pathParts.length > 0) {
+    if (pathParts.nonEmpty) {
 
       val possibleLabel = pathParts(0)
       if (!StringUtils.isEmpty(possibleLabel)) {
 
-        val mountPoints = retrieveMountPointsByLabel(possibleLabel, true)
+        val mountPoints = retrieveMountPointsByLabel(possibleLabel, withAbsolutePath = true)
         if (mountPoints != null) {
 
           if (mountPoints.length == 1) {
@@ -250,7 +250,7 @@ object MountPointRegistry extends LazyLogging {
             logger.debug("Replace \"" + originPathname + "\" by \"" + localPathname + '\"')
 
             foundMountPoint = Some(mp.copy()) // Alway return a clone
-          } else if ((mountPoints.length > 1) && (directoryTypeHint.isDefined)) {
+          } else if ((mountPoints.length > 1) && directoryTypeHint.isDefined) {
             /* If there are multiple mountPoints for same label, try to use directoryTypeHint */
 
             var found: Boolean = false
@@ -329,7 +329,7 @@ object MountPointRegistry extends LazyLogging {
       logger.warn("No MountPoints entry for type [" + MZDB_FILES_DIRECTORY + ']')
     }
 
-    if (invalidPaths.length > 0) {
+    if (invalidPaths.nonEmpty) {
       val sb = new StringBuilder()
       invalidPaths.foreach(a => sb.append(a).append("; "))
       throw new RuntimeException("Specified mount points paths are invalid for " + sb.result())
@@ -353,7 +353,7 @@ object MountPointRegistry extends LazyLogging {
 
   private def parseConfig(directoryType: String, config: Config) : ArrayBuffer[String] = {
     assert(!StringUtils.isEmpty(directoryType), "Invalid directoryType")
-    assert((config != null), "Config is null")
+    assert(config != null, "Config is null")
 
     val defaultFileSystem = FileSystems.getDefault
     val invalidPathLabels = new ArrayBuffer[String]() 
@@ -410,7 +410,7 @@ object MountPointRegistry extends LazyLogging {
   }
 
   private def addMountPoint(mountPoint: MountPoint) {
-    assert((mountPoint != null), "MountPoint is null")
+    assert(mountPoint != null, "MountPoint is null")
 
     m_registryLock.synchronized {
 
@@ -423,7 +423,7 @@ object MountPointRegistry extends LazyLogging {
       if (optionalListPerType.isDefined) {
         listPerType = optionalListPerType.get
 
-        if (!listPerType.isEmpty) {
+        if (listPerType.nonEmpty) {
 
           for (mp <- listPerType) {
 
@@ -502,6 +502,6 @@ class LocalPath(val localPathname: String, val mountPoint: Option[MountPoint]) {
   /* Constructor checks */
   require(!StringUtils.isEmpty(localPathname), "Invalid localPathname")
 
-  require((mountPoint != null), "MountPoint Option is null")
+  require(mountPoint != null, "MountPoint Option is null")
 
 }

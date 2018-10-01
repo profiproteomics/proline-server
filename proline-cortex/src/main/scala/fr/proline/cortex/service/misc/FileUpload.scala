@@ -79,7 +79,7 @@ class FileUpload extends IRemoteBytesMsgService with IDefaultServiceVersion with
     }
       
     if(jsonResponse == null) { //No Previous Error    
-      if (!dirPath.isDirectory()) {
+      if (!dirPath.isDirectory) {
         logger.debug("Invalid destination folder "+localPath)
         val ex = new Exception("Invalid destination folder "+readFilePath)
         jsonResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, ex), jsonRequestId)

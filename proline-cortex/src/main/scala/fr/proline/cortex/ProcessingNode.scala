@@ -4,6 +4,7 @@ import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+
 import scala.collection.JavaConversions.mutableMapAsJavaMap
 import scala.collection.mutable
 import org.hornetq.api.core.TransportConfiguration
@@ -39,7 +40,6 @@ import fr.proline.cortex.service.dps.msq.ComputeQuantProfiles
 import fr.proline.cortex.service.dps.msq.Quantify
 import fr.proline.cortex.service.dps.msq.QuantifySC
 import fr.proline.cortex.service.dps.msq.QuantifySC_V02
-import fr.proline.cortex.service.dps.msq.QuantifyV2_0
 import fr.proline.cortex.service.dps.uds.GetExportInformation
 import fr.proline.cortex.service.dps.uds.RegisterRawFile
 import fr.proline.cortex.service.dps.uds.ValidateIdentDSInTree
@@ -62,7 +62,9 @@ import fr.proline.jms.util.NodeConfig
 import javax.jms.Connection
 import javax.jms.ExceptionListener
 import javax.jms.JMSException
+
 import fr.proline.cortex.service.dps.msi.ValidateResultSetV2
+import fr.proline.cortex.service.dps.msq.QuantifyV3_0
 
 
 
@@ -78,11 +80,11 @@ object ProcessingNode extends LazyLogging {
     addShutdownHook(server)
 
     /* Start JMS Consumers */
-    server.startJMSConsumers
+    server.startJMSConsumers()
   }
 
   private def addShutdownHook(server: ProcessingNode) {
-    assert((server != null), "addShutdownHook() server is null")
+    assert(server != null, "addShutdownHook() server is null")
 
     val target = new Runnable {
 
@@ -114,9 +116,9 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
   private val m_lock = new Object()
 
   /* All mutable fields are @GuardedBy("m_lock") */
-  private var m_connection: Connection = null
+  private var m_connection: Connection = _
 
-  private var m_executor: ExecutorService = null
+  private var m_executor: ExecutorService = _
 
   /**
    * Starts JMS Connection and Executor running Consumers receive loop.
@@ -152,14 +154,14 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         // Step 3 Directly instantiate the JMS ConnectionFactory object using that TransportConfiguration
         val cf = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF, transportConfiguration) //.asInstanceOf[ConnectionFactory]
        cf.setConsumerWindowSize(0)
-       cf.setReconnectAttempts(10);
+       cf.setReconnectAttempts(10)
         
         // Step 4.Create a JMS Connection
         m_connection = cf.createConnection()
 
         // Add an ExceptionListener to handle asynchronous Connection problems
         val exceptionListener = new ExceptionListener() {
-          override def onException(exception: JMSException) = {
+          override def onException(exception: JMSException): Unit = {
             logger.error("Asynchronous JMS Connection problem", exception)
           }
         }
@@ -286,7 +288,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new CreateProject())
     ServiceRegistry.addService(new RegisterRawFile())
     ServiceRegistry.addService(new DeleteOrphanData())
-    ServiceRegistry.addService(new QuantifyV2_0())
+    ServiceRegistry.addService(new QuantifyV3_0())
     ServiceRegistry.addService(new ImportMaxQuantResults())
     ServiceRegistry.addService(new IdentifyPtmSites())
     ServiceRegistry.addService(new ProlineResourceService())

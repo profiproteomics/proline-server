@@ -5,10 +5,8 @@ import java.util.HashMap
 import java.util.UUID
 
 import scala.collection.mutable.ArrayBuffer
-
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.StringUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
@@ -29,8 +27,10 @@ import fr.proline.module.exporter.commons.config.ExportConfig
 import fr.proline.module.exporter.commons.config.ExportConfigManager
 import fr.proline.module.exporter.dataset.view.BuildDatasetViewSet
 import fr.proline.module.exporter.msi.template.SpectraListAsTSV
-import fr.proline.module.exporter.msi.view.BuildRSMSpectraViewSet
+import fr.proline.module.exporter.msi.view.{BuildRSMSpectraViewSet, FormatCompatibility}
 import fr.proline.module.exporter.mzidentml.MzIdExporter
+import fr.proline.module.exporter.mzidentml.model.Contact
+import fr.proline.module.exporter.mzidentml.model.Organization
 import fr.proline.module.exporter.pridexml.PrideExporterService
 
 /**
@@ -127,7 +127,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
     val fileFormat = ExportFileFormat.withName(paramsRetriever.getString(FILE_FORMAT_PARAM))
     fileFormat match {
       case ExportFileFormat.MZIDENTML    => require(rsmIdentifiers.size == 1, "Could export only one Result into MzIdent")
-      case ExportFileFormat.TEMPLATED    => require(rsmIdentifiers.size > 0, "Could export at least one Result into Excel format")
+      case ExportFileFormat.TEMPLATED    => require(rsmIdentifiers.nonEmpty, "Could export at least one Result into Excel format")
       case ExportFileFormat.PRIDE        => require(rsmIdentifiers.size == 1, "Could export only one Result into Pride format")
       case ExportFileFormat.SPECTRA_LIST => require(rsmIdentifiers.size == 1, "Could export only one Result into Spectra List")
     }
@@ -160,9 +160,22 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
   ): Object = {
 
     // require(rsmIdentifiers.length == 1, "can only export one RSM at a time for the mzIdentML file format")
-
+    import fr.profi.util.serialization.ProfiJson.deserialize
     // val rsmIdentifier = rsmIdentifiers(0)
     var filePath = ""
+    val exportContact = if(extraParams.isDefined && extraParams.get.contains("contact")){
+      val contactInfo = serialize(extraParams.get.apply("contact"))
+       deserialize[Contact](contactInfo)
+    } else {
+      new Contact("Proline User", "ProFi", None, None)
+    }
+    val exportOrg = if(extraParams.isDefined && extraParams.get.contains("organization")){
+      val orgInfo = serialize(extraParams.get.apply("organization"))
+      deserialize[Organization](orgInfo)
+    } else {
+      new Organization("Proline User", None)
+    }
+
     val execCtx = DbConnectionHelper.createSQLExecutionContext(rsmIdentifier.projectId)
 
     try {
@@ -170,7 +183,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
       val exporter = new MzIdExporter(rsmIdentifier.rsmId, execCtx)
 
       filePath = fileDir + File.separatorChar + fileName + ".mzid"
-      exporter.exportResultSummary(filePath)
+      exporter.exportResultSummary(filePath, exportContact, exportOrg)
 
     } finally {
       DbConnectionHelper.tryToCloseExecContext(execCtx)
@@ -197,7 +210,6 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
 
     //    require(extraParams.isDefined, "some extra parameters must be provided")
 
-    var exportLocation = new java.io.File(fileDir)
     val filePath = fileDir + File.separator + fileName
     var executionContext: IExecutionContext = null
 
@@ -237,7 +249,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
     //    require(rsmIdentifiers.length == 1, "can only export one RSM at a time for this file format")
     require(extraParams.isDefined, "some extra parameters must be provided")
 
-    var mode: String = DatasetUtil.getExportMode(rsmIdentifiers(0).projectId, rsmIdentifiers(0).dsId.get)
+    val mode: String = DatasetUtil.getExportMode(rsmIdentifiers.head.projectId, rsmIdentifiers.head.dsId.get)
     var exportConfig: ExportConfig = null
 
     if (extraParams != null && extraParams.isDefined && extraParams.get.contains("config")) {
@@ -248,7 +260,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
       exportConfig = ExportConfigManager.getDefaultExportConfig(mode)
     }
 
-    var exportLocation = new java.io.File(fileDir)
+    val exportLocation = new java.io.File(fileDir)
     var exportedFiles: ArrayBuffer[java.io.File] = new ArrayBuffer()
 
     for (rsmIdentifier <- rsmIdentifiers) {
@@ -303,11 +315,14 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
   ): Object = {
 
     val viewSetTemplate = SpectraListAsTSV
-
-    //    val rsmIdentifier = rsmIdentifiers(0)
-
-    var exportLocation = new java.io.File(fileDir)
+    val exportLocation = new java.io.File(fileDir)
     var exportedFiles: Seq[java.io.File] = Seq()
+
+    val formatCompatibility = if (extraParams != null && extraParams.isDefined && extraParams.get.contains("format_compatibility")) {
+      FormatCompatibility.withName(extraParams.get("format_compatibility").asInstanceOf[String])
+    } else {
+      FormatCompatibility.PEAKVIEW
+    }
 
     var executionContext: IExecutionContext = null
     try {
@@ -319,7 +334,8 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
         rsmIdentifier.projectId,
         rsmIdentifier.rsmId,
         viewSetName = fileName,
-        viewSetTemplate = viewSetTemplate)
+        viewSetTemplate = viewSetTemplate,
+        mode = formatCompatibility)
       exportedFiles = ViewSetExporter.exportViewSetToDirectory(viewSet, exportLocation)
     } finally {
       DbConnectionHelper.tryToCloseExecContext(executionContext)

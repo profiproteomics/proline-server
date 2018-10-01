@@ -1,13 +1,10 @@
 package fr.proline.cortex.service.dps.msi
 
 import java.io.File
-import scala.collection.JavaConversions.mapAsScalaMap
-import scala.collection.mutable.ArrayBuffer
-import scala.util.matching.Regex
+
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.exception.ExceptionUtils
-import fr.profi.util.StringUtils
 import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.DatabaseConnectionContext
@@ -16,6 +13,7 @@ import fr.proline.core.algo.msi.InferenceMethod
 import fr.proline.core.algo.msi.scoring.PepSetScoring
 import fr.proline.core.dal.helper.UdsDbHelper
 import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
@@ -36,12 +34,16 @@ import fr.proline.cortex.api.service.dps.msi.IImportValidateGenerateSMService
 import fr.proline.cortex.api.service.dps.msi.IResultFileDescriptor
 import fr.proline.cortex.api.service.dps.msi.ResultFileDescriptorRuleId
 import fr.proline.cortex.api.service.dps.msi.ResultFileDescriptorsDecoyRegExp
+import fr.proline.cortex.service.SingleThreadIdentifierType
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.fs.MountPointRegistry
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
 import fr.proline.jms.service.api.ISingleThreadedService
 import fr.proline.module.fragmentmatch.service.SpectrumMatchesGenerator
-import fr.proline.cortex.service.SingleThreadIdentifierType
+
+import scala.collection.JavaConversions.mapAsScalaMap
+import scala.collection.mutable.ArrayBuffer
+import scala.util.matching.Regex
 
 
 
@@ -74,7 +76,7 @@ import fr.proline.cortex.service.SingleThreadIdentifierType
 class ImportValidateGenerateSM extends AbstractRemoteProcessingService with IImportValidateGenerateSMService with ISingleThreadedService with LazyLogging {
   
   /* JMS Service identification */
-  val singleThreadIdent= SingleThreadIdentifierType.IMPORT_SINGLETHREAD_IDENT.toString()
+  val singleThreadIdent: String = SingleThreadIdentifierType.IMPORT_SINGLETHREAD_IDENT.toString
   
   case class ImportedResultFileDesc(path: String, var targetResultSetOpt: Option[ResultSet] = None, var targetResultSetId: Long = -1L)
 
@@ -114,17 +116,17 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessingService with IImp
   private def buildParserContext(executionContext: IExecutionContext): ProviderDecoratedExecutionContext = {
 
     // Register some providers
-    val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
+    val parserContext = ProviderDecoratedExecutionContext(PeptideCacheExecutionContext(executionContext)) // Use Object factory
 
     // TODO: use real protein and seqDb providers
     parserContext.putProvider(classOf[IProteinProvider], ProteinFakeProvider)
     parserContext.putProvider(classOf[ISeqDatabaseProvider], SeqDbFakeProvider)
 
-    val psSQLCtx = executionContext.getPSDbConnectionContext
-    val sqlPTMProvider = new SQLPTMProvider(psSQLCtx)
+    val msiSQLCtx = executionContext.getMSIDbConnectionContext
+    val sqlPTMProvider = new SQLPTMProvider(msiSQLCtx)
     parserContext.putProvider(classOf[IPTMProvider], sqlPTMProvider)
 
-    val sqlPepProvider = new SQLPeptideProvider(psSQLCtx)
+    val sqlPepProvider = new SQLPeptideProvider(PeptideCacheExecutionContext(parserContext))
     parserContext.putProvider(classOf[IPeptideProvider], sqlPepProvider)
 
     parserContext
@@ -140,19 +142,19 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessingService with IImp
     val resultFiles = params.getList(RESULT_FILES_PARAM).toArray.map { rfd => parseResultFileDescriptor(rfd,useDecoyRegExp) }
     val instrumentConfigId = params.getLong(INSTRUMENT_CONFIG_ID_PARAM)
     val peaklistSoftwareId = params.getLong(PEAKLIST_SOFTWARE_ID_PARAM)
-    val importerProperties = if (params.hasParam(IMPORTER_PROPERTIES_PARAM) == false) Map.empty[String, Any]
+    val importerProperties = if (!params.hasParam(IMPORTER_PROPERTIES_PARAM)) Map.empty[String, Any]
     else params.getMap(IMPORTER_PROPERTIES_PARAM).map {
       case (a, b) => {
         if (a.endsWith(".file")) {
-          a -> MountPointRegistry.replacePossibleLabel(b.toString(), Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname
+          a -> MountPointRegistry.replacePossibleLabel(b.toString, Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname
         } else a -> b.asInstanceOf[Any]
       }
     } toMap
 
-    val generateSpectrumMatches = if (params.hasParam(PROCESS_METHOD.GENERATE_SPECTRUM_MATCHES_PARAM) == false) false
+    val generateSpectrumMatches = if (!params.hasParam(PROCESS_METHOD.GENERATE_SPECTRUM_MATCHES_PARAM)) false
     else params.getBoolean(PROCESS_METHOD.GENERATE_SPECTRUM_MATCHES_PARAM)
 
-    val gsmForceInsert = if (params.hasParam(FORCE_INSERT_PARAM) == false) false
+    val gsmForceInsert = if (!params.hasParam(FORCE_INSERT_PARAM)) false
     else params.getBoolean(FORCE_INSERT_PARAM)
     
     
@@ -166,13 +168,12 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessingService with IImp
     // *** Initialize the providers    
     val execCtx =DbConnectionHelper.createJPAExecutionContext(projectId)
     var msiDbConnectionContext: DatabaseConnectionContext = null
-    var udsbConnectionContext: DatabaseConnectionContext = null
     var transactionOk: Boolean = false
-   var certifyResult: Boolean = false
+    var certifyResult: Boolean = false
         
     try {
       val parserCtx = this.buildParserContext(execCtx)
-      val udsbConnectionContext = execCtx.getUDSDbConnectionContext()
+      val udsbConnectionContext = execCtx.getUDSDbConnectionContext
 
       val udsDbHelper = new UdsDbHelper(udsbConnectionContext)
       val decoyRegexById = udsDbHelper.getProteinMatchDecoyRegexById()
@@ -194,9 +195,7 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessingService with IImp
         }
       ))
 
-     
-      val errorMessage = new StringBuilder()
-      
+
       // Instantiate the ResultFileCertifier service
        val rsCertifier = new ResultFileCertifier(
           executionContext = parserCtx,
@@ -252,9 +251,9 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessingService with IImp
         resultImport = importedRFs.toArray
         val dsName = if(currentRS.msiSearch.isDefined){ 
           var name = currentRS.msiSearch.get.resultFileName
-          val indexOfDot = name.lastIndexOf('.');
+          val indexOfDot = name.lastIndexOf('.')
             if (indexOfDot != -1) {
-                name = name.substring(0, indexOfDot);
+                name = name.substring(0, indexOfDot)
             }
           name
         } else { currentRS.name } 
@@ -293,7 +292,7 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessingService with IImp
         udsEM.persist(ds)
         
         if(generateSpectrumMatches){          
-          val spectrumMatchesGenerator = new SpectrumMatchesGenerator(execCtx, currentRSId, Some(currentRSMId), None, gsmForceInsert)
+          val spectrumMatchesGenerator = new SpectrumMatchesGenerator(execCtx, currentRSId, Some(currentRSMId), None, None,  gsmForceInsert)
           spectrumMatchesGenerator.runService()
         }
       } // End Go through RS

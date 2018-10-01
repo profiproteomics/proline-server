@@ -5,16 +5,16 @@
   <parent>
     <groupId>fr.proline</groupId>
     <artifactId>ProFI-Pom</artifactId>
-    <version>0.4.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+    <version>0.4.0</version> <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>Proline-Cortex</artifactId>
-  <version>0.6.0-SNAPSHOT</version>
+  <version>1.0.0.a-SNAPSHOT</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.path>${project.basedir}/src/main/scala/fr/proline/cortex</version.path>
-    <core.version>1.3.0-SNAPSHOT</core.version> <!-- Snapshot Trunk version -->
+    <core.version>2.0.0.a-SNAPSHOT</core.version> <!-- Snapshot Trunk version -->
   </properties>
   
   <scm>

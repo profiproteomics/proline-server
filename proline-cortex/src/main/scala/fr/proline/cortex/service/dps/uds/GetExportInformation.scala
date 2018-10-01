@@ -33,7 +33,7 @@ class GetExportInformation extends AbstractRemoteProcessingService with IGetExpo
   
   /* Define the concrete doProcess method */
   def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
-    require((paramsRetriever != null), "No Parameters specified")
+    require(paramsRetriever != null, "No Parameters specified")
 
     val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
     val datasetId = paramsRetriever.getLong(PROCESS_METHOD.DATASET_ID_PARAM)
@@ -62,20 +62,20 @@ object DatasetUtil {
     var mode: String = ExportConfigConstant.MODE_IDENT
     val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId)
     try {
-      val udsDbCtx = execCtx.getUDSDbConnectionContext()
-      val udsEM = udsDbCtx.getEntityManager()
+      val udsDbCtx = execCtx.getUDSDbConnectionContext
+      val udsEM = udsDbCtx.getEntityManager
       val udsDs = udsEM.find(classOf[Dataset], datasetId)
       if (udsDs != null) {
-        val dsType: DatasetType = udsDs.getType()
+        val dsType: DatasetType = udsDs.getType
         if (dsType == DatasetType.QUANTITATION) {
           mode = ExportConfigConstant.MODE_QUANT_XIC
-          val dsMethod: QuantitationMethod = udsDs.getMethod()
+          val dsMethod: QuantitationMethod = udsDs.getMethod
           val quantMethodType = dsMethod.getType
           val abundanceUnit = dsMethod.getAbundanceUnit
-          if (quantMethodType == QuantMethodType.LABEL_FREE.toString() && abundanceUnit == AbundanceUnit.SPECTRAL_COUNTS.toString()) {
+          if (quantMethodType == QuantMethodType.LABEL_FREE.toString && abundanceUnit == AbundanceUnit.SPECTRAL_COUNTS.toString) {
             mode = ExportConfigConstant.MODE_QUANT_SC
           }
-          else if (abundanceUnit == AbundanceUnit.REPORTER_ION_INTENSITY.toString()) {
+          else if (abundanceUnit == AbundanceUnit.REPORTER_ION_INTENSITY.toString) {
             mode = ExportConfigConstant.MODE_QUANT_TAGGING
           }
         }

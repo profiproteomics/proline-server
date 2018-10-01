@@ -38,11 +38,11 @@ object WorkDirectoryRegistry {
    * is not located in one of the registered working directories.
    */
   def isManagedResource(resource: java.io.File): Boolean = {
-    if (resource.exists == false) return false
-    val resourcePath = resource.getCanonicalPath()
+    if (!resource.exists) return false
+    val resourcePath = resource.getCanonicalPath
 
     for (dir <- _registeredDirSet) {
-      val dirPath = dir.getCanonicalPath()
+      val dirPath = dir.getCanonicalPath
       if (resourcePath.startsWith(dirPath)) return true
     }
 
@@ -51,7 +51,7 @@ object WorkDirectoryRegistry {
 
   def registerWorkDirectory(workDir: File) {
     require(workDir.isDirectory, "invalid directory")
-    if (workDir.exists == false) {
+    if (!workDir.exists) {
       throw new IOException("directory [" + workDir + "] does not exist")
     }
 

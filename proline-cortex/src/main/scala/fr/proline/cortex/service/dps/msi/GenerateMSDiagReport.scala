@@ -27,7 +27,7 @@ class GenerateMSDiagReport extends AbstractRemoteProcessingService with IGenerat
 
   def doProcess(paramsRetriever: NamedParamsRetriever): Object = {
     logger.debug("GenerateMSDiagReport JMS WS: running doProcess")
-    require((paramsRetriever != null), "no parameter specified")
+    require(paramsRetriever != null, "no parameter specified")
 
     val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
     val resultSetId = paramsRetriever.getLong(PROCESS_METHOD.RESULT_SET_ID_PARAM)
@@ -47,7 +47,7 @@ class GenerateMSDiagReport extends AbstractRemoteProcessingService with IGenerat
 
     /// ************************************
     try {
-     msDiagReportGenerator.runService
+     msDiagReportGenerator.runService()
     } catch {
       case t: Throwable => {
         throw ExceptionUtils.wrapThrowable("Error while generating the MSDiag report", t, appendCause = true)

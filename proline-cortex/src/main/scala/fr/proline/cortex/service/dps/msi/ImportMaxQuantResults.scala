@@ -56,8 +56,10 @@ import fr.proline.core.orm.uds.Project
 import fr.proline.core.orm.uds.InstrumentConfiguration
 import fr.proline.core.om.storer.lcms.RawMapStorer
 import fr.proline.context.LcMsDbConnectionContext
-import fr.proline.core.dal.helper.UdsDbHelper
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.orm.lcms.{Scan, ScanSequence}
+
+import scala.collection.mutable
 
 /**
   * Import MaxQuant result file in the MSIdb corresponding to the provided project id
@@ -80,17 +82,17 @@ object ImportMaxQuantResults extends LazyLogging {
   def buildParserContext(executionContext: IExecutionContext): ProviderDecoratedExecutionContext = {
 
     // Register some providers
-    val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
+    val parserContext = ProviderDecoratedExecutionContext(PeptideCacheExecutionContext(executionContext)) // Use Object factory and use PeptideCache
 
     // TODO: use real protein and seqDb providers
     parserContext.putProvider(classOf[IProteinProvider], ProteinFakeProvider)
     parserContext.putProvider(classOf[ISeqDatabaseProvider], SeqDbFakeProvider)
 
-    val psSQLCtx = executionContext.getPSDbConnectionContext
-    val sqlPTMProvider = new SQLPTMProvider(psSQLCtx)
+    val msiSQLCtx = executionContext.getMSIDbConnectionContext
+    val sqlPTMProvider = new SQLPTMProvider(msiSQLCtx)
     parserContext.putProvider(classOf[IPTMProvider], sqlPTMProvider)
 
-    val sqlPepProvider = new SQLPeptideProvider(psSQLCtx)
+    val sqlPepProvider = new SQLPeptideProvider(PeptideCacheExecutionContext(parserContext))
     parserContext.putProvider(classOf[IPeptideProvider], sqlPepProvider)
 
     parserContext
@@ -118,17 +120,17 @@ object ImportMaxQuantResults extends LazyLogging {
       //get the zip file content
       zis = new ZipInputStream(new FileInputStream(zipFile))
       //get the zipped file list entry
-      var ze: ZipEntry = zis.getNextEntry()
+      var ze: ZipEntry = zis.getNextEntry
 
       while (ze != null) {
 
-        val nextFileName = ze.getName()
+        val nextFileName = ze.getName
         val newFile = new File(folder, nextFileName)
-        logger.debug("file unzip : " + newFile.getAbsoluteFile())
+        logger.debug("file unzip : " + newFile.getAbsoluteFile)
 
         //create all non exists folders
         //else you will hit FileNotFoundException for compressed folder
-        new File(newFile.getParent()).mkdirs()
+        new File(newFile.getParent).mkdirs()
 
         val fos: FileOutputStream = new FileOutputStream(newFile)
         var len = zis.read(buffer)
@@ -137,13 +139,13 @@ object ImportMaxQuantResults extends LazyLogging {
           len = zis.read(buffer)
         }
         fos.close()
-        ze = zis.getNextEntry()
+        ze = zis.getNextEntry
       }
 
-      zis.closeEntry();
-      zis.close();
+      zis.closeEntry()
+      zis.close()
 
-      logger.debug("All zip entry unzip : " + zipFile.getName())
+      logger.debug("All zip entry unzip : " + zipFile.getName)
 
       if (folder.list().length == 1) //root folder in ZIP
         return folder.listFiles()(0).getAbsolutePath
@@ -173,7 +175,7 @@ object ImportMaxQuantResults extends LazyLogging {
 class ImportMaxQuantResults extends AbstractRemoteProcessingService with IImportMaxQuantResultsService with LazyLogging with ISingleThreadedService {
 
   /* JMS Service identification */
-  val singleThreadIdent = SingleThreadIdentifierType.IMPORT_SINGLETHREAD_IDENT.toString()
+  val singleThreadIdent: String = SingleThreadIdentifierType.IMPORT_SINGLETHREAD_IDENT.toString
 
   def doProcess(params: NamedParamsRetriever): Any = {
     require(params != null, "no parameter specified")
@@ -185,16 +187,14 @@ class ImportMaxQuantResults extends AbstractRemoteProcessingService with IImport
 
     logger.info("Params : " + serialize(params))
 
-    var result: Map[String, Object] = Map.empty
+    val result: Map[String, Object] = Map.empty
 
     // Initialize the providers
     val execCtx = DbConnectionHelper.createSQLExecutionContext(projectId)
 
     try {
       val parserCtx = ImportMaxQuantResults.buildParserContext(execCtx)
-      val udsDbCtx = execCtx.getUDSDbConnectionContext()
-
-      val udsDbHelper = new UdsDbHelper(udsDbCtx)
+      val udsDbCtx = execCtx.getUDSDbConnectionContext
 
       var localPathname = MountPointRegistry.replacePossibleLabel(resultFileFolders, Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname
       var mqFolderName = localPathname
@@ -202,7 +202,7 @@ class ImportMaxQuantResults extends AbstractRemoteProcessingService with IImport
       if (!localFile.exists())
         throw new IllegalArgumentException("Specified Path not found on server side : " + resultFileFolders)
 
-      if (!localFile.isDirectory()) { //Should be a zip file !
+      if (!localFile.isDirectory) { //Should be a zip file !
         mqFolderName = ImportMaxQuantResults.unZipIt(localFile)
       }
       logger.debug("TRY to Import MaxQuant result on: " + mqFolderName)
@@ -232,9 +232,9 @@ class ImportMaxQuantResults extends AbstractRemoteProcessingService with IImport
 class ImportMaxQuantResultsV2_0 extends AbstractRemoteProcessingService with IImportMaxQuantResultsServiceV2 with IMapSetBuilder with LazyLogging with ISingleThreadedService {
 
   /* JMS Service identification */
-  val singleThreadIdent = SingleThreadIdentifierType.IMPORT_SINGLETHREAD_IDENT.toString()
+  val singleThreadIdent: String = SingleThreadIdentifierType.IMPORT_SINGLETHREAD_IDENT.toString
   var rsMQImporterOpt: Option[MaxQuantResultParser] = None
-  val pseudoScanByRsName = scala.collection.mutable.Map[String, Long]()
+  val pseudoScanByRsName: mutable.Map[String, Long] = scala.collection.mutable.Map[String, Long]()
 
   /* Define the concrete doProcess method */
   def doProcess(params: NamedParamsRetriever): Any = {
@@ -245,6 +245,7 @@ class ImportMaxQuantResultsV2_0 extends AbstractRemoteProcessingService with IIm
     val instrumentConfigId = params.getLong(PROCESS_METHOD.INSTRUMENT_CONFIG_ID_PARAM)
     val accessionRegexp = if (params.hasParam(PROCESS_METHOD.ACCESSION_REGEXP_PARAM)) params.getString(PROCESS_METHOD.ACCESSION_REGEXP_PARAM) else "(.*)"
     val importQuantitation = if (params.hasParam(PROCESS_METHOD.IMPORT_QUANT_RESULTS_PARAM)) params.getBoolean(PROCESS_METHOD.IMPORT_QUANT_RESULTS_PARAM) else false
+    val fragmentationRuleSetId = if (params.hasParam(PROCESS_METHOD.FRAGMENTATION_RULE_SET_ID_PARAM)) params.getLong(PROCESS_METHOD.FRAGMENTATION_RULE_SET_ID_PARAM) else -1
 
     logger.info("Params : " + serialize(params))
 
@@ -255,7 +256,7 @@ class ImportMaxQuantResultsV2_0 extends AbstractRemoteProcessingService with IIm
 
     try {
       val parserCtx = ImportMaxQuantResults.buildParserContext(execCtx)
-      var udsDbCtx = execCtx.getUDSDbConnectionContext()
+      var udsDbCtx = execCtx.getUDSDbConnectionContext
 
       var localPathname = MountPointRegistry.replacePossibleLabel(resultFileFolders, Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname
       var mqFolderName = localPathname
@@ -263,7 +264,7 @@ class ImportMaxQuantResultsV2_0 extends AbstractRemoteProcessingService with IIm
       if (!localFile.exists())
         throw new IllegalArgumentException("Specified Path not found on server side : " + resultFileFolders)
 
-      if (!localFile.isDirectory()) { //Should be a zip file !
+      if (!localFile.isDirectory) { //Should be a zip file !
         mqFolderName = ImportMaxQuantResults.unZipIt(localFile)
       }
       logger.debug("TRY to Import MaxQuant result on: " + mqFolderName)
@@ -272,7 +273,8 @@ class ImportMaxQuantResultsV2_0 extends AbstractRemoteProcessingService with IIm
       rsMQImporterOpt = Some(new MaxQuantResultParser(parserCtx,
         instrumentConfigId,
         accessionRegexp,
-        mqFolderName
+        mqFolderName,
+        fragmentationRuleSetId
       ))
 
       val rsMQImporter = rsMQImporterOpt.get
@@ -308,10 +310,10 @@ class ImportMaxQuantResultsV2_0 extends AbstractRemoteProcessingService with IIm
         DbConnectionHelper.tryToCloseExecContext(execCtx)
 
         execCtx = DbConnectionHelper.createJPAExecutionContext(projectId)
-        udsDbCtx = execCtx.getUDSDbConnectionContext()
+        udsDbCtx = execCtx.getUDSDbConnectionContext
 
         // Register SQLRunProvider 
-        val scanSeqProvider = new SQLScanSequenceProvider(execCtx.getLCMSDbConnectionContext())
+        val scanSeqProvider = new SQLScanSequenceProvider(execCtx.getLCMSDbConnectionContext)
         val lcMsRunProvider = new SQLRunProvider(
           udsDbCtx,
           Some(scanSeqProvider),
@@ -330,8 +332,8 @@ class ImportMaxQuantResultsV2_0 extends AbstractRemoteProcessingService with IIm
 
           for ((rsName, rsmId) <- rsmIds) {
 
-            val udsEM =  execCtx.getUDSDbConnectionContext().getEntityManager
-            val lcmsEM = execCtx.getLCMSDbConnectionContext().getEntityManager
+            val udsEM =  execCtx.getUDSDbConnectionContext.getEntityManager
+            val lcmsEM = execCtx.getLCMSDbConnectionContext.getEntityManager
 
             var rawFile = udsEM.find(classOf[RawFile], rsName)
             val project = udsEM.find(classOf[Project], projectId)
@@ -340,7 +342,6 @@ class ImportMaxQuantResultsV2_0 extends AbstractRemoteProcessingService with IIm
             val udsRun = if (rawFile == null) {
               rawFile = new RawFile()
               rawFile.setIdentifier(rsName)
-              rawFile.setInstrumentId(instrumentConfig.getInstrument.getId)
               rawFile.setOwnerId(project.getOwner.getId)
               rawFile.setRawFileName(rsName)
               udsEM.persist(rawFile)
@@ -368,18 +369,6 @@ class ImportMaxQuantResultsV2_0 extends AbstractRemoteProcessingService with IIm
               newScanSequence.setId(udsRun.getId)
               newScanSequence.setRawFileName(rsName)
 
-              var instrument = lcmsEM.find(classOf[fr.proline.core.orm.lcms.Instrument], instrumentConfig.getInstrument.getId)
-
-              if (instrument == null) {
-                logger.info("Create lcms Instrument")
-                instrument =  new fr.proline.core.orm.lcms.Instrument()
-                instrument.setId(instrumentConfig.getInstrument.getId)
-                instrument.setName(instrumentConfig.getInstrument.getName)
-                instrument.setSource(instrumentConfig.getInstrument.getSource)
-                lcmsEM.persist(instrument)
-              }
-
-              newScanSequence.setInstrument(instrument)
               // TODO : retrieve real values instead of fake constants
               newScanSequence.setMs1ScanCount(10000)
               newScanSequence.setMs2ScanCount(10000)
@@ -400,8 +389,8 @@ class ImportMaxQuantResultsV2_0 extends AbstractRemoteProcessingService with IIm
               lcmsEM.persist(pseudoScan)
               pseudoScanByRsName += (rsName -> pseudoScan.getId)
             } else {
-              val scans = scanSequence.getScans()
-              if ((scans == null) || (scans.isEmpty())) {
+              val scans = scanSequence.getScans
+              if ((scans == null) || scans.isEmpty) {
                 val pseudoScan = new Scan()
                 pseudoScan.setInitialId(0)
                 pseudoScan.setCycle(0)
@@ -445,7 +434,6 @@ class ImportMaxQuantResultsV2_0 extends AbstractRemoteProcessingService with IIm
           val name = "MaxQuant imported XIC"
           val methodId = 1
           val description = "Import MaxQuant"
-          val quantConfigAsMap = new java.util.HashMap[String, Object]()
 
           // Store quantitation in the UDSdb
           val quantiCreator = new CreateQuantitation(
@@ -462,8 +450,8 @@ class ImportMaxQuantResultsV2_0 extends AbstractRemoteProcessingService with IIm
           result.put("quantitation_dataset_id",Predef.long2Long(quantiId))
 
           // Retrieve entity manager
-          val udsDbCtx = providerContext.getUDSDbConnectionContext()
-          val udsEM = udsDbCtx.getEntityManager()
+          val udsDbCtx = providerContext.getUDSDbConnectionContext
+          val udsEM = udsDbCtx.getEntityManager
           val udsQuantitation = udsEM.find(classOf[UdsDataset], quantiCreator.getUdsQuantitation.getId)
 
           // Retrieve master quant channels (they should be sorted by their number)
