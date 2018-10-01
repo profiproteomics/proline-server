@@ -9,12 +9,12 @@
   </parent>
 
   <artifactId>Proline-Cortex</artifactId>
-  <version>1.0.0.a-SNAPSHOT</version>
+  <version>1.0.1-SNAPSHOT</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.path>${project.basedir}/src/main/scala/fr/proline/cortex</version.path>
-    <core.version>2.0.0.a-SNAPSHOT</core.version> <!-- Snapshot Trunk version -->
+    <core.version>2.0.1-SNAPSHOT</core.version> <!-- Snapshot Trunk version -->
   </properties>
   
   <scm>
