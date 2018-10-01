@@ -121,7 +121,7 @@ class PrideExporter(
   private val spectrumMatchByPeptideMatchId = {
     val spectrumMatchesByPeptMatchId = new HashMap[Long, SpectrumMatch]
     DoJDBCReturningWork.withEzDBC(msiSQLCtx, { msiEzDBC =>
-      val pepMatches = validPepMatchIdSet.mkString(",")
+
       val pepMatchSpectrumMatchQuery = new SelectQueryBuilder2(MsiDbPeptideMatchObjectTreeMapTable, MsiDbObjectTreeTable).mkSelectQuery((pmT, pmC, otT, otC) =>
         List(pmT.PEPTIDE_MATCH_ID, otT.CLOB_DATA) -> " WHERE " ~ pmT.OBJECT_TREE_ID ~ "=" ~ otT.ID ~ " AND " ~ pmT.SCHEMA_NAME ~ "= 'peptide_match.spectrum_match' AND " ~
           pmT.PEPTIDE_MATCH_ID ~ " IN (" ~ validPepMatchIdSet.mkString(",") ~ ")")
@@ -575,8 +575,8 @@ class PrideExporter(
 	      } // End go through Peptide Matches
 	      if(nbrSpectrumNotFound >0)
 	        logger.warn("Unable to found " +nbrSpectrumNotFound+" Spectra")
-	        
-	      idf.setScore(typicalProteinMatch.score)
+
+        idf.setScore(Float.float2double(typicalProteinMatch.score))
 	      //Add extra parameters
 	      val protAdditional = new Param()
 	      protAdditional.getCvParam.add(CvParam(PrideSchemaConstants.PRIDE_CV_PROT_DESCRIPTION_ACC, PrideSchemaConstants.PRIDE_CV_PROT_DESCRIPTION_NAME, typicalProteinMatch.description))

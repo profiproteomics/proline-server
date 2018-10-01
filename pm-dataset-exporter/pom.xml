@@ -68,7 +68,7 @@
     <dependency> <!-- SHOULD be defined BEFORE Proline OM or MZdb Processing ! -->
      <groupId>fr.proline</groupId>
      <artifactId>PM-FragmentMatchGenerator</artifactId>
-     <version>0.7.0-SNAPSHOT</version>
+     <version>0.8.0-SNAPSHOT</version>
      <scope>test</scope>
     </dependency>
     
