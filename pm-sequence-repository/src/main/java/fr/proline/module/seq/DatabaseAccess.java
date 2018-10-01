@@ -1,19 +1,5 @@
 package fr.proline.module.seq;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Map;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.sql.DataSource;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import fr.proline.core.orm.uds.ExternalDb;
 import fr.proline.core.orm.uds.repository.ExternalDbRepository;
 import fr.proline.core.orm.util.DStoreCustomPoolConnectorFactory;
@@ -24,8 +10,19 @@ import fr.proline.repository.DatabaseUpgrader;
 import fr.proline.repository.DriverType;
 import fr.proline.repository.IDataStoreConnectorFactory;
 import fr.proline.repository.IDatabaseConnector;
-import fr.proline.repository.IDatabaseConnector.ConnectionPoolType;
 import fr.proline.repository.ProlineDatabaseType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Map;
 
 /**
  * Handle <code>DataStoreConnectorFactory</code> and DatabaseConnector keeping and initialization for Sequence-Repository retrieve Service and Provider.
@@ -76,7 +73,7 @@ public final class DatabaseAccess {
 	}
 
 	public static IDataStoreConnectorFactory getDataStoreConnectorFactory() {
-		IDataStoreConnectorFactory result = null;
+		IDataStoreConnectorFactory result;
 
 		synchronized (INITIALIZATION_LOCK) {
 
@@ -210,8 +207,10 @@ public final class DatabaseAccess {
 
 			} else {
 				boolean cheksumrepair=false;
-				Map<Object,Object> dbProperties  = seqDb.toPropertiesMap(udsDbConnector.getDriverType());
-				Integer maxPoolConnection = DBProlineConfig.getInstance().getMaxPoolConnection();				
+				Map<Object,Object> dbProperties  = seqDb.toPropertiesMap(udsDbConnector.getDriverType(),
+						(String) udsDbConnector.getProperty(AbstractDatabaseConnector.PERSISTENCE_JDBC_USER_KEY),
+						(String) udsDbConnector.getProperty(AbstractDatabaseConnector.PERSISTENCE_JDBC_PASSWORD_KEY));
+				Integer maxPoolConnection = DBProlineConfig.getInstance().getMaxPoolConnection();
 				dbProperties.put(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY, maxPoolConnection);
 				
 				//VDS #16961 seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance(ProlineDatabaseType.SEQ, dbProperties, ConnectionPoolType.SIMPLE_POOL_MANAGEMENT);
@@ -257,12 +256,12 @@ public final class DatabaseAccess {
 			if (udsDriverType == DriverType.H2) {
 				// RAW ExternalDb creation
 				// TODO create structures required by setConnectionMode (if file or server mode)
-				seqDb = createSEQDb(udsEM, udsDriverType);
+				seqDb = createSEQDb(udsEM);
 			} else if (udsDriverType == DriverType.POSTGRESQL) {
 				final boolean success = createPgSEQDatabase(udsDbConnector);
 
 				if (success) {
-					seqDb = createSEQDb(udsEM, udsDriverType);
+					seqDb = createSEQDb(udsEM);
 				} else {
 					LOG.error("Unable to create Postgres SEQ Database");
 				}
@@ -288,8 +287,9 @@ public final class DatabaseAccess {
 		IDatabaseConnector seqDbConnector = null;
         boolean cheksumrepair=false;
 		if (transacOK && (seqDb != null)) {
-			Map<Object,Object> dbProperties  = seqDb.toPropertiesMap();
-			Integer maxPoolConnection = DBProlineConfig.getInstance().getMaxPoolConnection();				
+			Map<Object,Object> dbProperties  = seqDb.toPropertiesMap((String) udsDbConnector.getProperty(AbstractDatabaseConnector.PERSISTENCE_JDBC_USER_KEY),
+					(String) udsDbConnector.getProperty(AbstractDatabaseConnector.PERSISTENCE_JDBC_PASSWORD_KEY));
+			Integer maxPoolConnection = DBProlineConfig.getInstance().getMaxPoolConnection();
 			dbProperties.put(AbstractDatabaseConnector.PROLINE_MAX_POOL_CONNECTIONS_KEY, maxPoolConnection);
 
 			//VDS #16961 seqDbConnector = DatabaseConnectorFactory.createDatabaseConnectorInstance( ProlineDatabaseType.SEQ, dbProperties, ConnectionPoolType.SIMPLE_POOL_MANAGEMENT);
@@ -353,31 +353,14 @@ public final class DatabaseAccess {
 	}
 
 	/* Simple clone from PS Db ExternalDb configuration */
-	private static ExternalDb createSEQDb(final EntityManager udsEM, final DriverType udsDriverType) {
-		ExternalDb seqDb = null;
+	private static ExternalDb createSEQDb(final EntityManager udsEM) {
+		ExternalDb seqDb = DBProlineConfig.getInstance().getExternalDBTemplate();
+		seqDb.setDbName(SEQ_DB_NAME);
+		seqDb.setDbVersion("V0.2");  //FIXME get information from seqDb ?!
+		seqDb.setType(ProlineDatabaseType.SEQ);
+		udsEM.persist(seqDb);
 
-		final ExternalDb psDb = ExternalDbRepository.findExternalByType(udsEM, ProlineDatabaseType.PS);
-
-		if (psDb == null) {
-			LOG.error("Cannot find template PS ExternalDb");
-		} else {
-			seqDb = new ExternalDb();
-
-			seqDb.setDriverType(udsDriverType);
-			seqDb.setDbName(SEQ_DB_NAME);
-			seqDb.setDbPassword(psDb.getDbPassword());
-			seqDb.setDbUser(psDb.getDbUser());
-			seqDb.setDbVersion(psDb.getDbVersion());
-			seqDb.setHost(psDb.getHost());
-			seqDb.setPort(psDb.getPort());
-			seqDb.setType(ProlineDatabaseType.SEQ);
-			seqDb.setConnectionMode(psDb.getConnectionMode());
-
-			udsEM.persist(seqDb);
-
-			LOG.debug("New SEQ ExternalDb persisted");
-		}
-
+		LOG.debug("New SEQ ExternalDb persisted");
 		return seqDb;
 	}
 

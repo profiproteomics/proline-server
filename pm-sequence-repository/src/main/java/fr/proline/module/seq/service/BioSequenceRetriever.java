@@ -62,8 +62,7 @@ public final class BioSequenceRetriever {
 	private static final Logger LOG = LoggerFactory.getLogger(BioSequenceRetriever.class);
 
 	/**
-	 * Protect re-entrance of public retrieveBioSequences() method (Only one
-	 * thread at a time).
+	 * Protect re-entrance of public retrieveBioSequences() method (Only one thread at a time).
 	 */
 	private static final Object RUNNING_LOCK = new Object();
 
@@ -83,8 +82,7 @@ public final class BioSequenceRetriever {
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	public static int retrieveBioSequences(final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers)
-			throws Exception {
+	public static int retrieveBioSequences(final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers) throws Exception {
 		if ((seDbIdentifiers == null) || seDbIdentifiers.isEmpty()) {
 			throw new IllegalArgumentException("Invalid seDbIdentifiers Map");
 		}
@@ -96,9 +94,7 @@ public final class BioSequenceRetriever {
 		synchronized (RUNNING_LOCK) {// Only one Thread at a time
 			final long start = System.currentTimeMillis();
 
-			SeqRepoConfig.forcePropertiesReload();// Read back properties to
-													// take into account
-													// potential changes.
+			SeqRepoConfig.forcePropertiesReload();//Read back properties to take into account potential changes.
 			DATA_SOURCE_BUILDER.forceRescanFastaFiles();
 
 			final List<Future<Integer>> futures = new ArrayList<>();
@@ -119,7 +115,7 @@ public final class BioSequenceRetriever {
 							if (!(currentThread.getUncaughtExceptionHandler() instanceof ThreadLogger)) {
 								currentThread.setUncaughtExceptionHandler(new ThreadLogger(LOG));
 							}
-							LOG.debug(" GET Identifier from " + seDbInstanceW.getSourcePath());
+							LOG.debug(" GET Identifier from "+seDbInstanceW.getSourcePath());
 							return Integer.valueOf(retrieveBioSequences(seDbInstanceW, seDbIdentsW));
 						}
 
@@ -156,8 +152,7 @@ public final class BioSequenceRetriever {
 
 			final long duration = end - start;
 
-			LOG.info("Total retrieveBioSequences() execution : {} SEDbIdentifiers retrieved from sources in {} ms",
-					totalHandledSEDbIdents, duration);
+			LOG.info("Total retrieveBioSequences() execution : {} SEDbIdentifiers retrieved from sources in {} ms", totalHandledSEDbIdents, duration);
 		} // End of synchronized block on RUNNING_LOCK
 
 		return totalHandledSEDbIdents;
@@ -166,12 +161,12 @@ public final class BioSequenceRetriever {
 	public static boolean waitExecutorShutdown() throws Exception {
 		boolean result = false;
 
-		// try {
-		EXECUTOR.shutdown();
-		result = EXECUTOR.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS);
-		// } catch (Exception ex) {
-		// LOG.error("Error shutting-down BioSequenceRetriever EXECUTOR", ex);
-		// }
+//		try {
+			EXECUTOR.shutdown();
+			result = EXECUTOR.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS);
+//		} catch (Exception ex) {
+//			LOG.error("Error shutting-down BioSequenceRetriever EXECUTOR", ex);
+//		}
 
 		return result;
 	}
@@ -189,10 +184,9 @@ public final class BioSequenceRetriever {
 			seqEM = seqDb.createEntityManager();
 
 			nHandledSEDbIdents = retrieveBioSequences(seqEM, seDbInstanceW, seDbIdentifiers, true);
-			// } catch (Throwable t) {
-			// /* Catch all ! */
-			// LOG.error("Error loading Sequences from [" +
-			// seDbInstanceW.getSourcePath() + ']', t);
+//		} catch (Throwable t) {
+//			/* Catch all ! */
+//			LOG.error("Error loading Sequences from [" + seDbInstanceW.getSourcePath() + ']', t);
 		} finally {
 
 			if (seqEM != null) {
@@ -208,8 +202,11 @@ public final class BioSequenceRetriever {
 		return nHandledSEDbIdents;
 	}
 
-	private static int retrieveBioSequences(final EntityManager seqEM, final SEDbInstanceWrapper seDbInstanceW,
-			final Set<SEDbIdentifierWrapper> seDbIdentifiers, final boolean doRecurse) throws Exception {
+	private static int retrieveBioSequences(
+		final EntityManager seqEM,
+		final SEDbInstanceWrapper seDbInstanceW,
+		final Set<SEDbIdentifierWrapper> seDbIdentifiers,
+		final boolean doRecurse) throws Exception {
 		assert (seDbInstanceW != null) : "retrieveBioSequences() seDbInstanceW is null";
 
 		int nHandledSEDbIdents = 0;
@@ -227,40 +224,50 @@ public final class BioSequenceRetriever {
 			removeKnownIdentifiers(seqEM, seDbInstance, identByValues);
 		}
 
+		String parsingRuleReleaseRegex = null;
+		String seDbIdentRegex = null;
+		ParsingRuleEntry parsingRule = ParsingRuleEntry.getParsingRuleEntry(fastaFileName);
+		if(parsingRule != null){
+			parsingRuleReleaseRegex = parsingRule.getFastaReleaseRegEx();
+			seDbIdentRegex = parsingRule.getProteinAccRegEx();
+		}
+
+		/* Retrieve or guess Parsing rules */
+		final String release = parseReleaseVersion(fastaFileName, parsingRuleReleaseRegex, seDbInstance);
+		seDbInstanceW.setRelease(release);
+
 		if (!identByValues.isEmpty()) {
 
-			// String repositoryIdentRegex = null; //VD TODO How to manage it !!
-			String parsingRuleReleaseRegex = null;
-			String seDbIdentRegex = null;
-			ParsingRuleEntry parsingRule = ParsingRuleEntry.getParsingRuleEntry(fastaFileName);
-			if (parsingRule != null) {
-				parsingRuleReleaseRegex = parsingRule.getFastaReleaseRegEx();
-				seDbIdentRegex = parsingRule.getProteinAccRegEx();
-			}
+////			String repositoryIdentRegex = null; //VD TODO How to manage it !!
+//			String parsingRuleReleaseRegex = null;
+//			String seDbIdentRegex = null;
+//			ParsingRuleEntry parsingRule = ParsingRuleEntry.getParsingRuleEntry(fastaFileName);
+//			if(parsingRule != null){
+//				parsingRuleReleaseRegex = parsingRule.getFastaReleaseRegEx();
+//				seDbIdentRegex = parsingRule.getProteinAccRegEx();
+//			}
+//
 
-			/* Retrieve or guess Parsing rules */
-			final String release = parseReleaseVersion(fastaFileName, parsingRuleReleaseRegex, seDbInstance);
-
+//			/* Retrieve or guess Parsing rules */
+//			final String release = parseReleaseVersion(fastaFileName, parsingRuleReleaseRegex, seDbInstance);
+			
 			Pattern seDbIdentPattern = null;
 			if (seDbIdentRegex == null) {
 				LOG.debug("Sequence source [{}] will be parsed with Default Protein Accession Regex", sourcePath);
 				String defaultRegEx = SeqRepoConfig.getInstance().getDefaultProtAccRegEx();
-				seDbIdentPattern = Pattern.compile(defaultRegEx, Pattern.CASE_INSENSITIVE);
+				seDbIdentPattern = Pattern.compile(defaultRegEx, Pattern.CASE_INSENSITIVE);					
 			} else {
-				LOG.debug("Sequence source [{}] will be parsed using Protein Accession Regex {} ", fastaFileName,
-						seDbIdentRegex);
+				LOG.debug("Sequence source [{}] will be parsed using Protein Accession Regex {} ", fastaFileName, seDbIdentRegex);
 				seDbIdentPattern = Pattern.compile(seDbIdentRegex, Pattern.CASE_INSENSITIVE);
 			}
 
 			Pattern repositoryIdentPattern = null;
-			//
-			// if (repositoryIdentRegex != null) {
-			// repositoryIdentPattern = Pattern.compile(repositoryIdentRegex,
-			// Pattern.CASE_INSENSITIVE);
-			// }
+//
+//			if (repositoryIdentRegex != null) {
+//				repositoryIdentPattern = Pattern.compile(repositoryIdentRegex, Pattern.CASE_INSENSITIVE);
+//			}
 
-			final DataSource fastaSource = DATA_SOURCE_BUILDER.buildFastaSource(fastaFileName, seDbIdentPattern,
-					repositoryIdentPattern);
+			final DataSource fastaSource = DATA_SOURCE_BUILDER.buildFastaSource(fastaFileName, seDbIdentPattern, repositoryIdentPattern);
 
 			if (fastaSource == null) {
 				LOG.warn("NO FastaSource found for [{}]", sourcePath);
@@ -269,10 +276,8 @@ public final class BioSequenceRetriever {
 
 					final File bestFastaFile = selectBestFile(fastaFileName, release, parsingRuleReleaseRegex);
 					if (bestFastaFile != null) {
-						LOG.info("Trying to load [{}] sequences from [{}]", sourcePath,
-								bestFastaFile.getAbsolutePath());
-						final SEDbInstanceWrapper fakeSEDbInstance = new SEDbInstanceWrapper(seDbName, null,
-								bestFastaFile.getName());
+						LOG.info("Trying to load [{}] sequences from [{}]", sourcePath, bestFastaFile.getAbsolutePath());
+						final SEDbInstanceWrapper fakeSEDbInstance = new SEDbInstanceWrapper(seDbName, null, bestFastaFile.getName());
 						nHandledSEDbIdents = retrieveBioSequences(seqEM, fakeSEDbInstance, seDbIdentifiers, false);
 					}
 
@@ -288,8 +293,7 @@ public final class BioSequenceRetriever {
 					}
 
 					/* Big write lock on SEQ Db */
-					synchronized (SEQ_DB_WRITE_LOCK) {// Only one Thread at a
-														// time
+					synchronized (SEQ_DB_WRITE_LOCK) {// Only one Thread at a time
 						EntityTransaction seqTransac = seqEM.getTransaction();
 						boolean transacOK = false;
 
@@ -301,29 +305,21 @@ public final class BioSequenceRetriever {
 							final long start = System.currentTimeMillis();
 
 							if (seDbInstance == null) {
-								seDbInstance = loadOrCreateSEDbInstance(seqEM, seDbInstanceW, null, release,
-										fastaSource.getLastModifiedTime());
+								seDbInstance = loadOrCreateSEDbInstance(seqEM, seDbInstanceW, null, release, fastaSource.getLastModifiedTime());
 							} else {
 								seDbInstance = seqEM.merge(seDbInstance);
 							}
 
-							SEDb seDb = seDbInstance.getSEDb();// Update seDb
-																// (should not
-																// be null)
+							SEDb seDb = seDbInstance.getSEDb();// Update seDb (should not be null)
 
-							final Map<String, List<SEDbIdentifier>> existingSEDbIdents = loadExistingSEDbIdentifiers(
-									seqEM, seDbName, foundSequences);
+							final Map<String, List<SEDbIdentifier>> existingSEDbIdents = loadExistingSEDbIdentifiers(seqEM, seDbName, foundSequences);
 
 							if (LOG.isDebugEnabled()) {
 								LOG.debug("Possible existing SEDbIdentifiers : {}", existingSEDbIdents.size());
 							}
 
-							/*
-							 * BioSequence objects must be unique by sequence
-							 * (normalized to Upper Case)
-							 */
-							final Map<String, BioSequence> existingBioSequences = loadExistingBioSequences(seqEM,
-									foundSequences);
+							/* BioSequence objects must be unique by sequence (normalized to Upper Case) */
+							final Map<String, BioSequence> existingBioSequences = loadExistingBioSequences(seqEM, foundSequences);
 
 							if (LOG.isDebugEnabled()) {
 								LOG.debug("Existing BioSequences : {}", existingBioSequences.size());
@@ -334,22 +330,18 @@ public final class BioSequenceRetriever {
 							Map<String, RepositoryIdentifier> existingRepositoryIdents = null;
 
 							if (repository != null) {// Can be null
-								final String repositoryName = repository.getName();// Should
-																					// not
-																					// be
-																					// null
-								existingRepositoryIdents = loadExistingRepositoryIdentifiers(seqEM, repositoryName,
-										foundSequences);
+								final String repositoryName = repository.getName();// Should not be null
+								existingRepositoryIdents = loadExistingRepositoryIdentifiers(seqEM, repositoryName, foundSequences);
 
 								if (LOG.isDebugEnabled()) {
 									LOG.debug("Possible existing RepositoryIdentifiers : {}",
-											existingRepositoryIdents.size());
+										existingRepositoryIdents.size());
 								}
 
 							}
 
-							final SeqContext context = new SeqContext(seqEM, seDbInstance, existingSEDbIdents,
-									existingBioSequences, repository, existingRepositoryIdents);
+							final SeqContext context = new SeqContext(seqEM, seDbInstance, existingSEDbIdents, existingBioSequences, repository,
+									existingRepositoryIdents);
 
 							final Set<Map.Entry<SEDbIdentifierWrapper, String>> entries = foundSequences.entrySet();
 
@@ -383,8 +375,7 @@ public final class BioSequenceRetriever {
 								}
 							}
 
-						} // End of try / finally block on SEQ Db EntityManager
-							// Transaction
+						} // End of try / finally block on SEQ Db EntityManager Transaction
 
 					} // End of synchronized block on SEQ_DB_WRITE_LOCK
 
@@ -397,47 +388,43 @@ public final class BioSequenceRetriever {
 		return nHandledSEDbIdents;
 	}
 
-	private static String parseReleaseVersion(final String fastaFileName, final String parsingRuleReleaseRegex,
-			final SEDbInstance seDbInstance) {
+	private static String parseReleaseVersion(
+		final String fastaFileName,
+		final String parsingRuleReleaseRegex,
+		final SEDbInstance seDbInstance) {
 		String release = null;
 
 		if (parsingRuleReleaseRegex != null)
 			release = RegExUtil.parseReleaseVersion(fastaFileName, parsingRuleReleaseRegex);
 
-		if (release == null) {
-
-			if (seDbInstance != null) {
+		if(seDbInstance != null) {
+			if (release == null)
 				release = seDbInstance.getRelease();
-			}
+			else {
 
-		} else {
-
-			if (seDbInstance != null) {
-				final String instanceRelease = seDbInstance.getRelease();// Should
-																			// not
-																			// be
-																			// null
-
+				final String instanceRelease = seDbInstance.getRelease();// Should not be null
 				if (!release.equals(instanceRelease)) {
 					throw new RuntimeException("Inconsistent Release version");
 				}
-
 			}
-
 		}
 
 		return release;
 	}
 
+
+
 	/**
 	 * Try to select an existing FASTA file just after expected SEDbInstance
 	 * release.
-	 * 
+	 *
 	 * @throws Exception
 	 * 
 	 */
-	private static File selectBestFile(final String fastaFileName, final String release,
-			final String parsingRuleReleaseRegex) throws Exception {
+	private static File selectBestFile(
+		final String fastaFileName,
+		final String release,
+		final String parsingRuleReleaseRegex) throws Exception {
 		assert (fastaFileName != null) : "selectBestFile() fastaFileName is null";
 
 		File result = null;
@@ -509,8 +496,7 @@ public final class BioSequenceRetriever {
 		return result;
 	}
 
-	private static Map<String, List<SEDbIdentifierWrapper>> buildIdentbyValuesMap(
-			final Set<SEDbIdentifierWrapper> seDbIdentifiers) {
+	private static Map<String, List<SEDbIdentifierWrapper>> buildIdentbyValuesMap(final Set<SEDbIdentifierWrapper> seDbIdentifiers) {
 		assert (seDbIdentifiers != null) : "buildIdentbyValuesMap() seDbIdentifiers Set is null";
 
 		final Map<String, List<SEDbIdentifierWrapper>> result = new HashMap<>();
@@ -521,8 +507,7 @@ public final class BioSequenceRetriever {
 			List<SEDbIdentifierWrapper> identifiers = result.get(identValue);
 
 			if (identifiers == null) {
-				identifiers = new ArrayList<>(1);// Assume one SEDbIdentWrapper
-													// by identValue
+				identifiers = new ArrayList<>(1);// Assume one SEDbIdentWrapper by identValue
 
 				result.put(identValue, identifiers);
 			}
@@ -533,8 +518,10 @@ public final class BioSequenceRetriever {
 		return result;
 	}
 
-	private static SEDbInstance loadSEDbInstance(final EntityManager seqEM, final SEDbInstanceWrapper seDbInstanceW,
-			final String fastaFileName) {
+	private static SEDbInstance loadSEDbInstance(
+		final EntityManager seqEM,
+		final SEDbInstanceWrapper seDbInstanceW,
+		final String fastaFileName) {
 		assert (seDbInstanceW != null) : "loadSEDbInstance() seDbInstanceW is null";
 
 		final String seDbName = seDbInstanceW.getName();
@@ -543,8 +530,7 @@ public final class BioSequenceRetriever {
 		SEDbInstance result = null;
 
 		/* First try to load by sourcePath */
-		final List<SEDbInstance> foundSEDbInstances = SEDbRepository.findSEDbInstanceByNameAndSourcePath(seqEM,
-				seDbName, sourcePath);
+		final List<SEDbInstance> foundSEDbInstances = SEDbRepository.findSEDbInstanceByNameAndSourcePath(seqEM, seDbName, sourcePath);
 		if (foundSEDbInstances != null) {
 			final int nInstances = foundSEDbInstances.size();
 
@@ -580,15 +566,16 @@ public final class BioSequenceRetriever {
 	 * @param seDbInstance
 	 * @param identByValues
 	 */
-	private static void removeKnownIdentifiers(final EntityManager seqEM, final SEDbInstance seDbInstance,
-			final Map<String, List<SEDbIdentifierWrapper>> identByValues) {
+	private static void removeKnownIdentifiers(
+		final EntityManager seqEM,
+		final SEDbInstance seDbInstance,
+		final Map<String, List<SEDbIdentifierWrapper>> identByValues) {
 		assert (seDbInstance != null) : "removeKnownIdentifiers() seDbInstance is null";
 		assert ((identByValues != null) && !identByValues.isEmpty()) : "removeKnownIdentifiers() invalid identByValues";
 
 		final Set<String> distinctIndentValues = identByValues.keySet();
 
-		final List<SEDbIdentifier> knownIdents = SEDbIdentifierRepository.findSEDbIdentBySEDbInstanceAndValues(seqEM,
-				seDbInstance, distinctIndentValues);
+		final List<SEDbIdentifier> knownIdents = SEDbIdentifierRepository.findSEDbIdentBySEDbInstanceAndValues(seqEM, seDbInstance, distinctIndentValues);
 
 		int nRemovedIdents = 0;
 
@@ -596,6 +583,7 @@ public final class BioSequenceRetriever {
 
 			for (final SEDbIdentifier seDbIdent : knownIdents) {
 				final String knownValue = seDbIdent.getValue();
+
 				if (identByValues.remove(knownValue) != null) {
 					++nRemovedIdents;
 				}
@@ -605,18 +593,19 @@ public final class BioSequenceRetriever {
 		}
 
 		if ((nRemovedIdents > 0) && LOG.isDebugEnabled()) {
-			final String sourcePath = seDbInstance.getSourcePath();// Should not
-																	// be null
-			LOG.debug("{} already known identifiers removed from search list for SEDbInstance [{}]", nRemovedIdents,
-					sourcePath);
+			final String sourcePath = seDbInstance.getSourcePath();// Should not be null
+			LOG.debug("{} already known identifiers removed from search list for SEDbInstance [{}]", nRemovedIdents, sourcePath);
 		}
 
 	}
 
 	/* Must be called holding SEQ_DB_WRITE_LOCK */
-	private static SEDbInstance loadOrCreateSEDbInstance(final EntityManager seqEM,
-			final SEDbInstanceWrapper seDbInstanceW, final SEDb seDb, final String release,
-			final Date lastModifiedTime) {
+	private static SEDbInstance loadOrCreateSEDbInstance(
+		final EntityManager seqEM,
+		final SEDbInstanceWrapper seDbInstanceW,
+		final SEDb seDb,
+		final String release,
+		final Date lastModifiedTime) {
 		assert (seDbInstanceW != null) : "loadOrCreateSEDbInstance() seDbInstanceW is null";
 		assert (lastModifiedTime != null) : "loadOrCreateSEDbInstance() lastModifiedTime is null";
 
@@ -651,11 +640,10 @@ public final class BioSequenceRetriever {
 			seqEM.persist(result);
 
 			/* Check number of SEDbInstances and order */
-			final String retrievedSEDbName = newSEDb.getName();// Should not be
-																// null
+			final String retrievedSEDbName = newSEDb.getName();// Should not be null
 
 			final List<SEDbInstance> seDbInstances = SEDbRepository.findSEDbInstanceBySEDbName(seqEM,
-					retrievedSEDbName);
+				retrievedSEDbName);
 			if (seDbInstances != null) {
 				final int nInstances = seDbInstances.size();
 
@@ -671,7 +659,9 @@ public final class BioSequenceRetriever {
 	}
 
 	/* Must be called holding SEQ_DB_WRITE_LOCK */
-	private static SEDb loadOrCreateSEDb(final EntityManager seqEM, final String seDbName) {
+	private static SEDb loadOrCreateSEDb(
+		final EntityManager seqEM,
+		final String seDbName) {
 		assert (!StringUtils.isEmpty(seDbName)) : "loadOrCreateSEDb() invalid seDbName";
 
 		SEDb result = SEDbRepository.findSEDbByName(seqEM, seDbName);
@@ -687,8 +677,11 @@ public final class BioSequenceRetriever {
 		return result;
 	}
 
-	private static Map<String, List<SEDbIdentifier>> loadExistingSEDbIdentifiers(final EntityManager seqEM,
-			final String seDbName, final Map<SEDbIdentifierWrapper, String> foundSequences) {
+
+	private static Map<String, List<SEDbIdentifier>> loadExistingSEDbIdentifiers(
+		final EntityManager seqEM,
+		final String seDbName,
+		final Map<SEDbIdentifierWrapper, String> foundSequences) {
 		assert (foundSequences != null) : "loadExistingSEDbIdentifiers() foundSequences Map is null";
 
 		final Map<String, List<SEDbIdentifier>> result = new HashMap<>();// Multimap
@@ -727,8 +720,9 @@ public final class BioSequenceRetriever {
 	}
 
 	/* Distinct BioSequences by Hash */
-	private static Map<String, BioSequence> loadExistingBioSequences(final EntityManager seqEM,
-			final Map<SEDbIdentifierWrapper, String> foundSequences) {
+	private static Map<String, BioSequence> loadExistingBioSequences(
+		final EntityManager seqEM,
+		final Map<SEDbIdentifierWrapper, String> foundSequences) {
 		assert (foundSequences != null) : "loadExistingBioSequences() foundSequences Map is null";
 
 		final Map<String, BioSequence> result = new HashMap<>();
@@ -757,12 +751,11 @@ public final class BioSequenceRetriever {
 		return result;
 	}
 
-	/*
-	 * Distinct RepositoryIdentifiers (associated with the same Repository
-	 * identified by its name) by value
-	 */
-	private static Map<String, RepositoryIdentifier> loadExistingRepositoryIdentifiers(final EntityManager seqEM,
-			final String repositoryName, final Map<SEDbIdentifierWrapper, String> foundSequences) {
+	/* Distinct RepositoryIdentifiers (associated with the same Repository identified by its name) by value */
+	private static Map<String, RepositoryIdentifier> loadExistingRepositoryIdentifiers(
+		final EntityManager seqEM,
+		final String repositoryName,
+		final Map<SEDbIdentifierWrapper, String> foundSequences) {
 		assert (foundSequences != null) : "loadExistingRepositoryIdentifiers() foundSequences Map is null";
 
 		final Map<String, RepositoryIdentifier> result = new HashMap<>();
@@ -797,8 +790,10 @@ public final class BioSequenceRetriever {
 	}
 
 	/* Must be called holding SEQ_DB_WRITE_LOCK */
-	private static boolean handleSEDbIdentifier(final SeqContext context, final SEDbIdentifierWrapper seDbIdentW,
-			final String sequence) {
+	private static boolean handleSEDbIdentifier(
+		final SeqContext context,
+		final SEDbIdentifierWrapper seDbIdentW,
+		final String sequence) {
 		assert (context != null) : "handleSEDbIdentifier() context is null";
 		assert (seDbIdentW != null) : "handleSEDbIdentifier() seDbIdentW is null";
 		assert (sequence != null) : "handleSEDbIdentifier() sequence is null";
@@ -828,14 +823,12 @@ public final class BioSequenceRetriever {
 				if (sequence.equals(existingSequence)) {
 
 					if (sameSequence) {
-						final SEDb seDb = seDbInstance.getSEDb();// Should not
-																	// be null
-						final String seDbName = seDb.getName();// Should not be
-																// null
+						final SEDb seDb = seDbInstance.getSEDb();// Should not be null
+						final String seDbName = seDb.getName();// Should not be null
 
 						LOG.error(
-								"There are multiple SEDbIdentifier [{}] with same BioSequence for SEDb [{}] Must clean SEQ Database",
-								identValue, seDbName);
+							"There are multiple SEDbIdentifier [{}] with same BioSequence for SEDb [{}] Must clean SEQ Database",
+							identValue, seDbName);
 					} else {
 						sameSequence = true;
 
@@ -869,8 +862,10 @@ public final class BioSequenceRetriever {
 	}
 
 	/* Must be called holding SEQ_DB_WRITE_LOCK */
-	private static SEDbIdentifier persistNewSEDbIdentifier(final SeqContext context,
-			final SEDbIdentifierWrapper seDbIdentW, final String sequence) {
+	private static SEDbIdentifier persistNewSEDbIdentifier(
+		final SeqContext context,
+		final SEDbIdentifierWrapper seDbIdentW,
+		final String sequence) {
 		assert (context != null) : "persistNewSEDbIdentifier() context is null";
 		assert (seDbIdentW != null) : "persistNewSEDbIdentifier() seDbIdentW is null";
 		assert (sequence != null) : "persistNewSEDbIdentifier() sequence is null";
@@ -889,8 +884,7 @@ public final class BioSequenceRetriever {
 		final String repositoryIdentValue = seDbIdentW.getRepositoryIdentifier();
 
 		if ((repository != null) && (repositoryIdentValue != null)) {
-			final RepositoryIdentifier repositoryIdent = loadOrCreateRepositoryIdentifier(context,
-					repositoryIdentValue);
+			final RepositoryIdentifier repositoryIdent = loadOrCreateRepositoryIdentifier(context, repositoryIdentValue);
 			result.setRepositoryIdentifier(repositoryIdent);
 		}
 
@@ -925,11 +919,14 @@ public final class BioSequenceRetriever {
 	}
 
 	/* Must be called holding SEQ_DB_WRITE_LOCK */
-	private static RepositoryIdentifier loadOrCreateRepositoryIdentifier(final SeqContext context, final String value) {
+	private static RepositoryIdentifier loadOrCreateRepositoryIdentifier(
+		final SeqContext context,
+		final String value) {
 		assert (context != null) : "loadOrCreateRepositoryIdentifier() context is null";
 		assert (value != null) : "loadOrCreateRepositoryIdentifier() value is null";
 
-		final Map<String, RepositoryIdentifier> existingRepositoryIdents = context.getExistingRepositoryIdents();
+		final Map<String, RepositoryIdentifier> existingRepositoryIdents = context
+				.getExistingRepositoryIdents();
 
 		if (existingRepositoryIdents == null) {
 			throw new IllegalArgumentException("SeqContext.existingRepositoryIdents Map is null");
@@ -959,8 +956,10 @@ public final class BioSequenceRetriever {
 	}
 
 	/* Must be called holding SEQ_DB_WRITE_LOCK */
-	private static void updateRepositoryIdentifier(final SeqContext context, final SEDbIdentifier seDbIdentifier,
-			final SEDbIdentifierWrapper seDbIdentW) {
+	private static void updateRepositoryIdentifier(
+		final SeqContext context,
+		final SEDbIdentifier seDbIdentifier,
+		final SEDbIdentifierWrapper seDbIdentW) {
 		assert (context != null) : "updateRepositoryIdentifier() context is null";
 		assert (seDbIdentifier != null) : "updateRepositoryIdentifier() seDbIdentifier is null";
 		assert (seDbIdentW != null) : "updateRepositoryIdentifier() seDbIdentW is null";
@@ -974,10 +973,7 @@ public final class BioSequenceRetriever {
 
 			final RepositoryIdentifier oldRepositoryIdent = seDbIdentifier.getRepositoryIdentifier();
 			if (oldRepositoryIdent != null) {
-				final String oldRepositoryIdentValue = oldRepositoryIdent.getValue();// Should
-																						// not
-																						// be
-																						// null
+				final String oldRepositoryIdentValue = oldRepositoryIdent.getValue();// Should not be null
 				same = repositoryIdentValue.equals(oldRepositoryIdentValue);
 			}
 
@@ -990,11 +986,11 @@ public final class BioSequenceRetriever {
 				} else {
 					final String seDbIdentValue = seDbIdentifier.getValue();
 					LOG.info("New RepositoryIdentifier [{}] for SEDbIdentifier [{}]", repositoryIdentValue,
-							seDbIdentValue);
+						seDbIdentValue);
 
 					/* New RepositoryIdentifier for this SEDbIdentifier */
 					final RepositoryIdentifier newRepositoryIdent = loadOrCreateRepositoryIdentifier(context,
-							repositoryIdentValue);
+						repositoryIdentValue);
 					seDbIdentifier.setRepositoryIdentifier(newRepositoryIdent);
 				}
 

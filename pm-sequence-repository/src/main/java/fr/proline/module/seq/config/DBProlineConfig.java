@@ -26,6 +26,8 @@ public class DBProlineConfig {
 	private Config m_dbProlineConfig = null;
 	private ExternalDb m_udsExternalDB = null;
 	private Integer m_maxPoolConnection = null;
+	private String auth_user = null;
+	private String auth_password = null;
 	
 	private DBProlineConfig(){
 		m_dbProlineConfig = ConfigFactory.load( "application");
@@ -77,9 +79,11 @@ public class DBProlineConfig {
 			m_udsExternalDB.setDbName(dbConfig.getString("dbName"));
 			
 			Config authConfig = m_dbProlineConfig.getConfig("auth-config");
-			m_udsExternalDB.setDbPassword(authConfig.getString("password"));
-			m_udsExternalDB.setDbUser(authConfig.getString("user"));
-			
+//			m_udsExternalDB.setDbPassword(authConfig.getString("password"));
+//			m_udsExternalDB.setDbUser(authConfig.getString("user"));
+			auth_user = authConfig.getString("user");
+			auth_password = authConfig.getString("password");
+
 			Config hostConfig = m_dbProlineConfig.getConfig("host-config");
 			m_udsExternalDB.setHost(hostConfig.getString("host"));
 			if(hostConfig.hasPath("port"))
@@ -96,15 +100,26 @@ public class DBProlineConfig {
 		 Map<Object, Object> result = null;
 		 synchronized (CONFIGURATION_LOCK) {
 			 if(m_udsExternalDB ==null)
-				 initUDSProperties();				
+				 initUDSProperties();
 		 }
 		 try {
-			 result = m_udsExternalDB.toPropertiesMap();
+			 result = m_udsExternalDB.toPropertiesMap(auth_user, auth_password);
 		 } catch(Exception e){
 			 LOG.warn(" Error getting UDS External DB properties.");
 			 result = new HashMap<Object, Object>();
 		 }
 		 return result;
 	}
+
+	public ExternalDb getExternalDBTemplate() {
+		ExternalDb externalDB = new ExternalDb();
+		externalDB.setConnectionMode(m_udsExternalDB.getConnectionMode());
+		externalDB.setHost(m_udsExternalDB.getHost());
+		externalDB.setPort(m_udsExternalDB.getPort());
+		externalDB.setDriverType(m_udsExternalDB.getDriverType());
+
+		return externalDB;
+	}
+
 	
 }

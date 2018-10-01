@@ -15,6 +15,8 @@ public class SEDbInstanceWrapper implements Serializable {
 
 	private final String m_sourcePath;
 
+	private String m_release = null;
+
 	public SEDbInstanceWrapper(final String name, final Alphabet alphabet, final String sourcePath) {
 
 		if (StringUtils.isEmpty(name)) {
@@ -47,6 +49,14 @@ public class SEDbInstanceWrapper implements Serializable {
 	 */
 	public Alphabet getAlphabet() {
 		return m_alphabet;
+	}
+
+	public String getRelease() {
+		return m_release;
+	}
+
+	public void setRelease(String release){
+		this.m_release = release;
 	}
 
 	@Override
