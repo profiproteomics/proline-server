@@ -10,13 +10,13 @@
 	</parent>
 
 	<artifactId>PM-SequenceRepository</artifactId>
-	<version>0.8.0-SNAPSHOT</version>
+	<version>0.9.0-SNAPSHOT</version>
 
 	<name>PM-SequenceRepository</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<core.version>2.0.1-SNAPSHOT</core.version>
+		<core.version>2.1.0-SNAPSHOT</core.version>
 	</properties>
 	<scm>
 		<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-SequenceRepository/trunk</connection>
