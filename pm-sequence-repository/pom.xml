@@ -10,7 +10,7 @@
 	</parent>
 
 	<artifactId>PM-SequenceRepository</artifactId>
-	<version>=0.8.0-SNAPSHOT</version>
+	<version>0.8.0-SNAPSHOT</version>
 
 	<name>PM-SequenceRepository</name>
 
