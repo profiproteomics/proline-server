@@ -36,10 +36,7 @@ import fr.proline.cortex.service.dps.msi.MergeDatasetsV2_0
 import fr.proline.cortex.service.dps.msi.UpdateSpectraParamsV1_0
 import fr.proline.cortex.service.dps.msi.UpdateSpectraParamsV2_0
 import fr.proline.cortex.service.dps.msi.ValidateResultSet
-import fr.proline.cortex.service.dps.msq.ComputeQuantProfiles
-import fr.proline.cortex.service.dps.msq.Quantify
-import fr.proline.cortex.service.dps.msq.QuantifySC
-import fr.proline.cortex.service.dps.msq.QuantifySC_V02
+import fr.proline.cortex.service.dps.msq._
 import fr.proline.cortex.service.dps.uds.GetExportInformation
 import fr.proline.cortex.service.dps.uds.RegisterRawFile
 import fr.proline.cortex.service.dps.uds.ValidateIdentDSInTree
@@ -62,9 +59,7 @@ import fr.proline.jms.util.NodeConfig
 import javax.jms.Connection
 import javax.jms.ExceptionListener
 import javax.jms.JMSException
-
 import fr.proline.cortex.service.dps.msi.ValidateResultSetV2
-import fr.proline.cortex.service.dps.msq.QuantifyV3_0
 
 
 
@@ -282,7 +277,8 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new Quantify())
     ServiceRegistry.addService(new QuantifySC())
     ServiceRegistry.addService(new QuantifySC_V02())
-    
+    ServiceRegistry.addService(new AggregateQuantitation())
+
     ServiceRegistry.addService(new UserAccount())
     ServiceRegistry.addService(new GetConnectionTemplate())
     ServiceRegistry.addService(new CreateProject())
