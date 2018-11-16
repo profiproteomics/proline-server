@@ -104,7 +104,8 @@ class MascotDataParser(
 
           // --- Retrieve some properties values for PeptideMatchProperties --- //
           val pepMatchExpectValue = pepSummary.getPeptideExpectationValue(pepMatchScore, q)
-          val isotopeErr = currentMSPep.getNum13C(mascotSearchParams.getTOL,mascotSearchParams.getTOLU,mascotSearchParams.getMASS)
+          val readIsotopeErr = currentMSPep.getNum13C(mascotSearchParams.getTOL,mascotSearchParams.getTOLU,mascotSearchParams.getMASS)
+          val isotopeErr = if(readIsotopeErr > -1) readIsotopeErr else 0
 
           // Create peptide match Mascot properties
           val pepMatchMascotProps = new PeptideMatchMascotProperties(expectationValue = pepMatchExpectValue)
