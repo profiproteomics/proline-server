@@ -40,7 +40,7 @@ trait PeptideSpectrumMatcher extends LazyLogging {
     frsSource match {
       case FragmentationRuleSetSource.USER_SPECIFIED =>
         if(searchSettings.fragmentationRuleSet.isDefined)
-          searchSettings.fragmentationRuleSet.get.id.equals(fragmentationRuleSet.get)
+          !searchSettings.fragmentationRuleSet.get.id.equals(fragmentationRuleSet.get)
         else
           true
 
@@ -49,7 +49,7 @@ trait PeptideSpectrumMatcher extends LazyLogging {
 
       case FragmentationRuleSetSource.DEFAULT =>
         if(searchSettings.fragmentationRuleSet.isDefined)
-          searchSettings.fragmentationRuleSet.get.id.equals(fragmentationRuleSet.get.id)
+          !searchSettings.fragmentationRuleSet.get.id.equals(fragmentationRuleSet.get.id)
         else
           true
 
