@@ -54,7 +54,7 @@ class QuantConfigView(
 
     map.foreach { case(key, value) =>
       if (map.contains(key+"_unit")) {
-        tmpMap += (key -> (value.toString +" "+map(key+"_unit")))
+        tmpMap += (key -> ( (if(value !=null) value.toString else "") +" "+map(key+"_unit")))
       } else if (!key.endsWith("_unit") ) {
         tmpMap += (key -> value)
       }
@@ -64,7 +64,7 @@ class QuantConfigView(
       val modifiedKey = key.replace('_',' ').split("\\W+").map(w => dictionnary.getOrElse(w, w)).mkString(" ").trim().replaceAll("\\s{2,}", " ")
       val str = value match {
         case m:Map[String, Any] => _stringifyMap(m, dictionnary).map{ case(e1, e2) => (modifiedKey+" "+e1, e2) }
-        case _ => Array((modifiedKey, value.toString))
+        case _ => Array((modifiedKey, if(value !=null) value.toString else ""))
       }
       strings ++= str
     }

@@ -271,7 +271,7 @@ object BuildDatasetViewSet extends LazyLogging {
         rsms
       }
       
-      // FIXME: DBO => why loading leaves result sets ?
+      // Get all leaves result sets to get MSISearch information and MsQuery info
       val leaveResultSetLoader = () => {
         logger.debug("Loading leaves result sets (quantitation)...")
         val resultSets = _loadLeavesResultSets(lazyQuantRSM.lazyResultSummary.getResultSetId(), msiDbHelper, lazyRsProvider)
@@ -279,7 +279,6 @@ object BuildDatasetViewSet extends LazyLogging {
         logger.debug("Sorting leaves result sets by quant channel order (quantitation)...")
         val lazyRsById = resultSets.mapByLong(_.id)
 
-        // TODO: UDSdb => add a ident_result_set_id column to the quant_channel table ???
         val rsIdByRsmId = msiDbHelper.getResultSetIdByResultSummaryId(identRsmIds)
         val sortedResultSets = quantChannels.map { qc => 
             rsIdByRsmId.get(qc.identResultSummaryId).map(lazyRsById.getOrElse(_, null)).orNull
@@ -287,7 +286,7 @@ object BuildDatasetViewSet extends LazyLogging {
 
         // Check we had not problem to retrieve the result sets corresponding to the quant channels
         // If we have a problem then we return the result sets in the previous order
-        if (sortedResultSets.exists(_ == null)) resultSets else sortedResultSets
+        if (sortedResultSets.exists(_ == null) || (sortedResultSets.length!=resultSets.length)) resultSets else sortedResultSets
       }
 
       var qcNameById = quantChannels.toLongMapWith(qc => qc.id -> qc.name)
@@ -365,7 +364,7 @@ object BuildDatasetViewSet extends LazyLogging {
         // FIXME: do this in the IMQProteinSetSummarizer trait and update the MSIdb
         
         val qcCount = quantChannels.length
-        
+
         // Initialize the map peptideCountByMqProtSetIdByQCId
         for ( quantChannel <- quantChannels) {
           peptideCountByMqProtSetIdByQCId.put(quantChannel.id,new LongMap[Int])
