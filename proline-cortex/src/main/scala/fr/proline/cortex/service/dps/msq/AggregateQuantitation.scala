@@ -81,7 +81,7 @@ class AggregateQuantitation extends AbstractRemoteProcessingService with IAggreg
         require(!quantConfig.quantitationIds.isEmpty, "List of datasets to aggregate cannot be empty")
 
         // Store QUANT CONFIG in ObjectTree
-        logger.info("Storing quantitation configuration with schema named: " + UdsSchemaName.AGGREGATION_QUANT_CONFIG.toString())
+        logger.info("Storing quantitation configuration with schema named: " + UdsSchemaName.AGGREGATION_QUANT_CONFIG.getKeyName())
         val qtConfigObjectTree = Quantifier.storeQuantConfig(quantConfigAsStr, UdsSchemaName.AGGREGATION_QUANT_CONFIG, udsEM)
 
         // TODO remove me if the final decision is to enable multiple aggregation of a same quant dataset
@@ -93,7 +93,7 @@ class AggregateQuantitation extends AbstractRemoteProcessingService with IAggreg
 //        }
 
         // Link QUANT CONFIG to quantitation DS
-        udsQuantitation.putObject(UdsSchemaName.AGGREGATION_QUANT_CONFIG.toString(), qtConfigObjectTree.getId())
+        udsQuantitation.putObject(UdsSchemaName.AGGREGATION_QUANT_CONFIG.getKeyName(), qtConfigObjectTree.getId())
         udsEM.merge(udsQuantitation)
 
         //Perform the aggregation
