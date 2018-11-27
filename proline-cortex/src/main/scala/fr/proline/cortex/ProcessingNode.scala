@@ -51,6 +51,7 @@ import fr.proline.cortex.util.fs.WorkDirectoryRegistry
 import fr.proline.jms.ServiceManager
 import fr.proline.jms.ServiceRegistry
 import fr.proline.jms.ServiceRunner
+import fr.proline.jms.NamedThreadFactory
 import fr.proline.jms.SingleThreadedServiceRunner
 import fr.proline.jms.util.ExpiredMessageConsumer
 import fr.proline.jms.util.JMSConstants.MAX_JMS_SERVER_PORT
@@ -60,6 +61,8 @@ import javax.jms.Connection
 import javax.jms.ExceptionListener
 import javax.jms.JMSException
 import fr.proline.cortex.service.dps.msi.ValidateResultSetV2
+
+import scala.collection.mutable.ArrayBuffer
 
 
 
@@ -113,7 +116,8 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
   /* All mutable fields are @GuardedBy("m_lock") */
   private var m_connection: Connection = _
 
-  private var m_executor: ExecutorService = _
+  private var m_paralleleExecutor: ExecutorService = _
+  private var m_singleExecutor: ArrayBuffer[ExecutorService] = new ArrayBuffer[ExecutorService]()
 
   /**
    * Starts JMS Connection and Executor running Consumers receive loop.
@@ -132,7 +136,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
         logger.trace("JMS Queue : " + serviceRequestQueue)
         val expiredRequestQueue = HornetQJMSClient.createQueue(NodeConfig.PROLINE_EXPIRED_MESSAGE_QUEUE_NAME)
-        
+
 
         // Step 2. Instantiate the TransportConfiguration object which contains the knowledge of what transport to use,
         // The server port etc.
@@ -150,7 +154,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         val cf = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF, transportConfiguration) //.asInstanceOf[ConnectionFactory]
        cf.setConsumerWindowSize(0)
        cf.setReconnectAttempts(10)
-        
+
         // Step 4.Create a JMS Connection
         m_connection = cf.createConnection()
 
@@ -172,44 +176,45 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         initServices()
 
         /* Create Executor */
-        m_executor = Executors.newCachedThreadPool()
+        m_paralleleExecutor = Executors.newCachedThreadPool()
 
         val serviceMonitoringNotifier = new MonitoringTopicPublisherRunner(m_connection)
-        m_executor.submit(serviceMonitoringNotifier)
+        m_paralleleExecutor.submit(serviceMonitoringNotifier)
 
         /* Add SingleThreadedServiceRunner */
         val handledSingleThreadedServiceIdents = ServiceRegistry.getSingleThreadedServicesByThreadIdent().keySet
 
-        var nbrSingleThreads = 0 
+        var nbrSingleThreads = 0
         for (threadIdent <- handledSingleThreadedServiceIdents) {
           val singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier, threadIdent, true)
-          val singleThreadFuture =  m_executor.submit(singleThreadedServiceRunner)
+          val singleThreadExecutor =  Executors.newSingleThreadExecutor()
+          m_singleExecutor += singleThreadExecutor
+          val singleThreadFuture =  singleThreadExecutor.submit(singleThreadedServiceRunner)
           ServiceManager.addRunnale2FutureEntry(singleThreadedServiceRunner, singleThreadFuture)
           nbrSingleThreads += 1
         }
 
         // Start Expired Message Listener
         val expiredMessageConsumer = new ExpiredMessageConsumer(expiredRequestQueue, m_connection, serviceMonitoringNotifier)
-        m_executor.submit(expiredMessageConsumer)
+        m_paralleleExecutor.submit(expiredMessageConsumer)
         nbrSingleThreads += 1
-        
+
         logger.debug(nbrSingleThreads +" Single Thread ServiceRunners started")
-       
+
         /* Add Parallelizable SeviceRunner */
         logger.debug("Starting " + NodeConfig.SERVICE_THREAD_POOL_SIZE + " Parallelizable ServiceRunners")
 
         for (i <- 1 to NodeConfig.SERVICE_THREAD_POOL_SIZE) {
           val logSelector = if(i==1) true else false
           val parallelizableSeviceRunner = new ServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier,logSelector)
-          val threadFuture = m_executor.submit(parallelizableSeviceRunner)
+          val threadFuture = m_paralleleExecutor.submit(parallelizableSeviceRunner)
           ServiceManager.addRunnale2FutureEntry(parallelizableSeviceRunner, threadFuture)
-             
         }
 
-        m_connection.start() // Explicitly start connection to begin Consumer reception        
+        m_connection.start() // Explicitly start connection to begin Consumer reception
         logger.info(" ************ Proline Cortex successfully started !")
       } catch {
-        
+
 
         case ex: Throwable => {
           logger.error("Error starting JMS Consumers", ex)
@@ -288,9 +293,9 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new ImportMaxQuantResults())
     ServiceRegistry.addService(new IdentifyPtmSites())
     ServiceRegistry.addService(new ProlineResourceService())
-    //VDS TEST only ! 
+    //VDS TEST only !
 //    ServiceRegistry.addService(new WaitService())
-    ServiceRegistry.addService(new ValidateResultSetV2()) 
+    ServiceRegistry.addService(new ValidateResultSetV2())
     ServiceRegistry.addService(new CancelService())
  }
 
@@ -313,24 +318,47 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
       }
 
-      if (m_executor != null) {
+      if (m_paralleleExecutor != null) {
         logger.trace("Stopping JMS Consumers Executor")
-        m_executor.shutdown()
+        m_paralleleExecutor.shutdown()
 
         logger.debug("Waiting " + EXECUTOR_SHUTDOWN_TIMEOUT + " seconds for Executor termination...")
 
         try {
 
-          if (m_executor.awaitTermination(EXECUTOR_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
+          if (m_paralleleExecutor.awaitTermination(EXECUTOR_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
             logger.info("JMS Consumers Executor terminated")
           } else {
-            val remainingRunnables = m_executor.shutdownNow()
+            val remainingRunnables = m_paralleleExecutor.shutdownNow()
             logger.info(s"JMS Consumers Executor terminated, ${remainingRunnables.size} remaining Runnable(s) that never started.")
           }
 
         } catch {
           case intEx: InterruptedException => logger.warn("ExecutorService.awaitTermination() interrupted", intEx)
         }
+
+      }
+
+      if(!m_singleExecutor.isEmpty){
+          m_singleExecutor.foreach( executor => {
+            logger.trace("Stopping JMS Consumers Single Thread Executor "+executor.toString)
+            executor  .shutdown()
+
+            logger.debug("Waiting " + EXECUTOR_SHUTDOWN_TIMEOUT + " seconds for Executor termination...")
+
+            try {
+
+              if (executor.awaitTermination(EXECUTOR_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
+                logger.info("JMS Consumers Executor terminated")
+              } else {
+                val remainingRunnables = executor.shutdownNow()
+                logger.info(s"JMS Consumers Executor terminated, ${remainingRunnables.size} remaining Runnable(s) that never started.")
+              }
+
+            } catch {
+              case intEx: InterruptedException => logger.warn("ExecutorService.awaitTermination() interrupted", intEx)
+            }
+        })
 
       }
 
