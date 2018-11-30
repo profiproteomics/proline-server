@@ -153,7 +153,7 @@ trait AbstractQuantDatasetView extends AbstractIdentDatasetView {
   protected def mkQcFieldTitle(fieldConfig: CustomFieldConfig, qcId: Long): String = mkQcFieldTitle(fieldConfig.title, qcId)
   
   protected def mkQcFieldTitle(fieldTitle: String, qcId: Long): String = {
-    fieldTitle + titleSep + quantDs.qcNameById(qcId)
+    fieldTitle + titleSep + quantDs.qcNameByQcId(qcId)
   }
 
 }

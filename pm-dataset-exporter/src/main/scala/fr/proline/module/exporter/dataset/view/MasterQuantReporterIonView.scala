@@ -9,6 +9,8 @@ import fr.proline.module.exporter.commons.config.ExportConfigSheet
 import fr.proline.module.exporter.commons.view.SmartDecimalFormat
 import fr.proline.module.exporter.dataset.IdentDataset
 
+import scala.collection.mutable.ArrayBuffer
+
 class MasterQuantReporterIonView(
   val identDS: IdentDataset,
   val sheetConfig: ExportConfigSheet,
@@ -22,10 +24,6 @@ class MasterQuantReporterIonView(
   assert(isQuantDs, "this view can only be used for quantitative datasets")
   
   var viewName = "master_quant_reporter_ion"
-  
-  /*private val qRepIonFieldSet = Set(
-    FIELD_QUANT_PEPTIDE_ION_BEST_SCORE
-  )*/
   
   // Override getQcFieldSet in order to generate QuantChannel based columns
   override protected def getQcFieldSet() =  super.getQcFieldSet()// ++ qRepIonFieldSet
@@ -55,18 +53,11 @@ class MasterQuantReporterIonView(
     val mqRepIonBuildingCtx = buildingContext.asInstanceOf[MasterQuantReporterIonBuildingContext]
     
     val mqPepIon = mqRepIonBuildingCtx.masterQuantPeptideIon
-    val mqRepIon = mqRepIonBuildingCtx.masterQuantReporterIon
-    val qRepIonMap = mqRepIon.quantReporterIonMap
+
 
     val recordBuilder = Map.newBuilder[String,Any]
     recordBuilder ++= pepMatchRecord
     
-    /*def appendQcValuesToRecord(fieldConfig: CustomFieldConfig)( qcValueFn: (Long,QuantReporterIon) => Any ): Null = {
-      for (qcId <- quantDs.qcIds; qRepIon <- qRepIonMap.get(qcId) ) {
-        recordBuilder += mkQcFieldTitle(fieldConfig, qcId) -> qcValueFn(qcId, qRepIon)
-      }
-      null
-    }*/
 
     for (fieldConfig <- mqRepIonViewFieldsConfigs) {
       val fieldValue: Any = fieldConfig.id match {
@@ -85,11 +76,19 @@ class MasterQuantReporterIonView(
   override def formatView(recordFormatter: Map[String, Any] => Unit) {
     
     val rsm = identDS.resultSummary
-    val rs = rsm.lazyResultSet
-    val pepMatchById = rs.peptideMatchById
 
-    // Keep track of peptide matches which are exported in the next loop
-    val exportedPepMatchIds = new collection.mutable.HashSet[Long]
+    val msQueryIds : ArrayBuffer[Long]= new ArrayBuffer[Long]()
+    rsm.proteinSets.map(prS => prS.peptideSet).flatMap(_.getPeptideInstances()).foreach(pepI => {
+      val mqPepOpt = quantDs.mqPepByPepId.get(pepI.peptideId)
+      for (
+        mqPep <- mqPepOpt;
+        mqPepIon <- mqPep.masterQuantPeptideIons;
+        mqRepIon <- mqPepIon.masterQuantReporterIons
+      ) { msQueryIds += mqRepIon.msQueryId  }
+    })
+
+    val childPepMatchById = quantDs.loadPepMatchesByMsQIs(msQueryIds.toArray).mapByLong(_.id).toMap
+    val childPepMatchByMsQueryIds = childPepMatchById.values.toArray.groupBy(_.msQueryId)
 
     // Iterate over RSM protein sets
     for (protSet <- rsm.proteinSets.sortBy( - _.peptideSet.score ) ) {
@@ -100,7 +99,7 @@ class MasterQuantReporterIonView(
         // Typical Protein Match is put first
         val reprProtMatch = protSet.getRepresentativeProteinMatch().getOrElse(protSet.samesetProteinMatches.get.head)
         val seqMatchByPepId = reprProtMatch.sequenceMatches.toLongMapWith { seqMatch => 
-          (seqMatch.getPeptideId -> seqMatch)
+          seqMatch.getPeptideId -> seqMatch
         }
 
         val protMatchBuildingCtx = new ProtMatchBuildingContext(
@@ -119,9 +118,8 @@ class MasterQuantReporterIonView(
             mqPepIon <- mqPep.masterQuantPeptideIons;
             mqRepIon <- mqPepIon.masterQuantReporterIons
           ) {
-            
-            val identPepMatches = identPepMatchesByMsQueryId(mqRepIon.msQueryId)
-            val identPepMatchOpt = identPepMatches.find(pepMatch => pepMatch.peptideId == peptideId)
+
+            val identPepMatchOpt = childPepMatchByMsQueryIds(mqRepIon.msQueryId).find(pepMatch => pepMatch.peptideId == peptideId)
             assert(identPepMatchOpt.isDefined, "can't find a peptide match for the MS query id = " + mqRepIon.msQueryId)
             
             val quantRecordBuildingCtx = new MasterQuantReporterIonBuildingContext(
@@ -131,6 +129,7 @@ class MasterQuantReporterIonView(
               protMatchBuildingCtx = Some(protMatchBuildingCtx),
               mqPep,
               mqPepIon,
+              childPepMatchById,
               mqRepIon,
               groupSetupNumber = groupSetupNumber
             )

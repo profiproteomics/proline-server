@@ -11,6 +11,8 @@ import fr.proline.module.exporter.commons.config.ExportConfigSheet
 import fr.proline.module.exporter.commons.view.SmartDecimalFormat
 import fr.proline.module.exporter.dataset.IdentDataset
 
+import scala.collection.mutable
+
 class MasterQuantPeptideIonView(
   val identDS: IdentDataset,
   val sheetConfig: ExportConfigSheet,
@@ -20,7 +22,9 @@ class MasterQuantPeptideIonView(
   val exportAllProteinSet: Boolean,
   val exportBestProfile: Boolean
 ) extends AbstractProtSetToMQPepView {
-  
+
+  assert(isQuantDs, "this view can only be used for quantitative datasets")
+
   var viewName = "master_quant_peptide_ion"
   
   private val qPepIonFieldSet = Set(
@@ -41,29 +45,26 @@ class MasterQuantPeptideIonView(
   ) ++ qPepIonFieldSet
   
   protected val mqPepIonViewFieldsConfigs = sheetConfig.fields.filter( f => mqPepIonViewFieldSet.contains(f.id) )
-  
-  protected lazy val childPepMatchById = identDS.childResultSummaries.flatMap { childRsm =>
-    childRsm.lazyResultSet.peptideMatchById
-  } toLongMap()
 
   override def buildRecord(buildingContext: IRecordBuildingContext): Map[String, Any] = {
 
     val pepMatchRecord = super.buildRecord(buildingContext)
-    
+
     // If this building context is not a MasterQuantPeptideIonBuildingContext then we return the record as is
-    if( buildingContext.isInstanceOf[MasterQuantPeptideIonBuildingContext] == false) {
+    if( !buildingContext.isInstanceOf[MasterQuantPeptideIonBuildingContext]) {
       return pepMatchRecord
     }
-    
+
     val mqPepBuildingCtx = buildingContext.asInstanceOf[MasterQuantPeptideIonBuildingContext]
-    
+
     val mqPepIon = mqPepBuildingCtx.masterQuantPeptideIon
+    val childPepMatchById=mqPepBuildingCtx.childPepMatchById
     val qPepIonMap = mqPepIon.quantPeptideIonMap
     val bestPepMatchIdByQcIdOpt = mqPepIon.properties.map(_.getBestPeptideMatchIdMap())
 
     val recordBuilder = Map.newBuilder[String,Any]
     recordBuilder ++= pepMatchRecord
-    
+
     def appendQcValuesToRecord(fieldConfig: CustomFieldConfig)( qcValueFn: (Long,QuantPeptideIon) => Any ): Null = {
       for (qcId <- quantDs.qcIds; qPepIon <- qPepIonMap.get(qcId) ) {
         recordBuilder += mkQcFieldTitle(fieldConfig, qcId) -> qcValueFn(qcId, qPepIon)
@@ -95,21 +96,31 @@ class MasterQuantPeptideIonView(
         }
         case FIELD_MASTER_QUANT_PEPTIDE_ION_FEATURE_ID => mqPepIon.lcmsMasterFeatureId.getOrElse(0)
       }
-      
+
       if( fieldValue != null ) recordBuilder += fieldConfig.title -> fieldValue
     }
-    
+
     recordBuilder.result()
   }
-  
+
   override def formatView(recordFormatter: Map[String, Any] => Unit) {
     
     val rsm = identDS.resultSummary
     val rs = rsm.lazyResultSet
     val pepMatchById = rs.peptideMatchById
 
-    // Keep track of peptide matches which are exported in the next loop
-    val exportedPepMatchIds = new collection.mutable.HashSet[Long]
+    val childPepMatchesId : mutable.HashSet[Long]= new mutable.HashSet[Long]()
+    rsm.proteinSets.map(prS => prS.peptideSet).flatMap(_.getPeptideInstances()).foreach(pepI => {
+        val mqPepOpt = quantDs.mqPepByPepId.get(pepI.peptideId)
+        if(mqPepOpt.isDefined){
+          val pepMIds = mqPepOpt.get.masterQuantPeptideIons.flatMap(_.bestPeptideMatchId).filter(id => {!pepMatchById.contains(id)})
+          childPepMatchesId ++= pepMIds //Add bestPepMatch for MQPepIon
+          val qPepIonBestPepMatchId =  mqPepOpt.get.masterQuantPeptideIons.flatMap(_.properties.map(_.getBestPeptideMatchIdMap().values)).flatten
+          childPepMatchesId ++= qPepIonBestPepMatchId //Add bestPepMatch for QPepIon
+        }
+    })
+
+    val childPepMatchByIds = quantDs.loadPepMatches(childPepMatchesId.toArray).mapByLong(_.id).toMap
 
     // Iterate over RSM protein sets
     for (protSet <- rsm.proteinSets.sortBy( - _.peptideSet.score ) ) {
@@ -120,7 +131,7 @@ class MasterQuantPeptideIonView(
         // Typical Protein Match is put first
         val reprProtMatch = protSet.getRepresentativeProteinMatch().getOrElse(protSet.samesetProteinMatches.get.head)
         val seqMatchByPepId = reprProtMatch.sequenceMatches.toLongMapWith { seqMatch => 
-          (seqMatch.getPeptideId -> seqMatch)
+          seqMatch.getPeptideId -> seqMatch
         }
 
         val protMatchBuildingCtx = new ProtMatchBuildingContext(
@@ -129,27 +140,30 @@ class MasterQuantPeptideIonView(
           reprProtMatch
         )
 
+
         for (pepInst <- protSet.peptideSet.getPeptideInstances.sortBy(_.peptide.calculatedMass) ) {
 
           val peptideId = pepInst.peptide.id
           
           // TODO: DBO => Why this could be false ???
+          // VDS Set RuntimeException to catch this case ... to remove once testesd !
           if (!isQuantDs) {
-
-            val allPepMatches = pepInst.peptideMatches
-            for (pepMatch <- allPepMatches.sortBy(_.charge) ) {
-
-              val identRecordBuildingCtx = new PepMatchBuildingContext(
-                pepMatch = pepMatch,
-                isInSubset = false,
-                protMatch = reprProtMatch,
-                seqMatch = seqMatchByPepId(peptideId),
-                protMatchBuildingCtx = Some(protMatchBuildingCtx)
-              )
-
-              // Format this peptide match with protein set information
-              this.formatRecord(identRecordBuildingCtx, recordFormatter)
-            }
+            logger.warn("----> WARNING in MQPepIonView !isQuantDs")
+            throw new RuntimeException("----> WARNING in MQPepIonView !isQuantDs")
+//            val allPepMatches = pepInst.peptideMatches
+//            for (pepMatch <- allPepMatches.sortBy(_.charge) ) {
+//
+//              val identRecordBuildingCtx = new PepMatchBuildingContext(
+//                pepMatch = pepMatch,
+//                isInSubset = false,
+//                protMatch = reprProtMatch,
+//                seqMatch = seqMatchByPepId(peptideId),
+//                protMatchBuildingCtx = Some(protMatchBuildingCtx)
+//              )
+//
+//              // Format this peptide match with protein set information
+//              this.formatRecord(identRecordBuildingCtx, recordFormatter)
+//            }
           } else {
             
             val mqPepOpt = quantDs.mqPepByPepId.get(peptideId)
@@ -159,12 +173,11 @@ class MasterQuantPeptideIonView(
               // DBO: WORKAROUND FOR issues #15834, #17582
               val bestPeptMatchId = mqPepIon.bestPeptideMatchId.get
               val parentPepMatchOpt = pepMatchById.get(bestPeptMatchId)
-              val parentOrChildBestPepMatchOpt = if (parentPepMatchOpt.isDefined) parentPepMatchOpt
-              else childPepMatchById.get(bestPeptMatchId)
+              val parentOrChildBestPepMatchOpt = if (parentPepMatchOpt.isDefined) parentPepMatchOpt  else childPepMatchByIds.get(bestPeptMatchId)
               
               assert(
                 parentOrChildBestPepMatchOpt.isDefined,
-                s"Can't retrieve the best peptide match with ID = $bestPeptMatchId" 
+                s"Can't retrieve the best peptide match with ID = $bestPeptMatchId"
               )
               
               val quantRecordBuildingCtx = new MasterQuantPeptideIonBuildingContext(
@@ -174,6 +187,7 @@ class MasterQuantPeptideIonView(
                 protMatchBuildingCtx = Some(protMatchBuildingCtx),
                 mqPep,
                 mqPepIon,
+                childPepMatchByIds,
                 groupSetupNumber = groupSetupNumber
               )
 

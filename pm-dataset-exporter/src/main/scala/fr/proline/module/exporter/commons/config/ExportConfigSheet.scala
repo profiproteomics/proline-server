@@ -11,25 +11,11 @@ case class ExportConfigSheet(
   defaultDisplayed: Boolean = true
 ) {
   private val fieldTitles = fields.map(_.title)
-  //private val fieldTitleSet = fieldTitles.toSet
-  
+
   require( fieldTitles.length == fieldTitles.distinct.length, "duplicated field titles are not allowed")
   require( fieldTitles.forall(!_.isEmpty), "empty field titles are not allowed")
   
-  // return true if the sheet contains the given title before the given index (not included)
-  /*def containsTitle(title: String, index: Int): Boolean = {
-    
-    if (fields.length >= index) {
-      for (i <- 0 until index) {
-        if (fields(i).title.equals(title)) {
-          return true
-        }
-      }
-    }
-    
-    return false
-  }*/
-  
+
   def copyWithDefaultFields() = this.copy( fields = fields.filter(_.defaultDisplayed) )
 
 }

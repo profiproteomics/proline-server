@@ -75,8 +75,5 @@ object BuildDatasetView {
     val builViewFn = _builders(exportConfig)(viewType)
     builViewFn(identDS)
   }
-  
-  //implicit def abstractDs2IdentDs( abstractDs: AbstractDataset ): IdentDataset = abstractDs.asInstanceOf[IdentDataset]
-  //implicit def abstractDs2QuantDs( abstractDs: AbstractDataset ): QuantDataset = abstractDs.asInstanceOf[QuantDataset]
 
 }

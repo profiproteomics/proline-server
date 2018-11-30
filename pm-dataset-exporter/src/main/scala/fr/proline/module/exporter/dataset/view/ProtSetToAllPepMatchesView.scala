@@ -2,9 +2,6 @@ package fr.proline.module.exporter.dataset.view
 
 import java.text.SimpleDateFormat
 
-import fr.profi.util.collection._
-import fr.proline.core.om.model.msi._
-import fr.proline.module.exporter.commons.config.ExportConfigConstant._
 import fr.proline.module.exporter.commons.config.ExportConfigSheet
 import fr.proline.module.exporter.commons.view.SmartDecimalFormat
 import fr.proline.module.exporter.dataset.IdentDataset
@@ -25,10 +22,6 @@ class ProtSetToAllPepMatchesView(
   override def formatView(recordFormatter: Map[String, Any] => Unit) {
 
     val rsm = identDS.resultSummary
-    val rs = rsm.lazyResultSet
-
-    // Keep track of peptide matches which are exported in the next loop
-    val exportedPepMatchIds = new collection.mutable.HashSet[Long]
 
     // Iterate over RSM protein sets
     for (protSet <- rsm.proteinSets.sortBy( - _.peptideSet.score ) ) {

@@ -7,6 +7,8 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.collection._
 import fr.proline.core.om.model.msi._
 
+import scala.collection.mutable.ArrayBuffer
+
 // TODO: add this status to OM ?
 object ProteinMatchStatus extends Enumeration {
   val SAMESET = Value("Sameset")
@@ -15,22 +17,22 @@ object ProteinMatchStatus extends Enumeration {
 }
 
 class IdentDataset(
-  val projectName: String,
-  val resultSummary: LazyResultSummary,
-  protected val loadChildResultSummaries: () => Array[LazyResultSummary],
-  protected val loadLeaveResultSets: () => Array[LazyResultSet], // TODO: remove me => we don't need this, it should be identical to loadChildResultSummaries
-  protected val loadBioSequences: () => Array[BioSequence],
-  protected val loadSpectraDescriptors: (Array[Long]) => Array[Spectrum]
+                    val projectName: String,
+                    val resultSummary: LazyResultSummary,
+                    protected val loadLeaveResultSummaries: () => Array[LazyResultSummary],
+                    protected val loadLeaveResultSets: () => Array[LazyResultSet], // TODO: remove me => we don't need this, it should be identical to loadChildResultSummaries
+                    protected val loadBioSequences: () => Array[BioSequence],
+                    protected val loadSpectraDescriptors: (Array[Long]) => Array[Spectrum]
 ) extends LazyLogging {
-  
+
   // Count the number of protein sets and proteins matches related to a given peptide match
   val validProtSetIdSetByPepMatchId = new LongMap[HashSet[Long]]()
   val validSamesetProtMatchIdSetByPepMatchId = new LongMap[HashSet[Long]]()
   val validProtMatchIdSetByPepMatchId = new LongMap[HashSet[Long]]()
-  
+
   // Init Maps
   resultSummary.proteinSets.withFilter(_.isValidated).foreach { protSet =>
-    
+
     val samesetProtMatchIdSet = protSet.getSameSetProteinMatchIds.toSet
 
     protSet.peptideSet.getPeptideMatchIds.foreach { pepMatchId =>
@@ -50,48 +52,45 @@ class IdentDataset(
 
   lazy val peptideMatchById: LongMap[PeptideMatch] = resultSummary.lazyResultSet.peptideMatches.mapByLong(_.id)
 
-  // Create a map of all ProtMatches for pepMatches (validated or not) 
+  // Create a map of all ProtMatches for pepMatches (validated or not)
   lazy val allProtMatchSetByPepId: LongMap[HashSet[ProteinMatch]] = {
     val protMatchSetByPepId = new LongMap[HashSet[ProteinMatch]]
-    
+
     for (protMatch <- resultSummary.lazyResultSet.proteinMatches) {
-      
+
       if (protMatch.sequenceMatches != null) {
-        protMatch.sequenceMatches.foreach { seqMatch => 
+        protMatch.sequenceMatches.foreach { seqMatch =>
           protMatchSetByPepId.getOrElseUpdate(seqMatch.getPeptideId, new HashSet[ProteinMatch]) += protMatch
         }
       }
-      
+
     } // End of go through protein matches
-    
+
     protMatchSetByPepId
   }
-  
-  lazy val childResultSummaries: Array[LazyResultSummary] = loadChildResultSummaries()
-  lazy val allResultSummaries: Array[LazyResultSummary] = Array(resultSummary) ++ childResultSummaries
-  
-  // TODO: restore me => the childResultSummaries should contain the leaves
-  /*lazy val allResultSets: Array[LazyResultSet] = allResultSummaries.map(_.lazyResultSet)
-  lazy val allMsiSearches: Array[MSISearch] = allResultSets.withFilter(_.msiSearch.isDefined).map(_.msiSearch.get)*/
 
-  protected lazy val allLeavesResultSets : Array[LazyResultSet] = loadLeaveResultSets()
-  lazy val leavesResultSets : Array[LazyResultSet] = allLeavesResultSets
-  lazy val leavesMsiSearches: Array[MSISearch] = allLeavesResultSets.withFilter(_.msiSearch.isDefined).map(_.msiSearch.get)
-  lazy val allPeaklistsIds: Array[Long] = leavesMsiSearches.map(_.peakList.id)
-  
-  lazy val spectraDescriptorById: LongMap[Spectrum] = loadSpectraDescriptors(allPeaklistsIds).mapByLong(_.id)
+  lazy val childResultSummaries: Array[LazyResultSummary] = loadLeaveResultSummaries()
+  lazy val allResultSummaries: Array[LazyResultSummary] = Array(resultSummary) ++ childResultSummaries
+  lazy val leavesResultSets : Array[LazyResultSet] = loadLeaveResultSets()
+
   lazy val spectrumDescriptorByMsQueryId: Map[Long, Spectrum] = {
-    val ms2QueryIdSpecIdPairs = for(
-      peptideMatch <- resultSummary.lazyResultSet.peptideMatches;
+    val msQueries = new ArrayBuffer[Ms2Query]()
+    val spectraIds =new ArrayBuffer[Long]()
+    for(
+      peptideMatch <- resultSummary.lazyResultSet.peptideMatches
       if peptideMatch.msQuery != null && peptideMatch.msQuery.isInstanceOf[Ms2Query]
-    ) yield {
+    ){
       val ms2Query = peptideMatch.getMs2Query()
-      val spectrumId = ms2Query.spectrumId
-      ms2Query.id -> spectraDescriptorById(spectrumId)
+      spectraIds += ms2Query.spectrumId
+      msQueries += ms2Query
     }
-    
-    ms2QueryIdSpecIdPairs.toMap
+
+    val spectraDescriptorById: LongMap[Spectrum] = loadSpectraDescriptors(spectraIds.toArray).mapByLong(_.id)
+    msQueries.map(q=>{
+      q.id -> spectraDescriptorById(q.spectrumId)
+    }).toMap
   }
+
   lazy val bioSequenceById: LongMap[BioSequence] = loadBioSequences().mapByLong(_.id)
   
   private val protMatchStatusMapByLazyRsm = new HashMap[LazyResultSummary,LongMap[ProteinMatchStatus.Value]]

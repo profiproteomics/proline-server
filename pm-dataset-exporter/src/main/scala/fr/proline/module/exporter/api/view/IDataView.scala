@@ -1,7 +1,5 @@
 package fr.proline.module.exporter.api.view
 
-import scala.collection.mutable.ArrayBuffer
-
 trait IDataView {
   
   var viewName: String

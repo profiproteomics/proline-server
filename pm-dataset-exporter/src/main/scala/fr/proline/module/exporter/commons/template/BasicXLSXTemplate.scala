@@ -1,11 +1,10 @@
 package fr.proline.module.exporter.commons.template
 
 import com.typesafe.scalalogging.LazyLogging
-import org.apache.poi.ss.usermodel.CellStyle
-import org.apache.poi.ss.usermodel.Font
-import org.apache.poi.ss.usermodel.IndexedColors
 import fr.proline.module.exporter.api.view.IDataView
 import fr.proline.module.exporter.commons.context.WorkbookContext
+import org.apache.poi.ss.usermodel.FillPatternType
+import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.xssf.streaming.SXSSFSheet
 
 class BasicXLSXTemplate(
@@ -41,14 +40,13 @@ class BasicXLSXTemplate(
     // Create a Cell Style for Headers
     val headerCellStyle = wb.createCellStyle()
     headerCellStyle.cloneStyleFrom(defaultCellStyle)
-    val fontIndex = headerCellStyle.getFontIndex()
     val headerFont = wb.createFont()
     headerFont.setFontHeightInPoints(defaultfont.getFontHeightInPoints())
     headerFont.setFontName(defaultfont.getFontName())
-    headerFont.setBoldweight(Font.BOLDWEIGHT_BOLD)
+    headerFont.setBold(true)
     headerCellStyle.setFont(headerFont)
     headerCellStyle.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex())
-    headerCellStyle.setFillPattern(CellStyle.SOLID_FOREGROUND)
+    headerCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND)
 
     // create an array to control width of column
     val colSizeArray: Array[Int] = new Array[Int](selectedFieldsOrFields.length)
@@ -58,11 +56,11 @@ class BasicXLSXTemplate(
     var colIdx = 0
     for (header <- selectedFieldsOrFields) {
 
-      var cell = firstRow.createCell(colIdx)
+      val cell = firstRow.createCell(colIdx)
       cell.setCellValue(header)
       cell.setCellStyle(headerCellStyle)
 
-      var l = header.length()
+      val l = header.length()
       if (l > colSizeArray(colIdx)) {
         colSizeArray(colIdx) = l
       }

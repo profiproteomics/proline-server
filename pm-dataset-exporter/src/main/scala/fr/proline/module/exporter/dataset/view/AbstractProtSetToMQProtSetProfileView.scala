@@ -32,7 +32,6 @@ abstract class AbstractProtSetToMQProtSetProfileView extends AbstractProtSetToTy
 
     val mqProtSet = mqProtSetProfileBuildingCtx.masterQuantProteinSet
     val qProtSetMap = mqProtSet.quantProteinSetMap
-    val qcCount = qcIds.length
 
     def getProteinMatchId(qcId: Long, identRsm: LazyResultSummary): Option[Long] = {
       val protMatchIdOpt = qProtSetMap.get(qcId).flatMap(_.proteinMatchId)
@@ -41,19 +40,7 @@ abstract class AbstractProtSetToMQProtSetProfileView extends AbstractProtSetToTy
       else Some(mqProtSet.proteinSet.getRepresentativeProteinMatchId())
     }
 
-    /*def getProteinSet(qcId: Long, identRsm: LazyResultSummary): Option[ProteinSet] = {
 
-      // Try to get QuantProteinSet for current ProteinSet in current QuantChannel
-      val qProtSetOpt = qProtSetMap.get(qcId)
-
-      // TODO: remove me
-      if (qProtSetOpt.isEmpty) None
-      else {
-        val protSetId = qProtSetOpt.get.proteinSetId.getOrElse(0L)
-        identRsm.proteinSetById.get(protSetId)
-      }
-    }*/
-    
     def getQcPeptidesCount(qcId: Long): Int = {
       
       // If peptideCountByProtMatchIdByQCId is provided (SC mode)

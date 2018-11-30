@@ -112,7 +112,7 @@ class ImportAndValidationPropsView(
             val value = importPropByKey(key)
             val keyAsStr = key.split("_").map(_.capitalize).mkString(" ")
             
-            importParamsBuffer += s"Mascot ${keyAsStr}: ${value}"
+            importParamsBuffer += s"Mascot $keyAsStr: $value"
           }
   
         } else if (rsProps.getOmssaImportProperties.isDefined) { // OMSSA
@@ -191,7 +191,7 @@ class ImportAndValidationPropsView(
       
       fieldValue match {
         case filters: ArrayBuffer[_] => {
-          for (i <- 0 until filters.length) {
+          for (i <- filters.indices) {
             recordBuilder += (fieldConfig.title + titleSep + (i+1)) -> filters(i)
           }
         }

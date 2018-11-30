@@ -10,10 +10,5 @@ class CustomViewFields(titles: Iterable[String]) extends IViewFieldEnumeration {
   for (title <- titles) {
     Field(title)
   }
-
-  // TODO: remove me
-  def addField(title: String): String = {
-    Field(title).toString()
-  }
   
 }

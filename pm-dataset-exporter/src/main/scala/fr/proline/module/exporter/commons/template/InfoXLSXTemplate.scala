@@ -1,11 +1,10 @@
 package fr.proline.module.exporter.commons.template
 
-import org.apache.poi.ss.usermodel.CellStyle
-import org.apache.poi.ss.usermodel.Font
-import org.apache.poi.ss.usermodel.IndexedColors
-
 import fr.proline.module.exporter.api.view.IDataView
 import fr.proline.module.exporter.commons.context.WorkbookContext
+import org.apache.poi.ss.usermodel.FillPatternType
+import org.apache.poi.ss.usermodel.HorizontalAlignment
+import org.apache.poi.ss.usermodel.IndexedColors
 
 // TODO: rename to VerticalXLSXTemplate
 class InfoXLSXTemplate(
@@ -35,28 +34,27 @@ class InfoXLSXTemplate(
     // Create a Cell Style for Headers
     val headerCellStyleRow1 = wb.createCellStyle()
     headerCellStyleRow1.cloneStyleFrom(defaultCellStyle)
-    val fontIndex = headerCellStyleRow1.getFontIndex()
     val headerFont = wb.createFont()
     headerFont.setFontHeightInPoints(defaultfont.getFontHeightInPoints())
     headerFont.setFontName(defaultfont.getFontName())
-    headerFont.setBoldweight(Font.BOLDWEIGHT_BOLD)
+    headerFont.setBold(true)
     headerCellStyleRow1.setFont(headerFont)
     
     // Create an alternate cell style for header of the different rows
     val headerCellStyleRow2 = wb.createCellStyle()
     headerCellStyleRow2.cloneStyleFrom(headerCellStyleRow1)
     headerCellStyleRow2.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex())
-    headerCellStyleRow2.setFillPattern(CellStyle.SOLID_FOREGROUND)
+    headerCellStyleRow2.setFillPattern(FillPatternType.SOLID_FOREGROUND)
     
     // Create a Cell Style for Data
     val dataCellStyleRow1 = wb.createCellStyle()
     dataCellStyleRow1.cloneStyleFrom(defaultCellStyle)
-    dataCellStyleRow1.setAlignment(CellStyle.ALIGN_LEFT)
+    dataCellStyleRow1.setAlignment(HorizontalAlignment.LEFT)
 
     val dataCellStyleRow2 = wb.createCellStyle()
     dataCellStyleRow2.cloneStyleFrom(dataCellStyleRow1)
     dataCellStyleRow2.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex())
-    dataCellStyleRow2.setFillPattern(CellStyle.SOLID_FOREGROUND)
+    dataCellStyleRow2.setFillPattern(FillPatternType.SOLID_FOREGROUND)
     
     // create an array to control width of columns
     val colSizeMap = scala.collection.mutable.LongMap[Int]()
@@ -73,8 +71,8 @@ class InfoXLSXTemplate(
       } else {
     	  cell.setCellStyle(headerCellStyleRow2)
       }
-      
-      var l = header.length()
+
+      val l = header.length()
       val size = colSizeMap.get(colIdx)
       if (size.isDefined) {
         if (l>colSizeMap(colIdx)) {

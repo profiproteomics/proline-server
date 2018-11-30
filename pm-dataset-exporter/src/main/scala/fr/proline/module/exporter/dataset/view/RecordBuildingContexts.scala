@@ -17,8 +17,7 @@ class ProtMatchBuildingContext(
   
   private val allSeqs = new ArrayBuffer[String](peptidesCount)
   private val specificNonUniqSeqs = new ArrayBuffer[String](peptidesCount)
-  
-  private val allPepInstances = new ArrayBuffer[PeptideInstance](peptidesCount)
+
   private val specificPepInstances = new ArrayBuffer[PeptideInstance](peptidesCount)
   
   private var totalLeavesMatchCount = 0
@@ -71,9 +70,6 @@ class MasterQuantProteinSetProfileBuildingContext(
   protMatch
 ) with IMasterQuantEntityBuildingContext {
   def getQuantComponentMap(): LongMap[_ <: QuantComponent] = {
-    /*profile.map { p =>
-      p.getQuantComponentMap(quantChannelIds)
-    }.getOrElse( masterQuantProteinSet.getQuantComponentMap )*/
     if( profile.isEmpty ) masterQuantProteinSet.getQuantComponentMap
     else masterQuantProteinSet.getProfileQuantComponentMap(profile.get, quantChannelIds)
   }
@@ -106,6 +102,7 @@ class MasterQuantPeptideIonBuildingContext(
   protMatchBuildingCtx: Option[ProtMatchBuildingContext],
   masterQuantPeptide: MasterQuantPeptide,
   var masterQuantPeptideIon: MasterQuantPeptideIon,
+  val childPepMatchById: Map[Long, PeptideMatch],
   groupSetupNumber: Int
 ) extends MasterQuantPeptideBuildingContext(
   pepMatch,
@@ -126,6 +123,7 @@ class MasterQuantReporterIonBuildingContext(
   protMatchBuildingCtx: Option[ProtMatchBuildingContext],
   masterQuantPeptide: MasterQuantPeptide,
   masterQuantPeptideIon: MasterQuantPeptideIon,
+  childPepMatchById : Map[Long,PeptideMatch],
   val masterQuantReporterIon: MasterQuantReporterIon,
   groupSetupNumber: Int
 ) extends MasterQuantPeptideIonBuildingContext(
@@ -135,6 +133,7 @@ class MasterQuantReporterIonBuildingContext(
   protMatchBuildingCtx,
   masterQuantPeptide,
   masterQuantPeptideIon,
+  childPepMatchById,
   groupSetupNumber
 ) {
   override def getQuantComponentMap(): LongMap[_ <: QuantComponent] = masterQuantReporterIon.quantReporterIonMap

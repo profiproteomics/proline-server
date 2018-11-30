@@ -135,7 +135,7 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
       val ptmConstraint = if (ptm.isNTerm || ptm.isCTerm) ptmDef.location
       else "" + ptmDef.residue + seqPos
       
-      ptmStringBuf += s"${shortName} (${ptmConstraint})"
+      ptmStringBuf += s"$shortName ($ptmConstraint)"
     }
 
     ptmStringBuf.mkString("; ")

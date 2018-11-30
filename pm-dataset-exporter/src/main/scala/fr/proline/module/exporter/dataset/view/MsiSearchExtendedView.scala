@@ -102,30 +102,9 @@ class MsiSearchExtendedView(
   def formatView(recordFormatter: Map[String,Any] => Unit ) {
     
     for (rs <- identDS.leavesResultSets) {
-      this.formatRecord(MyBuildingContext(rs, rs.msiSearch.get), recordFormatter)
+      if(rs.msiSearch.isDefined) //M%ay not be always the case => Quant Aggregation
+        this.formatRecord(MyBuildingContext(rs, rs.msiSearch.get), recordFormatter)
     }
-    
-    /*val rs = identDS.resultSummary.lazyResultSet
-    
-    if( rs.msiSearch.isDefined ) {
-      this.formatRecord(MyBuildingContext(rs, rs.msiSearch.get), recordFormatter)
-    } else {
-      for( childRs <- identDS.childResultSets if childRs.msiSearch.isDefined ) {
-        this.formatRecord(MyBuildingContext(childRs, childRs.msiSearch.get), recordFormatter)
-      }
-    }*/ // rs is in the child childRs list ;  DBO: what does this mean ???
-
-    /*for (childRs <- identDS.childResultSets) {
-    	if (childRs.childMsiSearches.isEmpty) {
-    		for (msiSearch <- childRs.msiSearch if msiSearch != null) {
-    			this.formatRecord(MyBuildingContext(childRs,msiSearch), recordFormatter)
-    		}
-    	} else {
-    		for (msiSearch <- childRs.childMsiSearches) {
-    			this.formatRecord(MyBuildingContext(childRs,msiSearch), recordFormatter)
-    		}
-    	}
-    }*/
 
   }
 

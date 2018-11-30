@@ -10,21 +10,14 @@ import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.helper.UdsDbHelper
-import fr.proline.core.dal.tables.SelectQueryBuilder._
 import fr.proline.core.dal.tables.SelectQueryBuilder1
-import fr.proline.core.dal.tables.SelectQueryBuilder2
-import fr.proline.core.dal.tables.SelectQueryBuilder3
-import fr.proline.core.dal.tables.msi.MsiDbMsiSearchTable
-import fr.proline.core.dal.tables.msi.MsiDbResultSetTable
-import fr.proline.core.dal.tables.msi.MsiDbResultSummaryTable
-import fr.proline.core.dal.tables.uds.UdsDbDataSetTable
 import fr.proline.core.dal.tables.uds.UdsDbProjectTable
-import fr.proline.core.dal.tables.uds.UdsDbQuantChannelTable
 import fr.proline.core.om.model.msi.LazyResultSet
 import fr.proline.core.om.model.msi.LazyResultSummary
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.impl._
 import fr.proline.core.om.provider.msq.impl._
+import fr.proline.core.orm.uds.ObjectTreeSchema
 import fr.proline.module.exporter.api.template.ViewWithTemplate
 import fr.proline.module.exporter.api.template._
 import fr.proline.module.exporter.commons.config._
@@ -156,12 +149,10 @@ object BuildDatasetViewSet extends LazyLogging {
 
       val lazyRsm = lazyRsmOpt.get
 
-      // Load child result summaries (merge)
-      // VDS : Load only leaf RSM not all children
-      // VDS To test get all hierarchy level
+      // Load leave result summaries (merge)
       // TODO: add children ids to the RsmDescriptor
-      val childResultSummariesLoader = () => {
-        logger.debug("Loading child result summaries (merge)...")
+      val leaveResultSummariesLoader = () => {
+        logger.debug("Loading leave result summaries (merge)...")
         val leavesRsmIds = msiDbHelper.getResultSummaryLeavesIds(rsmId)
         val childResultSummaries = lazyRsmProvider.getLazyResultSummaries(
           leavesRsmIds,
@@ -176,7 +167,7 @@ object BuildDatasetViewSet extends LazyLogging {
           childResultSummaries.sortBy(_.lazyResultSet.descriptor.name)
       }
 
-      // FIXME: DBO => why loading leaves result sets ?
+      // DBO => why loading leaves result sets ? To get leave description info : search params....
       val leaveResultSetLoader = () => {
         logger.debug("Loading leave result set (merge)...")
         _loadLeavesResultSets(lazyRsm.getResultSetId(), msiDbHelper, lazyRsProvider)
@@ -187,7 +178,7 @@ object BuildDatasetViewSet extends LazyLogging {
       val identDs = new IdentDataset(
         projectName,
         lazyRsm,
-        childResultSummariesLoader,
+        leaveResultSummariesLoader,
         leaveResultSetLoader,
         this._buildBioSequenceLoader(msiDbCtx, lazyRsm),
         this._buildSpectraLoader(msiDbCtx)
@@ -208,18 +199,20 @@ object BuildDatasetViewSet extends LazyLogging {
       // FIXME: how to deal with other MQC ids
       val masterQuantChannelId = masterQcIds.head
       
-      val( quantConfigAndMethodOpt, profilizerConfigOpt) = if (mode != ExportConfigConstant.MODE_QUANT_XIC) (None,None)
+      val( quantConfigAndMethodOpt, quantConfigSchemaName, profilizerConfigOpt) = if (mode != ExportConfigConstant.MODE_QUANT_XIC) (None,None, None)
       else {
         // Load the quant config and the profilizer config
+        var quantSchemaName : Option[ObjectTreeSchema.SchemaName]= None
         val quantConfigProvider = new SQLQuantConfigProvider(udsDbCtx)
         val profilizerConfigProvider = new SQLProfilizerConfigProvider(udsDbCtx)
         val quantConfigAsStringOpt = quantConfigProvider.getQuantConfigAsString(dsId)
         val quantConfigAndMethod = if (quantConfigAsStringOpt.isDefined) {
-          Some(quantConfigAsStringOpt.get._1, quantConfigAsStringOpt.get._3)
+          quantSchemaName = Some(quantConfigAsStringOpt.get._2)
+          Some(quantConfigAsStringOpt.get._1,  quantConfigAsStringOpt.get._3)
         } else {
           None
         }
-        (quantConfigAndMethod,profilizerConfigProvider.getProfilizerConfigAsString(dsId))
+        (quantConfigAndMethod,quantSchemaName, profilizerConfigProvider.getProfilizerConfigAsString(dsId))
       }
 
       // Load the experimental design
@@ -235,7 +228,7 @@ object BuildDatasetViewSet extends LazyLogging {
 
       val quantRsmId = masterQc.quantResultSummaryId.get
       val quantChannels = masterQc.quantChannels
-      var identRsmIds = quantChannels.map(_.identResultSummaryId)
+      var identRsmIds = quantChannels.map(_.identResultSummaryId).filter(_>0)
 
       // Workaround for SC quantitations
       if (mode == ExportConfigConstant.MODE_QUANT_SC) {
@@ -243,6 +236,12 @@ object BuildDatasetViewSet extends LazyLogging {
         identRsmIds ++= quantChannels.flatMap { qc =>
           msiDbHelper.getResultSummaryLeavesIds(qc.identResultSummaryId)
         }
+      }
+
+      //VDS MAY NOT NEED Workaround for Agg of Quant
+      if(quantConfigSchemaName.isDefined && quantConfigSchemaName.get.equals(ObjectTreeSchema.SchemaName.AGGREGATION_QUANT_CONFIG) && masterQc.identResultSummaryId.isDefined ){
+        val parentRsmID = masterQc.identResultSummaryId.get
+        identRsmIds ++= msiDbHelper.getResultSummaryLeavesIds(parentRsmID)
       }
 
       // Load the quant RSM
@@ -286,72 +285,11 @@ object BuildDatasetViewSet extends LazyLogging {
 
         // Check we had not problem to retrieve the result sets corresponding to the quant channels
         // If we have a problem then we return the result sets in the previous order
-        if (sortedResultSets.exists(_ == null) || (sortedResultSets.length!=resultSets.length)) resultSets else sortedResultSets
+        if (sortedResultSets.contains(null) || (sortedResultSets.length!=resultSets.length)) resultSets else sortedResultSets
       }
 
-      var qcNameById = quantChannels.toLongMapWith(qc => qc.id -> qc.name)
-      val qcNames = qcNameById.values.toList
-      val definedQcNames = qcNames.filter(StringUtils.isNotEmpty(_))
 
-      // Check if we have retrieved defined names
-      if (qcNames.length != definedQcNames.length) {
 
-        logger.warn("Some quantitation channels are not named, we will use the result file names instead")
-
-        val qcIdByIdentRsmId = quantChannels.toLongMapWith(qc => qc.identResultSummaryId -> qc.id)
-
-        // Set QC names as the result file name
-        // FIXME: DBO => try to avoid the use of SQL queries, the names should be available directly from the QuantChannel entity. 
-        //VDS : Should be call only if it's not the case : names not in QuantChannel entity. May search only for missing values! 
-        qcNameById = {
-
-          val tmpQcNameById = new LongMap[String]()
-          
-          DoJDBCWork.withEzDBC(msiDbCtx) { ezDBC =>
-
-            val qcIdentRsmIds = identRsmIds.filter(qcIdByIdentRsmId.contains(_))
-
-            val sqlQuery = new SelectQueryBuilder3(MsiDbResultSetTable, MsiDbResultSummaryTable, MsiDbMsiSearchTable).mkSelectQuery { (t1, c1, t2, c2, t3, c3) =>
-              List(t2.ID, t3.RESULT_FILE_NAME) ->
-                "WHERE " ~ t2.ID ~ " IN (" ~ qcIdentRsmIds.mkString(",") ~ ") " ~
-                "AND " ~ t1.ID ~ "=" ~ t2.RESULT_SET_ID ~ " AND " ~ t3.ID ~ " = " ~ t1.MSI_SEARCH_ID
-            }
-
-            
-            ezDBC.selectAndProcess(sqlQuery) { r =>
-              tmpQcNameById += qcIdByIdentRsmId(r.nextLong) -> r.nextString
-              ()
-            }
-
-          }
-          
-          // FIXME: DBO => I think it should be "else if (mode == ExportConfigConstant.MODE_QUANT_SC)" : VDS ?? Test could be removed ! for XIC, sqch name already filled    
-          if (mode == ExportConfigConstant.MODE_QUANT_SC) {
-            
-            DoJDBCWork.withEzDBC(udsDbCtx) { ezDBC =>
-
-              // FIXME: DBO => please don't perform multiple SQL queries, this is killing the performance
-              // VDS : May search only for missing values ! 
-              for (qc <- quantChannels) {
-                // get the name
-                val sqlQuery2 = new SelectQueryBuilder2(UdsDbDataSetTable, UdsDbQuantChannelTable).mkSelectQuery { (t1, c1, t2, c2) =>
-                  List(t1.NAME) ->
-                    "WHERE " ~ t2.ID ~ " = " ~ qc.id ~
-                    " AND " ~ t2.IDENT_RESULT_SUMMARY_ID ~ "=" ~ t1.RESULT_SUMMARY_ID ~ " AND " ~ t1.PROJECT_ID ~ " = " ~ projectId
-                }
-
-                ezDBC.selectAndProcess(sqlQuery2) { r =>
-                  tmpQcNameById += qc.id -> r.nextString
-                  ()
-                }
-              }
-            }
-          }
-
-          tmpQcNameById
-        }
-
-      }
 
       var peptideCountByProtMatchIdByQCId: LongMap[LongMap[Int]] = null
       var peptideCountByMqProtSetIdByQCId: LongMap[LongMap[Int]] = null
@@ -409,8 +347,7 @@ object BuildDatasetViewSet extends LazyLogging {
           }
         }
         
-      }
-      else {
+      } else {
         
         peptideCountByProtMatchIdByQCId = new LongMap[LongMap[Int]]()
         
@@ -449,7 +386,8 @@ object BuildDatasetViewSet extends LazyLogging {
         leaveResultSetLoader,
         this._buildBioSequenceLoader(msiDbCtx, lazyQuantRSM.lazyResultSummary),
         this._buildSpectraLoader(msiDbCtx),
-        qcNameById,
+        this._buildPepMatchesLoader(executionContext),
+        this._buildPepMatchesByMsQIdLoader(executionContext),
         Option(peptideCountByProtMatchIdByQCId),
         Option(peptideCountByMqProtSetIdByQCId)
       )
@@ -458,9 +396,9 @@ object BuildDatasetViewSet extends LazyLogging {
     }
 
   }
-  
+
   private def _loadLeavesResultSets(rsId: Long, msiDbHelper: MsiDbHelper, lazyRsProvider: SQLLazyResultSetProvider): Array[LazyResultSet] = {
-    
+
     val leavesRsIds = msiDbHelper.getResultSetLeavesId(rsId)
     val leavesResultSets = lazyRsProvider.getLazyResultSets(leavesRsIds)
 
@@ -488,24 +426,24 @@ object BuildDatasetViewSet extends LazyLogging {
     bioSeqProvider.getBioSequences(protIds, loadSequence = false)
   }
 
-  private def _buildSpectraLoader(msiDbCtx: MsiDbConnectionContext) = { (peaklistIds: Array[Long]) =>
-    logger.debug("Loading spectra descriptors...")
+  private def _buildSpectraLoader(msiDbCtx: MsiDbConnectionContext) = { spectraIds: Array[Long] =>
+    logger.debug(s"Loading spectra descriptors... ${spectraIds.length}")
 
     val spectrumProvider = new SQLSpectrumProvider(msiDbCtx)
-
-    spectrumProvider.getPeaklistsSpectra(peaklistIds, loadPeaks = false)
-
-    /*val peptideMatches = lazyRsm.lazyResultSet.peptideMatches
-    val spectraIds = new ArrayBuffer[Long](peptideMatches.length)
-    for( peptideMatch <- peptideMatches) {
-      if( peptideMatch.msQuery != null ) {
-        peptideMatch.msQuery match {
-          case ms2Query: Ms2Query => spectraIds += ms2Query.spectrumId
-        }
-      }
-    }
-    
-    spectrumProvider.getSpectra(spectraIds, loadPeaks = false)*/
+    spectrumProvider.getSpectra(spectraIds, loadPeaks = false)
   }
 
+  private def _buildPepMatchesLoader(executionContext: IExecutionContext) = { pepMatchesId: Array[Long] =>
+    logger.debug(s"Loading peptide Matches ... ${pepMatchesId.length}")
+    val peptideMatchProvider = new SQLPeptideMatchProvider(PeptideCacheExecutionContext(executionContext))
+    peptideMatchProvider.getPeptideMatches(pepMatchesId)
+
+  }
+
+  private def _buildPepMatchesByMsQIdLoader(executionContext: IExecutionContext) = { msQueriesIds: Array[Long] =>
+    logger.debug(s"Loading peptide Matches from msQuery Ids ... ${msQueriesIds.length}")
+    val peptideMatchProvider = new SQLPeptideMatchProvider(PeptideCacheExecutionContext(executionContext))
+    peptideMatchProvider.getPeptideMatchesByMsQueryIds(msQueriesIds)
+
+  }
 }

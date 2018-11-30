@@ -4,8 +4,6 @@ import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.core.algo.lcms._
-import fr.proline.core.algo.msq.config._
 import fr.proline.core.algo.msq.config.profilizer._
 import fr.proline.module.exporter.api.view._
 import fr.proline.module.exporter.dataset._
@@ -29,7 +27,7 @@ class QuantConfigView(
     val quantConfigParams = if (quantConfigAndMethodOpt.isEmpty) {
       Array.empty[(String, Any)]
     } else {
-      val (quantConfigStr, quantMethod ) = quantConfigAndMethodOpt.get
+      val quantConfigStr = quantConfigAndMethodOpt.get._1
       val quantConfigAsMap = ProfiJson.deserialize[Map[String,Any]](quantConfigStr)
       _stringifyMap(quantConfigAsMap, developerDictionnary)
     }

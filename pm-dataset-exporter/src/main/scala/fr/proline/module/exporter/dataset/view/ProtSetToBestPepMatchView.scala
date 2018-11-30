@@ -23,13 +23,6 @@ class ProtSetToBestPepMatchView(
   override def formatView(recordFormatter: Map[String, Any] => Unit) {
 
     val rsm = identDS.resultSummary
-    val rs = rsm.lazyResultSet
-    val protMatchById = rs.proteinMatchById
-    val pepMatchById = rs.peptideMatchById
-    val pepMatchesByPepId = rs.peptideMatches.groupBy(_.peptideId)
-
-    // Keep track of peptide matches which are exported in the next loop
-    val exportedPepMatchIds = new collection.mutable.HashSet[Long]
 
     // Iterate over RSM protein sets
     for (protSet <- rsm.proteinSets.sortBy( - _.peptideSet.score ) ) {
@@ -56,7 +49,7 @@ class ProtSetToBestPepMatchView(
           require (pepInst.peptideMatches != null, "the peptide matches must be loaded to be able to export them")
           
           val peptideId = pepInst.peptide.id
-          val bestPepMatch = pepInst.peptideMatches.maxBy(_.score) //VDS pourquoi ne pas utiliser le  bestPeptideMatchId
+          val bestPepMatch = pepInst.peptideMatches.filter(_.id.equals(pepInst.bestPeptideMatchId)).head
           val mqPepOpt = Option(quantDs).flatMap( _.mqPepByPepId.get(peptideId) )
 
           val buildingContext =  { if (!isQuantDs || mqPepOpt.isEmpty) {

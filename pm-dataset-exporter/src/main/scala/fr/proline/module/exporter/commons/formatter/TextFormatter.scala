@@ -42,12 +42,7 @@ class TextFormatter(
   
   def formatView(view: IDataView): File = {
 
-    /*val outputFile = if (location.isFile) { // isFile => exist && is a normal File
-      location
-    } else {
-      viewSetCreationContext.getViewLocation(location, view)
-    }*/
-    val outputDir = viewSetCreationContext.viewSetLocation.get    
+    val outputDir = viewSetCreationContext.viewSetLocation.get
     val outputFile = viewSetCreationContext.getViewLocation(outputDir, view)
     
     _formatView(view, outputFile)
