@@ -120,8 +120,6 @@ class QuantifyV3_0 extends AbstractRemoteProcessingService with  IQuantifyServic
     val expDesign = deserialize[ExperimentalDesign](serialize(paramsRetriever.getMap(PROCESS_METHOD.EXPERIMENTAL_DESIGN_PARAM)))
     val quantConfigAsMap = paramsRetriever.getMap(PROCESS_METHOD.QUANTITATION_CONFIG_PARAM)
 
-    logger.info("LabelFreeQuantConfig version 2.0 => "+ProfiJson.serialize(quantConfigAsMap))
-
     val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId) // Use JPA context
 
     // Register SQLRunProvider

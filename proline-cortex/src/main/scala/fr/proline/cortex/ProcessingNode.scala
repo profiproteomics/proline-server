@@ -51,7 +51,6 @@ import fr.proline.cortex.util.fs.WorkDirectoryRegistry
 import fr.proline.jms.ServiceManager
 import fr.proline.jms.ServiceRegistry
 import fr.proline.jms.ServiceRunner
-import fr.proline.jms.NamedThreadFactory
 import fr.proline.jms.SingleThreadedServiceRunner
 import fr.proline.jms.util.ExpiredMessageConsumer
 import fr.proline.jms.util.JMSConstants.MAX_JMS_SERVER_PORT
