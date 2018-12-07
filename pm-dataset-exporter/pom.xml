@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>PM-DatasetExporter</artifactId>
-  <version>0.8.0</version>
+  <version>0.7.1</version>
 
   <name>${project.artifactId}</name>
   <description>Proline Module dedicated to the export of Proline datasets</description>
@@ -57,7 +57,7 @@
     <dependency> <!-- SHOULD be defined BEFORE Proline OM or MZdb Processing ! -->
       <groupId>fr.proline</groupId>
       <artifactId>PM-FragmentMatchGenerator</artifactId>
-      <version>0.8.0</version>
+      <version>0.7.1</version>
       <scope>test</scope>
     </dependency>
 
