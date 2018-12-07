@@ -1,0 +1,11 @@
+package fr.proline.module.parser.xtandem
+
+import fr.proline.util.version.IVersion
+
+class Version extends IVersion {
+
+  override val getModuleName = "@moduleName@"
+
+  override val getVersion = "@version@"
+
+}
