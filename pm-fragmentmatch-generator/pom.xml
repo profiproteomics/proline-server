@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>PM-FragmentMatchGenerator</artifactId>
-  <version>0.8.0</version>
+  <version>0.7.1</version>
   <name>${project.artifactId}</name>
   <description>Proline Module made to generate the fragment matches from a spectrum</description>
 
