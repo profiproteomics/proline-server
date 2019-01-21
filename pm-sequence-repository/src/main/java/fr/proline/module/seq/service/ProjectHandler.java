@@ -561,7 +561,7 @@ public class ProjectHandler {
 						
 						if(!isSameEnzyme){
 							LOG.warn("Can't get Enzyme for Merged ResultSet as child don't have the same Enzyme ! "); 
-						} else {
+						} else if(sameEnzymes != null && !sameEnzymes.isEmpty()){
 							//VDS TODO : Why use first 						}
 							fr.proline.core.orm.uds.Enzyme ormEnzyme = udsEM.find(fr.proline.core.orm.uds.Enzyme.class, sameEnzymes.iterator().next().getId());
 							List<EnzymeCleavage> cleavages = new ArrayList<>();
