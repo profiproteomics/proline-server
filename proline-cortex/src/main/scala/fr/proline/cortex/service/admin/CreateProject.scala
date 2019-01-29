@@ -5,26 +5,27 @@ import com.typesafe.scalalogging.LazyLogging
 
 import fr.proline.admin.service.db.CreateProjectDBs
 import fr.proline.admin.service.db.SetupProline
+import fr.proline.admin.service.user.ProjectUtils
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.cortex.api.service.admin.ICreateProjectService
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
 
 /**
- * JMS Service to create a new Project in current Proline DataStore. 
+ * JMS Service to create a new Project in current Proline DataStore.
  * This Service will create Project data in UDS DB and create necessary project databases (msi, lcms...)
- * 
+ *
  * Input params :
  *  name : "The project name" (String)
  *  description :  "The project description" (String)
  *  owner_id : "The project owner ID" (Long)
- *  
- * Output params : 
- *  new project Id. 
- *  
+ *
+ * Output params :
+ *  new project Id.
+ *
  */
 class CreateProject extends AbstractRemoteProcessingService with ICreateProjectService with LazyLogging {
-  
+
   //PARAM Description
   // "name" : "The project name" : String   
   // "description" :  "The project description": String
@@ -38,11 +39,11 @@ class CreateProject extends AbstractRemoteProcessingService with ICreateProjectS
     val description = paramsRetriever.getOptString(PROCESS_METHOD.DESCRIPTION_PARAM, true, "")
     val name = paramsRetriever.getString(PROCESS_METHOD.NAME_PARAM)
     var prjID: Long = -1L
-    
-    val udsDbConnectionContext = new DatabaseConnectionContext(DbConnectionHelper.getDataStoreConnectorFactory().getUdsDbConnector)
+    val connectorFactory = DbConnectionHelper.getDataStoreConnectorFactory()
+    val udsDbConnectionContext = new DatabaseConnectionContext(connectorFactory.getUdsDbConnector)
 
     try {
-      
+
       // Create Data entries in UDS
       val createPrj = new fr.proline.admin.service.user.CreateProject(udsDbConnectionContext, name, description, paramsRetriever.getLong("owner_id"))
       logger.debug("Create Project Object " + name)
@@ -55,7 +56,17 @@ class CreateProject extends AbstractRemoteProcessingService with ICreateProjectS
       // Create project databases
       logger.debug("Create Project databases for project " + prjID)
       new CreateProjectDBs(udsDbConnectionContext, SetupProline.config, prjID).doWork()
-
+      // Update external_db table with the current schema version 
+      try {
+        logger.debug("Update external_db with project schema version")
+        val msiDbConnector = connectorFactory.getMsiDbConnector(prjID)
+        val msiDbSchemaVersionOpt = ProjectUtils.retrieveDbVersion(msiDbConnector)
+        val lcmsDbConnector = connectorFactory.getLcMsDbConnector(prjID)
+        val lcmsDbSchemaVersionOpt = ProjectUtils.retrieveDbVersion(lcmsDbConnector)
+        ProjectUtils.updateExternalDbs(udsDbConnectionContext, prjID, msiDbSchemaVersionOpt, lcmsDbSchemaVersionOpt)
+      } catch {
+        case t: Throwable => logger.error("Error while trying to update external_db with project schema version", t.getMessage())
+      }
     } finally {
       DbConnectionHelper.tryToCloseDbContext(udsDbConnectionContext)
     }
