@@ -27,7 +27,7 @@ import fr.proline.jms.service.api.AbstractRemoteProcessingService
 class CreateProject extends AbstractRemoteProcessingService with ICreateProjectService with LazyLogging {
 
   //PARAM Description
-  // "name" : "The project name" : String   
+  // "name" : "The project name" : String
   // "description" :  "The project description": String
   // "owner_id" : "The project owner ID" : Long
 
@@ -45,7 +45,7 @@ class CreateProject extends AbstractRemoteProcessingService with ICreateProjectS
     try {
 
       // Create Data entries in UDS
-      val createPrj = new fr.proline.admin.service.user.CreateProject(udsDbConnectionContext, name, description, paramsRetriever.getLong("owner_id"))
+      val createPrj = new fr.proline.admin.service.user.CreateProject(connectorFactory, udsDbConnectionContext, name, description, paramsRetriever.getLong("owner_id"), createDbs = true)
       logger.debug("Create Project Object " + name)
       createPrj.doWork()
       prjID = createPrj.projectId
@@ -53,20 +53,6 @@ class CreateProject extends AbstractRemoteProcessingService with ICreateProjectS
       if (prjID <= 0)
         throw new RuntimeException("Error creating project (" + prjID + ")")
 
-      // Create project databases
-      logger.debug("Create Project databases for project " + prjID)
-      new CreateProjectDBs(udsDbConnectionContext, SetupProline.config, prjID).doWork()
-      // Update external_db table with the current schema version 
-      try {
-        logger.debug("Update external_db with project schema version")
-        val msiDbConnector = connectorFactory.getMsiDbConnector(prjID)
-        val msiDbSchemaVersionOpt = ProjectUtils.retrieveDbVersion(msiDbConnector)
-        val lcmsDbConnector = connectorFactory.getLcMsDbConnector(prjID)
-        val lcmsDbSchemaVersionOpt = ProjectUtils.retrieveDbVersion(lcmsDbConnector)
-        ProjectUtils.updateExternalDbs(udsDbConnectionContext, prjID, msiDbSchemaVersionOpt, lcmsDbSchemaVersionOpt)
-      } catch {
-        case t: Throwable => logger.error("Error while trying to update external_db with project schema version", t.getMessage())
-      }
     } finally {
       DbConnectionHelper.tryToCloseDbContext(udsDbConnectionContext)
     }
