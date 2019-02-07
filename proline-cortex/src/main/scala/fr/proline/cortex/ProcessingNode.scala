@@ -18,24 +18,7 @@ import fr.profi.util.ThreadLogger
 import fr.proline.cortex.service.admin.CreateProject
 import fr.proline.cortex.service.admin.GetConnectionTemplate
 import fr.proline.cortex.service.admin.UserAccount
-import fr.proline.cortex.service.dps.msi.CertifyResultFiles
-import fr.proline.cortex.service.dps.msi.ChangeTypicalProteinMatch
-import fr.proline.cortex.service.dps.msi.DeleteOrphanData
-import fr.proline.cortex.service.dps.msi.ExportResultSummary
-import fr.proline.cortex.service.dps.msi.ExportResultSummaryV2_0
-import fr.proline.cortex.service.dps.msi.FilterRsmProteinSets
-import fr.proline.cortex.service.dps.msi.GenerateMSDiagReport
-import fr.proline.cortex.service.dps.msi.GenerateSpectrumMatches
-import fr.proline.cortex.service.dps.msi.IdentifyPtmSites
-import fr.proline.cortex.service.dps.msi.ImportMaxQuantResults
-import fr.proline.cortex.service.dps.msi.ImportResultFilesDecoyRegExp
-import fr.proline.cortex.service.dps.msi.ImportResultFilesProtMatchDecoyRule
-import fr.proline.cortex.service.dps.msi.ImportValidateGenerateSM
-import fr.proline.cortex.service.dps.msi.MergeDatasetsV1_0
-import fr.proline.cortex.service.dps.msi.MergeDatasetsV2_0
-import fr.proline.cortex.service.dps.msi.UpdateSpectraParamsV1_0
-import fr.proline.cortex.service.dps.msi.UpdateSpectraParamsV2_0
-import fr.proline.cortex.service.dps.msi.ValidateResultSet
+import fr.proline.cortex.service.dps.msi._
 import fr.proline.cortex.service.dps.msq._
 import fr.proline.cortex.service.dps.uds.GetExportInformation
 import fr.proline.cortex.service.dps.uds.RegisterRawFile
@@ -59,10 +42,8 @@ import fr.proline.jms.util.NodeConfig
 import javax.jms.Connection
 import javax.jms.ExceptionListener
 import javax.jms.JMSException
-import fr.proline.cortex.service.dps.msi.ValidateResultSetV2
 
 import scala.collection.mutable.ArrayBuffer
-
 
 
 object ProcessingNode extends LazyLogging {
@@ -292,6 +273,8 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new DeleteOrphanData())
     ServiceRegistry.addService(new QuantifyV3_0())
     ServiceRegistry.addService(new ImportMaxQuantResults())
+    ServiceRegistry.addService(new ImportMaxQuantResultsV2_0())
+
     ServiceRegistry.addService(new IdentifyPtmSites())
     ServiceRegistry.addService(new ProlineResourceService())
     //VDS TEST only !
