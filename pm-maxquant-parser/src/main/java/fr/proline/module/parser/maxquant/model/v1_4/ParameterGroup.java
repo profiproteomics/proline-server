@@ -1,4 +1,6 @@
-package fr.proline.module.parser.maxquant.model;
+package fr.proline.module.parser.maxquant.model.v1_4;
+
+import fr.proline.module.parser.maxquant.model.IParameterGroup;
 
 import java.util.List;
 
@@ -10,28 +12,28 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name="parameterGroup")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class ParameterGroup {
+public class ParameterGroup implements IParameterGroup {
 
-	@XmlElement(name="maxCharge")
+	@XmlElement(name = "maxCharge")
 	private Integer m_maxCharge;
-	
-	@XmlElement(name="maxMissedCleavages",type=Integer.class)
+
+	@XmlElement(name = "maxMissedCleavages", type = Integer.class)
 	private Integer m_maxMissedCleavages;
 
 
 	@XmlElementWrapper(name = "enzymes")
-	@XmlElement(name="string")
+	@XmlElement(name = "string")
 	private List<String> m_enzymes;
-	
-	@XmlElementWrapper(name = "variableModifications")
-	@XmlElement(name="string")
-	private List<String> m_variableModifications;
-	
 
-	@XmlElement(name="mainSearchTol", type=Float.class)
+	@XmlElementWrapper(name = "variableModifications")
+	@XmlElement(name = "string")
+	private List<String> m_variableModifications;
+
+
+	@XmlElement(name = "mainSearchTol", type = Float.class)
 	private Float m_mainSearchTol;
-	
-	@XmlElement(name="searchTolInPpm", type=Boolean.class)
+
+	@XmlElement(name = "searchTolInPpm", type = Boolean.class)
 	private Boolean m_searchTolInPpm;
 
 	public Integer getMaxCharge() {
@@ -75,7 +77,7 @@ public class ParameterGroup {
 	}
 
 	public Boolean getSearchTolInPpm() {
-		if(m_searchTolInPpm == null) //Not in param file, version 1.4 (?) always true
+		if (m_searchTolInPpm == null) //Not in param file, version 1.4 (?) always true
 			return true;
 		return m_searchTolInPpm;
 	}
@@ -87,8 +89,7 @@ public class ParameterGroup {
 	@Override
 	public String toString() {
 		return "ParameterGroup [maxCharge=" + m_maxCharge + ", maxMissedCleavages=" + m_maxMissedCleavages + ", enzymes=" + m_enzymes + ", variableModifications="
-			+ m_variableModifications + ", mainSearchTol=" + m_mainSearchTol + ", searchTolInPpm=" + m_searchTolInPpm + "]";
+				+ m_variableModifications + ", mainSearchTol=" + m_mainSearchTol + ", searchTolInPpm=" + m_searchTolInPpm + "]";
 	}
-	
-	
+
 }
