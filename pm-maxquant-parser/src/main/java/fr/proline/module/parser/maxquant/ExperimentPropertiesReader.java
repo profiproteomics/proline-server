@@ -7,12 +7,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -43,7 +38,7 @@ import fr.proline.core.om.provider.msi.IPTMProvider;
 import fr.proline.core.om.provider.msi.ISeqDatabaseProvider;
 import fr.proline.module.parser.maxquant.model.IMaxQuantParams;
 import fr.proline.module.parser.maxquant.model.IMsMsParameters;
-import fr.proline.module.parser.maxquant.model.ParameterGroup;
+import fr.proline.module.parser.maxquant.model.IParameterGroup;
 import fr.proline.module.parser.maxquant.model.ResultSetsDataMapper;
 import scala.Option;
 
@@ -140,17 +135,28 @@ public class ExperimentPropertiesReader {
 			String mqVersion = readVersion(parametersFile);
 			File paramFile = new File(m_mqResultFileFolder,MQ_PROP_FILENAME);
 			
-			if(mqVersion.startsWith("1.5")){					
-				JAXBContext context = JAXBContext.newInstance(fr.proline.module.parser.maxquant.model.v1_5.MaxQuantParams.class);
-				Unmarshaller unmarshaller = context.createUnmarshaller();			
-				FileInputStream is = new FileInputStream(paramFile);				
-				m_mqParams = (IMaxQuantParams) unmarshaller.unmarshal(is);
-			}  else {
+			if(mqVersion.startsWith("1.4")){
 				JAXBContext context = JAXBContext.newInstance(fr.proline.module.parser.maxquant.model.v1_4.MaxQuantParams.class);
-				Unmarshaller unmarshaller = context.createUnmarshaller();			
-				FileInputStream is = new FileInputStream(paramFile);				
+				Unmarshaller unmarshaller = context.createUnmarshaller();
+				FileInputStream is = new FileInputStream(paramFile);
 				m_mqParams = (IMaxQuantParams) unmarshaller.unmarshal(is);
 				((fr.proline.module.parser.maxquant.model.v1_4.MaxQuantParams)m_mqParams).setVersion(mqVersion);
+			}  else if(mqVersion.startsWith("1.5")){
+				JAXBContext context = JAXBContext.newInstance(fr.proline.module.parser.maxquant.model.v1_5.MaxQuantParams.class);
+				Unmarshaller unmarshaller = context.createUnmarshaller();
+				FileInputStream is = new FileInputStream(paramFile);
+				m_mqParams = (IMaxQuantParams) unmarshaller.unmarshal(is);
+			} else { //1.6 or higher
+				JAXBContext context = JAXBContext.newInstance(fr.proline.module.parser.maxquant.model.v1_6.MaxQuantParams.class);
+				Unmarshaller unmarshaller = context.createUnmarshaller();
+				FileInputStream is = new FileInputStream(paramFile);
+				m_mqParams = (IMaxQuantParams) unmarshaller.unmarshal(is);
+				HashSet fixedModifsSet = new HashSet();
+				List<? extends IParameterGroup> parameterGroups = m_mqParams.getParameters();
+				for(IParameterGroup paramGrp : parameterGroups){
+					fixedModifsSet.addAll(((fr.proline.module.parser.maxquant.model.v1_6.ParameterGroup) paramGrp).getFixedModifications());
+				}
+				((fr.proline.module.parser.maxquant.model.v1_6.MaxQuantParams)m_mqParams).setFixedModifications(new ArrayList<>(fixedModifsSet));
 			}
 			
 			
@@ -263,7 +269,7 @@ public class ExperimentPropertiesReader {
 	
 	private void initSearchSettings() {
 		logger.info("Parse MaxQuant Search Settings information ...");		
-		ParameterGroup pg = m_mqParams.getParameters().get(0);
+		IParameterGroup pg = m_mqParams.getParameters().get(0);
 		
 		
 		//---- Create SeqDatabase List

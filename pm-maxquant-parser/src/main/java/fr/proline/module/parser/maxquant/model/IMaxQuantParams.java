@@ -20,7 +20,7 @@ public interface IMaxQuantParams {
 
 	List<String> getExperiments();
 
-	ArrayList<ParameterGroup> getParameters();
+	ArrayList<? extends IParameterGroup> getParameters();
 
 	ArrayList<? extends IMsMsParameters> getMsMsParameters();
 

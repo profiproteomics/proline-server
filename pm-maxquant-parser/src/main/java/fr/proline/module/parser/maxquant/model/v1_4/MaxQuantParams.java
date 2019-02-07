@@ -11,7 +11,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import fr.proline.module.parser.maxquant.model.IMaxQuantParams;
 import fr.proline.module.parser.maxquant.model.IMsMsParameters;
-import fr.proline.module.parser.maxquant.model.ParameterGroup;
+import fr.proline.module.parser.maxquant.model.IParameterGroup;
 
 @XmlRootElement(name = "MaxQuantParams")
 @XmlAccessorType(XmlAccessType.PROPERTY)
@@ -120,7 +120,7 @@ public class MaxQuantParams implements IMaxQuantParams  {
 	}
 
 	@Override
-	public ArrayList<ParameterGroup> getParameters() {
+	public ArrayList<? extends IParameterGroup> getParameters() {
 		return m_parameters;
 	}
 
