@@ -4,14 +4,14 @@
   
   <parent>
     <groupId>fr.proline</groupId>
-    <artifactId>ProFI-Pom</artifactId>
-    <version>0.4.0</version> <!-- Snapshot Trunk version -->
+    <artifactId>profi-pom</artifactId>
+    <version>0.5.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
   </parent>
   
-  <artifactId>Proline-Cortex-API</artifactId>
+  <artifactId>proline-cortex-api</artifactId>
   <version>0.6.0-SNAPSHOT</version>
   
-  <name>${project.artifactId}</name>
+  <name>Proline-Cortex-API</name>
   <description>Proline Cortex API (services, methods and parameters)</description>
   
   <properties>
@@ -63,22 +63,16 @@
       <version>1.0.0.Final</version>
     </dependency>
     
-    <!-- Proline-Cortex-Utils
-    <dependency>
-      <groupId>fr.proline</groupId>
-      <artifactId>Proline-Cortex-Utils</artifactId>
-      <version>0.1.0-SNAPSHOT</version>
-    </dependency>  -->
-    
     <!-- Proline -->
     <dependency>
       <groupId>fr.proline.util</groupId>
-      <artifactId>ProFI-Commons-Scala</artifactId>
+      <artifactId>profi-commons-scala</artifactId>
       <version>0.8.0-SNAPSHOT</version>
     </dependency>
+
     <dependency>
       <groupId>fr.proline.util</groupId>
-      <artifactId>ProFI-Commons-Java</artifactId>
+      <artifactId>profi-commons-java</artifactId>
       <version>0.7.0-SNAPSHOT</version>
     </dependency>
     <!-- Test -->

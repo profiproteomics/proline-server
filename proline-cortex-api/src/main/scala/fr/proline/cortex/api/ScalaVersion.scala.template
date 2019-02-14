@@ -1,6 +1,6 @@
 package fr.proline.cortex.api
 
-import fr.proline.util.version.IVersion
+import  fr.profi.util.version.IVersion
 
 class ScalaVersion extends IVersion {
 
