@@ -3,15 +3,14 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<artifactId>ProFI-Pom</artifactId>
+		<artifactId>profi-pom</artifactId>
 		<groupId>fr.proline</groupId>
-		<version>0.4.0</version>  <!-- Snapshot Trunk version -->
+		<version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
 	</parent>
 
-	<artifactId>PM-MSDiag</artifactId>
+	<artifactId>pm-msdiag</artifactId>
 	<version>0.9.0-SNAPSHOT</version>
-
-	<name>${project.artifactId}</name>
+	<name>PM-MSDiag</name>
 	<description>Proline Module made to generate the fragment matches from a spectrum</description>
 
 	<properties>
@@ -47,24 +46,24 @@
 		<!-- Proline -->
 		<dependency>
 			<groupId>fr.proline</groupId>
-			<artifactId>Proline-OM</artifactId>
+			<artifactId>proline-om</artifactId>
 			<version>${core.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>fr.proline</groupId>
-			<artifactId>Proline-DAL</artifactId>
+			<artifactId>proline-dal</artifactId>
 			<version>${core.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>fr.proline</groupId>
-			<artifactId>Proline-Databases</artifactId>
+			<artifactId>proline-databases</artifactId>
 			<version>${core.version}</version>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>fr.proline</groupId>
-			<artifactId>Proline-DAL</artifactId>
+			<artifactId>proline-dal</artifactId>
 			<version>${core.version}</version>
 			<type>test-jar</type>
 			<scope>test</scope>
@@ -116,12 +115,12 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.proline.util</groupId>
-			<artifactId>ProFI-Commons-Scala</artifactId>
+			<artifactId>profi-commons-scala</artifactId>
 			<version>0.8.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>fr.proline.util</groupId>
-			<artifactId>ProFI-Commons-Java</artifactId>
+			<artifactId>profi-commons-java</artifactId>
 			<version>0.7.0-SNAPSHOT</version>
 		</dependency>
 
@@ -137,31 +136,19 @@
 			<plugin>
 				<groupId>com.google.code.maven-replacer-plugin</groupId>
 				<artifactId>replacer</artifactId>
-
+				<!-- Version & config inherited from ProFI-Pom -->
 				<executions>
 					<execution>
+						<id>scala-version-generation</id>
 						<phase>generate-sources</phase>
 						<goals>
 							<goal>replace</goal>
 						</goals>
+						<configuration>
+							<skip>false</skip>
+						</configuration>
 					</execution>
 				</executions>
-
-				<configuration>
-					<file>${version.path}/Version.scala.template</file>
-					<outputFile>${version.path}/Version.scala</outputFile>
-					<replacements>
-						<replacement>
-							<token>@moduleName@</token>
-							<value>${project.artifactId}</value>
-						</replacement>
-						<replacement>
-							<token>@version@</token>
-							<value>${project.version}_${maven.build.timestamp}_${user.name}</value>
-						</replacement>
-					</replacements>
-				</configuration>
-
 			</plugin>
 
 

@@ -2,7 +2,7 @@ package fr.proline.module.quality.msdiag.service
 
 import scala.Array.canBuildFrom
 import fr.profi.util.serialization.ProfiJson
-import fr.proline.api.service.IService
+import fr.profi.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.storer.msi.RsStorer
