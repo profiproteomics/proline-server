@@ -687,6 +687,7 @@ class PrideExporter(
     val METHYL_KR= Ptm2PSI("Methyl KR", "MOD:00658")
     val METHYLKR= Ptm2PSI("MethylKR", "MOD:00658")
     val PHOSPHO_GOOD= Ptm2PSI("Phosphogood", "MOD:00696") //VDS TO BE REMOVED
+    val TRIMETHYL = Ptm2PSI("Trimethyl","MOD:01669")
 
 
     implicit def valueToMorePSIPtms(v: Value): Ptm2PSI = v.asInstanceOf[Ptm2PSI]

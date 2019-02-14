@@ -1,7 +1,7 @@
 package fr.proline.module.exporter.pridexml
 
 import com.typesafe.scalalogging.LazyLogging
-import fr.proline.api.service.IService
+import fr.profi.api.service.IService
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
