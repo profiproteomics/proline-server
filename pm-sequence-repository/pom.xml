@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<artifactId>ProFI-Pom</artifactId>
+		<artifactId>profi-pom</artifactId>
 		<groupId>fr.proline</groupId>
 		<version>0.4.0</version>
 	</parent>
 
-	<artifactId>PM-SequenceRepository</artifactId>
+	<artifactId>pm-sequence-repository</artifactId>
 	<version>0.9.0-SNAPSHOT</version>
 
 	<name>PM-SequenceRepository</name>
@@ -31,7 +31,7 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.proline</groupId>
-			<artifactId>Proline-ORM</artifactId>
+			<artifactId>proline-orm</artifactId>
 			<version>${core.version}</version>
 			<exclusions>
 				<exclusion>
@@ -42,7 +42,7 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.proline</groupId>
-			<artifactId>Proline-Databases</artifactId>
+			<artifactId>proline-databases</artifactId>
 			<version>${core.version}</version>
 			<exclusions>
 				<exclusion>
@@ -53,17 +53,17 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.profi</groupId>
-			<artifactId>ProFI-Proteomics</artifactId>
+			<artifactId>profi-proteomics</artifactId>
 			<version>0.4.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>fr.proline.util</groupId>
-			<artifactId>ProFI-Commons-Java</artifactId>
+			<artifactId>profi-commons-java</artifactId>
 			<version>0.7.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>fr.proline</groupId>
-			<artifactId>Proline-Cortex-API</artifactId>
+			<artifactId>proline-cortex-api</artifactId>
 			<version>0.6.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
@@ -147,7 +147,7 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.proline</groupId>
-			<artifactId>Proline-Node</artifactId>
+			<artifactId>proline-node</artifactId>
 			<version>0.5.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
