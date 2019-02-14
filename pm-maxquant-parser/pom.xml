@@ -2,11 +2,12 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>fr.proline</groupId>
-    <artifactId>ProFI-Pom</artifactId>
-    <version>0.4.0</version>
+    <artifactId>profi-pom</artifactId>
+    <version>0.5.0-SNAPSHOT</version>
   </parent>
-  <artifactId>PM-MaxQuantParser</artifactId>
+  <artifactId>pm-maxquant-parser</artifactId>
   <version>0.5.0-SNAPSHOT</version>
+  <name>PM-MaxQuantParser</name>
 
 	<properties>
 		<core.version>2.1.0-SNAPSHOT</core.version>
@@ -20,17 +21,17 @@
   	</dependency>
   	<dependency>
   		<groupId>fr.proline</groupId>
-  		<artifactId>Proline-DAL</artifactId>
+  		<artifactId>proline-dal</artifactId>
   		<version>${core.version}</version>
   	</dependency>
   	<dependency>
   		<groupId>fr.proline</groupId>
-  		<artifactId>Proline-OM</artifactId>
+  		<artifactId>proline-om</artifactId>
   		<version>${core.version}</version>
   	</dependency>
   	<dependency>
   		<groupId>fr.proline.util</groupId>
-  		<artifactId>ProFI-Commons-Java</artifactId>
+  		<artifactId>profi-commons-java</artifactId>
   		<version>0.7.0-SNAPSHOT</version>
   	</dependency>
   	<dependency>
@@ -52,7 +53,7 @@
   	</dependency>
   	<dependency>
   		<groupId>fr.proline.util</groupId>
-  		<artifactId>ProFI-Commons-Scala</artifactId>
+  		<artifactId>profi-commons-scala</artifactId>
   		<version>0.8.0-SNAPSHOT</version>
   	</dependency>
   	<dependency>
@@ -67,7 +68,7 @@
   	</dependency>
   	<dependency>
   		<groupId>fr.profi</groupId>
-  		<artifactId>ProFI-Proteomics</artifactId>
+  		<artifactId>profi-proteomics</artifactId>
   		<version>0.4.0-SNAPSHOT</version>
   	</dependency>
   	<dependency>
@@ -76,7 +77,7 @@
   	</dependency>
   	<dependency>
   		<groupId>fr.proline</groupId>
-  		<artifactId>Proline-Databases</artifactId>
+  		<artifactId>proline-databases</artifactId>
   		<version>${core.version}</version>
   	</dependency>
   </dependencies>

@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import fr.profi.util.StringUtils;
 import fr.profi.util.serialization.ProfiJson;
-import fr.proline.api.service.IServiceWrapper;
+import fr.profi.api.service.IServiceWrapper;
 import fr.proline.context.DatabaseConnectionContext;
 import fr.proline.context.MsiDbConnectionContext;
 import fr.proline.core.dal.tables.msi.MsiDbPeaklistSoftwareColumns;
