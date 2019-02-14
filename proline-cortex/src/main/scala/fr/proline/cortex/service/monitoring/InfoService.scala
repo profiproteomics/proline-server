@@ -12,7 +12,7 @@ import fr.proline.jms.service.api.IDefaultServiceVersion
 import fr.proline.jms.service.api.IRemoteJsonRPC2Service
 import fr.proline.jms.service.api.IRemoteServiceIdentity
 import fr.proline.jms.util.NodeConfig
-import fr.proline.util.version.VersionHelper
+import fr.profi.util.version.VersionHelper
 import fr.proline.jms.service.api.ISingleThreadedService
 import fr.proline.cortex.service.SingleThreadIdentifierType
 

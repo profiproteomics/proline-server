@@ -4,13 +4,13 @@
 
   <parent>
     <groupId>fr.proline</groupId>
-    <artifactId>ProFI-Pom</artifactId>
-    <version>0.4.0</version> <!-- Snapshot Trunk version -->
+    <artifactId>profi-pom</artifactId>
+    <version>0.5.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
   </parent>
 
-  <artifactId>Proline-Cortex</artifactId>
+  <artifactId>proline-cortex</artifactId>
   <version>2.1.0-SNAPSHOT</version>
-
+  <name>Proline-Cortex</name>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.path>${project.basedir}/src/main/scala/fr/proline/cortex</version.path>
@@ -121,17 +121,17 @@
     <!-- ProFI Commons -->
     <dependency>
        <groupId>fr.proline.util</groupId>
-       <artifactId>ProFI-Commons-Java</artifactId>
+       <artifactId>profi-commons-java</artifactId>
        <version>0.7.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.proline.util</groupId>
-      <artifactId>ProFI-Commons-Scala</artifactId>
+      <artifactId>profi-commons-scala</artifactId>
       <version>0.8.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.profi</groupId>
-      <artifactId>mzdb-access</artifactId>
+      <artifactId>mzdb-access_${scala.version}</artifactId>
       <version>0.9.0-SNAPSHOT</version>
     </dependency>
 
@@ -145,76 +145,76 @@
     <!-- Proline-Cortex components -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-Cortex-API</artifactId>
+      <artifactId>proline-cortex-api</artifactId>
       <version>0.6.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-Node</artifactId>
+      <artifactId>proline-node</artifactId>
       <version>0.5.0-SNAPSHOT</version>
     </dependency>
 
     <!-- Proline-Core -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-Databases</artifactId>
+      <artifactId>proline-databases</artifactId>
       <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-ORM</artifactId>
+      <artifactId>proline-orm</artifactId>
       <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-OM</artifactId>
+      <artifactId>proline-om</artifactId>
       <version>${core.version}</version>
       <exclusions>
         <exclusion>
           <groupId>fr.profi</groupId>
-          <artifactId>mzdb-processing</artifactId>
+          <artifactId>mzdb-processing_${scala.version}</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-DAL</artifactId>
+      <artifactId>proline-dal</artifactId>
       <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-OMP</artifactId>
+      <artifactId>proline-omp</artifactId>
       <version>${core.version}</version>
     </dependency>
 
     <!-- Proline-Admin -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-Admin</artifactId>
+      <artifactId>proline-admin</artifactId>
       <version>0.9.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
     </dependency>
     
     <!-- Proline Modules for result files import -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>PM-MascotParser</artifactId>
+      <artifactId>pm-mascot-parser</artifactId>
       <version>0.9.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
       <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>PM-MaxQuantParser</artifactId>
+      <artifactId>pm-maxquant-parser</artifactId>
       <version>0.5.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>PM-OmssaParser</artifactId>
+      <artifactId>pm-omssa-parser</artifactId>
       <version>0.9.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
       <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>PM-XtandemParser</artifactId>
+      <artifactId>pm-xtandem-parser</artifactId>
       <version>0.8.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
       <scope>runtime</scope>
     </dependency>
@@ -222,22 +222,22 @@
     <!-- Other Proline Modules -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>PM-DatasetExporter</artifactId>
+      <artifactId>pm-dataset-exporter</artifactId>
       <version>0.9.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>PM-FragmentMatchGenerator</artifactId>
+      <artifactId>pm-fragmentmatch-generator</artifactId>
       <version>0.9.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>PM-MSDiag</artifactId>
-      <version>0.8.0-SNAPSHOT</version>
+      <artifactId>pm-msdiag</artifactId>
+      <version>0.9.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>PM-MzIdentML</artifactId>
+      <artifactId>pm-mzidentml</artifactId>
       <version>0.9.0-SNAPSHOT</version>
     </dependency>
     <dependency>
