@@ -2,15 +2,15 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>ProFI-Pom</artifactId>
+    <artifactId>profi-pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.4.0</version>  <!-- Snapshot Trunk version -->
+    <version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
   </parent>
 
-  <artifactId>PM-MascotParser</artifactId>
+  <artifactId>pm-mascot-parser</artifactId>
   <version>0.9.0-SNAPSHOT</version>
 
-  <name>${project.artifactId}</name>
+  <name>PM-MascotParser</name>
   <description>Proline Module which parse a Mascot result file and store its result in databases</description>
   <inceptionYear>2012</inceptionYear>
 
@@ -44,54 +44,54 @@
     <!-- Proline UnimodUnmarshaller library -->
     <dependency>
       <groupId>fr.proline.unimod</groupId>
-      <artifactId>UnimodUnmarshaller</artifactId>
-      <version>0.11.0</version>
+      <artifactId>unimod-unmarshaller</artifactId>
+      <version>0.12.0-SNAPSHOT</version>
     </dependency>
 
     <!-- Mascot Parser native libraries (for all OSes, loaded at runtime) 
       msparser.jar dependency is defined via Maven profiles -->
     <dependency>
       <groupId>matrixscience</groupId>
-      <artifactId>MSParser-native-libraries-${mascot.version}</artifactId>
-      <version>0.7.0</version>
+      <artifactId>msparser-native-libraries-${mascot.version}</artifactId>
+      <version>0.8.0-SNAPSHOT</version>
     </dependency>
     
     <!-- ProFi Commons -->
     <dependency>
       <groupId>fr.proline.util</groupId>
-      <artifactId>ProFI-Commons-Java</artifactId>
+      <artifactId>profi-commons-java</artifactId>
       <version>0.7.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.proline.util</groupId>
-      <artifactId>ProFI-Commons-Scala</artifactId>
+      <artifactId>profi-commons-scala</artifactId>
       <version>0.8.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.profi</groupId>
-      <artifactId>ProFI-Proteomics</artifactId>
+      <artifactId>profi-proteomics</artifactId>
       <version>0.4.0-SNAPSHOT</version>
     </dependency>
 
     <!-- Proline -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-OM</artifactId>
+      <artifactId>proline-om</artifactId>
       <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-DAL</artifactId>
+      <artifactId>proline-dal</artifactId>
       <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-OMP</artifactId>
+      <artifactId>proline-omp</artifactId>
       <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-Databases</artifactId>
+      <artifactId>proline-databases</artifactId>
       <version>${core.version}</version>
     </dependency>
     <!-- Tests -->
@@ -114,14 +114,14 @@
 
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-Databases</artifactId>
+      <artifactId>proline-databases</artifactId>
       <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-DAL</artifactId>
+      <artifactId>proline-dal</artifactId>
       <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
@@ -150,7 +150,7 @@
     </dependency>
     <dependency>
     	<groupId>fr.proline</groupId>
-    	<artifactId>Proline-ORM</artifactId>
+    	<artifactId>proline-orm</artifactId>
     	<version>${core.version}</version>
     </dependency>
   </dependencies>

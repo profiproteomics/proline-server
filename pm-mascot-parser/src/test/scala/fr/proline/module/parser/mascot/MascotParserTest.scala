@@ -46,6 +46,15 @@ class MascotParserTest extends LazyLogging { // }extends DatabaseTestCase {
   }
 
   @Test
+  def testVersion {
+    val version = new fr.proline.module.parser.mascot.Version()
+    logger.debug("Module name : " + version.getModuleName)
+    assert("PM-MascotParser" == version.getModuleName)
+    logger.debug("Module version : " + version.getVersion)
+    logger.debug("TEST [testVersion] OK: versionning is successful")
+  }
+
+  @Test
   def testReadDatFile() = {
     val msiDbCtx = new MsiDbConnectionContext(msiDBTestCase.getConnector)
 
