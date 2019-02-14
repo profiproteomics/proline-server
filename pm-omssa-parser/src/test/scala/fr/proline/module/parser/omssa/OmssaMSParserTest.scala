@@ -54,26 +54,19 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
 
     //Load Data
     logger.info("Initializing Dbs")
-    psDBTestCase.loadDataSet("/default_datasets/Unimod_Dataset.xml")
-    pdiDBTestCase.loadDataSet("/default_datasets/Proteins_Dataset.xml")
     msiDBTestCase.loadDataSet("/default_datasets/Init_Dataset.xml")
 
-    logger.info("PS, PDI and MSI dbs succesfully initialized")
+    logger.info("MSI db succesfully initialized")
 
     udsDBTestCase.loadDataSet("/default_datasets/UDS_Simple_Dataset.xml")
     logger.info("UDS db succesfully initialized")
 
     val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, true) // default: false
-    val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true) // default: true
-    val psDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, true) // default: false
     val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), true) // default: false
 
-    val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
+    val executionContext = new BasicExecutionContext(1L, udsDbCtx, msiDbCtx, null)
 
     parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
-
-    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx))
-    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx))
 
     Assert.assertNotNull(parserContext)
   }
@@ -215,7 +208,7 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")
 
-    val storer = fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer(parserContext.getPSDbConnectionContext())
+    val storer = fr.proline.core.om.storer.msi.BuildPtmDefinitionStorer(parserContext.getMSIDbConnectionContext)
     val resultFileProvider = new OmssaResultFileProvider
     val verifier = resultFileProvider.getResultFileVerifier
 
@@ -250,7 +243,7 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
     val method = getMethod()
     logger.debug("TEST [" + method + "] STARTS")
 
-    val storer = fr.proline.core.om.storer.ps.BuildPtmDefinitionStorer(parserContext.getPSDbConnectionContext)
+    val storer = fr.proline.core.om.storer.msi.BuildPtmDefinitionStorer(parserContext.getMSIDbConnectionContext)
     val resultFileProvider = new OmssaResultFileProvider
     val verifier = resultFileProvider.getResultFileVerifier
     val ptms = verifier.getPtmDefinitions(new File(Thread.currentThread.getContextClassLoader.getResource("omssa_config/usermods.xml").getPath()), propertiesBuilder.result)
@@ -447,7 +440,7 @@ class OmssaMSParserTest extends AbstractMultipleDBTestCase{
         logger.debug("mozList = " + spectrum.mozList.get.mkString("#"))
         logger.debug("intensityList = " + spectrum.intensityList.get.mkString("#"))
         logger.debug("peaksCount = " + spectrum.peaksCount)
-        logger.debug("instrumentConfigId = " + spectrum.instrumentConfigId)
+        logger.debug("fragRuleSetId = " + spectrum.fragmentationRuleSetId)
         logger.debug("peaklistId = " + spectrum.peaklistId)
         val intensities = spectrum.intensityList.get
         assert(intensities(0) == 5533260)

@@ -19,6 +19,7 @@ import fr.proline.core.om.model.msi.LocatedPtm
 /**
  * @author abu
  *
+  *  VDS: Is it used ?
  */
 class OmssaSpectrumMatcher(omxFile: File, 
 						   wantDecoy: Boolean, 

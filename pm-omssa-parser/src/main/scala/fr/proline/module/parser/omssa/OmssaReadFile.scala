@@ -15,6 +15,7 @@ import java.io.InputStream
 import java.io.FileInputStream
 import java.io.BufferedInputStream
 import org.apache.commons.compress.compressors.CompressorStreamFactory
+import fr.profi.util.StringUtils
 
 case class ProteinWrapper(val seqdbId: Long, val protAccess: String, var wrappedProt: Option[Protein]) {
   override def equals(other: Any): Boolean = {
@@ -42,7 +43,9 @@ object OmssaReadFile {
 
 class OmssaReadFile(val omxFile: File,
                     val parseProperties: Map[OmssaParseParams.OmssaParseParam, Any],
-                    val omssaLoader: OmssaMandatoryFilesLoader, 
+                    val omssaLoader: OmssaMandatoryFilesLoader,
+                    val instrumentConfig: Option[InstrumentConfig] = None,
+                    val fragmentationRuleSet: Option[FragmentationRuleSet] = None,
                     val parserContext: ProviderDecoratedExecutionContext
                     ) extends LazyLogging {
 
@@ -84,8 +87,6 @@ class OmssaReadFile(val omxFile: File,
   private def _parseOmxFile() {
     pepByUniqueKey = new HashMap[String, Peptide]()
     var pepProvider = parserContext.getProvider(classOf[IPeptideProvider])
-    var protProvider = parserContext.getProvider(classOf[IProteinProvider])
-    val seqDbProvider = parserContext.getProvider(classOf[ISeqDatabaseProvider])
     msQueries = new HashMap[Int, Ms2Query]()
     protAccSeqDbToProteinWrapper = new HashMap[String, ProteinWrapper]()
     peptideToPeptideMatches = new HashMap[Peptide, ArrayBuffer[PeptideMatch]]()
@@ -163,7 +164,7 @@ class OmssaReadFile(val omxFile: File,
                 goThrough(MSRequest_firstChild.childElementCursor.advance.childElementCursor.advance)
                 searchSettingsReference = searchSettingsCandidate.clone
                 searchSettingsCandidate = null
-                parseMSISearch(nbSpectra, seqDbProvider)
+                parseMSISearch(nbSpectra)
 
               case "MSRequest_moresettings" => // if the current omx file is the merge of multiple omx files, all the settingsets have to match
                 // advance the cursor to the first child of MSRequest_moresettings (MSSearchSettingsSet)
@@ -276,14 +277,12 @@ class OmssaReadFile(val omxFile: File,
                                     val protWrapperKey = proteinMatchAccessionNumber + (seqDatabase.id)
                                     if (protAccSeqDbToProteinWrapper.contains(protWrapperKey)) { // Check if the protein has been already accessed
                                       protein = protAccSeqDbToProteinWrapper.get(protWrapperKey).get.wrappedProt
-                                    } else { // Try to get Protein from repository  
-                                      protein = protProvider.getProtein(proteinMatchAccessionNumber, seqDatabase)
-                                      if(protein == None && proteinSequence != "") {
-                                        logger.debug("Adding sequence to protein "+proteinMatchAccessionNumber)
-                                        protein = Some(new Protein(id = Protein.generateNewId, sequence = proteinSequence))
-                                      }
+                                    } else if (StringUtils.isNotEmpty(proteinSequence)) {
+                                      logger.debug("Adding sequence to protein "+proteinMatchAccessionNumber)
+                                      protein = Some(new Protein(id = Protein.generateNewId, sequence = proteinSequence))
                                       protAccSeqDbToProteinWrapper += protWrapperKey -> new ProteinWrapper(seqDatabase.id, proteinMatchAccessionNumber, protein)
                                     }
+                                    
                                     // create the protein match
                                     proteinMatch = new ProteinMatch(
                                       id = ProteinMatch.generateNewId,
@@ -403,7 +402,7 @@ class OmssaReadFile(val omxFile: File,
                           val peptide = this.getOrCreatePeptide(peptideLocatedPtms, peptideSequence, pepProvider)
                           // add properties
                           val ionSeries = peptideMatchIonSeries.filter(!_.isEmpty()).distinct.toArray
-                          val ionSeriesOpt = if(ionSeries.isEmpty) None else Some(ionSeries)
+//                          val ionSeriesOpt = if(ionSeries.isEmpty) None else Some(ionSeries)
                           val peptideMatchOmssaProperties = new PeptideMatchOmssaProperties(pValue = peptideMatchPValue, correctedCharge = peptideCharge, ionSeries = ionSeries)
                           val peptideMatchProperties = new PeptideMatchProperties(omssaProperties = Some(peptideMatchOmssaProperties))
                           // create the PeptideMatch object
@@ -503,9 +502,9 @@ class OmssaReadFile(val omxFile: File,
    * it retrieves all required parameters for proline core items creation
    * it use an case class because it is not possible to declaer and instanciate later an object type
    */
-  private def parseMSISearch(nbSpectra: Int, seqDbProvider: ISeqDatabaseProvider) = {
+  private def parseMSISearch(nbSpectra: Int) = {
     // prepare variables
-    val msiSearchProvider = new SQLMsiSearchProvider(parserContext.getUDSDbConnectionContext(), parserContext.getMSIDbConnectionContext(), parserContext.getPSDbConnectionContext())
+    val msiSearchProvider = new SQLMsiSearchProvider(parserContext.getUDSDbConnectionContext(), parserContext.getMSIDbConnectionContext())
     val msLevel = 2
     val msVarPtms = new ArrayBuffer[PtmDefinition]()
     val msFixedPtms = new ArrayBuffer[PtmDefinition]()
@@ -524,7 +523,7 @@ class OmssaReadFile(val omxFile: File,
     val msmstol = extract(find("MSSearchSettings_msmstol")).toDouble
     val msmstolUnit = omssaLoader.toleranceUnit(extract(find("MSSearchSettings_msmsppm/value")))
     val msmsChargeState = extract(find("MSChargeHandle_maxproductcharge")).toInt
-    val ionTypes = new ArrayBuffer[String]()
+    val ionTypes = new ArrayBuffer[String]() // VDS : Not uses ?! => Should be usd for SearchSettings.FragmentationRuleSet ?
 
     searchSettingsReference.filter(e => e.contains("MSSearchSettings_fixed/MSMod/*>")).foreach(e => omssaLoader.getPtmDefinitions(extract(e).toLong).foreach(msFixedPtms += _))
     searchSettingsReference.filter(e => e.contains("MSSearchSettings_variable/MSMod/*>")).foreach(e => omssaLoader.getPtmDefinitions(extract(e).toLong).foreach(msVarPtms += _))
@@ -533,24 +532,20 @@ class OmssaReadFile(val omxFile: File,
     val usedEnzymes = msiSearchProvider.getEnzymesByName(searchSettingsReference.filter(element => element.contains("MSEnzymes/*>")).map(e => omssaLoader.enzymes.get(extract(e).toInt).getOrElse("")).toSeq)
 
     val fastaFilePath = if(parseProperties.get(OmssaParseParams.FASTA_FILE_PATH).isDefined) parseProperties.get(OmssaParseParams.FASTA_FILE_PATH).get.toString + File.pathSeparator + dbName else ""
-    val usedSeqSDb = seqDbProvider.getSeqDatabase(dbName, fastaFilePath)
+    //val usedSeqSDb = seqDbProvider.getSeqDatabase(dbName, fastaFilePath)
 
-    seqDatabase = null
-    if (usedSeqSDb != None) seqDatabase = usedSeqSDb.get
-    else {
-      logger.warn("Sequence DB used for identification is not referenced in system ... First load data in repository ")
-      seqDatabase = new SeqDatabase(
-        id = SeqDatabase.generateNewId,
-        name = dbName,
-        filePath = fastaFilePath,
-        sequencesCount = nbSequencesInFastaFile,
-        searchedSequencesCount = nbSequencesInFastaFile,
-        version = version,
-        releaseDate = new java.util.Date,
-        properties = None,
-        searchProperties = None
-      )
-    }
+    logger.warn("Can't load sequence DB used for identification => TODO: implement provider")
+    seqDatabase = new SeqDatabase(
+      id = SeqDatabase.generateNewId,
+      name = dbName,
+      filePath = fastaFilePath,
+      sequencesCount = nbSequencesInFastaFile,
+      searchedSequencesCount = nbSequencesInFastaFile,
+      version = version,
+      releaseDate = new java.util.Date,
+      properties = None,
+      searchProperties = None
+    )
 
     val allChargeStates = new ArrayBuffer[String]()
     for (i <- minMsChargeState to maxMsChargeState) allChargeStates += i.toString()
@@ -573,7 +568,8 @@ class OmssaReadFile(val omxFile: File,
       variablePtmDefs = msVarPtms.toArray,
       fixedPtmDefs = msFixedPtms.toArray,
       seqDatabases = Array(seqDatabase),
-      instrumentConfig = null // not instanciated at this moment
+      instrumentConfig = if(instrumentConfig.isDefined) instrumentConfig.get else null, // use specified by caller - not instanciated by parser at this moment TODO ?
+      fragmentationRuleSet =  fragmentationRuleSet// use specified by caller - not instanciated at this moment TODO ?
     )
     
     if (msLevel == 2) {
