@@ -5,7 +5,7 @@
   <parent>
     <artifactId>ProFI-Pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.4.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    <version>0.4.0</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>PM-FragmentMatchGenerator</artifactId>
@@ -15,10 +15,10 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>1.3.0</core.version>
+    <core.version>2.0.0</core.version>  <!-- Snapshot Trunk version -->
   </properties>
 	<scm>
-	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-FragmentMatchGenerator/trunk</connection>
+	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-FragmentMatchGenerator/tags/0.8.0</connection>
 	</scm>
   <dependencies>
 
@@ -42,7 +42,7 @@
 	<dependency>
       <groupId>fr.profi</groupId>
       <artifactId>ProFI-Proteomics</artifactId>
-      <version>0.4.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+      <version>0.4.0</version> <!-- Snapshot Trunk version -->
     </dependency>
     
     <dependency>
@@ -97,7 +97,7 @@
     <dependency>
     	<groupId>fr.proline.util</groupId>
     	<artifactId>ProFI-Commons-Scala</artifactId>
-    	<version>0.8.0-SNAPSHOT</version>
+    	<version>0.8.0</version>
     </dependency>
   </dependencies>
 

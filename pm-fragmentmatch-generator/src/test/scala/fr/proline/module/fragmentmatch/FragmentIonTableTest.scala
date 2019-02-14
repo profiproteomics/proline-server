@@ -1,21 +1,16 @@
 package fr.proline.module.fragmentmatch
 
-import scala.Array.canBuildFrom
-import scala.collection.mutable.ArrayBuffer
-import scala.io.Source
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.fail
-import org.junit.Before
-import org.junit.Test
 import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.core.dal.BuildExecutionContext
+import fr.proline.core.dal.BuildDbConnectionContext
+import fr.proline.core.dal.BuildMsiDbConnectionContext
+import fr.proline.core.dal.BuildUdsDbConnectionContext
 import fr.proline.core.om.model.msi.Peptide
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.TheoreticalFragmentSeries
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.IPeptideProvider
@@ -24,9 +19,15 @@ import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.repository.DriverType
-import fr.proline.core.dal.BuildUdsDbConnectionContext
-import fr.proline.core.dal.BuildDbConnectionContext
-import fr.proline.core.dal.BuildMsiDbConnectionContext
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.fail
+import org.junit.Before
+import org.junit.Test
+
+import scala.Array.canBuildFrom
+import scala.collection.mutable.ArrayBuffer
+import scala.io.Source
 
 class FragmentIonTableTest extends AbstractMultipleDBTestCase with StrictLogging {
 
@@ -36,20 +37,18 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with StrictLogging
   val targetRSId = 2
   val decoyRSId = Option.empty[Int]
 
-  var executionContext: IExecutionContext = null
-  var rsProvider: IResultSetProvider = null
-  protected var readRS: ResultSet = null
+  var executionContext: IExecutionContext = _
+  var rsProvider: IResultSetProvider = _
+  protected var readRS: ResultSet = _
 
   @Before
   @throws(classOf[Exception])
-  def setUp() = {
+  def setUp(): Unit = {
 
     logger.info("Initializing DBs")
     super.initDBsDBManagement(driverType)
 
     //Load Data
-    pdiDBTestCase.loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml")
-    psDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/ps-db.xml")
     msiDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/msi-db.xml")
     udsDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/uds-db.xml")
 
@@ -74,24 +73,22 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with StrictLogging
     rs
   }
 
-  def buildSQLContext() = {
-    val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
-    val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
-    val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
-    val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
+  def buildSQLContext(): (ProviderDecoratedExecutionContext, SQLResultSetProvider) = {
+    val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector(), useJPA = false)
+    val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), useJPA = false)
+    val executionContext =PeptideCacheExecutionContext(new BasicExecutionContext(1, udsDbCtx, msiDbCtx, null))
     val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
-    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(psDbCtx))
-    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(psDbCtx))
+    parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(PeptideCacheExecutionContext(parserContext)))
+    parserContext.putProvider(classOf[IPTMProvider], new SQLPTMProvider(msiDbCtx))
 
-    val rsProvider = new SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
+    val rsProvider = new SQLResultSetProvider(PeptideCacheExecutionContext(parserContext))
 
     (parserContext, rsProvider)
   }
 
   @Test
-  def testSimpleFragmentationTest() = {
+  def testSimpleFragmentationTest(): Unit = {
 
     val peptideSequence = "QVGVPYIIVFLNK"
     val peptide = new Peptide(
@@ -106,7 +103,7 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with StrictLogging
   }
 
     @Test
-  def testSimpleFragmentationTestZSerie() = {
+  def testSimpleFragmentationTestZSerie(): Unit = {
 
     val peptideSequence = "VHISEPEPEVKHESLLEK"
     val peptide = new Peptide(
@@ -120,8 +117,8 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with StrictLogging
   }
 
   @Test
-  def fragmentationTest() = {
-    val peptide = readRS.getPeptideById()(931)
+  def fragmentationTest(): Unit = {
+    val peptide = readRS.getPeptideById()(381) //new ID after dbunit xml new generation. WAS 314  SEQUENCE="MVVTLIHPIAMDDGLR" PTM_STRING="11[O]"
     val expected = readCSV("/"+peptide.sequence+".csv")
     logger.debug(peptide.sequence + " " + peptide.readablePtmString)
     val peptideMatch = readRS.peptideMatches.find { _.peptideId == peptide.id }.get
@@ -133,9 +130,9 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with StrictLogging
   }
 
   @Test
-  def fragmentationTestNL() = {
-    val peptide = readRS.getPeptideById()(363)
-    val expected = readCSV("/"+peptide.sequence+".csv")
+  def fragmentationTestNL(): Unit = {
+    val peptide = readRS.getPeptideById()(543) //WAS 943 : SEQUENCE="GEPAEFPVNGVIPGWIEALTLMPVGSK" PTM_STRING="22[O]"
+    val expected = readCSV("/"+peptide.sequence+".csv")//new ID after dbunit xml new generation
     logger.debug(peptide.sequence + " " + peptide.readablePtmString)
     val ptm = peptide.ptms(0)
     logger.debug(ptm.definition.neutralLosses.map(_.toString).mkString(" "))
@@ -148,9 +145,9 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with StrictLogging
   }
 
   @Test
-  def fragmentationTestNTerm() = {
-    val peptide = readRS.getPeptideById()(614)
-    val expected = readCSV("/"+peptide.sequence+".csv")
+  def fragmentationTestNTerm(): Unit = {
+    val peptide = readRS.getPeptideById()(879) //WAS 701 SEQUENCE="SELSQLSPQPLWDIFAK" PTM_STRING="0[C(2) H(2) O]"
+    val expected = readCSV("/"+peptide.sequence+".csv")//new ID after dbunit xml new generation
     logger.debug(peptide.sequence + " " + peptide.readablePtmString)
     val ptm = peptide.ptms(0)
     val peptideMatch = readRS.peptideMatches.find { _.peptideId == peptide.id }.get
@@ -162,10 +159,10 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with StrictLogging
   }
 
   @Test
-  def fragmentationTest2Ox() = {
+  def fragmentationTest2Ox(): Unit = {
         
     val decoyRS = rsProvider.getResultSet(1).get
-    val peptide = decoyRS.getPeptideById()(70)
+    val peptide = decoyRS.getPeptideById()(72)//new ID after dbunit xml new generation WAS 140 SEQUENCE="SGMVIAVRAPNNRSSM" PTM_STRING="3[O]16[O]"
     val expected = readCSV("/"+peptide.sequence+".csv")
     val ptm0 = peptide.ptms(0)
     val ptm1 = peptide.ptms(1)
@@ -183,11 +180,11 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with StrictLogging
     compareTheoreticalFragments(expected, table.get)    
   }
 
-  def compareTheoreticalFragments(expected: Array[TheoreticalFragmentSeries], actual: Array[TheoreticalFragmentSeries] ) = {
+  def compareTheoreticalFragments(expected: Array[TheoreticalFragmentSeries], actual: Array[TheoreticalFragmentSeries] ): Unit = {
     assertEquals(expected.length, actual.length)
     for (expectedSerie <- expected) {
       val actualSerie = actual.find(_.fragSeries == expectedSerie.fragSeries)
-      if (!actualSerie.isDefined) fail("series "+expectedSerie.fragSeries+" not found")
+      if (actualSerie.isEmpty) fail("series "+expectedSerie.fragSeries+" not found")
       logger.debug("comparing series "+expectedSerie.fragSeries)
       (expectedSerie.masses, actualSerie.get.masses).zipped foreach { (e,a) =>
     	  assertEquals(e, a, 0.001)
@@ -196,7 +193,7 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with StrictLogging
   }
   
   @Test
-  def fragmentationAllPeptideTest() = {
+  def fragmentationAllPeptideTest(): Unit = {
     val start = System.currentTimeMillis()
     for (peptide <- readRS.peptides) {
       val currentFragmentIonTypes = new FragmentIons(ionTypeB = true, ionTypeY = true, chargeForIonsB = 2, chargeForIonsY = 2)
@@ -206,14 +203,14 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with StrictLogging
   }
 
   def readCSV(filename: String): Array[TheoreticalFragmentSeries] = {
-    val src = Source.fromURL(getClass().getResource(filename))
+    val src = Source.fromURL(getClass.getResource(filename))
     val iter = src.getLines().map(_.split(",", -1))
     val fragmentIonTable = new ArrayBuffer[TheoreticalFragmentSeries]
     iter.next().foreach { s:String => fragmentIonTable += new TheoreticalFragmentSeries(s, new Array[Double](0))  }
     try {
       iter foreach { item =>  
         for (i <- 0 until item.length) {
-        	fragmentIonTable(i).masses = fragmentIonTable(i).masses :+ { if (!item(i).isEmpty()) item(i).toDouble else 0.0 }
+        	fragmentIonTable(i).masses = fragmentIonTable(i).masses :+ { if (!item(i).isEmpty) item(i).toDouble else 0.0 }
         }
       }
     } catch {
