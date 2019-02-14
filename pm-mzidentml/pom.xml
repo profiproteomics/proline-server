@@ -3,15 +3,15 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>ProFI-Pom</artifactId>
+    <artifactId>profi-pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.4.0</version>  <!-- Snapshot Trunk version -->
+    <version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
   </parent>
 
-  <artifactId>PM-MzIdentML</artifactId>
+  <artifactId>pm-mzidentml</artifactId>
   <version>0.9.0-SNAPSHOT</version>
 
-  <name>${project.artifactId}</name>
+  <name>PM-MzIdentML</name>
   <description>Proline Module which can import and export results in the mzIdentML file format</description>
 
   <properties>
@@ -85,39 +85,39 @@
     <!-- Proline -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-OM</artifactId>
+      <artifactId>proline-om</artifactId>
       <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-DAL</artifactId>
+      <artifactId>proline-dal</artifactId>
       <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-OMP</artifactId>
+      <artifactId>proline-omp</artifactId>
       <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-ORM</artifactId>
+      <artifactId>proline-orm</artifactId>
       <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-Databases</artifactId>
+      <artifactId>proline-databases</artifactId>
       <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-Databases</artifactId>
+      <artifactId>proline-databases</artifactId>
       <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>Proline-DAL</artifactId>
+      <artifactId>proline-dal</artifactId>
       <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
@@ -125,12 +125,12 @@
 
    <dependency>
       <groupId>fr.profi</groupId>
-      <artifactId>ProFI-Proteomics</artifactId>
+      <artifactId>profi-proteomics</artifactId>
       <version>0.4.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.proline.util</groupId>
-      <artifactId>ProFI-Commons-Scala</artifactId>
+      <artifactId>profi-commons-scala</artifactId>
       <version>0.8.0-SNAPSHOT</version>
     </dependency>
     <!-- Tests -->
