@@ -1,6 +1,6 @@
 package fr.proline.module.parser.mascot
 
-import com.typesafe.scalalogging.LazyLogging 
+import com.typesafe.scalalogging.LazyLogging
 
 import matrix_science.msparser.ms_errors
 import matrix_science.msparser.ms_errs
@@ -29,25 +29,12 @@ object MascotErrorsHelper extends LazyLogging  {
       else {
         this.logger.warn("ms_parser warning (CODE=%d): %s".format(errorNumber,errorString) )
       }
-      
-      /*val severity = if( mascotErrors.getErrorSeverity(k) <= 0 ) "[W], " else "[F], "
         
-      this.logger.error("  - ms_error CODE=" + mascotErrors.getErrorNumber(k) +
-                        ", SEVERITY=" + severity + mascotErrors.getErrorString(k) )*/
     }
     
     mascotErrors.clearAllErrors()
   }
   
- /*def logFragment(frag: ms_fragment) {
-    val strBuilder = new StringBuilder("Fragment : ")
-                           .append(frag.getLabel())
-                           .append(" :: ")
-                           .append(frag.getMass())
-                           .append(" NL = "+ frag.getNeutralLoss())
-    
-    this.logger.debug(strBuilder.toString())
-  }*/
   
   def logMods( mods: ms_modvector ) {
     

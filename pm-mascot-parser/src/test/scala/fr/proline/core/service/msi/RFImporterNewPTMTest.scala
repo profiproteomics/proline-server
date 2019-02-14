@@ -1,14 +1,21 @@
 package fr.proline.core.service.msi
 
 import java.io.File
-import scala.collection.JavaConversions.collectionAsScalaIterable
-import org.junit.{Before, Ignore, Test}
-import org.junit.After
-import org.junit.Assert._
-import fr.proline.repository.DriverType
-import fr.proline.module.parser.mascot.MascotResultFileProvider
-import fr.proline.core.om.model.msi.IonTypes
+
 import fr.proline.context.IExecutionContext
+import fr.proline.core.dbunit.JInit_Dataset
+import fr.proline.core.om.model.msi.IonTypes
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
+import fr.proline.module.parser.mascot.MascotResultFileProvider
+import fr.proline.repository.DriverType
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+
+import scala.collection.JavaConversions.collectionAsScalaIterable
 
 @Test
 class RFImporterNewPTMTest extends AbstractRFImporterTestCase {
@@ -19,28 +26,33 @@ class RFImporterNewPTMTest extends AbstractRFImporterTestCase {
   
   @Before
   @throws(classOf[Exception])
-  override def setUp() = {
+  override def setUp(): Unit = {
 
     super.setUp()
 
     _datFileName = "/dat_samples/STR_F122817_Hydroxylation.dat"
     udsDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml")
     logger.info("UDS db succesfully initialized")
-    val (execContext, rsProvider) = buildJPAContext
+    msiDBTestCase.loadDataSet(JInit_Dataset.msiDbDatasetPath)
+    logger.info("MSI db succesfully initialized")
+    val (execContext, rsProvider) = buildJPAContext()
     executionContext = execContext
   }
 
   @After
-  override def tearDown() {   
-    if (executionContext != null) executionContext.closeAll()
+  override def tearDown() {
+    if (executionContext != null) {
+      PeptideCacheExecutionContext(executionContext).getPeptideCache().clear()
+      executionContext.closeAll()
+    }
     super.tearDown()
   }
 
   @Test
-  def testImportRFWithNewPTM() = {
+  def testImportRFWithNewPTM(): Unit = {
     //val (executionContext, rsProvider) = buildJPAContext
-    val psDbCtx = executionContext.getPSDbConnectionContext()
-    val psEM = psDbCtx.getEntityManager()
+    val msiDbCtx = executionContext.getMSIDbConnectionContext
+    val msiEM = msiDbCtx.getEntityManager
 
     assertNotNull(executionContext)
 
@@ -63,13 +75,13 @@ class RFImporterNewPTMTest extends AbstractRFImporterTestCase {
       
       // Check the composition and the number of PTM evidences of the retrieved PTM definition
       assertEquals( "O", methPtmDef.precursorDelta.composition )
-      assertEquals( 2, methPtmDef.ptmEvidences.filter( _.ionType != IonTypes.Precursor ).length )
+      assertEquals( 2, methPtmDef.ptmEvidences.count(_.ionType != IonTypes.Precursor) )
       
       logger.debug("--- Certifying result file")
       
       // TODO: is there a better way to do that ?
-      val ptmCountBeforeCertif = psEM.createQuery("FROM fr.proline.core.orm.ps.Ptm").getResultList().size
-      logger.debug(ptmCountBeforeCertif+" PTMs found in PSdb before result file certification" )
+      val ptmCountBeforeCertif = msiEM.createQuery("FROM fr.proline.core.orm.msi.Ptm").getResultList.size
+      logger.debug(ptmCountBeforeCertif+" PTMs found in MSIdb before result file certification" )
       
       val certifier = new ResultFileCertifier(
         executionContext = executionContext,
@@ -79,28 +91,28 @@ class RFImporterNewPTMTest extends AbstractRFImporterTestCase {
       certifier.run()
       
       // TODO: is there a better way to do that ?
-      val ptmCountAfterCertif = psEM.createQuery("FROM fr.proline.core.orm.ps.Ptm").getResultList().size
-      logger.debug(ptmCountAfterCertif+" PTMs found in PSdb after result file certification" )
+      val ptmCountAfterCertif = msiEM.createQuery("FROM fr.proline.core.orm.msi.Ptm").getResultList.size
+      logger.debug(ptmCountAfterCertif+" PTMs found in MSIdb after result file certification" )
       
       // Check we have now an additional PTM in the database
       assertEquals( ptmCountBeforeCertif + 1, ptmCountAfterCertif )
       
       // Retrieve Hydroxylation PTM
-      val psPTM = psEM.createQuery(
-        "FROM fr.proline.core.orm.ps.Ptm WHERE short_name='Hydroxylation'",
-        classOf[fr.proline.core.orm.ps.Ptm]
-      ).getSingleResult()
+      val psPTM = msiEM.createQuery(
+        "FROM fr.proline.core.orm.msi.Ptm WHERE short_name='Hydroxylation'",
+        classOf[fr.proline.core.orm.msi.Ptm]
+      ).getSingleResult
       
       // Check we have inserted the right number of PTM specificities
-      val ptmSpecifs = psPTM.getSpecificities().toList
+      val ptmSpecifs = psPTM.getSpecificities.toList
       assertEquals( 11, ptmSpecifs.size )
       
       // Check we have inserted the right number of PTM evidences for the Methionine specificity
-      val methSpecif = ptmSpecifs.find( _.getResidue() == 'M' ).get
+      val methSpecif = ptmSpecifs.find( _.getResidue == 'M' ).get
       /*for( ev <- methSpecif.getEvidences().toList ) {
         println("type="+ev.getType()+" mono mass="+ev.getMonoMass + " comp="+ev.getComposition )
       }*/
-      assertEquals( 2, methSpecif.getEvidences().size )
+      assertEquals( 2, methSpecif.getEvidences.size )
       
       logger.debug("--- Importing result file")
       val importer = new ResultFileImporter(

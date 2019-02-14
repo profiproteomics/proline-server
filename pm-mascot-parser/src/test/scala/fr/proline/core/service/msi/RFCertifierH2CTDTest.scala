@@ -1,24 +1,23 @@
 package fr.proline.core.service.msi
 
 import java.io.File
-import org.junit.After
-import org.junit.Assert
-import org.junit.Assert._
-import org.junit.Before
-import org.junit.Test
+
 import fr.proline.context.IExecutionContext
-import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
-import fr.proline.core.om.provider.msi.IResultSetProvider
+import fr.proline.core.dbunit.JInit_Dataset
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
-import fr.proline.core.orm.ps.repository.PsPtmRepository
+import fr.proline.core.orm.msi.PtmEvidence
+import fr.proline.core.orm.msi.repository.MsiPtmRepository
+import fr.proline.core.util.ResidueUtils.characterToScalaChar
 import fr.proline.module.parser.mascot.MascotResultFileProvider
 import fr.proline.repository.DriverType
-import fr.proline.core.orm.ps.PtmEvidence
-import scala.collection.JavaConversions._
-import fr.proline.core.orm.ps.PtmSpecificity
-import fr.proline.core.util.ResidueUtils._
-import org.junit.Ignore
+import org.junit.After
+import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Before
+import org.junit.Test
+
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions.asScalaSet
 
 @Test
 class RFCertifierH2CTDTest extends AbstractRFImporterTestCase {
@@ -28,32 +27,32 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTestCase {
  
   @Before
   @throws(classOf[Exception])
-  override def setUp() = {
+  override def setUp(): Unit = {
     _datFileName = "/dat_samples/STR_F122817_Mascot_v2.3.dat"
 
     super.initDBsDBManagement(driverType)
     logger.info("initDBsDBManagement DONE")
-    logger.info("psDBTestCase.loadDataSet")
-    psDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/Unimod_Dataset.xml")
-    logger.info("pdiDBTestCase.loadDataSet")
-    pdiDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/Proteins_Dataset.xml")
+    logger.info("xxDBTestCase.loadDataSet")
+    msiDBTestCase.loadDataSet(JInit_Dataset.msiDbDatasetPath)
     udsDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml")
     logger.info("UDS db succesfully initialized")
-    val (execContext, rsProvider) = buildJPAContext
+    val (execContext, rsProvider) = buildJPAContext()
     executionContext = execContext
   }
 
   @After
   override def tearDown() {
+    if (executionContext != null) executionContext.closeAll()
+
     super.tearDown()
   }
 
   @Test
-  def testRFCertifier() = {
+  def testRFCertifier(): Unit = {
     ResultFileProviderRegistry.register(new MascotResultFileProvider())
     logger.debug(" --- Get File " + _datFileName)
-    var datFile: File = new File(RFCertifierH2CTDTest.this.getClass.getResource(_datFileName).toURI)
-    var rfByFormat = Map("mascot.dat" -> Array(datFile))
+    val datFile: File = new File(RFCertifierH2CTDTest.this.getClass.getResource(_datFileName).toURI)
+    val rfByFormat = Map("mascot.dat" -> Array(datFile))
 
     val certifier = new ResultFileCertifier(
       executionContext,
@@ -68,13 +67,13 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTestCase {
   }
 
   @Test
-  def testRFCertifierWithMissingPtm() = {
+  def testRFCertifierWithMissingPtm(): Unit = {
     deletePtm(executionContext, "Carbamidomethyl")
 
     ResultFileProviderRegistry.register(new MascotResultFileProvider())
     logger.debug(" --- Get File " + _datFileName)
-    var datFile: File = new File(RFCertifierH2CTDTest.this.getClass.getResource(_datFileName).toURI)
-    var rfByFormat = Map("mascot.dat" -> Array(datFile))
+    val datFile: File = new File(RFCertifierH2CTDTest.this.getClass.getResource(_datFileName).toURI)
+    val rfByFormat = Map("mascot.dat" -> Array(datFile))
 
     val certifier = new ResultFileCertifier(
       executionContext,
@@ -89,19 +88,19 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTestCase {
   }
 
   @Test
-  def testRFCertifierWithMissingSpecificity() = {
-    val psEM = executionContext.getPSDbConnectionContext().getEntityManager()
+  def testRFCertifierWithMissingSpecificity(): Unit = {
     deletePtmSpecificity(executionContext, "Carbamidomethyl", 'E')
-    var psPtm = PsPtmRepository.findPtmForShortName(psEM, "Carbamidomethyl")
+    val msiEM = executionContext.getMSIDbConnectionContext.getEntityManager
+    var ptms = MsiPtmRepository.findPtmForShortName(msiEM, "Carbamidomethyl")
 
-    assertEquals(8, psPtm.getSpecificities().size())
-    psEM.detach(psPtm)
-    psEM.clear()
+    assertEquals(8, ptms.getSpecificities.size())
+    msiEM.detach(ptms)
+    msiEM.clear()
 
     ResultFileProviderRegistry.register(new MascotResultFileProvider())
     logger.debug(" --- Get File " + _datFileName)
-    var datFile: File = new File(RFCertifierH2CTDTest.this.getClass.getResource(_datFileName).toURI)
-    var rfByFormat = Map("mascot.dat" -> Array(datFile))
+    val datFile: File = new File(RFCertifierH2CTDTest.this.getClass.getResource(_datFileName).toURI)
+    val rfByFormat = Map("mascot.dat" -> Array(datFile))
 
     //psEM.getTransaction().begin()
     val certifier = new ResultFileCertifier(
@@ -114,18 +113,18 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTestCase {
     //psEM.getTransaction().commit()
 
     Assert.assertTrue(result)
-    psPtm = PsPtmRepository.findPtmForShortName(psEM, "Carbamidomethyl")
-    assertEquals(9, psPtm.getSpecificities().size())
+    ptms = MsiPtmRepository.findPtmForShortName(msiEM, "Carbamidomethyl")
+    assertEquals(9, ptms.getSpecificities.size())
 
     executionContext.closeAll()
   }
 
   @Test
-  def testTwoRFCertifier() = {
+  def testTwoRFCertifier(): Unit = {
     ResultFileProviderRegistry.register(new MascotResultFileProvider())
     logger.debug(" --- Get File " + _datFileName)
-    var datFile: File = new File(RFCertifierH2CTDTest.this.getClass.getResource(_datFileName).toURI)
-    var rfByFormat = Map("mascot.dat" -> Array(datFile, datFile))
+    val datFile: File = new File(RFCertifierH2CTDTest.this.getClass.getResource(_datFileName).toURI)
+    val rfByFormat = Map("mascot.dat" -> Array(datFile, datFile))
 
     val certifier = new ResultFileCertifier(
       executionContext,
@@ -140,51 +139,51 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTestCase {
   }
 
   def deletePtmSpecificity(execCtx: IExecutionContext, ptmShortName: String, residue: Char) {
-    val psEM = execCtx.getPSDbConnectionContext().getEntityManager()
-    var psPtm = PsPtmRepository.findPtmForShortName(psEM, ptmShortName)
+    val msiEM = execCtx.getMSIDbConnectionContext.getEntityManager
+    val msiPtm = MsiPtmRepository.findPtmForShortName(msiEM, ptmShortName)
 
-    val psPtmSpecifs = psPtm.getSpecificities().toList
+    val psPtmSpecifs = msiPtm.getSpecificities.toList
 
     val psMatchingPtmSpecifOpt = psPtmSpecifs.find { psPtmSpecif =>
       characterToScalaChar(psPtmSpecif.getResidue) == residue
     }
 
-    val ptmSpecificity = psMatchingPtmSpecifOpt.getOrElse(psPtm.getSpecificities().iterator().next())
+    val ptmSpecificity = psMatchingPtmSpecifOpt.getOrElse(msiPtm.getSpecificities.iterator().next())
     
-    if (ptmSpecificity.getResidue() != null)
-      logger.info("Test will remove specificity " + ptmShortName + " (" + ptmSpecificity.getResidue() + ")")
+    if (ptmSpecificity.getResidue != null)
+      logger.info("Test will remove specificity " + ptmShortName + " (" + ptmSpecificity.getResidue + ")")
     else
-      logger.info("Test will remove specificity " + ptmShortName + " (" + ptmSpecificity.getLocation() + ")")
+      logger.info("Test will remove specificity " + ptmShortName + " (" + ptmSpecificity.getLocation + ")")
 
-    psPtm.removeSpecificity(ptmSpecificity)
-    psEM.getTransaction().begin()
-    psEM.remove(ptmSpecificity)
-    psEM.getTransaction().commit()
+    msiPtm.removeSpecificity(ptmSpecificity)
+    msiEM.getTransaction.begin()
+    msiEM.remove(ptmSpecificity)
+    msiEM.getTransaction.commit()
   }
 
-  def deletePtm(execCtx: IExecutionContext, ptmShortName: String) = {
-    val psEM = execCtx.getPSDbConnectionContext().getEntityManager()
-    val psPtm = PsPtmRepository.findPtmForShortName(psEM, ptmShortName)
-    psEM.getTransaction().begin()
+  def deletePtm(execCtx: IExecutionContext, ptmShortName: String): Unit = {
+    val msiEM = execCtx.getMSIDbConnectionContext.getEntityManager
+    val msiPtm = MsiPtmRepository.findPtmForShortName(msiEM, ptmShortName)
+    msiEM.getTransaction.begin()
 
-    val composition = psPtm.getEvidences().iterator().next().getComposition()
-    val query = psEM.createQuery("FROM fr.proline.core.orm.ps.PtmEvidence WHERE composition = :composition", classOf[PtmEvidence])
-    val defs = query.setParameter("composition", composition).getResultList().toList
-    psEM.remove(psPtm)
+    val composition = msiPtm.getEvidences.iterator().next().getComposition
+    val query = msiEM.createQuery("FROM fr.proline.core.orm.msi.PtmEvidence WHERE composition = :composition", classOf[PtmEvidence])
+    val defs = query.setParameter("composition", composition).getResultList.toList
+    msiEM.remove(msiPtm)
     for (e <- defs) {
-      val ptm = e.getPtm()
-      psEM.remove(ptm)
+      val ptm = e.getPtm
+      msiEM.remove(ptm)
     }
-    psEM.getTransaction().commit()
+    msiEM.getTransaction.commit()
   }
 
   @Test
-  def testRFCertifierWithUnknwonEnzyme() = {
+  def testRFCertifierWithUnknwonEnzyme(): Unit = {
     ResultFileProviderRegistry.register(new MascotResultFileProvider())
     val unkownEnzyme_datFileName = "/dat_samples/F159835_unknown_enzyme.dat"
     logger.debug(" --- Get File " + unkownEnzyme_datFileName)
-    var datFile: File = new File(RFCertifierH2CTDTest.this.getClass.getResource(unkownEnzyme_datFileName).toURI)
-    var rfByFormat = Map("mascot.dat" -> Array(datFile))
+    val datFile: File = new File(RFCertifierH2CTDTest.this.getClass.getResource(unkownEnzyme_datFileName).toURI)
+    val rfByFormat = Map("mascot.dat" -> Array(datFile))
 
     val certifier = new ResultFileCertifier(
       executionContext,

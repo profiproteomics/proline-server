@@ -2,29 +2,19 @@ package fr.proline.module.parser.mascot
 
 import java.io.File
 import java.util.Calendar
-import org.hamcrest.CoreMatchers
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertThat
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Test
+
 import com.typesafe.scalalogging.LazyLogging
-import fr.proline.context.BasicExecutionContext
-import fr.proline.context.DatabaseConnectionContext
-import fr.proline.core.om.model.msi.PeptideMatch
-import fr.proline.core.om.model.msi.ResultSet
+import fr.proline.context.{BasicExecutionContext, MsiDbConnectionContext}
+import fr.proline.core.dal.MSIDatabaseTestCase
+import fr.proline.core.dbunit.JInit_Dataset
+import fr.proline.core.om.model.msi.{PeptideMatch, ResultSet}
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.IProteinProvider
-import fr.proline.core.om.provider.msi.ISeqDatabaseProvider
-import fr.proline.repository.ProlineDatabaseType
+import fr.proline.core.om.provider.msi.{IProteinProvider, ISeqDatabaseProvider, ProteinFakeProvider, SeqDbFakeProvider}
+import fr.proline.repository.DriverType
 import fr.proline.repository.util.DatabaseTestCase
-import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.core.om.provider.msi.ProteinFakeProvider
-import fr.proline.core.om.provider.msi.SeqDbFakeProvider
-import junit.framework.Assert
+import org.hamcrest.CoreMatchers
+import org.junit.Assert.{assertEquals, assertNotNull, assertThat, assertTrue}
+import org.junit.{After, Before, Test}
 
 @Test
 class MascotParserTest extends LazyLogging { // }extends DatabaseTestCase {
@@ -33,7 +23,7 @@ class MascotParserTest extends LazyLogging { // }extends DatabaseTestCase {
 
   var file: File = null
 
-  var psDBTestCase: DatabaseTestCase = null
+  var msiDBTestCase: DatabaseTestCase = null
 
   @Before
   def init() {
@@ -41,25 +31,25 @@ class MascotParserTest extends LazyLogging { // }extends DatabaseTestCase {
     logger.debug("Start Logging Debug ")
 
     // Init PS db connexion
-    psDBTestCase = new PSDatabaseTestCase()
-    psDBTestCase.initDatabase()
-    psDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/Unimod_Dataset.xml")
+    msiDBTestCase = new MSIDatabaseTestCase(DriverType.H2)
+    msiDBTestCase.initDatabase()
+    msiDBTestCase.loadDataSet(JInit_Dataset.msiDbDatasetPath)
   }
 
   @After
   def closeResources() {
 
-    if (psDBTestCase != null) {
-      psDBTestCase.tearDown()
+    if (msiDBTestCase != null) {
+      msiDBTestCase.tearDown()
     }
-    SQLPeptideProvider.clear()
+    
   }
 
   @Test
   def testReadDatFile() = {
-    val psDbCtx = new DatabaseConnectionContext(psDBTestCase.getConnector)
+    val msiDbCtx = new MsiDbConnectionContext(msiDBTestCase.getConnector)
 
-    val executionContext = new BasicExecutionContext(null, null, psDbCtx, null, null)
+    val executionContext = new BasicExecutionContext(1,null, msiDbCtx, null)
 
     try {
       val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
@@ -168,21 +158,6 @@ class MascotParserTest extends LazyLogging { // }extends DatabaseTestCase {
       assertEquals("Oxidation", pepMatch.peptide.ptms(0).definition.names.shortName)
     }
 
-  }
-
-  class PSDatabaseTestCase extends DatabaseTestCase {
-    override def getProlineDatabaseType() = ProlineDatabaseType.PS
-    override def getPropertiesFileName() : String = { 
-      "db_settings/h2/db_ps.properties"
-     }
-    
-  }
-
-  class PDIDatabaseTestCase extends DatabaseTestCase {
-    override def getProlineDatabaseType() = ProlineDatabaseType.PDI
-     override def getPropertiesFileName() : String = { 
-      "db_settings/h2/db_pdi.properties"
-     }
   }
 
 }

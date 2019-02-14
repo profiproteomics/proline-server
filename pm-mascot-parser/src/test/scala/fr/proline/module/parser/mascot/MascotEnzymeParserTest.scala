@@ -1,7 +1,10 @@
 package fr.proline.module.parser.mascot
 
 import java.io.File
-import org.junit.Assert._
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**

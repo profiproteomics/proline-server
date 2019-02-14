@@ -4,7 +4,7 @@
   <parent>
     <artifactId>ProFI-Pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.4.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    <version>0.4.0</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>PM-MascotParser</artifactId>
@@ -16,12 +16,12 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>1.3.0</core.version>
+    <core.version>2.0.0</core.version>  <!-- Snapshot Trunk version -->
     <version.path>${basedir}/src/main/scala/fr/proline/module/parser/mascot</version.path>
     <mascot.version>2.5.2</mascot.version>
   </properties>
   <scm>
-    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MascotParser/trunk</connection>
+    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MascotParser/tags/0.8.0</connection>
   </scm>
 
 
@@ -45,7 +45,7 @@
     <dependency>
       <groupId>fr.proline.unimod</groupId>
       <artifactId>UnimodUnmarshaller</artifactId>
-      <version>0.12.0-SNAPSHOT</version>
+      <version>0.11.0</version>
     </dependency>
 
     <!-- Mascot Parser native libraries (for all OSes, loaded at runtime) 
@@ -53,24 +53,24 @@
     <dependency>
       <groupId>matrixscience</groupId>
       <artifactId>MSParser-native-libraries-${mascot.version}</artifactId>
-      <version>0.7.0-SNAPSHOT</version>
+      <version>0.7.0</version>
     </dependency>
     
     <!-- ProFi Commons -->
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Java</artifactId>
-      <version>0.7.0-SNAPSHOT</version>
+      <version>0.7.0</version>
     </dependency>
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Scala</artifactId>
-      <version>0.8.0-SNAPSHOT</version>
+      <version>0.8.0</version>
     </dependency>
     <dependency>
       <groupId>fr.profi</groupId>
       <artifactId>ProFI-Proteomics</artifactId>
-      <version>0.4.0-SNAPSHOT</version>
+      <version>0.4.0</version>
     </dependency>
 
     <!-- Proline -->
@@ -93,7 +93,7 @@
       <groupId>fr.proline</groupId>
       <artifactId>Proline-Databases</artifactId>
       <version>${core.version}</version>
-    </dependency>    
+    </dependency>
     <!-- Tests -->
     <dependency>
       <groupId>junit</groupId>

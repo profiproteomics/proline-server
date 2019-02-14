@@ -2,17 +2,17 @@ package fr.proline.core.service.msi
 
 import java.io.File
 
+import fr.proline.context.IExecutionContext
+import fr.proline.core.dbunit.JInit_Dataset
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
+import fr.proline.core.om.provider.msi.IResultSetProvider
+import fr.proline.repository.DriverType
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
-
-import fr.proline.context.IExecutionContext
-import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.repository.DriverType
 
 @Test
 class RFImporterH2JPATest extends AbstractRFImporterTestCase {
@@ -23,32 +23,37 @@ class RFImporterH2JPATest extends AbstractRFImporterTestCase {
 
   @Before
   @throws(classOf[Exception])
-  override def setUp() = {
+  override def setUp(): Unit = {
 
     super.setUp()
 
     _datFileName = "/dat_samples/STR_F122817_Mascot_v2.3.dat"
     udsDBTestCase.loadDataSet("/fr/proline/module/parser/mascot/UDS_Simple_Dataset.xml")
     logger.info("UDS db succesfully initialized")
-     val (execContext, rsPr) = buildJPAContext
+    msiDBTestCase.loadDataSet(JInit_Dataset.msiDbDatasetPath)
+    logger.info("MSI db succesfully initialized")
+     val (execContext, rsPr) = buildJPAContext()
     executionContext = execContext
     rsProvider = rsPr
   }
 
   @After
   override def tearDown() {
-    if (executionContext != null) executionContext.closeAll()
+    if (executionContext != null) {
+      PeptideCacheExecutionContext(executionContext).getPeptideCache().clear()
+      executionContext.closeAll()
+    }
     super.tearDown()
   }
 
 
   @Test
-  def testRFIwithJPA() = {
+  def testRFIwithJPA(): Unit = {
     assertNotNull(executionContext)
 
     try {
       logger.debug(" --- Get File " + _datFileName)
-      var datFile: File = new File(this.getClass.getResource(_datFileName).toURI)
+      val datFile: File = new File(this.getClass.getResource(_datFileName).toURI)
 
       val propertiedBuilder = Map.newBuilder[String, Any]
       propertiedBuilder += ("ion.score.cutoff" -> 0.5)
@@ -84,7 +89,7 @@ class RFImporterH2JPATest extends AbstractRFImporterTestCase {
       val query = msiEM.createQuery("select count (*) from fr.proline.core.orm.msi.ProteinMatchSeqDatabaseMap")
 
       var count: Long = -1
-      val countObj = query.getSingleResult()
+      val countObj = query.getSingleResult
 
       if (countObj.isInstanceOf[java.lang.Long]) {
         count = countObj.asInstanceOf[java.lang.Long].longValue
@@ -99,7 +104,7 @@ class RFImporterH2JPATest extends AbstractRFImporterTestCase {
   }
 
   @Test
-  def testRFIwithDoubleJPA() = {
+  def testRFIwithDoubleJPA(): Unit = {
     var datFile: File = new File(this.getClass.getResource(_datFileName).toURI)
 
     val propertiedBuilder = Map.newBuilder[String, Any]

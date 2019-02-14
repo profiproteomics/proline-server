@@ -2,27 +2,26 @@ package fr.proline.module.parser.mascot
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
-import scala.util.matching.Regex
-import com.typesafe.scalalogging.LazyLogging 
 
-import fr.profi.util.regex.RegexUtils._
-import fr.proline.core.om.builder.PtmDefinitionBuilder
+import com.typesafe.scalalogging.LazyLogging
+
+import fr.profi.util.regex.RegexUtils.RichString
+import fr.proline.core.om.model.msi.IonTypes
 import fr.proline.core.om.model.msi.PtmDefinition
 import fr.proline.core.om.model.msi.PtmEvidence
-import fr.proline.core.om.model.msi.PtmNames
 import fr.proline.core.om.model.msi.PtmLocation
-import fr.proline.core.om.model.msi.IonTypes
+import fr.proline.core.om.model.msi.PtmNames
 import fr.proline.core.om.provider.msi.IPTMProvider
 
 // TODO conception a revoir : cet objet est un singleton qui garde un etat des resultats de recherche alors
 // que ces recherches sont faites dans avec IPTMProvider qui est passe en parametre, donc susceptible de changer
 // d'un appel a l'autre. Cela peut mener a des incoherences.
+// VDS: Remove cache, PTM have different IDs in differents MSIs
 
 object MascotPTMUtils extends LazyLogging  {
 
-  val accessedPtms = new ArrayBuffer[PtmDefinition]
-  val ptmDefsByMascotModName = new HashMap[String, Array[PtmDefinition]]
-//  var mascotServerURL: String = null
+//  val accessedPtms = new ArrayBuffer[PtmDefinition]
+//  val ptmDefsByMascotModName = new HashMap[String, Array[PtmDefinition]]
 
   val MascotModRegex = """(.+) \((.+)\)""".r
 
@@ -46,18 +45,8 @@ object MascotPTMUtils extends LazyLogging  {
    */
   def mascotModToPTMDefinitions(ptmProvider: IPTMProvider, mascotMod: String): Array[PtmDefinition] = {
 
-    // Check if this Mascot modification has been already retrieved
-    if (ptmDefsByMascotModName.contains(mascotMod)) {
-      return ptmDefsByMascotModName(mascotMod)
-    }
-
     var ptmDefs = new ArrayBuffer[PtmDefinition]()
-    //    logger.debug(" Get or create PtmDefinition for string read from Mascot : "+ptmsStr)
-
     var modName = mascotMod
-
-//    if (mascotServerURL != null) //Read from mascot modification file. 
-//      return _getPTMDefsFromModFile(ptmProvider, mascotMod)
 
     //No mascotServerURL : Get PTM information from mascot "name"    
     var posConstraint = ""
@@ -76,66 +65,50 @@ object MascotPTMUtils extends LazyLogging  {
       case (residue, location) =>
 
         val resChar = if (residue != None) residue.get else '\0'
-        val foundPtms = accessedPtms.filter { p => p.names.equals(modName) && p.residue == resChar && p.location == location }
-
         var nextPtmDef = Option.empty[PtmDefinition]
 
-        if (foundPtms.length == 1) nextPtmDef = Some(foundPtms(0)) // PtmDefinition Already retrieve or created
-        else {
-          nextPtmDef = ptmProvider.getPtmDefinition(modName, resChar, location)
+        nextPtmDef = ptmProvider.getPtmDefinition(modName, resChar, location)
 
-          // TODO: DBO => I think it should be forbidden to do this because composition has to be known
-          // FIXME: The fallback should be performed by parsing the Unimod section of the dat file
-          if (nextPtmDef == None) { //Ptm Definition don't exist. Create One 
+        // TODO: DBO => I think it should be forbidden to do this because composition has to be known
+        // FIXME: The fallback should be performed by parsing the Unimod section of the dat file
+        if (nextPtmDef == None) { //Ptm Definition don't exist. Create One
 
-            var ptmIdOpt = ptmProvider.getPtmId(modName) // Get PtmName if exist
-            var ptmId: Long = 0L
+          var ptmIdOpt = ptmProvider.getPtmId(modName) // Get PtmName if exist
+          var ptmId: Long = 0L
 
-            if (ptmIdOpt == Some)
-              ptmId = ptmIdOpt.get
-            else
-              ptmId = PtmNames.generateNewId
+          if (ptmIdOpt == Some)
+            ptmId = ptmIdOpt.get
+          else
+            ptmId = PtmNames.generateNewId
 
-            // FIXME Create PtmEvidence : type Precursor is required ! + PtmClassification
-            val ptmEvidence = new PtmEvidence(
-              ionType = IonTypes.Precursor,
-              composition = "UNVALID",
-              monoMass = Double.MaxValue,
-              averageMass = Double.MaxValue,
-              isRequired = true
-            )
+          // FIXME Create PtmEvidence : type Precursor is required ! + PtmClassification
+          val ptmEvidence = new PtmEvidence(
+            ionType = IonTypes.Precursor,
+            composition = "UNVALID",
+            monoMass = Double.MaxValue,
+            averageMass = Double.MaxValue,
+            isRequired = true
+          )
 
-            nextPtmDef = Some(new PtmDefinition(
-              id = PtmDefinition.generateNewId,
-              location = location.toString,
-              names = PtmNames(modName, modName),
-              ptmEvidences = Array(ptmEvidence),
-              residue = resChar,
-              classification = "Post-translational",
-              ptmId = ptmId
-            ))
-          }
+          nextPtmDef = Some(new PtmDefinition(
+            id = PtmDefinition.generateNewId,
+            location = location.toString,
+            names = PtmNames(modName, modName),
+            ptmEvidences = Array(ptmEvidence),
+            residue = resChar,
+            classification = "Post-translational",
+            ptmId = ptmId
+          ))
+        }
 
-          ptmDefs += nextPtmDef.get
-          accessedPtms += nextPtmDef.get
+        ptmDefs += nextPtmDef.get
 
-        } //End Ptm not already created or retrieved
     } //End go through residue
 
     val ptmDefsAsArray = ptmDefs.toArray
-    ptmDefsByMascotModName(mascotMod) = ptmDefsAsArray
-
     ptmDefsAsArray
   }
 
-  /**
-   * FIXME : Get PTMs definition from mascot modification file (more information could be retrieve using ms_modification)
-   *
-   */
-  private def _getPTMDefsFromModFile(ptmProvider: IPTMProvider, ptmsStr: String): Array[PtmDefinition] = {
-//    logger.debug(" Use Mascot modification file to get PtmDefinitions")
-    return null
-  }
 
   /**
    * Parse posConstraintAsStr containing the list of residues and/or location where a PTM could be applied

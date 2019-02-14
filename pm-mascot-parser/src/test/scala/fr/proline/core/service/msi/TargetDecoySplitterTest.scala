@@ -34,7 +34,7 @@ class TargetDecoySplitterTest extends JUnitSuite with LazyLogging {
   def datFileName = _datFileName
 
   private def buildFakeParserContext: ProviderDecoratedExecutionContext = {
-    val executionContext = new BasicExecutionContext(null, null, null, null, null)
+    val executionContext = new BasicExecutionContext(1, null, null, null)
 
     val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
