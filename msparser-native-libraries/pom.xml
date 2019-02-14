@@ -2,13 +2,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>ProFI-Pom</artifactId>
+    <artifactId>profi-pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.4.0-SNAPSHOT</version>
+    <version>0.5.0-SNAPSHOT</version>
   </parent>
 
   <groupId>matrixscience</groupId>
-  <artifactId>MSParser-native-libraries-2.5.2</artifactId> <!-- Include Mascot Parser version -->
+  <artifactId>msparser-native-libraries-2.5.2</artifactId> <!-- Include Mascot Parser version -->
   <version>0.8.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
@@ -31,7 +31,7 @@
     <!-- ProFI-Commons-Java -->
     <dependency>
       <groupId>fr.proline.util</groupId>
-      <artifactId>ProFI-Commons-Java</artifactId>
+      <artifactId>profi-commons-java</artifactId>
       <version>0.7.0-SNAPSHOT</version>
     </dependency>
 
