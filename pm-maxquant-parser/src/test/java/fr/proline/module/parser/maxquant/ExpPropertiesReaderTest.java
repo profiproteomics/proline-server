@@ -2,6 +2,8 @@ package fr.proline.module.parser.maxquant;
 
 import java.util.Map;
 
+import fr.proline.core.om.model.msi.FragmentationRule;
+import fr.proline.core.om.model.msi.FragmentationRuleSet;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -15,6 +17,7 @@ import fr.proline.core.om.provider.msi.IPTMProvider;
 import fr.proline.core.om.provider.msi.ISeqDatabaseProvider;
 import fr.proline.module.parser.maxquant.util.TestPTMProvider;
 import fr.proline.module.parser.maxquant.util.TestSeqdDBProvider;
+import scala.Option;
 
 
 public class ExpPropertiesReaderTest {
@@ -34,8 +37,8 @@ public class ExpPropertiesReaderTest {
 		String folder = "/mq_results/1_5/SmallRun";
 		InstrumentConfig ic = new InstrumentConfig(-1, new Instrument(-1, "test", "", null) , "FTMS", "FTMS", "CID");
 		PeaklistSoftware ps = new PeaklistSoftware(-1,"test ","1.0", null,null);
-
-		ExperimentPropertiesReader reader = new ExperimentPropertiesReader(this.getClass().getResource(folder), testSeqDBProvider,testPtmProvider, ic, ps);
+		FragmentationRuleSet frs = new FragmentationRuleSet(-1,"test",  new FragmentationRule[0]);
+		ExperimentPropertiesReader reader = new ExperimentPropertiesReader(this.getClass().getResource(folder), testSeqDBProvider,testPtmProvider, ic, Option.apply(frs), ps);
 		
 		Map<String, Long> rsidByName = reader.getResultSetIds();
 		Assert.assertEquals(2, rsidByName.size());
@@ -67,8 +70,9 @@ public class ExpPropertiesReaderTest {
 		String folder = "/mq_results/1_4/result1";
 		InstrumentConfig ic = new InstrumentConfig(-1, new Instrument(-1, "test", "", null) , "FTMS", "FTMS", "CID");
 		PeaklistSoftware ps = new PeaklistSoftware(-1,"test ","1.0", null,null);
+		FragmentationRuleSet frs = new FragmentationRuleSet(-1,"test",  new FragmentationRule[0]);
 
-		ExperimentPropertiesReader reader = new ExperimentPropertiesReader(this.getClass().getResource(folder), testSeqDBProvider,testPtmProvider, ic, ps);
+		ExperimentPropertiesReader reader = new ExperimentPropertiesReader(this.getClass().getResource(folder), testSeqDBProvider,testPtmProvider, ic, Option.apply(frs),ps);
 		
 		Map<String, Long> rsidByName = reader.getResultSetIds();
 		Assert.assertEquals(24, rsidByName.size());

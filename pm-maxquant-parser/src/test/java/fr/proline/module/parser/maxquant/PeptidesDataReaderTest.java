@@ -1,18 +1,8 @@
 package fr.proline.module.parser.maxquant;
 
-import java.net.URL;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import fr.proline.core.om.model.lcms.Feature;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import fr.proline.context.BasicExecutionContext;
+import fr.proline.core.om.model.msi.FragmentationRule;
+import fr.proline.core.om.model.msi.FragmentationRuleSet;
 import fr.proline.core.om.model.msi.Instrument;
 import fr.proline.core.om.model.msi.InstrumentConfig;
 import fr.proline.core.om.model.msi.PeaklistSoftware;
@@ -22,10 +12,18 @@ import fr.proline.core.om.provider.ProviderDecoratedExecutionContext;
 import fr.proline.core.om.provider.msi.IPTMProvider;
 import fr.proline.core.om.provider.msi.IPeptideProvider;
 import fr.proline.core.om.provider.msi.ISeqDatabaseProvider;
-import fr.proline.module.parser.maxquant.model.ResultSetsDataMapper;
 import fr.proline.module.parser.maxquant.util.TestPTMProvider;
 import fr.proline.module.parser.maxquant.util.TestPeptideProvider;
 import fr.proline.module.parser.maxquant.util.TestSeqdDBProvider;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.URL;
+import java.util.Arrays;
+import java.util.Map;
+import scala.Option;
 
 public class PeptidesDataReaderTest {
 
@@ -34,7 +32,7 @@ public class PeptidesDataReaderTest {
 	
 	@BeforeClass
 	public static void setUp(){
-		BasicExecutionContext ec = new BasicExecutionContext(null, null, null, null, null);
+		BasicExecutionContext ec = new BasicExecutionContext(1, null, null, null);
 		m_pec = ProviderDecoratedExecutionContext.apply(ec);
 		m_pec.putProvider(IPTMProvider.class, new TestPTMProvider());
 		m_pec.putProvider(IPeptideProvider.class, new TestPeptideProvider());
@@ -48,9 +46,11 @@ public class PeptidesDataReaderTest {
 //		String folder = "/mq_results/1_5/SmallRun";
 		InstrumentConfig ic = new InstrumentConfig(-1, new Instrument(-1, "test", "", null) , "FTMS", "FTMS", "CID");
 		PeaklistSoftware ps = new PeaklistSoftware(-1,"test ","1.0", null,null);
+		FragmentationRuleSet frs = new FragmentationRuleSet(-1,"test", new FragmentationRule[0]);
+
 //		URL folderURL = this.getClass().getResource(folder);
 		String folderName = "C:\\Local\\bruley\\Data\\example_MaxQuant\\100-10";
-		ExperimentPropertiesReader reader = new ExperimentPropertiesReader(folderName,m_pec.getProvider(ISeqDatabaseProvider.class),m_pec.getProvider(IPTMProvider.class), ic, ps);
+		ExperimentPropertiesReader reader = new ExperimentPropertiesReader(folderName,m_pec.getProvider(ISeqDatabaseProvider.class),m_pec.getProvider(IPTMProvider.class), ic,  Option.apply(frs), ps);
 		Map<String, Long> rsidByName = reader.getResultSetIds();
 
 		SearchSettings ss = reader.getSearchSettings();
@@ -60,13 +60,13 @@ public class PeptidesDataReaderTest {
 		System.arraycopy(fixedPtms, 0, allPtms, varPtms.length, fixedPtms.length);
 		
 		StringBuffer warningMsg = new StringBuffer();
-		MSDataReader dataReader = new MSDataReader(folderName, m_pec, ic,ps);
+		MSDataReader dataReader = new MSDataReader(folderName, m_pec, 1l,ps);
 		Long start = System.currentTimeMillis();
-		ResultSetsDataMapper rsMapper = dataReader.parseMSData2ResulSets(rsidByName, allPtms, "(.*)", warningMsg);
+		dataReader.parseMSData2ResulSets(rsidByName, allPtms, "(.*)", warningMsg);
 		logger.info("MS parsed in "+(System.currentTimeMillis() - start)+" ms");
 		PeptidesDataReader peptidesReader = new PeptidesDataReader(folderName, dataReader.getPeptidesByMQModifiedSequence());
 		start = System.currentTimeMillis();
-		rsMapper = peptidesReader.parseQuantitationData(rsidByName, warningMsg);
+		peptidesReader.parseQuantitationData(rsidByName, warningMsg);
 		logger.info("Peptides parsed in "+(System.currentTimeMillis() - start)+" ms");
 		
 		
@@ -79,9 +79,10 @@ public class PeptidesDataReaderTest {
 		InstrumentConfig ic = new InstrumentConfig(-1, new Instrument(-1, "test", "", null) , "FTMS", "FTMS", "CID");
 		PeaklistSoftware ps = new PeaklistSoftware(-1,"test ","1.0", null,null);
 		URL folderURL = this.getClass().getResource(folder);
+		FragmentationRuleSet frs = new FragmentationRuleSet(-1,"test", new FragmentationRule[0]);
 
 //		String folderName = "C:\\Local\\bruley\\Data\\example_MaxQuant\\100-10";
-		ExperimentPropertiesReader reader = new ExperimentPropertiesReader(folderURL,m_pec.getProvider(ISeqDatabaseProvider.class),m_pec.getProvider(IPTMProvider.class), ic, ps);
+		ExperimentPropertiesReader reader = new ExperimentPropertiesReader(folderURL,m_pec.getProvider(ISeqDatabaseProvider.class),m_pec.getProvider(IPTMProvider.class), ic,Option.apply(frs), ps);
 		Map<String, Long> rsidByName = reader.getResultSetIds();
 
 		SearchSettings ss = reader.getSearchSettings();
@@ -91,13 +92,13 @@ public class PeptidesDataReaderTest {
 		System.arraycopy(fixedPtms, 0, allPtms, varPtms.length, fixedPtms.length);
 		
 		StringBuffer warningMsg = new StringBuffer();
-		MSDataReader dataReader = new MSDataReader(folderURL, m_pec, ic,ps);
+		MSDataReader dataReader = new MSDataReader(folderURL, m_pec, 1l,ps);
 		Long start = System.currentTimeMillis();
-		ResultSetsDataMapper rsMapper= dataReader.parseMSData2ResulSets(rsidByName, allPtms, "(.*)\\|", warningMsg);
+		dataReader.parseMSData2ResulSets(rsidByName, allPtms, "(.*)\\|", warningMsg);
 		logger.info("MS parsed in "+(System.currentTimeMillis() - start)+" ms");
 		PeptidesDataReader peptidesReader = new PeptidesDataReader(folderURL, dataReader.getPeptidesByMQModifiedSequence());
 		start = System.currentTimeMillis();
-		rsMapper = peptidesReader.parseQuantitationData(rsidByName, warningMsg);
+		peptidesReader.parseQuantitationData(rsidByName, warningMsg);
 		logger.info("Peptides parsed in "+(System.currentTimeMillis() - start)+" ms");
 		
 		

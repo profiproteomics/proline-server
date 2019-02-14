@@ -15,24 +15,13 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import fr.proline.core.om.model.msi.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.opencsv.CSVReader;
 
 import fr.profi.util.StringUtils;
-import fr.proline.core.om.model.msi.InstrumentConfig;
-import fr.proline.core.om.model.msi.LocatedPtm;
-import fr.proline.core.om.model.msi.Ms2Query;
-import fr.proline.core.om.model.msi.PeaklistSoftware;
-import fr.proline.core.om.model.msi.Peptide;
-import fr.proline.core.om.model.msi.PeptideMatch;
-import fr.proline.core.om.model.msi.PeptideMatchScoreType;
-import fr.proline.core.om.model.msi.ProteinMatch;
-import fr.proline.core.om.model.msi.PtmDefinition;
-import fr.proline.core.om.model.msi.SequenceMatch;
-import fr.proline.core.om.model.msi.Spectrum;
-import fr.proline.core.om.model.msi.SpectrumProperties;
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext;
 import fr.proline.core.om.provider.msi.IPTMProvider;
 import fr.proline.core.om.provider.msi.IPeptideProvider;
@@ -76,7 +65,7 @@ public class MSDataReader {
 	private ProviderDecoratedExecutionContext m_parserContext;
 	private File m_msmsFile;
 	private ResultSetsDataMapper m_rsMapper;
-	private InstrumentConfig m_instrumentConfig;
+	private Long  m_fragmentationRuleSetId;
 	private PeaklistSoftware m_peaklistSoftware;
 	  
 	private HashMap<String, Peptide> m_pepByUniqueKey;
@@ -88,23 +77,23 @@ public class MSDataReader {
 			throw new RuntimeException("Error reading parameters file : "+uriE.getMessage());
 		}
 	}
-	
-	public MSDataReader(URL msmsFileURL, ProviderDecoratedExecutionContext parserContext,  InstrumentConfig instrumentConfig, PeaklistSoftware peaklistSoftware) {
-		this(URLtoFile(msmsFileURL), parserContext, instrumentConfig, peaklistSoftware);
+
+	public MSDataReader(URL msmsFileURL, ProviderDecoratedExecutionContext parserContext,  Long fragRuleSet , PeaklistSoftware peaklistSoftware) {
+		this(URLtoFile(msmsFileURL), parserContext, fragRuleSet, peaklistSoftware);
 	}
 	
-	public MSDataReader(String mqFolder, ProviderDecoratedExecutionContext parserContext,  InstrumentConfig instrumentConfig, PeaklistSoftware peaklistSoftware) {
-		this(new File(mqFolder,MQ_MSDATA_FILENAME), parserContext, instrumentConfig, peaklistSoftware);
+	public MSDataReader(String mqFolder, ProviderDecoratedExecutionContext parserContext, Long fragRuleSet , PeaklistSoftware peaklistSoftware) {
+		this(new File(mqFolder,MQ_MSDATA_FILENAME), parserContext, fragRuleSet, peaklistSoftware);
 	}
 
-	private MSDataReader(File msmsFile, ProviderDecoratedExecutionContext parserContext,  InstrumentConfig instrumentConfig, PeaklistSoftware peaklistSoftware) {
+	private MSDataReader(File msmsFile, ProviderDecoratedExecutionContext parserContext,  Long fragRuleSet , PeaklistSoftware peaklistSoftware) {
 		m_parserContext = parserContext;
 		m_msmsFile = msmsFile;
+		m_fragmentationRuleSetId = fragRuleSet;
 		if(!m_msmsFile.exists())
 			throw new RuntimeException("No msms file defined. Can't load MQ result");
 		m_rsMapper = new ResultSetsDataMapper();
 		m_peaklistSoftware = peaklistSoftware;
-		m_instrumentConfig = instrumentConfig;
 		m_pepByUniqueKey = new HashMap<String, Peptide>();
 	}
 
@@ -278,16 +267,19 @@ public class MSDataReader {
 			
 			if(currentProtMatch==null) { //ProtMatch Not found
 				//Create associated SeqMatch
+				Option<SequenceMatchProperties> noOpt =Option.empty();
 				//FIXME : Arbitrary seqPosition defined !
 				SequenceMatch seqM = new SequenceMatch(1, 1+pepMatch.peptide().sequence().length(), //start - end 
 													'?', '?',  //residue bef/after
 													false, //isDecoy
 													rsIdByName.get(rsName),												
-													pepId, Option.apply(pepMatch.peptide()),
-													pepMatchId, Option.apply(pepMatch),
-													Option.empty());
+													pepId, (Option<Peptide>) Option.apply(pepMatch.peptide()),
+													pepMatchId, (Option<PeptideMatch>)Option.apply(pepMatch),
+													noOpt);
 				SequenceMatch[] allSeqMatches = new SequenceMatch[1];
 				allSeqMatches[0] = seqM;
+				Option<Protein> noProtOp =  Option.empty();
+				Option<ProteinMatchProperties> noPrpOp = Option.empty();
 				currentProtMatch = new ProteinMatch(pName,
 												pDesc,
 												false, //isDecoy,
@@ -296,15 +288,14 @@ public class MSDataReader {
 												0, //taxon id											
 												rsIdByName.get(rsName),
 												0, //proteinId 
-												Option.empty(), //protein
+												noProtOp, //protein
 												null, //set all or no seqDbs ?
 												null, // geneName
 												0, //score
 												"andromeda:score", //score type
-												0f, //cov	erage
-												0, // FIXME: assign the right number for peptideMatchesCount
+												0,
 												allSeqMatches, //sequenceMatches,
-												Option.empty() // ProteinMatchProperties											
+												noPrpOp // ProteinMatchProperties
 												);
 			} else {
 				//ProtMatch exist. Search for SeqMatch for current peptide.
@@ -315,7 +306,7 @@ public class MSDataReader {
 						if(nextSeqM.bestPeptideMatch().get().score()<pepMatch.score()) {					
 							//	SeqMatch exist for this Peptide, just change bestPeptideMatch
 							nextSeqM.bestPeptideMatchId_$eq(pepMatchId);
-							nextSeqM.bestPeptideMatch_$eq(Option.apply(pepMatch));
+							nextSeqM.bestPeptideMatch_$eq((Option<PeptideMatch>) Option.apply(pepMatch));
 						}
 						foudSeq = true;
 						break;
@@ -324,14 +315,15 @@ public class MSDataReader {
 				
 				SequenceMatch[] finalSeqMatches = null;
 				if(!foudSeq){
-					//add new SeqMatch 
+					//add new SeqMatch
+					Option<SequenceMatchProperties> noPrpOp = Option.empty();
 					SequenceMatch seqM = new SequenceMatch(1, 1+pepMatch.peptide().sequence().length(), //start - end 
 						'?', '?',  //residue bef/after
 						false, //isDecoy
 						rsIdByName.get(rsName),												
-						pepId, Option.apply(pepMatch.peptide()),
-						pepMatchId, Option.apply(pepMatch),
-						Option.empty());
+						pepId, (Option<Peptide>)Option.apply(pepMatch.peptide()),
+						pepMatchId, (Option<PeptideMatch>) Option.apply(pepMatch),
+						noPrpOp);
 				
 					finalSeqMatches = Arrays.copyOf(allSeqMatches,allSeqMatches.length+1);
 					finalSeqMatches[allSeqMatches.length] = seqM;
@@ -359,7 +351,9 @@ public class MSDataReader {
 		Float deltaMass = moz - new Float(peptide.calculatedMass());
 		String rawName = valByHeader.get(RS_NAME_HEADER);
 		Long rsId = rsIdByName.get(rawName);
-	
+		Option<PeptideMatch[]> noChildsOp = Option.empty();
+		Option<PeptideMatchProperties> noPropOp = Option.empty();
+		Option<PeptideMatchResultSummaryProperties> noValidPropOp = Option.empty();
 		PeptideMatch pm = new PeptideMatch(PeptideMatch.generateNewId(),
 			1, // Rank will be calculated once all Pep matches are read
 			score,
@@ -375,9 +369,9 @@ public class MSDataReader {
 			rsId,
 			0, //cd Prettyrank
 			0,//sd Prettyrank
-			null, Option.empty(), 0l,//children
-			Option.empty(), //PeptideMatchProperties
-			Option.empty() //PeptideMatchResultSummaryProperties
+			null, noChildsOp, 0l,//children
+		 	noPropOp, //PeptideMatchProperties
+			noValidPropOp //PeptideMatchResultSummaryProperties
 			);
 		
 		return pm;
@@ -526,9 +520,10 @@ public class MSDataReader {
 		} else {			
 			
 			Double moz = Double.parseDouble(valByHeader.get(MOZ_HEADER));
-			Integer charge = Integer.valueOf(valByHeader.get(CHARGE_HEADER));			
+			Integer charge = Integer.valueOf(valByHeader.get(CHARGE_HEADER));
+			Option<MsQueryProperties> noMsQProp = Option.empty();
 			query =  new Ms2Query(Ms2Query.generateNewId(), initialId, 
-				moz, charge, spectrum.title(), spectrum.id(), 0L, Option.empty());
+				moz, charge, spectrum.title(), spectrum.id(), 0L, noMsQProp);
 		}
 		return query;
 	}
@@ -568,22 +563,25 @@ public class MSDataReader {
 			}else {
 				warningMsg.append(" No intensities for scan ").append(title);
 			}
-			
-			
-			SpectrumProperties spectrumProp = new SpectrumProperties(Option.apply(rt));
-							 
+
+			Option<Object> rtVal= Option.apply(rt);
+			SpectrumProperties spectrumProp = new SpectrumProperties( rtVal);
+
+			Option<Object> frs = Option.empty();
+			if(m_fragmentationRuleSetId> 0)
+				frs = Option.apply(m_fragmentationRuleSetId);
 			readSp = new Spectrum(Spectrum.generateNewId(), title,
 			moz, Float.NaN /*Prec Intenity*/, charge, //Precursor data 
 			false, //isSummed, 
 			0, 0, //Cycle
 			scanNbr, 0, //Scan
-			rt, rt, //Time 
-			Option.apply(mozList), 
-			Option.apply(intensitiesList),
+			rt, rt, //Time
+			(Option<double[]>) Option.apply(mozList),
+			(Option<float[]>) Option.apply(intensitiesList),
 			mozList.length,
-			m_instrumentConfig.id(), 
+			frs,
 			m_peaklistSoftware.id(), 
-			Option.apply(spectrumProp));	
+			(Option<SpectrumProperties>) Option.apply(spectrumProp));
 			spectrumByScan.put(scanNbr, readSp);
 		}
 		return readSp;

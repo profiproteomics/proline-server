@@ -7,6 +7,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import fr.proline.core.om.model.lcms.*;
+import fr.proline.core.om.model.msi.FragmentationRuleSet;
+import fr.proline.core.om.provider.msi.impl.SQLFragmentationRuleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,10 +45,11 @@ import scala.collection.JavaConversions;
 
 public class MaxQuantResultParser extends IServiceWrapper {
 	
-	protected static Logger logger = LoggerFactory.getLogger(MaxQuantResultParser.class);
+	private static Logger logger = LoggerFactory.getLogger(MaxQuantResultParser.class);
 	
 	private ProviderDecoratedExecutionContext m_parserContext;
 	private Long m_instrumConfigId;
+	private Long m_fragmentationRuleSetId;
 	private Long m_peaklistSoftwareId;
 	private String m_resultFolder;
 	private String m_accessionRegexp;
@@ -58,16 +61,17 @@ public class MaxQuantResultParser extends IServiceWrapper {
 	
 	
 	public MaxQuantResultParser(ProviderDecoratedExecutionContext parserContext, Long instrumConfigId, Long peaklistSoftwareId, String resultFolder ){
-		this(parserContext,instrumConfigId, peaklistSoftwareId, "*", resultFolder);
+		this(parserContext,instrumConfigId, peaklistSoftwareId, "*", resultFolder, -1l);
 	}
 
-	public MaxQuantResultParser(ProviderDecoratedExecutionContext parserContext, Long instrumConfigId, String accessionRegexp, String resultFolder ){
-		this(parserContext, instrumConfigId, getMaxQuantPeakListSoftwareId(parserContext), accessionRegexp, resultFolder);
+	public MaxQuantResultParser(ProviderDecoratedExecutionContext parserContext, Long instrumConfigId, String accessionRegexp, String resultFolder , Long fragmentationRuleSetId ){
+		this(parserContext, instrumConfigId, getMaxQuantPeakListSoftwareId(parserContext), accessionRegexp, resultFolder,fragmentationRuleSetId);
 	}
 
-	public MaxQuantResultParser(ProviderDecoratedExecutionContext parserContext, Long instrumConfigId, Long peaklistSoftwareId, String accessionRegexp, String resultFolder ){
+	public MaxQuantResultParser(ProviderDecoratedExecutionContext parserContext, Long instrumConfigId, Long peaklistSoftwareId, String accessionRegexp, String resultFolder, Long fragmentationRuleSetId ){
 		m_parserContext = parserContext;
 		m_instrumConfigId = instrumConfigId;
+		m_fragmentationRuleSetId = fragmentationRuleSetId;
 		m_peaklistSoftwareId = peaklistSoftwareId;
 		m_resultFolder = resultFolder;
 		m_accessionRegexp = accessionRegexp;
@@ -100,14 +104,22 @@ public class MaxQuantResultParser extends IServiceWrapper {
 			if(instrumentConfigOpt.isEmpty()){
 				throw new RuntimeException("can't find an Instrument Config for id = " + m_instrumConfigId);
 			}
-			
+
+			// Retrieve the fragmentation rule set  configuration
+			Option<FragmentationRuleSet>  fragRuleSetOpt = Option.empty();
+			if(m_fragmentationRuleSetId >0) {
+				SQLFragmentationRuleProvider fragmentationRulesetProvider = new SQLFragmentationRuleProvider(m_parserContext.getUDSDbConnectionContext());
+				fragRuleSetOpt = fragmentationRulesetProvider.getFragmentationRuleSet(m_fragmentationRuleSetId);
+			}
+
+
 			PeaklistSoftware peaklistSoft = getOrCreatePeaklistSoftware();		
 			
 			//Parse Search Parameters and meta data
 			logger.info("Parse Experiment properties ");
 			ISeqDatabaseProvider seqDbProvider= m_parserContext.getProvider(ISeqDatabaseProvider.class);
 			IPTMProvider ptmProvider= m_parserContext.getProvider(IPTMProvider.class);
-			ExperimentPropertiesReader propReader = new ExperimentPropertiesReader(m_resultFolder, seqDbProvider, ptmProvider, instrumentConfigOpt.get(), peaklistSoft);
+			ExperimentPropertiesReader propReader = new ExperimentPropertiesReader(m_resultFolder, seqDbProvider, ptmProvider, instrumentConfigOpt.get(),fragRuleSetOpt, peaklistSoft);
 			m_rsIdByName = propReader.getResultSetIds();		
 			
 			SearchSettings ss = propReader.getSearchSettings();
@@ -118,7 +130,7 @@ public class MaxQuantResultParser extends IServiceWrapper {
 	
 			//Parse ResultSet data : queries to protein matches
 			logger.info("Parse and create ResultSet MS Data ");
-			MSDataReader dataReader = new MSDataReader(m_resultFolder, m_parserContext, instrumentConfigOpt.get(), peaklistSoft);
+			MSDataReader dataReader = new MSDataReader(m_resultFolder, m_parserContext, m_fragmentationRuleSetId, peaklistSoft);
 			ResultSetsDataMapper rsMapper= dataReader.parseMSData2ResulSets(m_rsIdByName, allPtms, m_accessionRegexp, m_warningMsg);
 			m_peptideByModSequence = dataReader.getPeptidesByMQModifiedSequence();
 			
@@ -423,7 +435,7 @@ public class MaxQuantResultParser extends IServiceWrapper {
 
 	   	// TO DO ?  Create Map Query -> List peptideMatch ?? Why VDS ?!
 //	   	Map<MsQuery,List<PeptideMatch>> pepMatchesByQuery = null;
-	   	List<MsQuery> queries = new ArrayList<MsQuery>();
+	   	List<MsQuery> queries = new ArrayList<>();
 	   	for(PeptideMatch pm : nextRS.peptideMatches()){
 	   		MsQuery q = pm.msQuery();
 	   		if(!queries.contains(q)){
@@ -439,10 +451,8 @@ public class MaxQuantResultParser extends IServiceWrapper {
 	    pklWriter.insertSpectra(peakListId, plContainer, storerContext);
 	    
 	   	//TODO : Compute PrettyRank computePrettyRanks(rs.peptideMatches, separated = true)
-	    Long rsId = rsStorer.storeResultSet(nextRS, JavaConversions.asScalaBuffer(queries).toList(), storerContext);
-	    
-	    
-		return rsId;
+
+		return rsStorer.storeResultSet(nextRS, JavaConversions.asScalaBuffer(queries).toList(), storerContext);
 	}
 
 	private static Long getMaxQuantPeakListSoftwareId(ProviderDecoratedExecutionContext parserContext) {

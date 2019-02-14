@@ -7,17 +7,13 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import fr.proline.core.om.model.msi.FragmentationRuleSet;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +38,7 @@ import fr.proline.core.om.provider.msi.IPTMProvider;
 import fr.proline.core.om.provider.msi.ISeqDatabaseProvider;
 import fr.proline.module.parser.maxquant.model.IMaxQuantParams;
 import fr.proline.module.parser.maxquant.model.IMsMsParameters;
-import fr.proline.module.parser.maxquant.model.ParameterGroup;
+import fr.proline.module.parser.maxquant.model.IParameterGroup;
 import fr.proline.module.parser.maxquant.model.ResultSetsDataMapper;
 import scala.Option;
 
@@ -96,16 +92,18 @@ public class ExperimentPropertiesReader {
 	private IPTMProvider m_ptmProvider;
 	private InstrumentConfig m_instrumentConfig;
 	private PeaklistSoftware m_peaklistSoftware;
+	private Option<FragmentationRuleSet>  m_fragmentationRuleSetOpt;
 	private File m_mqResultFileFolder;
 	private Map<String, Long>  m_rsIdByName;
 	private IMaxQuantParams m_mqParams = null;
 	private SearchSettings m_globalSearchSettings;
 	
-	public ExperimentPropertiesReader(URL folderURL, ISeqDatabaseProvider seqDbProvider, IPTMProvider ptmProvider, InstrumentConfig instrumentConfig, PeaklistSoftware peaklistSoftware) {
+	public ExperimentPropertiesReader(URL folderURL, ISeqDatabaseProvider seqDbProvider, IPTMProvider ptmProvider, InstrumentConfig instrumentConfig, Option<FragmentationRuleSet> fragRuleSetOpt, PeaklistSoftware peaklistSoftware) {
 		m_seqDbProvider = seqDbProvider;
 		m_ptmProvider = ptmProvider;
 		m_instrumentConfig = instrumentConfig;
 		m_peaklistSoftware = peaklistSoftware;
+		m_fragmentationRuleSetOpt = fragRuleSetOpt;
 		try {
 			m_mqResultFileFolder = new File(folderURL.toURI());
 			initReader();
@@ -116,11 +114,12 @@ public class ExperimentPropertiesReader {
 	}
 
 	
-	public ExperimentPropertiesReader(String mqFolder, ISeqDatabaseProvider seqDbProvider, IPTMProvider ptmProvider, InstrumentConfig instrumentConfig, PeaklistSoftware peaklistSoftware) {
+	public ExperimentPropertiesReader(String mqFolder, ISeqDatabaseProvider seqDbProvider, IPTMProvider ptmProvider, InstrumentConfig instrumentConfig, Option<FragmentationRuleSet> fragRuleSetOpt, PeaklistSoftware peaklistSoftware) {
 		m_seqDbProvider = seqDbProvider;
 		m_ptmProvider = ptmProvider;
 		m_instrumentConfig = instrumentConfig;
 		m_peaklistSoftware = peaklistSoftware;
+		m_fragmentationRuleSetOpt = fragRuleSetOpt;
 
 		m_mqResultFileFolder = new File(mqFolder);
 		initReader();
@@ -136,17 +135,28 @@ public class ExperimentPropertiesReader {
 			String mqVersion = readVersion(parametersFile);
 			File paramFile = new File(m_mqResultFileFolder,MQ_PROP_FILENAME);
 			
-			if(mqVersion.startsWith("1.5")){					
-				JAXBContext context = JAXBContext.newInstance(fr.proline.module.parser.maxquant.model.v1_5.MaxQuantParams.class);
-				Unmarshaller unmarshaller = context.createUnmarshaller();			
-				FileInputStream is = new FileInputStream(paramFile);				
-				m_mqParams = (IMaxQuantParams) unmarshaller.unmarshal(is);
-			}  else {
+			if(mqVersion.startsWith("1.4")){
 				JAXBContext context = JAXBContext.newInstance(fr.proline.module.parser.maxquant.model.v1_4.MaxQuantParams.class);
-				Unmarshaller unmarshaller = context.createUnmarshaller();			
-				FileInputStream is = new FileInputStream(paramFile);				
+				Unmarshaller unmarshaller = context.createUnmarshaller();
+				FileInputStream is = new FileInputStream(paramFile);
 				m_mqParams = (IMaxQuantParams) unmarshaller.unmarshal(is);
 				((fr.proline.module.parser.maxquant.model.v1_4.MaxQuantParams)m_mqParams).setVersion(mqVersion);
+			}  else if(mqVersion.startsWith("1.5")){
+				JAXBContext context = JAXBContext.newInstance(fr.proline.module.parser.maxquant.model.v1_5.MaxQuantParams.class);
+				Unmarshaller unmarshaller = context.createUnmarshaller();
+				FileInputStream is = new FileInputStream(paramFile);
+				m_mqParams = (IMaxQuantParams) unmarshaller.unmarshal(is);
+			} else { //1.6 or higher
+				JAXBContext context = JAXBContext.newInstance(fr.proline.module.parser.maxquant.model.v1_6.MaxQuantParams.class);
+				Unmarshaller unmarshaller = context.createUnmarshaller();
+				FileInputStream is = new FileInputStream(paramFile);
+				m_mqParams = (IMaxQuantParams) unmarshaller.unmarshal(is);
+				HashSet fixedModifsSet = new HashSet();
+				List<? extends IParameterGroup> parameterGroups = m_mqParams.getParameters();
+				for(IParameterGroup paramGrp : parameterGroups){
+					fixedModifsSet.addAll(((fr.proline.module.parser.maxquant.model.v1_6.ParameterGroup) paramGrp).getFixedModifications());
+				}
+				((fr.proline.module.parser.maxquant.model.v1_6.MaxQuantParams)m_mqParams).setFixedModifications(new ArrayList<>(fixedModifsSet));
 			}
 			
 			
@@ -224,7 +234,7 @@ public class ExperimentPropertiesReader {
 		Map<String, Integer> qCountByRS = getQueriesCount();
 		
 		for(String nextFilePath : m_mqParams.getFilePaths()){
-			ResultSetProperties rsProp = new ResultSetProperties(Option.apply("SEPARATED"), null, null,null);
+			ResultSetProperties rsProp = new ResultSetProperties(Option.apply("SEPARATED"), null, null, null,null);
 			MSISearch nextMSI = createMSISearch(nextFilePath, creationDate, m_peaklistSoftware, qCountByRS );
 			
 			String rsName = FilenameUtils.getBaseName(nextFilePath);
@@ -259,7 +269,7 @@ public class ExperimentPropertiesReader {
 	
 	private void initSearchSettings() {
 		logger.info("Parse MaxQuant Search Settings information ...");		
-		ParameterGroup pg = m_mqParams.getParameters().get(0);
+		IParameterGroup pg = m_mqParams.getParameters().get(0);
 		
 		
 		//---- Create SeqDatabase List
@@ -347,7 +357,8 @@ public class ExperimentPropertiesReader {
 			enzymes, 
 			varPtms.toArray(new PtmDefinition[varPtms.size()]), fixedPtms.toArray(new PtmDefinition[fixedPtms.size()]), 
 			seqDbsList.toArray(new SeqDatabase[seqDbsList.size()]),
-			m_instrumentConfig, Option.apply(ssProp), 
+			m_instrumentConfig, m_fragmentationRuleSetOpt,
+			Option.apply(ssProp),
 			Option.empty(), // PMFSearchSettings
 			Option.empty());//SearchSettingsProperties
 					
