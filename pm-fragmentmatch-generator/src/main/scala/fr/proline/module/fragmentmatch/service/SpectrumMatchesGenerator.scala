@@ -3,7 +3,7 @@ package fr.proline.module.fragmentmatch.service
 import java.sql.Connection
 
 import com.typesafe.scalalogging.LazyLogging
-import fr.proline.api.service.IService
+import fr.profi.api.service.IService
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.context.MsiDbConnectionContext
