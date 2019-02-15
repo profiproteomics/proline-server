@@ -9,7 +9,7 @@
 
   <groupId>matrixscience</groupId>
   <artifactId>msparser-native-libraries-2.5.2</artifactId> <!-- Include Mascot Parser version -->
-  <version>0.8.0-SNAPSHOT</version>
+  <version>0.9.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>MSParser-native-libraries</name>
@@ -30,9 +30,9 @@
 
     <!-- ProFI-Commons-Java -->
     <dependency>
-      <groupId>fr.proline.util</groupId>
+      <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-java</artifactId>
-      <version>0.7.0-SNAPSHOT</version>
+      <version>0.8.0-SNAPSHOT</version>
     </dependency>
 
     <!-- JUnit tests -->
