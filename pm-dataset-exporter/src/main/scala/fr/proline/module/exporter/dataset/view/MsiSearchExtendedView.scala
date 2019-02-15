@@ -2,9 +2,6 @@ package fr.proline.module.exporter.dataset.view
 
 import java.text.SimpleDateFormat
 
-import scala.collection.mutable.ArrayBuffer
-
-import fr.profi.util.collection._
 import fr.proline.core.om.model.msi._
 import fr.proline.module.exporter.api.view._
 import fr.proline.module.exporter.commons.config.ExportConfigConstant._
@@ -12,6 +9,8 @@ import fr.proline.module.exporter.commons.config.ExportConfigSheet
 import fr.proline.module.exporter.commons.config.view.CustomViewFields
 import fr.proline.module.exporter.commons.view.SmartDecimalFormat
 import fr.proline.module.exporter.dataset._
+
+import scala.collection.mutable.ArrayBuffer
 
 class MsiSearchExtendedView(
   val identDS: IdentDataset,
@@ -22,14 +21,14 @@ class MsiSearchExtendedView(
   
   var viewName = "msi_search"
   
-  val quantDS = identDS match {
+  val quantDS: QuantDataset = identDS match {
     case qds: QuantDataset => qds
     case _ => null
   }
   protected val isQuantDS = quantDS != null
   protected val qcNameByRsId = if (isQuantDS) quantDS.qcNameByRsId else null
   
-  val fieldsTitles = sheetConfig.fields.map(_.title)
+  val fieldsTitles: Array[String] = sheetConfig.fields.map(_.title)
   val fields = new CustomViewFields(fieldsTitles)
   
   case class MyBuildingContext( resultSet: LazyResultSet, msiSearch: MSISearch) extends IRecordBuildingContext
@@ -86,8 +85,8 @@ class MsiSearchExtendedView(
         case FIELD_INFORMATION_TAXONOMY                      => searchSettings.taxonomy
         case FIELD_INFORMATION_ENZYMES                       => searchSettings.usedEnzymes.map(_.name).mkString(", ")
         case FIELD_INFORMATION_MAX_MISSED_CLEAVAGES          => searchSettings.maxMissedCleavages
-        case FIELD_INFORMATION_FIXED_PTMS                    => searchSettings.fixedPtmDefs.map(_.toReadableString).mkString("; ")
-        case FIELD_INFORMATION_VARIABLE_PTMS                 => searchSettings.variablePtmDefs.map(_.toReadableString).mkString("; ")
+        case FIELD_INFORMATION_FIXED_PTMS                    => searchSettings.fixedPtmDefs.map(_.toReadableString()).mkString("; ")
+        case FIELD_INFORMATION_VARIABLE_PTMS                 => searchSettings.variablePtmDefs.map(_.toReadableString()).mkString("; ")
         case FIELD_INFORMATION_PEPTIDE_CHARGE_STATES         => searchSettings.ms1ChargeStates
         case FIELD_INFORMATION_PEPTIDE_MASS_ERROR_TOLERANCE  => ms1ErrorTol
         case FIELD_INFORMATION_FRAGMENT_MASS_ERROR_TOLERANCE => fragmentTol
@@ -100,7 +99,7 @@ class MsiSearchExtendedView(
     recordBuilder.result()
   }
   
-  def onEachRecord( recordFormatter: Map[String,Any] => Unit ) {
+  def formatView(recordFormatter: Map[String,Any] => Unit ) {
     
     for (rs <- identDS.leavesResultSets) {
       this.formatRecord(MyBuildingContext(rs, rs.msiSearch.get), recordFormatter)

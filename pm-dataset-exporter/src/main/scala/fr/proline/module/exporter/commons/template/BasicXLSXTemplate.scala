@@ -20,6 +20,7 @@ class BasicXLSXTemplate(
       if (selectedFields.isDefined) selectedFields.get
       else view.getFieldsNames
     }
+    logger.debug("Export View with "+selectedFieldsOrFields.length+" columns ")
 
     // Retrieve workbook
     val wb = workbookCreationContext.workbook.get
@@ -71,7 +72,7 @@ class BasicXLSXTemplate(
     
     // Iterate over records to append them to the worksheet
     var rowIdx = 1
-    view.onEachRecord { record => 
+    view.formatView { record =>
 
       val row = sheet.createRow(rowIdx)
 
@@ -89,8 +90,11 @@ class BasicXLSXTemplate(
       }
 
       rowIdx += 1
+      if(rowIdx >= maxRowsNbr)
+        throw new RuntimeException("Too much rows in "+view.viewName+". Can't export to xlsx format !")
     }
-    
+    logger.debug("Export View with "+rowIdx+" rows")
+
     // size columns (they can not exceed MAX_COLUMN_WIDTH_IN_CHARS characters)
     val MAX_COLUMN_WIDTH_IN_CHARS = 30
     for (j <- 0 until colIdx) {

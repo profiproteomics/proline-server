@@ -3,9 +3,7 @@ package fr.proline.module.exporter.dataset.view
 import java.text.SimpleDateFormat
 import java.util.NoSuchElementException
 
-import fr.proline.core.om.model.msi._
 import fr.proline.module.exporter.commons.config._
-import fr.proline.module.exporter.commons.config.ExportConfigConstant._
 import fr.proline.module.exporter.commons.view.SmartDecimalFormat
 import fr.proline.module.exporter.dataset._
 
@@ -21,7 +19,7 @@ class ProtSetToTypicalProtMatchView(
   
   var viewName = "prot_set_to_typical_prot_match"
 
-  def onEachRecord(recordFormatter: Map[String, Any] => Unit) {
+  def formatView(recordFormatter: Map[String, Any] => Unit) {
 
     val rsm = identDS.resultSummary
     val rs = rsm.lazyResultSet
@@ -51,7 +49,7 @@ class ProtSetToTypicalProtMatchView(
         }
 
         // If ident DS
-        if (isQuantDs == false) {
+        if (!isQuantDs) {
           val protMatchBuildingContext = new ProtMatchBuildingContext(
             protSet,
             protSet.peptideSet,

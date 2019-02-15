@@ -1,20 +1,19 @@
 package fr.proline.module.exporter.dataset
 
-import scala.collection.JavaConversions._
-import scala.collection.mutable.LongMap
 import fr.profi.util.collection._
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.model.msq._
-import fr.proline.core.algo.msq.config.IQuantConfig
-import fr.proline.core.algo.msq.config.profilizer.ProfilizerConfig
-import fr.proline.core.orm.uds.{ MasterQuantitationChannel => UdsMasterQuantChannel }
+import fr.proline.core.dal.helper
+
+import scala.collection.mutable
+import scala.collection.mutable.LongMap
 
 class QuantDataset(
   override val projectName: String,
   val quantRSM: LazyQuantResultSummary,
   val expDesign: Option[ExperimentalDesign],
-  val quantConfigAndMethod: Option[(IQuantConfig,IQuantMethod)],
-  val profilizerConfig: Option[ProfilizerConfig],
+  val quantConfigAndMethod: Option[(String,IQuantMethod)],
+  val profilizerConfig: Option[String],
   val masterQuantChannel: MasterQuantChannel,
   val groupSetupNumber: Int,
   override protected val loadChildResultSummaries: () => Array[LazyResultSummary],
@@ -28,7 +27,21 @@ class QuantDataset(
   val peptideCountByMqProtSetByQCId: Option[LongMap[LongMap[Int]]]
   
 ) extends IdentDataset(projectName,quantRSM.lazyResultSummary,loadChildResultSummaries,loadLeaveResultSets, loadBioSequences,loadSpectraDescriptors) {
-  
+
+  override lazy val leavesResultSets : Array[LazyResultSet] = {
+
+    val rSIdByRsmId = mutable.HashMap.empty[Long,Long]
+    identRsmById.foreach( entry => rSIdByRsmId.put(entry._2.id , entry._2.getResultSetId()) )
+
+    val quantChannelsResultSets = Array.newBuilder[LazyResultSet]
+    masterQuantChannel.quantChannels.map { qc =>
+      val rs = allLeavesResultSets.filter(_.id.equals(rSIdByRsmId.getOrElse(qc.identResultSummaryId,-1)))
+      if(!rs.isEmpty)
+        quantChannelsResultSets += rs.head
+    }
+    quantChannelsResultSets.result()
+  }
+
   lazy val identRsmById = childResultSummaries.mapByLong(_.id)
   lazy val identRsmByQcId = masterQuantChannel.quantChannels.toLongMapWith { qc =>
     qc.id -> identRsmById(qc.identResultSummaryId)

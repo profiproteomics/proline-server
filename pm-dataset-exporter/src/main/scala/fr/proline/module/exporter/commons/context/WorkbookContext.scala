@@ -1,14 +1,11 @@
 package fr.proline.module.exporter.commons.context
 
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
-import org.apache.poi.ss.usermodel.Workbook
-import org.apache.poi.ss.usermodel.WorkbookFactory
+
 import fr.proline.module.exporter.api.context.IViewSetCreationContext
 import fr.proline.module.exporter.api.template.IFileExtensionEnumeration
-import org.apache.poi.xssf.usermodel.XSSFWorkbook
-import org.apache.poi.xssf.streaming.SXSSFSheet
+import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 
 class WorkbookContext(val fileExtension: IFileExtensionEnumeration#Value) extends IViewSetCreationContext {

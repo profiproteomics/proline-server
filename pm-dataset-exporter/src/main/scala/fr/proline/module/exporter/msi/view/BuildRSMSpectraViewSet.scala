@@ -1,41 +1,39 @@
 package fr.proline.module.exporter.msi.view
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-
 import com.typesafe.scalalogging.LazyLogging
-
-import fr.profi.jdbc.easy._
-import fr.profi.util.serialization.CustomDoubleJacksonSerializer
-import fr.profi.util.serialization.ProfiJSMSerialization
+import fr.profi.util.serialization.{CustomDoubleJacksonSerializer, ProfiJSMSerialization}
 import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.DoJDBCReturningWork
-import fr.proline.core.dal.DoJDBCWork
+import fr.proline.core.dal.{DoJDBCReturningWork, DoJDBCWork}
 import fr.proline.core.dal.tables.SelectQueryBuilder._
-import fr.proline.core.dal.tables.SelectQueryBuilder1
 import fr.proline.core.dal.tables.SelectQueryBuilder2
-import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
-import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchObjectTreeMapTable
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.model.msi.ResultSummary
+import fr.proline.core.dal.tables.msi.{MsiDbObjectTreeTable, MsiDbPeptideMatchObjectTreeMapTable}
 import fr.proline.core.om.model.msi.SpectrumMatch
-import fr.proline.core.om.provider.msi.IResultSummaryProvider
+import fr.proline.core.om.model.msq.MasterQuantPeptideIon
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
+import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.impl._
 import fr.proline.core.om.provider.msq.impl.SQLMasterQuantPeptideProvider
-import fr.proline.module.exporter.api.template._
-import fr.proline.module.exporter.api.template.ViewWithTemplate
+import fr.proline.module.exporter.api.template.{ViewWithTemplate, _}
 import fr.proline.module.exporter.commons.config.ExportConfig
 import fr.proline.module.exporter.commons.view.ViewSet
+import scala.collection.mutable._
 
+
+object FormatCompatibility extends Enumeration {
+
+  val PEAKVIEW: FormatCompatibility.Value = Value("peakview")
+  val SPECTRONAUT = Value("spectronaut")
+
+}
 
 object BuildRSMSpectraViewSet extends LazyLogging {
 
   object CustomSerializer extends ProfiJSMSerialization with CustomDoubleJacksonSerializer
 
-  def apply(ds: IdentWithSpectrumDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate, exportConfig: ExportConfig): ViewSet = {
+  def apply(ds: IdentWithSpectrumDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate, exportConfig: ExportConfig, mode: FormatCompatibility.Value): ViewSet = {
 
     val templatedViews = viewSetTemplate.templatedViewTypes.map { templatedViewType =>
-      val viewWithTpl = ViewWithTemplate(BuildRSMSpectraView(ds, templatedViewType.viewType, exportConfig), templatedViewType.template)
+      val viewWithTpl = ViewWithTemplate(BuildRSMSpectraView(ds, templatedViewType.viewType, exportConfig, mode), templatedViewType.template)
       if (templatedViewType.viewName.isDefined) viewWithTpl.dataView.viewName = templatedViewType.viewName.get
 
       viewWithTpl
@@ -49,50 +47,52 @@ object BuildRSMSpectraViewSet extends LazyLogging {
     projectId: Long,
     rsmId: Long,
     viewSetName: String,
-    viewSetTemplate: IViewSetTemplate
+    viewSetTemplate: IViewSetTemplate,
+    mode: FormatCompatibility.Value
   ): ViewSet = {
 
-    val loadFullResultSet = false //See if needed ! 
+    val loadFullResultSet = false //See if needed !
+    val msiSQLCtx = executionContext.getMSIDbConnectionContext
 
-    val udsSQLCtx = executionContext.getUDSDbConnectionContext()
-    val psSQLCtx = executionContext.getPSDbConnectionContext()
-    val msiSQLCtx = executionContext.getMSIDbConnectionContext()
-
-    // **** Load RSM
-    val rsmProvider = new SQLResultSummaryProvider(msiSQLCtx, psSQLCtx, udsSQLCtx)
-    val rsm = if (loadFullResultSet == false) rsmProvider.getResultSummary(rsmId, true).get
+    // Load RSM and force RS loading if loadFullResultSet
+    val rsmProvider = new SQLResultSummaryProvider(PeptideCacheExecutionContext(executionContext) )
+    val rsm = if (!loadFullResultSet) rsmProvider.getResultSummary(rsmId, loadResultSet = true).get
     else {
-      val tmpRsm = rsmProvider.getResultSummary(rsmId, false).get
-      val rsProvider = new SQLResultSetProvider(msiSQLCtx, psSQLCtx, udsSQLCtx)
+      val tmpRsm = rsmProvider.getResultSummary(rsmId, loadResultSet = false).get
+      val rsProvider = new SQLResultSetProvider(PeptideCacheExecutionContext(executionContext))
       tmpRsm.resultSet = rsProvider.getResultSet(tmpRsm.getResultSetId)
       tmpRsm
     }
-    
-    
+
+    val isQuantiRSM = rsm.resultSet.get.isQuantified
+
     //************* Load PepMatch Info
-    //Get All pepMatchId for spectrum search
-    val validatedPepMatchIds =  new ArrayBuffer[Long]
-    val sharedPepMatchIds =  new ArrayBuffer[Long]
-    rsm.peptideSets.map(pepSet => {
-      pepSet.items.foreach(item => {
-        if (item.peptideInstance.validatedProteinSetsCount > 1)
-          sharedPepMatchIds ++= item.peptideInstance.getPeptideMatchIds
-        validatedPepMatchIds ++= item.peptideInstance.getPeptideMatchIds
-      })
-    })
-    
-    val validatedPepMatchIdsSet = validatedPepMatchIds.toSet
-    val pepMatchesAsStr = validatedPepMatchIdsSet.mkString(",")
-    
-    //************* Load MasterQuantPep Info
-    val isQuantiRSM = rsm.resultSet.get.isQuantified //RS should always be set !
-    val mqPepByPepId = if(isQuantiRSM) {
-      val masterQuantPepProvider = new SQLMasterQuantPeptideProvider(msiSQLCtx, psSQLCtx)
-      val rsmMQPeptides = masterQuantPepProvider.getQuantResultSummariesMQPeptides(Seq(rsm.id))    
-      val allMqPepsByPepId =  rsmMQPeptides.groupBy(mqPep => if(mqPep.getPeptideId.isDefined) mqPep.getPeptideId.get else -1l)
-      Some(allMqPepsByPepId.map(entry => entry._1 -> entry._2.head))
-     } else None
-    
+
+    val peptideMatches = rsm.peptideInstances.filter(_.validatedProteinSetsCount > 0).flatMap(_.peptideMatches)
+
+    val (bestPeptideMatchesByPeptideAndCharge, masterQuantPepIonByPepMatchId) = if (isQuantiRSM) {
+      val masterQuantPepIonByPepMatchId = scala.collection.mutable.Map[Long, MasterQuantPeptideIon]()
+      // The following map must be built manually because SQLMasterQuantPeptideProvider and ResultSummary Peptide object are different
+      val peptideMatchesByPeptideAndCharge = scala.collection.mutable.Map[(Peptide, Int), PeptideMatch]()
+      val peptideMatchesByPeptideIdAndCharge = peptideMatches.groupBy(pepMatch => (pepMatch.peptide.id, pepMatch.charge)).mapValues(_.maxBy(_.score))
+      val masterQuantPepProvider = new SQLMasterQuantPeptideProvider(PeptideCacheExecutionContext(executionContext))
+      val masterQuantPepIonsByPeptideInstance = masterQuantPepProvider.getQuantResultSummariesMQPeptides(Seq(rsm.id)).groupBy(_.peptideInstance.getOrElse(null)).mapValues(_.flatMap(_.masterQuantPeptideIons))
+      for ((peptideInstance, quantPepIons) <- masterQuantPepIonsByPeptideInstance) {
+        for (quantPepIon <- quantPepIons) {
+          if (peptideMatchesByPeptideIdAndCharge.contains((peptideInstance.peptide.id, quantPepIon.charge))) {
+            masterQuantPepIonByPepMatchId += (peptideMatchesByPeptideIdAndCharge((peptideInstance.peptide.id, quantPepIon.charge)).id -> quantPepIon)
+            peptideMatchesByPeptideAndCharge += ((peptideInstance.peptide, quantPepIon.charge) -> peptideMatchesByPeptideIdAndCharge((peptideInstance.peptide.id, quantPepIon.charge)))
+          }
+        }
+      }
+      (peptideMatchesByPeptideAndCharge.toMap, Some(masterQuantPepIonByPepMatchId.toMap))
+    } else {
+      val peptideMatchesByPeptideAndCharge = peptideMatches.groupBy(pepMatch => (pepMatch.peptide, pepMatch.charge)).mapValues(_.maxBy(_.score))
+      (peptideMatchesByPeptideAndCharge, None)
+    }
+
+    val pepMatchesAsStr = bestPeptideMatchesByPeptideAndCharge.values.map(_.id).mkString(",")
+
     //************* Load Spectrum Info 
     val spectrumProvider = new SQLSpectrumProvider(msiSQLCtx)
     val spectrumIdByPepMatchId = {
@@ -108,14 +108,10 @@ object BuildRSMSpectraViewSet extends LazyLogging {
     }
 
     logger.debug(" spectrumIdByPepMatchId  " + spectrumIdByPepMatchId.size)
-    if(spectrumIdByPepMatchId.size != validatedPepMatchIdsSet.size) {
-      logger.warn(" *** Some spectra are missing for RSM " + rsm.id + " !!!!")
-      //      throw new IllegalArgumentException(" Some spectrum are missing ! Unable to get spectrum matches !") //VDS Should we stop export ?
-    }
-    
+
     val spectra = spectrumProvider.getSpectra(spectrumIdByPepMatchId.values.toSeq)
-    val spectrumByPepMathID = spectrumIdByPepMatchId.map(entry => { entry._1 -> spectra.filter(_.id == entry._2).head }).toMap
-    logger.debug(" spectrumByPepMathID  " + spectrumByPepMathID.size)
+    val spectrumByPepMatchID = spectrumIdByPepMatchId.map(entry => { entry._1 -> spectra.filter(_.id == entry._2).head }).toMap
+    logger.debug(" spectrumByPepMatchID  " + spectrumByPepMatchID.size)
 
     //************* Load Spectrum Info    
     val spectrumMatchesByPeptMatchId = new HashMap[Long, SpectrumMatch]
@@ -132,12 +128,8 @@ object BuildRSMSpectraViewSet extends LazyLogging {
     })
 
     logger.debug(" spectrumMatchesByPeptMatchId  " + spectrumMatchesByPeptMatchId.size)
-    if(spectrumMatchesByPeptMatchId.size != validatedPepMatchIdsSet.size) {
-      logger.warn(" *** Some spectrum Matches are missing for RSM " + rsm.id + " !!!!")
-      throw new IllegalArgumentException(" Some spectrum matches are missing ! Execute Generate Spectrum Matches first !")
-    }
 
-    return apply(IdentWithSpectrumDataSet( rsm, sharedPepMatchIds.toSet.toArray, spectrumByPepMathID, spectrumMatchesByPeptMatchId, mqPepByPepId ), viewSetName, viewSetTemplate, null)
+    return apply(IdentWithSpectrumDataSet( rsm, bestPeptideMatchesByPeptideAndCharge, spectrumByPepMatchID, spectrumMatchesByPeptMatchId, masterQuantPepIonByPepMatchId ), viewSetName, viewSetTemplate, null, mode)
 
   }
      

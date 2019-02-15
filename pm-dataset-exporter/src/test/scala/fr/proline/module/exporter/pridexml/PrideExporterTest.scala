@@ -2,44 +2,28 @@ package fr.proline.module.exporter.pridexml
 
 import java.io.File
 
-import org.junit.Assert
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
-import org.junit.BeforeClass
-import org.junit.Test
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
 import fr.proline.core.algo.msi.filtering.pepmatch.PrettyRankPSMFilter
-import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
-import fr.proline.core.algo.msi.validation.TargetDecoyModes
-import fr.proline.core.dal.AbstractEmptyDatastoreTestCase
+import fr.proline.core.algo.msi.validation.{BasicTDAnalyzer, TargetDecoyModes}
+import fr.proline.core.dal.AbstractDatastoreTestCase
 import fr.proline.core.dbunit.GRE_F068213_M2_4_TD_EColi
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.model.msi.ResultSummary
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import fr.proline.core.om.model.msi.{ResultSet, ResultSummary}
 import fr.proline.core.service.msi.ResultSetValidator
 import fr.proline.module.fragmentmatch.service.SpectrumMatchesGenerator
 import fr.proline.repository.DriverType
+import org.junit.Assert.{assertNotNull, assertTrue}
+import org.junit.Test
 
-object PrideExporterTest extends AbstractEmptyDatastoreTestCase {
+object PrideExporterTest extends AbstractDatastoreTestCase {
 
-  val driverType = DriverType.H2
-  val useJPA = false
-  lazy val rs1 = {
-    val provider = new SQLResultSetProvider(executionContext.getMSIDbConnectionContext(), executionContext.getPSDbConnectionContext(), executionContext.getUDSDbConnectionContext())
-    val resultSet = provider.getResultSets(Array(2))(0)
-    resultSet.decoyResultSet = Some(provider.getResultSets(Array(1))(0))
-    resultSet
-  }
+  override val driverType = DriverType.H2
+  override val dbUnitResultFile = GRE_F068213_M2_4_TD_EColi
+  override val useJPA: Boolean = false
 
-  @BeforeClass
-  override def setUp() {
-    super.setUp()
-    loadDbUnitResultFiles(GRE_F068213_M2_4_TD_EColi)
-  }
+  val targetRSId: Long = 2L
+  val decoyRSId: Option[Long] = Some(1L)
 
 }
 
@@ -48,9 +32,9 @@ class PrideExporterTest extends LazyLogging {
   @Test
   def testExport() {
     val f = new File("pridexml_test.xml")
-    
-    val rsm = validate(PrideExporterTest.executionContext, PrideExporterTest.rs1)
-    generateSpectrumMatches(PrideExporterTest.executionContext, rsm.id, PrideExporterTest.rs1.id)
+
+    val rsm = validate(PrideExporterTest.executionContext, PrideExporterTest.getRS(PrideExporterTest.targetRSId, PrideExporterTest.decoyRSId))
+    generateSpectrumMatches(PrideExporterTest.executionContext, rsm.id, PrideExporterTest.targetRSId)
 
     val extraParams = Map.newBuilder[String, Object]
     extraParams += ("protocol_description" -> "<Protocol> \n  <ProtocolName>PRTNAME</ProtocolName> \n    <ProtocolSteps> \n <StepDescription> \n <cvParam cvLabel=\"PRIDE\" accession=\"PRIDE:0000024\" name=\"Enzyme digestion\" value=\"0\" /> \n </StepDescription> \n    </ProtocolSteps>\n </Protocol>\n")
@@ -58,7 +42,7 @@ class PrideExporterTest extends LazyLogging {
     extraParams += ("sample_desc" -> "the sample comment")
     extraParams += ("contact_name" -> "John Doo")
     extraParams += ("contact_institution" -> "Proline")
-    val exporter = new PrideExporterService(PrideExporterTest.executionContext, rsm.id, f.getAbsolutePath(), extraParams.result)
+    val exporter = new PrideExporterService(PrideExporterTest.executionContext, rsm.id, f.getAbsolutePath, extraParams.result)
     exporter.runService()
     assertTrue(f.exists())
     f.delete()
@@ -66,7 +50,7 @@ class PrideExporterTest extends LazyLogging {
   }
 
   private def generateSpectrumMatches(execContext: IExecutionContext, rsmId: Long, rsId: Long) {
-    val service = new SpectrumMatchesGenerator(execContext, rsId, Some(rsmId), None, false)
+    val service = new SpectrumMatchesGenerator(execContext, rsId, Some(rsmId), None,None, false)
     service.run
   }
 
@@ -84,7 +68,7 @@ class PrideExporterTest extends LazyLogging {
       protSetValidator = None,
       storeResultSummary = true)
 
-    val result = rsValidator.runService
+    val result = rsValidator.runService()
 
     assertTrue("Validation of RS #" + rs.id, result)
 

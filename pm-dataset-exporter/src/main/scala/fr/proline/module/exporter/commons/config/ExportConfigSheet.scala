@@ -4,17 +4,17 @@ package fr.proline.module.exporter.commons.config
  * represents the configuration for a sheet in the export file
  */
 case class ExportConfigSheet(
-  val id: String = "",
-  val title: String = "",
-  val presentation: String = ExportConfigConstant.PRESENTATION_SHEET_COLUMNS,
-  val fields: Array[CustomFieldConfig] = Array(), // sorted by positions
-  val defaultDisplayed: Boolean = true
+  id: String = "",
+  title: String = "",
+  presentation: String = ExportConfigConstant.PRESENTATION_SHEET_COLUMNS,
+  fields: Array[CustomFieldConfig] = Array(), // sorted by positions
+  defaultDisplayed: Boolean = true
 ) {
   private val fieldTitles = fields.map(_.title)
   //private val fieldTitleSet = fieldTitles.toSet
   
   require( fieldTitles.length == fieldTitles.distinct.length, "duplicated field titles are not allowed")
-  require( fieldTitles.forall(_.isEmpty() == false), "empty field titles are not allowed")
+  require( fieldTitles.forall(!_.isEmpty), "empty field titles are not allowed")
   
   // return true if the sheet contains the given title before the given index (not included)
   /*def containsTitle(title: String, index: Int): Boolean = {
@@ -66,7 +66,7 @@ object ExportConfigSheet {
       id = ExportConfigConstant.SHEET_PROTEIN_SETS,
       title = title,
       presentation = ExportConfigConstant.PRESENTATION_SHEET_COLUMNS,
-      fields = CustomFieldConfigFactory.getProteinSetsSheetFields(true, fromXIC, fromSC)
+      fields = CustomFieldConfigFactory.getProteinSetsSheetFields(fromProtein = true, fromXIC = fromXIC, fromSC = fromSC)
     )
   }
 

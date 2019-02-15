@@ -3,9 +3,7 @@ package fr.proline.module.exporter.dataset.view
 import java.text.SimpleDateFormat
 
 import fr.profi.util.collection._
-import fr.proline.core.om.model.msq.QuantReporterIon
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
-import fr.proline.module.exporter.commons.config.CustomFieldConfig
 import fr.proline.module.exporter.commons.config.ExportConfigConstant._
 import fr.proline.module.exporter.commons.config.ExportConfigSheet
 import fr.proline.module.exporter.commons.view.SmartDecimalFormat
@@ -50,7 +48,7 @@ class MasterQuantReporterIonView(
     val pepMatchRecord = super.buildRecord(buildingContext)
     
     // If this building context is not a MasterQuantReporterIonBuildingContext then we return the record as is
-    if (buildingContext.isInstanceOf[MasterQuantReporterIonBuildingContext] == false) {
+    if (!buildingContext.isInstanceOf[MasterQuantReporterIonBuildingContext]) {
       return pepMatchRecord
     }
     
@@ -84,7 +82,7 @@ class MasterQuantReporterIonView(
     recordBuilder.result()
   }
   
-  override def onEachRecord(recordFormatter: Map[String, Any] => Unit) {
+  override def formatView(recordFormatter: Map[String, Any] => Unit) {
     
     val rsm = identDS.resultSummary
     val rs = rsm.lazyResultSet

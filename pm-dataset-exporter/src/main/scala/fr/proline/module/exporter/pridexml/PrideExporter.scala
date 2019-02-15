@@ -1,12 +1,11 @@
 package fr.proline.module.exporter.pridexml
 
 import java.io.FileWriter
+import java.io.IOException
 import java.math.BigInteger
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import scala.Array.canBuildFrom
-import scala.annotation.migration
-import scala.collection.mutable.HashMap
+
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.bytes.doublesToBytes
 import fr.profi.util.serialization.CustomDoubleJacksonSerializer
@@ -28,9 +27,11 @@ import fr.proline.core.om.provider.msi.IMSISearchProvider
 import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider
 import fr.proline.core.om.provider.msi.impl.SQLProteinMatchProvider
 import fr.proline.core.om.provider.msi.impl.SQLSpectrumProvider
+import org.apache.commons.lang3.StringUtils
 import uk.ac.ebi.pride.jaxb.model.Admin
 import uk.ac.ebi.pride.jaxb.model.Data
 import uk.ac.ebi.pride.jaxb.model.Description
+import uk.ac.ebi.pride.jaxb.model.FragmentIon
 import uk.ac.ebi.pride.jaxb.model.GelFreeIdentification
 import uk.ac.ebi.pride.jaxb.model.IntenArrayBinary
 import uk.ac.ebi.pride.jaxb.model.ModificationItem
@@ -39,26 +40,25 @@ import uk.ac.ebi.pride.jaxb.model.Param
 import uk.ac.ebi.pride.jaxb.model.PeptideItem
 import uk.ac.ebi.pride.jaxb.model.Precursor
 import uk.ac.ebi.pride.jaxb.model.PrecursorList
+import uk.ac.ebi.pride.jaxb.model.Protocol
+import uk.ac.ebi.pride.jaxb.model.ProtocolSteps
+import uk.ac.ebi.pride.jaxb.model.SampleDescription
 import uk.ac.ebi.pride.jaxb.model.SpectrumDesc
 import uk.ac.ebi.pride.jaxb.model.SpectrumInstrument
 import uk.ac.ebi.pride.jaxb.model.SpectrumSettings
 import uk.ac.ebi.pride.jaxb.utils.PrideModelUtils
 import uk.ac.ebi.pride.jaxb.xml.marshaller.PrideXmlMarshaller
 import uk.ac.ebi.pride.jaxb.xml.marshaller.PrideXmlMarshallerFactory
-import org.apache.commons.lang3.StringUtils
-import uk.ac.ebi.pride.jaxb.model.FragmentIon
-import fr.proline.core.om.model.msi.FragmentMatch
-import uk.ac.ebi.pride.jaxb.model.SampleDescription
-import java.io.IOException
-import uk.ac.ebi.pride.jaxb.model.Protocol
-import uk.ac.ebi.pride.jaxb.model.ProtocolSteps
+
+import scala.Array.canBuildFrom
+import scala.collection.mutable.HashMap
 
 
 object PrideExporter {
 
   protected val marshaller = {
-    val pof = PrideXmlMarshallerFactory.getInstance();
-    val marshaller = pof.initializeMarshaller();
+    val pof = PrideXmlMarshallerFactory.getInstance()
+    val marshaller = pof.initializeMarshaller()
     marshaller
   }
 
@@ -79,7 +79,7 @@ class PrideExporter(
 
   // -- variables constructions
 
-  val msiSQLCtx = execCtx.getMSIDbConnectionContext()
+  val msiSQLCtx = execCtx.getMSIDbConnectionContext
 
   // Retrieve some proline objects
   val rs = rsm.resultSet.get
@@ -89,7 +89,7 @@ class PrideExporter(
   val optionalMsiSearch = rs.msiSearch
   val assMsiSearch = if ((optionalMsiSearch != null) && optionalMsiSearch.isDefined) optionalMsiSearch else {
     val msiHelper = new MsiDbHelper(msiSQLCtx)
-    val childMsiSearches = msiHelper.getResultSetsMsiSearchIds(Seq(rsId), true)
+    val childMsiSearches = msiHelper.getResultSetsMsiSearchIds(Seq(rsId), hierarchicalQuery = true)
     if (childMsiSearches.length > 0) {
       getMISearchProvider(execCtx).getMSISearch(childMsiSearches(0))
     } else
@@ -121,7 +121,7 @@ class PrideExporter(
   private val spectrumMatchByPeptideMatchId = {
     val spectrumMatchesByPeptMatchId = new HashMap[Long, SpectrumMatch]
     DoJDBCReturningWork.withEzDBC(msiSQLCtx, { msiEzDBC =>
-      val pepMatches = validPepMatchIdSet.mkString(",")
+
       val pepMatchSpectrumMatchQuery = new SelectQueryBuilder2(MsiDbPeptideMatchObjectTreeMapTable, MsiDbObjectTreeTable).mkSelectQuery((pmT, pmC, otT, otC) =>
         List(pmT.PEPTIDE_MATCH_ID, otT.CLOB_DATA) -> " WHERE " ~ pmT.OBJECT_TREE_ID ~ "=" ~ otT.ID ~ " AND " ~ pmT.SCHEMA_NAME ~ "= 'peptide_match.spectrum_match' AND " ~
           pmT.PEPTIDE_MATCH_ID ~ " IN (" ~ validPepMatchIdSet.mkString(",") ~ ")")
@@ -154,8 +154,7 @@ class PrideExporter(
 
   private def getMISearchProvider(execContext: IExecutionContext): IMSISearchProvider = {
 
-    new SQLMsiSearchProvider(udsDbCtx = execContext.getUDSDbConnectionContext, msiDbCtx = execContext.getMSIDbConnectionContext,
-      psDbCtx = execContext.getPSDbConnectionContext)
+    new SQLMsiSearchProvider(udsDbCtx = execContext.getUDSDbConnectionContext, msiDbCtx = execContext.getMSIDbConnectionContext)
   }
 
   /**
@@ -215,7 +214,7 @@ class PrideExporter(
 	    // TODO ? Get project 
 	    if(extraDataMap.get("project_name").isDefined) {
 	       writer.write("\n")
-	      marshaller.marshall(CvParam(PrideSchemaConstants.PRIDE_CV_PROJECT_ACC, PrideSchemaConstants.PRIDE_CV_PROJECT_NAME,  extraDataMap("project_name").toString()), writer)	      
+	      marshaller.marshall(CvParam(PrideSchemaConstants.PRIDE_CV_PROJECT_ACC, PrideSchemaConstants.PRIDE_CV_PROJECT_NAME,  extraDataMap("project_name").toString), writer)
        }
     	    
 	    writer.write("\n</" + PrideSchemaConstants.ADDITIONAL_NODE + ">")
@@ -233,7 +232,7 @@ class PrideExporter(
     	  }catch { case e: Exception =>
     	    
     	  }  finally {
-    	    throw new Exception(" Error writing Pride Footer "+ioe.getMessage()) 
+    	    throw new Exception(" Error writing Pride Footer "+ioe.getMessage)
     	  }
       } 
     }
@@ -246,8 +245,8 @@ class PrideExporter(
   protected def exportExperimentalData(filePath: String, marshaller: PrideXmlMarshaller, extraDataMap: Map[String, Object]) {
    
 
-    val title : String = if(extraDataMap.get("exp_title").isDefined) {extraDataMap("exp_title").toString() } else rs.name
-    val shortLabel : String = if(extraDataMap.get("exp_short_label").isDefined) {extraDataMap("exp_short_label").toString() } else rs.name
+    val title : String = if(extraDataMap.get("exp_title").isDefined) {extraDataMap("exp_title").toString } else rs.name
+    val shortLabel : String = if(extraDataMap.get("exp_short_label").isDefined) {extraDataMap("exp_short_label").toString } else rs.name
     require(!StringUtils.isEmpty(title) && !StringUtils.isEmpty(shortLabel), " Did not found title and short Label or search result name !")
  
     var writer : FileWriter  = null
@@ -267,7 +266,7 @@ class PrideExporter(
 	    writer.write('\n')
 	
 	    if (extraDataMap.get("protocol_description").isDefined){
-	      writer.write(extraDataMap("protocol_description").toString())
+	      writer.write(extraDataMap("protocol_description").toString)
 	      writer.write('\n')
 	
 	    } else if(extraDataMap.get("protocol_name").isDefined){
@@ -275,12 +274,12 @@ class PrideExporter(
 	      val protocol = new Protocol()
 	      protocol.setProtocolName(extraDataMap("protocol_name").asInstanceOf[String])
 	      val steps = new ProtocolSteps
-	      steps.getStepDescription().add(0, new Param())
+	      steps.getStepDescription.add(0, new Param())
 	      if(extraDataMap.get("protocol_steps").isDefined){
 	        
 	         val addValues : List[String] = extraDataMap("protocol_steps").asInstanceOf[List[String]]
     		 addValues.foreach( nextEntry => {
-    			 steps.getStepDescription().get(0).getCvParam().add(0,CvParam(nextEntry))
+    			 steps.getStepDescription.get(0).getCvParam.add(0,CvParam(nextEntry))
     		 })
 	      }
 	      protocol.setProtocolSteps(steps)
@@ -307,7 +306,7 @@ class PrideExporter(
     	  }catch { case e: Exception =>
     	    
     	  }  finally {
-    	    throw new Exception(" Error writing Pride Experimental Data  "+ioe.getMessage()) 
+    	    throw new Exception(" Error writing Pride Experimental Data  "+ioe.getMessage)
     	  }
       } 
     }
@@ -352,7 +351,7 @@ class PrideExporter(
     	  }catch { case e: Exception =>
     	    
     	  }  finally {
-    	    throw new Exception(" Error writing Pride MzData  "+ioe.getMessage()) 
+    	    throw new Exception(" Error writing Pride MzData  "+ioe.getMessage)
     	  }
       } 
     }
@@ -362,13 +361,13 @@ class PrideExporter(
     
     require(extraDataMap.contains("sample_name"),"Sample name should be specified for Pride XML file")
     
-    val contact = metadataBuilder.getContact        
-    require( ( (!StringUtils.isEmpty(contact.getInstitution())) || extraDataMap.contains("contact_institution")),"Contact instituition should be specified for Pride XML file")
-    require( ( (!StringUtils.isEmpty(contact.getName())) || extraDataMap.contains("contact_name")),"Contact name should be specified for Pride XML file")
+    val contact = metadataBuilder.getContact()
+    require( (!StringUtils.isEmpty(contact.getInstitution)) || extraDataMap.contains("contact_institution"),"Contact instituition should be specified for Pride XML file")
+    require(  (!StringUtils.isEmpty(contact.getName)) || extraDataMap.contains("contact_name"),"Contact name should be specified for Pride XML file")
     
-    val instrum = metadataBuilder.getInstrument
-    require( ( (!StringUtils.isEmpty(instrum.getInstrumentName())) || extraDataMap.contains("instrument_name")),"Instrument name should be specified for Pride XML file")
-    require( ( (instrum.getSource() != null && !instrum.getSource().getCvParam().isEmpty()) || (extraDataMap.contains("source_acc") && extraDataMap.contains("source_name")) ),"Instrument source should be specified for Pride XML file")
+    val instrum = metadataBuilder.getInstrument()
+    require( (!StringUtils.isEmpty(instrum.getInstrumentName)) || extraDataMap.contains("instrument_name"),"Instrument name should be specified for Pride XML file")
+    require( (instrum.getSource != null && !instrum.getSource.getCvParam.isEmpty) || (extraDataMap.contains("source_acc") && extraDataMap.contains("source_name")),"Instrument source should be specified for Pride XML file")
 
     //TOFO Get and verify instrument analyser and detector
     
@@ -377,11 +376,11 @@ class PrideExporter(
     val admin = new Admin()
 
     if(extraDataMap.contains("contact_institution"))
-      contact.setInstitution(extraDataMap("contact_institution").toString())
+      contact.setInstitution(extraDataMap("contact_institution").toString)
     if(extraDataMap.contains("contact_name"))
-      contact.setName(extraDataMap("contact_name").toString())
+      contact.setName(extraDataMap("contact_name").toString)
      
-    admin.getContact().add(contact)
+    admin.getContact.add(contact)
     
     admin.setSampleName(extraDataMap("sample_name").toString)
       
@@ -389,12 +388,12 @@ class PrideExporter(
       val splDesc = new SampleDescription()
       
       if(extraDataMap.contains("sample_desc"))
-    	  splDesc.setComment(extraDataMap("sample_desc").toString())
+    	  splDesc.setComment(extraDataMap("sample_desc").toString)
       
 	  if(extraDataMap.contains("sample_additional")){
         val addValues : List[String] = extraDataMap("sample_additional").asInstanceOf[List[String]]
         addValues.foreach( nextEntry => {
-        	splDesc.getCvParam().add(0, CvParam(nextEntry))
+        	splDesc.getCvParam.add(0, CvParam(nextEntry))
         })    	
       }
       
@@ -404,10 +403,10 @@ class PrideExporter(
     description.setAdmin(admin)
 
     //--- Generate Instrument part :  "instrumentName", "source", "analyzerList", "detector", "additional"    
-    description.setInstrument(metadataBuilder.getInstrument)
+    description.setInstrument(metadataBuilder.getInstrument())
     
         //--- Generate DataProcessing  part :  processingMethod
-    description.setDataProcessing(metadataBuilder.getDataProcessing)
+    description.setDataProcessing(metadataBuilder.getDataProcessing())
     description
   }
 
@@ -428,19 +427,19 @@ class PrideExporter(
     
     val precursor = new Precursor()
     precursor.setMsLevel(1)
-    val ionSelection = new Param();
-    ionSelection.getCvParam().add(CvParam(PrideSchemaConstants.MS_CV_MASS_2_CHARGE_ACC, PrideSchemaConstants.MS_CV_MASS_2_CHARGE_NAME, PrideSchemaConstants.MS_CV_NAME, spectrum.precursorMoz.toString))
-    ionSelection.getCvParam().add(CvParam(PrideSchemaConstants.MS_CV_CHARGE_STATE_ACC, PrideSchemaConstants.MS_CV_CHARGE_STATE_NAME, PrideSchemaConstants.MS_CV_NAME, spectrum.precursorCharge.toString))
-    if (!spectrum.precursorIntensity.isNaN())
-      ionSelection.getCvParam().add(CvParam(PrideSchemaConstants.MS_CV_INTENSITY_ACC, PrideSchemaConstants.MS_CV_INTENSITY_NAME, PrideSchemaConstants.MS_CV_NAME, spectrum.precursorIntensity.toString))
+    val ionSelection = new Param()
+    ionSelection.getCvParam.add(CvParam(PrideSchemaConstants.MS_CV_MASS_2_CHARGE_ACC, PrideSchemaConstants.MS_CV_MASS_2_CHARGE_NAME, PrideSchemaConstants.MS_CV_NAME, spectrum.precursorMoz.toString))
+    ionSelection.getCvParam.add(CvParam(PrideSchemaConstants.MS_CV_CHARGE_STATE_ACC, PrideSchemaConstants.MS_CV_CHARGE_STATE_NAME, PrideSchemaConstants.MS_CV_NAME, spectrum.precursorCharge.toString))
+    if (!spectrum.precursorIntensity.isNaN)
+      ionSelection.getCvParam.add(CvParam(PrideSchemaConstants.MS_CV_INTENSITY_ACC, PrideSchemaConstants.MS_CV_INTENSITY_NAME, PrideSchemaConstants.MS_CV_NAME, spectrum.precursorIntensity.toString))
     precursor.setIonSelection(ionSelection)
-     val activation = new Param();
+     val activation = new Param()
     precursor.setActivation(activation)
     precursor.setSpectrum(PrideModelUtils.createSpectrum(0))
     
     val precursorList = new PrecursorList()
     precursorList.setCount(1)
-    precursorList.getPrecursor().add(precursor)
+    precursorList.getPrecursor.add(precursor)
     spectrumDesc.setPrecursorList(precursorList)
     
     val (mz, intensities) = _encodeSpectrum(spectrum)
@@ -469,7 +468,7 @@ class PrideExporter(
   private def _encodeSpectrum(spectrum: Spectrum): (Array[Byte], Array[Byte]) = {
     //build byte arrays from the peak data
     val numPoints = spectrum.mozList.get.length
-    val mzBytes = doublesToBytes(spectrum.mozList.get, true)
+    val mzBytes = doublesToBytes(spectrum.mozList.get, littleEndian = true)
 
     // Convert doubles to a byte buffer
     val intensityBuff = ByteBuffer.allocate(numPoints * 8).order(ByteOrder.LITTLE_ENDIAN)
@@ -486,10 +485,10 @@ class PrideExporter(
     try {
 	    writer = new FileWriter(filePath,true)
 	
-	    val proteinSets = rsm.proteinSets.filter(_.isValidated).sortBy { p => proteinMatchesById(p.getRepresentativeProteinMatchId).score }.reverse
+	    val proteinSets = rsm.proteinSets.filter(_.isValidated).sortBy { p => proteinMatchesById(p.getRepresentativeProteinMatchId()).score }.reverse
 	    for (protSet <- proteinSets) {
 	
-	      val typicalProteinMatch = proteinMatchesById(protSet.getRepresentativeProteinMatchId)
+	      val typicalProteinMatch = proteinMatchesById(protSet.getRepresentativeProteinMatchId())
 	      val idf = new GelFreeIdentification()
 	      val seqDb = seqDbById(typicalProteinMatch.seqDatabaseIds(0))
 	      
@@ -513,11 +512,11 @@ class PrideExporter(
 	      }
 	      idf.setDatabaseVersion(dbVersion)
 	      
-	      val seqMatches = typicalProteinMatch.sequenceMatches.groupBy(_.getPeptideId)      
+	      val seqMatches = typicalProteinMatch.sequenceMatches.groupBy(_.getPeptideId())
 	      var nbrSpectrumNotFound = 0
-	      for (pepInstance <- protSet.peptideSet.getPeptideInstances) {
+	      for (pepInstance <- protSet.peptideSet.getPeptideInstances()) {
 	        val seqMatch = seqMatches(pepInstance.peptideId)(0)
-	        val peptideMatch = rsm.resultSet.get.getPeptideMatchById.get(pepInstance.bestPeptideMatchId).get
+	        val peptideMatch = rsm.resultSet.get.getPeptideMatchById().get(pepInstance.bestPeptideMatchId).get
 	        
 	        val peptideItem = new PeptideItem()
           // Replace X, B and Z  with corresponding AA used for matching
@@ -555,14 +554,14 @@ class PrideExporter(
 	        
 	        //Add extra parameters
 	        val additional = new Param()        
-	        additional.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_MASCOT_SCORE_ACC, PrideSchemaConstants.PRIDE_CV_MASCOT_SCORE_NAME, peptideMatch.score.toString))
-	        additional.getCvParam().add(CvParam(PrideSchemaConstants.MS_CV_CHARGE_STATE_ACC, PrideSchemaConstants.MS_CV_CHARGE_STATE_NAME, peptideMatch.charge.toString))
-	        additional.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_RESIDUE_BEFORE_ACC, PrideSchemaConstants.PRIDE_CV_RESIDUE_BEFORE_NAME, seqMatch.residueBefore.toString))
-	        additional.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_RESIDUE_AFTER_ACC, PrideSchemaConstants.PRIDE_CV_RESIDUE_AFTER_NAME, seqMatch.residueAfter.toString))
+	        additional.getCvParam.add(CvParam(PrideSchemaConstants.PRIDE_CV_MASCOT_SCORE_ACC, PrideSchemaConstants.PRIDE_CV_MASCOT_SCORE_NAME, peptideMatch.score.toString))
+	        additional.getCvParam.add(CvParam(PrideSchemaConstants.MS_CV_CHARGE_STATE_ACC, PrideSchemaConstants.MS_CV_CHARGE_STATE_NAME, peptideMatch.charge.toString))
+	        additional.getCvParam.add(CvParam(PrideSchemaConstants.PRIDE_CV_RESIDUE_BEFORE_ACC, PrideSchemaConstants.PRIDE_CV_RESIDUE_BEFORE_NAME, seqMatch.residueBefore.toString))
+	        additional.getCvParam.add(CvParam(PrideSchemaConstants.PRIDE_CV_RESIDUE_AFTER_ACC, PrideSchemaConstants.PRIDE_CV_RESIDUE_AFTER_NAME, seqMatch.residueAfter.toString))
 	        peptideItem.setAdditional(additional)
 	        
 	        for (ptm <- pepInstance.peptide.ptms) {
-	          peptideItem.getModificationItem().add(_buildModification(ptm))
+	          peptideItem.getModificationItem.add(_buildModification(ptm))
 	        }
 	        
 	        if (spectrumMatchByPeptideMatchId.contains(pepInstance.bestPeptideMatchId)) {
@@ -572,20 +571,20 @@ class PrideExporter(
 	          nbrSpectrumNotFound += 1
 	          logger.trace("Unable to get Spectrum for peptide {} ",pepInstance.peptide.sequence )
 	        }
-	        idf.getPeptideItem().add(peptideItem)
+	        idf.getPeptideItem.add(peptideItem)
 	      } // End go through Peptide Matches
 	      if(nbrSpectrumNotFound >0)
 	        logger.warn("Unable to found " +nbrSpectrumNotFound+" Spectra")
-	        
-	      idf.setScore(typicalProteinMatch.score)
+
+        idf.setScore(Float.float2double(typicalProteinMatch.score))
 	      //Add extra parameters
 	      val protAdditional = new Param()
-	      protAdditional.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_PROT_DESCRIPTION_ACC, PrideSchemaConstants.PRIDE_CV_PROT_DESCRIPTION_NAME, typicalProteinMatch.description))
-	      protAdditional.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_PROT_IDENTIFIED_PEP_FRAG_ACC, PrideSchemaConstants.PRIDE_CV_PROT_IDENTIFIED_PEP_FRAG_NAME, ""))
+	      protAdditional.getCvParam.add(CvParam(PrideSchemaConstants.PRIDE_CV_PROT_DESCRIPTION_ACC, PrideSchemaConstants.PRIDE_CV_PROT_DESCRIPTION_NAME, typicalProteinMatch.description))
+	      protAdditional.getCvParam.add(CvParam(PrideSchemaConstants.PRIDE_CV_PROT_IDENTIFIED_PEP_FRAG_ACC, PrideSchemaConstants.PRIDE_CV_PROT_IDENTIFIED_PEP_FRAG_NAME, ""))
 	      protSet.getSameSetProteinMatchIds.foreach( ssId => {
-	        if(!ssId.equals(protSet.getRepresentativeProteinMatchId)){
+	        if(!ssId.equals(protSet.getRepresentativeProteinMatchId())){
 	        	val ssProteinMatch = proteinMatchesById(ssId)
-	        	protAdditional.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_PROT_SAMSET_ACC, PrideSchemaConstants.PRIDE_CV_PROT_SAMSET_NAME,ssProteinMatch.accession))
+	        	protAdditional.getCvParam.add(CvParam(PrideSchemaConstants.PRIDE_CV_PROT_SAMSET_ACC, PrideSchemaConstants.PRIDE_CV_PROT_SAMSET_NAME,ssProteinMatch.accession))
 	        }         
 	      })
 	      idf.setAdditional(protAdditional)
@@ -604,47 +603,102 @@ class PrideExporter(
     	  }catch { case e: Exception =>
     	    
     	  }  finally {
-    	    throw new Exception(" Error writing Pride Identification Data  "+ioe.getMessage()) 
+    	    throw new Exception(" Error writing Pride Identification Data  "+ioe.getMessage)
     	  }
       } 
     }
 
   }
 
-  private def _buildFragmentMatches(pepItem: PeptideItem, spectrumMatch: SpectrumMatch) = {
+  private def _buildFragmentMatches(pepItem: PeptideItem, spectrumMatch: SpectrumMatch): Unit = {
     val fragMatches = spectrumMatch.fragMatches
 
     if(fragMatches != null) {
       fragMatches.foreach(fragMatch => {
 
         val fragmentIon = new FragmentIon()
-        fragmentIon.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_PROD_ION_CHARGE_ACC, PrideSchemaConstants.PRIDE_CV_PROD_ION_CHARGE_NAME, fragMatch.charge.toString))
-        fragmentIon.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_PROD_ION_MZ_ACC, PrideSchemaConstants.PRIDE_CV_PROD_ION_MZ_NAME, fragMatch.moz.toString))
+        fragmentIon.getCvParam.add(CvParam(PrideSchemaConstants.PRIDE_CV_PROD_ION_CHARGE_ACC, PrideSchemaConstants.PRIDE_CV_PROD_ION_CHARGE_NAME, fragMatch.charge.toString))
+        fragmentIon.getCvParam.add(CvParam(PrideSchemaConstants.PRIDE_CV_PROD_ION_MZ_ACC, PrideSchemaConstants.PRIDE_CV_PROD_ION_MZ_NAME, fragMatch.moz.toString))
 
         if (fragMatch.intensity != Float.NaN)
-          fragmentIon.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_PROD_ION_I_ACC, PrideSchemaConstants.PRIDE_CV_PROD_ION_I_NAME, fragMatch.intensity.toString))
+          fragmentIon.getCvParam.add(CvParam(PrideSchemaConstants.PRIDE_CV_PROD_ION_I_ACC, PrideSchemaConstants.PRIDE_CV_PROD_ION_I_NAME, fragMatch.intensity.toString))
 
         val serie = fragMatch.ionSeries
           
       val (cvIonAcc, cvIonName)  = FragmentMatchMapper.getPrideCVforIonSerie(serie.toString)
-        fragmentIon.getCvParam().add(CvParam(cvIonAcc, cvIonName, fragMatch.aaPosition.toString))           
-        fragmentIon.getCvParam().add(CvParam(PrideSchemaConstants.PRIDE_CV_PROD_ION_MASS_ERR_ACC, PrideSchemaConstants.PRIDE_CV_PROD_ION_MASS_ERR_NAME,(fragMatch.calculatedMoz-fragMatch.moz).toString))
+        fragmentIon.getCvParam.add(CvParam(cvIonAcc, cvIonName, fragMatch.aaPosition.toString))
+        fragmentIon.getCvParam.add(CvParam(PrideSchemaConstants.PRIDE_CV_PROD_ION_MASS_ERR_ACC, PrideSchemaConstants.PRIDE_CV_PROD_ION_MASS_ERR_NAME,(fragMatch.calculatedMoz-fragMatch.moz).toString))
         
         
-        pepItem.getFragmentIon().add(fragmentIon)
+        pepItem.getFragmentIon.add(fragmentIon)
       }) //END Go trough fragment matches
     }
 
   }
   
+//  protected def _buildModification(ptm: LocatedPtm): ModificationItem = {
+//    val mod = new ModificationItem()
+//    mod.setModLocation(BigInteger.valueOf(ptm.seqPosition))
+//    mod.setModDatabase("MOD")
+//    mod.setModAccession(UnimodToPSIPtmMap.map(ptm.definition.unimodId).getAccession())
+//    mod.getModMonoDelta().add(ptm.monoMass.toString)
+//    mod.getModAvgDelta().add(ptm.averageMass.toString)
+//    mod
+//  }
+
+
   protected def _buildModification(ptm: LocatedPtm): ModificationItem = {
     val mod = new ModificationItem()
     mod.setModLocation(BigInteger.valueOf(ptm.seqPosition))
     mod.setModDatabase("MOD")
-    mod.setModAccession(UnimodToPSIPtmMap.map(ptm.definition.unimodId).getAccession())
     mod.getModMonoDelta().add(ptm.monoMass.toString)
     mod.getModAvgDelta().add(ptm.averageMass.toString)
+
+    if(UnimodToPSIPtmMap.map.get(ptm.definition.unimodId).isDefined){
+      mod.setModAccession(UnimodToPSIPtmMap.map(ptm.definition.unimodId).getAccession())
+    } else {
+      val acc = getPSIAccessionFor(ptm: LocatedPtm)
+      if(acc == null){
+        logger.error("No PSI MOD Found for PTM "+ptm.definition.names)
+        throw new Exception("No PSI MOD Found for PTM "+ptm.definition.names)
+      }
+      mod.setModAccession(acc)
+    }
     mod
   }
+
+  object MorePSIPtms extends Enumeration {
+    case class Ptm2PSI (name: String, psiMod: String) extends Val(name){
+      //
+      //    def withAcc(acc: String): Ptm2PSI = {
+      //      if(acc.equals( LABEL_13C6_15N2_K.name)) {
+      //       LABEL_13C6_15N2_K
+      //      } else if(acc.equals( LABEL_13C6_15N2_K.name)) {
+      //        LABEL_13C6_15N4_R
+      //      }
+      //    }
+    }
+
+    val LABEL_13C6_15N2_K = Ptm2PSI("LABEL_13C6_15N2_K","MOD:00582")
+    val LABEL_13C6_15N4_R= Ptm2PSI("LABEL_13C6_15N4_R", "MOD:00587")
+    val DIMETHYL_KR= Ptm2PSI("Dimethyl RK", "MOD:00429")
+    val DIMETHYL= Ptm2PSI("Dimethyl", "MOD:00429")
+    val METHYL_KRH= Ptm2PSI("Methyl KRH", "MOD:00658")
+    val METHYL_KR= Ptm2PSI("Methyl KR", "MOD:00658")
+    val METHYLKR= Ptm2PSI("MethylKR", "MOD:00658")
+    val PHOSPHO_GOOD= Ptm2PSI("Phosphogood", "MOD:00696") //VDS TO BE REMOVED
+
+
+    implicit def valueToMorePSIPtms(v: Value): Ptm2PSI = v.asInstanceOf[Ptm2PSI]
+  }
+
+  def getPSIAccessionFor(ptm: LocatedPtm): String = {
+    try {
+      MorePSIPtms.withName(ptm.definition.names.shortName).psiMod
+    } catch {
+      case e: NoSuchElementException => { null }
+    }
+  }
+
 
 }

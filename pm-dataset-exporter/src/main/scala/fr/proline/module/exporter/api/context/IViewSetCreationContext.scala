@@ -1,7 +1,7 @@
 package fr.proline.module.exporter.api.context
 
 import java.io.File
-import fr.proline.module.exporter.api.view.IDataView
+
 import fr.proline.module.exporter.api.template.IFileExtensionEnumeration
 
 trait IViewSetCreationContext {

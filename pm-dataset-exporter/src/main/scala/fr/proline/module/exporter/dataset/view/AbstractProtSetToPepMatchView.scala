@@ -69,9 +69,9 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
     else {
       val ptmSiteProperties = ptmSitePropsOpt.get
 
-      if (ptmSiteProperties.getMascotProbabilityBySite.isEmpty) None
+      if (ptmSiteProperties.getMascotProbabilityBySite().isEmpty) None
       else {
-        val sites = ptmSiteProperties.getMascotProbabilityBySite.get.map { case (k, v) =>
+        val sites = ptmSiteProperties.getMascotProbabilityBySite().get.map { case (k, v) =>
           k + " = " + dcf2.format(v)
         }
         Some( sites.mkString(",") )

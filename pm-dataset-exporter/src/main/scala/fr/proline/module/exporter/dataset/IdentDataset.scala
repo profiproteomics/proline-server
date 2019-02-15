@@ -74,12 +74,13 @@ class IdentDataset(
   /*lazy val allResultSets: Array[LazyResultSet] = allResultSummaries.map(_.lazyResultSet)
   lazy val allMsiSearches: Array[MSISearch] = allResultSets.withFilter(_.msiSearch.isDefined).map(_.msiSearch.get)*/
 
-  lazy val leavesResultSets : Array[LazyResultSet] = loadLeaveResultSets()  
-  lazy val leavesMsiSearches: Array[MSISearch] = leavesResultSets.withFilter(_.msiSearch.isDefined).map(_.msiSearch.get)
+  protected lazy val allLeavesResultSets : Array[LazyResultSet] = loadLeaveResultSets()
+  lazy val leavesResultSets : Array[LazyResultSet] = allLeavesResultSets
+  lazy val leavesMsiSearches: Array[MSISearch] = allLeavesResultSets.withFilter(_.msiSearch.isDefined).map(_.msiSearch.get)
   lazy val allPeaklistsIds: Array[Long] = leavesMsiSearches.map(_.peakList.id)
   
   lazy val spectraDescriptorById: LongMap[Spectrum] = loadSpectraDescriptors(allPeaklistsIds).mapByLong(_.id)
-  lazy val spectrumDescriptorByMsQueryId = {
+  lazy val spectrumDescriptorByMsQueryId: Map[Long, Spectrum] = {
     val ms2QueryIdSpecIdPairs = for(
       peptideMatch <- resultSummary.lazyResultSet.peptideMatches;
       if peptideMatch.msQuery != null && peptideMatch.msQuery.isInstanceOf[Ms2Query]

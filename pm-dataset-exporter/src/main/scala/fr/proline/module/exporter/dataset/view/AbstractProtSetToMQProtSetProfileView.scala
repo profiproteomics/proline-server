@@ -1,11 +1,6 @@
 package fr.proline.module.exporter.dataset.view
 
-import scala.collection.mutable.LongMap
-
-import fr.profi.util.collection._
 import fr.proline.core.om.model.msi.LazyResultSummary
-import fr.proline.core.om.model.msi.ProteinMatch
-import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
 import fr.proline.module.exporter.commons.config.ExportConfigConstant._
 
@@ -29,7 +24,7 @@ abstract class AbstractProtSetToMQProtSetProfileView extends AbstractProtSetToTy
     val protMatchRecord = super.buildRecord(buildingContext)
 
     // If this building context is not a MasterQuantProteinSetProfileBuildingContext then we return the record as is
-    if (buildingContext.isInstanceOf[MasterQuantProteinSetProfileBuildingContext] == false) {
+    if (!buildingContext.isInstanceOf[MasterQuantProteinSetProfileBuildingContext]) {
       return protMatchRecord
     }
 
@@ -43,7 +38,7 @@ abstract class AbstractProtSetToMQProtSetProfileView extends AbstractProtSetToTy
       val protMatchIdOpt = qProtSetMap.get(qcId).flatMap(_.proteinMatchId)
 
       if (protMatchIdOpt.isDefined) protMatchIdOpt
-      else Some(mqProtSet.proteinSet.getRepresentativeProteinMatchId)
+      else Some(mqProtSet.proteinSet.getRepresentativeProteinMatchId())
     }
 
     /*def getProteinSet(qcId: Long, identRsm: LazyResultSummary): Option[ProteinSet] = {
@@ -76,7 +71,7 @@ abstract class AbstractProtSetToMQProtSetProfileView extends AbstractProtSetToTy
           }
         }
         
-        val qcPeptideNumber = if (pepCountByProtMatchIdByQCId.contains(qcId) == false) 0
+        val qcPeptideNumber = if (!pepCountByProtMatchIdByQCId.contains(qcId)) 0
         else {
           val pepCountByProtMatchId = pepCountByProtMatchIdByQCId.get(qcId).get
           pepCountByProtMatchId.getOrElse(pmId,0)
@@ -88,7 +83,7 @@ abstract class AbstractProtSetToMQProtSetProfileView extends AbstractProtSetToTy
       else if (quantDs.peptideCountByMqProtSetByQCId.isDefined) {
         val pepCountByMqProtSetByQCId = quantDs.peptideCountByMqProtSetByQCId.get
 
-        val qcPeptideNumber = if (pepCountByMqProtSetByQCId.contains(qcId) == false) 0
+        val qcPeptideNumber = if (!pepCountByMqProtSetByQCId.contains(qcId)) 0
         else {
           val pepCountByMqProtSet = pepCountByMqProtSetByQCId.get(qcId).get
           pepCountByMqProtSet.getOrElse(mqProtSet.id,0)

@@ -24,14 +24,14 @@ class ImportAndValidationPropsView(
 
   var viewName = "import and validation"
   
-  val quantDS = identDS match {
+  val quantDS: QuantDataset = identDS match {
     case qds: QuantDataset => qds
     case _ => null
   }
   protected val isQuantDS = quantDS != null
   protected val qcNameByRsId = if (isQuantDS) quantDS.qcNameByRsId else null
   
-  val fields = {
+  val fields: CustomViewFields = {
     
     // Count the number of PSM/Protein filters
     var psmFiltersCount = 0
@@ -57,7 +57,7 @@ class ImportAndValidationPropsView(
     logger.debug(s"ImportAndValidationPropsView with $psmFiltersCount PSM filters and $protFiltersCount Protein filters")
     
     val fieldsTitles = new ArrayBuffer[String](sheetConfig.fields.length + psmFiltersCount + protFiltersCount)
-    def appendFilterTitles(title: String, filtersCount: Int) = {
+    def appendFilterTitles(title: String, filtersCount: Int): Unit = {
       for (i <- 1 to psmFiltersCount) {
         fieldsTitles += title + titleSep + i
       }
@@ -202,7 +202,7 @@ class ImportAndValidationPropsView(
     recordBuilder.result
   }
 
-  def onEachRecord(recordFormatter: Map[String, Any] => Unit) {
+  def formatView(recordFormatter: Map[String, Any] => Unit) {
     for (rsm <- identDS.allResultSummaries) {
       this.formatRecord(MyBuildingContext(rsm), recordFormatter)
     }

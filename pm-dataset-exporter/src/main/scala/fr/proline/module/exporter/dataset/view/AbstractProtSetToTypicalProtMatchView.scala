@@ -1,10 +1,7 @@
 package fr.proline.module.exporter.dataset.view
 
-import fr.proline.core.om.model.msi._
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
-import fr.proline.module.exporter.commons.config._
 import fr.proline.module.exporter.commons.config.ExportConfigConstant._
-import fr.proline.module.exporter.dataset._
 
 abstract class AbstractProtSetToTypicalProtMatchView extends AbstractIdentDatasetView {
   
@@ -57,7 +54,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends AbstractIdentDatase
     
     // MW
     val bioSequenceById = identDS.bioSequenceById
-    val proteinId = protMatch.getProteinId
+    val proteinId = protMatch.getProteinId()
     val massOpt = if (proteinId > 0) bioSequenceById.get(proteinId).map(_.mass) else None
     val mass = massOpt.getOrElse(0.0)
     
@@ -82,7 +79,7 @@ abstract class AbstractProtSetToTypicalProtMatchView extends AbstractIdentDatase
         case FIELD_PROTEIN_SETS_NB_SUBSET_PROTEIN_MATCHES => protSet.getSubSetProteinMatchIds.length
         case FIELD_PROTEIN_SETS_COVERAGE => dcf2.format(protMatchCoverage)
         case FIELD_PROTEIN_SETS_MW => decimalFormat.format(mass)
-        case FIELD_PROTEIN_SETS_NB_OBSERVABLE_PEPTIDES => (if (protMatch.properties.isDefined) protMatch.properties.get.getObservablePeptideCount else -1)
+        case FIELD_PROTEIN_SETS_NB_OBSERVABLE_PEPTIDES => if (protMatch.properties.isDefined) protMatch.properties.get.getObservablePeptideCount else -1
         case FIELD_PROTEIN_SETS_NB_SEQUENCES => buildingCtx.sequencesCount
         case FIELD_PROTEIN_SETS_NB_SPECIFIC_SEQUENCES => if (protSet.isValidated) buildingCtx.specificSequencesCount else -1
         case FIELD_PROTEIN_SETS_NB_PEPTIDES => buildingCtx.peptidesCount

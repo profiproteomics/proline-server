@@ -18,7 +18,7 @@ abstract class AbstractProtSetToMQPepView extends AbstractProtSetToPepMatchView 
     val pepMatchRecord = super.buildRecord(buildingContext)
     
     // If this building context is not a MasterQuantPeptideBuildingContext then we return the record as is
-    if( buildingContext.isInstanceOf[MasterQuantPeptideBuildingContext] == false) {
+    if( !buildingContext.isInstanceOf[MasterQuantPeptideBuildingContext]) {
       return pepMatchRecord
     }
     

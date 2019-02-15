@@ -1,12 +1,8 @@
 package fr.proline.module.exporter.dataset.template
 
-import fr.proline.module.exporter.api.template.IViewTemplate
 import fr.proline.module.exporter.api.template.ViewTypeWithTemplate
-import fr.proline.module.exporter.api.view.IViewTypeEnumeration
 import fr.proline.module.exporter.commons.config.ExportConfig
 import fr.proline.module.exporter.commons.config.ExportConfigConstant._
-import fr.proline.module.exporter.commons.config.ExportConfigSheet
-import fr.proline.module.exporter.commons.config.view.DatasetViewType._
 import fr.proline.module.exporter.commons.template.AbstractViewSetXLSXTemplate
 import fr.proline.module.exporter.commons.template.InfoXLSXTemplate
 

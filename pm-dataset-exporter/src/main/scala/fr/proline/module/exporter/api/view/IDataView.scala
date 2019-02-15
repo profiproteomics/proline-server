@@ -7,21 +7,17 @@ trait IDataView {
   var viewName: String
   
   def getFieldsNames(): Array[String]
-  
-  def getAllRecords(): Seq[Map[String,Any]]
-    
-  def onEachRecord( recordFormatter: Map[String,Any] => Unit )
+
+  def formatView(recordFormatter: Map[String,Any] => Unit )
 
 }
 
 trait IFormLikeView extends IDataView {
-  
+
   def getFieldValueMap(): Map[String,Any]
-  
-  def getAllRecords(): Seq[Map[String,Any]] = Seq(this.getFieldValueMap())
-  
-  def onEachRecord( recordFormatter: Map[String,Any] => Unit ) = {
-    recordFormatter(this.getFieldValueMap)
+
+  def formatView(recordFormatter: Map[String,Any] => Unit ) = {
+    recordFormatter(this.getFieldValueMap())
   }
 
 }
@@ -34,20 +30,11 @@ trait IRecordBuildingContext
 trait ITableLikeView extends IDataView {  
 
   def buildRecord( buildingContext: IRecordBuildingContext ): Map[String,Any]
+
   def formatRecord( buildingContext: IRecordBuildingContext, recordFormatter: Map[String,Any] => Unit ) {
     recordFormatter( this.buildRecord(buildingContext) )
   }
-  
-  def getAllRecords(): Seq[Map[String,Any]] = {
-    val records = new ArrayBuffer[Map[String,Any]]()
-    
-    this.onEachRecord( record => {
-      records += record
-    } )
 
-    records
-  }
-  
 }
 
 // Must be used when a view as a predefined set of fields

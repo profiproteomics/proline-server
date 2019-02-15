@@ -3,8 +3,6 @@ package fr.proline.module.exporter.dataset.view
 import java.text.SimpleDateFormat
 
 import fr.profi.util.collection._
-
-import fr.proline.core.om.model.msi.SequenceMatch
 import fr.proline.module.exporter.commons.config.ExportConfigSheet
 import fr.proline.module.exporter.commons.view.SmartDecimalFormat
 import fr.proline.module.exporter.dataset.IdentDataset
@@ -22,7 +20,7 @@ class ProtSetToBestPepMatchView(
   var viewName = "prot_set_to_best_pep_match"
   
   // TODO: factorize this code with ProtSetToAllPepMatchesView in AbsractProtSetToPepMatchView (onEachPeptideMatch method)
-  override def onEachRecord(recordFormatter: Map[String, Any] => Unit) {
+  override def formatView(recordFormatter: Map[String, Any] => Unit) {
 
     val rsm = identDS.resultSummary
     val rs = rsm.lazyResultSet
@@ -58,7 +56,7 @@ class ProtSetToBestPepMatchView(
           require (pepInst.peptideMatches != null, "the peptide matches must be loaded to be able to export them")
           
           val peptideId = pepInst.peptide.id
-          val bestPepMatch = pepInst.peptideMatches.maxBy(_.score)
+          val bestPepMatch = pepInst.peptideMatches.maxBy(_.score) //VDS pourquoi ne pas utiliser le  bestPeptideMatchId
           val mqPepOpt = Option(quantDs).flatMap( _.mqPepByPepId.get(peptideId) )
 
           val buildingContext =  { if (!isQuantDs || mqPepOpt.isEmpty) {

@@ -81,7 +81,7 @@ trait AbstractQuantDatasetView extends AbstractIdentDatasetView {
     val identDatasetRecord = super.buildRecord(buildingContext)
     
     // If this building context is not a MasterQuantProteinSetProfileBuildingContext then we return the record as is
-    if( buildingContext.isInstanceOf[IMasterQuantEntityBuildingContext] == false) {
+    if( !buildingContext.isInstanceOf[IMasterQuantEntityBuildingContext]) {
       return identDatasetRecord
     }
     
@@ -129,13 +129,13 @@ trait AbstractQuantDatasetView extends AbstractIdentDatasetView {
           addRatiosProperty(fieldConfig, r => Some(dcf2.format(r.ratioValue)) )
         }
         case FIELD_PROFILIZER_TTEST_PVALUE => {
-          addRatiosProperty(fieldConfig, _.getTTestPValue().map(dcf6.format(_)) )
+          addRatiosProperty(fieldConfig, _.getTTestPValue.map(dcf6.format(_)) )
         }
         case FIELD_PROFILIZER_ZTEST_PVALUE => {
-          addRatiosProperty(fieldConfig, _.getZTestPValue().map(dcf6.format(_)) )
+          addRatiosProperty(fieldConfig, _.getZTestPValue.map(dcf6.format(_)) )
         }
         case FIELD_PROFILIZER_ZSCORE => {
-          addRatiosProperty(fieldConfig, _.getZScore().map(dcf2.format(_)) )
+          addRatiosProperty(fieldConfig, _.getZScore.map(dcf2.format(_)) )
         }
       }
     }

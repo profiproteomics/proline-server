@@ -36,7 +36,7 @@ class TextFormatter(
     }
     
     def mkRow( record: Map[String,Any] ): String = {
-      selectedFieldsOrFields.map( field => record.get(field).flatMap( Option(_) ).getOrElse("").toString() ).mkString(sepChar)
+      selectedFieldsOrFields.map( field => record.get(field).flatMap( Option(_) ).getOrElse("").toString ).mkString(sepChar)
     }
   }
   
@@ -66,7 +66,7 @@ class TextFormatter(
     writer.flush()
     
     // Print the rows
-    view.onEachRecord( record => {
+    view.formatView(record => {
       writer.println( helper.mkRow(record) )
       writer.flush()
     })
