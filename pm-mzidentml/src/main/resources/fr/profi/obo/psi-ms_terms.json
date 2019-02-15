@@ -12856,6 +12856,14 @@
       "is_a" : [
          "MS:1001456"
       ],
+      "name" : "Proline",
+      "id" : "MS:1002981",
+      "definition" : "The Proline software suite for mass spectrometry based proteomics."
+   },
+   {
+      "is_a" : [
+         "MS:1001456"
+      ],
       "name" : "SEQUEST",
       "id" : "MS:1001208",
       "definition" : "The name of the SEQUEST search engine."

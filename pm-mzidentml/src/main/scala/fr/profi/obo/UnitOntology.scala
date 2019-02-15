@@ -347,6 +347,7 @@ object UnitTermId extends Enumeration {
   val UO_0000330 = Value("UO:0000330")
   val UO_0000331 = Value("UO:0000331")
   val UO_0000332 = Value("UO:0000332")
+  val UO_0010009 = Value("UO:0010009")
 }
 
 object UnitTerm extends Enumeration {
@@ -682,4 +683,5 @@ object UnitTerm extends Enumeration {
   val Gigabasepair = Value("UO:0000330")
   val Gigabyte = Value("UO:0000331")
   val Terabyte = Value("UO:0000332")
+  val Mmu = Value ("UO:0010009")
 }

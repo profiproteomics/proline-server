@@ -1,16 +1,129 @@
 package fr.profi.obo
 
-import scala.io.Source
+import fr.proline.core.om.model.msi.FragmentIonSeries
+
 import scala.io.BufferedSource
+import scala.io.Source
 
 object PsiMsOntology extends Ontology {
 
   val id = "PSI-MS"
   val name ="Proteomics Standards Initiative Mass Spectrometry Vocabularies"
-  val sourceUrl = "http://psidev.cvs.sourceforge.net/viewvc/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo"
-  val dataVersion = "3.71.0"
+  val sourceUrl = "https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"
+  val dataVersion = "4.1.13"
   val jsonTermsResource: BufferedSource = Source.fromURL( this.getClass.getResource("psi-ms_terms.json") )
   
+}
+
+object FragmentationIonParamPSIValue extends Enumeration {
+
+  //VDS TODO ADD all possible fragmentation ion type
+  case class FragmentationParamPsiMs (name: String, psiMod:  PsiMs.Value) extends Val(name){
+  }
+
+  val A_ION = FragmentationParamPsiMs(FragmentIonSeries.a.toString , PsiMs.FragAIon)
+  val A_ION_H2O = FragmentationParamPsiMs(FragmentIonSeries.a_H2O.toString, PsiMs.FragAIonH2O)
+  val A_ION_NH3 = FragmentationParamPsiMs(FragmentIonSeries.a_NH3.toString, PsiMs.FragAIonNH3)
+  val B_ION = FragmentationParamPsiMs(FragmentIonSeries.b.toString, PsiMs.FragBIon)
+  val B_ION_H2O = FragmentationParamPsiMs(FragmentIonSeries.b_H2O.toString, PsiMs.FragBIonH2O)
+  val B_ION_NH3 = FragmentationParamPsiMs(FragmentIonSeries.b_NH3.toString, PsiMs.FragBIonNH3)
+  val C_ION = FragmentationParamPsiMs(FragmentIonSeries.c.toString, PsiMs.FragCIon)
+  val D_ION = FragmentationParamPsiMs(FragmentIonSeries.d.toString, PsiMs.FragDIon)
+  val V_ION = FragmentationParamPsiMs(FragmentIonSeries.v.toString, PsiMs.FragVIon)
+  val W_ION = FragmentationParamPsiMs(FragmentIonSeries.w.toString, PsiMs.FragWIon)
+  val X_ION = FragmentationParamPsiMs(FragmentIonSeries.x.toString, PsiMs.FragXIon)
+  val Y_ION = FragmentationParamPsiMs(FragmentIonSeries.y.toString, PsiMs.FragYIon)
+  val Y_ION_H2O = FragmentationParamPsiMs(FragmentIonSeries.y_H2O.toString, PsiMs.FragYIonH2O)
+  val Y_ION_NH3 = FragmentationParamPsiMs(FragmentIonSeries.y_NH3.toString, PsiMs.FragYIonNH3)
+  val YA_ION = FragmentationParamPsiMs(FragmentIonSeries.ya.toString, PsiMs.FragInternalYaIon)
+  val YB_ION = FragmentationParamPsiMs(FragmentIonSeries.yb.toString, PsiMs.FragInternalYbIon)
+  val Z_ION = FragmentationParamPsiMs(FragmentIonSeries.z.toString, PsiMs.FragZIon)
+  val Z1_ION = FragmentationParamPsiMs(FragmentIonSeries.z1.toString, PsiMs.FragZ1Ion)
+  val Z2_ION = FragmentationParamPsiMs(FragmentIonSeries.z2.toString, PsiMs.FragZ2Ion)
+
+  implicit def valueToPsiMs(v: Value): FragmentationParamPsiMs = v.asInstanceOf[FragmentationParamPsiMs]
+
+  def getPsiMsforFragmentationType(ionSerieType: String): PsiMs.Value = {
+    try {
+      FragmentationIonParamPSIValue.withName(ionSerieType).psiMod
+    } catch {
+      case e: NoSuchElementException => { null }
+    }
+  }
+}
+
+object FragmentationIonTypePSIValue extends Enumeration {
+
+  //VDS TODO ADD all possible fragmentation ion type
+  case class FragmentationTypePsiMs (name: String, psiMod:  PsiMs.Value) extends Val(name){
+  }
+
+  val A_ION = FragmentationTypePsiMs(FragmentIonSeries.a.toString , PsiMs.FragAIon)
+  val A_ION_H2O = FragmentationTypePsiMs(FragmentIonSeries.a_H2O.toString, PsiMs.FragAIonH2O)
+  val A_ION_NH3 = FragmentationTypePsiMs(FragmentIonSeries.a_NH3.toString, PsiMs.FragAIonNH3)
+  val B_ION = FragmentationTypePsiMs(FragmentIonSeries.b.toString, PsiMs.FragBIon)
+  val B_ION_H2O = FragmentationTypePsiMs(FragmentIonSeries.b_H2O.toString, PsiMs.FragBIonH2O)
+  val B_ION_NH3 = FragmentationTypePsiMs(FragmentIonSeries.b_NH3.toString, PsiMs.FragBIonNH3)
+  val C_ION = FragmentationTypePsiMs(FragmentIonSeries.c.toString, PsiMs.FragCIon)
+  val D_ION = FragmentationTypePsiMs(FragmentIonSeries.d.toString, PsiMs.FragDIon)
+  val V_ION = FragmentationTypePsiMs(FragmentIonSeries.v.toString, PsiMs.FragVIon)
+  val W_ION = FragmentationTypePsiMs(FragmentIonSeries.w.toString, PsiMs.FragWIon)
+  val X_ION = FragmentationTypePsiMs(FragmentIonSeries.x.toString, PsiMs.FragXIon)
+  val Y_ION = FragmentationTypePsiMs(FragmentIonSeries.y.toString, PsiMs.FragYIon)
+  val Y_ION_H2O = FragmentationTypePsiMs(FragmentIonSeries.y_H2O.toString, PsiMs.FragYIonH2O)
+  val Y_ION_NH3 = FragmentationTypePsiMs(FragmentIonSeries.y_NH3.toString, PsiMs.FragYIonNH3)
+  val YA_ION = FragmentationTypePsiMs(FragmentIonSeries.ya.toString, PsiMs.FragInternalYaIon)
+  val YB_ION = FragmentationTypePsiMs(FragmentIonSeries.yb.toString, PsiMs.FragInternalYbIon)
+  val Z_ION = FragmentationTypePsiMs(FragmentIonSeries.z.toString, PsiMs.FragZIon)
+  val Z1_ION = FragmentationTypePsiMs(FragmentIonSeries.z1.toString, PsiMs.FragZ1Ion)
+  val Z2_ION = FragmentationTypePsiMs(FragmentIonSeries.z2.toString, PsiMs.FragZ2Ion)
+
+  implicit def valueToPsiEnzyme(v: Value): FragmentationTypePsiMs = v.asInstanceOf[FragmentationTypePsiMs]
+
+  def getPsiMsforFragmentationType(ionSerieType: String): PsiMs.Value = {
+    try {
+      FragmentationIonTypePSIValue.withName(ionSerieType).psiMod
+    } catch {
+      case e: NoSuchElementException => { null }
+    }
+  }
+}
+
+
+
+
+object EnzymePSIValue extends Enumeration {
+
+  case class PsiEnzyme (name: String, psiMod:  PsiMs.Value) extends Val(name){
+  }
+
+  // VS Datastore : don't found 'LysC+AspN', 'CNBr+Trypsin', 'thermolysin','semiTrypsin', 'Lys-N'
+  val TRYPSIN_P = PsiEnzyme("Trypsin/P", PsiMs.TrypsinP)
+  val TRYPSIN = PsiEnzyme("Trypsin", PsiMs.Trypsin)
+  val ASP_N = PsiEnzyme("Asp-N", PsiMs.AspN)
+  val CNBR = PsiEnzyme("CNBr", PsiMs.CNBr)
+  val PEPSIN_A=PsiEnzyme("PepsinA", PsiMs.PepsinA)
+  val CHYMOTRYPSIN=PsiEnzyme("Chymotrypsin", PsiMs.Chymotrypsin)
+  val LYS_C = PsiEnzyme("Lys-C", PsiMs.LysC)
+  val ARG_C = PsiEnzyme("Arg-C", PsiMs.ArgC)
+  val ASP_N_AMBIC = PsiEnzyme("Asp-N_ambic", PsiMs.AspNAmbic)
+  val FORMIC_ACID = PsiEnzyme("Formic_acid", PsiMs.FormicAcid)
+  val LYS_C_P = PsiEnzyme("Lys-C/P", PsiMs.LysCP)
+  val V8_E = PsiEnzyme("V8-E", PsiMs.V8E)
+  val V8_DE = PsiEnzyme("V8-DE", PsiMs.V8DE)
+  val TRYPCHYMO = PsiEnzyme("TrypChymo", PsiMs.TrypChymo)
+  val NONE = PsiEnzyme("none", PsiMs.NoCleavage)
+
+
+  implicit def valueToPsiEnzyme(v: Value): PsiEnzyme = v.asInstanceOf[PsiEnzyme]
+
+  def getPsiMsforEnzyme(enzyme: String): PsiMs.Value = {
+    try {
+      EnzymePSIValue.withName(enzyme).psiMod
+    } catch {
+      case e: NoSuchElementException => { null }
+    }
+  }
 }
 
 // TODO: create a java enumeration
@@ -1130,6 +1243,7 @@ object PsiMs extends Enumeration {
   val Mascot = Value("MS:1001207")
   val SEQUEST = Value("MS:1001208")
   val Phenyx = Value("MS:1001209")
+  val Proline = Value("MS:1002981")
   val MassTypeSettings = Value("MS:1001210")
   val ParentMassTypeMono = Value("MS:1001211")
   val ParentMassTypeAverage = Value("MS:1001212")
@@ -4857,5 +4971,6 @@ object PsiMsTermId extends Enumeration {
   val MS_1002533 = Value("MS:1002533")
   val MS_1002534 = Value("MS:1002534")
   val MS_1002535 = Value("MS:1002535")
+  val MS_1002981 = Value("MS:1002981")
 }
 
