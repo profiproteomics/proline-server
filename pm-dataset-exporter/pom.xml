@@ -16,7 +16,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>2.0.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
+    <core.version>2.0.0</core.version>  <!-- Snapshot Trunk version -->
      <version.path>${basedir}/src/main/scala/fr/proline/module/exporter/api</version.path>
   </properties>
 	<scm>
@@ -61,14 +61,14 @@
     <dependency>
       <groupId>fr.proline.util</groupId>
       <artifactId>ProFI-Commons-Java</artifactId>
-      <version>0.7.0-SNAPSHOT</version>
+      <version>0.7.0</version>
     </dependency>
 
     
     <dependency> <!-- SHOULD be defined BEFORE Proline OM or MZdb Processing ! -->
      <groupId>fr.proline</groupId>
      <artifactId>PM-FragmentMatchGenerator</artifactId>
-     <version>0.8.0-SNAPSHOT</version>
+     <version>0.8.0</version>
      <scope>test</scope>
     </dependency>
     
@@ -158,12 +158,12 @@
     <dependency>
     	<groupId>fr.proline.util</groupId>
     	<artifactId>ProFI-Commons-Scala</artifactId>
-    	<version>0.8.0-SNAPSHOT</version>
+    	<version>0.8.0</version>
     </dependency>
     <dependency>
     	<groupId>fr.profi</groupId>
     	<artifactId>ProFI-Proteomics</artifactId>
-    	<version>0.4.0-SNAPSHOT</version>
+    	<version>0.4.0</version>
     </dependency>
     <dependency>
     	<groupId>com.fasterxml.jackson.core</groupId>
