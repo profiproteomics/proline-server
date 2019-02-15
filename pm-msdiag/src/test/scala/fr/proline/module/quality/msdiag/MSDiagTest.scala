@@ -1,20 +1,21 @@
 package fr.proline.module.quality.msdiag
 
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
+import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.BasicExecutionContext
 import fr.proline.context.IExecutionContext
 import fr.proline.core.dal.AbstractMultipleDBTestCase
+import fr.proline.core.dal.BuildDbConnectionContext
+import fr.proline.core.dal.BuildMsiDbConnectionContext
+import fr.proline.core.dal.BuildUdsDbConnectionContext
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.module.quality.msdiag.msi.MSDiagOutput
 import fr.proline.repository.DriverType
-import com.typesafe.scalalogging.StrictLogging
-import fr.proline.core.dal.BuildUdsDbConnectionContext
-import fr.proline.core.dal.BuildDbConnectionContext
-import fr.proline.core.dal.BuildMsiDbConnectionContext
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
 
 @Test
 class MSDiagTest extends AbstractMultipleDBTestCase with StrictLogging {
@@ -36,8 +37,6 @@ class MSDiagTest extends AbstractMultipleDBTestCase with StrictLogging {
     super.initDBsDBManagement(driverType)
 
     //Load Data
-    pdiDBTestCase.loadDataSet("/dbunit/datasets/pdi/Proteins_Dataset.xml")
-    psDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/ps-db.xml")
     msiDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/msi-db.xml")
     udsDBTestCase.loadDataSet("/dbunit_samples/" + fileName + "/uds-db.xml")
 
@@ -56,13 +55,11 @@ class MSDiagTest extends AbstractMultipleDBTestCase with StrictLogging {
 
   def buildSQLContext() = {
     val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector, false)
-    val pdiDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPdiDbConnector, true)
-    val psDbCtx = BuildDbConnectionContext(dsConnectorFactoryForTest.getPsDbConnector, false)
     val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), false)
-    val executionContext = new BasicExecutionContext(udsDbCtx, pdiDbCtx, psDbCtx, msiDbCtx, null)
+    val executionContext = PeptideCacheExecutionContext(new BasicExecutionContext(1,udsDbCtx, msiDbCtx, null))
     val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
-    val rsProvider = new SQLResultSetProvider(msiDbCtx, psDbCtx, udsDbCtx)
+    val rsProvider = new SQLResultSetProvider(PeptideCacheExecutionContext(parserContext))
 
     (parserContext, rsProvider)
   }

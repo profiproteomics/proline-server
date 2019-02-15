@@ -1,23 +1,25 @@
 package fr.proline.module.quality.msdiag.msi
 
-import scala.Array.canBuildFrom
-import scala.Array.fallbackCanBuildFrom
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.IExecutionContext
-import fr.proline.core.om.model.msi.MsQuery
 import fr.proline.core.om.model.msi.Ms2Query
+import fr.proline.core.om.model.msi.MsQuery
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.ResultSet
 import fr.proline.core.om.model.msi.Spectrum
+import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.impl.SQLMsQueryProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLSpectrumProvider
-import com.typesafe.scalalogging.LazyLogging
+
+import scala.Array.canBuildFrom
+import scala.Array.fallbackCanBuildFrom
 
 class MSDiagResultSetManager(val parserContext: IExecutionContext, val rsId: Long) extends LazyLogging {
   
   private val msQueryProvider = new SQLMsQueryProvider(parserContext.getMSIDbConnectionContext)
   private val spectrumProvider = new SQLSpectrumProvider(parserContext.getMSIDbConnectionContext)
-  private val resultSetProvider = new SQLResultSetProvider(parserContext.getMSIDbConnectionContext, parserContext.getPSDbConnectionContext, parserContext.getUDSDbConnectionContext)
+  private val resultSetProvider = new SQLResultSetProvider(PeptideCacheExecutionContext(parserContext))
 
   private val rsTargetOpt = resultSetProvider.getResultSet(rsId)
   if(!rsTargetOpt.isDefined) {
