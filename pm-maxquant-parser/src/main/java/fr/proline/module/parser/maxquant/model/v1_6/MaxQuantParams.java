@@ -12,7 +12,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import fr.proline.module.parser.maxquant.model.IMaxQuantParams;
 import fr.proline.module.parser.maxquant.model.IMsMsParameters;
 import fr.proline.module.parser.maxquant.model.IParameterGroup;
-import fr.proline.module.parser.maxquant.model.v1_4.ParameterGroup;
+
 
 @XmlRootElement(name = "MaxQuantParams")
 @XmlAccessorType(XmlAccessType.PROPERTY)
