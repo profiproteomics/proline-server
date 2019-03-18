@@ -36,30 +36,23 @@ public class DataSourceBuilder {
 
 	}
 
-	public DataSource buildFastaSource(final String fastaFileName, final Pattern seDbIdentPattern, final Pattern repositoryIdentPattern) throws Exception {
+	public DataSource buildFastaSource(final String sourceFileName, final Pattern proteinIdentifierPattern, final Pattern repositoryIdentifierPattern) throws Exception {
 
-		if (StringUtils.isEmpty(fastaFileName)) {
-			throw new IllegalArgumentException("Invalid fastaFileName");
-		}
-
-		if (seDbIdentPattern == null) {
-			throw new IllegalArgumentException("SeDbIdentPattern is null");
-		}
+		assert !StringUtils.isEmpty(sourceFileName) : "Invalid sourceFileName";
+		assert (proteinIdentifierPattern != null) : "SeDbIdentPattern is null";
 
 		DataSource fastaSource = null;
-
 		final Map<String, List<File>> fastaFiles = getFastaFiles();
 
 		if ((fastaFiles != null) && !fastaFiles.isEmpty()) {
-			final List<File> files = fastaFiles.get(fastaFileName);
+			final List<File> files = fastaFiles.get(sourceFileName);
 
 			if ((files == null) || files.isEmpty()) {
-				LOG.warn("Cannot find [{}] in given fastaFilePaths", fastaFileName);
+				LOG.warn("Cannot find [{}] in given fastaFilePaths", sourceFileName);
 			} else {
-				final File foundFile = retrieveLatest(files);
-				fastaSource = new FastaSource(foundFile, seDbIdentPattern, repositoryIdentPattern);
+				final File foundFastaFile = retrieveLatest(files);
+				fastaSource = new FastaSource(foundFastaFile, proteinIdentifierPattern, repositoryIdentifierPattern);
 			}
-
 		}
 
 		return fastaSource;
@@ -67,9 +60,7 @@ public class DataSourceBuilder {
 
 	public List<File> locateFastaFile(final String namePart) throws Exception {
 
-		if (StringUtils.isEmpty(namePart)) {
-			throw new IllegalArgumentException("Invalid namePart");
-		}
+		assert !StringUtils.isEmpty(namePart) : "Invalid namePart";
 
 		List<File> result = new ArrayList<>();
 
@@ -83,15 +74,14 @@ public class DataSourceBuilder {
 				if (fastaFileName.contains(namePart)) {
 					result.addAll(entry.getValue());
 				}
-
 			}
-
 		}
 
 		return result;
 	}
 
 	protected Map<String, List<File>> getFastaFiles() throws Exception {
+
 		Map<String, List<File>> fastaFiles = null;
 
 		synchronized (m_foundFastaFilesLock) {
@@ -106,11 +96,9 @@ public class DataSourceBuilder {
 				} else {
 					LOG.error("No valid localFASTAPaths configured");
 				}
-
 			} else {
 				fastaFiles = m_foundFastaFiles;
 			}
-
 		}
 
 		return fastaFiles;
@@ -131,9 +119,7 @@ public class DataSourceBuilder {
 					LOG.info("Use latest version of [{}]", f.getAbsolutePath());
 					latest = f;
 				}
-
 			}
-
 		}
 
 		return latest;

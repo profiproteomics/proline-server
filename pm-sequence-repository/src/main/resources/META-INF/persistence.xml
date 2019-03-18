@@ -9,10 +9,10 @@
     <class>fr.proline.module.seq.orm.BioSequence</class>
     <class>fr.proline.module.seq.orm.ParsingRule</class>
     <class>fr.proline.module.seq.orm.Repository</class>
-    <class>fr.proline.module.seq.orm.RepositoryIdentifier</class>
-    <class>fr.proline.module.seq.orm.SEDb</class>
-    <class>fr.proline.module.seq.orm.SEDbIdentifier</class>
-    <class>fr.proline.module.seq.orm.SEDbInstance</class>
+    <class>fr.proline.module.seq.orm.RepositoryProtein</class>
+    <class>fr.proline.module.seq.orm.Databank</class>
+    <class>fr.proline.module.seq.orm.DatabankProtein</class>
+    <class>fr.proline.module.seq.orm.DatabankInstance</class>
   </persistence-unit>
 
 </persistence>

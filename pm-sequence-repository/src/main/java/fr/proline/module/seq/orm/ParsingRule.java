@@ -68,8 +68,8 @@ public class ParsingRule implements Serializable {
 		return seDbIdentifier;
 	}
 
-	public void setRepositoryIdentifier(final String pRepositoryIdent) {
-		repositoryIdentifier = pRepositoryIdent;
+	public void setRepositoryIdentifier(final String repositoryProtein) {
+		this.repositoryIdentifier = repositoryProtein;
 	}
 
 	public String getRepositoryIdentifier() {

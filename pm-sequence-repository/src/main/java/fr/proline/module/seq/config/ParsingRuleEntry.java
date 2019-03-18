@@ -53,7 +53,7 @@ public class ParsingRuleEntry {
 		this.proteinAccRegEx = proteinAccRegEx;
 	}
 	
-	public static ParsingRuleEntry getParsingRuleEntry(final String fastaFileName) {
+	public static synchronized ParsingRuleEntry getParsingRuleEntry(final String fastaFileName) {
 		assert (fastaFileName != null) : "getParsingRuleEntry() fastaFileName is null";
 
 		ParsingRuleEntry result = null;

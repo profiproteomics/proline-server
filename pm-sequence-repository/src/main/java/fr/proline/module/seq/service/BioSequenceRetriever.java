@@ -1,31 +1,5 @@
 package fr.proline.module.seq.service;
 
-import java.io.File;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import fr.profi.util.DateUtils;
 import fr.profi.util.FileUtils;
 import fr.profi.util.StringUtils;
@@ -34,31 +8,37 @@ import fr.proline.module.seq.Constants;
 import fr.proline.module.seq.DatabaseAccess;
 import fr.proline.module.seq.config.ParsingRuleEntry;
 import fr.proline.module.seq.config.SeqRepoConfig;
-import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
-import fr.proline.module.seq.dto.SEDbInstanceWrapper;
-import fr.proline.module.seq.orm.Alphabet;
-import fr.proline.module.seq.orm.BioSequence;
-import fr.proline.module.seq.orm.Repository;
-import fr.proline.module.seq.orm.RepositoryIdentifier;
-import fr.proline.module.seq.orm.SEDb;
-import fr.proline.module.seq.orm.SEDbIdentifier;
-import fr.proline.module.seq.orm.SEDbInstance;
-import fr.proline.module.seq.orm.SEDbInstanceComparator;
-import fr.proline.module.seq.orm.repository.BioSequenceRepository;
-import fr.proline.module.seq.orm.repository.RepositoryIdentifierRepository;
-import fr.proline.module.seq.orm.repository.SEDbIdentifierRepository;
-import fr.proline.module.seq.orm.repository.SEDbRepository;
+import fr.proline.module.seq.dto.DDatabankInstance;
+import fr.proline.module.seq.dto.DDatabankProtein;
+import fr.proline.module.seq.orm.*;
+import fr.proline.module.seq.orm.dao.BioSequenceDao;
+import fr.proline.module.seq.orm.dao.DatabankDao;
+import fr.proline.module.seq.orm.dao.DatabankProteinDao;
+import fr.proline.module.seq.orm.dao.RepositoryProteinDao;
+import fr.proline.module.seq.util.Counters;
+import fr.proline.module.seq.util.DatabankInstanceComparator;
 import fr.proline.module.seq.util.HashUtil;
 import fr.proline.module.seq.util.RegExUtil;
 import fr.proline.repository.IDatabaseConnector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import java.io.File;
+import java.sql.Timestamp;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.regex.Pattern;
+
+import static fr.proline.module.seq.Constants.PERSISTENCE;
 
 public final class BioSequenceRetriever {
 
 	/**
-	 * Protect Write Transaction on SEQ Database.
+	 * Protect Write Transaction on SEQ Databank.
 	 */
 	public static final Object SEQ_DB_WRITE_LOCK = new Object();
-
 	private static final Logger LOG = LoggerFactory.getLogger(BioSequenceRetriever.class);
 
 	/**
@@ -67,29 +47,28 @@ public final class BioSequenceRetriever {
 	private static final Object RUNNING_LOCK = new Object();
 
 	private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(Constants.calculateNThreads());
-
 	private static final DataSourceBuilder DATA_SOURCE_BUILDER = new DataSourceBuilder();
+	private static final DatabankInstanceComparator DATABANK_INSTANCE_COMPARATOR = new DatabankInstanceComparator();
 
 	/* Private constructor (Utility class) */
 	private BioSequenceRetriever() {
 	}
 
 	/**
-	 * Blocks until all given SEDbInstance are searched.
+	 * Blocks until all given DatabankInstance are searched.
 	 * 
-	 * @param seDbIdentifiers
+	 * @param proteinsByDatabank
 	 * @return Number of handled (created or updated) SEDbIdentifiers.
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	public static int retrieveBioSequences(final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers) throws Exception {
-		if ((seDbIdentifiers == null) || seDbIdentifiers.isEmpty()) {
-			throw new IllegalArgumentException("Invalid seDbIdentifiers Map");
-		}
+	public static int retrieveBioSequences(final Map<DDatabankInstance, Set<DDatabankProtein>> proteinsByDatabank) throws Exception {
 
-		LOG.info("Retrieve Sequence from {} differents source ", seDbIdentifiers.size());
+		assert ((proteinsByDatabank != null) && !proteinsByDatabank.isEmpty()) : "proteinsByDatabank must not be null";
 
-		int totalHandledSEDbIdents = 0;
+		LOG.info("Start RetrieveBioSequences from {} Databank Instance(s) ", proteinsByDatabank.size());
+
+		int totalPersistedProteinsCount = 0;
 
 		synchronized (RUNNING_LOCK) {// Only one Thread at a time
 			final long start = System.currentTimeMillis();
@@ -99,14 +78,14 @@ public final class BioSequenceRetriever {
 
 			final List<Future<Integer>> futures = new ArrayList<>();
 
-			final Set<Map.Entry<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>>> entries = seDbIdentifiers.entrySet();
+			final Set<Map.Entry<DDatabankInstance, Set<DDatabankProtein>>> entries = proteinsByDatabank.entrySet();
 
-			for (final Map.Entry<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> entry : entries) {
+			for (final Map.Entry<DDatabankInstance, Set<DDatabankProtein>> entry : entries) {
 
-				final Set<SEDbIdentifierWrapper> seDbIdentsW = entry.getValue();
-				if ((seDbIdentsW != null) && !seDbIdentsW.isEmpty()) {
+				final Set<DDatabankProtein> proteins = entry.getValue();
+				if ((proteins != null) && !proteins.isEmpty()) {
 
-					final SEDbInstanceWrapper seDbInstanceW = entry.getKey();
+					final DDatabankInstance databank  = entry.getKey();
 					final Callable<Integer> task = new Callable<Integer>() {
 
 						public Integer call() throws Exception {
@@ -115,8 +94,7 @@ public final class BioSequenceRetriever {
 							if (!(currentThread.getUncaughtExceptionHandler() instanceof ThreadLogger)) {
 								currentThread.setUncaughtExceptionHandler(new ThreadLogger(LOG));
 							}
-							LOG.debug(" GET Identifier from "+seDbInstanceW.getSourcePath());
-							return Integer.valueOf(retrieveBioSequences(seDbInstanceW, seDbIdentsW));
+							return Integer.valueOf(retrieveBioSequences(databank, proteins));
 						}
 
 					};
@@ -125,68 +103,52 @@ public final class BioSequenceRetriever {
 					futures.add(future);
 				}
 
-			} // End loop for each seDbIdentifiers entries
+			} // End loop for each proteinsByDatabank entries
 
 			/* Wait (blocking) for all futures to complete */
 			for (final Future<Integer> f : futures) {
-
-				// try { //VD : Let the error be thrown to caller.
-
 				final Integer result = f.get();
 				if (result != null) {
 					final int nHandledSEDbIdents = result.intValue();
 
 					if (nHandledSEDbIdents > 0) {
-						totalHandledSEDbIdents += nHandledSEDbIdents;
+						totalPersistedProteinsCount += nHandledSEDbIdents;
 					}
 
 				}
-				//
-				// } catch (Exception ex) {
-				// LOG.error("Error trying to get Future result", ex);
-				// }
-
 			}
 
 			final long end = System.currentTimeMillis();
 
 			final long duration = end - start;
 
-			LOG.info("Total retrieveBioSequences() execution : {} SEDbIdentifiers retrieved from sources in {} ms", totalHandledSEDbIdents, duration);
+			LOG.info("Total retrieveBioSequences() execution : {} Protein Identifiers retrieved from sources in {} ms", totalPersistedProteinsCount, duration);
 		} // End of synchronized block on RUNNING_LOCK
 
-		return totalHandledSEDbIdents;
+		return totalPersistedProteinsCount;
 	}
 
 	public static boolean waitExecutorShutdown() throws Exception {
 		boolean result = false;
-
-//		try {
-			EXECUTOR.shutdown();
-			result = EXECUTOR.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS);
-//		} catch (Exception ex) {
-//			LOG.error("Error shutting-down BioSequenceRetriever EXECUTOR", ex);
-//		}
-
+		EXECUTOR.shutdown();
+		result = EXECUTOR.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS);
 		return result;
 	}
 
-	/* Private methods */
-	private static int retrieveBioSequences(final SEDbInstanceWrapper seDbInstanceW,
-			final Set<SEDbIdentifierWrapper> seDbIdentifiers) throws Exception {
+	private static int retrieveBioSequences(final DDatabankInstance databank, final Set<DDatabankProtein> proteins) throws Exception {
 
-		assert (seDbInstanceW != null) : "retrieveBioSequences() seDbInstanceW is null";
-		int nHandledSEDbIdents = 0;
+		assert (databank != null) : "retrieveBioSequences() databank is null";
+
+		LOG.info("Start RetrieveBioSequences of {} proteins in file {}", proteins.size(), databank.getSourcePath());
+		int persistedProteinsCount = 0;
 		EntityManager seqEM = null;
 
 		try {
 			final IDatabaseConnector seqDb = DatabaseAccess.getSEQDatabaseConnector(true);
 			seqEM = seqDb.createEntityManager();
-
-			nHandledSEDbIdents = retrieveBioSequences(seqEM, seDbInstanceW, seDbIdentifiers, true);
-//		} catch (Throwable t) {
-//			/* Catch all ! */
-//			LOG.error("Error loading Sequences from [" + seDbInstanceW.getSourcePath() + ']', t);
+			Counters counters = retrieveBioSequences(seqEM, databank, proteins, true);
+			persistedProteinsCount = counters.sum("persisted");
+			counters.report(LOG);
 		} finally {
 
 			if (seqEM != null) {
@@ -196,101 +158,81 @@ public final class BioSequenceRetriever {
 					LOG.error("Error closing SEQ Db EntityManager", exClose);
 				}
 			}
-
 		}
 
-		return nHandledSEDbIdents;
+		return persistedProteinsCount;
 	}
 
-	private static int retrieveBioSequences(
+	private static Counters retrieveBioSequences(
 		final EntityManager seqEM,
-		final SEDbInstanceWrapper seDbInstanceW,
-		final Set<SEDbIdentifierWrapper> seDbIdentifiers,
-		final boolean doRecurse) throws Exception {
-		assert (seDbInstanceW != null) : "retrieveBioSequences() seDbInstanceW is null";
+		final DDatabankInstance dDatabankInstance,
+		final Set<DDatabankProtein> proteins,
+		final boolean doApproximate) throws Exception {
 
-		int nHandledSEDbIdents = 0;
+		assert (dDatabankInstance != null) : "retrieveBioSequences() databankInstance is null";
 
-		final Map<String, List<SEDbIdentifierWrapper>> identByValues = buildIdentbyValuesMap(seDbIdentifiers);
+		Counters counters = new Counters(dDatabankInstance.getName());
 
-		final String seDbName = seDbInstanceW.getName();
-		final String sourcePath = seDbInstanceW.getSourcePath();
+		final Map<String, List<DDatabankProtein>> proteinsByIdentifier = buildProteinsByIdentifierMap(proteins);
 
-		final String fastaFileName = FileUtils.extractFileName(sourcePath);
+		final String databankInstanceName = dDatabankInstance.getName();
+		final String sourcePath = dDatabankInstance.getSourcePath();
+		final String sourceFileName = FileUtils.extractFileName(sourcePath);
 
-		/* Try to load SEDbInstance, SEDb, ParsingRule */
-		SEDbInstance seDbInstance = loadSEDbInstance(seqEM, seDbInstanceW, fastaFileName);
-		if (seDbInstance != null) {
-			removeKnownIdentifiers(seqEM, seDbInstance, identByValues);
-		}
+		String releaseRegex = null;
+		String proteinIdentifierRegex = null;
+		String release = null;
 
-		String parsingRuleReleaseRegex = null;
-		String seDbIdentRegex = null;
-		ParsingRuleEntry parsingRule = ParsingRuleEntry.getParsingRuleEntry(fastaFileName);
+		ParsingRuleEntry parsingRule = ParsingRuleEntry.getParsingRuleEntry(sourceFileName);
 		if(parsingRule != null){
-			parsingRuleReleaseRegex = parsingRule.getFastaReleaseRegEx();
-			seDbIdentRegex = parsingRule.getProteinAccRegEx();
+			releaseRegex = parsingRule.getFastaReleaseRegEx();
+			proteinIdentifierRegex = parsingRule.getProteinAccRegEx();
+			release = RegExUtil.parseReleaseVersion(sourceFileName, releaseRegex);
 		}
 
-		/* Retrieve or guess Parsing rules */
-		final String release = parseReleaseVersion(fastaFileName, parsingRuleReleaseRegex, seDbInstance);
-		seDbInstanceW.setRelease(release);
+		DatabankInstance databankInstance = searchDatabankInstance(seqEM, dDatabankInstance, release);
+		release = getReleaseInformation(release, databankInstance);
+		dDatabankInstance.setRelease(release);
 
-		if (!identByValues.isEmpty()) {
+		if (databankInstance != null) {
+			removeAlreadyPersistedIdentifiers(seqEM, databankInstance, proteinsByIdentifier);
+		}
 
-////			String repositoryIdentRegex = null; //VD TODO How to manage it !!
-//			String parsingRuleReleaseRegex = null;
-//			String seDbIdentRegex = null;
-//			ParsingRuleEntry parsingRule = ParsingRuleEntry.getParsingRuleEntry(fastaFileName);
-//			if(parsingRule != null){
-//				parsingRuleReleaseRegex = parsingRule.getFastaReleaseRegEx();
-//				seDbIdentRegex = parsingRule.getProteinAccRegEx();
-//			}
-//
 
-//			/* Retrieve or guess Parsing rules */
-//			final String release = parseReleaseVersion(fastaFileName, parsingRuleReleaseRegex, seDbInstance);
-			
-			Pattern seDbIdentPattern = null;
-			if (seDbIdentRegex == null) {
-				LOG.debug("Sequence source [{}] will be parsed with Default Protein Accession Regex", sourcePath);
+		if (!proteinsByIdentifier.isEmpty()) {
+
+			Pattern proteinIdentifierPattern = null;
+			if (proteinIdentifierRegex == null) {
 				String defaultRegEx = SeqRepoConfig.getInstance().getDefaultProtAccRegEx();
-				seDbIdentPattern = Pattern.compile(defaultRegEx, Pattern.CASE_INSENSITIVE);					
+				LOG.debug("Sequence source [{}] will be parsed with Default Protein Accession Regex {}", sourcePath, defaultRegEx);
+				proteinIdentifierPattern = Pattern.compile(defaultRegEx, Pattern.CASE_INSENSITIVE);
 			} else {
-				LOG.debug("Sequence source [{}] will be parsed using Protein Accession Regex {} ", fastaFileName, seDbIdentRegex);
-				seDbIdentPattern = Pattern.compile(seDbIdentRegex, Pattern.CASE_INSENSITIVE);
+				LOG.debug("Sequence source [{}] will be parsed using Protein Accession Regex {} ", sourceFileName, proteinIdentifierRegex);
+				proteinIdentifierPattern = Pattern.compile(proteinIdentifierRegex, Pattern.CASE_INSENSITIVE);
 			}
 
-			Pattern repositoryIdentPattern = null;
-//
-//			if (repositoryIdentRegex != null) {
-//				repositoryIdentPattern = Pattern.compile(repositoryIdentRegex, Pattern.CASE_INSENSITIVE);
-//			}
-
-			final DataSource fastaSource = DATA_SOURCE_BUILDER.buildFastaSource(fastaFileName, seDbIdentPattern, repositoryIdentPattern);
+			final DataSource fastaSource = DATA_SOURCE_BUILDER.buildFastaSource(sourceFileName, proteinIdentifierPattern, null);
 
 			if (fastaSource == null) {
-				LOG.warn("NO FastaSource found for [{}]", sourcePath);
-
-				if (doRecurse) {
-
-					final File bestFastaFile = selectBestFile(fastaFileName, release, parsingRuleReleaseRegex);
+				LOG.warn("No Fasta file found matching source path [{}]", sourcePath);
+				if (doApproximate) {
+					LOG.info("Trying to find the closest matching filename to {}", sourceFileName);
+					final File bestFastaFile = selectBestMatchingFastaFile(sourceFileName, release, releaseRegex);
 					if (bestFastaFile != null) {
 						LOG.info("Trying to load [{}] sequences from [{}]", sourcePath, bestFastaFile.getAbsolutePath());
-						final SEDbInstanceWrapper fakeSEDbInstance = new SEDbInstanceWrapper(seDbName, null, bestFastaFile.getName());
-						nHandledSEDbIdents = retrieveBioSequences(seqEM, fakeSEDbInstance, seDbIdentifiers, false);
+						return retrieveBioSequences(seqEM, new DDatabankInstance(databankInstanceName, null, bestFastaFile.getName()), proteins, false);
+					} else {
+						LOG.warn("No filename nearly matching to source path [{}] found", sourcePath);
 					}
-
 				}
-
 			} else {
 
-				final Map<SEDbIdentifierWrapper, String> foundSequences = fastaSource.retrieveSequences(identByValues);
+				LOG.info("Searching {} BioSequences from sourcePath [{}]", proteinsByIdentifier.size(), sourcePath);
+
+				final Map<DDatabankProtein, String> foundSequences = fastaSource.retrieveSequences(proteinsByIdentifier);
 				if ((foundSequences != null) && !foundSequences.isEmpty()) {
 
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Retrieved {} sequences from [{}]", foundSequences.size(), sourcePath);
-					}
+					LOG.info("{} BioSequences have been extracted from sourcePath [{}]", foundSequences.size(), sourcePath);
 
 					/* Big write lock on SEQ Db */
 					synchronized (SEQ_DB_WRITE_LOCK) {// Only one Thread at a time
@@ -304,67 +246,49 @@ public final class BioSequenceRetriever {
 							LOG.debug("SEQ Db WRITE Transaction begin");
 							final long start = System.currentTimeMillis();
 
-							if (seDbInstance == null) {
-								seDbInstance = loadOrCreateSEDbInstance(seqEM, seDbInstanceW, null, release, fastaSource.getLastModifiedTime());
+							if (databankInstance == null) {
+								databankInstance = findOrCreateDatabankInstance(seqEM, dDatabankInstance, null, release, fastaSource.getLastModifiedTime());
 							} else {
-								seDbInstance = seqEM.merge(seDbInstance);
+								databankInstance = seqEM.merge(databankInstance);
 							}
 
-							SEDb seDb = seDbInstance.getSEDb();// Update seDb (should not be null)
+							final Map<String, List<DatabankProtein>> existingProteins = searchExistingProteins(seqEM, databankInstanceName, foundSequences.keySet());
+							LOG.debug("{} Proteins already exists in the databank {}", existingProteins.size(), databankInstance);
 
-							final Map<String, List<SEDbIdentifier>> existingSEDbIdents = loadExistingSEDbIdentifiers(seqEM, seDbName, foundSequences);
+							final Map<String, BioSequence> existingBioSequences = findExistingBioSequences(seqEM, foundSequences.values());
+							LOG.debug("{} BioSequence already exists in the SeqDB (compared by hash code)", existingBioSequences.size());
 
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("Possible existing SEDbIdentifiers : {}", existingSEDbIdents.size());
-							}
-
-							/* BioSequence objects must be unique by sequence (normalized to Upper Case) */
-							final Map<String, BioSequence> existingBioSequences = loadExistingBioSequences(seqEM, foundSequences);
-
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("Existing BioSequences : {}", existingBioSequences.size());
-							}
-
-							final Repository repository = seDb.getRepository();
-
-							Map<String, RepositoryIdentifier> existingRepositoryIdents = null;
+							final Repository repository = databankInstance.getDatabank().getRepository();
+							Map<String, RepositoryProtein> existingRepositoryIdents = null;
 
 							if (repository != null) {// Can be null
 								final String repositoryName = repository.getName();// Should not be null
 								existingRepositoryIdents = loadExistingRepositoryIdentifiers(seqEM, repositoryName, foundSequences);
-
-								if (LOG.isDebugEnabled()) {
-									LOG.debug("Possible existing RepositoryIdentifiers : {}",
-										existingRepositoryIdents.size());
-								}
-
+								LOG.debug("Possible existing RepositoryIdentifiers : {}", existingRepositoryIdents.size());
 							}
 
-							final SeqContext context = new SeqContext(seqEM, seDbInstance, existingSEDbIdents, existingBioSequences, repository,
-									existingRepositoryIdents);
+							final RetrieverContext context = new RetrieverContext(
+											seqEM,
+											databankInstance,
+											existingProteins,
+											existingBioSequences,
+											repository,
+											existingRepositoryIdents,
+											counters);
 
-							final Set<Map.Entry<SEDbIdentifierWrapper, String>> entries = foundSequences.entrySet();
 
-							for (final Map.Entry<SEDbIdentifierWrapper, String> entry : entries) {
-								final SEDbIdentifierWrapper seDbIdentW = entry.getKey();
+							for (final Map.Entry<DDatabankProtein, String> entry : foundSequences.entrySet()) {
+								final DDatabankProtein protein = entry.getKey();
 								final String sequence = entry.getValue();
-
-								if (handleSEDbIdentifier(context, seDbIdentW, sequence)) {
-									++nHandledSEDbIdents;
-								}
-
+								persistProteinIfNeeded(context, protein, sequence);
 							}
 
 							seqTransac.commit();
 							transacOK = true;
 
-							final long end = System.currentTimeMillis();
+							long duration = System.currentTimeMillis() - start;
+							LOG.info("SeqDb WRITE Transaction committed : {} proteins persisted from [{}] in {} ms", counters.sum("persisted"), sourcePath, duration);
 
-							final long duration = end - start;
-
-							LOG.info(
-									"SEQ Db WRITE Transaction committed : {} SEDbIdentifiers handled from [{}] in {} ms",
-									nHandledSEDbIdents, sourcePath, duration);
 						} finally {
 
 							if ((seqTransac != null) && !transacOK) {
@@ -374,67 +298,56 @@ public final class BioSequenceRetriever {
 									LOG.error("Error rollbacking SEQ Db EntityManager Transaction", ex);
 								}
 							}
-
 						} // End of try / finally block on SEQ Db EntityManager Transaction
-
 					} // End of synchronized block on SEQ_DB_WRITE_LOCK
-
 				}
-
 			}
-
 		}
 
-		return nHandledSEDbIdents;
+		return counters;
 	}
 
-	private static String parseReleaseVersion(
-		final String fastaFileName,
-		final String parsingRuleReleaseRegex,
-		final SEDbInstance seDbInstance) {
-		String release = null;
+	private static String getReleaseInformation(
+					final String release,
+					final DatabankInstance databankInstance) {
 
-		if (parsingRuleReleaseRegex != null)
-			release = RegExUtil.parseReleaseVersion(fastaFileName, parsingRuleReleaseRegex);
-
-		if(seDbInstance != null) {
-			if (release == null)
-				release = seDbInstance.getRelease();
-			else {
-
-				final String instanceRelease = seDbInstance.getRelease();// Should not be null
+		if (databankInstance != null) {
+			if (release == null) {
+				return databankInstance.getRelease();
+			} else {
+				final String instanceRelease = databankInstance.getRelease();// Should not be null
 				if (!release.equals(instanceRelease)) {
 					throw new RuntimeException("Inconsistent Release version");
 				}
 			}
 		}
-
 		return release;
 	}
 
 
 
 	/**
-	 * Try to select an existing FASTA file just after expected SEDbInstance
+	 * Try to select among existing Fasta file one approximately matching the fastaFilename
 	 * release.
 	 *
 	 * @throws Exception
 	 * 
 	 */
-	private static File selectBestFile(
-		final String fastaFileName,
+	private static File selectBestMatchingFastaFile(
+		final String sourceFileName,
 		final String release,
 		final String parsingRuleReleaseRegex) throws Exception {
-		assert (fastaFileName != null) : "selectBestFile() fastaFileName is null";
+
+		assert (sourceFileName != null) : "selectBestMatchingFastaFile() sourceFileName is null";
 
 		File result = null;
 
 		if (!StringUtils.isEmpty(release)) {
 
-			final int releaseIndex = fastaFileName.indexOf(release);
+			final int releaseIndex = sourceFileName.indexOf(release);
 			if (releaseIndex != -1) {
 
-				final String namePart = fastaFileName.substring(0, releaseIndex);
+				final String namePart = sourceFileName.substring(0, releaseIndex);
 				if (!StringUtils.isEmpty(namePart)) {
 
 					final List<File> fastaFiles = DATA_SOURCE_BUILDER.locateFastaFile(namePart);
@@ -464,9 +377,7 @@ public final class BioSequenceRetriever {
 									LOG.info("Use latest version of [{}]", f.getAbsolutePath());
 									sortedFiles.put(fRelease, f);
 								}
-
 							}
-
 						} // End loop for each possible fastaFile
 
 						/* First try file just after */
@@ -482,78 +393,77 @@ public final class BioSequenceRetriever {
 							if (floorEntry != null) {
 								result = floorEntry.getValue();
 							}
-
 						}
-
 					} // End if (fastaFiles is not empty)
-
 				} // End if (namePart is not empty)
-
-			} // End if (fastaFileName contains release)
-
+			} // End if (sourceFileName contains release)
 		} // End if (release string is not empty)
 
 		return result;
 	}
 
-	private static Map<String, List<SEDbIdentifierWrapper>> buildIdentbyValuesMap(final Set<SEDbIdentifierWrapper> seDbIdentifiers) {
-		assert (seDbIdentifiers != null) : "buildIdentbyValuesMap() seDbIdentifiers Set is null";
+	private static Map<String, List<DDatabankProtein>> buildProteinsByIdentifierMap(final Set<DDatabankProtein> proteins) {
 
-		final Map<String, List<SEDbIdentifierWrapper>> result = new HashMap<>();
+		assert (proteins != null) : "buildProteinsByIdentifierMap() proteins Set is null";
+		final Map<String, List<DDatabankProtein>> result = new HashMap<>();
 
-		for (final SEDbIdentifierWrapper sdi : seDbIdentifiers) {
-			final String identValue = sdi.getValue();
-
-			List<SEDbIdentifierWrapper> identifiers = result.get(identValue);
-
+		for (final DDatabankProtein sdi : proteins) {
+			final String identValue = sdi.getIdentifier();
+			List<DDatabankProtein> identifiers = result.get(identValue);
 			if (identifiers == null) {
 				identifiers = new ArrayList<>(1);// Assume one SEDbIdentWrapper by identValue
-
 				result.put(identValue, identifiers);
 			}
-
 			identifiers.add(sdi);
-		} // End loop for each seDbIdentifiers
+		} // End loop for each proteins
 
 		return result;
 	}
 
-	private static SEDbInstance loadSEDbInstance(
+	/*
+	 * Search for the DataBank instance in the SeqDB. The instance is search by matching name and sourcepath from the
+	 * dDatabankInstance object or by matching name and release.
+	 */
+	private static DatabankInstance searchDatabankInstance(
 		final EntityManager seqEM,
-		final SEDbInstanceWrapper seDbInstanceW,
-		final String fastaFileName) {
-		assert (seDbInstanceW != null) : "loadSEDbInstance() seDbInstanceW is null";
+		final DDatabankInstance dDatabankInstance,
+		final String release) {
 
-		final String seDbName = seDbInstanceW.getName();
-		final String sourcePath = seDbInstanceW.getSourcePath();
+		assert (dDatabankInstance != null) : "searchDatabankInstance() dDatabankInstance is null";
 
-		SEDbInstance result = null;
+		final String seDbName = dDatabankInstance.getName();
+		final String sourcePath = dDatabankInstance.getSourcePath();
 
-		/* First try to load by sourcePath */
-		final List<SEDbInstance> foundSEDbInstances = SEDbRepository.findSEDbInstanceByNameAndSourcePath(seqEM, seDbName, sourcePath);
+		DatabankInstance result = null;
+
+		//
+		// First try to load the databank instance from SeqDB by Name and SourcePath
+		//
+		final List<DatabankInstance> foundSEDbInstances = DatabankDao.findSEDbInstanceByNameAndSourcePath(seqEM, seDbName, sourcePath);
 		if (foundSEDbInstances != null) {
 			final int nInstances = foundSEDbInstances.size();
-
 			if (nInstances == 1) {
 				result = foundSEDbInstances.get(0);
+				LOG.info("DatabankInstance matching name:{} and sourcePath:{} found", seDbName, sourcePath);
 			} else if (nInstances > 1) {
-				LOG.warn("There are {} SEDbInstance for sourcePath [{}]", nInstances, sourcePath);
+				LOG.warn("There are {} DatabankInstances in SeqDB matching name:{} and sourcePath:{}", nInstances, seDbName, sourcePath);
 			}
-
 		}
 
 		if (result == null) {
-			/* Then try to parse release and load by release */
-
-			String parsingRuleReleaseRegex = null;
-			ParsingRuleEntry pre = ParsingRuleEntry.getParsingRuleEntry(fastaFileName);
-			if (pre != null) {
-				parsingRuleReleaseRegex = pre.getFastaReleaseRegEx();
-				final String release = RegExUtil.parseReleaseVersion(fastaFileName, parsingRuleReleaseRegex);
+			//
+			// If the DatabankInstance cannot be found in the SeqDB, then try find DatabankInstance by name and release
+			//
+			LOG.warn("DatabankInstance (name, sourcePath) not found or ambiguous in SeqDB, trying to search by release extracted from the fasta filename");
 				if (release != null && !StringUtils.isEmpty(release)) {
-					result = SEDbRepository.findSEDbInstanceByNameAndRelease(seqEM, seDbName, release);
+					LOG.warn("Search DatabankInstance in SeqDB, from the name:{} and release:{}", seDbName, release);
+					result = DatabankDao.findSEDbInstanceByNameAndRelease(seqEM, seDbName, release);
+					if (result == null) {
+						LOG.warn("DatabankInstance (name, release) not found in SeqDB");
+					}
+				}  else {
+					LOG.warn("No Release information supplied, DatabankInstance cannot be found in the SeqDB");
 				}
-			}
 		}
 
 		return result;
@@ -563,55 +473,54 @@ public final class BioSequenceRetriever {
 	 * Removes Identifiers already known in the SeqDB from the supplied Map.
 	 * 
 	 * @param seqEM
-	 * @param seDbInstance
-	 * @param identByValues
+	 * @param databankInstance
+	 * @param proteinsByIdentifier
 	 */
-	private static void removeKnownIdentifiers(
+	private static void removeAlreadyPersistedIdentifiers(
 		final EntityManager seqEM,
-		final SEDbInstance seDbInstance,
-		final Map<String, List<SEDbIdentifierWrapper>> identByValues) {
-		assert (seDbInstance != null) : "removeKnownIdentifiers() seDbInstance is null";
-		assert ((identByValues != null) && !identByValues.isEmpty()) : "removeKnownIdentifiers() invalid identByValues";
+		final DatabankInstance databankInstance,
+		final Map<String, List<DDatabankProtein>> proteinsByIdentifier) {
 
-		final Set<String> distinctIndentValues = identByValues.keySet();
+		assert (databankInstance != null) : "removeAlreadyPersistedIdentifiers() databankInstance is null";
+		assert ((proteinsByIdentifier != null) && !proteinsByIdentifier.isEmpty()) : "removeAlreadyPersistedIdentifiers() invalid proteinsByIdentifier";
 
-		final List<SEDbIdentifier> knownIdents = SEDbIdentifierRepository.findSEDbIdentBySEDbInstanceAndValues(seqEM, seDbInstance, distinctIndentValues);
+		final Set<String> distinctIdentifiers = proteinsByIdentifier.keySet();
+		final List<DatabankProtein> proteinsInDatabank = DatabankProteinDao.findProteinsInDatabank(seqEM, databankInstance, distinctIdentifiers);
 
-		int nRemovedIdents = 0;
+		int removedIdentifiersCount = 0;
 
-		if ((knownIdents != null) && !knownIdents.isEmpty()) {
+		if ((proteinsInDatabank != null) && !proteinsInDatabank.isEmpty()) {
 
-			for (final SEDbIdentifier seDbIdent : knownIdents) {
-				final String knownValue = seDbIdent.getValue();
-
-				if (identByValues.remove(knownValue) != null) {
-					++nRemovedIdents;
+			for (final DatabankProtein protein : proteinsInDatabank) {
+				final String identifier = protein.getIdentifier();
+				if (proteinsByIdentifier.remove(identifier) != null) {
+					++removedIdentifiersCount;
 				}
 
 			}
 
 		}
 
-		if ((nRemovedIdents > 0) && LOG.isDebugEnabled()) {
-			final String sourcePath = seDbInstance.getSourcePath();// Should not be null
-			LOG.debug("{} already known identifiers removed from search list for SEDbInstance [{}]", nRemovedIdents, sourcePath);
+		if ((removedIdentifiersCount > 0) && LOG.isDebugEnabled()) {
+			LOG.info("{} already known identifiers removed from search list for DatabankInstance {}", removedIdentifiersCount, databankInstance);
 		}
 
 	}
 
 	/* Must be called holding SEQ_DB_WRITE_LOCK */
-	private static SEDbInstance loadOrCreateSEDbInstance(
+	private static DatabankInstance findOrCreateDatabankInstance(
 		final EntityManager seqEM,
-		final SEDbInstanceWrapper seDbInstanceW,
-		final SEDb seDb,
+		final DDatabankInstance dDatabankInstance,
+		final Databank databank,
 		final String release,
 		final Date lastModifiedTime) {
-		assert (seDbInstanceW != null) : "loadOrCreateSEDbInstance() seDbInstanceW is null";
-		assert (lastModifiedTime != null) : "loadOrCreateSEDbInstance() lastModifiedTime is null";
+
+		assert (dDatabankInstance != null) : "findOrCreateDatabankInstance() dDatabankInstance is null";
+		assert (lastModifiedTime != null) : "findOrCreateDatabankInstance() lastModifiedTime is null";
 
 		String seDbRelease = null;
 
-		final String seDbName = seDbInstanceW.getName();
+		final String seDbName = dDatabankInstance.getName();
 
 		if (StringUtils.isEmpty(release)) {
 			seDbRelease = DateUtils.formatReleaseDate(lastModifiedTime);
@@ -619,117 +528,101 @@ public final class BioSequenceRetriever {
 			seDbRelease = release;
 		}
 
-		SEDbInstance result = SEDbRepository.findSEDbInstanceByNameAndRelease(seqEM, seDbName, seDbRelease);
+		DatabankInstance databankInstance = DatabankDao.findSEDbInstanceByNameAndRelease(seqEM, seDbName, seDbRelease);
 
-		if (result == null) {
-			result = new SEDbInstance();
-			result.setRelease(seDbRelease);
-			result.setSourcePath(seDbInstanceW.getSourcePath());
-			result.setSourceLastModifiedTime(new Timestamp(lastModifiedTime.getTime()));
+		if (databankInstance == null) {
+			databankInstance = new DatabankInstance();
+			databankInstance.setRelease(seDbRelease);
+			databankInstance.setSourcePath(dDatabankInstance.getSourcePath());
+			databankInstance.setSourceLastModifiedTime(new Timestamp(lastModifiedTime.getTime()));
 
-			SEDb newSEDb = null;
+			Databank jpaDatabank = null;
 
-			if (seDb == null) {
-				newSEDb = loadOrCreateSEDb(seqEM, seDbName);
+			if (databank == null) {
+				jpaDatabank = findOrCreateDatabank(seqEM, seDbName);
 			} else {
-				newSEDb = seqEM.merge(seDb);
+				jpaDatabank = seqEM.merge(databank);
 			}
 
-			result.setSEDb(newSEDb);
-
-			seqEM.persist(result);
-
-			/* Check number of SEDbInstances and order */
-			final String retrievedSEDbName = newSEDb.getName();// Should not be null
-
-			final List<SEDbInstance> seDbInstances = SEDbRepository.findSEDbInstanceBySEDbName(seqEM,
-				retrievedSEDbName);
-			if (seDbInstances != null) {
-				final int nInstances = seDbInstances.size();
-
-				if (nInstances > 1) {
-					LOG.info("There are {} SEDbInstances for SEDb [{}]", nInstances, retrievedSEDbName);
-				}
-
-			}
+			databankInstance.setDatabank(jpaDatabank);
+			persist(seqEM, databankInstance);
 
 		}
 
-		return result;
+		return databankInstance;
 	}
 
 	/* Must be called holding SEQ_DB_WRITE_LOCK */
-	private static SEDb loadOrCreateSEDb(
+	private static Databank findOrCreateDatabank(
 		final EntityManager seqEM,
-		final String seDbName) {
-		assert (!StringUtils.isEmpty(seDbName)) : "loadOrCreateSEDb() invalid seDbName";
+		final String databankName) {
+		assert (!StringUtils.isEmpty(databankName)) : "findOrCreateDatabank() invalid databankName";
 
-		SEDb result = SEDbRepository.findSEDbByName(seqEM, seDbName);
+		Databank databank = DatabankDao.findSEDbByName(seqEM, databankName);
 
-		if (result == null) {
-			result = new SEDb();
-			result.setName(seDbName);
-			result.setAlphabet(Alphabet.AA);// Default to Amino Acid sequence
-
-			seqEM.persist(result);
+		if (databank == null) {
+			databank = new Databank();
+			databank.setName(databankName);
+			databank.setAlphabet(Alphabet.AA);// Default to Amino Acid sequence
+			persist(seqEM, databank);
 		}
 
-		return result;
+		return databank;
 	}
 
-
-	private static Map<String, List<SEDbIdentifier>> loadExistingSEDbIdentifiers(
+	/**
+	 * Search in databankName proteins matching identifiers extracted from the specified proteins parameter.
+	 * The search do not take into account the release or sourcePath of the databank. As a result, a single
+	 * identifier can be found several times by this search.
+	 *
+	 * @param seqEM
+	 * @param databankName
+	 * @param proteins
+	 * @return
+	 */
+	private static Map<String, List<DatabankProtein>> searchExistingProteins(
 		final EntityManager seqEM,
-		final String seDbName,
-		final Map<SEDbIdentifierWrapper, String> foundSequences) {
-		assert (foundSequences != null) : "loadExistingSEDbIdentifiers() foundSequences Map is null";
+		final String databankName,
+		final Set<DDatabankProtein> proteins) {
 
-		final Map<String, List<SEDbIdentifier>> result = new HashMap<>();// Multimap
+		assert (proteins != null) : "searchExistingProteins() proteins Map is null";
 
-		final Set<String> valuesSet = new HashSet<>();
+		final Map<String, List<DatabankProtein>> result = new HashMap<>();
+		final Set<String> identifiers = new HashSet<>();
 
-		final Set<SEDbIdentifierWrapper> identifiers = foundSequences.keySet();
-
-		for (final SEDbIdentifierWrapper ident : identifiers) {
-			valuesSet.add(ident.getValue());
+		for (final DDatabankProtein protein : proteins) {
+			identifiers.add(protein.getIdentifier());
 		}
 
-		if (!valuesSet.isEmpty()) {
+		if (!identifiers.isEmpty()) {
+			final List<DatabankProtein> foundProteins = DatabankProteinDao.findProteinsInDatabankName(seqEM, databankName, identifiers);
+			if ((foundProteins != null) && !foundProteins.isEmpty()) {
 
-			final List<SEDbIdentifier> foundIdentifiers = SEDbIdentifierRepository
-					.findSEDbIdentBySEDbNameAndValues(seqEM, seDbName, valuesSet);
-			if ((foundIdentifiers != null) && !foundIdentifiers.isEmpty()) {
-				for (final SEDbIdentifier ident : foundIdentifiers) {
-					final String key = ident.getValue();
+				for (DatabankProtein protein : foundProteins) {
+					final String identifier = protein.getIdentifier();
+					List<DatabankProtein> proteinList = result.get(identifier);
 
-					List<SEDbIdentifier> idents = result.get(key);
-
-					if (idents == null) {
-						idents = new ArrayList<>();
-
-						result.put(key, idents);
+					if (proteinList == null) {
+						proteinList = new ArrayList<>();
+						result.put(identifier, proteinList);
 					}
-
-					idents.add(ident);
+					proteinList.add(protein);
 				}
 			}
-
 		}
 
 		return result;
 	}
 
 	/* Distinct BioSequences by Hash */
-	private static Map<String, BioSequence> loadExistingBioSequences(
+	private static Map<String, BioSequence> findExistingBioSequences(
 		final EntityManager seqEM,
-		final Map<SEDbIdentifierWrapper, String> foundSequences) {
-		assert (foundSequences != null) : "loadExistingBioSequences() foundSequences Map is null";
+		final Collection<String> sequences) {
+
+		assert (sequences != null) : "findExistingBioSequences() sequences collection is null";
 
 		final Map<String, BioSequence> result = new HashMap<>();
-
 		final Set<String> hashesSet = new HashSet<>();
-
-		final Collection<String> sequences = foundSequences.values();
 
 		for (final String sequence : sequences) {
 			final String hash = HashUtil.calculateSHA256(sequence);
@@ -737,34 +630,31 @@ public final class BioSequenceRetriever {
 		}
 
 		if (!hashesSet.isEmpty()) {
-
-			final List<BioSequence> foundBSs = BioSequenceRepository.findBioSequenceByHashes(seqEM, hashesSet);
+			final List<BioSequence> foundBSs = BioSequenceDao.findBioSequenceByHashes(seqEM, hashesSet);
 			if ((foundBSs != null) && !foundBSs.isEmpty()) {
 				for (final BioSequence bs : foundBSs) {
 					final String hash = bs.getHash();
 					result.put(hash, bs);
 				}
 			}
-
 		}
-
 		return result;
 	}
 
 	/* Distinct RepositoryIdentifiers (associated with the same Repository identified by its name) by value */
-	private static Map<String, RepositoryIdentifier> loadExistingRepositoryIdentifiers(
+	private static Map<String, RepositoryProtein> loadExistingRepositoryIdentifiers(
 		final EntityManager seqEM,
 		final String repositoryName,
-		final Map<SEDbIdentifierWrapper, String> foundSequences) {
+		final Map<DDatabankProtein, String> foundSequences) {
 		assert (foundSequences != null) : "loadExistingRepositoryIdentifiers() foundSequences Map is null";
 
-		final Map<String, RepositoryIdentifier> result = new HashMap<>();
+		final Map<String, RepositoryProtein> result = new HashMap<>();
 
 		final Set<String> valuesSet = new HashSet<>();
 
-		final Set<SEDbIdentifierWrapper> identifiers = foundSequences.keySet();
+		final Set<DDatabankProtein> identifiers = foundSequences.keySet();
 
-		for (final SEDbIdentifierWrapper ident : identifiers) {
+		for (final DDatabankProtein ident : identifiers) {
 
 			final String repositoryIdentValue = ident.getRepositoryIdentifier();
 			if (repositoryIdentValue != null) {// Can be null
@@ -775,10 +665,9 @@ public final class BioSequenceRetriever {
 
 		if (!valuesSet.isEmpty()) {
 
-			final List<RepositoryIdentifier> foundIdentifiers = RepositoryIdentifierRepository
-					.findRepositoryIdentByRepoNameAndValues(seqEM, repositoryName, valuesSet);
+			final List<RepositoryProtein> foundIdentifiers = RepositoryProteinDao.findRepositoryIdentByRepoNameAndValues(seqEM, repositoryName, valuesSet);
 			if ((foundIdentifiers != null) && !foundIdentifiers.isEmpty()) {
-				for (final RepositoryIdentifier ident : foundIdentifiers) {
+				for (final RepositoryProtein ident : foundIdentifiers) {
 					final String repositoryIdentValue = ident.getValue();
 					result.put(repositoryIdentValue, ident);
 				}
@@ -789,189 +678,178 @@ public final class BioSequenceRetriever {
 		return result;
 	}
 
-	/* Must be called holding SEQ_DB_WRITE_LOCK */
-	private static boolean handleSEDbIdentifier(
-		final SeqContext context,
-		final SEDbIdentifierWrapper seDbIdentW,
-		final String sequence) {
-		assert (context != null) : "handleSEDbIdentifier() context is null";
-		assert (seDbIdentW != null) : "handleSEDbIdentifier() seDbIdentW is null";
-		assert (sequence != null) : "handleSEDbIdentifier() sequence is null";
+	/**
+	 * Persist if needed the specified (protein,sequence) tuple. Returns true if the protein is persisted
+	 * or if an existing object mach the (protein, sequence) tuple.
+	 *
+	 * Must be called holding SEQ_DB_WRITE_LOCK
+	 *
+	 * @param context
+	 * @param protein
+	 * @param sequence
+	 * @return
+	 */
+		private static void persistProteinIfNeeded(final RetrieverContext context, final DDatabankProtein protein, final String sequence) {
 
-		boolean seDbIdentModified = false;
+		assert (context != null) : "persistProteinIfNeeded() context is null";
+		assert (protein != null) : "persistProteinIfNeeded() protein is null";
+		assert (sequence != null) : "persistProteinIfNeeded() sequence is null";
 
-		final String identValue = seDbIdentW.getValue();
 
-		final Map<String, List<SEDbIdentifier>> existingSEDbIdents = context.getExistingSEDbIdents();
-		final List<SEDbIdentifier> existingIdents = existingSEDbIdents.get(identValue);
+		final String proteinIdentifier = protein.getIdentifier();
+		final List<DatabankProtein> matchingProteins = context.getExistingProteins().get(proteinIdentifier);
 
-		if ((existingIdents == null) || existingIdents.isEmpty()) {
-			persistNewSEDbIdentifier(context, seDbIdentW, sequence);
-			seDbIdentModified = true;
+		if ((matchingProteins == null) || matchingProteins.isEmpty()) {
+			LOG.info("Persist new Protein Identifier [{}] in Databank {}", proteinIdentifier, context.getDatabankInstance());
+			persistDatabankProtein(context, protein, sequence);
+			context.getCounters().inc("New Proteins persisted");
 		} else {
-			final SEDbInstance seDbInstance = context.getSEDbInstance();
+			final DatabankInstance databankInstance = context.getDatabankInstance();
+			boolean sequenceMatched = false;
 
-			boolean sameSequence = false;
+			for (final DatabankProtein matchingProtein : matchingProteins) {
 
-			final SEDbInstanceComparator comparator = new SEDbInstanceComparator();
+				final String matchingSequence = matchingProtein.getBioSequence().getSequence();
 
-			for (final SEDbIdentifier existingIdent : existingIdents) {
-				// Should not be null
-				final BioSequence existingBs = existingIdent.getBioSequence();
-				final String existingSequence = existingBs.getSequence();
-
-				if (sequence.equals(existingSequence)) {
-
-					if (sameSequence) {
-						final SEDb seDb = seDbInstance.getSEDb();// Should not be null
-						final String seDbName = seDb.getName();// Should not be null
-
-						LOG.error(
-							"There are multiple SEDbIdentifier [{}] with same BioSequence for SEDb [{}] Must clean SEQ Database",
-							identValue, seDbName);
+				if (sequence.equals(matchingSequence)) {
+					if (sequenceMatched) {
+						final String databankName = databankInstance.getDatabank().getName();
+						LOG.error( "There are several proteins named [{}] with the same BioSequence for Databank [{}], this should not happen", proteinIdentifier, databankName);
 					} else {
-						sameSequence = true;
+						sequenceMatched = true;
+						final DatabankInstance matchedDatabankInstance = matchingProtein.getDatabankInstance();
 
-						// Should not be null
-						final SEDbInstance existingSEDbInstance = existingIdent.getSEDbInstance();
-
-						if (comparator.compare(existingSEDbInstance, seDbInstance) < 0) {
-							/* Update SEDbIdentifier to newest seDbInstance */
-							existingIdent.setSEDbInstance(seDbInstance);
-							seDbIdentModified = true;
-
-							updateRepositoryIdentifier(context, existingIdent, seDbIdentW);
+						if (DATABANK_INSTANCE_COMPARATOR.compare(matchedDatabankInstance, databankInstance) < 0) {
+							// Update DatabankProtein to newest databankInstance
+							// TODO: CBy : je ne comprends pas a quel endroit la matchingProtein est persistée ?
+							matchingProtein.setDatabankInstance(databankInstance);
+							context.getCounters().inc("Already persisted Proteins was updated");
+							updateRepositoryIdentifier(context, matchingProtein, protein);
+						} else {
+							context.getCounters().inc("Already persisted Proteins (but in a newer databank)");
 						}
-
 					}
-
-				} // End if (sequence == existingSequence)
-
-			} // End loop for each existingIdent
-
-			if (!sameSequence) {
-				LOG.info("New Sequence for SEDbIdentifier [{}]", identValue);
-
-				persistNewSEDbIdentifier(context, seDbIdentW, sequence);
-				seDbIdentModified = true;
+				}
 			}
 
-		} // End if (existingIdents is not empty)
-
-		return seDbIdentModified;
+			if (!sequenceMatched) {
+				LOG.info("Persist new Protein [{}] because its Sequence is new", proteinIdentifier);
+				persistDatabankProtein(context, protein, sequence);
+				context.getCounters().inc("New persisted Proteins (because of a new Sequence)");
+			}
+		} // End if (matchingProteins is not empty)
 	}
 
 	/* Must be called holding SEQ_DB_WRITE_LOCK */
-	private static SEDbIdentifier persistNewSEDbIdentifier(
-		final SeqContext context,
-		final SEDbIdentifierWrapper seDbIdentW,
+	private static DatabankProtein persistDatabankProtein(
+		final RetrieverContext context,
+		final DDatabankProtein dProtein,
 		final String sequence) {
-		assert (context != null) : "persistNewSEDbIdentifier() context is null";
-		assert (seDbIdentW != null) : "persistNewSEDbIdentifier() seDbIdentW is null";
-		assert (sequence != null) : "persistNewSEDbIdentifier() sequence is null";
+		assert (context != null) : "persistDatabankProtein() context is null";
+		assert (dProtein != null) : "persistDatabankProtein() dProtein is null";
+		assert (sequence != null) : "persistDatabankProtein() sequence is null";
 
-		final SEDbIdentifier result = new SEDbIdentifier();
-		result.setValue(seDbIdentW.getValue());
-		result.setInferred(seDbIdentW.isInferred());
-		result.setDescription(seDbIdentW.getDescription());
-		final SEDbInstance seDbInstance = context.getSEDbInstance();
-		result.setSEDbInstance(seDbInstance);
+		final DatabankProtein protein = new DatabankProtein();
+		protein.setIdentifier(dProtein.getIdentifier());
+		protein.setInferred(dProtein.isInferred());
+		protein.setDescription(dProtein.getDescription());
+		final DatabankInstance seDbInstance = context.getDatabankInstance();
+		protein.setDatabankInstance(seDbInstance);
 
-		final BioSequence bioSequence = loadOrCreateBioSequence(context, sequence);
-		result.setBioSequence(bioSequence);
+		final BioSequence bioSequence = getOrCreateBioSequence(context, sequence);
+		protein.setBioSequence(bioSequence);
 
 		final Repository repository = context.getRepository();
-		final String repositoryIdentValue = seDbIdentW.getRepositoryIdentifier();
+		final String repositoryIdentValue = dProtein.getRepositoryIdentifier();
 
 		if ((repository != null) && (repositoryIdentValue != null)) {
-			final RepositoryIdentifier repositoryIdent = loadOrCreateRepositoryIdentifier(context, repositoryIdentValue);
-			result.setRepositoryIdentifier(repositoryIdent);
+			final RepositoryProtein repositoryIdent = getOrCreateRepositoryIdentifier(context, repositoryIdentValue);
+			protein.setRepositoryIdentifier(repositoryIdent);
 		}
 
-		context.getSeqEM().persist(result);
+		persist(context.getSeqEM(), protein);
 
-		return result;
+		return protein;
 	}
 
 	/* Must be called holding SEQ_DB_WRITE_LOCK */
-	private static BioSequence loadOrCreateBioSequence(final SeqContext context, final String sequence) {
-		assert (context != null) : "loadOrCreateBioSequence() context is null";
-		assert (sequence != null) : "loadOrCreateBioSequence() sequence is null";
+	private static BioSequence getOrCreateBioSequence(final RetrieverContext context, final String sequence) {
+
+		assert (context != null) : "getOrCreateBioSequence() context is null";
+		assert (sequence != null) : "getOrCreateBioSequence() sequence is null";
 
 		final String hash = HashUtil.calculateSHA256(sequence);
-
 		final Map<String, BioSequence> existingBioSequences = context.getExistingBioSequences();
 
-		BioSequence result = existingBioSequences.get(hash);
+		BioSequence bioSequence = existingBioSequences.get(hash);
 
-		if (result == null) {
-			result = new BioSequence();
-			result.setSequence(sequence);
-			result.setHash(hash);
+		if (bioSequence == null) {
+			bioSequence = new BioSequence();
+			bioSequence.setSequence(sequence);
+			bioSequence.setHash(hash);
 
-			context.getSeqEM().persist(result);
+			persist(context.getSeqEM(), bioSequence);
 
 			/* Cache created BioSequence */
-			existingBioSequences.put(hash, result);
+			existingBioSequences.put(hash, bioSequence);
 		}
 
-		return result;
+		return bioSequence;
 	}
 
 	/* Must be called holding SEQ_DB_WRITE_LOCK */
-	private static RepositoryIdentifier loadOrCreateRepositoryIdentifier(
-		final SeqContext context,
+	private static RepositoryProtein getOrCreateRepositoryIdentifier(
+		final RetrieverContext context,
 		final String value) {
-		assert (context != null) : "loadOrCreateRepositoryIdentifier() context is null";
-		assert (value != null) : "loadOrCreateRepositoryIdentifier() value is null";
 
-		final Map<String, RepositoryIdentifier> existingRepositoryIdents = context
-				.getExistingRepositoryIdents();
+		assert (context != null) : "getOrCreateRepositoryIdentifier() context is null";
+		assert (value != null) : "getOrCreateRepositoryIdentifier() value is null";
+
+		final Map<String, RepositoryProtein> existingRepositoryIdents = context.getExistingRepositoryIdents();
 
 		if (existingRepositoryIdents == null) {
-			throw new IllegalArgumentException("SeqContext.existingRepositoryIdents Map is null");
+			throw new IllegalArgumentException("RetrieverContext.existingRepositoryIdents Map is null");
 		}
 
-		RepositoryIdentifier result = existingRepositoryIdents.get(value);
+		RepositoryProtein repositoryProtein = existingRepositoryIdents.get(value);
 
-		if (result == null) {
-			result = new RepositoryIdentifier();
-			result.setValue(value);
+		if (repositoryProtein == null) {
+			repositoryProtein = new RepositoryProtein();
+			repositoryProtein.setValue(value);
 
 			final Repository repository = context.getRepository();
 
 			if (repository == null) {
-				throw new IllegalArgumentException("SeqContext.repository is null");
+				throw new IllegalArgumentException("RetrieverContext.repository is null");
 			}
 
-			result.setRepository(repository);
+			repositoryProtein.setRepository(repository);
+			persist(context.getSeqEM(), repositoryProtein);
 
-			context.getSeqEM().persist(result);
-
-			/* Cache created RepositoryIdentifier */
-			existingRepositoryIdents.put(value, result);
+			/* Cache created RepositoryProtein */
+			existingRepositoryIdents.put(value, repositoryProtein);
 		}
 
-		return result;
+		return repositoryProtein;
 	}
 
 	/* Must be called holding SEQ_DB_WRITE_LOCK */
 	private static void updateRepositoryIdentifier(
-		final SeqContext context,
-		final SEDbIdentifier seDbIdentifier,
-		final SEDbIdentifierWrapper seDbIdentW) {
+		final RetrieverContext context,
+		final DatabankProtein protein,
+		final DDatabankProtein dProtein) {
 		assert (context != null) : "updateRepositoryIdentifier() context is null";
-		assert (seDbIdentifier != null) : "updateRepositoryIdentifier() seDbIdentifier is null";
-		assert (seDbIdentW != null) : "updateRepositoryIdentifier() seDbIdentW is null";
+		assert (protein != null) : "updateRepositoryIdentifier() protein is null";
+		assert (dProtein != null) : "updateRepositoryIdentifier() dProtein is null";
 
-		final String repositoryIdentValue = seDbIdentW.getRepositoryIdentifier();
+		final String repositoryIdentValue = dProtein.getRepositoryIdentifier();
 
 		if (repositoryIdentValue == null) {
-			seDbIdentifier.setRepositoryIdentifier(null);
+			protein.setRepositoryIdentifier(null);
 		} else {
 			boolean same = false;
 
-			final RepositoryIdentifier oldRepositoryIdent = seDbIdentifier.getRepositoryIdentifier();
+			final RepositoryProtein oldRepositoryIdent = protein.getRepositoryIdentifier();
 			if (oldRepositoryIdent != null) {
 				final String oldRepositoryIdentValue = oldRepositoryIdent.getValue();// Should not be null
 				same = repositoryIdentValue.equals(oldRepositoryIdentValue);
@@ -981,23 +859,23 @@ public final class BioSequenceRetriever {
 				final Repository repository = context.getRepository();
 
 				if (repository == null) {
-					/* Relation SEDb -> Repository removed */
-					seDbIdentifier.setRepositoryIdentifier(null);
+					/* Relation Databank -> Repository removed */
+					protein.setRepositoryIdentifier(null);
 				} else {
-					final String seDbIdentValue = seDbIdentifier.getValue();
-					LOG.info("New RepositoryIdentifier [{}] for SEDbIdentifier [{}]", repositoryIdentValue,
-						seDbIdentValue);
+					final String seDbIdentValue = protein.getIdentifier();
+					LOG.info("New RepositoryProtein [{}] for DatabankProtein [{}]", repositoryIdentValue, seDbIdentValue);
 
-					/* New RepositoryIdentifier for this SEDbIdentifier */
-					final RepositoryIdentifier newRepositoryIdent = loadOrCreateRepositoryIdentifier(context,
-						repositoryIdentValue);
-					seDbIdentifier.setRepositoryIdentifier(newRepositoryIdent);
+					/* New RepositoryProtein for this DatabankProtein */
+					final RepositoryProtein newRepositoryIdent = getOrCreateRepositoryIdentifier(context, repositoryIdentValue);
+					protein.setRepositoryIdentifier(newRepositoryIdent);
 				}
-
 			} // End if (oldRepositoryIdent differ from repositoryIdent Value)
-
 		}
-
 	}
 
+	private static void persist(EntityManager em, Object o) {
+		if (PERSISTENCE) {
+			em.persist(o);
+		}
+	}
 }

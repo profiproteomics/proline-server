@@ -39,8 +39,7 @@ public final class PeptideUtils {
 		boolean valid = false;
 
 		if (normalizedSequence != null) {
-			valid = true; // Optimistic initialization
-
+			valid = true;
 			final int sequenceLength = normalizedSequence.length();
 
 			for (int i = 0; valid && (i < sequenceLength); ++i) {
@@ -49,9 +48,7 @@ public final class PeptideUtils {
 				if ((currentResidue < 'A') || (currentResidue > 'Z')) {
 					valid = false;
 				}
-
 			}
-
 		}
 
 		return valid;

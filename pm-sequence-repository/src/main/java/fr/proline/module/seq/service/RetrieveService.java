@@ -8,8 +8,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-import javax.persistence.EntityManager;
-
+import fr.proline.module.seq.dto.DDatabankInstance;
+import fr.proline.module.seq.dto.DDatabankProtein;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,10 +19,8 @@ import com.beust.jcommander.Parameter;
 import ch.qos.logback.classic.Level;
 import fr.profi.util.ThreadLogger;
 import fr.proline.module.seq.DatabaseAccess;
-import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
-import fr.proline.module.seq.dto.SEDbInstanceWrapper;
-import fr.proline.repository.IDataStoreConnectorFactory;
-import fr.proline.repository.IDatabaseConnector;
+
+import static fr.proline.module.seq.Constants.PERSISTENCE;
 
 /**
  * Launch Sequence-Repository retrieve Service as single pass or as scheduled task (timer).
@@ -108,7 +106,7 @@ public final class RetrieveService {
 				if (params.projectId == 0) {
 					retrieveBioSequencesForAllProjects(params.forceUpdate);
 				} else {
-					retrieveBioSequencesForProject(params.projectId, params.forceUpdate);
+					retrieveBioSequences(params.projectId, params.forceUpdate, null);
 				}
 				BioSequenceRetriever.waitExecutorShutdown();
 				System.out.println("\nMain terminated !");
@@ -123,189 +121,74 @@ public final class RetrieveService {
 	}
 
 	public static void retrieveBioSequencesForAllProjects(boolean forceUpdate) throws Exception {
-		
-		int totalHandledSEDbIdents = 0;
-		LOG.info("Start new pass on all projects ");
+
+		LOG.info("Start RetrieveService for all projects");
+
+		int persistedProteinsCount = 0;
 		final long start = System.currentTimeMillis();
+		List<Long> projectIds = ProjectHandler.retrieveAllActiveProjectIds();
 
-		final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = new HashMap<>();
+		if ((projectIds == null) || projectIds.isEmpty()) {
+			LOG.warn("NO MSI Project found");
+		} else {
+			for (Long projectId : projectIds) {
+				if (projectId != null) {
+					//Get data needed by fillXX methods
+					ProjectHandler projectHandler = new ProjectHandler(projectId);
+					List<Long> rsmIds = projectHandler.findAllRSMIds();
+					persistedProteinsCount += _retrieveBioSequences(projectHandler, forceUpdate, rsmIds);
+					DatabaseAccess.getDataStoreConnectorFactory().closeProjectConnectors(projectId);
+				}
+			}
+		}
 
-		final IDataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();
-		final IDatabaseConnector udsDbConnector = connectorFactory.getUdsDbConnector();
+		long duration = System.currentTimeMillis() - start;
+		LOG.info("Total for all projects execution: {} Protein Identifiers handled in {} ms", persistedProteinsCount, duration);
+	}
 
-		EntityManager udsEM = udsDbConnector.createEntityManager();
-		EntityManager msiEM = null;
-		try {
-			List<Long> projectIds = ProjectHandler.retrieveAllActiveProjectIds(udsEM);
-			Map<Long, List<Long>> rsmIdsPerProject = new HashMap<Long, List<Long>>();
-			Map<Long, Map<Long, SEDbInstanceWrapper>> seDbInstancesPerProject  = new HashMap<Long, Map<Long, SEDbInstanceWrapper>>();
-			
-			if ((projectIds == null) || projectIds.isEmpty()) {
-				LOG.warn("NO MSI Project found");
+	public static int retrieveBioSequences(final long projectId, boolean forceUpdate, List<Long> rsmIds) throws Exception {
+
+		LOG.info("Start RetrieveBioSequences for RSMs {} of Project #{}", rsmIds.toString(), projectId);
+
+		final long start = System.currentTimeMillis();
+		ProjectHandler projectHandler = new ProjectHandler(projectId);
+		int persistedProteinsCount = _retrieveBioSequences(projectHandler, forceUpdate, rsmIds);
+		long duration = System.currentTimeMillis() - start;
+		LOG.info("Total RetrieveBioSequences for RSMs of Project #{} execution: {} Protein Identifiers persisted in {} ms", projectId, persistedProteinsCount, duration);
+
+		return persistedProteinsCount;
+	}
+
+	private static int _retrieveBioSequences(final ProjectHandler projectHandler, boolean forceUpdate, List<Long> rsmIds) throws Exception {
+
+		int persistedProteinsCount = 0;
+
+		if (projectHandler.isProjectActive()) {
+
+			final Map<DDatabankInstance, Set<DDatabankProtein>> proteinsByDatabank = new HashMap<>();
+			List<Long> finalRsmIds = projectHandler.filterRSMIdsToUpdate(rsmIds, forceUpdate);
+
+			final Map<Long, DDatabankInstance> databankBySeqDatabase = projectHandler.retrieveAllSeqDatabases();
+			projectHandler.findProteinIdentifiers(proteinsByDatabank, databankBySeqDatabase, finalRsmIds);
+
+			if ((proteinsByDatabank == null) || proteinsByDatabank.isEmpty()) {
+				LOG.warn("NO DatabankProtein found");
 			} else {
-				int size = projectIds.size();
-				for (int i = size - 1; i >= 0; i--) {
-					Long pId = projectIds.get(i);
-					
-					if (pId != null) {
-						//Get data needed by fillXX methods
-						final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(pId);
-						if(msiDbConnector == null){
-							LOG.warn("NO database for Project {}",pId);
-							continue;
-						}					
-						msiEM = msiDbConnector.createEntityManager();					
-						List<Long> rsmIds = ProjectHandler.retrieveRSMIdToFill(pId.longValue(), forceUpdate, null, udsEM, msiEM);
-						rsmIdsPerProject.put(pId,rsmIds);
-						
-						final Map<Long, SEDbInstanceWrapper> seDbInstances = ProjectHandler.retrieveAllSeqDatabases(msiEM);
-						seDbInstancesPerProject.put(pId,seDbInstances);
-						
-						ProjectHandler.fillSEDbIdentifiersBySEDb(pId.longValue(), seDbIdentifiers, seDbInstances, rsmIds);
-						DatabaseAccess.getDataStoreConnectorFactory().closeProjectConnectors(pId);
-					}
-					if(msiEM.isOpen())
-						msiEM.close();
-				}
-	
-				if ((seDbIdentifiers == null) || seDbIdentifiers.isEmpty()) {
-					LOG.warn("NO SEDbIdentifier found");
-				} else {
-					totalHandledSEDbIdents = BioSequenceRetriever.retrieveBioSequences(seDbIdentifiers);
-					for (int i = size - 1; i >= 0; i--) {
-						Long pId = projectIds.get(i);
-						if (pId != null) {
-							ProjectHandler.fillProteinMatchesProperties(pId.longValue(),seDbInstancesPerProject.get(pId), rsmIdsPerProject.get(pId));
-							DatabaseAccess.getDataStoreConnectorFactory().closeProjectConnectors(pId);
-						}
-					}
+				persistedProteinsCount = BioSequenceRetriever.retrieveBioSequences(proteinsByDatabank);
+				if (PERSISTENCE) {
+					projectHandler.fillProteinMatchesProperties(databankBySeqDatabase, finalRsmIds);
 				}
 			}
-		} finally {
-			if (udsEM != null && udsEM.isOpen()) {		
-				try {
-					udsEM.close();
-				} catch (Exception exClose) {
-					LOG.error("Error closing UDS Db EntityManager", exClose);
-				}
-			}
-			if (msiEM != null && msiEM.isOpen() ) {		
-				try {
-					msiEM.close();
-				} catch (Exception exClose) {
-					LOG.error("Error closing MSI Db EntityManager", exClose);
-				}
-			}
-		}
-		final long end = System.currentTimeMillis();
-		final long duration = end - start;		
-		LOG.info("Total retrieveBioSequencesForAllProjects() execution : {} SEDbIdentifiers handleds in {} ms", totalHandledSEDbIdents, duration);
-	}
 
-	public static void retrieveBioSequencesForProject(final long projectId, boolean forceUpdate) throws Exception {
+			projectHandler.close();
 
-		LOG.debug("retrieveBioSequencesForProject running ");
-
-		int totalHandledSEDbIdents = 0;
-
-		final long start = System.currentTimeMillis();
-		
-		final IDataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();		
-		final IDatabaseConnector udsDbConnector = connectorFactory.getUdsDbConnector();
-		final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId);
-		
-		if (msiDbConnector == null) {
-			LOG.warn("Project #{} has NO associated MSI Db", projectId);
 		} else {
-			EntityManager udsEM = udsDbConnector.createEntityManager();
-			EntityManager msiEM = msiDbConnector.createEntityManager();
-			long duration = 0; 
-			try {
-				if( ProjectHandler.isProjectActive(projectId, udsEM)){
-
-					final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = new HashMap<>();
-					//Get data needed by fillXX methods 
-					List<Long> rsmIds = ProjectHandler.retrieveRSMIdToFill(projectId, forceUpdate, null, udsEM, msiEM);
-					final Map<Long, SEDbInstanceWrapper> seDbInstances = ProjectHandler.retrieveAllSeqDatabases(msiEM);
-					
-					ProjectHandler.fillSEDbIdentifiersBySEDb(projectId, seDbIdentifiers,seDbInstances,  rsmIds);
-			
-					if (seDbIdentifiers.isEmpty()) {
-						LOG.warn("NO SEDbIdentifier found");
-					} else {
-						totalHandledSEDbIdents = BioSequenceRetriever.retrieveBioSequences(seDbIdentifiers);
-					}
-			
-					ProjectHandler.fillProteinMatchesProperties(projectId, seDbInstances, rsmIds);
-				} else 
-					LOG.warn("Project #{} is not active", projectId);
-				
-				final long end = System.currentTimeMillis();
-				duration = end - start;
-			} finally {
-				if(udsEM.isOpen())
-					udsEM.close();
-				if(msiEM.isOpen())
-					msiEM.close();				
-			}
-			LOG.info("Total retrieveBioSequencesForProject(#{}) execution : {} SEDbIdentifiers handled in {} ms", projectId, totalHandledSEDbIdents, duration);
+			LOG.warn("Project #{} is not active", projectHandler.getProjectId());
 		}
+
+		return persistedProteinsCount;
 	}
-
-	public static void retrieveBioSequencesForRsms(final long projectId, List<Long> rsmIds, boolean forceUpdate)throws Exception {
-
-		LOG.debug("retrieveBioSequencesForRsms running ");
-
-		int totalHandledSEDbIdents = 0;
-
-		final long start = System.currentTimeMillis();
-		long duration = 0; 
-		
-		final Map<SEDbInstanceWrapper, Set<SEDbIdentifierWrapper>> seDbIdentifiers = new HashMap<>();
-		
-		final IDataStoreConnectorFactory connectorFactory = DatabaseAccess.getDataStoreConnectorFactory();		
-		final IDatabaseConnector udsDbConnector = connectorFactory.getUdsDbConnector();
-		final IDatabaseConnector msiDbConnector = connectorFactory.getMsiDbConnector(projectId);
-		
-		if (msiDbConnector == null) {
-			LOG.warn("Project #{} has NO associated MSI Db", projectId);
-		} else {
-			EntityManager udsEM = udsDbConnector.createEntityManager();
-			EntityManager msiEM = msiDbConnector.createEntityManager();
-
-			try {
-				if( ProjectHandler.isProjectActive(projectId, udsEM)){
-			
-					//Get data needed by fillXX methods 
-					List<Long> finalRsmIds = ProjectHandler.retrieveRSMIdToFill(projectId, forceUpdate, rsmIds, udsEM, msiEM);
-					final Map<Long, SEDbInstanceWrapper> seDbInstances = ProjectHandler.retrieveAllSeqDatabases(msiEM);
-			
-			
-					ProjectHandler.fillSEDbIdentifiersBySEDb(projectId, seDbIdentifiers, seDbInstances, finalRsmIds);
-			
-					if (seDbIdentifiers.isEmpty()) {
-						LOG.warn("NO SEDbIdentifier found");
-					} else {
-						totalHandledSEDbIdents = BioSequenceRetriever.retrieveBioSequences(seDbIdentifiers);
-					}
-	
-					ProjectHandler.fillProteinMatchesProperties(projectId,seDbInstances, rsmIds);
-				} else 
-					LOG.warn("Project #{} is not active", projectId);
-				final long end = System.currentTimeMillis();
-				duration = end - start;
-			} finally {
-				if(udsEM.isOpen())
-					udsEM.close();
-				if(msiEM.isOpen())
-					msiEM.close();	
-			}
-			LOG.info("Total retrieveBioSequencesForRsms in Project(#{}) execution : {} SEDbIdentifiers handled in {} ms",
-			projectId, totalHandledSEDbIdents, duration);
-		}
-	}
-
-
 
 }
+
 

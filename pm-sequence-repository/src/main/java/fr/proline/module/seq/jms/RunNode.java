@@ -27,7 +27,7 @@ import fr.proline.jms.util.JMSConstants;
 import fr.proline.jms.util.MonitoringTopicPublisherRunner;
 import fr.proline.jms.util.NodeConfig;
 import fr.proline.module.seq.DatabaseAccess;
-import fr.proline.module.seq.jms.service.RetrieveBioSeqForRSMs;
+import fr.proline.module.seq.jms.service.RetrieveJMSService;
 
 public class RunNode {
 
@@ -203,6 +203,6 @@ public class RunNode {
 
 		/* Parallelizable Service */
 		//		    ServiceRegistry.addService(new InfoService()) // Monitoring
-		ServiceRegistry.addService(new RetrieveBioSeqForRSMs());
+		ServiceRegistry.addService(new RetrieveJMSService());
 	}
 }

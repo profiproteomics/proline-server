@@ -124,11 +124,21 @@ public final class DatabaseAccess {
 		return result;
 	}
 
+	public static void closeSEQDatabaseConnector() {
+		synchronized (INITIALIZATION_LOCK) {
+			if (seqDatabaseConnector != null) {
+				seqDatabaseConnector.close();
+				seqDatabaseConnector = null;
+				connectorFactory = null;
+			}
+		}
+	}
+
 	/**
 	 * Retrieve current SEQ DatabaseConnector instance.
 	 * 
 	 * @param allowCreateUpdateDB
-	 *            <code>true</code> if called by service (lazy initialization of SEQ Database) or <code>false</code> if called by client (provider use)
+	 *            <code>true</code> if called by service (lazy initialization of SEQ Databank) or <code>false</code> if called by client (provider use)
 	 * @return SEQ DatabaseConnector or <code>null</code> if DatabaseConnector cannot be initialized
 	 */
 	public static IDatabaseConnector getSEQDatabaseConnector(final boolean allowCreateUpdateDB) {
@@ -153,7 +163,7 @@ public final class DatabaseAccess {
 	 * Retrieve current SEQ DatabaseConnector instance.
 	 * 
 	 * @param allowCreateUpdateDB
-	 *            <code>true</code> if called by service (lazy initialization of SEQ Database) or <code>false</code> if called by client (provider use)
+	 *            <code>true</code> if called by service (lazy initialization of SEQ Databank) or <code>false</code> if called by client (provider use)
 	 * @param udsDbProperties
 	 *            Properties to use to create UDSConnector
 	 * @return SEQ DatabaseConnector or <code>null</code> if DatabaseConnector cannot be initialized
@@ -263,7 +273,7 @@ public final class DatabaseAccess {
 				if (success) {
 					seqDb = createSEQDb(udsEM);
 				} else {
-					LOG.error("Unable to create Postgres SEQ Database");
+					LOG.error("Unable to create Postgres SEQ Databank");
 				}
 
 			} else {
@@ -329,13 +339,13 @@ public final class DatabaseAccess {
 
 					success = true;
 				} else {
-					LOG.error("Error creating Postgres SEQ Database : {}", result);
+					LOG.error("Error creating Postgres SEQ Databank : {}", result);
 				}
 
 			}
 
 //		} catch (Exception ex) {
-//			LOG.error("Error creating Postgres SEQ Database", ex);
+//			LOG.error("Error creating Postgres SEQ Databank", ex);
 		} finally {
 
 			if (sqlCon != null) {

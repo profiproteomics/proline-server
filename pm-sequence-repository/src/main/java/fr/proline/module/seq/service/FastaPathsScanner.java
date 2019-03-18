@@ -35,13 +35,8 @@ public class FastaPathsScanner {
 	 */
 	public static Map<String, List<File>> scanPaths(final FastaPathsScanner scanner, final List<String> paths) throws Exception {
 
-		if (scanner == null) {
-			throw new IllegalArgumentException("Scanner is null");
-		}
-
-		if ( (paths == null) || (paths.isEmpty())) {
-			throw new IllegalArgumentException("Invalid paths array");
-		}
+		assert (scanner != null) : "Scanner cannot be null to scan paths";
+		assert ((paths != null) && (!paths.isEmpty())) : "Invalid paths array";
 
 		/* Check each given path */
 		final List<File> filePaths = new ArrayList<>(paths.size());
@@ -71,12 +66,10 @@ public class FastaPathsScanner {
 		Map<String, List<File>> result = null;
 
 		final ExecutorService executor = Executors.newFixedThreadPool(Constants.calculateNThreads());
-
 		final ConcurrentMap<File, Boolean> traversedDirs = new ConcurrentHashMap<File, Boolean>();
 
 		/* @GuardedBy("itself") */
 		final Map<String, List<File>> foundFastaFiles = new HashMap<String, List<File>>();
-
 		final List<Future<?>> futures = new ArrayList<>(nPaths);
 
 		for (final File filePath : filePaths) {
@@ -91,19 +84,15 @@ public class FastaPathsScanner {
 					}
 
 					final String absolutePathname = filePath.getAbsolutePath();
-
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Scanning [{}]", absolutePathname);
-					}
+					LOG.debug("Scanning [{}]", absolutePathname);
 
 					try {
 						scanner.scan(filePath, traversedDirs, foundFastaFiles);
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						throw new RuntimeException(e);
 					}
 
-					LOG.info("[{}] scan terminated", absolutePathname);
+					LOG.debug("[{}] scan terminated", absolutePathname);
 				}
 
 			};
@@ -114,36 +103,25 @@ public class FastaPathsScanner {
 
 		/* Wait (blocking) for all futures to complete */
 		for (final Future<?> f : futures) {
-
-//			try {
-				f.get();// Return null
-//			} catch (Exception ex) {
-//				LOG.error("Error trying to get Future result", ex);
-//			}
-
+			f.get();// Return null
 		}
 
-//		try {
-			executor.shutdown();
+		executor.shutdown();
 
-			if (executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS)) {
+		if (executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS)) {
 
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Number of traversed dirs: {}", traversedDirs.size());
-				}
-
-				synchronized (foundFastaFiles) {
-					result = foundFastaFiles;
-				} // End of synchronized block on foundFastaFiles
-
-				LOG.info("Found FASTA file names: {}", result.size());
-			} else {
-				LOG.error("FastaFilesScanner Executor timed out");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Number of traversed dirs: {}", traversedDirs.size());
 			}
 
-//		} catch (Exception ex) {
-//			LOG.error("Error ending FastaFilesScanner Executor", ex);
-//		}
+			synchronized (foundFastaFiles) {
+				result = foundFastaFiles;
+			} // End of synchronized block on foundFastaFiles
+
+			LOG.info("{} Fasta fileName(s) found in search paths", result.size());
+		} else {
+			LOG.error("FastaFilesScanner Executor timed out");
+		}
 
 		return result;
 	}
@@ -174,9 +152,10 @@ public class FastaPathsScanner {
 	 * 
 	 */
 	private void scan(
-		final File file,
-		final ConcurrentMap<File, Boolean> traversedDirs,
-		final Map<String, List<File>> foundFastaFiles) throws IOException {
+					final File file,
+					final ConcurrentMap<File, Boolean> traversedDirs,
+					final Map<String, List<File>> foundFastaFiles) throws IOException {
+
 		assert (file != null) : "scan() file is null";
 		assert (traversedDirs != null) : "scan() traversedDirs Map is null";
 
@@ -185,15 +164,10 @@ public class FastaPathsScanner {
 		if (file.isFile()) {
 			handleFile(file, foundFastaFiles);
 		} else if (file.isDirectory()) {
+
 			boolean alreadyTraversed = true;// Don't want to traverse a non canonisable pathname
-
-//			try {
-				final File canonicalPathname = file.getCanonicalFile();
-
-				alreadyTraversed = (traversedDirs.put(canonicalPathname, Boolean.TRUE) == Boolean.TRUE);
-//			} catch (IOException ioEx) {
-//				LOG.error("Error retrieving [" + absolutePathname + "] canonical pathname", ioEx);
-//			}
+			final File canonicalPathname = file.getCanonicalFile();
+			alreadyTraversed = (traversedDirs.put(canonicalPathname, Boolean.TRUE) == Boolean.TRUE);
 
 			if (alreadyTraversed) {// Do not recurse in UNIX symbolic links
 				LOG.info("Already traversed dir [{}]", absolutePathname);
@@ -203,22 +177,18 @@ public class FastaPathsScanner {
 				if (files == null) {
 					LOG.warn("Cannot list [{}]", absolutePathname);
 				} else {
-
 					for (final File f : files) {
 						scan(f, traversedDirs, foundFastaFiles);
 					}
-
-				} // End if (files array is not null)
-
-			} // End if (directory not already traversed)
-
+				}
+			}
 		} else {
 			LOG.warn("Unknown path type [{}]", absolutePathname);
 		}
-
 	}
 
 	private void handleFile(final File file, final Map<String, List<File>> foundFastaFiles) {
+
 		assert ((file != null) && file.isFile()) : "handleFile() invalid file";
 		assert (foundFastaFiles != null) : "handleFile() foundFastaFiles Map is null";
 
@@ -238,10 +208,7 @@ public class FastaPathsScanner {
 				}
 
 				files.add(file);
-			} // End of synchronized block on foundFastaFiles
-
+			}
 		}
-
 	}
-
 }

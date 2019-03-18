@@ -16,10 +16,10 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import fr.proline.module.seq.dto.DDatabankProtein;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.proline.module.seq.dto.SEDbIdentifierWrapper;
 import fr.proline.module.seq.util.PeptideUtils;
 
 /**
@@ -31,31 +31,20 @@ import fr.proline.module.seq.util.PeptideUtils;
 public class FastaSource implements DataSource {
 
 	private static final Logger LOG = LoggerFactory.getLogger(FastaSource.class);
-
 	private static final int MESSAGE_BUILDER_SIZE = 1024;
 
 	private final File m_fastaFile;
-
 	private final Date m_sourceCreationTime = new Date();
-
-	private final Pattern m_seDbIdentPattern;
-
+	private final Pattern m_proteinIdentifierPattern;
 	private final Pattern m_repositoryIdentPattern;
 
-	public FastaSource(final File fastaFile, final Pattern seDbIdentPattern, final Pattern repositoryIdentPattern) {
+	public FastaSource(final File fastaFile, final Pattern proteinIdentifierPattern, final Pattern repositoryIdentPattern) {
 
-		if ((fastaFile == null) || !fastaFile.isFile()) {
-			throw new IllegalArgumentException("Invalid fastaFile");
-		}
+		assert ((fastaFile != null) && fastaFile.isFile()) : "Invalid fastaFile";
+		assert (proteinIdentifierPattern != null) : "SEDbIdentPattern is null";
 
 		m_fastaFile = fastaFile;
-
-		if (seDbIdentPattern == null) {
-			throw new IllegalArgumentException("SEDbIdentPattern is null");
-		}
-
-		m_seDbIdentPattern = seDbIdentPattern;
-
+		m_proteinIdentifierPattern = proteinIdentifierPattern;
 		m_repositoryIdentPattern = repositoryIdentPattern;
 	}
 
@@ -73,41 +62,36 @@ public class FastaSource implements DataSource {
 		return result;
 	}
 
-	public Map<SEDbIdentifierWrapper, String> retrieveSequences(
-			final Map<String, List<SEDbIdentifierWrapper>> identByValues) throws IOException {
-		return parseFile(identByValues);
+	public Map<DDatabankProtein, String> retrieveSequences(final Map<String, List<DDatabankProtein>> proteinsByIdentifier) throws IOException {
+		return parseFile(proteinsByIdentifier);
 	}
 
 	/* Private methods */
-	private Map<SEDbIdentifierWrapper, String> parseFile(final Map<String, List<SEDbIdentifierWrapper>> identByValues)
-			throws IOException {
+	private Map<DDatabankProtein, String> parseFile(final Map<String, List<DDatabankProtein>> proteinsByIdentifier)	throws IOException {
 
 		final String fastaAbsolutePathname = m_fastaFile.getAbsolutePath();
-		final Map<SEDbIdentifierWrapper, String> foundSequences = new HashMap<>();
+		final Map<DDatabankProtein, String> foundSequences = new HashMap<>();
 
 		long lineIndex = 0L;
-
-		BufferedReader br = null;
+		BufferedReader reader = null;
 
 		try {
 			InputStream is = new FileInputStream(m_fastaFile);
-			br = new BufferedReader(new InputStreamReader(is, LATIN_1_CHARSET));
+			reader = new BufferedReader(new InputStreamReader(is, LATIN_1_CHARSET));
 
-			final Map<String, List<SEDbIdentifierWrapper>> remainingSEDbIdentifiers = new HashMap<>(identByValues);
-			final int nIdentValues = remainingSEDbIdentifiers.size();
+			final Map<String, List<DDatabankProtein>> remainingProteinIdentifiers = new HashMap<>(proteinsByIdentifier);
+			final int remainingProteinIdentifiersCount = remainingProteinIdentifiers.size();
 
-			SEDbIdentifierWrapper readingSEDbIdentifier = null;
+			DDatabankProtein currentProtein = null;
 			StringBuilder sequenceBuilder = null;
 
-			if (LOG.isDebugEnabled()) {
-				LOG.debug(
-						"Reading [{}] Searching {} distinct SEDbIdentifier.values with \"{}\" SEDbIdent and {} RepositoryIdent Regex",
-						fastaAbsolutePathname, nIdentValues, m_seDbIdentPattern.pattern(),
-						(m_repositoryIdentPattern == null) ? "NO" : '\"' + m_repositoryIdentPattern.pattern() + '\"');
-			}
+				LOG.debug("Searching {} distinct Proteins with \"{}\" Regex in [{}] ",
+								remainingProteinIdentifiersCount,
+								m_proteinIdentifierPattern.pattern(),
+								fastaAbsolutePathname);
 
 			final long start = System.currentTimeMillis();
-			String rawLine = br.readLine();
+			String rawLine = reader.readLine();
 
 			while (rawLine != null) {
 				final String trimmedLine = rawLine.trim();
@@ -115,90 +99,71 @@ public class FastaSource implements DataSource {
 				if (!trimmedLine.isEmpty()) {
 
 					if (trimmedLine.startsWith(">")) {
-						/* Fasta header */
-
-						if (readingSEDbIdentifier != null) {
-							addSequence(readingSEDbIdentifier, sequenceBuilder, foundSequences,
-									remainingSEDbIdentifiers);
-							readingSEDbIdentifier = null;// Reset current
-															// readingSeDbIdentifier
-															// and sequence
+						/* Current line is a protein header */
+						if (currentProtein != null) {
+							// register the previously parsed entry
+							addSequence(currentProtein, sequenceBuilder, foundSequences, remainingProteinIdentifiers);
+							currentProtein = null;// Reset current readingSeDbIdentifier and sequence
 							sequenceBuilder = null;
 						}
-
-						if (remainingSEDbIdentifiers.isEmpty()) {
+						if (remainingProteinIdentifiers.isEmpty()) {
 							LOG.debug("All identifiers found from [" + fastaAbsolutePathname + ']');
-
 							break;
 						} else {
-
-							final SEDbIdentifierWrapper seDbIdentifier = checkHeader(rawLine, remainingSEDbIdentifiers);
-							if (seDbIdentifier != null) {
-								/* Found a seDbIdentifier */
-								readingSEDbIdentifier = seDbIdentifier;
+							final DDatabankProtein proteinIdentifier = checkHeader(rawLine, remainingProteinIdentifiers);
+							if (proteinIdentifier != null) {
+								/* Found a proteinIdentifier */
+								currentProtein = proteinIdentifier;
 								sequenceBuilder = new StringBuilder();
 							}
-
 						}
 					} else {
-						/* Continuing sequence */
-
-						if (sequenceBuilder != null) {// Reading
-														// readingSEDbIdentifier
-														// sequence
+						/* Continue to read AA sequence */
+						if (sequenceBuilder != null) {// Reading currentProtein sequence
 							sequenceBuilder.append(trimmedLine);
 						}
-
 					}
-
 				} // End if (line is not empty)
 
-				++lineIndex;
-
-				rawLine = br.readLine();
+				lineIndex++;
+				rawLine = reader.readLine();
 			} // End reading loop
 
 			/* Handle last sequence */
-			if (readingSEDbIdentifier != null) {
-				addSequence(readingSEDbIdentifier, sequenceBuilder, foundSequences, remainingSEDbIdentifiers);
+			if (currentProtein != null) {
+				addSequence(currentProtein, sequenceBuilder, foundSequences, remainingProteinIdentifiers);
 			}
 
-			final long end = System.currentTimeMillis();
-
-			final long duration = end - start;
+			final long duration = System.currentTimeMillis() - start;
 
 			final String message = String.format(
 					"[%s] %d lines parsed in %d ms (%,.1f lines/s) found %d sequences on %d", fastaAbsolutePathname,
-					lineIndex, duration, ((double) (lineIndex * 1000)) / duration, foundSequences.size(), nIdentValues);
+					lineIndex, duration, ((double) (lineIndex * 1000)) / duration, foundSequences.size(), remainingProteinIdentifiersCount);
 			LOG.info(message);
-			// } catch (Exception ex) {
-			// LOG.error(String.format("Error reading [%s] current line index:
-			// %d", fastaAbsolutePathname,
-			// lineIndex), ex);
-		} finally {
 
-			if (br != null) {
+		} finally {
+			if (reader != null) {
 				try {
-					br.close();
+					reader.close();
 				} catch (IOException exClose) {
 					LOG.error("Error closing [" + fastaAbsolutePathname + ']', exClose);
 				}
 			}
-
 		}
 
 		return foundSequences;
 	}
 
-	private static void addSequence(final SEDbIdentifierWrapper readingSEDbIdentifier,
-			final StringBuilder sequenceBuilder, final Map<SEDbIdentifierWrapper, String> foundSequences,
-			final Map<String, List<SEDbIdentifierWrapper>> remainingSEDbIdentifiers) {
+	private static void addSequence(
+			final DDatabankProtein protein,
+			final StringBuilder sequenceBuilder, final Map<DDatabankProtein, String> foundSequences,
+			final Map<String, List<DDatabankProtein>> remainingProteinIdentifiers) {
 
-		final String identValue = readingSEDbIdentifier.getValue();
+		final String identifier = protein.getIdentifier();
 		String normalizedSequence = sequenceBuilder.toString().toUpperCase();
 		/* Remove white spaces from sequence */
 		if (normalizedSequence.contains(" ")) {
-			LOG.info("White spaces will be replaced by '' in the Sequence for [{}].",identValue);
+			LOG.info("White spaces will be replaced by '' in the Sequence for [{}].",identifier);
 			normalizedSequence = normalizedSequence.replaceAll("\\s+", "");
 		}
 		/* Remove potential '*' char (translation stop marker) */
@@ -208,93 +173,82 @@ public class FastaSource implements DataSource {
 		}
 
 		if (PeptideUtils.checkSequence(normalizedSequence)) {
-			foundSequences.put(readingSEDbIdentifier, normalizedSequence);
-
-			remainingSEDbIdentifiers.remove(identValue);
+			foundSequences.put(protein, normalizedSequence);
+			remainingProteinIdentifiers.remove(identifier);
 		} else {
-			LOG.warn("Invalid Sequence for [{}] :\n{}", identValue, normalizedSequence);
+			LOG.warn("Invalid Sequence for [{}] :\n{}", identifier, normalizedSequence);
 		}
 
 	}
 
-	private SEDbIdentifierWrapper checkHeader(final String header,
-			final Map<String, List<SEDbIdentifierWrapper>> remainingSEDbIdentifiers) {
+	private DDatabankProtein checkHeader(final String header, final Map<String, List<DDatabankProtein>> remainingProteinIdentifiers) {
 
-		SEDbIdentifierWrapper foundSEDbIdent = null;
+		DDatabankProtein foundProtein = null;
 		String missedDescription = null;
-		final Matcher matcher = m_seDbIdentPattern.matcher(header);
+		final Matcher matcher = m_proteinIdentifierPattern.matcher(header);
 
 		if (matcher.find()) {
-
 			if (matcher.groupCount() < 1) {
-				throw new IllegalArgumentException("Invalid SEDbIdentifier Regex");
+				throw new IllegalArgumentException("Invalid DatabankProtein Regex");
 			}
 
-			final String identValue = matcher.group(1).trim();// SEDbIdentifier
-																// value should
-																// be trimmed
+			final String identifier = matcher.group(1).trim();// DatabankProtein value should be trimmed
 
-			if ((header != null) && (!header.isEmpty()) && (header.trim().length() > identValue.trim().length())) {
-				missedDescription = header.substring(identValue.length() + 1, header.length());
+			if ((header != null) && (!header.isEmpty()) && (header.trim().length() > identifier.trim().length())) {
+				missedDescription = header.substring(header.indexOf(identifier) + identifier.length() + 1);
 			}
-			final List<SEDbIdentifierWrapper> possibleIdentifiers = remainingSEDbIdentifiers.get(identValue);
+
+			final List<DDatabankProtein> possibleIdentifiers = remainingProteinIdentifiers.get(identifier);
+
 			if ((possibleIdentifiers != null) && !possibleIdentifiers.isEmpty()) {
 
-				for (final SEDbIdentifierWrapper sdi : possibleIdentifiers) {
+				// First iteration, search for an entry with the same description (more precisely: a description contained in
+				// the header).
+				for (final DDatabankProtein sdi : possibleIdentifiers) {
 					final String description = sdi.getDescription();
 					if ((description != null) && header.contains(description)) {
-						/* Check exact description match */
-						foundSEDbIdent = sdi;
-
+						foundProtein = sdi;
 						break;
 					}
+				}
 
-				} // End first loop for each possibleIdentifiers
-
-				if (foundSEDbIdent == null) {
-
-					for (final SEDbIdentifierWrapper sdi : possibleIdentifiers) {
-
+				// If not found, start a second iteration searching for the first one with no description and eventually set it
+				// the description found in the header
+				if (foundProtein == null) {
+					LOG.debug("Cannot find a Protein with a matching description for [{}], trying to search for one with no description", identifier);
+					for (final DDatabankProtein sdi : possibleIdentifiers) {
 						if (sdi.getDescription() == null) {
-							/*
-							 * Retrieve first SEDbIdentWrapper without
-							 * description
-							 */
+							LOG.debug("A Protein with no description is found for [{}]", possibleIdentifiers.size(), identifier);
 							if ((missedDescription != null) && (!missedDescription.isEmpty())) {
-								foundSEDbIdent = new SEDbIdentifierWrapper(identValue, missedDescription);
+								foundProtein = new DDatabankProtein(identifier, missedDescription);
 							} else {
-								foundSEDbIdent = sdi;
+								foundProtein = sdi;
 								final int nPossibleIdentifiers = possibleIdentifiers.size();
 								if (nPossibleIdentifiers > 1) {
-									foundSEDbIdent.setInferred(true);
-									LOG.debug(
-											"There are {} SEDbIdentWrapper (inferred) for [{}] taking first with no description",
-											nPossibleIdentifiers, identValue);
+									//TODO Cby: mais les autres possibleIdentifiers ont peut etre une description mais qui ne matche pas ?
+									foundProtein.setInferred(true);
+									LOG.debug("There are {} Proteins (inferred) for [{}] taking the first one with no description", nPossibleIdentifiers, identifier);
 								}
 							}
-
 							break;
-						} // End if (current SEDbIdentWrapper description is
-							// null)
-
+						} // End if (current SEDbIdentWrapper description is null)
 					} // End second loop for each possibleIdentifiers
+				} // End if (foundProtein is null after first loop)
 
-				} // End if (foundSEDbIdent is null after first loop)
-
-				if (foundSEDbIdent == null) {
+				if (foundProtein == null) {
 					/* Build Warning LOG message */
 					final StringBuilder messageBuilder = new StringBuilder(MESSAGE_BUILDER_SIZE);
-					messageBuilder.append("No valid description match for [").append(identValue);
-					messageBuilder.append("] taking first SEDbIdentWrapper (inferred)");
+					messageBuilder.append("No valid description match for [").append(identifier);
+					messageBuilder.append("] taking first protein (inferred)");
 					messageBuilder.append(LINE_SEPARATOR);
 
-					messageBuilder.append("Parsed FASTA Header, then expected SEDbIdentWrapper descriptions :");
+					messageBuilder.append("Parsed FASTA Header, then expected protein descriptions :");
 					messageBuilder.append(LINE_SEPARATOR);
 
 					messageBuilder.append(header);
 					messageBuilder.append(LINE_SEPARATOR);
 
-					for (final SEDbIdentifierWrapper sdi : possibleIdentifiers) {
+					for (final DDatabankProtein sdi : possibleIdentifiers) {
 						final String description = sdi.getDescription();
 
 						if (description == null) {
@@ -309,19 +263,20 @@ public class FastaSource implements DataSource {
 					LOG.debug(messageBuilder.toString());
 
 					/* Retrieve arbitrar first SEDbIdentWrapper */
-					foundSEDbIdent = possibleIdentifiers.get(0);
-					foundSEDbIdent.setInferred(true);
+					foundProtein = possibleIdentifiers.get(0);
+					foundProtein.setInferred(true);
+					LOG.warn("Arbitrarily select the first ProteinIdentifier as the one matching to the identifier parsed in the fasta file ??");
 				}
 
-				parseRepositoryIdent(header, foundSEDbIdent);
+				parseRepositoryIdent(header, foundProtein);
 			} // End if (possibleIdentifiers is not empty)
 
-		} // End if (m_seDbIdentPattern is found)
+		} // End if (m_proteinIdentifierPattern is found)
 
-		return foundSEDbIdent;
+		return foundProtein;
 	}
 
-	protected void parseRepositoryIdent(final String header, final SEDbIdentifierWrapper seDbIdentifier) {
+	protected void parseRepositoryIdent(final String header, final DDatabankProtein seDbIdentifier) {
 
 		if (m_repositoryIdentPattern != null) {
 
@@ -330,18 +285,15 @@ public class FastaSource implements DataSource {
 			if (matcher.find()) {
 
 				if (matcher.groupCount() < 1) {
-					throw new IllegalArgumentException("Invalid RepositoryIdentifier Regex");
+					throw new IllegalArgumentException("Invalid RepositoryProtein Regex");
 				}
 
 				final String repositoryIdent = matcher.group(1).trim();
 				if (!repositoryIdent.isEmpty()) {
 					seDbIdentifier.setRepositoryIdentifier(repositoryIdent);
 				}
-
 			}
-
 		}
-
 	}
 
 }
