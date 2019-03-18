@@ -30,7 +30,7 @@ object BuildRSMSpectraViewSet extends LazyLogging {
 
   object CustomSerializer extends ProfiJSMSerialization with CustomDoubleJacksonSerializer
 
-  def apply(ds: IdentWithSpectrumDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate, exportConfig: ExportConfig, mode: FormatCompatibility.Value): ViewSet = {
+  def apply(ds:  IdentWithSpectrumDataSet, viewSetName: String, viewSetTemplate: IViewSetTemplate, exportConfig: ExportConfig, mode: FormatCompatibility.Value): ViewSet = {
 
     val templatedViews = viewSetTemplate.templatedViewTypes.map { templatedViewType =>
       val viewWithTpl = ViewWithTemplate(BuildRSMSpectraView(ds, templatedViewType.viewType, exportConfig, mode), templatedViewType.template)
@@ -107,7 +107,7 @@ object BuildRSMSpectraViewSet extends LazyLogging {
       Map() ++ map
     }
 
-    logger.debug(" spectrumIdByPepMatchId  " + spectrumIdByPepMatchId.size)
+    logger.debug(" Found {} spectrum for {} pep matches.", spectrumIdByPepMatchId.size, bestPeptideMatchesByPeptideAndCharge.values.size)
 
     val spectra = spectrumProvider.getSpectra(spectrumIdByPepMatchId.values.toSeq)
     val spectrumByPepMatchID = spectrumIdByPepMatchId.map(entry => { entry._1 -> spectra.filter(_.id == entry._2).head }).toMap
@@ -127,7 +127,9 @@ object BuildRSMSpectraViewSet extends LazyLogging {
       }
     })
 
-    logger.debug(" spectrumMatchesByPeptMatchId  " + spectrumMatchesByPeptMatchId.size)
+    logger.debug(" Found {} Spectrum Matches for {} pep matches.", spectrumMatchesByPeptMatchId.size, bestPeptideMatchesByPeptideAndCharge.values.size)
+    if(spectrumMatchesByPeptMatchId.size < bestPeptideMatchesByPeptideAndCharge.values.size ) // or if(spectrumMatchesByPeptMatchId.isEmpty()) ??
+      throw new RuntimeException("No annotation found for peptide matches'spectrum, run first Generate Spectrum Matches")
 
     return apply(IdentWithSpectrumDataSet( rsm, bestPeptideMatchesByPeptideAndCharge, spectrumByPepMatchID, spectrumMatchesByPeptMatchId, masterQuantPepIonByPepMatchId ), viewSetName, viewSetTemplate, null, mode)
 
