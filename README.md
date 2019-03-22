@@ -5,8 +5,8 @@
 
 :warning:
 
-Our goal is to migrate all our source code from out actual SVN to Git.
-But before that, we provide a tar.gz containing the source files for all repository's project.
+We are currently migrating all our source code from out actual SVN to Git.
+In the meantime, we provide a tar.gz containing the source files of all repository's projects.
 
 ---
 
