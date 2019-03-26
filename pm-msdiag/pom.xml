@@ -46,12 +46,12 @@
 		<!-- Proline -->
 		<dependency>
 			<groupId>fr.proline</groupId>
-			<artifactId>proline-om</artifactId>
+			<artifactId>proline-om_${scala.version}</artifactId>
 			<version>${core.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>fr.proline</groupId>
-			<artifactId>proline-dal</artifactId>
+			<artifactId>proline-dal_${scala.version}</artifactId>
 			<version>${core.version}</version>
 		</dependency>
 		<dependency>
@@ -63,7 +63,7 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.proline</groupId>
-			<artifactId>proline-dal</artifactId>
+			<artifactId>proline-dal_${scala.version}</artifactId>
 			<version>${core.version}</version>
 			<type>test-jar</type>
 			<scope>test</scope>
@@ -115,7 +115,7 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.profi.util</groupId>
-			<artifactId>profi-commons-scala</artifactId>
+			<artifactId>profi-commons-scala_${scala.version}</artifactId>
 			<version>0.9.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
