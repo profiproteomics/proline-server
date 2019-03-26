@@ -82,7 +82,7 @@
     <!-- Proline -->
     <dependency>
       <groupId>fr.profi.util</groupId>
-      <artifactId>profi-commons-scala</artifactId>
+      <artifactId>profi-commons-scala_${scala.version}</artifactId>
       <version>0.9.0-SNAPSHOT</version>
     </dependency>
     <dependency>
