@@ -54,29 +54,36 @@ class AggregateQuantitation extends AbstractRemoteProcessingService with IAggreg
     try {
       // Isolate future actions in an SQL transaction
       executionContext.tryInTransactions(udsTx = true, msiTx = true, txWork = {
+
+        // Parse the quant configuration
+        val quantConfigAsStr = serialize(quantConfigAsMap)
+        val quantConfig = deserialize[AggregationQuantConfig](quantConfigAsStr)
+        val qId:  Long = quantConfig.quantitationIds(0)
+        // Retrieve entity manager
+        val udsDbCtx = executionContext.getUDSDbConnectionContext()
+        val udsEM = udsDbCtx.getEntityManager()
+        val childQuantitation = udsEM.find(classOf[UdsDataset], qId)
+
         // Store quantitation in the UDSdb
         val quantiCreator = new CreateQuantitation(
           executionContext = executionContext,
           name = paramsRetriever.getString(PROCESS_METHOD.NAME_PARAM),
           description = paramsRetriever.getString(PROCESS_METHOD.DESCRIPTION_PARAM),
           projectId = projectId,
-          methodId = 1, // TODO: this should not be done like this : extract method from aggregated datasets
+          methodId = childQuantitation.getMethod.getId,
           experimentalDesign = experimentalDesign
         )
         quantiCreator.runService()
         quantiId = quantiCreator.getUdsQuantitation.getId
 
         // Retrieve entity manager
-        val udsDbCtx = executionContext.getUDSDbConnectionContext()
-        val udsEM = udsDbCtx.getEntityManager()
+        //val udsDbCtx = executionContext.getUDSDbConnectionContext()
+        //val udsEM2 = udsDbCtx.getEntityManager()
         val udsQuantitation = udsEM.find(classOf[UdsDataset], quantiId)
 
         // Retrieve master quant channels (they should be sorted by their number)
         val udsMasterQuantChannels = udsQuantitation.getMasterQuantitationChannels.toList
 
-        // Parse the quant configuration
-        val quantConfigAsStr = serialize(quantConfigAsMap)
-        val quantConfig = deserialize[AggregationQuantConfig](quantConfigAsStr)
 
         require(!quantConfig.quantitationIds.isEmpty, "List of datasets to aggregate cannot be empty")
 
