@@ -110,10 +110,10 @@ public final class RetrieveServiceTest extends AbstractDatabaseTest  {
 			ProjectHandler projectHandler = new ProjectHandler(PROJECT_ID);
 			List<Long> rsmIds = projectHandler.findAllRSMIds();
 			projectHandler.close();
-			logger.info("--- Starting retrieveBioSequences Unit Test ---");
+			logger.info("--- Starting retrieveBioSequences Unit Test (testRetrieveOutdatedDbWith2Diffs) ---");
 			int persistedProteinsCount = RetrieveService.retrieveBioSequences(PROJECT_ID, false, rsmIds);
 
-//			DatabaseUtils.writeDataSetXML(DatabaseAccess.getSEQDatabaseConnector(false), "seq-db-OUT-outdated_2diffs.xml");
+			DatabaseUtils.writeDataSetXML(DatabaseAccess.getSEQDatabaseConnector(false), "seq-db-OUT-outdated_2diffs.xml");
 
 			DatabaseAccess.closeSEQDatabaseConnector();
 
@@ -168,7 +168,7 @@ public final class RetrieveServiceTest extends AbstractDatabaseTest  {
 			ProjectHandler projectHandler = new ProjectHandler(PROJECT_ID);
 			List<Long> rsmIds = projectHandler.findAllRSMIds();
 			projectHandler.close();
-			logger.info("--- Starting retrieveBioSequences Unit Test ---");
+			logger.info("--- Starting retrieveBioSequences Unit Test (testRetrieveNewerDbButMissingFasta5missing)");
 			int persistedProteinsCount = RetrieveService.retrieveBioSequences(PROJECT_ID, false, rsmIds);
 
 //			DatabaseUtils.writeDataSetXML(DatabaseAccess.getSEQDatabaseConnector(false), "seq-db_OUT-newer_missing_fasta-5missing.xml");
