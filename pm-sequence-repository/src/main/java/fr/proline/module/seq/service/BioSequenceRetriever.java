@@ -57,7 +57,7 @@ public final class BioSequenceRetriever {
 	/**
 	 * Blocks until all given DatabankInstance are searched.
 	 * 
-	 * @param proteinsByDatabank
+	 * @param proteinsByDatabank List of proteins by specific databank instance (name + release)
 	 * @return Number of handled (created or updated) SEDbIdentifiers.
 	 * @throws ExecutionException
 	 * @throws InterruptedException
@@ -190,12 +190,12 @@ public final class BioSequenceRetriever {
 			release = RegExUtil.parseReleaseVersion(sourceFileName, releaseRegex);
 		}
 
-		DatabankInstance databankInstance = searchDatabankInstance(seqEM, dDatabankInstance, release);
-		release = getReleaseInformation(release, databankInstance);
+		DatabankInstance seqDbDatabankInstance = searchDatabankInstance(seqEM, dDatabankInstance, release);
+		release = getReleaseInformation(release, seqDbDatabankInstance);
 		dDatabankInstance.setRelease(release);
 
-		if (databankInstance != null) {
-			removeAlreadyPersistedIdentifiers(seqEM, databankInstance, proteinsByIdentifier);
+		if (seqDbDatabankInstance != null) {
+			removeAlreadyPersistedIdentifiers(seqEM, seqDbDatabankInstance, proteinsByIdentifier);
 		}
 
 
@@ -246,19 +246,19 @@ public final class BioSequenceRetriever {
 							LOG.debug("SEQ Db WRITE Transaction begin");
 							final long start = System.currentTimeMillis();
 
-							if (databankInstance == null) {
-								databankInstance = findOrCreateDatabankInstance(seqEM, dDatabankInstance, null, release, fastaSource.getLastModifiedTime());
+							if (seqDbDatabankInstance == null) {
+								seqDbDatabankInstance = findOrCreateDatabankInstance(seqEM, dDatabankInstance, null, release, fastaSource.getLastModifiedTime());
 							} else {
-								databankInstance = seqEM.merge(databankInstance);
+								seqDbDatabankInstance = seqEM.merge(seqDbDatabankInstance);
 							}
 
 							final Map<String, List<DatabankProtein>> existingProteins = searchExistingProteins(seqEM, databankInstanceName, foundSequences.keySet());
-							LOG.debug("{} Proteins already exists in the databank {}", existingProteins.size(), databankInstance);
+							LOG.debug("{} Proteins already exists in the databank {}", existingProteins.size(), seqDbDatabankInstance);
 
 							final Map<String, BioSequence> existingBioSequences = findExistingBioSequences(seqEM, foundSequences.values());
 							LOG.debug("{} BioSequence already exists in the SeqDB (compared by hash code)", existingBioSequences.size());
 
-							final Repository repository = databankInstance.getDatabank().getRepository();
+							final Repository repository = seqDbDatabankInstance.getDatabank().getRepository();
 							Map<String, RepositoryProtein> existingRepositoryIdents = null;
 
 							if (repository != null) {// Can be null
@@ -269,7 +269,7 @@ public final class BioSequenceRetriever {
 
 							final RetrieverContext context = new RetrieverContext(
 											seqEM,
-											databankInstance,
+											seqDbDatabankInstance,
 											existingProteins,
 											existingBioSequences,
 											repository,
@@ -436,6 +436,7 @@ public final class BioSequenceRetriever {
 
 		DatabankInstance result = null;
 
+		//VDS TODO : If more than one found search using release in this first subList ?
 		//
 		// First try to load the databank instance from SeqDB by Name and SourcePath
 		//
@@ -501,7 +502,7 @@ public final class BioSequenceRetriever {
 
 		}
 
-		if ((removedIdentifiersCount > 0) && LOG.isDebugEnabled()) {
+		if (removedIdentifiersCount > 0) {
 			LOG.info("{} already known identifiers removed from search list for DatabankInstance {}", removedIdentifiersCount, databankInstance);
 		}
 
@@ -722,7 +723,10 @@ public final class BioSequenceRetriever {
 						if (DATABANK_INSTANCE_COMPARATOR.compare(matchedDatabankInstance, databankInstance) < 0) {
 							// Update DatabankProtein to newest databankInstance
 							// TODO: CBy : je ne comprends pas a quel endroit la matchingProtein est persistée ?
+							// == dans le seqTransaction.commit
 							matchingProtein.setDatabankInstance(databankInstance);
+							if(!matchingProtein.getDescription().equals(protein.getDescription()))
+								matchingProtein.setDescription(protein.getDescription());
 							context.getCounters().inc("Already persisted Proteins was updated");
 							updateRepositoryIdentifier(context, matchingProtein, protein);
 						} else {

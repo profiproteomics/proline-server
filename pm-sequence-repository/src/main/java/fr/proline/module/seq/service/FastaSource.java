@@ -85,7 +85,7 @@ public class FastaSource implements DataSource {
 			DDatabankProtein currentProtein = null;
 			StringBuilder sequenceBuilder = null;
 
-				LOG.debug("Searching {} distinct Proteins with \"{}\" Regex in [{}] ",
+			LOG.debug("Searching {} distinct Proteins with \"{}\" Regex in [{}] ",
 								remainingProteinIdentifiersCount,
 								m_proteinIdentifierPattern.pattern(),
 								fastaAbsolutePathname);
@@ -192,13 +192,13 @@ public class FastaSource implements DataSource {
 				throw new IllegalArgumentException("Invalid DatabankProtein Regex");
 			}
 
-			final String identifier = matcher.group(1).trim();// DatabankProtein value should be trimmed
+			final String fastaIdentifier = matcher.group(1).trim();// DatabankProtein value should be trimmed
 
-			if ((header != null) && (!header.isEmpty()) && (header.trim().length() > identifier.trim().length())) {
-				descriptionFromFasta = header.substring(header.indexOf(identifier) + identifier.length() + 1);
+			if ((header != null) && (!header.isEmpty()) && (header.trim().length() > fastaIdentifier.trim().length())) {
+				descriptionFromFasta = header.substring(header.indexOf(fastaIdentifier) + fastaIdentifier.length() + 1);
 			}
 
-			final List<DDatabankProtein> possibleIdentifiers = remainingProteinIdentifiers.get(identifier);
+			final List<DDatabankProtein> possibleIdentifiers = remainingProteinIdentifiers.get(fastaIdentifier);
 
 			if ((possibleIdentifiers != null) && !possibleIdentifiers.isEmpty()) {
 
@@ -215,12 +215,12 @@ public class FastaSource implements DataSource {
 				// If not found, start a second iteration searching for the first one with no description and eventually set it
 				// the description found in the header
 				if (foundProtein == null) {
-					LOG.debug("Cannot find a Protein with a matching description for [{}], trying to search for one with no description", identifier);
+					LOG.debug("Cannot find a Protein with a matching description for [{}], trying to search for one with no description", fastaIdentifier);
 					for (final DDatabankProtein sdi : possibleIdentifiers) {
 						if (sdi.getDescription() == null) {
-							LOG.debug("A Protein with no description is found for [{}]", possibleIdentifiers.size(), identifier);
+							LOG.debug("A Protein with no description is found for [{}]", possibleIdentifiers.size(), fastaIdentifier);
 							if ((descriptionFromFasta != null) && (!descriptionFromFasta.isEmpty())) {
-								foundProtein = new DDatabankProtein(identifier, descriptionFromFasta);
+								foundProtein = new DDatabankProtein(fastaIdentifier, descriptionFromFasta);
 							} else {
 								//*** VDS Both description are null ...  choose first one with no description
 								foundProtein = sdi;
@@ -228,7 +228,7 @@ public class FastaSource implements DataSource {
 								if (nPossibleIdentifiers > 1) {
 									//TODO Cby: mais les autres possibleIdentifiers ont peut etre une description mais qui ne matche pas ?
 									foundProtein.setInferred(true);
-									LOG.debug("There are {} Proteins (inferred) for [{}] taking the first one with no description", nPossibleIdentifiers, identifier);
+									LOG.debug("There are {} Proteins (inferred) for [{}] taking the first one with no description", nPossibleIdentifiers, fastaIdentifier);
 								}
 							}
 							break;
@@ -241,7 +241,7 @@ public class FastaSource implements DataSource {
 				if (foundProtein == null) {
 					/* Build Warning LOG message */
 					final StringBuilder messageBuilder = new StringBuilder(MESSAGE_BUILDER_SIZE);
-					messageBuilder.append("No valid description match for [").append(identifier);
+					messageBuilder.append("No valid description match for [").append(fastaIdentifier);
 					messageBuilder.append("] taking first protein (inferred)");
 					messageBuilder.append(LINE_SEPARATOR);
 
@@ -255,7 +255,7 @@ public class FastaSource implements DataSource {
 						final String description = sdi.getDescription();
 
 						if (description == null) {
-							messageBuilder.append("NULL");
+							messageBuilder.append("NULL"); // should not occured !
 						} else {
 							messageBuilder.append('[').append(description).append(']');
 						}
@@ -266,8 +266,9 @@ public class FastaSource implements DataSource {
 					LOG.debug(messageBuilder.toString());
 
 					/* Retrieve arbitrar first SEDbIdentWrapper */
-					//***  VDS Warning : Use MSI protein with description from MSI instead of FASTA to set in SeqDB !
-					foundProtein = possibleIdentifiers.get(0);
+					//***  VDS Warning : Use Fasta date to create entry instead of MSI protein ==> finally SeqDb Protein from fasta !
+					//foundProtein = possibleIdentifiers.get(0);
+					foundProtein = new DDatabankProtein(fastaIdentifier, descriptionFromFasta);
 					foundProtein.setInferred(true);
 					LOG.warn("Arbitrarily select the first ProteinIdentifier as the one matching to the identifier parsed in the fasta file ??");
 				}
