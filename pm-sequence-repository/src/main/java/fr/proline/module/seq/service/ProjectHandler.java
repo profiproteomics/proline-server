@@ -557,7 +557,7 @@ public class ProjectHandler {
 					LOG.info("Processed " + psIdcount + " protein sets / " + psIdListSize);
 					LOG.debug("--- Number of proteins with MORE THAN 1 Sequence : {}", nbrManySeqProt);
 					LOG.debug("--- Number of proteins with NO Sequence : {}", nbrNoSeqProt);
-					LOG.debug("--- Number of proteins with NO Sequence : {}", nbrBioSeqMissMatch);
+					LOG.debug("--- Number of proteins with miss matched BioSequence : {}", nbrBioSeqMissMatch);
 
 					//Save RSM Property
 					JsonObject array = getPropertiesAsJsonObject(rsm.getSerializedProperties());

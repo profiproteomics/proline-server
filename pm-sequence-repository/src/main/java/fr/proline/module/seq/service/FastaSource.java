@@ -184,7 +184,7 @@ public class FastaSource implements DataSource {
 	private DDatabankProtein checkHeader(final String header, final Map<String, List<DDatabankProtein>> remainingProteinIdentifiers) {
 
 		DDatabankProtein foundProtein = null;
-		String missedDescription = null;
+		String descriptionFromFasta = null;
 		final Matcher matcher = m_proteinIdentifierPattern.matcher(header);
 
 		if (matcher.find()) {
@@ -195,7 +195,7 @@ public class FastaSource implements DataSource {
 			final String identifier = matcher.group(1).trim();// DatabankProtein value should be trimmed
 
 			if ((header != null) && (!header.isEmpty()) && (header.trim().length() > identifier.trim().length())) {
-				missedDescription = header.substring(header.indexOf(identifier) + identifier.length() + 1);
+				descriptionFromFasta = header.substring(header.indexOf(identifier) + identifier.length() + 1);
 			}
 
 			final List<DDatabankProtein> possibleIdentifiers = remainingProteinIdentifiers.get(identifier);
@@ -219,9 +219,10 @@ public class FastaSource implements DataSource {
 					for (final DDatabankProtein sdi : possibleIdentifiers) {
 						if (sdi.getDescription() == null) {
 							LOG.debug("A Protein with no description is found for [{}]", possibleIdentifiers.size(), identifier);
-							if ((missedDescription != null) && (!missedDescription.isEmpty())) {
-								foundProtein = new DDatabankProtein(identifier, missedDescription);
+							if ((descriptionFromFasta != null) && (!descriptionFromFasta.isEmpty())) {
+								foundProtein = new DDatabankProtein(identifier, descriptionFromFasta);
 							} else {
+								//*** VDS Both description are null ...  choose first one with no description
 								foundProtein = sdi;
 								final int nPossibleIdentifiers = possibleIdentifiers.size();
 								if (nPossibleIdentifiers > 1) {
@@ -235,6 +236,8 @@ public class FastaSource implements DataSource {
 					} // End second loop for each possibleIdentifiers
 				} // End if (foundProtein is null after first loop)
 
+				//  *** VDS MSI description not null && still not found MSI description not in Fasta Description Header and
+				//
 				if (foundProtein == null) {
 					/* Build Warning LOG message */
 					final StringBuilder messageBuilder = new StringBuilder(MESSAGE_BUILDER_SIZE);
@@ -263,6 +266,7 @@ public class FastaSource implements DataSource {
 					LOG.debug(messageBuilder.toString());
 
 					/* Retrieve arbitrar first SEDbIdentWrapper */
+					//***  VDS Warning : Use MSI protein with description from MSI instead of FASTA to set in SeqDB !
 					foundProtein = possibleIdentifiers.get(0);
 					foundProtein.setInferred(true);
 					LOG.warn("Arbitrarily select the first ProteinIdentifier as the one matching to the identifier parsed in the fasta file ??");
