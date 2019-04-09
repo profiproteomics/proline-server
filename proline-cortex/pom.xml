@@ -504,6 +504,7 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <!-- Version inherited from ProFI-Pom -->
         <configuration>
+          <finalName>${project.name}-${project.version}</finalName>
           <descriptors>
             <descriptor>${assembly.file.path}</descriptor>
           </descriptors>
