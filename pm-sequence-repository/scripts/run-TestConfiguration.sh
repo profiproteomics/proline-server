@@ -1,3 +1,3 @@
 #!/bin/sh
 
-java -cp "config:PM-SequenceRepository-${project.version}.jar:lib/*" fr.proline.module.seq.service.ListMatchingRules
+java -cp "config:pm-sequence-repository-${project.version}.jar:lib/*" fr.proline.module.seq.service.ListMatchingRules
