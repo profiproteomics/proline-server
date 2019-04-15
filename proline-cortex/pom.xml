@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>Proline-Cortex</artifactId>
-  <version>2.0.0</version>
+  <version>2.0.1</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -18,7 +18,7 @@
   </properties>
   
   <scm>
-  	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-JMS-Components/Proline-Cortex/tags/2.0.0</connection>
+  	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-JMS-Components/Proline-Cortex/tags/2.0.1</connection>
   </scm>
   <dependencies>
 
@@ -191,7 +191,7 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>Proline-Admin</artifactId>
-      <version>0.8.0</version>  <!-- Snapshot Trunk version -->
+      <version>0.8.1</version>  <!-- Snapshot Trunk version -->
     </dependency>
     
     <!-- Proline Modules for result files import -->
@@ -528,6 +528,7 @@
 		</profile> <!-- End of full_distrib profile -->
 
 		<profile>
+			<!-- Cortex Profile: create assembly with ProlineCortex only -->
 			<!-- Cortex Profile: create assembly with ProlineCortex only -->
 			<id>cortex_distrib</id>
 			<properties>
