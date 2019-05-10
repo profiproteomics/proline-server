@@ -148,7 +148,7 @@ class FragmentIonTable(peptide: Peptide,
           (0.0, 0.0)
         else {
           val ptm = ptmByPosition.get(position).get
-          (ptm.monoMass, if (ptmNeutralLosses.isDefined && ptmNeutralLosses.isDefined && ptmNeutralLosses.get.contains(ptm)) ptmNeutralLosses.get(ptm) else 0.0)
+          (ptm.monoMass, if (ptmNeutralLosses.isDefined && ptmNeutralLosses.get.contains(ptm)) ptmNeutralLosses.get(ptm) else 0.0)
         }
       }
     

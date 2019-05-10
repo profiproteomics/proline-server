@@ -57,7 +57,7 @@ case class PeptideSpectrumMatcherMascot(
     	if(nlString.charAt(idx) != '0') {
     	  val ptm = peptideMatch.peptide.ptms.find(_.seqPosition == idx)
     	  val index = nlString.charAt(idx).asDigit
-    	  val ptmEvidence = ptm.get.definition.ptmEvidences(index)
+    	  val ptmEvidence = ptm.get.definition.neutralLosses(index-1)
     	  if(ptmEvidence.ionType  == IonTypes.NeutralLoss || ptmEvidence.ionType  == IonTypes.PepNeutralLoss)
     	    ptmNeutralLosses += (ptm.get -> ptmEvidence.monoMass)
   	    else
