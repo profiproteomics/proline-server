@@ -1,5 +1,6 @@
 package fr.profi.obo
 
+import com.typesafe.scalalogging.LazyLogging
 import fr.proline.core.om.model.msi.FragmentIonSeries
 
 import scala.io.BufferedSource
@@ -15,7 +16,7 @@ object PsiMsOntology extends Ontology {
   
 }
 
-object FragmentationIonParamPSIValue extends Enumeration {
+object FragmentationIonParamPSIValue extends Enumeration with LazyLogging{
 
   //VDS TODO ADD all possible fragmentation ion type
   case class FragmentationParamPsiMs (name: String, psiMod:  PsiMs.Value) extends Val(name){
@@ -40,6 +41,7 @@ object FragmentationIonParamPSIValue extends Enumeration {
   val Z_ION = FragmentationParamPsiMs(FragmentIonSeries.z.toString, PsiMs.FragZIon)
   val Z1_ION = FragmentationParamPsiMs(FragmentIonSeries.z1.toString, PsiMs.FragZ1Ion)
   val Z2_ION = FragmentationParamPsiMs(FragmentIonSeries.z2.toString, PsiMs.FragZ2Ion)
+  val IMMONIUM_ION = FragmentationParamPsiMs(FragmentIonSeries.immonium.toString, PsiMs.FragImmoniumIon)
 
   implicit def valueToPsiMs(v: Value): FragmentationParamPsiMs = v.asInstanceOf[FragmentationParamPsiMs]
 
@@ -47,7 +49,9 @@ object FragmentationIonParamPSIValue extends Enumeration {
     try {
       FragmentationIonParamPSIValue.withName(ionSerieType).psiMod
     } catch {
-      case e: NoSuchElementException => { null }
+      case e: NoSuchElementException => {
+        logger.debug(s" Unable to find FragmentIonSeries with name ${ionSerieType}")
+        null }
     }
   }
 }
@@ -77,6 +81,7 @@ object FragmentationIonTypePSIValue extends Enumeration {
   val Z_ION = FragmentationTypePsiMs(FragmentIonSeries.z.toString, PsiMs.FragZIon)
   val Z1_ION = FragmentationTypePsiMs(FragmentIonSeries.z1.toString, PsiMs.FragZ1Ion)
   val Z2_ION = FragmentationTypePsiMs(FragmentIonSeries.z2.toString, PsiMs.FragZ2Ion)
+  val IMMONIUM_ION = FragmentationTypePsiMs(FragmentIonSeries.immonium.toString, PsiMs.FragImmoniumIon)
 
   implicit def valueToPsiEnzyme(v: Value): FragmentationTypePsiMs = v.asInstanceOf[FragmentationTypePsiMs]
 
