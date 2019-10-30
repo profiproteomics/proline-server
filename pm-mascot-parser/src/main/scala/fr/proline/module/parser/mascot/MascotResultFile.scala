@@ -627,7 +627,10 @@ class MascotResultFile(
     }
 
     // Perform asynchronous IO
-    import ExecutionContext.Implicits.global
+    //import ExecutionContext.Implicits.global
+    val executorForAsyncIO = java.util.concurrent.Executors.newFixedThreadPool(4)
+    implicit val ecForAsyncIO: ExecutionContext = ExecutionContext.fromExecutor(executorForAsyncIO)
+    
     Future {
 
       this.eachQuerySection(this.fileLocation) { msqSection =>
@@ -744,6 +747,8 @@ class MascotResultFile(
     }
 
     scala.concurrent.Await.result(endOfParsingPromise.future,duration.Duration.Inf)
+    
+    executorForAsyncIO.shutdownNow() // shutdown the local thread pool used for async I/O
 
     logger.debug(s"End of eachSpectrum method!")
 
@@ -947,6 +952,7 @@ class MascotResultFile(
 
     tryWithBufferedReader(bfr) {
       var lineNumber = 1
+      
       var line = bfr.readLine()
       var eof = false
       var isInsideQueriesSection = false
@@ -954,6 +960,7 @@ class MascotResultFile(
       while (eof == false) {
 
         if (line == null) {
+          println("line is null")
           eof = true
         }
         else if (isInsideQueriesSection == false && lineNumber == firstQueryLineNumber) {
@@ -962,6 +969,7 @@ class MascotResultFile(
         else if (isInsideQueriesSection) {
 
           if (line == MASCOT_MULTIPART_EOF || line == MASCOT_INDEX_SECTION_LINE) {
+          println("reached eof")
             eof = true
           }
           else if (line == MASCOT_MULTIPART_BOUNDARY) {
@@ -976,7 +984,7 @@ class MascotResultFile(
             val queryNumAsStr = line.split("query").last.dropRight(1)
             section.put(MascotQuerySection.QUERY_NUM, queryNumAsStr)
           }
-          else if (line.nonEmpty) {
+          else if (line.nonEmpty && line.contains('=')) {
             val lineParts = line.split('=')
             section.put(lineParts(0), lineParts(1))
           }
