@@ -1,0 +1,1 @@
+﻿ALTER TABLE public.se_db_identifier ADD COLUMN description VARCHAR(10000);
