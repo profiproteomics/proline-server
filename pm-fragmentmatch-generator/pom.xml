@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>profi-pom</artifactId>
+    <groupId>fr.proline</groupId>
+    <version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+  </parent>
+
+  <artifactId>pm-fragmentmatch-generator</artifactId>
+  <version>0.9.0-SNAPSHOT</version>
+  <name>PM-FragmentMatchGenerator</name>
+  <description>Proline Module made to generate the fragment matches from a spectrum</description>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <core.version>2.1.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
+  </properties>
+	<scm>
+	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-FragmentMatchGenerator/trunk</connection>
+	</scm>
+  <dependencies>
+
+    <!-- Scala -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <!-- Version inherited from ProFI-Pom ${scala-library.version} -->
+    </dependency>
+
+    <!-- Logging -->
+
+   		<dependency>
+        <groupId>com.typesafe.scala-logging</groupId>
+        <artifactId>scala-logging_${scala.version}</artifactId>
+      </dependency>
+
+      <!-- Bridge Apache commons-logging over SLF4J -->
+
+    <!-- Proline -->
+	<dependency>
+      <groupId>fr.profi</groupId>
+      <artifactId>profi-proteomics_${scala.version}</artifactId>
+      <version>0.5.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+    </dependency>
+    
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-dal_${scala.version}</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+    <!-- Tests -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+     <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+    </dependency>
+	<dependency>
+      <groupId>org.dbunit</groupId>
+      <artifactId>dbunit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-databases</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-om_${scala.version}</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-dal_${scala.version}</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+    	<groupId>fr.profi.util</groupId>
+    	<artifactId>profi-commons-scala_${scala.version}</artifactId>
+    	<version>0.9.0-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+      </plugin>
+
+	 <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+      </plugin>
+      
+     <!--  <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin> -->
+      
+    </plugins>
+  </build>
+
+</project>
