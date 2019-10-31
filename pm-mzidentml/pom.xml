@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>profi-pom</artifactId>
+    <groupId>fr.proline</groupId>
+    <version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+  </parent>
+
+  <artifactId>pm-mzidentml</artifactId>
+  <version>0.9.0-SNAPSHOT</version>
+
+  <name>PM-MzIdentML</name>
+  <description>Proline Module which can import and export results in the mzIdentML file format</description>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <core.version>2.1.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
+    <version.path>${basedir}/src/main/scala/fr/proline/module/exporter/mzidentml</version.path>
+  </properties>
+	<scm>
+	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MzIdentML/trunk</connection>
+	</scm>
+
+
+  <dependencies>
+
+    <!-- Scala -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <!-- Version inherited from ProFI-Pom ${scala-library.version} -->
+    </dependency>
+
+    <!-- Logging -->
+    <dependency>
+      <groupId>com.typesafe.scala-logging</groupId>
+      <artifactId>scala-logging_${scala.version}</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
+    </dependency>
+
+    <!-- jmzidentml -->
+    <dependency>
+      <groupId>uk.ac.ebi.jmzidml</groupId>
+      <artifactId>jmzidentml</artifactId>
+      <version>1.2.7</version>
+
+       <exclusions>
+         <exclusion>
+           <groupId>org.apache.commons</groupId>
+           <artifactId>com.springsource.org.apache.commons.logging</artifactId>
+         </exclusion>
+
+         <exclusion>
+           <groupId>org.apache.log4j</groupId>
+           <artifactId>com.springsource.org.apache.log4j</artifactId>
+         </exclusion>
+
+         <exclusion>
+           <groupId>org.antlr</groupId>
+           <artifactId>com.springsource.antlr</artifactId>
+         </exclusion>
+
+
+      </exclusions>
+
+    </dependency>
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <version>2.2.12</version>
+    </dependency>
+
+    <!-- Override jmzidentml / xxindex dependency without com.springsource prefix -->
+    <!-- Use SLF4J instead of Apache common-loggings -->
+
+    <!-- If log4j is needed, add log4j-over-slf4j dependency -->
+
+    <dependency>
+      <groupId>org.scala-lang.modules</groupId>
+      <artifactId>scala-xml_${scala.version}</artifactId>
+    </dependency>
+
+    <!-- Proline -->
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-om_${scala.version}</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-dal_${scala.version}</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-omp_${scala.version}</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-orm</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-databases</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-databases</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-dal_${scala.version}</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+   <dependency>
+      <groupId>fr.profi</groupId>
+      <artifactId>profi-proteomics_${scala.version}</artifactId>
+      <version>0.5.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.profi.util</groupId>
+      <artifactId>profi-commons-scala_${scala.version}</artifactId>
+      <version>0.9.0-SNAPSHOT</version>
+    </dependency>
+    <!-- Tests -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_${scala.version}</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+     <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+    	<groupId>org.dbunit</groupId>
+    	<artifactId>dbunit</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>        
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+
+      <plugin>
+        <groupId>com.google.code.maven-replacer-plugin</groupId>
+        <artifactId>replacer</artifactId>
+        <!-- Version & config inherited from ProFI-Pom -->
+        <executions>
+          <execution>
+            <id>scala-version-generation</id>
+            <phase>generate-sources</phase>
+            <configuration>
+              <skip>false</skip>
+            </configuration>
+          </execution>
+        </executions>
+
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

@@ -1,0 +1,5721 @@
+[
+   {
+      "name" : "unit",
+      "id" : "UO:0000000",
+      "definition" : "A unit of measurement is a standardized quantity of a physical quality."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001708"
+         }
+      ],
+      "name" : "length unit",
+      "id" : "UO:0000001",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the distance between two points."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0000125"
+         },
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0000128"
+         }
+      ],
+      "name" : "mass unit",
+      "id" : "UO:0000002",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the amount of matter/energy of a physical object."
+   },
+   {
+      "alt_ids" : [
+         "UO:0000149"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0000165"
+         },
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001309"
+         }
+      ],
+      "name" : "time unit",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the dimension in which events occur in sequence.",
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "time derived unit",
+            "scope" : "EXACT"
+         }
+      ],
+      "id" : "UO:0000003"
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "name" : "electric current unit",
+      "id" : "UO:0000004",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the flow of electric charge."
+   },
+   {
+      "alt_ids" : [
+         "UO:0000126"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0000146"
+         }
+      ],
+      "name" : "temperature unit",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the average kinetic energy of the particles in a sample of matter.",
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "temperature derived unit",
+            "scope" : "EXACT"
+         }
+      ],
+      "id" : "UO:0000005"
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "name" : "substance unit",
+      "id" : "UO:0000006",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standardised quantity of an element or compound with uniform composition."
+   },
+   {
+      "is_a" : [
+         "UO:0000157"
+      ],
+      "name" : "luminous intensity unit",
+      "id" : "UO:0000007",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the wavelength-weighted power emitted by a light source in a particular direction."
+   },
+   {
+      "is_a" : [
+         "UO:0000001",
+         "UO:0000045"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "m",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "metre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "meter",
+      "id" : "UO:0000008",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A length unit which is equal to the length of the path traveled by light in vacuum during a time interval of 1/299 792 458 of a second."
+   },
+   {
+      "is_a" : [
+         "UO:0000002",
+         "UO:0000045"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "kg",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "kilogram",
+      "id" : "UO:0000009",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A mass unit which is equal to the mass of the International Prototype Kilogram kept by the BIPM at Svres, France."
+   },
+   {
+      "is_a" : [
+         "UO:0000003",
+         "UO:0000045"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "s",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "second",
+      "id" : "UO:0000010",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A time unit which is equal to the duration of 9 192 631 770 periods of the radiation corresponding to the transition between the two hyperfine levels of the ground state of the caesium 133 atom."
+   },
+   {
+      "is_a" : [
+         "UO:0000004",
+         "UO:0000045"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "A",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "ampere",
+      "id" : "UO:0000011",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An electric current unit which is equal to the constant current which, if maintained in two straight parallel conductors of infinite length, of negligible circular cross-section, and placed 1 m apart in vacuum, would produce between these conductors a force equal to 2 x 10^[-7] newton per meter of length."
+   },
+   {
+      "is_a" : [
+         "UO:0000005",
+         "UO:0000045"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "K",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "kelvin",
+      "id" : "UO:0000012",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A thermodynamic temperature unit which is equal to the fraction 1/273.16 of the thermodynamic temperature of the triple point of water."
+   },
+   {
+      "is_a" : [
+         "UO:0000006",
+         "UO:0000045"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "mol",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "mole",
+      "id" : "UO:0000013",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A substance unit which is equal to the amount of substance of a molecular system which contains as many elementary entities as there are atoms in 0.012 kilogram of carbon 12."
+   },
+   {
+      "is_a" : [
+         "UO:0000007",
+         "UO:0000045"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "cd",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "candela",
+      "id" : "UO:0000014",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A luminous intensity unit which equal to the luminous intensity, in a given direction, of a source that emits monochromatic radiation of frequency 540 x 1012 hertz and that has a radiant intensity in that direction of 1/683 watt per steradian."
+   },
+   {
+      "is_a" : [
+         "UO:0000001"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "centimetre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "cm",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "centimeter",
+      "id" : "UO:0000015",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A length unit which is equal to one hundredth of a meter or 10^[-2] m."
+   },
+   {
+      "is_a" : [
+         "UO:0000001"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "micrometre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "mm",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "millimeter",
+      "id" : "UO:0000016",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A length unit which is equal to one thousandth of a meter or 10^[-3] m."
+   },
+   {
+      "is_a" : [
+         "UO:0000001"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "micrometre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "micron",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "um",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "micrometer",
+      "id" : "UO:0000017",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A length unit which is equal to one millionth of a meter or 10^[-6] m."
+   },
+   {
+      "is_a" : [
+         "UO:0000001"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "nanometre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "nm",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "nanometer",
+      "id" : "UO:0000018",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A length unit which is equal to one thousandth of one millionth of a meter or 10^[-9] m."
+   },
+   {
+      "is_a" : [
+         "UO:0000001"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "A",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "angstrom",
+      "id" : "UO:0000019",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A length unit which is equal to 10 [-10] m."
+   },
+   {
+      "is_a" : [
+         "UO:0000001"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "picometre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "pm",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "picometer",
+      "id" : "UO:0000020",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A length unit which is equal to 10^[-12] m."
+   },
+   {
+      "is_a" : [
+         "UO:0000002"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "g",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "gram",
+      "id" : "UO:0000021",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A mass unit which is equal to one thousandth of a kilogram or 10^[-3] kg."
+   },
+   {
+      "is_a" : [
+         "UO:0000002"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "mg",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "milligram",
+      "id" : "UO:0000022",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A mass unit which is equal to one thousandth of a gram or 10^[-3] g."
+   },
+   {
+      "is_a" : [
+         "UO:0000002"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "ug",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "microgram",
+      "id" : "UO:0000023",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A mass unit which is equal to one millionth of a gram or 10^[-6] g."
+   },
+   {
+      "is_a" : [
+         "UO:0000002"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "ng",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "nanogram",
+      "id" : "UO:0000024",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A mass unit which is equal to one thousandth of one millionth of a gram or 10^[-9] g."
+   },
+   {
+      "is_a" : [
+         "UO:0000002"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "pg",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "picogram",
+      "id" : "UO:0000025",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A mass unit which is equal to 10^[-12] g."
+   },
+   {
+      "is_a" : [
+         "UO:0000002"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "fg",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "femtogram",
+      "id" : "UO:0000026",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A mass unit which is equal to 10^[-15] g."
+   },
+   {
+      "is_a" : [
+         "UO:0000005"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "C",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "degree Celsius",
+      "id" : "UO:0000027",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A temperature unit which is equal to one kelvin degree. However, they have their zeros at different points. The centigrade scale has its zero at 273.15 K."
+   },
+   {
+      "is_a" : [
+         "UO:0000003"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "ms",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "millisecond",
+      "id" : "UO:0000028",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A time unit which is equal to one thousandth of a second or 10^[-3] s."
+   },
+   {
+      "is_a" : [
+         "UO:0000003"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "us",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "microsecond",
+      "id" : "UO:0000029",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A time unit which is equal to one millionth of a second or 10^[-6] s."
+   },
+   {
+      "is_a" : [
+         "UO:0000003"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "ps",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "picosecond",
+      "id" : "UO:0000030",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A time unit which is equal to 10^[-12] s."
+   },
+   {
+      "is_a" : [
+         "UO:0000003"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "min",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "minute",
+      "id" : "UO:0000031",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A time unit which is equal to 60 seconds."
+   },
+   {
+      "is_a" : [
+         "UO:0000003"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "h",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "hour",
+      "id" : "UO:0000032",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A time unit which is equal to 3600 seconds or 60 minutes."
+   },
+   {
+      "is_a" : [
+         "UO:0000003"
+      ],
+      "name" : "day",
+      "id" : "UO:0000033",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A time unit which is equal to 24 hours."
+   },
+   {
+      "is_a" : [
+         "UO:0000003"
+      ],
+      "name" : "week",
+      "id" : "UO:0000034",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A time unit which is equal to 7 days."
+   },
+   {
+      "is_a" : [
+         "UO:0000003"
+      ],
+      "name" : "month",
+      "id" : "UO:0000035",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A time unit which is approximately equal to the length of time of one of cycle of the moon's phases which in science is taken to be equal to 30 days."
+   },
+   {
+      "is_a" : [
+         "UO:0000003"
+      ],
+      "name" : "year",
+      "id" : "UO:0000036",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A time unit which is equal to 12 months which is science is taken to be equal to 365.25 days."
+   },
+   {
+      "is_a" : [
+         "UO:0000004"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "mA",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "milliampere",
+      "id" : "UO:0000037",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An electric current unit current which is equal to one thousandth of an ampere or 10^[-3] A."
+   },
+   {
+      "is_a" : [
+         "UO:0000004"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "uA",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "microampere",
+      "id" : "UO:0000038",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An electric current unit current which is equal to one millionth of an ampere or 10^[-6] A."
+   },
+   {
+      "is_a" : [
+         "UO:0000006"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "umol",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "micromole",
+      "id" : "UO:0000039",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A substance unit equal to a millionth of a mol or 10^[-6] mol."
+   },
+   {
+      "is_a" : [
+         "UO:0000006"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "mmol",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "millimole",
+      "id" : "UO:0000040",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A substance unit equal to a thousandth of a mol or 10^[-3] mol."
+   },
+   {
+      "is_a" : [
+         "UO:0000006"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "nmol",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "nanomole",
+      "id" : "UO:0000041",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A substance unit equal to one thousandth of one millionth of a mole or 10^[-9] mol."
+   },
+   {
+      "is_a" : [
+         "UO:0000006"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "pmol",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "picomole",
+      "id" : "UO:0000042",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A substance unit equal to 10^[-12] mol."
+   },
+   {
+      "is_a" : [
+         "UO:0000006"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "fmol",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "femtomole",
+      "id" : "UO:0000043",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A substance unit equal to 10^[-15] mol."
+   },
+   {
+      "is_a" : [
+         "UO:0000006"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "amol",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "attomole",
+      "id" : "UO:0000044",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A substance unit equal to 10^[-18] mol."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "name" : "base unit",
+      "id" : "UO:0000045",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is one of a particular measure to which all measures of that type can be related."
+   },
+   {
+      "name" : "prefix",
+      "id" : "UO:0000046",
+      "definition" : ""
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001709"
+         }
+      ],
+      "name" : "area unit",
+      "id" : "UO:0000047",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the amount of a 2-dimensional flat surface."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001028"
+         }
+      ],
+      "name" : "acceleration unit",
+      "id" : "UO:0000048",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the rate of change of velocity in either speed or direction."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001413"
+         }
+      ],
+      "name" : "angular velocity unit",
+      "id" : "UO:0000049",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the rate of angular movement about an axis; the angle rotated in a given time."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001350"
+         }
+      ],
+      "name" : "angular acceleration unit",
+      "id" : "UO:0000050",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the rate of change of angular velocity."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0000033"
+         }
+      ],
+      "name" : "concentration unit",
+      "id" : "UO:0000051",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which represents a standard measurement of how much of a given substance there is mixed with another substance."
+   },
+   {
+      "is_a" : [
+         "UO:0000182"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "mass per unit volume",
+            "scope" : "EXACT"
+         }
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001353"
+         }
+      ],
+      "name" : "mass density unit",
+      "id" : "UO:0000052",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A density unit which is a standard measure of the mass of a substance in a given volume."
+   },
+   {
+      "is_a" : [
+         "UO:0000157"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001718"
+         }
+      ],
+      "name" : "luminance unit",
+      "id" : "UO:0000053",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the luminous intensity impinging on a given area."
+   },
+   {
+      "is_a" : [
+         "UO:0000182"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "mass per unit area unit",
+            "scope" : "EXACT"
+         }
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001351"
+         }
+      ],
+      "name" : "area density unit",
+      "id" : "UO:0000054",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A density unit which is a standard measure of the mass exerting an influence on a given area."
+   },
+   {
+      "is_a" : [
+         "UO:0000002"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001681"
+         }
+      ],
+      "name" : "molar mass unit",
+      "id" : "UO:0000055",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the mass of a homogeneous substance containing 6.02 x 1023 atoms or molecules."
+   },
+   {
+      "is_a" : [
+         "UO:0000095"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001680"
+         }
+      ],
+      "name" : "molar volume unit",
+      "id" : "UO:0000056",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the volume of a homogeneous substance containing 6.02 x 1023 atoms or molecules."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001023"
+         },
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001022"
+         }
+      ],
+      "name" : "momentum unit",
+      "id" : "UO:0000057",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the quantity of motion measured by the product of mass and velocity."
+   },
+   {
+      "is_a" : [
+         "UO:0000105"
+      ],
+      "name" : "rotational frequency unit",
+      "id" : "UO:0000058",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the number of rotations in a given time."
+   },
+   {
+      "is_a" : [
+         "UO:0000095"
+      ],
+      "name" : "specific volume unit",
+      "id" : "UO:0000059",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the volume of a given mass of substance (the reciprocal of density)."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0000008"
+         }
+      ],
+      "name" : "speed/velocity unit",
+      "id" : "UO:0000060",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the rate of movement. Speed is measured in the same physical units of measurement as velocity, but does not contain the element of direction that velocity has. Speed is thus the magnitude component of velocity."
+   },
+   {
+      "is_a" : [
+         "UO:0000051"
+      ],
+      "name" : "unit of molarity",
+      "id" : "UO:0000061",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A concentration unit which is a standard measure of the number of moles of a given substance per liter of solution."
+   },
+   {
+      "is_a" : [
+         "UO:0000061"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "M",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "molar",
+      "id" : "UO:0000062",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A unit of concentration which expresses a concentration of 1 mole of solute per liter of solution (mol/L)."
+   },
+   {
+      "is_a" : [
+         "UO:0000061"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "mM",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "millimolar",
+      "id" : "UO:0000063",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A unit of molarity which is equal to one thousandth of a molar or 10^[-3] M."
+   },
+   {
+      "is_a" : [
+         "UO:0000061"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "uM",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "micromolar",
+      "id" : "UO:0000064",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A unit of molarity which is equal to one millionth of a molar or 10^[-6] M."
+   },
+   {
+      "is_a" : [
+         "UO:0000061"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "nM",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "nanomolar",
+      "id" : "UO:0000065",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A unit of molarity which is equal to one thousandth of one millionth of a molar or 10^[-9] M."
+   },
+   {
+      "is_a" : [
+         "UO:0000061"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "pM",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "picomolar",
+      "id" : "UO:0000066",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A unit of molarity which is equal to 10^[-12] M."
+   },
+   {
+      "is_a" : [
+         "UO:0000051"
+      ],
+      "name" : "unit of molality",
+      "id" : "UO:0000067",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A concentration unit which is a standard measure of the number of moles of a given substance per kilogram of solvent."
+   },
+   {
+      "is_a" : [
+         "UO:0000067"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "m",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "molal",
+      "id" : "UO:0000068",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A unit of concentration which expresses a concentration of a solution of 1 mole per kilogram of solvent (mol/kg)."
+   },
+   {
+      "is_a" : [
+         "UO:0000067"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "mm",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "millimolal",
+      "id" : "UO:0000069",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A molality unit which is equal to one thousandth of a molal or 10^[-3] m."
+   },
+   {
+      "is_a" : [
+         "UO:0000067"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "um",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "micromolal",
+      "id" : "UO:0000070",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A molality unit which is equal to one millionth of a molal or 10^[-6] m."
+   },
+   {
+      "is_a" : [
+         "UO:0000067"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "nm",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "nanomolal",
+      "id" : "UO:0000071",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A molality unit which is equal to one thousandth of one millionth of a molal or 10^[-9] m."
+   },
+   {
+      "is_a" : [
+         "UO:0000067"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "pm",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "picomolal",
+      "id" : "UO:0000072",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A molality unit which is equal to 10^[-12] m."
+   },
+   {
+      "is_a" : [
+         "UO:0000061"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "fM",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "femtomolar",
+      "id" : "UO:0000073",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A unit of molarity which is equal to 10^[-15] M."
+   },
+   {
+      "is_a" : [
+         "UO:0000051"
+      ],
+      "name" : "unit of normality",
+      "id" : "UO:0000074",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit of concentration which highlights the chemical nature of salts."
+   },
+   {
+      "is_a" : [
+         "UO:0000074"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "N",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "normal",
+      "id" : "UO:0000075",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A unit of concentration which is one gram equivalent of a solute per liter of solution. A gram equivalent weight or equivalent is a measure of the reactive capacity of a given molecule."
+   },
+   {
+      "is_a" : [
+         "UO:0000191",
+         "UO:0000051"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "(x)",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "chi",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "mole fraction",
+      "id" : "UO:0000076",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A concentration unit which denotes the number of moles of solute as a proportion of the total number of moles in a solution."
+   },
+   {
+      "is_a" : [
+         "UO:0000048"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "m/s^[2]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "metre per second per second",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "meter per second per second",
+      "id" : "UO:0000077",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An acceleration unit which is equal to the acceleration an object changing its velocity by 1meter/s over a time period that equals one second."
+   },
+   {
+      "is_a" : [
+         "UO:0000050"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "alpha",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "rad/s^[2]",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "radian per second per second",
+      "id" : "UO:0000078",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An angular unit acceleration which is equal to the angular acceleration of an object changing its angular velocity by 1rad/s over a time period that equals one second."
+   },
+   {
+      "is_a" : [
+         "UO:0000049"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "rad/s",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "radian per second",
+      "id" : "UO:0000079",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An angular unit velocity which is equal to about 9.54930 rpm (revolutions per minute)."
+   },
+   {
+      "is_a" : [
+         "UO:0000047"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "m^[2]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "square metre",
+            "scope" : "RELATED"
+         }
+      ],
+      "name" : "square meter",
+      "id" : "UO:0000080",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An area unit which is equal to an area enclosed by a square with sides each 1 meter long."
+   },
+   {
+      "is_a" : [
+         "UO:0000047"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "cm^[2]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "square centimetre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "square centimeter",
+      "id" : "UO:0000081",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An area unit which is equal to one thousand of square meter or 10^[-3] m^[2]."
+   },
+   {
+      "is_a" : [
+         "UO:0000047"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "mm^[2]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "square millimetre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "square millimeter",
+      "id" : "UO:0000082",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An area unit which is equal to one millionth of a square meter or 10^[-6] m^[2]."
+   },
+   {
+      "is_a" : [
+         "UO:0000052"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "kg/m^[3]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "kilogram per cubic metre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "kilogram per cubic meter",
+      "id" : "UO:0000083",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A mass unit density which is equal to mass of an object in kilograms divided by the volume in cubic meters."
+   },
+   {
+      "is_a" : [
+         "UO:0000052"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "g/cm^[3]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "gram per cubic centimetre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "gram per cubic centimeter",
+      "id" : "UO:0000084",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A mass unit density which is equal to mass of an object in grams divided by the volume in cubic centimeters."
+   },
+   {
+      "is_a" : [
+         "UO:0000053"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "candela per square metre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "cd/m^[2]",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "candela per square meter",
+      "id" : "UO:0000085",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A luminance unit which is equal to a luminous intensity of one candela radiating from a surface whose area is one square meter."
+   },
+   {
+      "is_a" : [
+         "UO:0000054"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "Body Mass Index (BMI)",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "kg/m^[2]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "kilogram per square metre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "kilogram per square meter",
+      "id" : "UO:0000086",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An area density unit which is equal to the mass of an object in kilograms divided by the surface area in meters squared."
+   },
+   {
+      "is_a" : [
+         "UO:0000055"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "kg/mol",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "kilogram per mole",
+      "id" : "UO:0000087",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A molar mass unit which is equal to one kilogram of mass of one mole of chemical element or chemical compound."
+   },
+   {
+      "is_a" : [
+         "UO:0000055"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "g/mol",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "gram per mole",
+      "id" : "UO:0000088",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A molar mass unit which is equal to one gram of mass of one mole of chemical element or chemical compound."
+   },
+   {
+      "is_a" : [
+         "UO:0000056"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "cubic metre per mole",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "m^[3]/mol",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "cubic meter per mole",
+      "id" : "UO:0000089",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A molar volume unit which is equal to 1 cubic meter occupied by one mole of a substance in the form of a solid, liquid, or gas."
+   },
+   {
+      "is_a" : [
+         "UO:0000056"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "cm^[3]/mol",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "cubic centimetre per mole",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "cubic centimeter per mole",
+      "id" : "UO:0000090",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A molar volume unit which is equal to 1 cubic centimeter occupied by one mole of a substance in the form of a solid, liquid, or gas."
+   },
+   {
+      "is_a" : [
+         "UO:0000057"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "kg.m/s",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "kilogram metre per second",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "kilogram meter per second",
+      "id" : "UO:0000091",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A momentum unit which is equal to the momentum of a one kilogram mass object with a speed of one meter per second."
+   },
+   {
+      "is_a" : [
+         "UO:0000058"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "1/s",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "one turn per second",
+            "scope" : "NARROW"
+         }
+      ],
+      "name" : "turns per second",
+      "id" : "UO:0000092",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A rotational frequency unit which is equal to the number complete turn in a period of time that equals to 1 second."
+   },
+   {
+      "is_a" : [
+         "UO:0000059"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "cubic metre per kilogram",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "m^[3]/kg",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "cubic meter per kilogram",
+      "id" : "UO:0000093",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A specific volume unit which is equal to one cubic meter volume occupied by one kilogram of a particular substance."
+   },
+   {
+      "is_a" : [
+         "UO:0000060"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "m/s",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "metre per second",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "meter per second",
+      "id" : "UO:0000094",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A speed/velocity unit which is equal to the speed of an object traveling 1 meter distance in one second."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001710"
+         }
+      ],
+      "name" : "volume unit",
+      "id" : "UO:0000095",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the amount of space occupied by any substance, whether solid, liquid, or gas."
+   },
+   {
+      "is_a" : [
+         "UO:0000095"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "cubic metre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "m^[3]",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "cubic meter",
+      "id" : "UO:0000096",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A volume unit which is equal to the volume of a cube with edges one meter in length. One cubic meter equals to 1000 liters."
+   },
+   {
+      "is_a" : [
+         "UO:0000095"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "cc",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "cm^3",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "cubic centimetre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "cubic centimeter",
+      "id" : "UO:0000097",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A volume unit which is equal to one millionth of a cubic meter or 10^[-9] m^[3], or to 1 ml."
+   },
+   {
+      "is_a" : [
+         "UO:0000095"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "millilitre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "ml",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "milliliter",
+      "id" : "UO:0000098",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A volume unit which is equal to one thousandth of a liter or 10^[-3] L, or to 1 cubic centimeter."
+   },
+   {
+      "is_a" : [
+         "UO:0000095"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "l",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "L",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "litre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "liter",
+      "id" : "UO:0000099",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A volume unit which is equal to one thousandth of a cubic meter or 10^[-3] m^[3], or to 1 decimeter."
+   },
+   {
+      "is_a" : [
+         "UO:0000095"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "cubic decimetre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "dm^[3]",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "cubic decimeter",
+      "id" : "UO:0000100",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A volume unit which is equal to one thousand of a cubic meter or 10^[-3] m^[3], or to 1 L."
+   },
+   {
+      "is_a" : [
+         "UO:0000095"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "microlitre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "ul",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "microliter",
+      "id" : "UO:0000101",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A volume unit which is equal to one millionth of a liter or 10^[-6] L."
+   },
+   {
+      "is_a" : [
+         "UO:0000095"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "nanolitre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "nl",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "nanoliter",
+      "id" : "UO:0000102",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A volume unit which is equal to one thousandth of one millionth of a liter or 10^[-9] L."
+   },
+   {
+      "is_a" : [
+         "UO:0000095"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "picolitre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "pl",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "picoliter",
+      "id" : "UO:0000103",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A volume unit which is equal to 10^[-12] L."
+   },
+   {
+      "is_a" : [
+         "UO:0000095"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "femtolitre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "fl",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "femtoliter",
+      "id" : "UO:0000104",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A volume unit which is equal to 10^[-15] L."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0000044"
+         }
+      ],
+      "name" : "frequency unit",
+      "id" : "UO:0000105",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the number of repetitive actions in a particular time."
+   },
+   {
+      "is_a" : [
+         "UO:0000105"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "Hz",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "s^1",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "hertz",
+      "id" : "UO:0000106",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A frequency unit which is equal to 1 complete cycle of a recurring phenomenon in 1 second."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001035"
+         }
+      ],
+      "name" : "force unit",
+      "id" : "UO:0000107",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the force is applied when a mass is accelerated."
+   },
+   {
+      "is_a" : [
+         "UO:0000107"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "N",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "newton",
+      "id" : "UO:0000108",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A force unit which is equal to the force required to cause an acceleration of 1m/s2 of a mass of 1 Kg in the direction of the force."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001025"
+         }
+      ],
+      "name" : "pressure unit",
+      "id" : "UO:0000109",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the force applied to a given area."
+   },
+   {
+      "is_a" : [
+         "UO:0000109"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "Pa",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "pascal",
+      "id" : "UO:0000110",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A pressure unit which is equal to the pressure or stress on a surface caused by a force of 1 newton spread over a surface of 1 m^[2]."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001021"
+         },
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001026"
+         }
+      ],
+      "name" : "energy unit",
+      "id" : "UO:0000111",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the work done by a certain force (gravitational, electric, magnetic, force of inertia, etc)."
+   },
+   {
+      "is_a" : [
+         "UO:0000111"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "J",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "joule",
+      "id" : "UO:0000112",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An energy unit which is equal to the energy required when a force of 1 newton moves an object 1 meter in the direction of the force."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001024"
+         }
+      ],
+      "name" : "power unit",
+      "id" : "UO:0000113",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure power or the rate of doing work."
+   },
+   {
+      "is_a" : [
+         "UO:0000113"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "W",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "watt",
+      "id" : "UO:0000114",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A power unit which is equal to the power used when work is done at the rate of 1 joule per second."
+   },
+   {
+      "is_a" : [
+         "UO:0000157"
+      ],
+      "name" : "illuminance unit",
+      "id" : "UO:0000115",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the luminous flux incident on a unit area."
+   },
+   {
+      "is_a" : [
+         "UO:0000115"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "lx",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "lux",
+      "id" : "UO:0000116",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An illuminance unit which is equal to the illuminance produced by 1 lumen evenly spread over an area 1 m^[2]."
+   },
+   {
+      "is_a" : [
+         "UO:0000157"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001296"
+         }
+      ],
+      "name" : "luminous flux unit",
+      "id" : "UO:0000117",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the flow of radiant energy."
+   },
+   {
+      "is_a" : [
+         "UO:0000117"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "lm",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "lumen",
+      "id" : "UO:0000118",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A luminous flux unit which is equal to the luminous flux emitted into 1 steradian by a point source of 1 candela."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001414"
+         }
+      ],
+      "name" : "catalytic activity unit",
+      "id" : "UO:0000119",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the amount of the action of a catalyst."
+   },
+   {
+      "is_a" : [
+         "UO:0000119"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "kat",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "katal",
+      "id" : "UO:0000120",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A catalytic unit activity which is equal to the activity of a catalyst in moles per second, such as the amount of an enzyme needed to transform one mole of substrate per second."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0000133"
+         }
+      ],
+      "name" : "angle unit",
+      "id" : "UO:0000121",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the figure or space formed by the junction of two lines or planes."
+   },
+   {
+      "is_a" : [
+         "UO:0000121"
+      ],
+      "name" : "plane angle unit",
+      "id" : "UO:0000122",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the angle formed by two straight lines in the same plane."
+   },
+   {
+      "is_a" : [
+         "UO:0000122"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "rad",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "radian",
+      "id" : "UO:0000123",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A plane angle unit which is equal to the angle subtended at the center of a circle by an arc equal in length to the radius of the circle, approximately 57 degrees 17 minutes and 44.6 seconds."
+   },
+   {
+      "is_a" : [
+         "UO:0000121"
+      ],
+      "name" : "solid angle unit",
+      "id" : "UO:0000124",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the angle formed by three or more planes intersecting at a common point."
+   },
+   {
+      "is_a" : [
+         "UO:0000124"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "sr",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "steradian",
+      "id" : "UO:0000125",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A solid angle unit which is equal to the solid angle subtended at the center of a sphere by an area on the surface of the sphere that is equal to the radius squared."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "name" : "radiation unit",
+      "id" : "UO:0000127",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the amount of radiation emitted by a given radiation source as well as the amount of radiation absorbed or deposited in a specific material by a radiation source."
+   },
+   {
+      "is_a" : [
+         "UO:0000127"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001740"
+         }
+      ],
+      "name" : "activity (of a radionuclide) unit",
+      "id" : "UO:0000128",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the transformation (disintegration) rate of a radioactive substance."
+   },
+   {
+      "is_a" : [
+         "UO:0000127"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001745"
+         }
+      ],
+      "name" : "absorbed dose unit",
+      "id" : "UO:0000129",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the energy imparted by ionizing radiation to unit mass of matter such as tissue."
+   },
+   {
+      "is_a" : [
+         "UO:0000127"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001746"
+         }
+      ],
+      "name" : "dose equivalent unit",
+      "id" : "UO:0000130",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the expression of dose in terms of its biological effect."
+   },
+   {
+      "is_a" : [
+         "UO:0000127"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001744"
+         }
+      ],
+      "name" : "exposure unit",
+      "id" : "UO:0000131",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the quantity that expresses the ability of radiation to ionize air and thereby create electric charges which can be collected and measured."
+   },
+   {
+      "is_a" : [
+         "UO:0000128"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "Bq",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "becquerel",
+      "id" : "UO:0000132",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An activity (of a radionuclide) unit which is equal to the activity of a quantity of radioactive material in which one nucleus decays per second or there is one atom disintegration per second (dps)."
+   },
+   {
+      "is_a" : [
+         "UO:0000128"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "Ci",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "curie",
+      "id" : "UO:0000133",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An activity (of a radionuclide) unit which is equal to the activity of a quantity of radioactive material in which there are 3.7 x 10^[10] atom disintegration per second (dps)."
+   },
+   {
+      "is_a" : [
+         "UO:0000129"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "Gy",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "gray",
+      "id" : "UO:0000134",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An absorbed dose unit which is equal to the absorption of one joule of radiation energy by one kilogram of matter."
+   },
+   {
+      "is_a" : [
+         "UO:0000129"
+      ],
+      "name" : "rad",
+      "id" : "UO:0000135",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An absorbed dose unit which is equal to 0.01 gray (Gy)."
+   },
+   {
+      "is_a" : [
+         "UO:0000131"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "R",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "roentgen",
+      "id" : "UO:0000136",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An exposure unit which is equal to the amount of radiation required to liberate positive and negative charges of one electrostatic unit of charge in 1 cm^[3] of air at standard temperature and pressure (STP). This corresponds to the generation of approximately 2.0810^[9] ion pairs."
+   },
+   {
+      "is_a" : [
+         "UO:0000130"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "Sv",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "sievert",
+      "id" : "UO:0000137",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dose equivalent unit which is equal to the absorption of one joule of radiation energy by one kilogram of matter."
+   },
+   {
+      "is_a" : [
+         "UO:0000130"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "mSv",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "millisievert",
+      "id" : "UO:0000138",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dose equivalent unit which is equal to one thousandth of a sievert or 10^[-3] Sv."
+   },
+   {
+      "is_a" : [
+         "UO:0000130"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "uSv",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "microsievert",
+      "id" : "UO:0000139",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dose equivalent unit which is equal to one millionth of a sievert or 10^[-6] Sv."
+   },
+   {
+      "is_a" : [
+         "UO:0000130"
+      ],
+      "comment" : "Rem = absorbed dose (rad) x quality factor (Q). Q is unique to the type of incident radiation.",
+      "synonyms" : [
+         {
+            "definition" : "rem",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "Roentgen equivalent man",
+      "id" : "UO:0000140",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dose equivalent unit which when multiplied by hundred is equal to one sievert or 1 Sv. 1 Sv is equal to 100 rem."
+   },
+   {
+      "is_a" : [
+         "UO:0000129"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "uGy",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "microgray",
+      "id" : "UO:0000141",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An absorbed dose unit which is equal to one millionth of a gray or 10^[-6] Gy."
+   },
+   {
+      "is_a" : [
+         "UO:0000129"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "mGy",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "milligray",
+      "id" : "UO:0000142",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An absorbed dose unit which is equal to one thousandth of a gray or 10^[-3] Gy."
+   },
+   {
+      "is_a" : [
+         "UO:0000129"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "nGy",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "nanogray",
+      "id" : "UO:0000143",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An absorbed dose unit which is equal to one thousandth of a millionth of a gray or 10^[-9] Gy."
+   },
+   {
+      "is_a" : [
+         "UO:0000130"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "nSv",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "nanosievert",
+      "id" : "UO:0000144",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dose equivalent unit which is equal to one thousandth of a millionth of a sievert or 10^[-9] Sv."
+   },
+   {
+      "is_a" : [
+         "UO:0000128"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "mCi",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "millicurie",
+      "id" : "UO:0000145",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An activity (of a radionuclide) unit which is equal to one thousandth of a curie or 10^[-3] Ci."
+   },
+   {
+      "is_a" : [
+         "UO:0000128"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "uCi",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "microcurie",
+      "id" : "UO:0000146",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An activity (of a radionuclide) unit which is equal to one millionth of a curie or 10^[-6] Ci."
+   },
+   {
+      "is_a" : [
+         "UO:0000128"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "dpm",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "disintegrations per minute",
+      "id" : "UO:0000147",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An activity (of a radionuclide) unit which is equal to the activity of a quantity of radioactive material in which one nucleus decays per minute or there is one atom disintegration per minute."
+   },
+   {
+      "is_a" : [
+         "UO:0000128"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "cpm",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "counts per minute",
+      "id" : "UO:0000148",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An activity (of a radionuclide) unit which is equal to the number of light emissions produced by ionizing radiation in one minute."
+   },
+   {
+      "is_a" : [
+         "UO:0000003"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "ns",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "nanosecond",
+      "id" : "UO:0000150",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A time unit which is equal to one thousandth of one millionth of a second or 10^[-9] s."
+   },
+   {
+      "is_a" : [
+         "UO:0000003"
+      ],
+      "name" : "century",
+      "id" : "UO:0000151",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A time unit which is equal to 100 years."
+   },
+   {
+      "is_a" : [
+         "UO:0000003"
+      ],
+      "comment" : "Typically applied to the half life of radioactive atoms but also applicable to any other situation where the population is of molecules of diminishing concentration or activity.",
+      "name" : "half life",
+      "id" : "UO:0000152",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A time unit which represents the period over which the activity or concentration of a specified chemical or element falls to half its original activity or concentration."
+   },
+   {
+      "is_a" : [
+         "UO:0000115"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "ft-c",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "foot candle",
+      "id" : "UO:0000153",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An illuminance unit which is equal to the illuminance produced by 1 lumen evenly spread over an area 1 foot^[2]. One footcandle is equal to 10.76 lux."
+   },
+   {
+      "is_a" : [
+         "UO:0000157"
+      ],
+      "name" : "irradiance unit",
+      "id" : "UO:0000154",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the power of electromagnetic radiation at a surface, per unit area."
+   },
+   {
+      "is_a" : [
+         "UO:0000154"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "W/m^[2]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "watt per square metre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "watt per square meter",
+      "id" : "UO:0000155",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An irradiance unit which is equal to 1 watt of radiant power incident per one square meter surface area."
+   },
+   {
+      "is_a" : [
+         "UO:0000154"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "einstein per square metre per second",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "einstein/sm^[2]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "mole per second and square meter mol/sm^2",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "einstein per square meter per second",
+      "id" : "UO:0000156",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An irradiance unit which is equal to one einstein per square meter per second. One einstein is one mole of photons, regardless of their frequency. Therefore, the number of photons in an einstein is Avogadro's number."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "name" : "light unit",
+      "id" : "UO:0000157",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the intensity of light."
+   },
+   {
+      "is_a" : [
+         "UO:0000161"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "W/sr m^[2]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "watt per steradian per square metre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "watt per steradian per square meter",
+      "id" : "UO:0000158",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A radiance unit which is equal to one watt of radiant power incident per steradian solid angle per one square meter projected area of the source, as viewed from the given direction."
+   },
+   {
+      "is_a" : [
+         "UO:0000157"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001717"
+         }
+      ],
+      "name" : "radiant intensity unit",
+      "id" : "UO:0000159",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the intensity of electromagnetic radiation."
+   },
+   {
+      "is_a" : [
+         "UO:0000154"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "microeinstein per square metre per second",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "micromole per second and square meter mmol/sm^2",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "umicroeinstein/sm^[2]",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "microeinstein per square meter per second",
+      "id" : "UO:0000160",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An irradiance unit which is equal to one microeinstein per square meter per second or 10^[-6] microeinstein/sm^[2]."
+   },
+   {
+      "is_a" : [
+         "UO:0000157"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001299"
+         }
+      ],
+      "name" : "radiance unit",
+      "id" : "UO:0000161",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the power of electromagnetic radiation through space or through a material medium in the form of electromagnetic waves."
+   },
+   {
+      "is_a" : [
+         "UO:0000159"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "W/sr",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "watt per steradian",
+      "id" : "UO:0000162",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A radiant intensity unit which is equal to one kilogram meter squared per second cubed per steradian."
+   },
+   {
+      "is_a" : [
+         "UO:0000051",
+         "UO:0000187"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "w/w",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "weight-weight percentage",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "mass percentage",
+      "id" : "UO:0000163",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dimensionless concentration unit which denotes the mass of a substance in a mixture as a percentage of the mass of the entire mixture."
+   },
+   {
+      "is_a" : [
+         "UO:0000051",
+         "UO:0000187"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "(w/v)",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "weight-volume percentage",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "mass volume percentage",
+      "id" : "UO:0000164",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dimensionless concentration unit which denotes the mass of the substance in a mixture as a percentage of the volume of the entire mixture."
+   },
+   {
+      "is_a" : [
+         "UO:0000187",
+         "UO:0000205"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "% (v/v)",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "volume percentage",
+      "id" : "UO:0000165",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dimensionless concentration unit which denotes the volume of the solute in mL per 100 mL of the resulting solution."
+   },
+   {
+      "is_a" : [
+         "UO:0000186"
+      ],
+      "name" : "parts per notation unit",
+      "id" : "UO:0000166",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A dimensionless concentration notation which describes the amount of one substance in another. It is the ratio of the amount of the substance of interest to the amount of that substance plus the amount of the substance."
+   },
+   {
+      "is_a" : [
+         "UO:0000166"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[-2]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "pph",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "parts per hundred",
+      "id" : "UO:0000167",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dimensionless concentration notation which denotes the amount of a given substance in a total amount of 100 regardless of the units of measure as long as they are the same."
+   },
+   {
+      "is_a" : [
+         "UO:0000166"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[-3]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "ppth",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "parts per thousand",
+      "id" : "UO:0000168",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dimensionless concentration notation which denotes the amount of a given substance in a total amount of 1000 regardless of the units of measure as long as they are the same."
+   },
+   {
+      "is_a" : [
+         "UO:0000166"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[-6]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "ppm",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "parts per million",
+      "id" : "UO:0000169",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dimensionless concentration notation which denotes the amount of a given substance in a total amount of 1,000,000 regardless of the units of measure used as long as they are the same or 1 part in 10^[6]."
+   },
+   {
+      "is_a" : [
+         "UO:0000166"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[-9]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "ppb",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "parts per billion",
+      "id" : "UO:0000170",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dimensionless concentration notation which denotes the amount of a given substance in a total amount of 1,000,000,000 regardless of the units of measure as long as they are the same or 1 part in 10^[9]."
+   },
+   {
+      "is_a" : [
+         "UO:0000166"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[-12]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "ppt",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "parts per trillion",
+      "id" : "UO:0000171",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dimensionless concentration notation which denotes the amount of a given substance in a total amount of 1,000,000,000 regardless of the units of measure used as long as they are the same or 1 part in 10^[12]."
+   },
+   {
+      "is_a" : [
+         "UO:0000166"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[-15]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "ppq",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "parts per quadrillion",
+      "id" : "UO:0000172",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dimensionless concentration notation which denotes the amount of a given substance in a total amount of 1,000,000,000,000 regardless of the units of measure used as long as they are the same or 1 part in 10^[15]."
+   },
+   {
+      "is_a" : [
+         "UO:0000052"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "g/ml",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "gram per millilitre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "gram per milliliter",
+      "id" : "UO:0000173",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A mass unit density which is equal to mass of an object in grams divided by the volume in milliliter."
+   },
+   {
+      "is_a" : [
+         "UO:0000052"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "kg/L",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "kilogram per litre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "kilogram per liter",
+      "id" : "UO:0000174",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A mass unit density which is equal to mass of an object in kilograms divided by the volume in liters."
+   },
+   {
+      "is_a" : [
+         "UO:0000052"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "g/L",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "gram per litre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "gram per liter",
+      "id" : "UO:0000175",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A mass unit density which is equal to mass of an object in grams divided by the volume in liters."
+   },
+   {
+      "is_a" : [
+         "UO:0000052"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "mg/ml",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "milligram per millilitre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "milligram per milliliter",
+      "id" : "UO:0000176",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A mass unit density which is equal to mass of an object in milligrams divided by the volume in milliliters."
+   },
+   {
+      "is_a" : [
+         "UO:0000051"
+      ],
+      "name" : "unit per volume unit",
+      "id" : "UO:0000177",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A concentration unit which is a standard measure of the number of units, as an agreed arbitrary amount, of a given substance per a specific volume of solution."
+   },
+   {
+      "is_a" : [
+         "UO:0000177"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "U/ml",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "unit per millilitre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "unit per milliliter",
+      "id" : "UO:0000178",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A unit per milliliter unit which is equal to one unit of an agreed arbitrary amount per one milliliter."
+   },
+   {
+      "is_a" : [
+         "UO:0000177"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "U/l",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "unit per litre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "unit per liter",
+      "id" : "UO:0000179",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A unit per milliliter unit which is equal to one unit of an agreed arbitrary amount per one liter."
+   },
+   {
+      "is_a" : [
+         "UO:0000051"
+      ],
+      "comment" : "For units and further information look under the mass density unit. For a sample of a specific pure elemental substance, the concentration is directly proportional to the density. However, concentration is not proportional to density in general.",
+      "name" : "mass per unit volume",
+      "id" : "UO:0000180",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A concentration unit which is a standard measure of the mass of a substance in a given volume (density)."
+   },
+   {
+      "is_a" : [
+         "UO:0000119"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "U",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "enzyme unit",
+      "id" : "UO:0000181",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A catalytic unit activity which is equal to the amount of the enzyme that catalyzes the conversion of 1 micro mole of substrate per minute."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001019"
+         }
+      ],
+      "name" : "density unit",
+      "id" : "UO:0000182",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the influence exerted by some mass."
+   },
+   {
+      "is_a" : [
+         "UO:0000182"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001352"
+         }
+      ],
+      "name" : "linear density unit",
+      "id" : "UO:0000183",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A density unit which is a standard measure of the mass exerting an influence on a one-dimensional object."
+   },
+   {
+      "is_a" : [
+         "UO:0000183"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "kg/m",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "kilogram per metre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "kilogram per meter",
+      "id" : "UO:0000184",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An area density unit which is equal to the mass of an object in kilograms divided by one meter."
+   },
+   {
+      "is_a" : [
+         "UO:0000122"
+      ],
+      "name" : "degree",
+      "id" : "UO:0000185",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A plane angle unit which is equal to 1/360 of a full rotation or 1.7453310^[-2] rad."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "name" : "dimensionless unit",
+      "id" : "UO:0000186",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of physical quantity consisting of only a numerical number without any units."
+   },
+   {
+      "is_a" : [
+         "UO:0000190"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "%",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "percent",
+      "id" : "UO:0000187",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A dimensionless ratio unit which denotes numbers as fractions of 100."
+   },
+   {
+      "is_a" : [
+         "UO:0000186"
+      ],
+      "name" : "pi",
+      "id" : "UO:0000188",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dimensionless unit which denoted an irrational real number, approximately equal to 3.14159 which is the ratio of a circle's circumference to its diameter in Euclidean geometry."
+   },
+   {
+      "is_a" : [
+         "UO:0000186"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "count",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "count unit",
+      "id" : "UO:0000189",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A dimensionless unit which denotes a simple count of things."
+   },
+   {
+      "is_a" : [
+         "UO:0000186"
+      ],
+      "name" : "ratio",
+      "id" : "UO:0000190",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A dimensionless unit which denotes an amount or magnitude of one quantity relative to another."
+   },
+   {
+      "is_a" : [
+         "UO:0000190"
+      ],
+      "name" : "fraction",
+      "id" : "UO:0000191",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A dimensionless ratio unit which relates the part (the numerator) to the whole (the denominator)."
+   },
+   {
+      "is_a" : [
+         "UO:0000189"
+      ],
+      "name" : "molecule count",
+      "id" : "UO:0000192",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dimensionless count unit which denotes the number of molecules."
+   },
+   {
+      "is_a" : [
+         "UO:0000187"
+      ],
+      "comment" : "An example of a biomaterial could be an e.g. tumor biopsy.",
+      "name" : "purity percentage",
+      "id" : "UO:0000193",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dimensionless percent unit which denotes the homogeneity of a biomaterial."
+   },
+   {
+      "is_a" : [
+         "UO:0000187"
+      ],
+      "name" : "confluence percentage",
+      "id" : "UO:0000194",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dimensionless percent unit which denotes the density of an attached or monolayer culture (e.g., cell culture)."
+   },
+   {
+      "is_a" : [
+         "UO:0000005"
+      ],
+      "comment" : "In this scale, the freezing point of water is 32 degrees Fahrenheit and the boiling point is 212 degrees, placing the boiling and freezing points of water 180 degrees apart. -40 degrees Fahrenheit is equal to -40 degrees Celsius.",
+      "synonyms" : [
+         {
+            "definition" : "F",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "degree Fahrenheit",
+      "id" : "UO:0000195",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A temperature unit which is equal to 5/9ths of a kelvin. Negative 40 degrees Fahrenheit is equal to negative 40 degrees Celsius."
+   },
+   {
+      "is_a" : [
+         "UO:0000186",
+         "UO:0000051"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001428"
+         }
+      ],
+      "name" : "pH",
+      "id" : "UO:0000196",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dimensionless concentration notation which denotes the acidity of a solution in terms of activity of hydrogen ions (H+)."
+   },
+   {
+      "is_a" : [
+         "UO:0000059"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "l/kg",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "litre per kilogram",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "liter per kilogram",
+      "id" : "UO:0000197",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A specific volume unit which is equal to one liter volume occupied by one kilogram of a particular substance."
+   },
+   {
+      "is_a" : [
+         "UO:0000059"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "millilitre per kilogram",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "ml/kg",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "milliliter per kilogram",
+      "id" : "UO:0000198",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A specific volume unit which is equal to a thousandth of a liter per kilogram or 10^[-3] l/kg."
+   },
+   {
+      "is_a" : [
+         "UO:0000059"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "microlitre per kilogram",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "ul/kg",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "microliter per kilogram",
+      "id" : "UO:0000199",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A specific volume unit which is equal to one millionth of a liter per kilogram or 10^[-6] l/kg."
+   },
+   {
+      "is_a" : [
+         "UO:0000051"
+      ],
+      "name" : "cell concentration unit",
+      "id" : "UO:0000200",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A concentration unit which denotes the average cell number in a given volume."
+   },
+   {
+      "is_a" : [
+         "UO:0000200"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "cells per millilitre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "cells per ml",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "cells per milliliter",
+      "id" : "UO:0000201",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A unit of cell concentration which is equal to one cell in a volume of 1 milliliter."
+   },
+   {
+      "is_a" : [
+         "UO:0000051"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001674"
+         }
+      ],
+      "name" : "catalytic (activity) concentration unit",
+      "id" : "UO:0000202",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A concentration unit which is a standard measure of the amount of the action of a catalyst in a given volume."
+   },
+   {
+      "is_a" : [
+         "UO:0000202"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "kat/m^[3]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "katal per cubic metre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "katal per cubic meter",
+      "id" : "UO:0000203",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A catalytic (activity) concentration unit which is equal to 1 katal activity of a catalyst in a given volume of one cubic meter."
+   },
+   {
+      "is_a" : [
+         "UO:0000202"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "kat/l",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "katal per litre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "katal per liter",
+      "id" : "UO:0000204",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A catalytic (activity) concentration unit which is equal to 1 katal activity of a catalyst in a given volume of one thousandth of a cubic meter."
+   },
+   {
+      "is_a" : [
+         "UO:0000051"
+      ],
+      "name" : "volume per unit volume",
+      "id" : "UO:0000205",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A dimensionless concentration unit which denotes the given volume of the solute in the total volume of the resulting solution."
+   },
+   {
+      "is_a" : [
+         "UO:0000205"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "millilitre per cubic metre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "ml/m^[3]",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "milliliter per cubic meter",
+      "id" : "UO:0000206",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A volume per unit volume unit which is equal to one millionth of a liter of solute in one cubic meter of solution."
+   },
+   {
+      "is_a" : [
+         "UO:0000205"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "millilitre per litre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "ml/l",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "milliliter per liter",
+      "id" : "UO:0000207",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A volume per unit volume unit which is equal to one millionth of a liter of solute in one liter of solution."
+   },
+   {
+      "is_a" : [
+         "UO:0000052"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "g/dl",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "gram per decilitre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "gram per deciliter",
+      "id" : "UO:0000208",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A mass density unit which is equal to mass of an object in grams divided by the volume in deciliters."
+   },
+   {
+      "is_a" : [
+         "UO:0000095"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "decilitre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "dl",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "deciliter",
+      "id" : "UO:0000209",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A volume unit which is equal to one tenth of a liter or 10^[-1] L."
+   },
+   {
+      "is_a" : [
+         "UO:0000189"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "cfu",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "colony forming unit",
+      "id" : "UO:0000210",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dimensionless count unit which a measure of viable bacterial numbers."
+   },
+   {
+      "is_a" : [
+         "UO:0000189"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "pfu",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "plaque forming unit",
+      "id" : "UO:0000211",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dimensionless count unit which a measure of plague forming units in a given volume."
+   },
+   {
+      "is_a" : [
+         "UO:0000051"
+      ],
+      "name" : "colony forming unit per volume",
+      "id" : "UO:0000212",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A concentration unit which a measure of viable bacterial numbers in a given volume."
+   },
+   {
+      "is_a" : [
+         "UO:0000212"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "cfu/ml",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "colony forming unit per millilitre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "colony forming unit per milliliter",
+      "id" : "UO:0000213",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A colony forming unit which a measure of viable bacterial numbers in one milliliter."
+   },
+   {
+      "is_a" : [
+         "UO:0000051"
+      ],
+      "name" : "plaque forming unit per volume",
+      "id" : "UO:0000214",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A concentration unit which a measure of plague forming units in a given volume."
+   },
+   {
+      "is_a" : [
+         "UO:0000214"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "pfu/ml",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "plaque forming unit per millilitre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "plaque forming unit per milliliter",
+      "id" : "UO:0000215",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A concentration unit which a measure of plague forming units in one milliliter."
+   },
+   {
+      "is_a" : [
+         "UO:0000128"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "dps",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "disintegrations per second",
+      "id" : "UO:0000216",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An activity (of a radionuclide) unit which is equal to the activity of a quantity of radioactive material in which one nucleus decays per second or there is one atom disintegration per second."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001464"
+         }
+      ],
+      "name" : "electric potential difference unit",
+      "id" : "UO:0000217",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the work done per unit charge as a charge is moved between two points in an electric field."
+   },
+   {
+      "is_a" : [
+         "UO:0000217"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "V",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "volt",
+      "id" : "UO:0000218",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An electric potential difference unit which is equal to the work per unit charge. One volt is the potential difference required to move one coulomb of charge between two points in a circuit while using one joule of energy."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "name" : "electric charge",
+      "id" : "UO:0000219",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the quantity of unbalanced electricity in a body (either positive or negative) and construed as an excess or deficiency of electrons."
+   },
+   {
+      "is_a" : [
+         "UO:0000219"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "C",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "coulomb",
+      "id" : "UO:0000220",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An electrical charge unit which is equal to the amount of charge transferred by a current of 1 ampere in 1 second."
+   },
+   {
+      "is_a" : [
+         "UO:0000002"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "amu",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "Da",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "u",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "unified atomic mass unit",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "dalton",
+      "id" : "UO:0000221",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An independently to the base SI units defined mass unit which is equal to one twelfth of the mass of an unbound atom of the carbon-12 nuclide, at rest and in its ground state."
+   },
+   {
+      "is_a" : [
+         "UO:0000002"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "kDa",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "kilodalton",
+      "id" : "UO:0000222",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A mass unit which is equal to one thousand daltons."
+   },
+   {
+      "is_a" : [
+         "UO:0000111"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "Wh",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "watt-hour",
+      "id" : "UO:0000223",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An energy unit which is equal to the amount of electrical energy equivalent to a one-watt load drawing power for one hour."
+   },
+   {
+      "is_a" : [
+         "UO:0000111"
+      ],
+      "name" : "kilowatt-hour",
+      "id" : "UO:0000224",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An energy unit which is equal to 1,000 watt-hours."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001682"
+         }
+      ],
+      "name" : "magnetic flux unit",
+      "id" : "UO:0000225",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of quantity of magnetism, taking account of the strength and the extent of a magnetic field."
+   },
+   {
+      "is_a" : [
+         "UO:0000225"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "V s",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "volt-second",
+            "scope" : "RELATED"
+         },
+         {
+            "definition" : "Wb",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "weber",
+      "id" : "UO:0000226",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A magnetic flux unit which is equal to the amount of flux that when linked with a single turn of wire for an interval of one second will induce an electromotive force of one volt."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "B",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "magnetic flux density unit",
+      "id" : "UO:0000227",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the strength of a magnetic field."
+   },
+   {
+      "is_a" : [
+         "UO:0000227"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "T",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "Wb/m2",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "tesla",
+      "id" : "UO:0000228",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A magnetic flux density unit which is equal to one weber per square meter."
+   },
+   {
+      "is_a" : [
+         "UO:0000225"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "Vh",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "volt-hour",
+      "id" : "UO:0000229",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A magnetic flux unit which is equal to 3600 Wb."
+   },
+   {
+      "is_a" : [
+         "UO:0000225"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "kVh",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "kilovolt-hour",
+      "id" : "UO:0000230",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A magnetic flux unit which is equal to one thousand volt-hours."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "name" : "information unit",
+      "id" : "UO:0000231",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the amount of information."
+   },
+   {
+      "is_a" : [
+         "UO:0000231"
+      ],
+      "name" : "bit",
+      "id" : "UO:0000232",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An information unit which refers to a digit in the binary numeral system, which consists of base 2 digits (ie there are only 2 possible values: 0 or 1)."
+   },
+   {
+      "is_a" : [
+         "UO:0000231"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "B",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "byte",
+      "id" : "UO:0000233",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An information unit which is equal to 8 bits."
+   },
+   {
+      "is_a" : [
+         "UO:0000231"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "kB",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "kilobyte",
+      "id" : "UO:0000234",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An information unit which is equal to 1000 bytes."
+   },
+   {
+      "is_a" : [
+         "UO:0000231"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "MB",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "megabyte",
+      "id" : "UO:0000235",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An information unit which is equal to 1000 kB."
+   },
+   {
+      "is_a" : [
+         "UO:0000231"
+      ],
+      "name" : "image resolution unit",
+      "id" : "UO:0000236",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "An information unit which is a standard measure of the detail an image holds."
+   },
+   {
+      "is_a" : [
+         "UO:0000236"
+      ],
+      "name" : "chroma sampling unit",
+      "id" : "UO:0000237",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An image resolution unit which is a standard measure of the amount of spatial detail in an image."
+   },
+   {
+      "is_a" : [
+         "UO:0000236"
+      ],
+      "name" : "dynamic range unit",
+      "id" : "UO:0000238",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An image resolution unit which is a standard measure of the amount of contrast available in a pixel."
+   },
+   {
+      "is_a" : [
+         "UO:0000236"
+      ],
+      "name" : "spatial resolution unit",
+      "id" : "UO:0000239",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "An image resolution unit which is a standard measure of the way luminance and chrominance may be sampled at different levels."
+   },
+   {
+      "is_a" : [
+         "UO:0000239"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "dpi",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "dots per inch",
+      "id" : "UO:0000240",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A spatial resolution unit which is a standard measure of the printing resolution, in particular the number of individual dots of ink a printer or toner can produce within a linear one-inch space."
+   },
+   {
+      "is_a" : [
+         "UO:0000239"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "micrometer pixel",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "micron pixel",
+      "id" : "UO:0000241",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A spatial resolution unit which is equal to a pixel size of one micrometer."
+   },
+   {
+      "is_a" : [
+         "UO:0000239"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "pixel density",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "ppi",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "pixels per inch",
+      "id" : "UO:0000242",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A spatial resolution unit which is a standard measure of the resolution of a computer display, related to the size of the display in inches and the total number of pixels in the horizontal and vertical directions."
+   },
+   {
+      "is_a" : [
+         "UO:0000239"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "pixels per millimetre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "pixels per millimeter",
+      "id" : "UO:0000243",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A spatial resolution unit which is a standard measure of the number of pixels in one millimeter length or width of a digital image divided by the physical length or width of a printed image."
+   },
+   {
+      "is_a" : [
+         "UO:0000189"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "bp",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "base pair",
+      "id" : "UO:0000244",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A count unit which contains one nucleotide."
+   },
+   {
+      "is_a" : [
+         "UO:0000231"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "KiB",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "kibibyte",
+      "id" : "UO:0000245",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An information unit which is equal to 1024 B."
+   },
+   {
+      "is_a" : [
+         "UO:0000231"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "MiB",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "mebibyte",
+      "id" : "UO:0000246",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An information unit which is equal to 1024 KiB."
+   },
+   {
+      "is_a" : [
+         "UO:0000217"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "mV",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "millivolt",
+      "id" : "UO:0000247",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An electric potential difference unit which is equal to one thousandth of a volt or 10^[-3] V."
+   },
+   {
+      "is_a" : [
+         "UO:0000217"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "kV",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "kilovolt",
+      "id" : "UO:0000248",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An electric potential difference unit which is equal to one thousand volts or 10^[3] V."
+   },
+   {
+      "is_a" : [
+         "UO:0000217"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "uV",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "microvolt",
+      "id" : "UO:0000249",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An electric potential difference unit which is equal to one millionth of a volt or 10^[-6] V."
+   },
+   {
+      "is_a" : [
+         "UO:0000217"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "nV",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "nanovolt",
+      "id" : "UO:0000250",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An electric potential difference unit which is equal to one billionth of a volt or 10^[-12] V."
+   },
+   {
+      "is_a" : [
+         "UO:0000217"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "pV",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "picovolt",
+      "id" : "UO:0000251",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An electric potential difference unit which is equal to one trillionth of a volt or 10^[-12] V."
+   },
+   {
+      "is_a" : [
+         "UO:0000217"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "MV",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "megavolt",
+      "id" : "UO:0000252",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An electric potential difference unit which is equal to one million volts or 10^[6] V."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001461"
+         }
+      ],
+      "name" : "surface tension unit",
+      "id" : "UO:0000253",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the ability of a liguid to attraction of molecules at its surface as a result of unbalanced molecular cohesive forces."
+   },
+   {
+      "is_a" : [
+         "UO:0000253"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "N/m",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "newton per metre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "newton per meter",
+      "id" : "UO:0000254",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A surface tension unit which is equal to one newton per meter."
+   },
+   {
+      "is_a" : [
+         "UO:0000253"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "dyn/cm",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "dyne per cm",
+      "id" : "UO:0000255",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A surface tension unit which is equal to one dyne per centimeter."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0000992"
+         }
+      ],
+      "name" : "viscosity unit",
+      "id" : "UO:0000256",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the internal resistance of fluids to flow."
+   },
+   {
+      "is_a" : [
+         "UO:0000256"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "Pa  s",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "pascal second",
+      "id" : "UO:0000257",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A viscosity unit which is equal to one pascale per second."
+   },
+   {
+      "is_a" : [
+         "UO:0000256"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "dyne s/cm^2",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "P",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "poise",
+      "id" : "UO:0000258",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A viscosity unit which is equal to one dyne second per square centimeter."
+   },
+   {
+      "is_a" : [
+         "UO:0000190"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "dB",
+            "scope" : "EXACT"
+         }
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001521"
+         }
+      ],
+      "name" : "decibel",
+      "id" : "UO:0000259",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A ratio unit which is an indicator of sound power per unit area."
+   },
+   {
+      "is_a" : [
+         "UO:0000127"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001747"
+         }
+      ],
+      "name" : "effective dose unit",
+      "id" : "UO:0000260",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the estimate of the stochastic effect that a non-uniform radiation dose has on a human."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "name" : "conduction unit",
+      "id" : "UO:0000261",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which represents a standard measurement of the transmission of an entity through a medium."
+   },
+   {
+      "is_a" : [
+         "UO:0000261"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001757"
+         }
+      ],
+      "name" : "electrical conduction unit",
+      "id" : "UO:0000262",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which represents a standard measurement of the movement of electrically charged particles through a transmission medium (electrical conductor)."
+   },
+   {
+      "is_a" : [
+         "UO:0000261"
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001756"
+         }
+      ],
+      "name" : "heat conduction unit",
+      "id" : "UO:0000263",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which represents a standard measurement of the spontaneous transfer of thermal energy through matter, from a region of higher temperature to a region of lower temperature."
+   },
+   {
+      "is_a" : [
+         "UO:0000262"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "A V^-1",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "mho ",
+            "scope" : "RELATED"
+         },
+         {
+            "definition" : "S",
+            "scope" : "RELATED"
+         }
+      ],
+      "name" : "siemens",
+      "id" : "UO:0000264",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An electrical conduction unit which is equal to A/V."
+   },
+   {
+      "is_a" : [
+         "UO:0000263"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "W/m K",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "watt per metre kelvin",
+            "scope" : "RELATED"
+         }
+      ],
+      "name" : "watt per meter kelvin",
+      "id" : "UO:0000265",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An heat conduction unit which is equal to one watt divided by meter kelvin."
+   },
+   {
+      "is_a" : [
+         "UO:0000111"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "electron volt",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "eV",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "electronvolt",
+      "id" : "UO:0000266",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A non-SI unit of energy (eV) defined as the energy acquired by a single unbound electron when it passes through an electrostatic potential difference of one volt. An electronvolt is equal to 1.602 176 53(14) x 10^-19 J."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "E-field strength ",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "electric field strength unit",
+      "id" : "UO:0000267",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "The electric field strength is a unit which is a measure of the potential difference between two points some distance apart."
+   },
+   {
+      "is_a" : [
+         "UO:0000267"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "V/m",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "volt per metre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "volt per meter",
+      "id" : "UO:0000268",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "The volt per meter is a unit of electric field strength equal to the a potential difference of 1 volt existing between two points that are 1 meter apart."
+   },
+   {
+      "is_a" : [
+         "UO:0000186"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "AU",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "absorbance unit",
+      "id" : "UO:0000269",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dimensionless logarithmic unit assigned to a measure of absorbance of light through a partially absorbing substance, defined as -log10(I/I_0) where I = transmitted light and I_0 = incident light."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "name" : "volumetric flow rate unit",
+      "id" : "UO:0000270",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is a standard measure of the volume of fluid which passes through a given surface per unit time ."
+   },
+   {
+      "is_a" : [
+         "UO:0000270"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "microlitres per minute",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "uL/min",
+            "scope" : "EXACT"
+         }
+      ],
+      "relationships" : [
+         {
+            "link_type" : "is_unit_of",
+            "target" : "PATO:0001574"
+         }
+      ],
+      "name" : "microliters per minute",
+      "id" : "UO:0000271",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A volumetric flow rate unit which is equal to one microliter volume through a given surface in one minute."
+   },
+   {
+      "is_a" : [
+         "UO:0000109"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "millimeters of mercury",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "mmHg",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "millimetres of mercury",
+      "id" : "UO:0000272",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A unit of pressure equal to the amount of fluid pressure one millimeter deep in mercury at zero degrees centigrade on Earth."
+   },
+   {
+      "is_a" : [
+         "UO:0000052"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "mg/L",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "milligram per litre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "milligram per liter",
+      "id" : "UO:0000273",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A mass unit density which is equal to mass of an object in milligrams divided by the volume in liters."
+   },
+   {
+      "is_a" : [
+         "UO:0000052"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "microgram per millilitre",
+            "scope" : "RELATED"
+         },
+         {
+            "definition" : "ug/ml",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "microgram per milliliter",
+      "id" : "UO:0000274",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A mass unit density which is equal to mass of an object in micrograms divided by the volume in millliters."
+   },
+   {
+      "is_a" : [
+         "UO:0000052"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "nanogram per millilitre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "ng/ml",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "nanogram per milliliter",
+      "id" : "UO:0000275",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A mass unit density which is equal to mass of an object in nanograms divided by the volume in milliliters."
+   },
+   {
+      "is_a" : [
+         "UO:0000051"
+      ],
+      "name" : "amount per container",
+      "id" : "UO:0000276",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A concentration unit which is a standard measure of the amount of a substance in a given container."
+   },
+   {
+      "is_a" : [
+         "UO:0000276"
+      ],
+      "name" : "ug/disk",
+      "id" : "UO:0000277",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is equal to one microgram per disk, where a disk is some physical surface/container upon which the substance is deposited."
+   },
+   {
+      "is_a" : [
+         "UO:0000276"
+      ],
+      "name" : "nmole/disk",
+      "id" : "UO:0000278",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which is equal to one nanomole per disk, where a disk is some physical surface/container upon which the substance is deposited."
+   },
+   {
+      "is_a" : [
+         "UO:0000177"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "milliunits per millilitre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "mU/ml",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "milliunits per milliliter",
+      "id" : "UO:0000279",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A unit per milliliter unit which is equal to one thousandth of a unit of an agreed arbitrary amount per one milliliter."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "name" : "rate unit",
+      "id" : "UO:0000280",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A unit which represents a standard measurement occurrence of a process per unit time."
+   },
+   {
+      "is_a" : [
+         "UO:0000280"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "nM^-1 s^-1",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "count per nanomolar second",
+      "id" : "UO:0000281",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A rate unit which is equal to one over one nanomolar second."
+   },
+   {
+      "is_a" : [
+         "UO:0000280"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "M^-1 s^-1",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "count per molar second",
+      "id" : "UO:0000282",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A rate unit which is equal to one over one molar second."
+   },
+   {
+      "is_a" : [
+         "UO:0000054"
+      ],
+      "name" : "kilogram per hectare",
+      "id" : "UO:0000283",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "An area density unit which is equal to the mass of an object in kilograms divided by the surface area in hectares.."
+   },
+   {
+      "is_a" : [
+         "UO:0000280"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "1/nM",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "nM^-1",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "count per nanomolar",
+      "id" : "UO:0000284",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A rate unit which is equal to one over one nanomolar."
+   },
+   {
+      "is_a" : [
+         "UO:0000280"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "1/M",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "M^-1",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "count per molar",
+      "id" : "UO:0000285",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A rate unit which is equal to one over one molar."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[24]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "Y",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "yotta",
+      "id" : "UO:0000286",
+      "subsets" : [
+         "prefix_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of ten to the power of 24."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[2]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "h",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "hecto",
+      "id" : "UO:0000287",
+      "subsets" : [
+         "prefix_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of one hundred."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[21]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "Z",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "zetta",
+      "id" : "UO:0000288",
+      "subsets" : [
+         "prefix_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of ten to the power of 21."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[18]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "E",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "exa",
+      "id" : "UO:0000289",
+      "subsets" : [
+         "prefix_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of ten to the power of 18."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[15]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "P",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "peta",
+      "id" : "UO:0000290",
+      "subsets" : [
+         "prefix_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of ten to the power of 15."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[12]",
+            "scope" : "RELATED"
+         },
+         {
+            "definition" : "T",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "tera",
+      "id" : "UO:0000291",
+      "subsets" : [
+         "prefix_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of ten to the power of 12."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[9]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "G",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "giga",
+      "id" : "UO:0000292",
+      "subsets" : [
+         "prefix_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of ten to the power of 9."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[6]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "M",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "mega",
+      "id" : "UO:0000293",
+      "subsets" : [
+         "prefix_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of million."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[3]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "k",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "kilo",
+      "id" : "UO:0000294",
+      "subsets" : [
+         "prefix_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of one thousand."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[1]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "da",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "deca",
+      "id" : "UO:0000295",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of ten."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[-1]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "d",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "deci",
+      "id" : "UO:0000296",
+      "subsets" : [
+         "prefix_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of one tenth."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[-3]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "m",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "milli",
+      "id" : "UO:0000297",
+      "subsets" : [
+         "prefix_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of one thousand."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[-2]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "c",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "centi",
+      "id" : "UO:0000298",
+      "subsets" : [
+         "prefix_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of one hundred."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[-6]",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "micro",
+      "id" : "UO:0000299",
+      "subsets" : [
+         "prefix_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of 10 to the power of -6."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[-9]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "n",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "nano",
+      "id" : "UO:0000300",
+      "subsets" : [
+         "prefix_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of 10 to the power of -9."
+   },
+   {
+      "is_a" : [
+         "UO:0000052"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "microgram per litre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "ug/L",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "microgram per liter",
+      "id" : "UO:0000301",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A mass unit density which is equal to mass of an object in micrograms divided by the volume in liters."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[-12]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "n",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "pico",
+      "id" : "UO:0000302",
+      "subsets" : [
+         "prefix_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of 10 to the power of -12."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[-15]",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "f",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "femto",
+      "id" : "UO:0000303",
+      "subsets" : [
+         "prefix_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of 10 to the power of -15."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[-18]",
+            "scope" : "RELATED"
+         },
+         {
+            "definition" : "a",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "atto",
+      "id" : "UO:0000304",
+      "subsets" : [
+         "prefix_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of 10 to the power of -18."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[-21]",
+            "scope" : "RELATED"
+         },
+         {
+            "definition" : "z",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "zepto",
+      "id" : "UO:0000305",
+      "subsets" : [
+         "prefix_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of 10 to the power of -21."
+   },
+   {
+      "is_a" : [
+         "UO:0000046"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "10^[-24]",
+            "scope" : "RELATED"
+         },
+         {
+            "definition" : "y",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "yocto",
+      "id" : "UO:0000306",
+      "subsets" : [
+         "prefix_slim"
+      ],
+      "definition" : "A prefix in the metric system denoting a factor of 10 to the power of -24."
+   },
+   {
+      "is_a" : [
+         "UO:0000051"
+      ],
+      "name" : "dose unit",
+      "id" : "UO:0000307",
+      "subsets" : [
+         "unit_group_slim"
+      ],
+      "definition" : "A concentration unit which is a standard measure of the amount of a toxic or pharmaceutical substance administered to a recipient subject, expressed in terms of the size of the subject."
+   },
+   {
+      "is_a" : [
+         "UO:0000307"
+      ],
+      "name" : "milligram per kilogram",
+      "id" : "UO:0000308",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dose unit which is equal to 1 milligram of a toxic or pharmaceutical substance per kilogram body weight of the recipient subject."
+   },
+   {
+      "is_a" : [
+         "UO:0000307"
+      ],
+      "name" : "milligram per square meter",
+      "id" : "UO:0000309",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dose unit which is equal to 1 milligram of a toxic or pharmaceutical substance per square meter of surface area of the recipient subject."
+   },
+   {
+      "is_a" : [
+         "UO:0000051"
+      ],
+      "name" : "dosage unit",
+      "id" : "UO:0000310",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A concentration unit which is a standard measure of the amount of a toxic or pharmaceutical substance administered over time to a recipient subject, expressed in terms of the size of the subject."
+   },
+   {
+      "is_a" : [
+         "UO:0000310"
+      ],
+      "name" : "milligram per kilogram per day",
+      "id" : "UO:0000311",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A dosage unit which is equal to 1 milligram per day of a toxic or pharmaceutical substance per kilogram body weight of the recipient subject."
+   },
+   {
+      "is_a" : [
+         "UO:0000157"
+      ],
+      "name" : "relative light unit",
+      "id" : "UO:0000312",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A derived unit which is a measure of relative light intensity, as typically measured by a luminometer, spectrophotometer, or fluorimeter in biological research applications."
+   },
+   {
+      "is_a" : [
+         "UO:0000312"
+      ],
+      "name" : "relative luminescence unit",
+      "id" : "UO:0000313",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A relative light unit which is a measure of relative luminescence intensity."
+   },
+   {
+      "is_a" : [
+         "UO:0000312"
+      ],
+      "name" : "relative fluorescence unit",
+      "id" : "UO:0000314",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A relative light unit which is a measure of relative fluorescence intensity."
+   },
+   {
+      "is_a" : [
+         "UO:0000000"
+      ],
+      "name" : "turbidity unit",
+      "id" : "UO:0000315",
+      "definition" : "A unit used to indicate the clarity of water or other solutions or suspensions, as measured by the ability of the solution or suspension to scatter light of a defined wavelength range."
+   },
+   {
+      "is_a" : [
+         "UO:0000200"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "cells per microlitre",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "cells per ul",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "cells per microliter",
+      "id" : "UO:0000316",
+      "definition" : "A unit of cell concentration which is equal to one cell in a volume of 1 microliter."
+   },
+   {
+      "is_a" : [
+         "UO:0000200"
+      ],
+      "name" : "cells per well",
+      "id" : "UO:0000317",
+      "definition" : "A unit of cell concentration which is equal to 1 cell in a well or discrete container of arbitrary volume."
+   },
+   {
+      "is_a" : [
+         "UO:0000315"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "FNU",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "formazin nephelometric unit",
+      "id" : "UO:0000318",
+      "definition" : "1000 formazin turbidity units (FNU) on the empirical formazin turbidity scale represents reflectance of insol. reaction products of 0.0725 g hydrazine sulfate with 0.7250 g hexamethylenetetramine diluted to 1 L."
+   },
+   {
+      "is_a" : [
+         "UO:0000051"
+      ],
+      "name" : "radioactivity concentration",
+      "id" : "UO:0000319",
+      "definition" : "A concentration unit which is a standard measure of the amount of radioactivity in a given volume."
+   },
+   {
+      "is_a" : [
+         "UO:0000319"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "curie per litre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "curie per liter",
+      "id" : "UO:0000320",
+      "definition" : "A unit of radioactivity concentration which is equal to one curie in a volume of 1 liter."
+   },
+   {
+      "is_a" : [
+         "UO:0000319"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "microcurie per millilitre",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "microcurie per milliliter",
+      "id" : "UO:0000321",
+      "definition" : "A unit of radioactivity concentration which is equal to one micro curie in a volume of 1 liter."
+   },
+   {
+      "is_a" : [
+         "UO:0000186"
+      ],
+      "name" : "fold dilution",
+      "id" : "UO:0000322",
+      "definition" : "A unit that is the ratio of concentration of two solutions of interest, typically with one solution derived from the other by the addition of solvent."
+   },
+   {
+      "is_a" : [
+         "UO:0000054"
+      ],
+      "name" : "ton per hectare",
+      "id" : "UO:0000323",
+      "definition" : "An area density unit which is equal to the mass of an object in tons divided by the surface area in hectares."
+   },
+   {
+      "is_a" : [
+         "UO:0000047"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "A^[2]",
+            "scope" : "RELATED"
+         }
+      ],
+      "name" : "square angstrom",
+      "id" : "UO:0000324",
+      "definition" : "An area unit which is equal to an area enclosed by a square with sides each 1 angstrom long."
+   },
+   {
+      "is_a" : [
+         "UO:0000106"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "mH",
+            "scope" : "RELATED"
+         }
+      ],
+      "name" : "megaHertz",
+      "id" : "UO:0000325",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A frequency unit which is equal to one million hertz or 10^[6] V."
+   },
+   {
+      "is_a" : [
+         "UO:0000001"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "cM",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "centiMorgan",
+      "id" : "UO:0000326",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A unit used to express distances on a genetic map. In genetic mapping, distances between markers are determined by measuring the rate of meoitic recombination between them, which increases proportionately with the distance separating them. A cM is defined as the length of an interval in which there is a 1% probability of recombination. On the average, 1 cM is roughly equivalent to 1 megabase (Mb) of DNA, although this can vary widely due to hot and cold spots of recombination."
+   },
+   {
+      "is_a" : [
+         "UO:0000001"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "cR",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "centiRay",
+      "id" : "UO:0000327",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A unit of genetic map distance defined corresponding to an interval in which there is a 1% probability of X-irradiation induced breakage. To be completely specified, the unit must be qualified by the radiation in dosage in rads (e.g. cR8000), because this determines the actual breakage probability."
+   },
+   {
+      "is_a" : [
+         "UO:0000244"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "kbp",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "kilobasepair",
+      "id" : "UO:0000328",
+      "definition" : "A unit equal to one thousand base pairs."
+   },
+   {
+      "is_a" : [
+         "UO:0000244"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "Mb",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "megabasepair",
+      "id" : "UO:0000329",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A unit equal to one million base pairs"
+   },
+   {
+      "is_a" : [
+         "UO:0000244"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "Gb",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "gigabasepair",
+      "id" : "UO:0000330",
+      "subsets" : [
+         "unit_slim"
+      ],
+      "definition" : "A unit equal to one billion base pairs."
+   },
+   {
+      "is_a" : [
+         "UO:0000231"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "GB",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "gigabyte",
+      "id" : "UO:0000331",
+      "definition" : "An information unit which is equal to 1000000000 bytes."
+   },
+   {
+      "is_a" : [
+         "UO:0000231"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "TB",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "terabyte",
+      "id" : "UO:0000332",
+      "definition" : "An information unit which is equal to 1000 gigabytes."
+   },
+   {
+      "is_a" : [
+         "UO:0000002"
+      ],
+      "synonyms" : [
+         {
+            "definition" : "milli unified atomic mass unit",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "millidalton",
+            "scope" : "EXACT"
+         },
+         {
+            "definition" : "mDa",
+            "scope" : "EXACT"
+         }
+      ],
+      "name" : "mmu",
+      "id" : "UO:0010009",
+      "definition" : "A mass unit which is equal to 1/12 the mass of 12C"
+   }
+]
