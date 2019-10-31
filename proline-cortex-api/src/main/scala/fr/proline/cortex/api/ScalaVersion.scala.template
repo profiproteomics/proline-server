@@ -1,0 +1,11 @@
+package fr.proline.cortex.api
+
+import  fr.profi.util.version.IVersion
+
+class ScalaVersion extends IVersion {
+
+  override val getModuleName = "@moduleName@"
+
+  override val getVersion = "@version@"
+
+}
