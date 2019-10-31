@@ -1,0 +1,14 @@
+# One line per ptm
+# Use the following format: ptmName=composition
+# The ptmName corresponds to MSMod value from the usermods.xml file
+# The composition format must be similar to Unimod's compositions, such as H(-12) C(-6) N(-4) O(-1)
+TMPP C=H(-12) C(-6) N(-4) O(-1)
+TMPP KY=H(-9) C(-5) N(-1) O(-1) S(-1)
+TMPP N-Term=H(-7) C(-9) N(-1)
+TMPP prot-Nterm=H(-12) C(-6) N(-2) O(-1)
+TMPP Y=H(-5) C(-8) N(-1)
+Acetyl peptide N-term=H(-6) C(-7) O(-1)
+Asn - Asp=H(-9) C(-4) N(-3)
++1 Da R=H(-5) C(-8) N(-1) O
++1 Da K=H(-6) C(-6) O(-1)
+BS3 linker + H2O=H(-4) C(-6) O(-1)
