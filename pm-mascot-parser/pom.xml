@@ -1,0 +1,286 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>profi-pom</artifactId>
+    <groupId>fr.proline</groupId>
+    <version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+  </parent>
+
+  <artifactId>pm-mascot-parser</artifactId>
+  <version>0.9.0-SNAPSHOT</version>
+
+  <name>PM-MascotParser</name>
+  <description>Proline Module which parse a Mascot result file and store its result in databases</description>
+  <inceptionYear>2012</inceptionYear>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <core.version>2.1.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
+    <version.path>${basedir}/src/main/scala/fr/proline/module/parser/mascot</version.path>
+    <mascot.version>2.5.2</mascot.version>
+  </properties>
+  <scm>
+    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MascotParser/trunk</connection>
+  </scm>
+
+
+  <dependencies>
+
+    <!-- Scala -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <!-- Version inherited from ProFI-Pom ${scala-library.version} -->
+    </dependency>
+
+    <!-- Logging -->
+    <dependency>
+      <groupId>com.typesafe.scala-logging</groupId>
+      <artifactId>scala-logging_${scala.version}</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
+    </dependency>
+
+    <!-- Proline UnimodUnmarshaller library -->
+    <dependency>
+      <groupId>fr.proline.unimod</groupId>
+      <artifactId>unimod-unmarshaller</artifactId>
+      <version>0.13.0-SNAPSHOT</version>
+    </dependency>
+
+    <!-- Mascot Parser native libraries (for all OSes, loaded at runtime) 
+      msparser.jar dependency is defined via Maven profiles -->
+    <dependency>
+      <groupId>matrixscience</groupId>
+      <artifactId>msparser-native-libraries-${mascot.version}</artifactId>
+      <version>0.9.0-SNAPSHOT</version>
+    </dependency>
+    
+    <!-- ProFi Commons -->
+    <dependency>
+      <groupId>fr.profi.util</groupId>
+      <artifactId>profi-commons-java</artifactId>
+      <version>0.8.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.profi.util</groupId>
+      <artifactId>profi-commons-scala_${scala.version}</artifactId>
+      <version>0.9.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.profi</groupId>
+      <artifactId>profi-proteomics_${scala.version}</artifactId>
+      <version>0.5.0-SNAPSHOT</version>
+    </dependency>
+
+    <!-- Proline -->
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-om_${scala.version}</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-dal_${scala.version}</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-omp_${scala.version}</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-databases</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+    <!-- Tests -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_${scala.version}</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.dbunit</groupId>
+      <artifactId>dbunit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-databases</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-dal_${scala.version}</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Logging -->
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+    	<groupId>org.hibernate.javax.persistence</groupId>
+    	<artifactId>hibernate-jpa-2.1-api</artifactId>
+    	<version>1.0.0.Final</version>
+    </dependency>
+    <dependency>
+    	<groupId>org.apache.commons</groupId>
+    	<artifactId>commons-lang3</artifactId>
+    </dependency>
+    <dependency>
+    	<groupId>fr.proline</groupId>
+    	<artifactId>proline-orm</artifactId>
+    	<version>${core.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+
+    <pluginManagement>
+      <plugins>
+        <!-- For Eclipse build -->
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>com.google.code.maven-replacer-plugin</groupId>
+                    <artifactId>replacer</artifactId>
+                    <versionRange>[1.5.2,)</versionRange>
+                    <goals>
+                      <goal>replace</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <execute>
+                      <runOnIncremental>false</runOnIncremental>
+                    </execute>
+                  </action>
+                </pluginExecution>
+
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <!-- Version inherited from ProFI-Pom -->        
+      </plugin>
+
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <!-- Version inherited from ProFI-Pom -->
+      </plugin>
+
+      <plugin>
+        <groupId>com.google.code.maven-replacer-plugin</groupId>
+        <artifactId>replacer</artifactId>
+        <!-- Version & config inherited from ProFI-Pom -->
+        <executions>
+          <execution>
+			<id>scala-version-generation</id>
+            <phase>generate-sources</phase>
+            <configuration>
+			  <skip>false</skip>
+      	    </configuration>                        
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+
+  </build>
+
+  <profiles>
+
+    <profile>
+      <!-- Development profile : Windows 64 bits -->
+      <id>dev_64</id>
+
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+
+      <dependencies>
+
+        <dependency>
+          <groupId>matrixscience</groupId>
+          <artifactId>msparser</artifactId>
+          <version>${mascot.version}</version>
+          <classifier>Windows_amd64</classifier>
+        </dependency>
+
+      </dependencies>
+
+    </profile> <!-- End of dev_64 profile -->
+
+    <profile>
+      <!-- Integration profile : Linux 32 bits -->
+      <id>integ_32</id>
+
+      <dependencies>
+
+        <dependency>
+          <groupId>matrixscience</groupId>
+          <artifactId>msparser</artifactId>
+          <version>${mascot.version}</version>
+          <classifier>Linux_i386</classifier>
+        </dependency>
+
+      </dependencies>
+
+    </profile> <!-- End of integ_32 profile -->
+
+    <profile>
+      <!-- Integration (Jenkins) profile : Linux 64 bits -->
+      <id>integ_64</id>
+
+      <dependencies>
+
+        <dependency>
+          <groupId>matrixscience</groupId>
+          <artifactId>msparser</artifactId>
+          <version>${mascot.version}</version>
+          <classifier>Linux_amd64</classifier>
+        </dependency>
+
+      </dependencies>
+
+    </profile> <!-- End of integ_64 profile -->
+
+  </profiles>
+
+</project>
