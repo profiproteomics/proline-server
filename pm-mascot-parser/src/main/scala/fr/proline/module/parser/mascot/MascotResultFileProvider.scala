@@ -14,7 +14,7 @@ import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IResultFileProvider
 import fr.proline.core.om.provider.msi.IResultFileVerifier
 import fr.proline.module.parser.mascot.MascotDataParser.LATIN_1_CHARSET
-import fr.proline.unimod.UnimodUnmarshaller
+import fr.profi.ms.unimod.UnimodUnmarshaller
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -56,7 +56,7 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
 
     /* Unimod xml part expected UTF-8 stream : <?xml version="1.0" encoding="UTF-8" ?> */
     val is = new ByteArrayInputStream(unimodText.getBytes("UTF-8"))
-    val unimod = UnimodUnmarshaller.unmarshal(is)
+    val unimod = new UnimodUnmarshaller().unmarshal(is)
     // No need to close a ByteArrayInputStream
 
     val modificationsElement = unimod.getModifications
