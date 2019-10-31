@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>profi-pom</artifactId>
+    <groupId>fr.proline</groupId>
+    <version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+  </parent>
+
+  <artifactId>pm-dataset-exporter</artifactId>
+  <version>0.9.0-SNAPSHOT</version>
+
+  <name>PM-DatasetExporter</name>
+  <description>Proline Module dedicated to the export of Proline datasets</description>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <core.version>2.1.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
+     <version.path>${basedir}/src/main/scala/fr/proline/module/exporter/api</version.path>
+  </properties>
+	<scm>
+	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-DatasetExporter/trunk </connection>
+	</scm>
+
+
+  <dependencies>
+
+    <!-- Scala -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <!-- Version inherited from ProFI-Pom ${scala-library.version} -->
+    </dependency>
+
+    <!-- Logging -->
+    <dependency>
+      <groupId>com.typesafe.scala-logging</groupId>
+      <artifactId>scala-logging_${scala.version}</artifactId>
+      <!-- Version inherited from ProFI-Pom -->
+    </dependency>
+
+    <!-- If log4j is needed, add log4j-over-slf4j dependency -->
+<!-- unused
+    <dependency>
+      <groupId>antlr</groupId>
+      <artifactId>antlr</artifactId>
+      <version>2.7.7</version>
+    </dependency>
+    
+    -->
+    
+    <!-- Commons IO used for resursive delete -->
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.5</version>
+    </dependency>
+
+    <!-- for debugging purpose TODO: remove me -->
+    <dependency>
+      <groupId>fr.profi.util</groupId>
+      <artifactId>profi-commons-java</artifactId>
+      <version>0.8.0-SNAPSHOT</version>
+    </dependency>
+
+    
+    <dependency> <!-- SHOULD be defined BEFORE Proline OM or MZdb Processing ! -->
+     <groupId>fr.proline</groupId>
+     <artifactId>pm-fragmentmatch-generator</artifactId>
+     <version>0.9.0-SNAPSHOT</version>
+     <scope>test</scope>
+    </dependency>
+    
+    <!-- Proline -->
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-om_${scala.version}</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-dal_${scala.version}</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+
+    <!-- Templating -->
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi-ooxml</artifactId>
+      <version>3.16</version>
+    </dependency>
+	<dependency>
+    	<groupId>uk.ac.ebi.pride.utilities</groupId>
+    	<artifactId>pride-mod</artifactId>
+     	<version>2.1.0</version>
+	</dependency>
+	<dependency>
+		<groupId>uk.ac.ebi.pride.jaxb</groupId>
+		<artifactId>pride-jaxb</artifactId>
+		<version>1.0.20</version>
+	</dependency>
+ 
+    <!-- Tests -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-databases</artifactId>
+      <version>${core.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-dal_${scala.version}</artifactId>
+      <version>${core.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-omp_${scala.version}</artifactId>
+      <version>${core.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-databases</artifactId>
+      <version>${core.version}</version>
+       <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+    	<groupId>org.scala-lang.modules</groupId>
+    	<artifactId>scala-xml_${scala.version}</artifactId>
+    </dependency>
+    <dependency>
+    	<groupId>fr.profi.util</groupId>
+    	<artifactId>profi-commons-scala_${scala.version}</artifactId>
+    	<version>0.9.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+    	<groupId>fr.profi</groupId>
+    	<artifactId>profi-proteomics_${scala.version}</artifactId>
+    	<version>0.5.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+    	<groupId>com.fasterxml.jackson.core</groupId>
+    	<artifactId>jackson-databind</artifactId>
+    </dependency>
+    <dependency>
+    	<groupId>org.apache.commons</groupId>
+    	<artifactId>commons-lang3</artifactId>
+    </dependency>
+    <dependency>
+    	<groupId>org.apache.poi</groupId>
+    	<artifactId>poi</artifactId>
+    	<version>3.16</version>
+    </dependency>
+    <dependency>
+    	<groupId>org.dbunit</groupId>
+    	<artifactId>dbunit</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+   <pluginManagement>
+      <plugins>
+        <!-- For Eclipse build -->
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>com.google.code.maven-replacer-plugin</groupId>
+                    <artifactId>replacer</artifactId>
+                    <versionRange>[1.5.2,)</versionRange>
+                    <goals>
+                      <goal>replace</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <execute>
+                       <runOnIncremental>false</runOnIncremental>
+                     </execute>
+                  </action>
+                </pluginExecution>
+
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    
+    <plugins>
+
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <!-- Version inherited from ProFI-Pom -->
+      </plugin>
+      
+ 	 <plugin>
+        <groupId>com.google.code.maven-replacer-plugin</groupId>
+        <artifactId>replacer</artifactId>
+        <!-- Version & config inherited from ProFI-Pom -->
+        <executions>
+          <execution>
+          	<id>scala-version-generation</id>
+            <phase>generate-sources</phase>
+            <configuration>
+			<skip>false</skip>
+      	</configuration>            
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
