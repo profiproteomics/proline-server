@@ -122,7 +122,7 @@ public class RunNode {
 				/* Add Parallelizable SeviceRunner */
 				LOG.debug("Starting " + NodeConfig.SERVICE_THREAD_POOL_SIZE() + " Parallelizable ServiceRunners");
 
-				for (int i = 1; i < NodeConfig.SERVICE_THREAD_POOL_SIZE(); i++) {
+				for (int i = 0; i < NodeConfig.SERVICE_THREAD_POOL_SIZE(); i++) {
 					ServiceRunner parallelizableSeviceRunner = new ServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier,true);
 					m_executor.submit(parallelizableSeviceRunner);
 				}
