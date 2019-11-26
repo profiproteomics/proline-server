@@ -1,13 +1,4 @@
 
----
-
-## Note
-
-:warning:
-We are currently migrating Proline source code from our legacy SVN repository to GitHub.
-In the meantime, we provide the source files of the different projects as a tar.gz file in the release section.
-
----
 
 # Proline-Server
 
@@ -27,8 +18,7 @@ and all other computational modules other than Proline-Core
     * PM-MzIdentML :  Parse MzIdentML result and also generate mzIdentML file from Proline dataset
   * PM-MSDiag: Module designed to run a diagnosis of a MS/MS search
   * PM-SequenceRepository: Module to get Protein sequences and associated information from fasta files 
-  * UnimodUnmarshaller : Util project to read Unimod description
-
+  
 # License
 
 This project is licensed under the [CeCILL License V2.1](http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html)
