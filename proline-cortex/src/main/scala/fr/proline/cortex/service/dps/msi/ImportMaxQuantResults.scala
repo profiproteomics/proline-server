@@ -39,7 +39,7 @@ import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.orm.uds.{Dataset => UdsDataset}
 import fr.proline.core.service.lcms.io.IMapSetBuilder
-import fr.proline.core.service.msi.ResultSetValidator
+import fr.proline.core.service.msi.{ResultSetValidator, ValidationConfig}
 import fr.proline.core.service.msq.quantify.ThirdPartyLabelFreeFeatureQuantifier
 import fr.proline.core.service.uds.CreateQuantitation
 import fr.proline.cortex.api.service.dps.msi.IImportMaxQuantResultsService
@@ -295,7 +295,8 @@ class ImportMaxQuantResultsV2_0 extends AbstractRemoteProcessingService with IIm
 
           val rsValidator = ResultSetValidator(
             execContext = execCtx,
-            targetRsId = rsId
+            targetRsId = rsId,
+            validationConfig = ValidationConfig()
           )
           rsValidator.run()
           rsmIds += (rsName -> rsValidator.targetRSMIdPerRsId(rsId))

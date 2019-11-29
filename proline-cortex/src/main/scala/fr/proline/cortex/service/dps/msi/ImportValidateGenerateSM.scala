@@ -27,9 +27,7 @@ import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.orm.uds.IdentificationDataset
 import fr.proline.core.orm.uds.Project
 import fr.proline.core.orm.uds.repository.DatasetRepository
-import fr.proline.core.service.msi.ResultFileCertifier
-import fr.proline.core.service.msi.ResultFileImporter
-import fr.proline.core.service.msi.ResultSetValidator
+import fr.proline.core.service.msi.{ResultFileCertifier, ResultFileImporter, ResultSetValidator, ValidationConfig}
 import fr.proline.cortex.api.service.dps.msi.IImportValidateGenerateSMService
 import fr.proline.cortex.api.service.dps.msi.IResultFileDescriptor
 import fr.proline.cortex.api.service.dps.msi.ResultFileDescriptorRuleId
@@ -275,13 +273,13 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessingService with IImp
         val rsValidator = new ResultSetValidator(
           execContext = execCtx,
           targetRs = currentRS,
-          tdAnalyzer = validationParam.tdAnalyzer,
-          pepMatchPreFilters = validationParam.pepMatchPreFilters,
-          pepMatchValidator = validationParam.pepMatchValidator,
-          protSetFilters = validationParam.protSetFilters,
-          protSetValidator = validationParam.protSetValidator,
-          inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
-          peptideSetScoring = Some(validationParam.pepSetScoring.getOrElse(PepSetScoring.MASCOT_STANDARD_SCORE))
+          validationConfig = ValidationConfig(
+            pepMatchPreFilters = validationParam.pepMatchPreFilters,
+            pepMatchValidator = validationParam.pepMatchValidator,
+            protSetFilters = validationParam.protSetFilters,
+            protSetValidator = validationParam.protSetValidator,
+            pepSetScoring = Some(validationParam.pepSetScoring.getOrElse(PepSetScoring.MASCOT_STANDARD_SCORE))),
+          inferenceMethod = Some(InferenceMethod.PARSIMONIOUS)
         )  
         rsValidator.run()   
         val currentRSMId = rsValidator.validatedTargetRsm.id

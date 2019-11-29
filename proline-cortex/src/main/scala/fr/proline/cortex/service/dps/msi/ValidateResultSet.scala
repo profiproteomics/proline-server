@@ -6,28 +6,12 @@ import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.algo.msi.InferenceMethod
-import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
-import fr.proline.core.algo.msi.filtering.IProteinSetFilter
+import fr.proline.core.algo.msi.filtering.{IPeptideInstanceFilter, IPeptideMatchFilter, IProteinSetFilter}
 import fr.proline.core.algo.msi.scoring.PepSetScoring
-import fr.proline.core.algo.msi.validation.BasicTDAnalyzer
-import fr.proline.core.algo.msi.validation.BuildOptimizablePeptideMatchFilter
-import fr.proline.core.algo.msi.validation.BuildPeptideMatchFilter
-import fr.proline.core.algo.msi.validation.BuildPeptideMatchValidator
-import fr.proline.core.algo.msi.validation.BuildProteinSetFilter
-import fr.proline.core.algo.msi.validation.BuildProteinSetValidator
-import fr.proline.core.algo.msi.validation.IPeptideMatchValidator
-import fr.proline.core.algo.msi.validation.IProteinSetValidator
-import fr.proline.core.algo.msi.validation.ITargetDecoyAnalyzer
-import fr.proline.core.algo.msi.validation.ProtSetValidationMethods
-import fr.proline.core.algo.msi.validation.TargetDecoyModes
+import fr.proline.core.algo.msi.validation._
 import fr.proline.core.service.msi.ResultSetValidator
 import fr.proline.core.service.msi.ValidationConfig
-import fr.proline.cortex.api.service.dps.msi.FilterConfig
-import fr.proline.cortex.api.service.dps.msi.IValidateResultSetService
-import fr.proline.cortex.api.service.dps.msi.IValidateResultSetServiceV2
-import fr.proline.cortex.api.service.dps.msi.PepMatchValidatorConfig
-import fr.proline.cortex.api.service.dps.msi.ProtSetValidatorConfig
-import fr.proline.cortex.api.service.dps.msi.ValidateResultSetService
+import fr.proline.cortex.api.service.dps.msi._
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
 
@@ -61,18 +45,30 @@ object ValidateResultSet {
 
     // val pepMatchFilters =  .parsePepMatchFilters(params,targetRS )
     val pepMatchFilters = parsePepMatchFilters(paramsRetriever)
-
-    // Create a default TD analyzer 
-    val tdAnalyzer: Option[ITargetDecoyAnalyzer] = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED))
-    val pepMatchValidator = parsePepMatchValidator(paramsRetriever, tdAnalyzer)
+    val tdAnalyzerConfig = parseTDAnalyzerConfig(paramsRetriever)
+    val pepMatchValidator = parsePepMatchValidator(paramsRetriever)
+    val peptideBuilder = BuildPeptideInstanceBuilder(PeptideInstanceBuilders.withName(paramsRetriever.getOptString(PEPTIDE_BUILDER_CONFIG_PARAM, true, "STANDARD")))
+    val peptideFilters = parsePeptideFilters(paramsRetriever)
     val pepSetScoring = Option(paramsRetriever.getOptString(PEP_SET_SCORE_TYPE_PARAM, true, null)).map(PepSetScoring.withName(_))
     val protSetFilters = parseProtSetFilters(paramsRetriever)
     val protSetValidator = parseProtSetValidator(paramsRetriever)
 
+    val tdAnalyzer = TargetDecoyAnalyzers.values.find(_.toString.toLowerCase == tdAnalyzerConfig.methodName.toLowerCase()).getOrElse(TargetDecoyAnalyzers.BASIC)
+    val tdEstimator = TargetDecoyComputers.values.find(_.toString.toLowerCase == tdAnalyzerConfig.estimatorName.getOrElse("").toLowerCase())
+
+
+    val tdAnalyzerBuilder = new TDAnalyzerBuilder(
+      analyzer = tdAnalyzer,
+      estimator = tdEstimator,
+      params = tdAnalyzerConfig.params
+    )
+
     ValidationConfig(
-      tdAnalyzer = None,
+      tdAnalyzerBuilder = Some(tdAnalyzerBuilder),
       pepMatchPreFilters = pepMatchFilters,
       pepMatchValidator = pepMatchValidator,
+      peptideBuilder = peptideBuilder,
+      peptideFilters = peptideFilters,
       pepSetScoring = pepSetScoring,
       protSetFilters = protSetFilters,
       protSetValidator = protSetValidator
@@ -105,29 +101,43 @@ object ValidateResultSet {
     deserialize[PepMatchValidatorConfig](serialize(paramsMap))
   }
 
-  // def parsePepMatchValidator(params: NamedParamsRetriever, tdAnalyzer: Option[ITargetDecoyAnalyzer], targetRS: ResultSet): Option[IPeptideMatchValidator] = {
-  def parsePepMatchValidator(params: NamedParamsRetriever, tdAnalyzer: Option[ITargetDecoyAnalyzer]): Option[IPeptideMatchValidator] = {
+  def parsePepMatchValidator(params: NamedParamsRetriever): Option[IPeptideMatchValidator] = {
+
     if (params.hasParam(PEP_MATCH_VALIDATOR_CONFIG_PARAM)) {
 
       val pepMatchValidatorConfig = parsePepMatchValidatorConfig(params.getMap(PEP_MATCH_VALIDATOR_CONFIG_PARAM))
-
       val pepMatchValidationFilter = if (pepMatchValidatorConfig.expectedFdr.isDefined) {
         BuildOptimizablePeptideMatchFilter(pepMatchValidatorConfig.parameter)
       } else {
-        val currentFilter = BuildPeptideMatchFilter(pepMatchValidatorConfig.parameter, pepMatchValidatorConfig.threshold.get.asInstanceOf[AnyVal])
-        currentFilter
+        BuildPeptideMatchFilter(pepMatchValidatorConfig.parameter, pepMatchValidatorConfig.threshold.get)
       }
 
-      // Build PeptideMatchValidator
       Some(
         BuildPeptideMatchValidator(
           pepMatchValidationFilter,
-          pepMatchValidatorConfig.expectedFdr,
-          tdAnalyzer
+          pepMatchValidatorConfig.expectedFdr
         )
       )
-
     } else None
+  }
+
+  def parsePeptideFilters(params: NamedParamsRetriever): Option[Seq[IPeptideInstanceFilter]] = {
+    if (params.hasParam(PEPTIDE_FILTERS_PARAM)) {
+      val pepFiltersConfigs = params.getList(PEPTIDE_FILTERS_PARAM).toArray.map(parseFilterConfig(_))
+      Some(pepFiltersConfigs.map(fc => {
+        BuildPeptideInstanceFilter(fc.parameter, fc.threshold.asInstanceOf[AnyVal])
+      }).toSeq)
+    } else None
+  }
+
+
+
+  def parseTDAnalyzerConfig(params: NamedParamsRetriever): TDAnalyzerConfig = {
+    if (params.hasParam(TD_ANALYZER_PARAM)) {
+      deserialize[TDAnalyzerConfig](serialize(params.getMap(TD_ANALYZER_PARAM)))
+    } else {
+      new TDAnalyzerConfig("BASIC")
+    }
   }
 
   def parseProtSetFilters(params: NamedParamsRetriever): Option[Seq[IProteinSetFilter]] = {
@@ -192,13 +202,8 @@ class ValidateResultSet extends AbstractRemoteProcessingService with IValidateRe
       val rsValidator = ResultSetValidator(
         execContext = execCtx,
         targetRsId = resultSetId,
-        tdAnalyzer = validationConfig.tdAnalyzer,
-        pepMatchPreFilters = validationConfig.pepMatchPreFilters,
-        pepMatchValidator = validationConfig.pepMatchValidator,
-        protSetFilters = validationConfig.protSetFilters,
-        protSetValidator = validationConfig.protSetValidator,
-        inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
-        peptideSetScoring = Some(validationConfig.pepSetScoring.getOrElse(PepSetScoring.MASCOT_STANDARD_SCORE))
+        validationConfig = validationConfig,
+        inferenceMethod = Some(InferenceMethod.PARSIMONIOUS)
       )
 
       rsValidator.run()
@@ -237,7 +242,7 @@ class ValidateResultSetV2 extends AbstractRemoteProcessingService with IValidate
     var msiDbConnectionContext: DatabaseConnectionContext = null
     var msiDbTransacOk: Boolean = false
 
-    val execCtx =  DbConnectionHelper.createSQLExecutionContext(projectId) 
+    val execCtx =  DbConnectionHelper.createSQLExecutionContext(projectId)
 
     try {
       val validationConfig = ValidateResultSet.parseValidationConfig(paramsRetriever)
@@ -251,13 +256,9 @@ class ValidateResultSetV2 extends AbstractRemoteProcessingService with IValidate
       val rsValidator = ResultSetValidator(
         execContext = execCtx,
         targetRsId = resultSetId,
-        tdAnalyzer = validationConfig.tdAnalyzer,
-        pepMatchPreFilters = validationConfig.pepMatchPreFilters,
-        pepMatchValidator = validationConfig.pepMatchValidator,
-        protSetFilters = validationConfig.protSetFilters,
-        protSetValidator = validationConfig.protSetValidator,
+        validationConfig = validationConfig,
+        tdAnalyzer = None,
         inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
-        peptideSetScoring = Some(validationConfig.pepSetScoring.getOrElse(PepSetScoring.MASCOT_STANDARD_SCORE)),
         storeResultSummary = true,
         propagatePepMatchValidation= propagatePSMFilters,
         propagateProtSetValidation= propagateProtSetFilters
