@@ -15,7 +15,6 @@ case class FilterConfig(
   threshold: AnyVal,
   postValidation: Boolean = false
 ) 
-  
 
 case class PepMatchValidatorConfig(
   parameter: String,
@@ -30,6 +29,13 @@ case class ProtSetValidatorConfig(
   thresholds: Option[Map[String, AnyVal]] = None,
   @JsonDeserialize(contentAs = classOf[java.lang.Float])
   expectedFdr: Option[Float] = None
+)
+
+case class TDAnalyzerConfig(
+    methodName: String,
+    @JsonDeserialize(contentAs = classOf[java.lang.String])
+    estimatorName: Option[String] = None,
+    params: Option[Map[String, AnyVal]] = None
 )
 
 object ValidateResultSetService extends IValidateResultSetService {
@@ -97,7 +103,7 @@ trait IValidateResultSetServiceV2 extends IMsiService  {
       PROJECT_ID_PARAM,
       RESULT_SET_ID_PARAM,
       DESCRIPTION_PARAM,
-      USE_TD_COMPETITION_PARAM,
+      TD_ANALYZER_PARAM,
       PEP_MATCH_FILTERS_PARAM,
       PEP_MATCH_VALIDATOR_CONFIG_PARAM,
       PEP_SET_SCORE_TYPE_PARAM,
@@ -113,7 +119,6 @@ trait IValidateResultSetServiceV2 extends IMsiService  {
 
   }
 }
-
 
 
 trait IValidateResultSetServiceParams {
@@ -138,6 +143,12 @@ trait IValidateResultSetServiceParams {
     val scalaType = typeOf[Boolean]
     optional = true
   }
+  object TD_ANALYZER_PARAM extends JSONRPC2DefaultMethodParameter {
+    val name = "td_analyzer_config"
+    val description = "Target Decoy Analyzer to be used (Basic (default) or Gorshkov))."
+    val scalaType = typeOf[TDAnalyzerConfig]
+    optional = true
+  }
   object PEP_MATCH_FILTERS_PARAM extends JSONRPC2DefaultMethodParameter {
     val name = "pep_match_filters"
     val description = "List of PSMs filters to apply (name, threshold)."
@@ -150,11 +161,23 @@ trait IValidateResultSetServiceParams {
     val scalaType = typeOf[PepMatchValidatorConfig]
     optional = true
   }
+  object PEPTIDE_FILTERS_PARAM extends JSONRPC2DefaultMethodParameter {
+    val name = "peptide_filters"
+    val description = "List of Peptide filters to apply (name, threshold)."
+    val scalaType = typeOf[Array[FilterConfig]]
+    optional = true
+  }
+  object PEPTIDE_BUILDER_CONFIG_PARAM extends JSONRPC2DefaultMethodParameter {
+    val name = "peptide_builder_config"
+    val description = "Name of the Peptide builder config to use."
+    val scalaType = typeOf[String]
+    optional = true
+  }
   object PEP_SET_SCORE_TYPE_PARAM extends JSONRPC2DefaultMethodParameter {
     val name = "pep_set_score_type"
     val description =
       "The type of score to use for peptide sets. " +
-      "Valid values are: 'mascot:standard score', 'mascot:mudpit score', 'mascot:modified mudpit score'."
+        "Valid values are: 'mascot:standard score', 'mascot:mudpit score', 'mascot:modified mudpit score', 'proline:fisher score'."
     val scalaType = typeOf[String]
     optional = true
   }
@@ -182,5 +205,5 @@ trait IValidateResultSetServiceParams {
     val scalaType = typeOf[Boolean]
     optional = true
   }
-  
+
 }

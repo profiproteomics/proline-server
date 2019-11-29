@@ -27,7 +27,7 @@ class StatisticsView(
 
   private val _fieldValueMap = {
     val rsmValResultsOpt = rsm.descriptor.properties.flatMap(_.getValidationProperties.map(_.getResults))
-    val psmValResultsAsStr = _stringifyValResults(rsmValResultsOpt.flatMap(_.getPeptideResults))
+    val psmValResultsAsStr = _stringifyValResults(rsmValResultsOpt.flatMap(_.getPsmResults))
     val protValResultsAsStr = _stringifyValResults(rsmValResultsOpt.flatMap(_.getProteinResults))
 
     // TODO: get validated ResultSet
