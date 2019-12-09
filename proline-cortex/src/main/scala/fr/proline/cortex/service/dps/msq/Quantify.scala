@@ -109,7 +109,7 @@ class Quantify extends AbstractRemoteProcessingService with IQuantifyService wit
   }
 }
 
-class QuantifyV3_0 extends AbstractRemoteProcessingService with  IQuantifyServiceV3 with LazyLogging with ISingleThreadedService {
+class QuantifyV3_0 extends AbstractRemoteProcessingService with IQuantifyServiceV3 with LazyLogging with ISingleThreadedService {
 
   val singleThreadIdent: String = SingleThreadIdentifierType.QUANTIFY_SINGLETHREAD_IDENT.toString
 
@@ -161,6 +161,9 @@ class QuantifyV3_0 extends AbstractRemoteProcessingService with  IQuantifyServic
       }
     } finally {
       DbConnectionHelper.tryToCloseExecContext(execCtx)
+      
+      // Run the garbage collector
+      System.gc()
     }
 
     quantiId
