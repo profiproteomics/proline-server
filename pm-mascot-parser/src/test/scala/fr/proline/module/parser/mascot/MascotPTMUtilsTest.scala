@@ -19,12 +19,12 @@ class MascotPTMUtilsTest extends LazyLogging {
   @Before
   def init() {
     logger.debug("Start Logging MascotPTMUtilsTest")
-    MascotPTMUtils.ptmDefsByMascotModName.clear()
+
   }
 
   @After
   def tearDown() {
-    MascotPTMUtils.ptmDefsByMascotModName.clear()
+
   }
   
   @Test

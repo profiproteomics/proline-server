@@ -16,11 +16,12 @@ import fr.proline.core.om.provider.msi.IPTMProvider
 // TODO conception a revoir : cet objet est un singleton qui garde un etat des resultats de recherche alors
 // que ces recherches sont faites dans avec IPTMProvider qui est passe en parametre, donc susceptible de changer
 // d'un appel a l'autre. Cela peut mener a des incoherences.
+// VDS: Remove cache, PTM have different IDs in differents MSIs
 
 object MascotPTMUtils extends LazyLogging  {
 
-  val accessedPtms = new ArrayBuffer[PtmDefinition]
-  val ptmDefsByMascotModName = new HashMap[String, Array[PtmDefinition]]
+//  val accessedPtms = new ArrayBuffer[PtmDefinition]
+//  val ptmDefsByMascotModName = new HashMap[String, Array[PtmDefinition]]
 
   val MascotModRegex = """(.+) \((.+)\)""".r
 
@@ -44,14 +45,7 @@ object MascotPTMUtils extends LazyLogging  {
    */
   def mascotModToPTMDefinitions(ptmProvider: IPTMProvider, mascotMod: String): Array[PtmDefinition] = {
 
-    // Check if this Mascot modification has been already retrieved
-    if (ptmDefsByMascotModName.contains(mascotMod)) {
-      return ptmDefsByMascotModName(mascotMod)
-    }
-
     var ptmDefs = new ArrayBuffer[PtmDefinition]()
-    //    logger.debug(" Get or create PtmDefinition for string read from Mascot : "+ptmsStr)
-
     var modName = mascotMod
 
 
@@ -73,12 +67,8 @@ object MascotPTMUtils extends LazyLogging  {
       case (residue, location) =>
 
         val resChar = if (residue != None) residue.get else '\0'
-        val foundPtms = accessedPtms.filter { p => p.names.equals(modName) && p.residue == resChar && p.location == location }
-
         var nextPtmDef = Option.empty[PtmDefinition]
 
-        if (foundPtms.length == 1) nextPtmDef = Some(foundPtms(0)) // PtmDefinition Already retrieve or created
-        else {
           nextPtmDef = ptmProvider.getPtmDefinition(modName, resChar, location)
 
           // TODO: DBO => I think it should be forbidden to do this because composition has to be known
@@ -114,14 +104,10 @@ object MascotPTMUtils extends LazyLogging  {
           }
 
           ptmDefs += nextPtmDef.get
-          accessedPtms += nextPtmDef.get
 
-        } //End Ptm not already created or retrieved
     } //End go through residue
 
     val ptmDefsAsArray = ptmDefs.toArray
-    ptmDefsByMascotModName(mascotMod) = ptmDefsAsArray
-
     ptmDefsAsArray
   }
 
