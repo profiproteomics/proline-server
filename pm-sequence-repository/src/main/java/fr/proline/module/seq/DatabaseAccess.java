@@ -200,8 +200,8 @@ public final class DatabaseAccess {
 
 		try {
 			/* Try to load SEQ Db Connector */
-			final ExternalDb seqDb = ExternalDbRepository.findExternalByType(udsEM, ProlineDatabaseType.SEQ);
-
+			
+                        ExternalDb seqDb = ExternalDbRepository.findExternalByType(udsEM, ProlineDatabaseType.SEQ);
 			if (seqDb == null) {
 
 				if (allowCreateUpdateDB) {
@@ -262,16 +262,18 @@ public final class DatabaseAccess {
 			transacOK = false;
 
 			final DriverType udsDriverType = udsDbConnector.getDriverType();
+                        
 
 			if (udsDriverType == DriverType.H2) {
 				// RAW ExternalDb creation
 				// TODO create structures required by setConnectionMode (if file or server mode)
-				seqDb = createSEQDb(udsEM);
+                                String path = DBProlineConfig.getInstance().getDbPath();
+				seqDb = createSEQDb(udsEM, path+SEQ_DB_NAME);
 			} else if (udsDriverType == DriverType.POSTGRESQL) {
 				final boolean success = createPgSEQDatabase(udsDbConnector);
 
 				if (success) {
-					seqDb = createSEQDb(udsEM);
+					seqDb = createSEQDb(udsEM, SEQ_DB_NAME);
 				} else {
 					LOG.error("Unable to create Postgres SEQ Databank");
 				}
@@ -363,9 +365,9 @@ public final class DatabaseAccess {
 	}
 
 	/* Simple clone from PS Db ExternalDb configuration */
-	private static ExternalDb createSEQDb(final EntityManager udsEM) {
+	private static ExternalDb createSEQDb(final EntityManager udsEM, String dbName) {
 		ExternalDb seqDb = DBProlineConfig.getInstance().getExternalDBTemplate();
-		seqDb.setDbName(SEQ_DB_NAME);
+		seqDb.setDbName(dbName);
 		seqDb.setDbVersion("V0.2");  //FIXME get information from seqDb ?!
 		seqDb.setType(ProlineDatabaseType.SEQ);
 		udsEM.persist(seqDb);
