@@ -722,10 +722,9 @@ public final class BioSequenceRetriever {
 
 						if (DATABANK_INSTANCE_COMPARATOR.compare(matchedDatabankInstance, databankInstance) < 0) {
 							// Update DatabankProtein to newest databankInstance
-							// TODO: CBy : je ne comprends pas a quel endroit la matchingProtein est persistée ?
-							// == dans le seqTransaction.commit
+							// La matchingProtein est persistée dans le seqTransaction.commit
 							matchingProtein.setDatabankInstance(databankInstance);
-							if(!matchingProtein.getDescription().equals(protein.getDescription()))
+							if ((matchingProtein.getDescription() == null) || (!matchingProtein.getDescription().equals(protein.getDescription())))
 								matchingProtein.setDescription(protein.getDescription());
 							context.getCounters().inc("Already persisted Proteins was updated");
 							updateRepositoryIdentifier(context, matchingProtein, protein);
