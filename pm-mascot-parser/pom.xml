@@ -2,27 +2,21 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>profi-pom</artifactId>
+    <artifactId>proline-server</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    <version>2.2.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>pm-mascot-parser</artifactId>
-  <version>0.9.0-SNAPSHOT</version>
 
   <name>PM-MascotParser</name>
   <description>Proline Module which parse a Mascot result file and store its result in databases</description>
   <inceptionYear>2012</inceptionYear>
 
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>2.1.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
     <version.path>${basedir}/src/main/scala/fr/proline/module/parser/mascot</version.path>
     <mascot.version>2.5.2</mascot.version>
   </properties>
-  <scm>
-    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MascotParser/trunk</connection>
-  </scm>
 
 
   <dependencies>
@@ -47,46 +41,39 @@
     <dependency>
       <groupId>matrixscience</groupId>
       <artifactId>msparser-native-libraries-${mascot.version}</artifactId>
-      <version>0.9.0-SNAPSHOT</version>
+      <version>${server.version}</version>
     </dependency>
     
     <!-- ProFi Commons -->
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-java</artifactId>
-      <version>0.8.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-scala_${scala.version}</artifactId>
-      <version>0.9.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.profi</groupId>
       <artifactId>profi-proteomics_${scala.version}</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
     </dependency>
 
     <!-- Proline -->
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-om_${scala.version}</artifactId>
-      <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-dal_${scala.version}</artifactId>
-      <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-omp_${scala.version}</artifactId>
-      <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-databases</artifactId>
-      <version>${core.version}</version>
     </dependency>
     <!-- Tests -->
     <dependency>
@@ -109,14 +96,12 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-databases</artifactId>
-      <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-dal_${scala.version}</artifactId>
-      <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
@@ -145,7 +130,6 @@
     <dependency>
     	<groupId>fr.proline</groupId>
     	<artifactId>proline-orm</artifactId>
-    	<version>${core.version}</version>
     </dependency>
   </dependencies>
 

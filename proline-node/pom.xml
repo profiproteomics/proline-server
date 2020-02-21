@@ -1,27 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  
+
   <parent>
+    <artifactId>proline-server</artifactId>
     <groupId>fr.proline</groupId>
-    <artifactId>profi-pom</artifactId>
-    <version>0.5.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+    <version>2.2.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>proline-node</artifactId>
-  <version>0.6.0-SNAPSHOT</version>
-  
+
   <name>Proline-Node</name>
   <description>A base project to assist the creation of Proline-Cortex nodes (JMS consumers)</description>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding> <!-- Snapshot Trunk version -->
-  </properties>
-
-  <scm>
-    <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Proline-JMS-Components/Proline-Node/trunk</connection>
-  </scm>
-  
   <dependencies>
   
     <!-- Scala -->
@@ -76,19 +67,17 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-cortex-api</artifactId>
-      <version>0.7.0-SNAPSHOT</version>
+      <version>${server.version}</version>
     </dependency>
     
     <!-- Proline -->
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-scala_${scala.version}</artifactId>
-      <version>0.9.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-java</artifactId>
-      <version>0.8.0-SNAPSHOT</version>
     </dependency>
     
     <!-- Test -->

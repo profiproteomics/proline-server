@@ -4,23 +4,14 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<artifactId>profi-pom</artifactId>
+		<artifactId>proline-server</artifactId>
 		<groupId>fr.proline</groupId>
-		<version>0.5.0-SNAPSHOT</version>
+		<version>2.2.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>pm-sequence-repository</artifactId>
-	<version>0.9.0-SNAPSHOT</version>
 
 	<name>PM-SequenceRepository</name>
-
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<core.version>2.1.0-SNAPSHOT</core.version>
-	</properties>
-	<scm>
-		<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-SequenceRepository/trunk</connection>
-	</scm>
 
 
 	<dependencies>
@@ -32,7 +23,6 @@
 		<dependency>
 			<groupId>fr.proline</groupId>
 			<artifactId>proline-orm</artifactId>
-			<version>${core.version}</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>slf4j-simple</artifactId>
@@ -43,7 +33,6 @@
 		<dependency>
 			<groupId>fr.proline</groupId>
 			<artifactId>proline-databases</artifactId>
-			<version>${core.version}</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>slf4j-simple</artifactId>
@@ -54,17 +43,15 @@
 		<dependency>
 			<groupId>fr.profi</groupId>
 			<artifactId>profi-proteomics_${scala.version}</artifactId>
-			<version>0.5.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>fr.profi.util</groupId>
 			<artifactId>profi-commons-java</artifactId>
-			<version>0.8.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>fr.proline</groupId>
 			<artifactId>proline-cortex-api</artifactId>
-			<version>0.7.0-SNAPSHOT</version>
+			<version>${server.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.typesafe</groupId>
@@ -143,7 +130,6 @@
 		<dependency>
 			<groupId>fr.proline</groupId>
 			<artifactId>proline-databases</artifactId>
-			<version>${core.version}</version>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
@@ -162,7 +148,7 @@
 		<dependency>
 			<groupId>fr.proline</groupId>
 			<artifactId>proline-node</artifactId>
-			<version>0.6.0-SNAPSHOT</version>
+			<version>${server.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.spec.javax.jms</groupId>

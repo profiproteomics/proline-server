@@ -1,17 +1,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>fr.proline</groupId>
-    <artifactId>profi-pom</artifactId>
-    <version>0.5.0-SNAPSHOT</version>
-  </parent>
-  <artifactId>pm-maxquant-parser</artifactId>
-  <version>0.5.0-SNAPSHOT</version>
-  <name>PM-MaxQuantParser</name>
+	<parent>
+		<artifactId>proline-server</artifactId>
+		<groupId>fr.proline</groupId>
+		<version>2.2.0-SNAPSHOT</version>
+	</parent>
 
-	<properties>
-		<core.version>2.1.0-SNAPSHOT</core.version>
-	</properties>
+  <artifactId>pm-maxquant-parser</artifactId>
+    <name>PM-MaxQuantParser</name>
+
 
   <dependencies>
   	<dependency>
@@ -22,17 +19,14 @@
   	<dependency>
   		<groupId>fr.proline</groupId>
   		<artifactId>proline-dal_${scala.version}</artifactId>
-  		<version>${core.version}</version>
   	</dependency>
   	<dependency>
   		<groupId>fr.proline</groupId>
   		<artifactId>proline-om_${scala.version}</artifactId>
-  		<version>${core.version}</version>
   	</dependency>
   	<dependency>
   		<groupId>fr.profi.util</groupId>
   		<artifactId>profi-commons-java</artifactId>
-  		<version>0.8.0-SNAPSHOT</version>
   	</dependency>
   	<dependency>
   		<groupId>junit</groupId>
@@ -54,7 +48,6 @@
   	<dependency>
   		<groupId>fr.profi.util</groupId>
   		<artifactId>profi-commons-scala_${scala.version}</artifactId>
-  		<version>0.9.0-SNAPSHOT</version>
   	</dependency>
   	<dependency>
   		<groupId>commons-io</groupId>
@@ -69,7 +62,6 @@
   	<dependency>
   		<groupId>fr.profi</groupId>
   		<artifactId>profi-proteomics_${scala.version}</artifactId>
-  		<version>0.5.0-SNAPSHOT</version>
   	</dependency>
   	<dependency>
   		<groupId>org.scala-lang</groupId>
@@ -78,7 +70,6 @@
   	<dependency>
   		<groupId>fr.proline</groupId>
   		<artifactId>proline-databases</artifactId>
-  		<version>${core.version}</version>
   	</dependency>
   </dependencies>
   <build>
@@ -112,7 +103,4 @@
 			</plugins>
 		</pluginManagement>
   </build>
-  <scm>
-  	<connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-MaxQuantParser/trunk</connection>
-  </scm>
 </project>

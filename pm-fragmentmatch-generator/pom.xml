@@ -3,23 +3,15 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>profi-pom</artifactId>
+    <artifactId>proline-server</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    <version>2.2.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>pm-fragmentmatch-generator</artifactId>
-  <version>0.9.0-SNAPSHOT</version>
   <name>PM-FragmentMatchGenerator</name>
   <description>Proline Module made to generate the fragment matches from a spectrum</description>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>2.1.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
-  </properties>
-	<scm>
-	  <connection>scm:svn:https://bioproj.extra.cea.fr/svn/proline/Components/PM-FragmentMatchGenerator/trunk</connection>
-	</scm>
   <dependencies>
 
     <!-- Scala -->
@@ -39,16 +31,15 @@
       <!-- Bridge Apache commons-logging over SLF4J -->
 
     <!-- Proline -->
+    <!-- Version inherited from parent POM -->
 	<dependency>
       <groupId>fr.profi</groupId>
       <artifactId>profi-proteomics_${scala.version}</artifactId>
-      <version>0.5.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
     </dependency>
     
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-dal_${scala.version}</artifactId>
-      <version>${core.version}</version>
     </dependency>
     <!-- Tests -->
     <dependency>
@@ -75,21 +66,18 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-databases</artifactId>
-      <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-om_${scala.version}</artifactId>
-      <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-dal_${scala.version}</artifactId>
-      <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
@@ -97,7 +85,6 @@
     <dependency>
     	<groupId>fr.profi.util</groupId>
     	<artifactId>profi-commons-scala_${scala.version}</artifactId>
-    	<version>0.9.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
