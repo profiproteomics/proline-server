@@ -195,7 +195,7 @@ public class FastaSource implements DataSource {
 			final String fastaIdentifier = matcher.group(1).trim();// DatabankProtein value should be trimmed
 
 			if ((header != null) && (!header.isEmpty()) && (header.trim().length() > fastaIdentifier.trim().length())) {
-				descriptionFromFasta = header.substring(header.indexOf(fastaIdentifier) + fastaIdentifier.length() + 1);
+				descriptionFromFasta = header.substring(header.indexOf(fastaIdentifier) + fastaIdentifier.length()).trim();
 			}
 
 			final List<DDatabankProtein> possibleIdentifiers = remainingProteinIdentifiers.get(fastaIdentifier);

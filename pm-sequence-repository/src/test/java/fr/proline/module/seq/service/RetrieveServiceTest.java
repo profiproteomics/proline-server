@@ -9,7 +9,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.List;
+
+import static org.junit.Assert.fail;
 
 /**
  * Unit test
@@ -48,8 +51,8 @@ public final class RetrieveServiceTest extends AbstractDatabaseTest  {
 
 			logger.info("\nMain terminated !");
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 	}
 
@@ -69,8 +72,8 @@ public final class RetrieveServiceTest extends AbstractDatabaseTest  {
 
 			logger.info("\nMain terminated !");
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 	}
 
@@ -91,8 +94,8 @@ public final class RetrieveServiceTest extends AbstractDatabaseTest  {
 
 			logger.info("\nMain terminated !");
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 	}
 
@@ -121,8 +124,8 @@ public final class RetrieveServiceTest extends AbstractDatabaseTest  {
 
 			logger.info("\nMain terminated !");
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 	}
 
@@ -150,14 +153,89 @@ public final class RetrieveServiceTest extends AbstractDatabaseTest  {
 
 			logger.info("\nMain terminated !");
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 	}
 
 
 	/**
-	 * seq_db missed 5 biosequences and protein identifiers but the MSI RS references an newer databank version
+	 * seq_db contains all biosequence from an older db than the one referenced by msi
+	 * and 1 protein from the fasta file did not contain description
+	 *
+	 */
+	@Test
+	public void testRetrieveNoDescriptionInSeqDB() {
+		File fasta = new File("./target/test-classes/fasta/fake_66660101.fasta");
+
+		try {
+			fasta.renameTo(new File("./target/test-classes/fasta/ups1_ups2_66660101.fasta"));
+
+			super.initDBTestCase("/dbunit_samples/SmallRuns_XIC/uds-db.xml","/dbunit_samples/SmallRuns_XIC/msi-db_newer.xml");
+			super.initSeqDBTestCase("/dbunit_samples/SmallRuns_XIC/seq_db/seq-db_nodesc.xml");
+			ProjectHandler projectHandler = new ProjectHandler(PROJECT_ID);
+			List<Long> rsmIds = projectHandler.findAllRSMIds();
+			projectHandler.close();
+			logger.info("--- Starting retrieveBioSequences Unit Test ---");
+			int persistedProteinsCount = RetrieveService.retrieveBioSequences(PROJECT_ID, false, rsmIds);
+
+			DatabaseUtils.writeDataSetXML(DatabaseAccess.getSEQDatabaseConnector(false), "seq-db_OUT.xml");
+
+			DatabaseAccess.closeSEQDatabaseConnector();
+
+			Assert.assertEquals("Expected peptides proteins count", 45, persistedProteinsCount);
+
+			logger.info("\nMain terminated !");
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		} finally {
+			fasta = new File("./target/test-classes/fasta/ups1_ups2_66660101.fasta");
+			fasta.renameTo(new File("./target/test-classes/fasta/fake_66660101.fasta"));
+		}
+	}
+
+	/**
+	 * seq_db contains all biosequence from another db than the one referenced by msi
+	 * 1 protein from the fasta file did not contain description
+	 *
+	 * WARNING : for this test ups1_ups2_66660101.fasta is mandatory. We then rename fake_6660101 to ups1_ups2_66660101
+	 * then rollback to avoid side effect on other tests
+	 */
+	@Test
+	public void testRetrieveNoDescriptionInFasta() {
+		File fasta = new File("./target/test-classes/fasta/fake_66660101.fasta");
+		try {
+			fasta.renameTo(new File("./target/test-classes/fasta/ups1_ups2_66660101.fasta"));
+
+			super.initDBTestCase("/dbunit_samples/SmallRuns_XIC/uds-db.xml","/dbunit_samples/SmallRuns_XIC/msi-db_newer.xml");
+			super.initSeqDBTestCase("/dbunit_samples/SmallRuns_XIC/seq_db/seq-db.xml");
+			ProjectHandler projectHandler = new ProjectHandler(PROJECT_ID);
+			List<Long> rsmIds = projectHandler.findAllRSMIds();
+			projectHandler.close();
+			logger.info("--- Starting retrieveBioSequences Unit Test ---");
+			int persistedProteinsCount = RetrieveService.retrieveBioSequences(PROJECT_ID, false, rsmIds);
+
+			DatabaseUtils.writeDataSetXML(DatabaseAccess.getSEQDatabaseConnector(false), "seq-db_OUT.xml");
+
+			DatabaseAccess.closeSEQDatabaseConnector();
+
+			Assert.assertEquals("Expected peptides proteins count", 45, persistedProteinsCount);
+
+			logger.info("\nMain terminated !");
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		} finally {
+			fasta = new File("./target/test-classes/fasta/ups1_ups2_66660101.fasta");
+			fasta.renameTo(new File("./target/test-classes/fasta/fake_66660101.fasta"));
+		}
+	}
+
+
+
+	/**
+	 * seq_db missed 5 biosequences and protein identifiers but the MSI RS references a newer databank version
 	 *
 	 */
 	@Test
@@ -179,8 +257,8 @@ public final class RetrieveServiceTest extends AbstractDatabaseTest  {
 
 			logger.info("\nMain terminated !");
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 	}
 
@@ -206,8 +284,8 @@ public final class RetrieveServiceTest extends AbstractDatabaseTest  {
 
 			logger.info("\nMain terminated !");
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 	}
 
@@ -233,8 +311,8 @@ public final class RetrieveServiceTest extends AbstractDatabaseTest  {
 
 			logger.info("\nMain terminated !");
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		}
 	}
 
