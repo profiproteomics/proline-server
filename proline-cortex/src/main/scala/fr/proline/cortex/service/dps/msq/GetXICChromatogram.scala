@@ -6,6 +6,7 @@ import com.almworks.sqlite4java.SQLiteException
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.mzdb.XicMethod
+import fr.profi.mzdb.io.reader.cache.MzDbEntityCache
 import fr.profi.mzdb.model.{DataPoint, Peak}
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.orm.uds.RawFile
@@ -85,10 +86,8 @@ class GetXICChromatogram extends AbstractRemoteProcessingService with IGetXICChr
       logger.info(s"The raw file '$rawFileIdentifier' has not been found")
     } else {
 
-      val mzDbFilePath = rawFile.getMzDbFileDirectory () + java.io.File.separator + rawFile.getMzDbFileName ();
-
-      val mzDbFileLocalPathname = MountPointRegistry.replacePossibleLabel (mzDbFilePath).localPathname;
-      val mzDbFileLocal = new java.io.File (mzDbFileLocalPathname);
+      val mzDbDirectoryLocalPathname = MountPointRegistry.replacePossibleLabel (rawFile.getMzDbFileDirectory ()).localPathname;
+      val mzDbFileLocal = new java.io.File (mzDbDirectoryLocalPathname, rawFile.getMzDbFileName());
       if (mzDbFileLocal.exists () ) {
         // we have found the mzDbFile
 
@@ -101,7 +100,7 @@ class GetXICChromatogram extends AbstractRemoteProcessingService with IGetXICChr
         retrievePeaks (peakList, mzDbFileLocal, mz, minMz, maxMz)
         return peakList;
       } else {
-        logger.info (s"The mzdb file '" + mzDbFileLocalPathname + "' has not been found")
+        logger.info (s"The mzdb file '" + mzDbFileLocal.getAbsolutePath() + "' has not been found")
       }
     }
 
@@ -119,6 +118,7 @@ class GetXICChromatogram extends AbstractRemoteProcessingService with IGetXICChr
     var peaks = null : Array[Peak];
 
     val mzDbReader = new fr.profi.mzdb.MzDbReader(mzDbFile, true);
+    logger.info(s"getMsXicInMzRange '$minMz' '$maxMz' starts")
     peaks = mzDbReader.getMsXicInMzRange(minMz, maxMz, XicMethod.MAX);
 
 
