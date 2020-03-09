@@ -60,12 +60,25 @@ class GetXICChromatogram extends AbstractRemoteProcessingService with IGetXICChr
       val udsEM = udsDbCtx.getEntityManager
 
       // Call
+      var previousRawFileIdentifier : String = null;
+      var rawFile = null : RawFile;
       for ( i <- 0 to (rawFileIdentifierList.length - 1)) {
         val rawFileIdentifier = (rawFileIdentifierList(i)).asInstanceOf[String]
         val mz = mzList(i).asInstanceOf[Double]
 
-        var peakList = extractXIC(udsEM, rawFileIdentifier, mz, mzTolPPM)
-        chromatograms.append(peakList);
+        // Search for this raw file identifier in the UDSdb
+        if (previousRawFileIdentifier != rawFileIdentifier) {
+          rawFile = udsEM.find(classOf[RawFile], rawFileIdentifier)
+          previousRawFileIdentifier = rawFileIdentifier;
+        }
+        // Manage raw file not found
+        if (rawFile == null) {
+          logger.info(s"The raw file '$rawFileIdentifier' has not been found")
+          chromatograms.append(null);
+        } else {
+          var peakList = extractXIC(udsEM, rawFile, mz, mzTolPPM)
+          chromatograms.append(peakList);
+        }
       }
 
     } finally {
@@ -76,15 +89,11 @@ class GetXICChromatogram extends AbstractRemoteProcessingService with IGetXICChr
 
   }
 
-  private def extractXIC(udsEM : EntityManager, rawFileIdentifier : String, mz: Double, mzTolPPM: Double):  ArrayBuffer[fr.proline.core.orm.lcms.Peak] = {
+  private def extractXIC(udsEM : EntityManager, rawFile : RawFile, mz: Double, mzTolPPM: Double):  ArrayBuffer[fr.proline.core.orm.lcms.Peak] = {
 
-    // Search for this raw file identifier in the UDSdb
-    val rawFile = udsEM.find(classOf[RawFile], rawFileIdentifier)
 
-    // Manage raw file not found
-    if (rawFile == null) {
-      logger.info(s"The raw file '$rawFileIdentifier' has not been found")
-    } else {
+
+
 
       val mzDbDirectoryLocalPathname = MountPointRegistry.replacePossibleLabel (rawFile.getMzDbFileDirectory ()).localPathname;
       val mzDbFileLocal = new java.io.File (mzDbDirectoryLocalPathname, rawFile.getMzDbFileName());
@@ -102,7 +111,7 @@ class GetXICChromatogram extends AbstractRemoteProcessingService with IGetXICChr
       } else {
         logger.info (s"The mzdb file '" + mzDbFileLocal.getAbsolutePath() + "' has not been found")
       }
-    }
+
 
     return null
   }
