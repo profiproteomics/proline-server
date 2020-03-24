@@ -4,13 +4,7 @@ import fr.proline.core.orm.uds.ExternalDb;
 import fr.proline.core.orm.uds.repository.ExternalDbRepository;
 import fr.proline.core.orm.util.DStoreCustomPoolConnectorFactory;
 import fr.proline.module.seq.config.DBProlineConfig;
-import fr.proline.repository.AbstractDatabaseConnector;
-import fr.proline.repository.DatabaseConnectorFactory;
-import fr.proline.repository.DatabaseUpgrader;
-import fr.proline.repository.DriverType;
-import fr.proline.repository.IDataStoreConnectorFactory;
-import fr.proline.repository.IDatabaseConnector;
-import fr.proline.repository.ProlineDatabaseType;
+import fr.proline.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -267,7 +261,14 @@ public final class DatabaseAccess {
 			if (udsDriverType == DriverType.H2) {
 				// RAW ExternalDb creation
 				// TODO create structures required by setConnectionMode (if file or server mode)
-                                String path = DBProlineConfig.getInstance().getDbPath();
+				ConnectionMode mode = DBProlineConfig.getInstance().getUDSConnectionMode();
+				String path ="";
+				switch (mode){
+					case FILE:
+						path = DBProlineConfig.getInstance().getDbPath();
+						break;
+				}
+
 				seqDb = createSEQDb(udsEM, path+SEQ_DB_NAME);
 			} else if (udsDriverType == DriverType.POSTGRESQL) {
 				final boolean success = createPgSEQDatabase(udsDbConnector);
