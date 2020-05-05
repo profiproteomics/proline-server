@@ -70,8 +70,8 @@ class MasterQuantProteinSetProfileBuildingContext(
   protMatch
 ) with IMasterQuantEntityBuildingContext {
   def getQuantComponentMap(): LongMap[_ <: QuantComponent] = {
-    if( profile.isEmpty ) masterQuantProteinSet.getQuantComponentMap
-    else masterQuantProteinSet.getProfileQuantComponentMap(profile.get, quantChannelIds)
+    //#17395 confusion between raw abundance in GUI and export. always use inital raw_abundance
+    masterQuantProteinSet.getQuantComponentMap
   }
   def getRatios(): Option[List[Option[ComputedRatio]]] = profile.map(_.getRatios())
 }
