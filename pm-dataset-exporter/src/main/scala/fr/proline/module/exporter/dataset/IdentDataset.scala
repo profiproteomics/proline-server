@@ -26,7 +26,7 @@ class IdentDataset(
 ) extends LazyLogging {
 
   // Count the number of protein sets and proteins matches related to a given peptide match
-  val validProtSetIdSetByPepMatchId = new LongMap[HashSet[Long]]()
+  val validProtSetIdSetByPeptideId = new LongMap[HashSet[Long]]()
   val validSamesetProtMatchIdSetByPepMatchId = new LongMap[HashSet[Long]]()
   val validProtMatchIdSetByPepMatchId = new LongMap[HashSet[Long]]()
 
@@ -36,9 +36,12 @@ class IdentDataset(
     val samesetProtMatchIdSet = protSet.getSameSetProteinMatchIds.toSet
 
     protSet.peptideSet.getPeptideMatchIds.foreach { pepMatchId =>
-      validProtSetIdSetByPepMatchId.getOrElseUpdate(pepMatchId, new HashSet[Long]) += protSet.id
       validSamesetProtMatchIdSetByPepMatchId.getOrElseUpdate(pepMatchId, new HashSet[Long]) ++= samesetProtMatchIdSet
       validProtMatchIdSetByPepMatchId.getOrElseUpdate(pepMatchId, new HashSet[Long])
+    }
+    //#19643 use peptide Ids instead if psmId (may need information from leaf psm (in case of quant peptide ion for example)
+    protSet.peptideSet.getPeptideIds.foreach {pepId =>
+      validProtSetIdSetByPeptideId.getOrElseUpdate(pepId, new HashSet[Long]) += protSet.id
     }
 
     val protMatchIdByPepSet = protSet.getAllProteinMatchesIdByPeptideSet

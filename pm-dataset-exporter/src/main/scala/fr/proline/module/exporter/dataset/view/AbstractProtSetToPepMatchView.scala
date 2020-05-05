@@ -103,7 +103,7 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
         case FIELD_PSM_CD_PRETTY_RANK => pepMatch.cdPrettyRank
         case FIELD_PSM_FRAGMENT_MATCHES_COUNT => pepMatch.fragmentMatchesCount
         case FIELD_PSM_SPECTRUM_TITLE => msQueryOpt.map(_.spectrumTitle).orNull
-        case FIELD_PSM_NB_PROTEIN_SETS => identDS.validProtSetIdSetByPepMatchId.get(pepMatch.id).map(_.size).getOrElse(0)
+        case FIELD_PSM_NB_PROTEIN_SETS => identDS.validProtSetIdSetByPeptideId.get(peptide.id).map(_.size).getOrElse(0)
         case FIELD_PSM_NB_SAMESET_PROTEIN_MATCHES => identDS.validSamesetProtMatchIdSetByPepMatchId.get(pepMatch.id).map(_.size).getOrElse(0)
         case FIELD_PSM_NB_PROTEIN_MATCHES => identDS.validProtMatchIdSetByPepMatchId.get(pepMatch.id).map(_.size).getOrElse(0)
         case FIELD_PSM_NB_DATABANK_PROTEIN_MATCHES => identDS.allProtMatchSetByPepId.get(peptide.id).map(_.size).getOrElse(0)
