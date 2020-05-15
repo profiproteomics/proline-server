@@ -289,8 +289,6 @@ object BuildDatasetViewSet extends LazyLogging {
       }
 
 
-
-
       var peptideCountByProtMatchIdByQCId: LongMap[LongMap[Int]] = null
       var peptideCountByMqProtSetIdByQCId: LongMap[LongMap[Int]] = null
       
@@ -318,35 +316,42 @@ object BuildDatasetViewSet extends LazyLogging {
         qcPeptideCountMap.sizeHint(mqProtSets.length)
         
         for( mqProtSet <- mqProtSets ) {
-          
-          val pepInsts = mqProtSet.proteinSet.peptideSet.getPeptideInstances()
-          
-          val pepCountByQcId = new LongMap[Int](qcCount)
-          
-          for( pepInst <- pepInsts ) {
-            
-            // If the peptide has been quantified
-            val mqPepOpt = mqPepByPepInstId.get(pepInst.id)
-            if (mqPepOpt.isDefined) {
-              
-              val mqPep = mqPepOpt.get
-              
-              if (mqPep.selectionLevel >= 2) {
-                for ((qcId,quantPep) <- mqPep.quantPeptideMap) {
-                  if (quantPep.peptideMatchesCount > 0) {
-                    pepCountByQcId.getOrElseUpdate(qcId,0)
-                    pepCountByQcId(qcId) += 1
+
+          val qProtSetByQChId =  mqProtSet.getQuantComponentMap()
+          val nbPepCountDefined = qProtSetByQChId.values.count(_.peptidesCount.isDefined)
+          if(nbPepCountDefined >0 ) {
+            for ((qcId, qCom) <- qProtSetByQChId) {
+              val nbPep = if (qCom.peptidesCount.isDefined) qCom.peptidesCount.get else 0
+              peptideCountByMqProtSetIdByQCId(qcId).getOrElseUpdate(mqProtSet.id, nbPep)
+            }
+          } else {
+
+            val pepInsts = mqProtSet.proteinSet.peptideSet.getPeptideInstances()
+            val pepCountByQcId = new LongMap[Int](qcCount)
+
+            for (pepInst <- pepInsts) {
+
+              // If the peptide has been quantified
+              val mqPepOpt = mqPepByPepInstId.get(pepInst.id)
+              if (mqPepOpt.isDefined) {
+
+                val mqPep = mqPepOpt.get
+
+                if (mqPep.selectionLevel >= 2) {
+                  for ((qcId, quantPep) <- mqPep.quantPeptideMap) {
+                    if (quantPep.abundance > 0) {
+                      pepCountByQcId.getOrElseUpdate(qcId, 0)
+                      pepCountByQcId(qcId) += 1
+                    }
                   }
                 }
               }
             }
-          }
-          
-          for ( (qcId,pepCount) <- pepCountByQcId) {
-            peptideCountByMqProtSetIdByQCId(qcId).getOrElseUpdate(mqProtSet.id,pepCount)
+            for ((qcId, pepCount) <- pepCountByQcId) {
+              peptideCountByMqProtSetIdByQCId(qcId).getOrElseUpdate(mqProtSet.id, pepCount)
+            }
           }
         }
-        
       } else {
         
         peptideCountByProtMatchIdByQCId = new LongMap[LongMap[Int]]()
