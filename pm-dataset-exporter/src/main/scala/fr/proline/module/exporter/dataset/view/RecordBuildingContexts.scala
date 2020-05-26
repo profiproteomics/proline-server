@@ -139,3 +139,45 @@ class MasterQuantReporterIonBuildingContext(
   override def getQuantComponentMap(): LongMap[_ <: QuantComponent] = masterQuantReporterIon.quantReporterIonMap
   override def getRatios(): Option[List[Option[ComputedRatio]]] = None
 }
+
+trait IPTMClusterBuildingContext {
+  val ptmCluster : PtmCluster
+  val ptmSites: Array[PtmSite2]
+}
+
+class PTMClusterBuildingContext(
+    val ptmCluster: PtmCluster,
+    val ptmSites: Array[PtmSite2],
+    pepMatch: PeptideMatch,
+    protMatch: ProteinMatch,
+    seqMatch: SequenceMatch,
+    protMatchBuildingCtx: Option[ProtMatchBuildingContext]
+) extends PepMatchBuildingContext(
+  pepMatch,
+  false,
+  protMatch,
+  seqMatch,
+  protMatchBuildingCtx
+) with IPTMClusterBuildingContext {
+
+}
+
+class QuantPTMClusterBuildingContext(
+    val ptmCluster: PtmCluster,
+    val ptmSites: Array[PtmSite2],
+    pepMatch: PeptideMatch,
+    protMatch: ProteinMatch,
+    seqMatch: SequenceMatch,
+    protMatchBuildingCtx: Option[ProtMatchBuildingContext],
+    masterQuantPeptide: MasterQuantPeptide,
+    groupSetupNumber: Int
+) extends  MasterQuantPeptideBuildingContext(
+pepMatch,
+protMatch,
+seqMatch,
+protMatchBuildingCtx,
+masterQuantPeptide,
+groupSetupNumber
+) with IPTMClusterBuildingContext {
+
+}

@@ -4,6 +4,9 @@ import com.typesafe.scalalogging.LazyLogging
 import fr.profi.jdbc.easy._
 import fr.profi.util.StringUtils
 import fr.profi.util.collection._
+import fr.profi.util.primitives._
+import fr.proline.core.dal.tables.SelectQueryBuilder._
+import fr.profi.util.serialization.ProfiJson
 import fr.proline.context.IExecutionContext
 import fr.proline.context.MsiDbConnectionContext
 import fr.proline.core.dal.DoJDBCReturningWork
@@ -11,12 +14,13 @@ import fr.proline.core.dal.DoJDBCWork
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.helper.UdsDbHelper
 import fr.proline.core.dal.tables.SelectQueryBuilder1
+import fr.proline.core.dal.tables.msi.{MsiDbObjectTreeTable, MsiDbResultSummaryObjectTreeMapTable}
 import fr.proline.core.dal.tables.uds.UdsDbProjectTable
-import fr.proline.core.om.model.msi.LazyResultSet
-import fr.proline.core.om.model.msi.LazyResultSummary
+import fr.proline.core.om.model.msi.{LazyResultSet, LazyResultSummary, PtmDataSet, PtmSite}
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.impl._
 import fr.proline.core.om.provider.msq.impl._
+import fr.proline.core.orm.msi.ObjectTreeSchema.SchemaName
 import fr.proline.core.orm.uds.ObjectTreeSchema
 import fr.proline.module.exporter.api.template.ViewWithTemplate
 import fr.proline.module.exporter.api.template._
@@ -181,7 +185,9 @@ object BuildDatasetViewSet extends LazyLogging {
         leaveResultSummariesLoader,
         leaveResultSetLoader,
         this._buildBioSequenceLoader(msiDbCtx, lazyRsm),
-        this._buildSpectraLoader(msiDbCtx)
+        this._buildSpectraLoader(msiDbCtx),
+        this._buildPepMatchesLoader(executionContext),
+        this._buildPTMDatasetLoader(executionContext, rsmId)
       )
 
       this.apply(identDs, viewSetName, viewSetTemplate, exportConfig)
@@ -394,7 +400,8 @@ object BuildDatasetViewSet extends LazyLogging {
         this._buildPepMatchesLoader(executionContext),
         this._buildPepMatchesByMsQIdLoader(executionContext),
         Option(peptideCountByProtMatchIdByQCId),
-        Option(peptideCountByMqProtSetIdByQCId)
+        Option(peptideCountByMqProtSetIdByQCId),
+        this._buildPTMDatasetLoader(executionContext, quantRsmId)
       )
 
       this.apply(quantDs, viewSetName, viewSetTemplate, exportConfig)
@@ -451,4 +458,35 @@ object BuildDatasetViewSet extends LazyLogging {
     peptideMatchProvider.getPeptideMatchesByMsQueryIds(msQueriesIds)
 
   }
+
+  private def _buildPTMDatasetLoader(executionContext: IExecutionContext, rsmId: Long) = { () =>
+    logger.debug(s"Loading ptm dataset ... ")
+
+    DoJDBCReturningWork.withEzDBC(executionContext.getMSIDbConnectionContext) { msiEzDBC =>
+
+      val ptmObjectTreeQuery = new SelectQueryBuilder1(MsiDbResultSummaryObjectTreeMapTable).mkSelectQuery((t, c) =>
+        List(t.*) -> "WHERE " ~ t.RESULT_SUMMARY_ID ~ s" = '${rsmId}'" ~ " AND " ~ t.SCHEMA_NAME ~ s" = '${SchemaName.PTM_DATASET.toString}'"
+      )
+
+      val objectTreeIdOpt = msiEzDBC.select(ptmObjectTreeQuery) { r =>
+        toLong(r.getAny(MsiDbResultSummaryObjectTreeMapTable.columns.OBJECT_TREE_ID))
+      }.headOption
+
+      if (objectTreeIdOpt.isDefined) {
+        val ptmSiteQuery = new SelectQueryBuilder1(MsiDbObjectTreeTable).mkSelectQuery((t, c) =>
+          List(t.*) -> "WHERE " ~ t.ID ~ s" = '${objectTreeIdOpt.get}'"
+        )
+
+        // TODO the following transformation from PtmSite V1 to V2 is made for compatibility only, it must be removed
+        val ptmDataset = msiEzDBC.select(ptmSiteQuery) { r =>
+          val clob = r.getString(MsiDbObjectTreeTable.columns.CLOB_DATA)
+          val ptmDataset = ProfiJson.deserialize[PtmDataSet](clob)
+          ptmDataset
+        }.headOption
+        ptmDataset
+      } else None
+    }
+
+  }
+
 }

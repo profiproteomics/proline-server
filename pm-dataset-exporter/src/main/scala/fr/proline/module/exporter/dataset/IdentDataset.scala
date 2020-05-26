@@ -22,7 +22,9 @@ class IdentDataset(
                     protected val loadLeaveResultSummaries: () => Array[LazyResultSummary],
                     protected val loadLeaveResultSets: () => Array[LazyResultSet], // TODO: remove me => we don't need this, it should be identical to loadChildResultSummaries
                     protected val loadBioSequences: () => Array[BioSequence],
-                    protected val loadSpectraDescriptors: (Array[Long]) => Array[Spectrum]
+                    protected val loadSpectraDescriptors: (Array[Long]) => Array[Spectrum],
+                    val loadPepMatches: (Array[Long]) => Array[PeptideMatch],
+                    val loadPtmDataset: () => Option[PtmDataSet]
 ) extends LazyLogging {
 
   // Count the number of protein sets and proteins matches related to a given peptide match

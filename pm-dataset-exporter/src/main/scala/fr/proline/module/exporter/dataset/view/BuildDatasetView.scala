@@ -64,6 +64,9 @@ object BuildDatasetView {
         case ExportConfigConstant.SHEET_STAT => {
           mapBuilder += (STATISTICS -> { ds: IdentDataset => new StatisticsView(ds.resultSummary, sheet, dateFormat, decimalFormat) })
         }
+        case ExportConfigConstant.SHEET_PTM_CLUSTER => {
+          mapBuilder += (PTM_CLUSTER -> { ds: IdentDataset => new PTMClusterView(ds, sheet, dateFormat, smartDecimalFormat, titleSep) })
+        }
         case _ => throw new Exception(s"Invalid sheet: ${sheet.id}")
       }
     }

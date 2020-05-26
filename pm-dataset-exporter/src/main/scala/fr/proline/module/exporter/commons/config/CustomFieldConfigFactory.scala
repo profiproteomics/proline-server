@@ -246,4 +246,53 @@ object CustomFieldConfigFactory {
     )
   }
 
+
+
+  // get all fields for Best PSM sheet
+  def getPtmClusterSheetFields(fromXIC: Boolean): Array[CustomFieldConfig] = {
+
+    val fieldsBuffer = ArrayBuffer(
+      CustomFieldConfig(FIELD_PTM_CLUSTER_NB_PEPTIDES, "ptm_cluster_nb_peptides"),
+      CustomFieldConfig(FIELD_PTM_CLUSTER_NB_SITES, "ptm_cluster_nb_sites"),
+      CustomFieldConfig(FIELD_PTM_CLUSTER_SITES_LOCALISATION,"ptm_cluster_sites_localisations"),
+      CustomFieldConfig(FIELD_PTM_CLUSTER_LOCALISATION_CONFIDENCE, "ptm_cluster_localisation_confidence"),
+      CustomFieldConfig(FIELD_PSM_PEPTIDE_ID, "peptide_id"),
+      CustomFieldConfig(FIELD_PSM_SEQUENCE, "sequence"),
+      CustomFieldConfig(FIELD_PSM_MODIFICATIONS, "modifications"),
+      CustomFieldConfig(FIELD_PSM_PTM_PROTEIN_POSITIONS, "ptm_protein_positions"),
+      CustomFieldConfig(FIELD_PSM_SCORE, "psm_score"),
+      CustomFieldConfig(FIELD_PSM_CALCULATED_MASS, "calculated_mass"),
+      CustomFieldConfig(FIELD_PSM_CHARGE, "charge"),
+      CustomFieldConfig(FIELD_PSM_EXPERIMENTAL_MOZ, "experimental_moz"),
+      CustomFieldConfig(FIELD_PSM_DELTA_MOZ, "delta_moz"),
+      CustomFieldConfig(FIELD_PSM_RT, "rt"),
+      CustomFieldConfig(FIELD_PSM_PEPTIDE_LENGTH, "peptide_length"),
+      CustomFieldConfig(FIELD_PSM_INITIAL_QUERY_ID, "initial_query_id"),
+      CustomFieldConfig(FIELD_PSM_MISSED_CLEAVAGES, "missed_cleavages"),
+      CustomFieldConfig(FIELD_PSM_RANK, "rank"),
+      CustomFieldConfig(FIELD_PSM_CD_PRETTY_RANK, "cd_pretty_rank"),
+      CustomFieldConfig(FIELD_PSM_FRAGMENT_MATCHES_COUNT, "fragment_matches_count"),
+      CustomFieldConfig(FIELD_PSM_SPECTRUM_TITLE, "spectrum_title"),
+      CustomFieldConfig(FIELD_PSM_NB_PROTEIN_SETS, "#psm_prot_sets"),
+      CustomFieldConfig(FIELD_PSM_NB_SAMESET_PROTEIN_MATCHES, "#psm_sameset_prot_matches"),
+      CustomFieldConfig(FIELD_PSM_START, "start"),
+      CustomFieldConfig(FIELD_PSM_END, "end"),
+      CustomFieldConfig(FIELD_PSM_RESIDUE_BEFORE, "residue_before"),
+      CustomFieldConfig(FIELD_PSM_RESIDUE_AFTER, "residue_after"),
+      CustomFieldConfig(FIELD_PSM_PTM_SCORE, "ptm_score"),
+      CustomFieldConfig(FIELD_PSM_PTM_SITES_CONFIDENCE, "ptm_sites_confidence"),
+      CustomFieldConfig(FIELD_PSM_PHOSPHO_RS_RESULT, "phosphors_result", defaultDisplayed = false)
+    ).filter( _ != null )
+
+    fieldsBuffer ++= getProteinSetsSheetFields(fromProtein = false, fromXIC = false, fromSC = false)
+
+    if (fromXIC) {
+      fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id")
+      fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_ELUTION_TIME, "master_elution_time")
+      fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_SELECTION_LEVEL, "master_quant_selection_level")
+      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE, "raw_abundance")
+      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_ABUNDANCE, "abundance")
+    }
+    fieldsBuffer.toArray
+  }
 }
