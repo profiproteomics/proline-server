@@ -52,7 +52,7 @@ class ExportConfigManagerTest extends LazyLogging {
     val configStr = ExportConfig.toJSON(ExportConfig.getIdentificationFullExportConfig())
     //  reserialize check the conf
     val config = ExportConfigManager.readConfig(configStr)
-    assertEquals("All Ident export nbSheets", 7, config.sheets.length)
+    assertEquals("All Ident export nbSheets", 8, config.sheets.length)
 
   }
 
