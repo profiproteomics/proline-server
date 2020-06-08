@@ -53,6 +53,8 @@ trait IComputeQuantPostProcessingService extends  IMsqService with IDefaultServi
 
 trait IComputeQuantPostProcessingServiceV2 extends IComputeQuantPostProcessingService {
 
+  // Override params from IDefaultServiceVersion...
   override val serviceVersion = "2.0"
+  override val isDefaultVersion = false
 
 }
