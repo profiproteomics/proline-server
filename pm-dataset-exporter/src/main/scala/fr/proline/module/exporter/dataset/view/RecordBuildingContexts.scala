@@ -70,8 +70,8 @@ class MasterQuantProteinSetProfileBuildingContext(
   protMatch
 ) with IMasterQuantEntityBuildingContext {
   def getQuantComponentMap(): LongMap[_ <: QuantComponent] = {
-    if( profile.isEmpty ) masterQuantProteinSet.getQuantComponentMap
-    else masterQuantProteinSet.getProfileQuantComponentMap(profile.get, quantChannelIds)
+    //#17395 confusion between raw abundance in GUI and export. always use inital raw_abundance
+    masterQuantProteinSet.getQuantComponentMap
   }
   def getRatios(): Option[List[Option[ComputedRatio]]] = profile.map(_.getRatios())
 }
@@ -138,4 +138,46 @@ class MasterQuantReporterIonBuildingContext(
 ) {
   override def getQuantComponentMap(): LongMap[_ <: QuantComponent] = masterQuantReporterIon.quantReporterIonMap
   override def getRatios(): Option[List[Option[ComputedRatio]]] = None
+}
+
+trait IPTMClusterBuildingContext {
+  val ptmCluster : PtmCluster
+  val ptmSites: Array[PtmSite2]
+}
+
+class PTMClusterBuildingContext(
+    val ptmCluster: PtmCluster,
+    val ptmSites: Array[PtmSite2],
+    pepMatch: PeptideMatch,
+    protMatch: ProteinMatch,
+    seqMatch: SequenceMatch,
+    protMatchBuildingCtx: Option[ProtMatchBuildingContext]
+) extends PepMatchBuildingContext(
+  pepMatch,
+  false,
+  protMatch,
+  seqMatch,
+  protMatchBuildingCtx
+) with IPTMClusterBuildingContext {
+
+}
+
+class QuantPTMClusterBuildingContext(
+    val ptmCluster: PtmCluster,
+    val ptmSites: Array[PtmSite2],
+    pepMatch: PeptideMatch,
+    protMatch: ProteinMatch,
+    seqMatch: SequenceMatch,
+    protMatchBuildingCtx: Option[ProtMatchBuildingContext],
+    masterQuantPeptide: MasterQuantPeptide,
+    groupSetupNumber: Int
+) extends  MasterQuantPeptideBuildingContext(
+pepMatch,
+protMatch,
+seqMatch,
+protMatchBuildingCtx,
+masterQuantPeptide,
+groupSetupNumber
+) with IPTMClusterBuildingContext {
+
 }

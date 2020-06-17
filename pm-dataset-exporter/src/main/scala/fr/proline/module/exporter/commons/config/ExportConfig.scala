@@ -48,6 +48,7 @@ object ExportConfig {
         ExportConfigSheet.getProteinMatchesSheetExportConfig(),
         ExportConfigSheet.getBestPeptideMatchesSheetExportConfig(fromXIC, fromSC),
         ExportConfigSheet.getPeptideMatchesSheetExportConfig(fromXIC, fromSC),
+        ExportConfigSheet.getPTMClusterSheetExportConfig(fromXIC, defaultDisplayed = false),
         ExportConfigSheet.getStatisticsSheetExportConfig()
       )
     )
@@ -82,6 +83,7 @@ object ExportConfig {
         ExportConfigSheet.getBestPeptideMatchesSheetExportConfig(fromXIC, fromSC, defaultDisplayed = false),
         //ExportConfigSheet.getMasterQuantPeptidesSheetExportConfig(),
         ExportConfigSheet.getMasterQuantPepIonsSheetSheetExportConfig(),
+        ExportConfigSheet.getPTMClusterSheetExportConfig(fromXIC, defaultDisplayed = false),
         ExportConfigSheet.getStatisticsSheetExportConfig(defaultDisplayed = false)
       )
     )

@@ -67,7 +67,9 @@ public class DBProlineConfig {
 
     public String getDbPath() {
         Config dbConfig = m_dbProlineConfig.getConfig("uds-db").getConfig("connection-properties");
-        String path = dbConfig.getString("dbPath");
+        String path = "";
+        if(dbConfig.hasPath("dbPath"))
+            path = dbConfig.hasPath("dbPath") ?  dbConfig.getString("dbPath") : "";
         return path;
     }
 
@@ -118,6 +120,10 @@ public class DBProlineConfig {
             result = new HashMap<Object, Object>();
         }
         return result;
+    }
+
+    public ConnectionMode getUDSConnectionMode(){
+        return m_udsExternalDB.getConnectionMode();
     }
 
     public ExternalDb getExternalDBTemplate() {

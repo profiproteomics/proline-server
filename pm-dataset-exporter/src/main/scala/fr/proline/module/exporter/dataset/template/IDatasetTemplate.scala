@@ -32,6 +32,7 @@ trait IDatasetTemplate extends IViewSetTemplate with StrictLogging {
       case SHEET_MASTER_QUANT_PEPTIDE_ION => MASTER_QUANT_PEPTIDE_ION
       case SHEET_MASTER_QUANT_REPORTER_ION => MASTER_QUANT_REPORTER_ION
       case SHEET_STAT => STATISTICS
+      case SHEET_PTM_CLUSTER => PTM_CLUSTER
       case _ => throw new Exception(s"Invalid sheet id: ${sheet.id}")
     }
     

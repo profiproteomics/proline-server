@@ -206,4 +206,12 @@ object ExportConfigConstant {
 
   // Statistics sheet
   val SHEET_QUANT_CONFIG = "quant_config"
+
+  //PTM Clusters sheet
+  val SHEET_PTM_CLUSTER = "ptm_cluster"
+  val FIELD_PTM_CLUSTER_NB_PEPTIDES = "ptm_cluster_nb_peptides"
+  val FIELD_PTM_CLUSTER_NB_SITES = "ptm_cluster_nb_sites"
+  val FIELD_PTM_CLUSTER_SITES_LOCALISATION = "ptm_cluster_sites_localisation"
+  val FIELD_PTM_CLUSTER_LOCALISATION_CONFIDENCE= "ptm_cluster_localisation_confidence"
+
 }

@@ -210,7 +210,7 @@ class MzIdResultFile(
       val siteRegexpOpt = Option(mzidEnzyme.getSiteRegexp)
       val cleavage = if (siteRegexpOpt.isDefined) {
         
-        val SiteRegexExtractor = """.+?([A-Z]+).+([A-Z]+).*""".r
+        val SiteRegexExtractor = """.*?([A-Z]+)[^A-Z]*([A-Z]*).*""".r
         val SiteRegexExtractor(residues,restrictiveResidues) = siteRegexpOpt.get
         
         EnzymeCleavage(
@@ -502,7 +502,17 @@ class MzIdResultFile(
       //println( mzIdMod.getResidues() )
       
       // Retrieve PTM definition
-      val unimodId = mzIdMod.getCvParam().head.getAccession().split(":").last.toInt
+      val unimodSplitted = mzIdMod.getCvParam().head.getAccession().split(":")
+      var unimodId = -1
+      try{
+        if(unimodSplitted.length>1)
+          unimodId = unimodSplitted.last.toInt
+      } catch {
+          case nbe : NumberFormatException => unimodId = -1
+      }
+
+      //val unimodId = mzIdMod.getCvParam().head.getAccession().split(":").last.toInt
+      require( unimodId != -1, "can't deal with undefined modifications (No unimod id)" )
       require( unimodId != 1001460, "can't deal with unknown modifications" )
       
       //val modId = if( unimodId != 1001460 ) unimodId else (mzIdMod.getMonoisotopicMassDelta() * 100).toInt

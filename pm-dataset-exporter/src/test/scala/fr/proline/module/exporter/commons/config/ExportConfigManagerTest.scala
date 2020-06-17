@@ -52,7 +52,7 @@ class ExportConfigManagerTest extends LazyLogging {
     val configStr = ExportConfig.toJSON(ExportConfig.getIdentificationFullExportConfig())
     //  reserialize check the conf
     val config = ExportConfigManager.readConfig(configStr)
-    assertEquals("All Ident export nbSheets", 7, config.sheets.length)
+    assertEquals("All Ident export nbSheets", 8, config.sheets.length)
 
   }
 
@@ -70,7 +70,7 @@ class ExportConfigManagerTest extends LazyLogging {
     val configStr = ExportConfig.toJSON(ExportConfig.getXicExportFullConfig())
     //  reserialize check the conf
     val config = ExportConfigManager.readConfig(configStr)
-    assertEquals("All XIC export nbSheets", 8, config.sheets.length)
+    assertEquals("All XIC export nbSheets", 9, config.sheets.length)
     assertEquals("All XIC export nbFields in ProteinSet sheet ", 28, config.sheets(3).fields.length)
   }
 
