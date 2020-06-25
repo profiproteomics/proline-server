@@ -2,21 +2,25 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>proline-server</artifactId>
+    <artifactId>profi-pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>2.2.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    <version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>pm-mascot-parser</artifactId>
+  <version>0.9.0-SNAPSHOT</version>
 
   <name>PM-MascotParser</name>
   <description>Proline Module which parse a Mascot result file and store its result in databases</description>
   <inceptionYear>2012</inceptionYear>
 
   <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <core.version>2.1.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
     <version.path>${basedir}/src/main/scala/fr/proline/module/parser/mascot</version.path>
     <mascot.version>2.5.2</mascot.version>
   </properties>
+
 
 
   <dependencies>
@@ -36,44 +40,51 @@
     </dependency>
 
 
-    <!-- Mascot Parser native libraries (for all OSes, loaded at runtime) 
+    <!-- Mascot Parser native libraries (for all OSes, loaded at runtime)
       msparser.jar dependency is defined via Maven profiles -->
     <dependency>
       <groupId>matrixscience</groupId>
       <artifactId>msparser-native-libraries-${mascot.version}</artifactId>
-      <version>${server.version}</version>
+      <version>0.9.0-SNAPSHOT</version>
     </dependency>
-    
+
     <!-- ProFi Commons -->
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-java</artifactId>
+      <version>0.8.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-scala_${scala.version}</artifactId>
+      <version>0.9.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.profi</groupId>
       <artifactId>profi-proteomics_${scala.version}</artifactId>
+      <version>0.5.0-SNAPSHOT</version>
     </dependency>
 
     <!-- Proline -->
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-om_${scala.version}</artifactId>
+      <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-dal_${scala.version}</artifactId>
+      <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-omp_${scala.version}</artifactId>
+      <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-databases</artifactId>
+      <version>${core.version}</version>
     </dependency>
     <!-- Tests -->
     <dependency>
@@ -96,12 +107,14 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-databases</artifactId>
+      <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-dal_${scala.version}</artifactId>
+      <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
@@ -119,17 +132,18 @@
     </dependency>
 
     <dependency>
-    	<groupId>org.hibernate.javax.persistence</groupId>
-    	<artifactId>hibernate-jpa-2.1-api</artifactId>
-    	<version>1.0.0.Final</version>
+      <groupId>org.hibernate.javax.persistence</groupId>
+      <artifactId>hibernate-jpa-2.1-api</artifactId>
+      <version>1.0.0.Final</version>
     </dependency>
     <dependency>
-    	<groupId>org.apache.commons</groupId>
-    	<artifactId>commons-lang3</artifactId>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
     </dependency>
     <dependency>
-    	<groupId>fr.proline</groupId>
-    	<artifactId>proline-orm</artifactId>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-orm</artifactId>
+      <version>${core.version}</version>
     </dependency>
   </dependencies>
 
@@ -174,7 +188,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <!-- Version inherited from ProFI-Pom -->        
+        <!-- Version inherited from ProFI-Pom -->
       </plugin>
 
       <plugin>
@@ -189,11 +203,11 @@
         <!-- Version & config inherited from ProFI-Pom -->
         <executions>
           <execution>
-			<id>scala-version-generation</id>
+            <id>scala-version-generation</id>
             <phase>generate-sources</phase>
             <configuration>
-			  <skip>false</skip>
-      	    </configuration>                        
+              <skip>false</skip>
+            </configuration>
           </execution>
         </executions>
       </plugin>

@@ -2,20 +2,24 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>proline-server</artifactId>
+    <artifactId>profi-pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>2.2.0-SNAPSHOT</version>
+    <version>0.5.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>pm-omssa-parser</artifactId>
+  <version>0.9.0-SNAPSHOT</version>
 
   <name>PM-OmssaParser</name>
   <description>Proline Module which parse an Omssa result file and store its result in databases</description>
   <inceptionYear>2012</inceptionYear>
 
   <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <core.version>2.1.0-SNAPSHOT</core.version>
     <version.path>${basedir}/src/main/scala/fr/proline/module/parser/omssa</version.path>
   </properties>
+
 
 
   <dependencies>
@@ -60,35 +64,41 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-om_${scala.version}</artifactId>
+      <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-dal_${scala.version}</artifactId>
+      <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-omp_${scala.version}</artifactId>
+      <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-databases</artifactId>
+      <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-dal_${scala.version}</artifactId>
+      <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>pm-fragmentmatch-generator</artifactId>
-      <version>${server.version}</version>
+      <version>0.9.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.profi</groupId>
       <artifactId>profi-proteomics_${scala.version}</artifactId>
+      <version>0.5.0-SNAPSHOT</version>
     </dependency>
     <!-- Testing -->
     <dependency>
@@ -182,18 +192,18 @@
       <plugin>
         <groupId>com.google.code.maven-replacer-plugin</groupId>
         <artifactId>replacer</artifactId>
-		<!-- Version & config inherited from ProFI-Pom -->
-         <executions>
+        <!-- Version & config inherited from ProFI-Pom -->
+        <executions>
           <execution>
             <id>scala-version-generation</id>
             <phase>generate-sources</phase>
             <configuration>
-			  <skip>false</skip>
-      	    </configuration>            
+              <skip>false</skip>
+            </configuration>
           </execution>
         </executions>
       </plugin>
-      
+
       <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
@@ -223,42 +233,42 @@
         </executions>
       </plugin>
 
-<!--       <plugin> -->
-<!--         <groupId>org.apache.maven.plugins</groupId> -->
-<!--         <artifactId>maven-dependency-plugin</artifactId> -->
-<!--         Version inherited from ProFI-Pom -->
-<!--         <executions> -->
-<!--           <execution> -->
-<!--             <id>copy-dependencies</id> -->
-<!--             <phase>package</phase> -->
-<!--             <goals> -->
-<!--               <goal>copy-dependencies</goal> -->
-<!--             </goals> -->
-<!--             <configuration> -->
-<!--               <outputDirectory>${project.build.directory}/lib</outputDirectory> -->
-<!--               <includeTypes>jar</includeTypes> -->
-<!--               <overWriteReleases>false</overWriteReleases> -->
-<!--               <overWriteSnapshots>false</overWriteSnapshots> -->
-<!--               <overWriteIfNewer>true</overWriteIfNewer> -->
-<!--             </configuration> -->
-<!--           </execution> -->
-<!--           <execution> -->
-<!--             <id>copy-dll</id> -->
-<!--             <phase>compile</phase> -->
-<!--             <goals> -->
-<!--               <goal>copy-dependencies</goal> -->
-<!--             </goals> -->
-<!--             <configuration> -->
-<!--               <outputDirectory>${project.build.directory}/lib</outputDirectory> -->
-<!--               <includeTypes>dll,exe</includeTypes> -->
-<!--               <stripVersion>true</stripVersion> -->
-<!--               <overWriteReleases>false</overWriteReleases> -->
-<!--               <overWriteSnapshots>false</overWriteSnapshots> -->
-<!--               <overWriteIfNewer>true</overWriteIfNewer> -->
-<!--             </configuration> -->
-<!--           </execution> -->
-<!--         </executions> -->
-<!--       </plugin> -->
+      <!--       <plugin> -->
+      <!--         <groupId>org.apache.maven.plugins</groupId> -->
+      <!--         <artifactId>maven-dependency-plugin</artifactId> -->
+      <!--         Version inherited from ProFI-Pom -->
+      <!--         <executions> -->
+      <!--           <execution> -->
+      <!--             <id>copy-dependencies</id> -->
+      <!--             <phase>package</phase> -->
+      <!--             <goals> -->
+      <!--               <goal>copy-dependencies</goal> -->
+      <!--             </goals> -->
+      <!--             <configuration> -->
+      <!--               <outputDirectory>${project.build.directory}/lib</outputDirectory> -->
+      <!--               <includeTypes>jar</includeTypes> -->
+      <!--               <overWriteReleases>false</overWriteReleases> -->
+      <!--               <overWriteSnapshots>false</overWriteSnapshots> -->
+      <!--               <overWriteIfNewer>true</overWriteIfNewer> -->
+      <!--             </configuration> -->
+      <!--           </execution> -->
+      <!--           <execution> -->
+      <!--             <id>copy-dll</id> -->
+      <!--             <phase>compile</phase> -->
+      <!--             <goals> -->
+      <!--               <goal>copy-dependencies</goal> -->
+      <!--             </goals> -->
+      <!--             <configuration> -->
+      <!--               <outputDirectory>${project.build.directory}/lib</outputDirectory> -->
+      <!--               <includeTypes>dll,exe</includeTypes> -->
+      <!--               <stripVersion>true</stripVersion> -->
+      <!--               <overWriteReleases>false</overWriteReleases> -->
+      <!--               <overWriteSnapshots>false</overWriteSnapshots> -->
+      <!--               <overWriteIfNewer>true</overWriteIfNewer> -->
+      <!--             </configuration> -->
+      <!--           </execution> -->
+      <!--         </executions> -->
+      <!--       </plugin> -->
 
     </plugins>
 

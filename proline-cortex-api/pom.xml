@@ -3,33 +3,35 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>proline-server</artifactId>
+
     <groupId>fr.proline</groupId>
-    <version>2.2.0-SNAPSHOT</version>
+    <artifactId>profi-pom</artifactId>
+    <version>0.5.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>proline-cortex-api</artifactId>
+  <version>0.7.0-SNAPSHOT</version>
 
   <name>Proline-Cortex-API</name>
   <description>Proline Cortex API (services, methods and parameters)</description>
-  
+
   <properties>
-      <version.path>${basedir}/src/main/scala/fr/proline/cortex/api</version.path>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <version.path>${basedir}/src/main/scala/fr/proline/cortex/api</version.path>
   </properties>
-  
 
   <dependencies>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-       <!-- Version inherited from ProFI-Pom ${jackson.version} -->
+      <!-- Version inherited from ProFI-Pom ${jackson.version} -->
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
       <!-- Version inherited from ProFI-Pom ${jackson.version} -->
     </dependency>
-  
+
     <!-- Scala -->
     <dependency>
       <groupId>org.scala-lang</groupId>
@@ -40,9 +42,9 @@
     <dependency>
       <groupId>com.typesafe.scala-logging</groupId>
       <artifactId>scala-logging_${scala.version}</artifactId>
-    <!-- Version inherited from ProFI-Pom -->
-  </dependency>
-  <!-- Serialization -->
+      <!-- Version inherited from ProFI-Pom -->
+    </dependency>
+    <!-- Serialization -->
 
     <!-- JSON-RPC -->
     <dependency>
@@ -50,23 +52,25 @@
       <artifactId>jsonrpc2-base</artifactId>
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
-    
+
     <!-- JMS Spec 2.0 -->
     <dependency>
       <groupId>org.jboss.spec.javax.jms</groupId>
       <artifactId>jboss-jms-api_2.0_spec</artifactId>
       <version>1.0.0.Final</version>
     </dependency>
-    
+
     <!-- Proline -->
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-scala_${scala.version}</artifactId>
+      <version>0.9.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-java</artifactId>
+      <version>0.8.0-SNAPSHOT</version>
     </dependency>
     <!-- Test -->
     <dependency>
@@ -76,13 +80,13 @@
       <scope>test</scope>
     </dependency>
 
-    
+
   </dependencies>
-  
+
   <build>
 
     <plugins>
-    
+
       <!-- Scala build -->
       <plugin>
         <groupId>net.alchim31.maven</groupId>
@@ -113,8 +117,8 @@
         <artifactId>maven-release-plugin</artifactId>
         <!-- Version and configuration inherited from parent POM -->
       </plugin>
-      
+
     </plugins>
   </build>
-  
+
 </project>

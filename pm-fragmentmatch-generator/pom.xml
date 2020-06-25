@@ -3,14 +3,20 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>proline-server</artifactId>
+    <artifactId>profi-pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>2.2.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    <version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>pm-fragmentmatch-generator</artifactId>
+  <version>0.9.0-SNAPSHOT</version>
   <name>PM-FragmentMatchGenerator</name>
   <description>Proline Module made to generate the fragment matches from a spectrum</description>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <core.version>2.1.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
+  </properties>
 
   <dependencies>
 
@@ -23,23 +29,25 @@
 
     <!-- Logging -->
 
-   		<dependency>
-        <groupId>com.typesafe.scala-logging</groupId>
-        <artifactId>scala-logging_${scala.version}</artifactId>
-      </dependency>
+    <dependency>
+      <groupId>com.typesafe.scala-logging</groupId>
+      <artifactId>scala-logging_${scala.version}</artifactId>
+    </dependency>
 
-      <!-- Bridge Apache commons-logging over SLF4J -->
+    <!-- Bridge Apache commons-logging over SLF4J -->
 
     <!-- Proline -->
-    <!-- Version inherited from parent POM -->
-	<dependency>
+
+    <dependency>
       <groupId>fr.profi</groupId>
       <artifactId>profi-proteomics_${scala.version}</artifactId>
+      <version>0.5.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
     </dependency>
-    
+
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-dal_${scala.version}</artifactId>
+      <version>${core.version}</version>
     </dependency>
     <!-- Tests -->
     <dependency>
@@ -48,7 +56,7 @@
       <scope>test</scope>
     </dependency>
 
-     <dependency>
+    <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-core</artifactId>
       <scope>test</scope>
@@ -58,7 +66,7 @@
       <artifactId>logback-classic</artifactId>
       <scope>test</scope>
     </dependency>
-	<dependency>
+    <dependency>
       <groupId>org.dbunit</groupId>
       <artifactId>dbunit</artifactId>
       <scope>test</scope>
@@ -66,25 +74,29 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-databases</artifactId>
+      <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-om_${scala.version}</artifactId>
+      <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-dal_${scala.version}</artifactId>
+      <version>${core.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-    	<groupId>fr.profi.util</groupId>
-    	<artifactId>profi-commons-scala_${scala.version}</artifactId>
+      <groupId>fr.profi.util</groupId>
+      <artifactId>profi-commons-scala_${scala.version}</artifactId>
+      <version>0.9.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
@@ -96,24 +108,24 @@
         <artifactId>scala-maven-plugin</artifactId>
       </plugin>
 
-	 <plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
       </plugin>
-      
-     <!--  <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>compile</phase>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin> -->
-      
+
+      <!--  <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-compiler-plugin</artifactId>
+         <executions>
+           <execution>
+             <phase>compile</phase>
+             <goals>
+               <goal>compile</goal>
+             </goals>
+           </execution>
+         </executions>
+       </plugin> -->
+
     </plugins>
   </build>
 

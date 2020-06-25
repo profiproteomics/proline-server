@@ -3,18 +3,24 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>proline-server</artifactId>
+
     <groupId>fr.proline</groupId>
-    <version>2.2.0-SNAPSHOT</version>
+    <artifactId>profi-pom</artifactId>
+    <version>0.5.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>proline-node</artifactId>
+  <version>0.6.0-SNAPSHOT</version>
 
   <name>Proline-Node</name>
   <description>A base project to assist the creation of Proline-Cortex nodes (JMS consumers)</description>
 
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding> <!-- Snapshot Trunk version -->
+  </properties>
+
   <dependencies>
-  
+
     <!-- Scala -->
     <dependency>
       <groupId>com.typesafe</groupId>
@@ -45,7 +51,7 @@
       <groupId>com.thetransactioncompany</groupId>
       <artifactId>jsonrpc2-base</artifactId>
     </dependency>
-    
+
     <!-- JMS Spec 2.0 + HornetQ JMS client + Netty (versions checked 10 july 2014) -->
     <dependency>
       <groupId>org.jboss.spec.javax.jms</groupId>
@@ -62,24 +68,26 @@
       <artifactId>hornetq-core-client</artifactId>
       <version>2.4.7.Final</version>
     </dependency>
-    
+
     <!-- Proline-Cortex-API -->
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-cortex-api</artifactId>
-      <version>${server.version}</version>
+      <version>0.7.0-SNAPSHOT</version>
     </dependency>
-    
+
     <!-- Proline -->
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-scala_${scala.version}</artifactId>
+      <version>0.9.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-java</artifactId>
+      <version>0.8.0-SNAPSHOT</version>
     </dependency>
-    
+
     <!-- Test -->
     <dependency>
       <groupId>junit</groupId>

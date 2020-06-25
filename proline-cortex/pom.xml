@@ -3,18 +3,22 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>proline-server</artifactId>
     <groupId>fr.proline</groupId>
-    <version>2.2.0-SNAPSHOT</version>
+    <artifactId>profi-pom</artifactId>
+    <version>0.5.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>proline-cortex</artifactId>
+  <version>2.1.0-SNAPSHOT</version>
   <name>Proline-Cortex</name>
   <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.path>${project.basedir}/src/main/scala/fr/proline/cortex</version.path>
+    <core.version>2.1.0-SNAPSHOT</core.version> <!-- Snapshot Trunk version -->
   </properties>
 
   <dependencies>
+
 
     <!-- Scala -->
     <dependency>
@@ -25,7 +29,7 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-reflect</artifactId>
-       <!-- Version inherited from ProFI-Pom ${scala-library.version}-->
+      <!-- Version inherited from ProFI-Pom ${scala-library.version}-->
     </dependency>
 
     <!-- Logging -->
@@ -34,7 +38,7 @@
       <artifactId>scala-logging_${scala.version}</artifactId>
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
-    
+
     <!-- Configuration -->
     <dependency>
       <groupId>com.typesafe</groupId>
@@ -48,7 +52,7 @@
       <artifactId>jboss-jms-api_2.0_spec</artifactId>
       <version>1.0.0.Final</version><!-- Version 1.0.1.Final  June 2017 .... update next time -->
     </dependency>
-   <dependency>
+    <dependency>
       <groupId>org.hibernate.javax.persistence</groupId>
       <artifactId>hibernate-jpa-2.1-api</artifactId>
       <version>1.0.0.Final</version>
@@ -82,7 +86,7 @@
       </exclusions>
     </dependency>
 
-    
+
     <!-- VDS unused ? -->
     <!-- HTTP layer
     <dependency>
@@ -90,14 +94,14 @@
       <artifactId>netty-all</artifactId>
       <version>4.1.13.Final</version>
     </dependency> -->
-     
+
     <!-- Serialization
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
       <artifactId>jackson-module-scala_${scala.version}</artifactId>-->
-      <!-- Version inherited from ProFI-Pom -->
-   <!-- </dependency>-->
-    
+    <!-- Version inherited from ProFI-Pom -->
+    <!-- </dependency>-->
+
     <!-- Commons IO used for resursive delete -->
     <dependency>
       <groupId>commons-io</groupId>
@@ -113,16 +117,19 @@
 
     <!-- ProFI Commons -->
     <dependency>
-       <groupId>fr.profi.util</groupId>
-       <artifactId>profi-commons-java</artifactId>
+      <groupId>fr.profi.util</groupId>
+      <artifactId>profi-commons-java</artifactId>
+      <version>0.8.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-scala_${scala.version}</artifactId>
+      <version>0.9.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.profi</groupId>
       <artifactId>mzdb-access_${scala.version}</artifactId>
+      <version>0.10.0-SNAPSHOT</version>
     </dependency>
 
     <!-- sqlite4java (needed for mzDB-access) -->
@@ -131,31 +138,34 @@
       <artifactId>sqlite4java</artifactId>
       <version>${sqlite4java.version}</version>
     </dependency>
-    
+
     <!-- Proline-Cortex components -->
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-cortex-api</artifactId>
-      <version>${server.version}</version>
+      <version>0.7.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-node</artifactId>
-      <version>${server.version}</version>
+      <version>0.6.0-SNAPSHOT</version>
     </dependency>
 
     <!-- Proline-Core -->
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-databases</artifactId>
+      <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-orm</artifactId>
+      <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-om_${scala.version}</artifactId>
+      <version>${core.version}</version>
       <exclusions>
         <exclusion>
           <groupId>fr.profi</groupId>
@@ -166,64 +176,66 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-dal_${scala.version}</artifactId>
+      <version>${core.version}</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-omp_${scala.version}</artifactId>
+      <version>${core.version}</version>
     </dependency>
 
     <!-- Proline-Admin -->
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-admin</artifactId>
-      <version>2.2.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+      <version>0.9.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
     </dependency>
-    
+
     <!-- Proline Modules for result files import -->
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>pm-mascot-parser</artifactId>
-      <version>${server.version}</version>
+      <version>0.9.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
       <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>pm-maxquant-parser</artifactId>
-      <version>${server.version}</version>
+      <version>0.5.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>pm-omssa-parser</artifactId>
-      <version>${server.version}</version>
+      <version>0.9.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
       <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>pm-xtandem-parser</artifactId>
-      <version>${server.version}</version>
+      <version>0.8.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
       <scope>runtime</scope>
     </dependency>
-    
+
     <!-- Other Proline Modules -->
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>pm-dataset-exporter</artifactId>
-      <version>${server.version}</version>
+      <version>0.9.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>pm-fragmentmatch-generator</artifactId>
-      <version>${server.version}</version>
+      <version>0.9.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>pm-msdiag</artifactId>
-      <version>${server.version}</version>
+      <version>0.9.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>pm-mzidentml</artifactId>
-      <version>${server.version}</version>
+      <version>0.9.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
@@ -238,14 +250,14 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-       <scope>test</scope>
+      <scope>test</scope>
     </dependency>
 
 
 
   </dependencies>
-  
-    <dependencyManagement>
+
+  <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>psidev.psi.tools</groupId>
@@ -254,7 +266,7 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-  
+
   <build>
 
     <pluginManagement>
@@ -273,15 +285,15 @@
                     <groupId>com.google.code.maven-replacer-plugin</groupId>
                     <artifactId>replacer</artifactId>
                     <versionRange>[1.5.2,)</versionRange>
-                    
+
                     <goals>
                       <goal>replace</goal>
                     </goals>
                   </pluginExecutionFilter>
                   <action>
                     <execute>
-                       <runOnIncremental>false</runOnIncremental>
-                     </execute>
+                      <runOnIncremental>false</runOnIncremental>
+                    </execute>
                   </action>
                 </pluginExecution>
 
@@ -296,8 +308,8 @@
                   </pluginExecutionFilter>
                   <action>
                     <execute>
-                       <runOnIncremental>false</runOnIncremental>
-                     </execute>
+                      <runOnIncremental>false</runOnIncremental>
+                    </execute>
                   </action>
                 </pluginExecution>
 
@@ -305,20 +317,20 @@
             </lifecycleMappingMetadata>
           </configuration>
         </plugin>
-        
+
         <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <systemProperties>
-            <property>
-              <name>sqlite4java.library.path</name>
-              <value>${project.build.directory}/lib</value>
-            </property>
-          </systemProperties>
-        </configuration>
-      </plugin>
-      
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <systemProperties>
+              <property>
+                <name>sqlite4java.library.path</name>
+                <value>${project.build.directory}/lib</value>
+              </property>
+            </systemProperties>
+          </configuration>
+        </plugin>
+
       </plugins>
     </pluginManagement>
 
@@ -382,11 +394,11 @@
         <!-- Version & config inherited from ProFI-Pom -->
         <executions>
           <execution>
-          	<id>scala-version-generation</id>
+            <id>scala-version-generation</id>
             <phase>generate-sources</phase>
             <configuration>
               <skip>false</skip>
-      	   </configuration>
+            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -397,33 +409,33 @@
         <artifactId>scala-maven-plugin</artifactId>
         <!-- Version inherited from ProFI-Pom -->
         <configuration>
-        	<charset>UTF-8</charset>
+          <charset>UTF-8</charset>
         </configuration>
       </plugin>
 
 
- 	<!-- Phase "generate-resources" unzip hornetQ -->
- 	   <plugin>
-   		  <groupId>org.apache.maven.plugins</groupId>
-	      <artifactId>maven-antrun-plugin</artifactId>
-	      <version>1.8</version>
-	      <executions>
-	         <execution>
-	         	<id>unzipHornetQ</id>
-	            <phase>package</phase>
-	            <configuration>
-	               <tasks>
-	                  <echo message="unzipping hornetQ distribution" />
-	                  <unzip src="assembly/hornetq_light-2.4.0.Final.zip" dest="${project.build.directory}/" />
-	               </tasks>
-	            </configuration>
-	            <goals>
-	               <goal>run</goal>
-	            </goals>
-	         </execution>
-	      </executions>
-	   </plugin>	
-			
+      <!-- Phase "generate-resources" unzip hornetQ -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+            <id>unzipHornetQ</id>
+            <phase>package</phase>
+            <configuration>
+              <tasks>
+                <echo message="unzipping hornetQ distribution" />
+                <unzip src="assembly/hornetq_light-2.4.0.Final.zip" dest="${project.build.directory}/" />
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
       <!-- Phase "package" Copy Jar and native dependencies to lib/ directory -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -466,7 +478,7 @@
                   <overWrite>true</overWrite>
                   <outputDirectory>${project.build.directory}/lib</outputDirectory>
                 </artifactItem>
-          
+
                 <artifactItem>
                   <groupId>com.almworks.sqlite4java</groupId>
                   <artifactId>libsqlite4java-linux-amd64</artifactId>
@@ -475,7 +487,7 @@
                   <overWrite>true</overWrite>
                   <outputDirectory>${project.build.directory}/lib</outputDirectory>
                 </artifactItem>
-          
+
               </artifactItems>
             </configuration>
           </execution>
@@ -499,27 +511,27 @@
     </plugins>
   </build>
 
-  
-	<profiles>
 
-		<profile>
-			<!-- Full Profile : create assembly with hornetQ stand alone Server -->
-			<id>full_distrib</id>
-			<properties>
-				<assembly.file.path>assembly/assembly_full.xml</assembly.file.path>
-			</properties>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-		</profile> <!-- End of full_distrib profile -->
+  <profiles>
 
-		<profile>
-			<!-- Cortex Profile: create assembly with ProlineCortex only -->
-			<id>cortex_distrib</id>
-			<properties>
-				<assembly.file.path>assembly/assembly.xml</assembly.file.path>
-			</properties>
+    <profile>
+      <!-- Full Profile : create assembly with hornetQ stand alone Server -->
+      <id>full_distrib</id>
+      <properties>
+        <assembly.file.path>assembly/assembly_full.xml</assembly.file.path>
+      </properties>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+    </profile> <!-- End of full_distrib profile -->
 
-		</profile>
-	</profiles>
+    <profile>
+      <!-- Cortex Profile: create assembly with ProlineCortex only -->
+      <id>cortex_distrib</id>
+      <properties>
+        <assembly.file.path>assembly/assembly.xml</assembly.file.path>
+      </properties>
+
+    </profile>
+  </profiles>
 </project>
