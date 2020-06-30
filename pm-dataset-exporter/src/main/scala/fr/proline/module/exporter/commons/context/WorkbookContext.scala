@@ -29,8 +29,7 @@ class WorkbookContext(val fileExtension: IFileExtensionEnumeration#Value) extend
     viewSetLocation = Some(location)
     
     // Open workbook
-    val wb = new SXSSFWorkbook()
-    wb.setCompressTempFiles(false)
+    val wb = new SXSSFWorkbook(null, 100, false, true)
     workbook = Some(wb)
   }
   
