@@ -1,0 +1,16 @@
+/*/target/
+/msparser-native-libraries/msparser-native-libraries-2.5.2.iml
+/pm-dataset-exporter/pm-dataset-exporter.iml
+/pm-fragmentmatch-generator/pm-fragmentmatch-generator.iml
+/pm-mascot-parser/pm-mascot-parser.iml
+/pm-maxquant-parser/pm-maxquant-parser.iml
+/pm-msdiag/pm-msdiag.iml
+/pm-mzidentml/pm-mzidentml.iml
+/pm-omssa-parser/pm-omssa-parser.iml
+/pm-sequence-repository/pm-sequence-repository.iml
+/pm-xtandem-parser/pm-xtandem-parser.iml
+/proline-cortex/proline-cortex.iml
+/proline-cortex-api/proline-cortex-api.iml
+/proline-node/proline-node.iml
+/.idea/
+/logs/
