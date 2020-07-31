@@ -189,6 +189,7 @@
 	</dependencies>
 
 	<build>
+
 		<plugins>
 			<plugin>
 				<!-- Exclude configuration from Jar archive. Added in config/ output 
