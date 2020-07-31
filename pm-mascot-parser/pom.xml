@@ -4,7 +4,7 @@
   <parent>
     <artifactId>proline-server</artifactId>
     <groupId>fr.proline</groupId>
-    <version>2.2.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    <version>2.2.0_jdk11-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>pm-mascot-parser</artifactId>
@@ -31,7 +31,7 @@
     <!-- Logging -->
     <dependency>
       <groupId>com.typesafe.scala-logging</groupId>
-      <artifactId>scala-logging_${scala.version}</artifactId>
+      <artifactId>scala-logging_${scala.compat.version}</artifactId>
       <!-- Version inherited from ProFI-Pom -->
     </dependency>
 
@@ -51,25 +51,25 @@
     </dependency>
     <dependency>
       <groupId>fr.profi.util</groupId>
-      <artifactId>profi-commons-scala_${scala.version}</artifactId>
+      <artifactId>profi-commons-scala_${scala.compat.version}</artifactId>
     </dependency>
     <dependency>
       <groupId>fr.profi</groupId>
-      <artifactId>profi-proteomics_${scala.version}</artifactId>
+      <artifactId>profi-proteomics_${scala.compat.version}</artifactId>
     </dependency>
 
     <!-- Proline -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-om_${scala.version}</artifactId>
+      <artifactId>proline-om_${scala.compat.version}</artifactId>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-dal_${scala.version}</artifactId>
+      <artifactId>proline-dal_${scala.compat.version}</artifactId>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-omp_${scala.version}</artifactId>
+      <artifactId>proline-omp_${scala.compat.version}</artifactId>
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
@@ -84,7 +84,7 @@
 
     <dependency>
       <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_${scala.version}</artifactId>
+      <artifactId>scalatest_${scala.compat.version}</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -101,7 +101,7 @@
     </dependency>
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-dal_${scala.version}</artifactId>
+      <artifactId>proline-dal_${scala.compat.version}</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
@@ -135,41 +135,7 @@
 
   <build>
 
-    <pluginManagement>
       <plugins>
-        <!-- For Eclipse build -->
-        <plugin>
-          <groupId>org.eclipse.m2e</groupId>
-          <artifactId>lifecycle-mapping</artifactId>
-          <version>1.0.0</version>
-          <configuration>
-            <lifecycleMappingMetadata>
-              <pluginExecutions>
-
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>com.google.code.maven-replacer-plugin</groupId>
-                    <artifactId>replacer</artifactId>
-                    <versionRange>[1.5.2,)</versionRange>
-                    <goals>
-                      <goal>replace</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <execute>
-                      <runOnIncremental>false</runOnIncremental>
-                    </execute>
-                  </action>
-                </pluginExecution>
-
-              </pluginExecutions>
-            </lifecycleMappingMetadata>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-
-    <plugins>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
