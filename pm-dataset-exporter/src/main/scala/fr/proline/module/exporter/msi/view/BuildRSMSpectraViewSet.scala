@@ -74,7 +74,31 @@ object BuildRSMSpectraViewSet extends LazyLogging {
       val masterQuantPepIonByPepMatchId = scala.collection.mutable.Map[Long, MasterQuantPeptideIon]()
       // The following map must be built manually because SQLMasterQuantPeptideProvider and ResultSummary Peptide object are different
       val peptideMatchesByPeptideAndCharge = scala.collection.mutable.Map[(Peptide, Int), PeptideMatch]()
-      val peptideMatchesByPeptideIdAndCharge = peptideMatches.groupBy(pepMatch => (pepMatch.peptide.id, pepMatch.charge)).mapValues(_.maxBy(_.score))
+      //to get best PSM for each (Pep,Charge), use score then deltamoz then id...
+      val peptideMatchesByPeptidesIdAndCharge =  peptideMatches.groupBy(pepMatch => (pepMatch.peptide.id, pepMatch.charge))
+      val peptideMatchesByPeptideIdAndCharge = new HashMap[(Long, Int), PeptideMatch]()
+      peptideMatchesByPeptidesIdAndCharge.foreach(entry => {
+        val key = entry._1
+        val pepMatches = entry._2
+        var bestPepMatch:PeptideMatch = null
+        if(pepMatches.size ==1)
+          peptideMatchesByPeptideIdAndCharge += (key -> pepMatches.head)
+        else{
+          pepMatches.foreach( pepM => {
+            if(bestPepMatch == null)
+              bestPepMatch = pepM
+            else {
+              if ((bestPepMatch.score < pepM.score) ||
+                ((bestPepMatch.score == pepM.score) && (bestPepMatch.deltaMoz < pepM.deltaMoz)) ||
+                ((bestPepMatch.score == pepM.score) && (bestPepMatch.deltaMoz == pepM.deltaMoz) && (bestPepMatch.id < pepM.id))) {
+                bestPepMatch = pepM
+              }
+            }
+            })
+          peptideMatchesByPeptideIdAndCharge += (key -> bestPepMatch)
+        }
+      } )
+//      val peptideMatchesByPeptideIdAndCharge = peptideMatches.groupBy(pepMatch => (pepMatch.peptide.id, pepMatch.charge)).mapValues(_.maxBy(_.score))
       val masterQuantPepProvider = new SQLMasterQuantPeptideProvider(PeptideCacheExecutionContext(executionContext))
       val masterQuantPepIonsByPeptideInstance = masterQuantPepProvider.getQuantResultSummariesMQPeptides(Seq(rsm.id)).groupBy(_.peptideInstance.getOrElse(null)).mapValues(_.flatMap(_.masterQuantPeptideIons))
       for ((peptideInstance, quantPepIons) <- masterQuantPepIonsByPeptideInstance) {
