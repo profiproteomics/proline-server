@@ -78,8 +78,8 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_SEQUENCES, "#specific_sequences", defaultDisplayed = fromProtein),
       CustomFieldConfig(FIELD_PROTEIN_SETS_NB_PEPTIDES, "#peptides", defaultDisplayed = fromProtein),
       CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDES, "#specific_peptides", defaultDisplayed = fromProtein),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_PEPTIDE_MATCHES, "#peptide_matches", defaultDisplayed = fromProtein),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDE_MATCHES, "#specific_peptide_matches", defaultDisplayed = fromProtein)
+      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_PEPTIDE_MATCHES, "spectral_count", defaultDisplayed = fromProtein),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDE_MATCHES, "specific_spectral_count", defaultDisplayed = fromProtein)
     )
     
     if (fromSC) { // Currently not available for XIC 
@@ -123,8 +123,8 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_SEQUENCES, "#specific_sequences"),
       CustomFieldConfig(FIELD_PROTEIN_SETS_NB_PEPTIDES, "#peptides"),
       CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDES, "#specific_peptides"),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_PEPTIDE_MATCHES, "#peptide_matches"),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDE_MATCHES, "#specific_peptide_matches")
+      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_PEPTIDE_MATCHES, "spectral_count"),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDE_MATCHES, "specific_spectral_count")
     )
   }
 
