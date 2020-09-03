@@ -25,8 +25,7 @@ class ProtMatchBuildingContext(
 
   for (item <- protSet.peptideSet.items) {
     val pepInst = item.peptideInstance
-    allSeqs += pepInst.peptide.sequence
-    
+
     totalLeavesMatchCount += pepInst.totalLeavesMatchCount
     
     if (protSet.isValidated && pepInst.isValidProteinSetSpecific) {
