@@ -10,7 +10,7 @@ import fr.profi.mzdb.io.reader.cache.MzDbEntityCache
 import fr.profi.mzdb.model.{DataPoint, Peak}
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.orm.uds.RawFile
-import fr.proline.cortex.api.service.dps.msq.IGetXICChromatogramService
+import fr.proline.cortex.api.service.dps.msq.IExtractChromatogramService
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.fs.MountPointRegistry
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
@@ -32,7 +32,7 @@ import scala.collection.mutable.ArrayBuffer
  * Output params:
  * String : Chromatogram as Json
  */
-class GetXICChromatogram extends AbstractRemoteProcessingService with IGetXICChromatogramService with ISingleThreadedService with LazyLogging {
+class ExtractChromatogram extends AbstractRemoteProcessingService with IExtractChromatogramService with ISingleThreadedService with LazyLogging {
 
   /* JMS Service identification */
   val singleThreadIdent: String = SingleThreadIdentifierType.SHORT_SERVICES_SINGLETHREAD_IDENT.toString
