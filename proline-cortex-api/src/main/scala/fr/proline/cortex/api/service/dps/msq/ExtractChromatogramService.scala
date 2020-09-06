@@ -5,18 +5,18 @@ import scala.reflect.runtime.universe.typeOf
 import fr.profi.util.jsonrpc.{IJSONRPC2Method, JSONRPC2DefaultMethod, JSONRPC2DefaultMethodParameter, JSONRPC2MethodResult}
 import fr.proline.jms.service.api.{IDefaultServiceVersion, RemoteServiceIdentity}
 
-object TestJPMService extends IGetXICChromatogramService
+object ExtractChromatogramService extends IExtractChromatogramService
 
-trait IAbstractGetXICChromatogramService extends IMsqService {
+trait IAbstractExtractChromatogramService extends IMsqService {
   /* JMS Service identification */
-  val serviceLabel = "GetXICChromatogram"
+  val serviceLabel = "ExtractChromatogram"
   this.serviceDescription = Some(
-    "Retrieve XIC Chromatogram for m/z"
+    "Extract Chromatogram for m/z"
   )
 
 }
 
-trait IGetXICChromatogramService extends IAbstractGetXICChromatogramService with IDefaultServiceVersion {
+trait IExtractChromatogramService extends IAbstractExtractChromatogramService with IDefaultServiceVersion {
 
   /* JMS Service identification */
 
