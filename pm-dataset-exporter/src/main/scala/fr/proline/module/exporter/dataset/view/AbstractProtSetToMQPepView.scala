@@ -29,12 +29,12 @@ abstract class AbstractProtSetToMQPepView extends AbstractProtSetToPepMatchView 
     
     val recordBuilder = Map.newBuilder[String,Any]
     recordBuilder ++= pepMatchRecord
-
+    val isSelected = mqPep.selectionLevel>=2
     for (fieldConfig <- mqPepFieldsConfigs) {
       val fieldValue: Any = fieldConfig.id match {
         case FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID => mqPep.id
         case FIELD_PSM_QUANT_ELUTION_TIME => dcf2.format(bestQPep.elutionTime / 60)
-        case FIELD_PSM_QUANT_SELECTION_LEVEL => mqPep.selectionLevel
+        case FIELD_PSM_QUANT_SELECTION_LEVEL => isSelected //mqPep.selectionLevel
       }
       
       recordBuilder += fieldConfig.title -> fieldValue
