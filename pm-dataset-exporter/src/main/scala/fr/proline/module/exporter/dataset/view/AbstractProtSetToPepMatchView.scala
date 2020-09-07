@@ -5,6 +5,8 @@ import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
 import fr.proline.module.exporter.commons.config.ExportConfigConstant._
 
+import scala.collection.mutable
+
 abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalProtMatchView {
   
   protected val pepMatchFieldSet = Set(
@@ -51,7 +53,18 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
     val seqMatch = pepMatchBuildingCtx.seqMatch
     val peptide = pepMatch.peptide
     val msQueryOpt = Option(pepMatch.getMs2Query)
-    
+
+    val protSetPepSet = protMatchBuildingCtx.peptideSet
+    val subSetProtMatchesIds : mutable.HashSet[Long] =new  mutable.HashSet[Long]()
+    if(protSetPepSet.hasStrictSubset()){
+      protSetPepSet.strictSubsets.get.foreach(pepSet => {
+        if(pepSet.getPeptideIds().contains(peptide.id))
+          subSetProtMatchesIds ++= pepSet.proteinMatchIds
+      })
+    }
+    val subsetCount = subSetProtMatchesIds.size
+    val subsetAcs = super.protMatchIdsToAcs(subSetProtMatchesIds.toArray)
+
     // Retrieve retention time mapping
     val spectrumDescriptorByMsQueryId = identDS.spectrumDescriptorByMsQueryId
     
@@ -82,6 +95,13 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
     
     val recordBuilder = Map.newBuilder[String,Any]
     recordBuilder ++= protMatchRecord
+    var filterResults = protSetFieldsConfigs.filter(_.id.equals(FIELD_PROTEIN_SETS_SUBSETS_ACCESSIONS))
+    var fieldSubSetAccTitleToReplace = if(filterResults.length>0) filterResults.head.title else ""
+    recordBuilder +=  fieldSubSetAccTitleToReplace -> subsetAcs.sorted.mkString("; ")
+    filterResults = protSetFieldsConfigs.filter(_.id.equals(FIELD_PROTEIN_SETS_NB_SUBSET_PROTEIN_MATCHES))
+    fieldSubSetAccTitleToReplace = if(filterResults.length>0) filterResults.head.title else ""
+    recordBuilder +=  fieldSubSetAccTitleToReplace -> subsetCount
+
 
     for (fieldConfig <- pepMatchFieldsConfigs) {
       val fieldValue: Any = fieldConfig.id match {
