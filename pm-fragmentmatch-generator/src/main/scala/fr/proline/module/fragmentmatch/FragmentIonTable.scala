@@ -104,7 +104,8 @@ class FragmentIonTable(peptide: Peptide,
    
     var nterMass = 0.0
     var cterPtmNLMasse = 0.0
-    
+    var nterPtmlNLMasse = 0.0
+
     if (peptide.ptms != null) {
       for (ptm <- peptide.ptms) {
         val nlMass = {
@@ -117,13 +118,11 @@ class FragmentIonTable(peptide: Peptide,
         if (ptm.isNTerm) nterMass += ptm.monoMass
       }
     }
-        
-        
+
     var bFragmentMz = MolecularConstants.PROTON_MASS + nterMass
     var position = 0
-    var nterPtmlNLMasse = 0.0
     var reversePosition = aaSequence.length
-    
+
     // initialize last reverse ions fragments to 0.0
     if (currentFragmentIonTypes.contains("y")) {
       addSeries(_table, "y", currentFragmentIonTypes.getCharge("y"), new Fragment(0.0, reversePosition, cterPtmNLMasse))
@@ -131,7 +130,10 @@ class FragmentIonTable(peptide: Peptide,
       addSeries(_table, "y0", currentFragmentIonTypes.getCharge("y"), new Fragment(0.0, reversePosition, cterPtmNLMasse))
     }
     
-    if (currentFragmentIonTypes.contains("x"))  addSeries(_table, "x", currentFragmentIonTypes.getCharge("x"), new Fragment(0.0, reversePosition, cterPtmNLMasse))
+    if (currentFragmentIonTypes.contains("x")) {
+      addSeries(_table, "x", currentFragmentIonTypes.getCharge("x"), new Fragment(0.0, reversePosition, cterPtmNLMasse))
+    }
+
     if (currentFragmentIonTypes.contains("z")) {
       addSeries(_table, "z", currentFragmentIonTypes.getCharge("z"), new Fragment(0.0, reversePosition, cterPtmNLMasse))
       addSeries(_table, "z+1", currentFragmentIonTypes.getCharge("z"), new Fragment(0.0, reversePosition, cterPtmNLMasse))

@@ -7,9 +7,7 @@ import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.dal.BuildDbConnectionContext
 import fr.proline.core.dal.BuildMsiDbConnectionContext
 import fr.proline.core.dal.BuildUdsDbConnectionContext
-import fr.proline.core.om.model.msi.Peptide
-import fr.proline.core.om.model.msi.ResultSet
-import fr.proline.core.om.model.msi.TheoreticalFragmentSeries
+import fr.proline.core.om.model.msi.{LocatedPtm, Peptide, ResultSet, TheoreticalFragmentSeries}
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
@@ -18,6 +16,7 @@ import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
+import fr.proline.core.orm.msi.PtmSpecificity.PtmLocation
 import fr.proline.repository.DriverType
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -76,7 +75,7 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with StrictLogging
   def buildSQLContext(): (ProviderDecoratedExecutionContext, SQLResultSetProvider) = {
     val udsDbCtx = BuildUdsDbConnectionContext(dsConnectorFactoryForTest.getUdsDbConnector(), useJPA = false)
     val msiDbCtx = BuildMsiDbConnectionContext(dsConnectorFactoryForTest.getMsiDbConnector(1), useJPA = false)
-    val executionContext =PeptideCacheExecutionContext(new BasicExecutionContext(1, udsDbCtx, msiDbCtx, null))
+    val executionContext = PeptideCacheExecutionContext(new BasicExecutionContext(1, udsDbCtx, msiDbCtx, null))
     val parserContext = ProviderDecoratedExecutionContext(executionContext) // Use Object factory
 
     parserContext.putProvider(classOf[IPeptideProvider], new SQLPeptideProvider(PeptideCacheExecutionContext(parserContext)))
@@ -178,6 +177,24 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with StrictLogging
       assert(fragment.series.isDefined)
     }
     compareTheoreticalFragments(expected, table.get)    
+  }
+
+  @Test
+  def manual(): Unit = {
+    val ptmProvider = executionContext.asInstanceOf[ProviderDecoratedExecutionContext].getProvider(classOf[IPTMProvider])
+    val pDef = ptmProvider.getPtmDefinition(52L).get
+    val oDef = ptmProvider.getPtmDefinition(94L).get
+    val s3 = new LocatedPtm(pDef, 3, pDef.ptmEvidences(0).monoMass, pDef.ptmEvidences(0).averageMass, pDef.ptmEvidences(0).composition)
+    val s4 = new LocatedPtm(pDef, 4, pDef.ptmEvidences(0).monoMass, pDef.ptmEvidences(0).averageMass, pDef.ptmEvidences(0).composition)
+    val m13 = new LocatedPtm(oDef, 13, oDef.ptmEvidences(0).monoMass, oDef.ptmEvidences(0).averageMass, oDef.ptmEvidences(0).composition)
+    val ptms = Array(s3, s4, m13)
+
+    val peptide = new Peptide(-1L, "SASSATACTSGVMTR", "", ptms , 1661.5828)
+    val currentFragmentIonTypes = new FragmentIons(ionTypeB = true, ionTypeY = true, chargeForIonsB = 2, chargeForIonsY = 2)
+    val table = new FragmentIonTable(peptide, currentFragmentIonTypes, ptmNeutralLosses = Some(Map((s3, s3.definition.neutralLosses(1).monoMass),
+      (s4, s4.definition.neutralLosses(1).monoMass), (m13, m13.definition.neutralLosses(0).monoMass) )))
+
+    logger.debug(table.toString)
   }
 
   def compareTheoreticalFragments(expected: Array[TheoreticalFragmentSeries], actual: Array[TheoreticalFragmentSeries] ): Unit = {
