@@ -14,8 +14,8 @@ class ProtMatchBuildingContext(
 ) extends IRecordBuildingContext {
 
   val peptidesCount = peptideSet.items.length
-  
-  private val allSeqs = new ArrayBuffer[String](peptidesCount)
+  val sequencesCount = peptideSet.sequencesCount
+
   private val specificNonUniqSeqs = new ArrayBuffer[String](peptidesCount)
 
   private val specificPepInstances = new ArrayBuffer[PeptideInstance](peptidesCount)
@@ -23,10 +23,9 @@ class ProtMatchBuildingContext(
   private var totalLeavesMatchCount = 0
   private var specificTotalLeavesMatchCount = 0
 
-  for (item <- protSet.peptideSet.items) {
+  for (item <- peptideSet.items) {
     val pepInst = item.peptideInstance
-    allSeqs += pepInst.peptide.sequence
-    
+
     totalLeavesMatchCount += pepInst.totalLeavesMatchCount
     
     if (protSet.isValidated && pepInst.isValidProteinSetSpecific) {
@@ -35,8 +34,7 @@ class ProtMatchBuildingContext(
       specificTotalLeavesMatchCount += pepInst.totalLeavesMatchCount
     }
   }
-  
-  val sequencesCount = allSeqs.distinct.length
+
   val specificSequencesCount = specificNonUniqSeqs.distinct.length
   val specificPeptidesCount = specificPepInstances.length
   val peptideMatchesCount = totalLeavesMatchCount

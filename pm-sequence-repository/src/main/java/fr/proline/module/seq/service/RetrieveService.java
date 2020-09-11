@@ -1,11 +1,6 @@
 package fr.proline.module.seq.service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import fr.proline.module.seq.dto.DDatabankInstance;
@@ -46,6 +41,10 @@ public final class RetrieveService {
 
 		@Parameter(names = { "-f", "--forceUpdate" }, description = "force update of MSIdb result summaries and biosequences (even if already updated)")
 		private boolean forceUpdate = false;
+
+		@Parameter(names = { "-rsm" }, description = "specify rsm id to update")
+		private Integer rsmId = 0;
+
 	}
 
 	private RetrieveService() {
@@ -106,7 +105,10 @@ public final class RetrieveService {
 				if (params.projectId == 0) {
 					retrieveBioSequencesForAllProjects(params.forceUpdate);
 				} else {
-					retrieveBioSequences(params.projectId, params.forceUpdate, null);
+					List<Long> rsmIds = new ArrayList<>();
+					if(params.rsmId>0)
+						rsmIds.add(params.rsmId.longValue());
+					retrieveBioSequences(params.projectId, params.forceUpdate, rsmIds);
 				}
 				BioSequenceRetriever.waitExecutorShutdown();
 				System.out.println("\nMain terminated !");
@@ -147,11 +149,14 @@ public final class RetrieveService {
 	}
 
 	public static int retrieveBioSequences(final long projectId, boolean forceUpdate, List<Long> rsmIds) throws Exception {
-
-		LOG.info("Start RetrieveBioSequences for RSMs {} of Project #{}", rsmIds.toString(), projectId);
-
 		final long start = System.currentTimeMillis();
 		ProjectHandler projectHandler = new ProjectHandler(projectId);
+		if(rsmIds == null ||rsmIds.isEmpty()){
+			//Update all RSMs
+			rsmIds = projectHandler.findAllRSMIds();
+		}
+		LOG.info("Start RetrieveBioSequences for RSMs {} of Project #{}", rsmIds.toString(), projectId);
+
 		int persistedProteinsCount = _retrieveBioSequences(projectHandler, forceUpdate, rsmIds);
 		long duration = System.currentTimeMillis() - start;
 		LOG.info("Total RetrieveBioSequences for RSMs of Project #{} execution: {} Protein Identifiers persisted in {} ms", projectId, persistedProteinsCount, duration);
@@ -168,7 +173,9 @@ public final class RetrieveService {
 			final Map<DDatabankInstance, Set<DDatabankProtein>> proteinsByDatabank = new HashMap<>();
 			List<Long> finalRsmIds = projectHandler.filterRSMIdsToUpdate(rsmIds, forceUpdate);
 
+			// Create 'seqDB' DDatabankInstance (name, fasta path and version if exist) from msiDB SeqDatabase information. Map these 'fake' object by msiSeqDB.id
 			final Map<Long, DDatabankInstance> databankBySeqDatabase = projectHandler.retrieveAllSeqDatabases();
+			// Create 'Fake' DDatabankProtein from info read in MSIdb and map these DDatabankProtein to DDatabankInstance  (same as in databankBySeqDatabase)
 			projectHandler.findProteinIdentifiers(proteinsByDatabank, databankBySeqDatabase, finalRsmIds);
 
 			if ((proteinsByDatabank == null) || proteinsByDatabank.isEmpty()) {
@@ -176,7 +183,7 @@ public final class RetrieveService {
 			} else {
 				persistedProteinsCount = BioSequenceRetriever.retrieveBioSequences(proteinsByDatabank);
 				if (PERSISTENCE) {
-					projectHandler.fillProteinMatchesProperties(databankBySeqDatabase, finalRsmIds);
+					projectHandler.fillProteinMatchesProperties(databankBySeqDatabase, proteinsByDatabank, finalRsmIds);
 				}
 			}
 

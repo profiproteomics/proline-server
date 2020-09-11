@@ -52,7 +52,7 @@ class PTMClusterView(
       for (ptmCluster <- ptmDatasetOpt.get.ptmClusters) {
         val proteinMatchId = sitesById(ptmCluster.ptmSiteLocations.head).proteinMatchId
         if (protSetByRepresentativeProtMatchId.contains(proteinMatchId)) {
-          logger.info(s"exporting cluster ${ptmCluster.id} matched by ${ptmCluster.peptideIds}, best pepMatch = ${ptmCluster.bestPeptideMatchId}")
+//          logger.info(s"exporting cluster ${ptmCluster.id} matched by ${ptmCluster.peptideIds}, best pepMatch = ${ptmCluster.bestPeptideMatchId}")
           val proteinMatch = protMatchById(proteinMatchId)
           val mqPeps = ptmCluster.peptideIds.map(peptideId => Option(quantDs).flatMap( _.mqPepByPepId.get(peptideId) ))
           val protSet = protSetByRepresentativeProtMatchId(proteinMatchId)

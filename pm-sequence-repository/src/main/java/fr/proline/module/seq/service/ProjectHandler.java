@@ -164,6 +164,7 @@ public class ProjectHandler {
 				int nSEDbIdentifiers = 0;
 
 				final Query query = msiEM.createQuery(VALIDATED_PM_SDM_FOR_RSMS_QUERY).setParameter("rsm_ids", rsmIds);
+				//Create 'Fake' DDatabankProtein from info read in MSIdb and map these  DDatabankProtein to msiSeqDbId (same as in databankBySeqDatabase)
 				nSEDbIdentifiers = ProjectHandler.createProteinIdentifiersFromQuery(query, databankBySeqDatabase, proteinsByDatabank);
 
 				if (nSEDbIdentifiers >= expectedProteinsCount) {
@@ -311,11 +312,13 @@ public class ProjectHandler {
 
 					} else {
 						final String fastaFilePath = seqDb.getFastaFilePath();
+						final String version = seqDb.getVersion();
 
 						if (StringUtils.isEmpty(fastaFilePath)) {
 							LOG.error("SeqDb #{} fastaFilePath is empty", seqDbId);
 						} else {
 							final DDatabankInstance databankInstance = new DDatabankInstance(trimmedName, null, fastaFilePath);
+							databankInstance.setRelease(version);
 							result.put(seqDbId, databankInstance);
 						} // End if (fastaFilePath is valid)
 
@@ -404,11 +407,11 @@ public class ProjectHandler {
 
 	/**
 	 * Calculate sequence coverage, mass and updates these properties as well as the BioSequence information in msidb.
-	 *
+	 * @param databankBySeqDatabase DDatabankInstance created using msi SeqDabases and referenced by its id (in MSI). Contains all SeqDb of this project
 	 * @param rsmIds : RSMs to consider
 	 */
 	@SuppressWarnings("unchecked")
-	public void fillProteinMatchesProperties(final Map<Long, DDatabankInstance> databankBySeqDatabase, final List<Long> rsmIds) {
+	public void fillProteinMatchesProperties(final Map<Long, DDatabankInstance> databankBySeqDatabase, final Map<DDatabankInstance, Set<DDatabankProtein>> proteinsByDatabank , final List<Long> rsmIds) {
 
 		Map<ProteinMatch, Integer> coveredSeqLengthByProtMatchList = new HashMap<>();
 
@@ -424,7 +427,7 @@ public class ProjectHandler {
 				msiTransactionOK = true;
 			} else {
 				LOG.info("Update SeqDatabase release properties for Project #{}. ", projectId);
-				updateMSISeqDbRelease(databankBySeqDatabase);
+				updateMSISeqDbRelease(databankBySeqDatabase); //to do only for referenced seqDb from rsms to consider ?
 
 				// for each RSM in data_set.result_summmary_id
 				for (Long rsmId : rsmIds) {
@@ -536,13 +539,12 @@ public class ProjectHandler {
 							ProteinMatch currentProtMatch = protSet2ProtMatch.getProteinMatch();
 							allProtMatchesAccession.add(currentProtMatch.getAccession());
 							protSetMapByProtMatch.put(currentProtMatch, protSet2ProtMatch);
-							coveredSeqLengthByProtMatchList.put(currentProtMatch,
-											computeSequenceCoverage(seqMatchesInfoByProteinMatchId, protSet2ProtMatch.getProteinMatch(),
-															pepIdsByProtSetId.get(protSet.getId())));
+							coveredSeqLengthByProtMatchList.put(currentProtMatch, computeSequenceCoverage(seqMatchesInfoByProteinMatchId, currentProtMatch, pepIdsByProtSetId.get(protSet.getId())));
 						}
 
 						//--  Get Wrappers for all ProteinMatches: bioSequence and DatabankProtein
-						Map<String, BioSequenceProvider.RelatedIdentifiers> protMatchesObjResult = BioSequenceProvider.findSEDbIdentRelatedData(allProtMatchesAccession);
+						// AND  filters RelatedIdentifier depending to keep only those corresponding to seqDbs
+						Map<String, BioSequenceProvider.RelatedIdentifiers> protMatchesObjResult = BioSequenceProvider.findSEDbIdentRelatedData(allProtMatchesAccession, proteinsByDatabank);
 
 
 						//Update and Save properties
@@ -698,12 +700,16 @@ public class ProjectHandler {
 					}
 					
 					// Save BioSequence
-					BioSequence msiBioSeq = msiEM.find(BioSequence.class, bioSeq.getSequenceId());
+					Long prevBioSeqId = protMatch.getBioSequenceId();
+					Long newBioSeqId = bioSeq.getSequenceId();
+					if(!newBioSeqId.equals(prevBioSeqId))
+						protMatch2Update = true;
+					BioSequence msiBioSeq = msiEM.find(BioSequence.class, newBioSeqId);
 					int nmass = (int)Math.round(bioSeq.getMass());
 					if (msiBioSeq == null) {
 						msiBioSeq = new BioSequence();
 						msiBioSeq.setAlphabet(Alphabet.AA);
-						msiBioSeq.setId(bioSeq.getSequenceId());
+						msiBioSeq.setId(newBioSeqId);
 						msiBioSeq.setLength(bioSeq.getSequence().length());
 						msiBioSeq.setMass(nmass);
 						msiBioSeq.setCrc64(HashUtil.calculateCRC64(bioSeq.getSequence()));
@@ -713,7 +719,7 @@ public class ProjectHandler {
 					} else {
 						boolean foundMissMatch = false;
 						StringBuffer sb = new StringBuffer(" Following properties don't match with current biosequence with id  ");
-						sb.append(bioSeq.getSequenceId());
+						sb.append(newBioSeqId);
 						if (msiBioSeq.getLength() != bioSeq.getSequence().length()) {
 							foundMissMatch = true;
 							sb.append(" sequence length;");
@@ -739,7 +745,7 @@ public class ProjectHandler {
 					}
 
 					// Save link between ProteinMatch and BioSeq
-					protMatch.setBioSequenceId(bioSeq.getSequenceId());
+					protMatch.setBioSequenceId(newBioSeqId);
 				}
 			}
 			if(protMatch2Update)

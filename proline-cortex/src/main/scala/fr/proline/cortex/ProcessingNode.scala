@@ -266,7 +266,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new QuantifySC())
     ServiceRegistry.addService(new QuantifySC_V02())
     ServiceRegistry.addService(new AggregateQuantitation())
-    ServiceRegistry.addService(new GetXICChromatogram())
+    ServiceRegistry.addService(new ExtractChromatogram())
 
     ServiceRegistry.addService(new UserAccount())
     ServiceRegistry.addService(new GetConnectionTemplate())

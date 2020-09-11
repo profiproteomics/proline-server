@@ -67,8 +67,8 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_PROTEIN_SETS_SUBSETS_ACCESSIONS, "subsets_accessions", defaultDisplayed = false),
       CustomFieldConfig(FIELD_PROTEIN_SETS_DESCRIPTION, "description"),
       CustomFieldConfig(FIELD_PROTEIN_SETS_SCORE, "protein_set_score"),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_IS_VALIDATED, "is_validated"),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_SELECTION_LEVEL, "selection_level", defaultDisplayed = fromXIC || fromSC),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_IS_VALIDATED, if (fromProtein) "is_validated" else "is_protein_set_validated"),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_SELECTION_LEVEL, if (fromProtein) "selection_level" else "protein_set_selection_level" , defaultDisplayed = fromXIC || fromSC),
       CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SAMESET_PROTEIN_MATCHES, "#sameset_protein_matches", defaultDisplayed = fromProtein),
       CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SUBSET_PROTEIN_MATCHES, "#subset_protein_matches", defaultDisplayed = fromProtein),
       CustomFieldConfig(FIELD_PROTEIN_SETS_COVERAGE, "coverage", defaultDisplayed = fromProtein),
@@ -78,8 +78,8 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_SEQUENCES, "#specific_sequences", defaultDisplayed = fromProtein),
       CustomFieldConfig(FIELD_PROTEIN_SETS_NB_PEPTIDES, "#peptides", defaultDisplayed = fromProtein),
       CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDES, "#specific_peptides", defaultDisplayed = fromProtein),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_PEPTIDE_MATCHES, "#peptide_matches", defaultDisplayed = fromProtein),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDE_MATCHES, "#specific_peptide_matches", defaultDisplayed = fromProtein)
+      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_PEPTIDE_MATCHES, "spectral_count", defaultDisplayed = fromProtein),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDE_MATCHES, "specific_spectral_count", defaultDisplayed = fromProtein)
     )
     
     if (fromSC) { // Currently not available for XIC 
@@ -123,8 +123,8 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_SEQUENCES, "#specific_sequences"),
       CustomFieldConfig(FIELD_PROTEIN_SETS_NB_PEPTIDES, "#peptides"),
       CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDES, "#specific_peptides"),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_PEPTIDE_MATCHES, "#peptide_matches"),
-      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDE_MATCHES, "#specific_peptide_matches")
+      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_PEPTIDE_MATCHES, "spectral_count"),
+      CustomFieldConfig(FIELD_PROTEIN_SETS_NB_SPECIFIC_PEPTIDE_MATCHES, "specific_spectral_count")
     )
   }
 
@@ -168,7 +168,7 @@ object CustomFieldConfigFactory {
     if (fromXIC || fromSC) {
       fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id")
       fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_ELUTION_TIME, "master_elution_time")
-      fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_SELECTION_LEVEL, "master_quant_selection_level")
+      fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_SELECTION_LEVEL, "is_validated_for_quanti")
       fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PSM_COUNT, if (fromXIC) "psm_count" else "Basic SC")
       fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE, if (fromXIC) "raw_abundance" else "Specific SC")      
     }
@@ -196,7 +196,7 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_PSM_PTM_PROTEIN_POSITIONS, "ptm_protein_positions"),
       CustomFieldConfig(FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id"),
       CustomFieldConfig(FIELD_PSM_QUANT_ELUTION_TIME, "master_elution_time"),
-      CustomFieldConfig(FIELD_PSM_QUANT_SELECTION_LEVEL, "master_quant_selection_level"),
+      CustomFieldConfig(FIELD_PSM_QUANT_SELECTION_LEVEL, "is_validated_for_quanti"),
       CustomFieldConfig(FIELD_PSM_NB_PROTEIN_SETS, "#psm_prot_sets"),
       CustomFieldConfig(FIELD_MASTER_QUANT_PEPTIDE_ION_ID, "master_quant_peptide_ion_id"),
       CustomFieldConfig(FIELD_MASTER_QUANT_PEPTIDE_ION_MOZ, "master_quant_peptide_ion_moz"),
@@ -289,7 +289,7 @@ object CustomFieldConfigFactory {
     if (fromXIC) {
       fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id")
       fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_ELUTION_TIME, "master_elution_time")
-      fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_SELECTION_LEVEL, "master_quant_selection_level")
+      fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_SELECTION_LEVEL, "is_validated_for_quanti")
       fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE, "raw_abundance")
       fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_ABUNDANCE, "abundance")
     }

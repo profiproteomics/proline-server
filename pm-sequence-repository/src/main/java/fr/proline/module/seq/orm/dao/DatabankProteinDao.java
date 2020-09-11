@@ -53,4 +53,24 @@ public final class DatabankProteinDao {
 		return JPARepositoryUtils.executeInQueryAsBatch(query, "values", proteinIdentifiers);
 	}
 
+
+	public static List<DatabankProtein> findProteinsInDatabankNameAndRelease(
+			final EntityManager seqEM,
+			final String seDbName,
+			final String seDbVersion,
+			final Collection<String> proteinIdentifiers) {
+
+		JPAUtils.checkEntityManager(seqEM);
+
+		if (StringUtils.isEmpty(seDbName) || StringUtils.isEmpty(seDbVersion)) {
+			throw new IllegalArgumentException("Invalid seDbName or seDbVersion");
+		}
+
+		final TypedQuery<DatabankProtein> query = seqEM.createNamedQuery("findSEDbIdentBySEDbNameReleaseAndValues", DatabankProtein.class);
+		query.setParameter("seDbName", seDbName);
+		query.setParameter("seDbVersion", seDbVersion);
+
+		return JPARepositoryUtils.executeInQueryAsBatch(query, "values", proteinIdentifiers);
+	}
+
 }

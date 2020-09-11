@@ -94,5 +94,8 @@ abstract class AbstractProtSetToTypicalProtMatchView extends AbstractIdentDatase
     recordBuilder.result()
   }
 
+  // Retrieve sameset & subset accessions
+  def protMatchIdsToAcs(ids: Array[Long]) = ids.map( proteinMatchById.get(_).map(_.accession).getOrElse("-") )
+
   
 }

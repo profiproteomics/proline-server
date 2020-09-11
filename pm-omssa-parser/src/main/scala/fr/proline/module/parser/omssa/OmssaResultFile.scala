@@ -29,9 +29,9 @@ object OmssaParseParams extends Enumeration {
  * This class allows a hashmap with two keys for one value
  * In this parser, it is used to map a sequenceMatch to a peptideMatch and a proteinMatch
  *
- * @param <K1> first key (the peptide match id)
- * @param <K2> second key (the protein match id)
- * @param <V> the value (the sequence match object)
+ * K1: first key (the peptide match id)
+ * K2: second key (the protein match id)
+ * V: the value (the sequence match object)
  */
 case class TwoDimensionsMap[K1, K2, V]() {
   val wrapped = new scala.collection.mutable.HashMap[(K1, K2), V]
@@ -92,7 +92,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
   if (parseProperties.get(OmssaParseParams.RAW_FILE_PATH) == None) parseProperties += (OmssaParseParams.RAW_FILE_PATH -> "")
 
   private val omxFile = fileLocation
-  // check file existancy
+  // check file existence
   if (omxFile == null || !omxFile.exists()) throw new FileNotFoundException("Specified file does not exist")
 //  if (!omxFile.getName().endsWith(".omx")) throw new IllegalArgumentException("Specified file does not have '.omx' suffix")
   if (!(omxFile.getName().endsWith(".omx") || omxFile.getName().endsWith(".omx.bz2"))) throw new IllegalArgumentException("Specified file does not have '.omx' suffix")
