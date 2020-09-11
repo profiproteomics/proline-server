@@ -1,5 +1,6 @@
 package fr.proline.module.seq.service;
 
+import fr.proline.core.orm.msi.ProteinMatch;
 import fr.proline.module.seq.AbstractDatabaseTest;
 import fr.proline.module.seq.DatabaseAccess;
 import fr.proline.repository.util.DatabaseUtils;
@@ -9,7 +10,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.persistence.EntityManager;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -316,5 +319,37 @@ public final class RetrieveServiceTest extends AbstractDatabaseTest  {
 			Assert.fail(e.getMessage());
 		}
 	}
+
+	@Test
+	public void testRetrieveNewSeqFromSeqDB() {
+		try {
+			super.initDBTestCase("/dbunit_samples/SmallRuns_XIC/uds-db.xml","/dbunit_samples/SmallRuns_XIC/msi-db_2Searches.xml");
+			super.initSeqDBTestCase("/dbunit_samples/SmallRuns_XIC/seq_db/seq-db-2diffs.xml");
+			List<Long> rsmIds = new ArrayList<>();
+			rsmIds.add(2l);
+			fr.proline.repository.IDatabaseConnector msiDbConnector = DatabaseAccess.getDataStoreConnectorFactory().getMsiDbConnector(PROJECT_ID);
+			EntityManager em = msiDbConnector.createEntityManager();
+
+			logger.info("--- Starting retrieveBioSequences Unit Test ---");
+			ProteinMatch pm = em.find(ProteinMatch.class, 60l);
+			Assert.assertTrue(pm.getBioSequenceId() == null);
+
+			int persistedProteinsCount = RetrieveService.retrieveBioSequences(PROJECT_ID, true, rsmIds);
+
+//			DatabaseUtils.writeDataSetXML(DatabaseAccess.getSEQDatabaseConnector(false), "seq-db_OUT-2diff.xml");
+
+			em.refresh(pm);
+			Assert.assertTrue(pm.getBioSequenceId() == 46);
+//			DatabaseUtils.writeDataSetXML(msiDbConnector, "msi-db-OUT-2diffs.xml");
+
+			DatabaseAccess.closeSEQDatabaseConnector();
+
+			logger.info("\nMain terminated !");
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		}
+	}
+
 
 }
