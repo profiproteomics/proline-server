@@ -1,5 +1,6 @@
 package fr.proline.module.seq;
 
+import fr.profi.util.StringUtils;
 import fr.proline.module.seq.dto.DBioSequence;
 import fr.proline.module.seq.dto.DDatabankInstance;
 import fr.proline.module.seq.dto.DDatabankProtein;
@@ -36,7 +37,7 @@ public final class BioSequenceProvider {
     EntityManager seqEM = seqDb.createEntityManager();
 
     try {
-      result = findMatchingProteins(seqEM, proteinIdentifiers);
+      result = findMatchingProteins(seqEM, proteinIdentifiers, null);
     } finally {
 
       if (seqEM != null) {
@@ -51,6 +52,37 @@ public final class BioSequenceProvider {
   }
 
   /**
+   * Create a Map from proteins identifiers (name/acc..) to an associated RelatedIdentifiers
+   * The RelatedIdentifiers contains the List of DBioSequence for each proteinIdentifier found and the List of DDatabankProtein
+   * (if one value corresponds to multiple proteins)
+   *
+   * @param proteinIdentifiers
+   * @param dDBProtByDSeqDBInstance Map of DDatabankProtein already read from SeqDB and associated to SeqDB they were read from
+   * @return
+   */
+  public static Map<String, RelatedIdentifiers> findSEDbIdentRelatedData(final Collection<String> proteinIdentifiers, Map<DDatabankInstance, Set<DDatabankProtein>> dDBProtByDSeqDBInstance ) {
+    Map<String, RelatedIdentifiers> result = null;
+
+    /* Client / Provider side */
+    final IDatabaseConnector seqDb = DatabaseAccess.getSEQDatabaseConnector(false);
+
+    EntityManager seqEM = seqDb.createEntityManager();
+
+    try {
+      result = findMatchingProteins(seqEM, proteinIdentifiers, dDBProtByDSeqDBInstance );
+    } finally {
+
+      if (seqEM != null) {
+        try {
+          seqEM.close();
+        } catch (Exception exClose) {
+          LOG.error("Error closing SEQ Db EntityManager", exClose);
+        }
+      }
+    }
+    return result;
+  }
+  /**
    * Find all DataBankProteins matching to the list of supplied identifiers. The search did not care about the databank
    * associated with the proteins found in the SeqDb, but returns all of them.
    *
@@ -58,11 +90,36 @@ public final class BioSequenceProvider {
    * @param proteinsIdentifiers
    * @return
    */
-  private static Map<String, RelatedIdentifiers> findMatchingProteins(final EntityManager seqEM, final Collection<String> proteinsIdentifiers) {
+  private static Map<String, RelatedIdentifiers> findMatchingProteins(final EntityManager seqEM, final Collection<String> proteinsIdentifiers, Map<DDatabankInstance, Set<DDatabankProtein>> dDBProtByDSeqDBInstance ) {
 
     final Map<String, RelatedIdentifiers> result = new HashMap<>();
+    List<DatabankProtein> foundProteins = new ArrayList<>();
+    if(dDBProtByDSeqDBInstance == null)
+      foundProteins =  DatabankProteinDao.findProteins(seqEM, proteinsIdentifiers);
+    else {
+      for(DDatabankInstance dbInst : dDBProtByDSeqDBInstance.keySet()) {
+        if(!StringUtils.isEmpty(dbInst.getRelease()))
+          foundProteins.addAll(DatabankProteinDao.findProteinsInDatabankNameAndRelease(seqEM, dbInst.getName(), dbInst.getRelease(), proteinsIdentifiers));
+        else {
+          List<DatabankProtein> tempFoundProteins = DatabankProteinDao.findProteinsInDatabankName(seqEM, dbInst.getName(), proteinsIdentifiers);
+          //Test if fasta file is the same as seqDb one
+          for(DatabankProtein dbProt : tempFoundProteins){
 
-    final List<DatabankProtein> foundProteins = DatabankProteinDao.findProteins(seqEM, proteinsIdentifiers);
+            String seqDBFastaname = dbInst.getSourcePath().replace("\\","/");
+            int lastIndex =seqDBFastaname.lastIndexOf('/');
+            seqDBFastaname = seqDBFastaname.substring(lastIndex+1,seqDBFastaname.length());
+
+            String dbProtFastaname = dbProt.getDatabankInstance().getSourcePath().replace("\\","/");
+            lastIndex = dbProtFastaname.lastIndexOf('/');
+            dbProtFastaname = dbProtFastaname.substring(lastIndex+1,dbProtFastaname.length());
+
+            if(seqDBFastaname.equals(dbProtFastaname)){
+              foundProteins.add(dbProt);
+            }
+          }
+        }
+      }
+    }
 
     if ((foundProteins != null) && !foundProteins.isEmpty()) {
 
