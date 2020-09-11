@@ -180,12 +180,12 @@ object ServiceRunner extends LazyLogging {
 /**
  * Builds JMS Consumer to run {{{IRemoteServiceIdentity}}} on given JMS {{{Queue}}}.
  */
-class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotifier: IServiceMonitoringNotifier, logConsumerSelector: Boolean) extends Runnable with LazyLogging {
+class ServiceRunner(queueName : String, connection: Connection, serviceMonitoringNotifier: IServiceMonitoringNotifier, logConsumerSelector: Boolean) extends Runnable with LazyLogging {
 
   import ServiceRunner._
 
   /* Constructor checks */
-  require(queue != null, "Queue is null")
+  require(queueName != null, "Queue is null")
   require(connection != null, "Connection is null")
   
   var selectorString:String = ""
@@ -212,6 +212,8 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
       
       if(logConsumerSelector)
         logger.debug(s"Consumer selector string:\n$selectorString")
+
+      val queue : Queue = session.createQueue(queueName)
 
       val consumer = session.createConsumer(queue, selectorString)
 
@@ -628,8 +630,8 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
 }
 
-class SingleThreadedServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotifier: MonitoringTopicPublisherRunner, serviceIdent: String, useThreadIdent: Boolean = false)
-  extends ServiceRunner(queue, connection, serviceMonitoringNotifier, true) {
+class SingleThreadedServiceRunner(queueName: String, connection: Connection, serviceMonitoringNotifier: MonitoringTopicPublisherRunner, serviceIdent: String, useThreadIdent: Boolean = false)
+  extends ServiceRunner(queueName, connection, serviceMonitoringNotifier, true) {
 
   import ServiceRunner._
 

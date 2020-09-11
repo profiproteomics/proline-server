@@ -24,7 +24,6 @@ import fr.proline.jms.service.api.IDefaultServiceVersion
 import fr.proline.jms.service.api.IRemoteCompleteJsonRPC2Service
 import fr.proline.jms.service.api.IRemoteServiceIdentity
 import fr.proline.jms.util.JMSConstants
-import org.hornetq.api.jms.HornetQJMSConstants
 
 import scala.reflect.runtime.universe
 import scala.reflect.runtime.universe.typeOf
@@ -137,7 +136,7 @@ class ProlineResourceService extends IProlineResourceService with IRemoteComplet
 
           logger.debug(s"Sending InputStream from File [$absolutePathname] to JMS BytesMessage")
 
-          responseJMSMessage.setObjectProperty(HornetQJMSConstants.JMS_HORNETQ_INPUT_STREAM, br)
+          responseJMSMessage.setObjectProperty("JMS_HQ_InputStream", br)  //   HornetQJMSConstants.JMS_HORNETQ_INPUT_STREAM  //JPM.JMS
         } catch {
 
           case ex: Exception => {

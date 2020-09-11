@@ -4,7 +4,6 @@ import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 
-import org.hornetq.api.jms.HornetQJMSConstants.JMS_HORNETQ_SAVE_STREAM
 
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.typesafe.scalalogging.LazyLogging
@@ -99,7 +98,7 @@ class FileUpload extends IRemoteBytesMsgService with IDefaultServiceVersion with
         
           val fos = new FileOutputStream(destFile)
           val outBuf = new BufferedOutputStream(fos)
-          message.setObjectProperty(JMS_HORNETQ_SAVE_STREAM, outBuf)
+          message.setObjectProperty("JMS_HQ_SaveStream", outBuf)  //  JMS_HORNETQ_SAVE_STREAM  // JPM.JMS
   
           outBuf.close()
           fos.close()

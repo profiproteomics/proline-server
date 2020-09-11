@@ -7,11 +7,15 @@ import java.util.concurrent.TimeUnit
 
 import scala.collection.JavaConversions.mutableMapAsJavaMap
 import scala.collection.mutable
-import org.hornetq.api.core.TransportConfiguration
-import org.hornetq.api.jms.HornetQJMSClient
-import org.hornetq.api.jms.JMSFactoryType
-import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory
-import org.hornetq.core.remoting.impl.netty.TransportConstants
+//import org.hornetq.api.core.TransportConfiguration
+//import org.hornetq.api.jms.HornetQJMSClient
+//import org.hornetq.api.jms.JMSFactoryType
+//import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory
+//import org.hornetq.core.remoting.impl.netty.TransportConstants
+
+import org.apache.activemq.ActiveMQConnectionFactory
+import org.apache.activemq.command.ActiveMQTopic
+
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.StringUtils
 import fr.profi.util.ThreadLogger
@@ -49,7 +53,7 @@ import scala.collection.mutable.ArrayBuffer
 object ProcessingNode extends LazyLogging {
 
   /* Constants */
-  private val EXECUTOR_SHUTDOWN_TIMEOUT = 30 // 30 seconds : te be sure currently running services could have a chance to terminate 
+  private val EXECUTOR_SHUTDOWN_TIMEOUT = 30 // 30 seconds : te be sure currently running services could have a chance to terminate
 
   def main(args: Array[String]) {
     Thread.currentThread.setUncaughtExceptionHandler(new ThreadLogger(logger.underlying.getName))
@@ -112,28 +116,30 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
       try {
         // Step 1. Directly instantiate the JMS Queue object.
-        val serviceRequestQueue = HornetQJMSClient.createQueue(NodeConfig.PROLINE_SERVICE_REQUEST_QUEUE_NAME)
+        val serviceRequestQueueName = NodeConfig.PROLINE_SERVICE_REQUEST_QUEUE_NAME //HornetQJMSClient.createQueue(NodeConfig.PROLINE_SERVICE_REQUEST_QUEUE_NAME)
 
-        logger.trace("JMS Queue : " + serviceRequestQueue)
-        val expiredRequestQueue = HornetQJMSClient.createQueue(NodeConfig.PROLINE_EXPIRED_MESSAGE_QUEUE_NAME)
+        //logger.trace("JMS Queue : " + serviceRequestQueue)
+        //val expiredRequestQueue = HornetQJMSClient.createQueue(NodeConfig.PROLINE_EXPIRED_MESSAGE_QUEUE_NAME)
 
 
         // Step 2. Instantiate the TransportConfiguration object which contains the knowledge of what transport to use,
         // The server port etc.
 
-        val connectionParams = mutable.Map.empty[String, Object]
+        /*val connectionParams = mutable.Map.empty[String, Object]
         connectionParams.put(TransportConstants.HOST_PROP_NAME, jmsServerHost) // JMS Server hostname or IP
         connectionParams.put(TransportConstants.PORT_PROP_NAME, java.lang.Integer.valueOf(jmsServerPort)) // JMS port
 
         val transportConfiguration = new TransportConfiguration(
           classOf[NettyConnectorFactory].getName,
           connectionParams
-        )
+        )*/
 
         // Step 3 Directly instantiate the JMS ConnectionFactory object using that TransportConfiguration
-        val cf = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF, transportConfiguration) //.asInstanceOf[ConnectionFactory]
-       cf.setConsumerWindowSize(0)
-       cf.setReconnectAttempts(10)
+        val jmsServerPortTMP = 61616; // 5445; //JPM.JMS.TODO
+        val cf: ActiveMQConnectionFactory = new ActiveMQConnectionFactory("tcp://" + jmsServerHost + ":" + jmsServerPortTMP) //JPM.JMS.TODO
+        //val cf = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF, transportConfiguration) //.asInstanceOf[ConnectionFactory]
+        //cf.setConsumerWindowSize(0)
+        //cf.setReconnectAttempts(10)
 
         // Step 4.Create a JMS Connection
         m_connection = cf.createConnection()
@@ -166,7 +172,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
         var nbrSingleThreads = 0
         for (threadIdent <- handledSingleThreadedServiceIdents) {
-          val singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier, threadIdent, true)
+          val singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueueName, m_connection, serviceMonitoringNotifier, threadIdent, true)
           val singleThreadExecutor =  Executors.newSingleThreadExecutor()
           m_singleExecutor += singleThreadExecutor
           val singleThreadFuture =  singleThreadExecutor.submit(singleThreadedServiceRunner)
@@ -175,7 +181,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         }
 
         // Start Expired Message Listener
-        val expiredMessageConsumer = new ExpiredMessageConsumer(expiredRequestQueue, m_connection, serviceMonitoringNotifier)
+        val expiredMessageConsumer = new ExpiredMessageConsumer(serviceRequestQueueName, m_connection, serviceMonitoringNotifier)
         m_paralleleExecutor.submit(expiredMessageConsumer)
         nbrSingleThreads += 1
 
@@ -186,7 +192,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
         for (i <- 1 to NodeConfig.SERVICE_THREAD_POOL_SIZE) {
           val logSelector = if(i==1) true else false
-          val parallelizableSeviceRunner = new ServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier,logSelector)
+          val parallelizableSeviceRunner = new ServiceRunner(serviceRequestQueueName, m_connection, serviceMonitoringNotifier,logSelector)
           val threadFuture = m_paralleleExecutor.submit(parallelizableSeviceRunner)
           ServiceManager.addRunnale2FutureEntry(parallelizableSeviceRunner, threadFuture)
         }
@@ -281,10 +287,10 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new IdentifyPtmSitesV2_0())
     ServiceRegistry.addService(new ProlineResourceService())
     //VDS TEST only !
-//    ServiceRegistry.addService(new WaitService())
+    //    ServiceRegistry.addService(new WaitService())
     ServiceRegistry.addService(new ValidateResultSetV2())
     ServiceRegistry.addService(new CancelService())
- }
+  }
 
   /**
    * Gracefully closes JMS Connection and stops the Executor running Consumers receive loop.
@@ -327,24 +333,24 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
       }
 
       if(!m_singleExecutor.isEmpty){
-          m_singleExecutor.foreach( executor => {
-            logger.trace("Stopping JMS Consumers Single Thread Executor "+executor.toString)
-            executor  .shutdown()
+        m_singleExecutor.foreach( executor => {
+          logger.trace("Stopping JMS Consumers Single Thread Executor "+executor.toString)
+          executor  .shutdown()
 
-            logger.debug("Waiting " + EXECUTOR_SHUTDOWN_TIMEOUT + " seconds for Executor termination...")
+          logger.debug("Waiting " + EXECUTOR_SHUTDOWN_TIMEOUT + " seconds for Executor termination...")
 
-            try {
+          try {
 
-              if (executor.awaitTermination(EXECUTOR_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
-                logger.info("JMS Consumers Executor terminated")
-              } else {
-                val remainingRunnables = executor.shutdownNow()
-                logger.info(s"JMS Consumers Executor terminated, ${remainingRunnables.size} remaining Runnable(s) that never started.")
-              }
-
-            } catch {
-              case intEx: InterruptedException => logger.warn("ExecutorService.awaitTermination() interrupted", intEx)
+            if (executor.awaitTermination(EXECUTOR_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
+              logger.info("JMS Consumers Executor terminated")
+            } else {
+              val remainingRunnables = executor.shutdownNow()
+              logger.info(s"JMS Consumers Executor terminated, ${remainingRunnables.size} remaining Runnable(s) that never started.")
             }
+
+          } catch {
+            case intEx: InterruptedException => logger.warn("ExecutorService.awaitTermination() interrupted", intEx)
+          }
         })
 
       }

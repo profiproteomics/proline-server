@@ -19,12 +19,12 @@ import javax.jms.TextMessage
 
 
 class ExpiredMessageConsumer(
-  queue: Queue, connection: Connection,
+  queueName: String, connection: Connection,
   serviceMonitoringNotifier: IServiceMonitoringNotifier
 ) extends Runnable with LazyLogging {
   
   /* Constructor checks */
-  require((queue != null), "Queue is null")
+  require((queueName != null), "Queue is null")
 
   require((connection != null), "Connection is null")
 
@@ -42,6 +42,7 @@ class ExpiredMessageConsumer(
 
     try {
       // Step 6. Create a JMS Message Consumer (Consumer MUST be confined in current Thread)
+      val queue : Queue = session.createQueue(queueName);
       val consumer = session.createConsumer(queue)
 
       /* ReplyProducer to send Response JMS Message to Client (Producer MUST be confined in current Thread) */

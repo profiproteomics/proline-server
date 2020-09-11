@@ -6,7 +6,6 @@ import javax.jms.Connection
 import javax.jms.JMSException
 import javax.jms.Session
 
-import org.hornetq.api.jms.HornetQJMSClient
 
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Message
 import com.typesafe.scalalogging.LazyLogging
@@ -51,10 +50,12 @@ class MonitoringTopicPublisherRunner(connection: Connection) extends IServiceMon
       currentThread.setUncaughtExceptionHandler(new ThreadLogger(logger.underlying.getName))
     }
 
-    val prolineNotificationTopic = HornetQJMSClient.createTopic(SERVICE_MONITORING_NOTIFICATION_TOPIC_NAME)
+
 
     // Not transacted, AUTO_ACKNOWLEDGE
     val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
+
+    val prolineNotificationTopic = session.createTopic(SERVICE_MONITORING_NOTIFICATION_TOPIC_NAME)
 
     try {
       val topicPublisher = session.createProducer(prolineNotificationTopic)

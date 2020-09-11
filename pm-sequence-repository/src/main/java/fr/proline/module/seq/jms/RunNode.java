@@ -12,11 +12,14 @@ import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.Queue;
 
+/*
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.jms.HornetQJMSClient;
 import org.hornetq.api.jms.JMSFactoryType;
 import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory;
-import org.hornetq.core.remoting.impl.netty.TransportConstants;
+import org.hornetq.core.remoting.impl.netty.TransportConstants;*/
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,20 +76,21 @@ public class RunNode {
 
 			try {
 				// Step 1. Directly instantiate the JMS Queue object.
-				Queue serviceRequestQueue = HornetQJMSClient.createQueue(NodeConfig.PROLINE_SERVICE_REQUEST_QUEUE_NAME());
-				LOG.debug("JMS Queue : " + serviceRequestQueue);
+				String serviceRequestQueueName = NodeConfig.PROLINE_SERVICE_REQUEST_QUEUE_NAME(); // HornetQJMSClient.createQueue();
+				LOG.debug("JMS Queue : " + serviceRequestQueueName);
 
 				// Step 2. Instantiate the TransportConfiguration object which contains the knowledge of what transport to use,
 				// The server port etc.
 
-				HashMap<String, Object> connectionParams = new HashMap<String, Object>();
+				/*HashMap<String, Object> connectionParams = new HashMap<String, Object>();
 				connectionParams.put(TransportConstants.HOST_PROP_NAME, m_jmsServerHost); // JMS Server hostname or IP
 				connectionParams.put(TransportConstants.PORT_PROP_NAME, java.lang.Integer.valueOf(m_jmsServerPort)); // JMS port
 
-				TransportConfiguration transportConfiguration = new TransportConfiguration(NettyConnectorFactory.class.getName(), connectionParams);
+				TransportConfiguration transportConfiguration = new TransportConfiguration(NettyConnectorFactory.class.getName(), connectionParams);*/
 
 				// 	Step 3 Directly instantiate the JMS ConnectionFactory object using that TransportConfiguration
-				ConnectionFactory cf = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF, transportConfiguration);
+				ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("tcp://" + m_jmsServerHost + ":" + m_jmsServerPort);
+				//ConnectionFactory cf = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF, transportConfiguration);
 
 				// Step 4.Create a JMS Connection	
 				m_connection = cf.createConnection();
@@ -123,7 +127,7 @@ public class RunNode {
 				LOG.debug("Starting " + NodeConfig.SERVICE_THREAD_POOL_SIZE() + " Parallelizable ServiceRunners");
 
 				for (int i = 0; i < NodeConfig.SERVICE_THREAD_POOL_SIZE(); i++) {
-					ServiceRunner parallelizableSeviceRunner = new ServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier,true);
+					ServiceRunner parallelizableSeviceRunner = new ServiceRunner(serviceRequestQueueName, m_connection, serviceMonitoringNotifier,true);
 					m_executor.submit(parallelizableSeviceRunner);
 				}
 

@@ -155,6 +155,7 @@
 			<artifactId>jboss-jms-api_2.0_spec</artifactId>
 			<version>1.0.0.Final</version>
 		</dependency>
+		<!--
 		<dependency>
 			<groupId>org.hornetq</groupId>
 			<artifactId>hornetq-core-client</artifactId>
@@ -164,6 +165,17 @@
 			<groupId>org.hornetq</groupId>
 			<artifactId>hornetq-jms-client</artifactId>
 			<version>2.4.7.Final</version>
+		</dependency>
+		-->
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-core</artifactId>
+			<version>5.7.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-client</artifactId>
+			<version>5.16.0</version>
 		</dependency>
 
 		<dependency>
