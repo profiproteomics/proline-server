@@ -21,7 +21,11 @@ import javax.persistence.Table;
 		@NamedQuery(name = "findSEDbIdentBySEDbInstanceAndValues", query = "SELECT DISTINCT sdi from fr.proline.module.seq.orm.DatabankProtein sdi"
 				+ " where (sdi.databankInstance = :seDbInstance) and (sdi.identifier in (:values))"),
 		@NamedQuery(name = "findSEDbIdentBySEDbNameAndValues", query = "SELECT DISTINCT sdi from fr.proline.module.seq.orm.DatabankProtein sdi"
-				+ " where (sdi.databankInstance.databank.name = :seDbName) and (sdi.identifier in (:values))"), })
+				+ " where (sdi.databankInstance.databank.name = :seDbName) and (sdi.identifier in (:values))"),
+		@NamedQuery(name = "findSEDbIdentBySEDbNameReleaseAndValues", query = "SELECT DISTINCT sdi from fr.proline.module.seq.orm.DatabankProtein sdi"
+				+ " where (sdi.databankInstance.databank.name = :seDbName) and (sdi.databankInstance.release = :seDbVersion) and (sdi.identifier in (:values))"),
+
+})
 public class DatabankProtein implements Serializable {
 
 	private static final long serialVersionUID = 1L;
