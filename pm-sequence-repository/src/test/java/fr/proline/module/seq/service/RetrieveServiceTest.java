@@ -12,8 +12,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.List;
 
-import static org.junit.Assert.fail;
-
 /**
  * Unit test
  * 
@@ -116,7 +114,10 @@ public final class RetrieveServiceTest extends AbstractDatabaseTest  {
 			logger.info("--- Starting retrieveBioSequences Unit Test (testRetrieveOutdatedDbWith2Diffs) ---");
 			int persistedProteinsCount = RetrieveService.retrieveBioSequences(PROJECT_ID, false, rsmIds);
 
-			DatabaseUtils.writeDataSetXML(DatabaseAccess.getSEQDatabaseConnector(false), "seq-db-OUT-outdated_2diffs.xml");
+			// Uncomment the following line to generate a sample seq db and oe msidb
+//			DatabaseUtils.writeDataSetXML(DatabaseAccess.getSEQDatabaseConnector(false), "seq-db-OUT-outdated_2diffs.xml");
+			//IDatabaseConnector msiDbConnector = DatabaseAccess.getDataStoreConnectorFactory().getMsiDbConnector(PROJECT_ID);
+			//DatabaseUtils.writeDataSetXML(msiDbConnector, "msi-db-OUT-outdated_2diffs.xml");
 
 			DatabaseAccess.closeSEQDatabaseConnector();
 
