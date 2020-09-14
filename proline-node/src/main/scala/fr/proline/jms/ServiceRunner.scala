@@ -219,6 +219,7 @@ class ServiceRunner(queueName : String, connection: Connection, serviceMonitorin
 
       /* ReplyProducer to send Response JMS Message to Client (Producer MUST be confined in current Thread) */
       val replyProducer = session.createProducer(null)
+      replyProducer.setTimeToLive(10000);
 
       logger.debug(s"Entering Consumer receive loop [${currentThread.getName}]")
 

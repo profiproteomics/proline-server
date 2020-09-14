@@ -89,7 +89,7 @@ public class RunNode {
 				TransportConfiguration transportConfiguration = new TransportConfiguration(NettyConnectorFactory.class.getName(), connectionParams);*/
 
 				// 	Step 3 Directly instantiate the JMS ConnectionFactory object using that TransportConfiguration
-				ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("tcp://" + m_jmsServerHost + ":" + m_jmsServerPort);
+				ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("tcp://" + m_jmsServerHost + ":" + m_jmsServerPort+"?soTimeout=60000");
 				//ConnectionFactory cf = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF, transportConfiguration);
 
 				// Step 4.Create a JMS Connection	

@@ -15,7 +15,7 @@ import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.typesafe.scalalogging.LazyLogging
 
-import org.hornetq.api.jms.HornetQJMSConstants
+//import org.hornetq.api.jms.HornetQJMSConstants
 
 import fr.profi.util.StringUtils
 import fr.proline.jms.ServiceEvent
@@ -235,7 +235,7 @@ class ResourceService extends LazyLogging {
 
           logger.debug(s"Sending InputStream from File [$absolutePathname] to JMS BytesMessage")
 
-          responseJMSMessage.setObjectProperty(HornetQJMSConstants.JMS_HORNETQ_INPUT_STREAM, br)
+          responseJMSMessage.setObjectProperty("JMS_HQ_InputStream" /*HornetQJMSConstants.JMS_HORNETQ_INPUT_STREAM*/, br)
         } catch {
 
           case ex: Exception => {

@@ -136,7 +136,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
         // Step 3 Directly instantiate the JMS ConnectionFactory object using that TransportConfiguration
         val jmsServerPortTMP = 61616; // 5445; //JPM.JMS.TODO
-        val cf: ActiveMQConnectionFactory = new ActiveMQConnectionFactory("tcp://" + jmsServerHost + ":" + jmsServerPortTMP) //JPM.JMS.TODO
+        val cf: ActiveMQConnectionFactory = new ActiveMQConnectionFactory("tcp://" + jmsServerHost + ":" + jmsServerPortTMP+"?soTimeout=60000") //JPM.JMS.TODO
         //val cf = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF, transportConfiguration) //.asInstanceOf[ConnectionFactory]
         //cf.setConsumerWindowSize(0)
         //cf.setReconnectAttempts(10)
@@ -181,9 +181,9 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         }
 
         // Start Expired Message Listener
-        val expiredMessageConsumer = new ExpiredMessageConsumer(serviceRequestQueueName, m_connection, serviceMonitoringNotifier)
-        m_paralleleExecutor.submit(expiredMessageConsumer)
-        nbrSingleThreads += 1
+        //val expiredMessageConsumer = new ExpiredMessageConsumer(serviceRequestQueueName, m_connection, serviceMonitoringNotifier)
+        //m_paralleleExecutor.submit(expiredMessageConsumer)
+        //nbrSingleThreads += 1
 
         logger.debug(nbrSingleThreads +" Single Thread ServiceRunners started")
 

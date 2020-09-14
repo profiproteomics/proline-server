@@ -47,6 +47,7 @@ class ExpiredMessageConsumer(
 
       /* ReplyProducer to send Response JMS Message to Client (Producer MUST be confined in current Thread) */
       val replyProducer = session.createProducer(null)
+      replyProducer.setTimeToLive(10000);
       logger.debug("Entering ExpiredMessage Consumer receive loop [" + currentThread.getName + ']')
 
       /* Infinite loop consuming JMS messages */

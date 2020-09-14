@@ -59,6 +59,7 @@ class MonitoringTopicPublisherRunner(connection: Connection) extends IServiceMon
 
     try {
       val topicPublisher = session.createProducer(prolineNotificationTopic)
+      topicPublisher.setTimeToLive(10000);
 
       logger.info("Entering Notification Topic Publisher send loop [" + currentThread.getName + ']'+" for topic "+prolineNotificationTopic)
 
