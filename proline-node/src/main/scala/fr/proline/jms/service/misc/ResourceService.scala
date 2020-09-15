@@ -17,6 +17,8 @@ import com.typesafe.scalalogging.LazyLogging
 
 //import org.hornetq.api.jms.HornetQJMSConstants
 
+import org.apache.activemq.command.ActiveMQBytesMessage
+
 import fr.profi.util.StringUtils
 import fr.proline.jms.ServiceEvent
 import fr.proline.jms.ServiceRunner
@@ -235,7 +237,10 @@ class ResourceService extends LazyLogging {
 
           logger.debug(s"Sending InputStream from File [$absolutePathname] to JMS BytesMessage")
 
-          responseJMSMessage.setObjectProperty("JMS_HQ_InputStream" /*HornetQJMSConstants.JMS_HORNETQ_INPUT_STREAM*/, br)
+          //( (ClientMessage) responseJMSMessage).setInputStream(br)
+
+          //(responseJMSMessage.asInstanceOf[ActiveMQBytesMessage])
+          responseJMSMessage.setObjectProperty("JMS_AMQ_InputStream", br)
         } catch {
 
           case ex: Exception => {
