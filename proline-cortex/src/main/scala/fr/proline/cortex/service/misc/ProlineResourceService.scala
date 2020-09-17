@@ -4,9 +4,8 @@ import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
-import javax.jms.Message
-import javax.jms.Session
 
+import javax.jms.{BytesMessage, Message, Session}
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
@@ -136,7 +135,17 @@ class ProlineResourceService extends IProlineResourceService with IRemoteComplet
 
           logger.debug(s"Sending InputStream from File [$absolutePathname] to JMS BytesMessage")
 
-          responseJMSMessage.setObjectProperty("JMS_HQ_InputStream", br)  //   HornetQJMSConstants.JMS_HORNETQ_INPUT_STREAM  //JPM.JMS
+
+          //JPM.JMS
+          val data = new Array[Byte](1024)
+
+          var current = br.read(data, 0, data.length);
+          while (current != -1) {
+            (responseJMSMessage.asInstanceOf[BytesMessage]).writeBytes(data, 0, current)
+
+            current = br.read(data, 0, data.length);
+          }
+
         } catch {
 
           case ex: Exception => {

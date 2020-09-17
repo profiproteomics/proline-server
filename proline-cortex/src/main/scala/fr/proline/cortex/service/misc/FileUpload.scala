@@ -4,10 +4,8 @@ import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 
-
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.jsonrpc.IJSONRPC2Method
 import fr.profi.util.jsonrpc.ProfiJSONRPC2Response
 import fr.proline.cortex.util.fs.MountPointRegistry
@@ -17,6 +15,7 @@ import fr.proline.jms.service.api.IDefaultServiceVersion
 import fr.proline.jms.service.api.IRemoteBytesMsgService
 import fr.proline.jms.util.JMSConstants
 import javax.jms.BytesMessage
+import org.apache.activemq.command.ActiveMQBytesMessage
 
 /**
  * 
@@ -98,8 +97,12 @@ class FileUpload extends IRemoteBytesMsgService with IDefaultServiceVersion with
         
           val fos = new FileOutputStream(destFile)
           val outBuf = new BufferedOutputStream(fos)
-          message.setObjectProperty("JMS_HQ_SaveStream", outBuf)  //  JMS_HORNETQ_SAVE_STREAM  // JPM.JMS
-  
+
+          //JPM.JMS
+          val bytesMessage = message.asInstanceOf[ActiveMQBytesMessage]
+          outBuf.write(bytesMessage.getContent.getData)
+
+
           outBuf.close()
           fos.close()
   

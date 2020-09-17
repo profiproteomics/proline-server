@@ -5,11 +5,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
 
-import javax.jms.Message
-import javax.jms.MessageProducer
-import javax.jms.Session
-import javax.jms.TextMessage
-
+import javax.jms.{BytesMessage, Message, MessageProducer, Session, TextMessage}
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
@@ -17,7 +13,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 //import org.hornetq.api.jms.HornetQJMSConstants
 
-import org.apache.activemq.command.ActiveMQBytesMessage
+//import org.apache.activemq.command.ActiveMQBytesMessage
 
 import fr.profi.util.StringUtils
 import fr.proline.jms.ServiceEvent
@@ -233,14 +229,23 @@ class ResourceService extends LazyLogging {
         try {
           br = new BufferedInputStream(new FileInputStream(file))
 
+
           responseJMSMessage = session.createBytesMessage()
 
           logger.debug(s"Sending InputStream from File [$absolutePathname] to JMS BytesMessage")
 
-          //( (ClientMessage) responseJMSMessage).setInputStream(br)
+          val data = new Array[Byte](1024)
 
-          //(responseJMSMessage.asInstanceOf[ActiveMQBytesMessage])
-          responseJMSMessage.setObjectProperty("JMS_AMQ_InputStream", br)
+          var current = br.read(data, 0, data.length);
+          while (current != -1) {
+            (responseJMSMessage.asInstanceOf[BytesMessage]).writeBytes(data, 0, current)
+
+            current = br.read(data, 0, data.length);
+          }
+
+
+
+
         } catch {
 
           case ex: Exception => {

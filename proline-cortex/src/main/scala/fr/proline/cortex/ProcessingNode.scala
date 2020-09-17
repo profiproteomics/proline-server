@@ -118,30 +118,14 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         // Step 1. Directly instantiate the JMS Queue object.
         val serviceRequestQueueName = NodeConfig.PROLINE_SERVICE_REQUEST_QUEUE_NAME //HornetQJMSClient.createQueue(NodeConfig.PROLINE_SERVICE_REQUEST_QUEUE_NAME)
 
-        //logger.trace("JMS Queue : " + serviceRequestQueue)
-        //val expiredRequestQueue = HornetQJMSClient.createQueue(NodeConfig.PROLINE_EXPIRED_MESSAGE_QUEUE_NAME)
 
+        // Step 2 Directly instantiate the JMS ConnectionFactory object using that TransportConfiguration
+        //val jmsServerPortTMP = 61616; // 5445; //JPM.JMS : line to be removed
+        val cf: ActiveMQConnectionFactory = new ActiveMQConnectionFactory("tcp://" + jmsServerHost + ":" + jmsServerPort+"?soTimeout=60000")
+        // cf.setConsumerWindowSize(0)
+        // cf.setReconnectAttempts(10) //JPM.JMS : no equivalent found
 
-        // Step 2. Instantiate the TransportConfiguration object which contains the knowledge of what transport to use,
-        // The server port etc.
-
-        /*val connectionParams = mutable.Map.empty[String, Object]
-        connectionParams.put(TransportConstants.HOST_PROP_NAME, jmsServerHost) // JMS Server hostname or IP
-        connectionParams.put(TransportConstants.PORT_PROP_NAME, java.lang.Integer.valueOf(jmsServerPort)) // JMS port
-
-        val transportConfiguration = new TransportConfiguration(
-          classOf[NettyConnectorFactory].getName,
-          connectionParams
-        )*/
-
-        // Step 3 Directly instantiate the JMS ConnectionFactory object using that TransportConfiguration
-        val jmsServerPortTMP = 61616; // 5445; //JPM.JMS.TODO
-        val cf: ActiveMQConnectionFactory = new ActiveMQConnectionFactory("tcp://" + jmsServerHost + ":" + jmsServerPortTMP+"?soTimeout=60000") //JPM.JMS.TODO
-        //val cf = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF, transportConfiguration) //.asInstanceOf[ConnectionFactory]
-        //cf.setConsumerWindowSize(0)
-        //cf.setReconnectAttempts(10)
-
-        // Step 4.Create a JMS Connection
+        // Step 3. Create a JMS Connection
         m_connection = cf.createConnection()
 
         // Add an ExceptionListener to handle asynchronous Connection problems
