@@ -243,7 +243,7 @@ public final class BioSequenceRetriever {
 							seqTransac.begin();
 							transacOK = false;
 
-							LOG.debug("SEQ Db WRITE Transaction begin");
+							LOG.trace("SEQ Db WRITE Transaction begin");
 							final long start = System.currentTimeMillis();
 
 							if (seqDbDatabankInstance == null) {
@@ -287,7 +287,7 @@ public final class BioSequenceRetriever {
 							transacOK = true;
 
 							long duration = System.currentTimeMillis() - start;
-							LOG.info("SeqDb WRITE Transaction committed : {} proteins persisted from [{}] in {} ms", counters.sum("persisted"), sourcePath, duration);
+							LOG.debug("SeqDb WRITE Transaction committed : {} proteins persisted from [{}] in {} ms", counters.sum("persisted"), sourcePath, duration);
 
 						} finally {
 
@@ -374,7 +374,7 @@ public final class BioSequenceRetriever {
 							} else {
 
 								if (lastModifiedTime > oldFile.lastModified()) {
-									LOG.info("Use latest version of [{}]", f.getAbsolutePath());
+									LOG.debug("Use latest version of [{}]", f.getAbsolutePath());
 									sortedFiles.put(fRelease, f);
 								}
 							}
@@ -701,7 +701,7 @@ public final class BioSequenceRetriever {
 		final List<DatabankProtein> matchingProteins = context.getExistingProteins().get(proteinIdentifier);
 
 		if ((matchingProteins == null) || matchingProteins.isEmpty()) {
-			LOG.info("Persist new Protein Identifier [{}] in Databank {}", proteinIdentifier, context.getDatabankInstance());
+			LOG.trace("Persist new Protein Identifier [{}] in Databank {}", proteinIdentifier, context.getDatabankInstance());
 			persistDatabankProtein(context, protein, sequence);
 			context.getCounters().inc("New Proteins persisted");
 		} else {
@@ -736,7 +736,7 @@ public final class BioSequenceRetriever {
 			}
 
 			if (!sequenceMatched) {
-				LOG.info("Persist new Protein [{}] because its Sequence is new", proteinIdentifier);
+				LOG.trace("Persist new Protein [{}] because its Sequence is new", proteinIdentifier);
 				persistDatabankProtein(context, protein, sequence);
 				context.getCounters().inc("New persisted Proteins (because of a new Sequence)");
 			}
