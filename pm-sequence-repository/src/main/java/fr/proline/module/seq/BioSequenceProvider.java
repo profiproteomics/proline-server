@@ -25,8 +25,8 @@ public final class BioSequenceProvider {
    * The RelatedIdentifiers contains the List of DBioSequence for each proteinIdentifier found and the List of DDatabankProtein
    * (if one value corresponds to multiple proteins)
    *
-   * @param proteinIdentifiers
-   * @return
+   * @param proteinIdentifiers List of proteins identifiers to search for
+   * @return Same protein identifierd mapped to a RelatedIdentifiers (BioSequecences and Protein from DBs)
    */
   public static Map<String, RelatedIdentifiers> findSEDbIdentRelatedData(final Collection<String> proteinIdentifiers) {
     Map<String, RelatedIdentifiers> result = null;
@@ -56,11 +56,12 @@ public final class BioSequenceProvider {
    * The RelatedIdentifiers contains the List of DBioSequence for each proteinIdentifier found and the List of DDatabankProtein
    * (if one value corresponds to multiple proteins)
    *
-   * @param proteinIdentifiers
-   * @param dDBProtByDSeqDBInstance Map of DDatabankProtein already read from SeqDB and associated to SeqDB they were read from
+   * @param proteinIdentifiers List of proteins identifiers to search for
+   * @param proteinsAccByDatabankSubMap proteins identifiers grouped by DatabankInstance where they are referenced.
+
    * @return
    */
-  public static Map<String, RelatedIdentifiers> findSEDbIdentRelatedData(final Collection<String> proteinIdentifiers, Map<DDatabankInstance, Set<DDatabankProtein>> dDBProtByDSeqDBInstance ) {
+  public static Map<String, RelatedIdentifiers> findSEDbIdentRelatedData(final Collection<String> proteinIdentifiers, Map<DDatabankInstance, List<String>> proteinsAccByDatabankSubMap ) {
     Map<String, RelatedIdentifiers> result = null;
 
     /* Client / Provider side */
@@ -69,7 +70,7 @@ public final class BioSequenceProvider {
     EntityManager seqEM = seqDb.createEntityManager();
 
     try {
-      result = findMatchingProteins(seqEM, proteinIdentifiers, dDBProtByDSeqDBInstance );
+      result = findMatchingProteins(seqEM, proteinIdentifiers, proteinsAccByDatabankSubMap ); // null for previous behaviour
     } finally {
 
       if (seqEM != null) {
@@ -86,24 +87,42 @@ public final class BioSequenceProvider {
    * Find all DataBankProteins matching to the list of supplied identifiers. The search did not care about the databank
    * associated with the proteins found in the SeqDb, but returns all of them.
    *
-   * @param seqEM
-   * @param proteinsIdentifiers
+   * @param seqEM EntityManager to access to SequenceDB
+   * @param proteinsIdentifiers List of proteins identifiers to search for
+   * @param proteinsAccByDatabankSubMap proteins identifiers grouped by DatabankInstance where they are referenced.
    * @return
    */
-  private static Map<String, RelatedIdentifiers> findMatchingProteins(final EntityManager seqEM, final Collection<String> proteinsIdentifiers, Map<DDatabankInstance, Set<DDatabankProtein>> dDBProtByDSeqDBInstance ) {
+  private static Map<String, RelatedIdentifiers> findMatchingProteins(final EntityManager seqEM, final Collection<String> proteinsIdentifiers,  Map<DDatabankInstance, List<String>> proteinsAccByDatabankSubMap ) {
 
     final Map<String, RelatedIdentifiers> result = new HashMap<>();
     List<DatabankProtein> foundProteins = new ArrayList<>();
-    if(dDBProtByDSeqDBInstance == null)
+    List<String> notFoundProteins = new ArrayList<>();
+
+    if(proteinsAccByDatabankSubMap == null)
+      //Get Protein from seqRepo only based on the protein identifier
       foundProteins =  DatabankProteinDao.findProteins(seqEM, proteinsIdentifiers);
     else {
-      for(DDatabankInstance dbInst : dDBProtByDSeqDBInstance.keySet()) {
-        if(!StringUtils.isEmpty(dbInst.getRelease()))
-          foundProteins.addAll(DatabankProteinDao.findProteinsInDatabankNameAndRelease(seqEM, dbInst.getName(), dbInst.getRelease(), proteinsIdentifiers));
-        else {
-          List<DatabankProtein> tempFoundProteins = DatabankProteinDao.findProteinsInDatabankName(seqEM, dbInst.getName(), proteinsIdentifiers);
+      //try to get more specific protein using DSeqDBInstance release or fasta path.
+      notFoundProteins.addAll(proteinsIdentifiers);
+      //get protein using prot identifier and DSeqDBInstance release
+      for(DDatabankInstance dbInst : proteinsAccByDatabankSubMap.keySet()) {
+        if (!StringUtils.isEmpty(dbInst.getRelease())) {
+          List<DatabankProtein> currentFoundProts = DatabankProteinDao.findProteinsInDatabankNameAndRelease(seqEM, dbInst.getName(), dbInst.getRelease(), notFoundProteins);
+          foundProteins.addAll(currentFoundProts);
+          //Remove protein found using identifier and DSeqDBInstance release.
+          for (DatabankProtein nextProt : currentFoundProts) {
+            notFoundProteins.remove(nextProt.getIdentifier());
+          }
+        }
+      }
+
+      //If still some Protein not found, try using fasta name
+      if(!notFoundProteins.isEmpty()) {
+        for (DDatabankInstance dbInst : proteinsAccByDatabankSubMap.keySet()) {
+          List<DatabankProtein> currentFoundProts = DatabankProteinDao.findProteinsInDatabankName(seqEM, dbInst.getName(), notFoundProteins);
+
           //Test if fasta file is the same as seqDb one
-          for(DatabankProtein dbProt : tempFoundProteins){
+          for(DatabankProtein dbProt : currentFoundProts){
 
             String seqDBFastaname = dbInst.getSourcePath().replace("\\","/");
             int lastIndex =seqDBFastaname.lastIndexOf('/');
@@ -115,10 +134,27 @@ public final class BioSequenceProvider {
 
             if(seqDBFastaname.equals(dbProtFastaname)){
               foundProteins.add(dbProt);
+              //Remove protein found using identifier and DSeqDBInstance fasta name.
+              notFoundProteins.remove(dbProt.getIdentifier());
             }
           }
         }
       }
+
+      //Still some missing protein, just use protein identifier
+      if(!notFoundProteins.isEmpty()) {
+        List<DatabankProtein> currentFoundProts = DatabankProteinDao.findProteins(seqEM, notFoundProteins);
+        foundProteins.addAll(currentFoundProts);
+        if(currentFoundProts.size()< notFoundProteins.size()){
+          LOG.debug(" {} proteins were not found in sequence database ", (notFoundProteins.size()-currentFoundProts.size()));
+          if(LOG.isTraceEnabled()){
+            for(DatabankProtein dbProt : currentFoundProts){
+              notFoundProteins.remove(dbProt.getIdentifier());
+            }
+            LOG.trace(" Not found proteins: "+notFoundProteins.toString());
+          }
+        }
+       }
     }
 
     if ((foundProteins != null) && !foundProteins.isEmpty()) {
