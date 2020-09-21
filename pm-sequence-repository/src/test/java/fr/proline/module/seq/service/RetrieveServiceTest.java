@@ -40,7 +40,7 @@ public final class RetrieveServiceTest extends AbstractDatabaseTest  {
 			ProjectHandler projectHandler = new ProjectHandler(PROJECT_ID);
 			List<Long> rsmIds = projectHandler.findAllRSMIds();
 			projectHandler.close();
-      logger.info("--- Starting retrieveBioSequences Unit Test ---");
+      		logger.info("--- Starting retrieveBioSequences Unit Test ---");
 			int persistedProteinsCount = RetrieveService.retrieveBioSequences(PROJECT_ID, false, rsmIds);
 
 // Uncomment the following line to generate a sample seq db
@@ -136,7 +136,7 @@ public final class RetrieveServiceTest extends AbstractDatabaseTest  {
 
 	/**
 	 * seq_db contains all the biosequences and protein identifiers but the MSI RS references an older databank version
-	 *
+	 * Add test to verify protein match bioSequence reference is filled (even with newer ref.) .
 	 */
 	@Test
 	public void testRetrieveOutdatedDbButMissingFasta() {
@@ -147,9 +147,19 @@ public final class RetrieveServiceTest extends AbstractDatabaseTest  {
 			List<Long> rsmIds = projectHandler.findAllRSMIds();
 			projectHandler.close();
 			logger.info("--- Starting retrieveBioSequences Unit Test ---");
-			int persistedProteinsCount = RetrieveService.retrieveBioSequences(PROJECT_ID, false, rsmIds);
 
+			fr.proline.repository.IDatabaseConnector msiDbConnector = DatabaseAccess.getDataStoreConnectorFactory().getMsiDbConnector(PROJECT_ID);
+			EntityManager em = msiDbConnector.createEntityManager();
+			ProteinMatch pm = em.find(ProteinMatch.class, 10l);
+
+			Assert.assertTrue(pm.getBioSequenceId() == null);
+
+			int persistedProteinsCount = RetrieveService.retrieveBioSequences(PROJECT_ID, false, rsmIds);
 //			DatabaseUtils.writeDataSetXML(DatabaseAccess.getSEQDatabaseConnector(false), "seq-db_OUT-outdated_missing_fasta.xml");
+//			DatabaseUtils.writeDataSetXML(msiDbConnector, "msi-db-OUT-2diffs.xml");
+
+			em.refresh(pm);
+			Assert.assertTrue(pm.getBioSequenceId() == 18l);
 
 			DatabaseAccess.closeSEQDatabaseConnector();
 
@@ -321,6 +331,10 @@ public final class RetrieveServiceTest extends AbstractDatabaseTest  {
 	}
 
 	@Test
+	/**
+	 *  This test is used for case:
+	 *  Ensure protein match referencing a newer fasta file (not in seqDB) with a new bioSequence will get the correct BioSequnece ( not the old one)
+	 */
 	public void testRetrieveNewSeqFromSeqDB() {
 		try {
 			super.initDBTestCase("/dbunit_samples/SmallRuns_XIC/uds-db.xml","/dbunit_samples/SmallRuns_XIC/msi-db_2Searches.xml");
@@ -336,10 +350,12 @@ public final class RetrieveServiceTest extends AbstractDatabaseTest  {
 
 			int persistedProteinsCount = RetrieveService.retrieveBioSequences(PROJECT_ID, true, rsmIds);
 
+			//uncomment to create seqDB file for SeqDB result after test
 //			DatabaseUtils.writeDataSetXML(DatabaseAccess.getSEQDatabaseConnector(false), "seq-db_OUT-2diff.xml");
 
 			em.refresh(pm);
 			Assert.assertTrue(pm.getBioSequenceId() == 46);
+			//uncomment to create msiDb file for MSIdb result after test
 //			DatabaseUtils.writeDataSetXML(msiDbConnector, "msi-db-OUT-2diffs.xml");
 
 			DatabaseAccess.closeSEQDatabaseConnector();
