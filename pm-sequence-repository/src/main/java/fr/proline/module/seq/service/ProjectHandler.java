@@ -173,7 +173,6 @@ public class ProjectHandler {
 
 				} else {
 					//Still some seDbIdentifiers not found with previous query. Search using searchSettings SeqDBInstances
-					nSEDbIdentifiers = 0;
 
 					final Query pmQuery = msiEM.createQuery(VALIDATED_PM_FOR_RSMS_QUERY).setParameter("rsm_ids", rsmIds);
 					nSEDbIdentifiers = ProjectHandler.createProteinIdentifiersFromQuery(query, databankBySeqDatabase, proteinsByDatabank);
@@ -414,6 +413,8 @@ public class ProjectHandler {
 	public void fillProteinMatchesProperties(final Map<Long, DDatabankInstance> databankBySeqDatabase, final Map<DDatabankInstance, Set<DDatabankProtein>> proteinsByDatabank , final List<Long> rsmIds) {
 
 		Map<ProteinMatch, Integer> coveredSeqLengthByProtMatchList = new HashMap<>();
+		Map<String,  List<DDatabankInstance>> seqDatabankByDbProtMatchIdentifier;
+
 
 		boolean msiTransactionOK = false;
 		try {
@@ -429,6 +430,15 @@ public class ProjectHandler {
 				LOG.info("Update SeqDatabase release properties for Project #{}. ", projectId);
 				updateMSISeqDbRelease(databankBySeqDatabase); //to do only for referenced seqDb from rsms to consider ?
 
+				//Create reverseMap seqDatabankByDbProtMatch
+				seqDatabankByDbProtMatchIdentifier = new HashMap<>();
+				for(Entry<DDatabankInstance, Set<DDatabankProtein>> e: proteinsByDatabank.entrySet()){
+					for(DDatabankProtein dbProt : e.getValue()) {
+						List<DDatabankInstance> seqDbs = seqDatabankByDbProtMatchIdentifier.getOrDefault(dbProt.getIdentifier(), new ArrayList<DDatabankInstance>());
+						seqDbs.add(e.getKey());
+						seqDatabankByDbProtMatchIdentifier.put(dbProt.getIdentifier(), seqDbs);
+					}
+				}
 				// for each RSM in data_set.result_summmary_id
 				for (Long rsmId : rsmIds) {
 					final long start = System.currentTimeMillis();
@@ -534,17 +544,24 @@ public class ProjectHandler {
 						Map<ProteinMatch, ProteinSetProteinMatchItem> protSetMapByProtMatch = new HashMap<>();
 						List<String> allProtMatchesAccession = new ArrayList<>();
 
+						Map<DDatabankInstance, List<String>> proteinsAccByDatabankSubMap  = new HashMap<>();
 						//get Coverage length For each ProteinMatch
 						for (ProteinSetProteinMatchItem protSet2ProtMatch : protSet.getProteinSetProteinMatchItems()) {
 							ProteinMatch currentProtMatch = protSet2ProtMatch.getProteinMatch();
 							allProtMatchesAccession.add(currentProtMatch.getAccession());
+							List<DDatabankInstance> seqDbInsts = seqDatabankByDbProtMatchIdentifier.get(currentProtMatch.getAccession());
+							for(DDatabankInstance seqDbInst : seqDbInsts) {
+								List<String> prots = proteinsAccByDatabankSubMap.getOrDefault(seqDbInst, new ArrayList<>());
+								prots.add(currentProtMatch.getAccession());
+								proteinsAccByDatabankSubMap.put(seqDbInst,prots);
+							}
 							protSetMapByProtMatch.put(currentProtMatch, protSet2ProtMatch);
 							coveredSeqLengthByProtMatchList.put(currentProtMatch, computeSequenceCoverage(seqMatchesInfoByProteinMatchId, currentProtMatch, pepIdsByProtSetId.get(protSet.getId())));
 						}
 
 						//--  Get Wrappers for all ProteinMatches: bioSequence and DatabankProtein
 						// AND  filters RelatedIdentifier depending to keep only those corresponding to seqDbs
-						Map<String, BioSequenceProvider.RelatedIdentifiers> protMatchesObjResult = BioSequenceProvider.findSEDbIdentRelatedData(allProtMatchesAccession, proteinsByDatabank);
+						Map<String, BioSequenceProvider.RelatedIdentifiers> protMatchesObjResult = BioSequenceProvider.findSEDbIdentRelatedData(allProtMatchesAccession, proteinsAccByDatabankSubMap);
 
 
 						//Update and Save properties
@@ -668,11 +685,15 @@ public class ProjectHandler {
 			
 			if(seDbIdents == null ||  seDbIdents.getDBioSequences() == null ||  seDbIdents.getDBioSequences().isEmpty()) {
 					nbrNoSeqProt++;
-					LOG.trace(" ****  FOUND NO Sequence for protein {}", protMatch.getAccession());
+					if(nbrNoSeqProt <= 10)
+						LOG.debug(" ****  FOUND NO Sequence for protein {}. Display only 10 first ", protMatch.getAccession());
+				LOG.trace(" ****  FOUND NO Sequence for protein {}", protMatch.getAccession());
 			} else {
 				List<DBioSequence> protMatchBioSeqs = seDbIdents.getDBioSequences();
 				if (protMatchBioSeqs.size() > 1) {
 					nbrManySeqProt++;
+					if(nbrManySeqProt <= 10)
+						LOG.debug(" ****  FOUND MORE THAN 1 Sequence for protein {}. Use first one (Display only 10 first) ", protMatch.getAccession());
 					LOG.trace(" ****  FOUND MORE THAN 1 Sequence for protein {}. Use first one  ", protMatch.getAccession());
 				}
 							
@@ -740,6 +761,9 @@ public class ProjectHandler {
 						}
 						if (foundMissMatch) {
 							nbrBioSeqMissMatch++;
+							String msg = sb.toString();
+							if(nbrBioSeqMissMatch <= 10)
+								LOG.debug(msg+" (Display only first 10)");
 							LOG.trace(sb.toString());
 						}
 					}
