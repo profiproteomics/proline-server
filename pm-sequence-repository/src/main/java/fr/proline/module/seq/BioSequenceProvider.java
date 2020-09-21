@@ -95,6 +95,8 @@ public final class BioSequenceProvider {
   private static Map<String, RelatedIdentifiers> findMatchingProteins(final EntityManager seqEM, final Collection<String> proteinsIdentifiers,  Map<DDatabankInstance, List<String>> proteinsAccByDatabankSubMap ) {
 
     final Map<String, RelatedIdentifiers> result = new HashMap<>();
+    if(proteinsIdentifiers.isEmpty())
+      return result;
     List<DatabankProtein> foundProteins = new ArrayList<>();
     List<String> notFoundProteins = new ArrayList<>();
 
@@ -106,7 +108,7 @@ public final class BioSequenceProvider {
       notFoundProteins.addAll(proteinsIdentifiers);
       //get protein using prot identifier and DSeqDBInstance release
       for(DDatabankInstance dbInst : proteinsAccByDatabankSubMap.keySet()) {
-        if (!StringUtils.isEmpty(dbInst.getRelease())) {
+        if (!StringUtils.isEmpty(dbInst.getRelease()) && !notFoundProteins.isEmpty()) {
           List<DatabankProtein> currentFoundProts = DatabankProteinDao.findProteinsInDatabankNameAndRelease(seqEM, dbInst.getName(), dbInst.getRelease(), notFoundProteins);
           foundProteins.addAll(currentFoundProts);
           //Remove protein found using identifier and DSeqDBInstance release.
@@ -117,8 +119,8 @@ public final class BioSequenceProvider {
       }
 
       //If still some Protein not found, try using fasta name
-      if(!notFoundProteins.isEmpty()) {
-        for (DDatabankInstance dbInst : proteinsAccByDatabankSubMap.keySet()) {
+      for (DDatabankInstance dbInst : proteinsAccByDatabankSubMap.keySet()) {
+        if(!notFoundProteins.isEmpty()) {
           List<DatabankProtein> currentFoundProts = DatabankProteinDao.findProteinsInDatabankName(seqEM, dbInst.getName(), notFoundProteins);
 
           //Test if fasta file is the same as seqDb one
