@@ -215,10 +215,10 @@ public class FastaSource implements DataSource {
 				// If not found, start a second iteration searching for the first one with no description and eventually set it
 				// the description found in the header
 				if (foundProtein == null) {
-					LOG.debug("Cannot find a Protein with a matching description for [{}], trying to search for one with no description", fastaIdentifier);
+					LOG.trace("Cannot find a Protein with a matching description for [{}], trying to search for one with no description", fastaIdentifier);
 					for (final DDatabankProtein sdi : possibleIdentifiers) {
 						if (sdi.getDescription() == null) {
-							LOG.debug("A Protein with no description is found for [{}]", possibleIdentifiers.size(), fastaIdentifier);
+							LOG.trace("A Protein with no description is found for [{}]", possibleIdentifiers.size(), fastaIdentifier);
 							if ((descriptionFromFasta != null) && (!descriptionFromFasta.isEmpty())) {
 								foundProtein = new DDatabankProtein(fastaIdentifier, descriptionFromFasta);
 							} else {
@@ -228,7 +228,7 @@ public class FastaSource implements DataSource {
 								if (nPossibleIdentifiers > 1) {
 									//TODO Cby: mais les autres possibleIdentifiers ont peut etre une description mais qui ne matche pas ?
 									foundProtein.setInferred(true);
-									LOG.debug("There are {} Proteins (inferred) for [{}] taking the first one with no description", nPossibleIdentifiers, fastaIdentifier);
+									LOG.trace("There are {} Proteins (inferred) for [{}] taking the first one with no description", nPossibleIdentifiers, fastaIdentifier);
 								}
 							}
 							break;
@@ -263,7 +263,7 @@ public class FastaSource implements DataSource {
 						messageBuilder.append(LINE_SEPARATOR);
 					}
 
-					LOG.debug(messageBuilder.toString());
+					LOG.trace(messageBuilder.toString());
 
 					/* Retrieve arbitrar first SEDbIdentWrapper */
 					//***  VDS Warning : Use Fasta date to create entry instead of MSI protein ==> finally SeqDb Protein from fasta !
