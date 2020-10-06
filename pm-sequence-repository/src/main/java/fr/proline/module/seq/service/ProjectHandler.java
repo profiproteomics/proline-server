@@ -652,35 +652,54 @@ public class ProjectHandler {
 		
 		int coveredSequenceLength;
 
-		// get missed descriptions for each protein_match.
 		for (Entry<ProteinMatch, Integer> entry : coveredSeqLengthByProtMatchList.entrySet()) {	
 			ProteinMatch protMatch = entry.getKey();
 			boolean protMatch2Update = false;
 			String protDescription = protMatch.getDescription();
 			coveredSequenceLength = entry.getValue();
 			BioSequenceProvider.RelatedIdentifiers seDbIdents = seDbIdentsObjects.get(protMatch.getAccession());
-			if ( (protDescription == null || protDescription.isEmpty()) && !(seDbIdents ==null)) {
+
+			//If many potential DatabankProteins, try using description matching
+			int entryIndex = -1;
+			if(seDbIdents != null) {
 				List<DDatabankProtein> sedbIdentifiers = seDbIdents.getDDatabankProteins();
-				if ((sedbIdentifiers != null) && (sedbIdentifiers.size() >= 1)) {
-					DDatabankProtein sedbIdent = sedbIdentifiers.get(0);
-					//sedbIdent description should not be null or empty 
-					if ((sedbIdent != null) && (sedbIdent.getDescription() != null)) {
-						if (sedbIdent.getDescription().trim().length() > 0){
-							protDescription = sedbIdent.getDescription();
-							protMatch.setDescription(protDescription);	
-							protMatch2Update = true;
+				if ( !StringUtils.isEmpty(protDescription)) {
+					if(sedbIdentifiers.size() >= 1 ) {
+						for (int index = 0; index < sedbIdentifiers.size(); index++) {
+							DDatabankProtein nextProt = sedbIdentifiers.get(index);
+							if (nextProt.getDescription() != null && nextProt.getDescription().equals(protDescription)) {
+								entryIndex = index;
+								break;
+							}
 						}
-					}
+					} else
+						entryIndex = 0;
+				} else {
+					// get missed descriptions for each protein_match. If more than one, use first not null...
+					if (sedbIdentifiers.size() >= 1){
+						for(int index = 0; index < sedbIdentifiers.size(); index++){
+							DDatabankProtein sedbIdent = sedbIdentifiers.get(index);
+							//test if sedbIdent description should not be null or empty
+							if ((sedbIdent != null) && (sedbIdent.getDescription() != null) && (sedbIdent.getDescription().trim().length() > 0)) {
+								protDescription = sedbIdent.getDescription();
+								protMatch.setDescription(protDescription);
+								entryIndex = index;
+								protMatch2Update = true;
+								break;
+							}
+						}
+					} else
+						entryIndex = 0;
 				}
 			}
 			
 			//Use Description to get GeneName :
-			if((protDescription != null) && (!protDescription.isEmpty())) {
+			if(!StringUtils.isEmpty(protDescription)) {
 				String geneName = RegExUtil.getMatchingString(protDescription, ".*GN=([^\\s]+).*");
 				if(geneName != null && !geneName.isEmpty()) {
 					protMatch.setGeneName(geneName);
 					protMatch2Update = true;
-				}		
+				}
 			}
 			
 			if(seDbIdents == null ||  seDbIdents.getDBioSequences() == null ||  seDbIdents.getDBioSequences().isEmpty()) {
@@ -692,12 +711,15 @@ public class ProjectHandler {
 				List<DBioSequence> protMatchBioSeqs = seDbIdents.getDBioSequences();
 				if (protMatchBioSeqs.size() > 1) {
 					nbrManySeqProt++;
+					if(entryIndex == -1)
+						entryIndex = 0;
 					if(nbrManySeqProt <= 10)
-						LOG.debug(" ****  FOUND MORE THAN 1 Sequence for protein {}. Use first one (Display only 10 first) ", protMatch.getAccession());
-					LOG.trace(" ****  FOUND MORE THAN 1 Sequence for protein {}. Use first one  ", protMatch.getAccession());
-				}
+						LOG.debug(" ****  FOUND MORE THAN 1 Sequence for protein {}. Use sequence at index {} (Display only 10 first) ", protMatch.getAccession(),entryIndex);
+					LOG.trace(" ****  FOUND MORE THAN 1 Sequence for protein {}. Use sequence at index {} ", protMatch.getAccession(),entryIndex);
+				} else
+					entryIndex = 0;
 							
-				DBioSequence bioSeq = protMatchBioSeqs.get(0);
+				DBioSequence bioSeq = protMatchBioSeqs.get(entryIndex);
 				int bioSequenceLenght = bioSeq.getSequence().length();
 				// to avoid the indeterminate form : /0
 				if ((bioSequenceLenght > 0) && (coveredSequenceLength <= bioSequenceLenght)) {
@@ -770,6 +792,8 @@ public class ProjectHandler {
 
 					// Save link between ProteinMatch and BioSeq
 					protMatch.setBioSequenceId(newBioSeqId);
+				} else {
+					LOG.warn(" ****  FOUND Sequence is shorter than theorical covered Sequence Length !!! ");
 				}
 			}
 			if(protMatch2Update)
