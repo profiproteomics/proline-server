@@ -108,7 +108,9 @@ object ExportConfigConstant {
 
   val FIELD_PROTEIN_SETS_QUANT_STATUS = "protein_sets_status" //incremental
   val FIELD_PROTEIN_SETS_QUANT_PEPTIDE_NUMBER = "protein_sets_qc_peptide_number" //incremental
-  
+
+  val FIELD_PROTEIN_SETS_QUANT_NB_PEPTIDE = "protein_sets_nb_quant_peptides"
+
   // FIXME: this is badly named => this not always relative to protein sets
   val FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE = "raw_abundance" //incremental // SC Specific 
   val FIELD_PROTEIN_SETS_QUANT_ABUNDANCE = "abundance" // incremental // SC Weighted

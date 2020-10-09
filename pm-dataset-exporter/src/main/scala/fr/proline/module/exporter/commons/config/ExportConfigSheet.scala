@@ -148,7 +148,7 @@ object ExportConfigSheet {
   def getPTMClusterSheetExportConfig(fromXIC: Boolean, defaultDisplayed: Boolean): ExportConfigSheet = {
     ExportConfigSheet(
       id = ExportConfigConstant.SHEET_PTM_CLUSTER,
-      title = "PTM Clusters",
+      title = "Modification Clusters",
       presentation = ExportConfigConstant.PRESENTATION_SHEET_COLUMNS,
       fields = CustomFieldConfigFactory.getPtmClusterSheetFields(fromXIC),
       defaultDisplayed
