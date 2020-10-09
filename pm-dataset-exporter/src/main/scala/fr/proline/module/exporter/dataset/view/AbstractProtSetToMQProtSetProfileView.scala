@@ -8,8 +8,9 @@ abstract class AbstractProtSetToMQProtSetProfileView extends AbstractProtSetToTy
 
   protected val mqProtSetProfileFieldSet = Set(
     FIELD_PROTEIN_SETS_QUANT_STATUS,
-    FIELD_PROTEIN_SETS_QUANT_PEPTIDE_NUMBER
+    FIELD_PROTEIN_SETS_QUANT_PEPTIDE_NUMBER //VDS Pourquoi pas dans AbstractQuantDataseyView
   )
+  protected val mqProtSetFieldSet = Set(FIELD_PROTEIN_SETS_QUANT_NB_PEPTIDE)
 
   // Override getQcFieldSet in order to generate QuantChannel based columns for fields defined by mqProtSetProfileFieldSet
   override protected def getQcFieldSet() = {
@@ -17,7 +18,7 @@ abstract class AbstractProtSetToMQProtSetProfileView extends AbstractProtSetToTy
     superQcFieldSet ++ mqProtSetProfileFieldSet
   }
 
-  protected val mqProtSetProfileFieldsConfigs = sheetConfig.fields.filter(f => mqProtSetProfileFieldSet.contains(f.id))
+  protected val mqProtSetProfileFieldsConfigs = sheetConfig.fields.filter(f => (mqProtSetProfileFieldSet.contains(f.id) || mqProtSetFieldSet.contains(f.id)))
 
   override def buildRecord(buildingContext: IRecordBuildingContext): Map[String, Any] = {
 
@@ -32,6 +33,16 @@ abstract class AbstractProtSetToMQProtSetProfileView extends AbstractProtSetToTy
 
     val mqProtSet = mqProtSetProfileBuildingCtx.masterQuantProteinSet
     val qProtSetMap = mqProtSet.quantProteinSetMap
+
+    val mqProtSetQPepCount = if(mqProtSet.properties.isDefined && mqProtSet.properties.get.getSelectionLevelByMqPeptideId().isDefined ) {
+      val mqPepBySelectionMLevel = mqProtSet.properties.get.getSelectionLevelByMqPeptideId().get;
+      if(mqPepBySelectionMLevel != null && !mqPepBySelectionMLevel.isEmpty)
+        mqPepBySelectionMLevel.filter(_._2 >= 2).size
+      else
+        0
+    } else
+      -1
+
 
     def getProteinMatchId(qcId: Long, identRsm: LazyResultSummary): Option[Long] = {
       val protMatchIdOpt = qProtSetMap.get(qcId).flatMap(_.proteinMatchId)
@@ -103,8 +114,14 @@ abstract class AbstractProtSetToMQProtSetProfileView extends AbstractProtSetToTy
         case FIELD_PROTEIN_SETS_QUANT_PEPTIDE_NUMBER => {
           for (qcId <- qcIds) {
             val qcPepCount = getQcPeptidesCount(qcId)
-            recordBuilder += Tuple2(mkQcFieldTitle(fieldConfig, qcId), if(qcPepCount > 0) qcPepCount else "")            
+            recordBuilder += Tuple2(mkQcFieldTitle(fieldConfig, qcId), if (qcPepCount > 0) qcPepCount else "")
           }
+        }
+        case FIELD_PROTEIN_SETS_QUANT_NB_PEPTIDE => {
+          if(mqProtSetQPepCount <0)
+            recordBuilder += fieldConfig.title -> "UNKNOWN"
+          else
+            recordBuilder += fieldConfig.title -> mqProtSetQPepCount
         }
       }
 

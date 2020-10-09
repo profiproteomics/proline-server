@@ -87,6 +87,7 @@ object CustomFieldConfigFactory {
     }
     
     if (fromXIC || fromSC) {
+      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_NB_PEPTIDE, "quantified_peptides_count")
       fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PEPTIDE_NUMBER, "peptides_count", defaultDisplayed = fromXIC || fromSC)
       fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PSM_COUNT, if (fromXIC) "psm_count" else "Basic SC")
       fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE, if (fromXIC) "raw_abundance" else "Specific SC")
@@ -166,6 +167,7 @@ object CustomFieldConfigFactory {
     fieldsBuffer ++= getProteinSetsSheetFields(fromProtein = false, fromXIC = false, fromSC = false)
 
     if (fromXIC || fromSC) {
+      fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_NB_PEPTIDE, "quantified_peptides_count")
       fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id")
       fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_ELUTION_TIME, "master_elution_time")
       fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_SELECTION_LEVEL, "is_validated_for_quanti")
