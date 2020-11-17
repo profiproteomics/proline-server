@@ -326,10 +326,10 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
       }
 
-      if(!m_singleExecutor.isEmpty){
+      if(m_singleExecutor.nonEmpty){
           m_singleExecutor.foreach( executor => {
             logger.trace("Stopping JMS Consumers Single Thread Executor "+executor.toString)
-            executor  .shutdown()
+            executor.shutdown
 
             logger.debug("Waiting " + EXECUTOR_SHUTDOWN_TIMEOUT + " seconds for Executor termination...")
 

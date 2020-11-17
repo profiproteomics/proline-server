@@ -268,15 +268,12 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
   }
 
   protected def buildSelectorString(): String = {
-    val handledServices = ServiceRegistry.getParallelizableServices
+    val handledServices = ServiceRegistry.getParallelizableServices()
 
     /* Parallelizable ServiceRunner */
-    buildConcreteSelectorString(handledServices, true)
+    buildConcreteSelectorString(handledServices, parallelizableRunner = true)
   }
 
-  protected def getServiceInstance(serviceName: String, serviceVersion: String): Option[IRemoteServiceIdentity] = {
-    ServiceRegistry.getService(serviceName, serviceVersion)
-  }
 
   /* Private methods */
   private def handleMessage(session: Session, message: Message, replyProducer: MessageProducer) {
@@ -336,7 +333,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
             ServiceManager.addMsg2FutureEntry(jmsMsgId, currentF)
           }
 
-          val serviceInstanceOpt = getServiceInstance(serviceName, serviceVersion)
+          val serviceInstanceOpt = ServiceRegistry.getService(serviceName, serviceVersion)
 
           if (serviceInstanceOpt.isDefined) {
             jmsMessageContext = buildJMSMessageContext(message)
@@ -416,7 +413,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
 
         /* Notify */
         val serviceSource = message.getStringProperty(PROLINE_SERVICE_SOURCE_KEY)
-        val serviceSourceOpt = if  (StringUtils.isNotEmpty(serviceSource)) Some(serviceSource) else None 
+        val serviceSourceOpt = if  (StringUtils.isNotEmpty(serviceSource)) Some(serviceSource) else None
 
         val serviceDescr = message.getStringProperty(PROLINE_SERVICE_DESCR_KEY)        
         val serviceDescrOpt = if  (StringUtils.isNotEmpty(serviceDescr)) Some(serviceDescr) else None 
