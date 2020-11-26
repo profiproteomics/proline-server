@@ -85,7 +85,12 @@ class PTMClusterView(
             for (qcId <- qcIds) {
               if (qPepsByQCId.contains(qcId)) {
                 val qPeps = qPepsByQCId(qcId).map(_._2)
-                val aggregatedQPep = qPeps.head.copy(rawAbundance = qPeps.map(_.rawAbundance).sum, abundance = qPeps.map(_.abundance).sum)
+                val quantPepIonWRawAb = qPeps.map(_.rawAbundance).filter(!_.equals(Float.NaN))
+                val quantPepIonWAb = qPeps.map(_.abundance).filter(!_.equals(Float.NaN))
+                val newRawAbundance = if (quantPepIonWRawAb.nonEmpty)quantPepIonWRawAb.sum else Float.NaN
+                val newAbundance =  if (quantPepIonWAb.nonEmpty)quantPepIonWAb.sum else Float.NaN
+
+                val aggregatedQPep = qPeps.head.copy(rawAbundance = newRawAbundance, abundance = newAbundance)
                 newQPeps += (qcId -> aggregatedQPep)
               }
             }
