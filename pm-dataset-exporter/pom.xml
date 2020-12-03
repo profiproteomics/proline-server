@@ -5,18 +5,18 @@
   <parent>
     <artifactId>profi-pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    <version>0.5.0</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>pm-dataset-exporter</artifactId>
-  <version>0.9.0-SNAPSHOT</version>
+  <version>0.9.0</version>
 
   <name>PM-DatasetExporter</name>
   <description>Proline Module dedicated to the export of Proline datasets</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>2.1.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
+    <core.version>2.1.0</core.version>  <!-- Snapshot Trunk version -->
     <version.path>${basedir}/src/main/scala/fr/proline/module/exporter/api</version.path>
   </properties>
 
@@ -58,14 +58,14 @@
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-java</artifactId>
-      <version>0.8.0-SNAPSHOT</version>
+      <version>0.8.0</version>
     </dependency>
 
 
     <dependency> <!-- SHOULD be defined BEFORE Proline OM or MZdb Processing ! -->
       <groupId>fr.proline</groupId>
       <artifactId>pm-fragmentmatch-generator</artifactId>
-      <version>0.9.0-SNAPSHOT</version>
+      <version>0.9.0</version>
       <scope>test</scope>
     </dependency>
 
@@ -156,12 +156,12 @@
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-scala_${scala.version}</artifactId>
-      <version>0.9.0-SNAPSHOT</version>
+      <version>0.9.0</version>
     </dependency>
     <dependency>
       <groupId>fr.profi</groupId>
       <artifactId>profi-proteomics_${scala.version}</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
+      <version>0.5.0</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>

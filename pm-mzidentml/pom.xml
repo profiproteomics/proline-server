@@ -5,18 +5,18 @@
   <parent>
     <artifactId>profi-pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.5.0-SNAPSHOT</version>  <!-- Snapshot Trunk version -->
+    <version>0.5.0</version>  <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>pm-mzidentml</artifactId>
-  <version>0.9.0-SNAPSHOT</version>
+  <version>0.9.0</version>
 
   <name>PM-MzIdentML</name>
   <description>Proline Module which can import and export results in the mzIdentML file format</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>2.1.0-SNAPSHOT</core.version>  <!-- Snapshot Trunk version -->
+    <core.version>2.1.0</core.version>  <!-- Snapshot Trunk version -->
     <version.path>${basedir}/src/main/scala/fr/proline/module/exporter/mzidentml</version.path>
   </properties>
 
@@ -124,12 +124,12 @@
     <dependency>
       <groupId>fr.profi</groupId>
       <artifactId>profi-proteomics_${scala.version}</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
+      <version>0.5.0</version>
     </dependency>
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-scala_${scala.version}</artifactId>
-      <version>0.9.0-SNAPSHOT</version>
+      <version>0.9.0</version>
     </dependency>
     <!-- Tests -->
     <dependency>

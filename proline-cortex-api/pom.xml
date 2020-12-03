@@ -6,11 +6,11 @@
 
     <groupId>fr.proline</groupId>
     <artifactId>profi-pom</artifactId>
-    <version>0.5.0-SNAPSHOT</version> <!-- Snapshot Trunk version -->
+    <version>0.5.0</version> <!-- Snapshot Trunk version -->
   </parent>
 
   <artifactId>proline-cortex-api</artifactId>
-  <version>0.7.0-SNAPSHOT</version>
+  <version>0.7.0</version>
 
   <name>Proline-Cortex-API</name>
   <description>Proline Cortex API (services, methods and parameters)</description>
@@ -64,13 +64,13 @@
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-scala_${scala.version}</artifactId>
-      <version>0.9.0-SNAPSHOT</version>
+      <version>0.9.0</version>
     </dependency>
 
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-java</artifactId>
-      <version>0.8.0-SNAPSHOT</version>
+      <version>0.8.0</version>
     </dependency>
     <!-- Test -->
     <dependency>

@@ -4,11 +4,11 @@
   <parent>
     <artifactId>profi-pom</artifactId>
     <groupId>fr.proline</groupId>
-    <version>0.5.0-SNAPSHOT</version>
+    <version>0.5.0</version>
   </parent>
 
   <artifactId>pm-omssa-parser</artifactId>
-  <version>0.9.0-SNAPSHOT</version>
+  <version>0.9.0</version>
 
   <name>PM-OmssaParser</name>
   <description>Proline Module which parse an Omssa result file and store its result in databases</description>
@@ -16,7 +16,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <core.version>2.1.0-SNAPSHOT</core.version>
+    <core.version>2.1.0</core.version>
     <version.path>${basedir}/src/main/scala/fr/proline/module/parser/omssa</version.path>
   </properties>
 
@@ -93,12 +93,12 @@
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>pm-fragmentmatch-generator</artifactId>
-      <version>0.9.0-SNAPSHOT</version>
+      <version>0.9.0</version>
     </dependency>
     <dependency>
       <groupId>fr.profi</groupId>
       <artifactId>profi-proteomics_${scala.version}</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
+      <version>0.5.0</version>
     </dependency>
     <!-- Testing -->
     <dependency>
