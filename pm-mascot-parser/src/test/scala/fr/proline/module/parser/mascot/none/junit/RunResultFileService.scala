@@ -11,7 +11,8 @@ import fr.proline.module.parser.mascot.MascotParseParams
 
 object RunResultFileService extends LazyLogging {
 
-  private var _datFileName: String = "/F047876.dat"
+  private var _datFileName: String = "/dat_samples/Mascot_ErrorTolerant_F981130.dat"  //error Tolerant search
+
   private var absoluteDatFileNameSet = false
   def datFileName_=(value: String): Unit = {
     _datFileName = value
@@ -56,7 +57,7 @@ object RunResultFileService extends LazyLogging {
     propertiedBuilder += (MascotParseParams.ION_SCORE_CUTOFF.toString -> 0.5)
     propertiedBuilder += (MascotParseParams.SUBSET_THRESHOLD.toString -> 0.5)
 
-    val projectId = 2
+    val projectId = 1
 
     val executionContext = BuildLazyExecutionContext(dbManager, projectId, true) // Use JPA !
 
