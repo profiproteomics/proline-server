@@ -1,17 +1,12 @@
 package fr.proline.module.parser.mascot
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
-
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.regex.RegexUtils.RichString
-import fr.proline.core.om.model.msi.IonTypes
-import fr.proline.core.om.model.msi.PtmDefinition
-import fr.proline.core.om.model.msi.PtmEvidence
-import fr.proline.core.om.model.msi.PtmLocation
-import fr.proline.core.om.model.msi.PtmNames
+import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.msi.IPTMProvider
+
+import scala.collection.mutable.ArrayBuffer
+import scala.util.matching.Regex
 
 // TODO conception a revoir : cet objet est un singleton qui garde un etat des resultats de recherche alors
 // que ces recherches sont faites dans avec IPTMProvider qui est passe en parametre, donc susceptible de changer
@@ -23,7 +18,7 @@ object MascotPTMUtils extends LazyLogging  {
 //  val accessedPtms = new ArrayBuffer[PtmDefinition]
 //  val ptmDefsByMascotModName = new HashMap[String, Array[PtmDefinition]]
 
-  val MascotModRegex = """(.+) \((.+)\)""".r
+  val MascotModRegex: Regex = """(.+) \((.+)\)""".r
 
   /**
    * Parse mascotMods, Seq[String] containing the list of PTMs as given by Mascot.
@@ -48,8 +43,6 @@ object MascotPTMUtils extends LazyLogging  {
     var ptmDefs = new ArrayBuffer[PtmDefinition]()
     var modName = mascotMod
 
-
-
     //No mascotServerURL : Get PTM information from mascot "name"    
     var posConstraint = ""
     if (modName.contains("(")) { //Split name to ptmName + Residue/Site      
@@ -66,25 +59,26 @@ object MascotPTMUtils extends LazyLogging  {
     posConstraints.foreach {
       case (residue, location) =>
 
-        val resChar = if (residue != None) residue.get else '\0'
+        val resChar = if (residue.isDefined) residue.get else '\0'
         var nextPtmDef = Option.empty[PtmDefinition]
 
-          nextPtmDef = ptmProvider.getPtmDefinition(modName, resChar, location)
+        nextPtmDef = ptmProvider.getPtmDefinition(modName, resChar, location)
 
-          // TODO: DBO => I think it should be forbidden to do this because composition has to be known
-          // FIXME: The fallback should be performed by parsing the Unimod section of the dat file
-          if (nextPtmDef == None) { //Ptm Definition don't exist. Create One 
+        // TODO: DBO => I think it should be forbidden to do this because composition has to be known
+        // FIXME: The fallback should be performed by parsing the Unimod section of the dat file
+        if (nextPtmDef.isEmpty) { //Ptm Definition don't exist. Create One
+          //VDS(ErrTol) TODO : DO NOT create one ==> error with unvalid composition etc... Just propagate error
 
-            var ptmIdOpt = ptmProvider.getPtmId(modName) // Get PtmName if exist
-            var ptmId: Long = 0L
+          var ptmIdOpt = ptmProvider.getPtmId(modName) // Get PtmName if exist
+          var ptmId: Long = 0L
 
-            if (ptmIdOpt == Some)
-              ptmId = ptmIdOpt.get
-            else
-              ptmId = PtmNames.generateNewId
+          if (ptmIdOpt.isDefined)
+            ptmId = ptmIdOpt.get
+          else
+            ptmId = PtmNames.generateNewId()
 
-            // FIXME Create PtmEvidence : type Precursor is required ! + PtmClassification
-            val ptmEvidence = new PtmEvidence(
+          // FIXME Create PtmEvidence : type Precursor is required ! + PtmClassification
+          val ptmEvidence = new PtmEvidence(
               ionType = IonTypes.Precursor,
               composition = "UNVALID",
               monoMass = Double.MaxValue,
@@ -92,18 +86,22 @@ object MascotPTMUtils extends LazyLogging  {
               isRequired = true
             )
 
-            nextPtmDef = Some(new PtmDefinition(
-              id = PtmDefinition.generateNewId,
+//            nextPtmDef = Some(new PtmDefinition(
+          Some(new PtmDefinition(
+              id = PtmDefinition.generateNewId(),
               location = location.toString,
               names = PtmNames(modName, modName),
               ptmEvidences = Array(ptmEvidence),
               residue = resChar,
               classification = "Post-translational",
               ptmId = ptmId
-            ))
-          }
+          ))
 
-          ptmDefs += nextPtmDef.get
+          logger.debug("-- missiong PTMDefinition:\t"+modName+"\tPTM id=\t"+ptmId+"\tlocation:\t"+location+"\tresChar:\t"+resChar)
+
+        }
+          if(nextPtmDef.isDefined)
+            ptmDefs += nextPtmDef.get
 
     } //End go through residue
 
@@ -132,7 +130,7 @@ object MascotPTMUtils extends LazyLogging  {
     if (posConstraintAsStr ~~ "(?i)term") {
 
       // If not strict match
-      if (posConstraintAsStr =~ "(?i).+term" == false) {
+      if (!(posConstraintAsStr =~ "(?i).+term")) {
         // Extract the residue
         val regexMatch = posConstraintAsStr =# """(?i)(.+term)\s+(.+)"""
         locConstraintAsStr = regexMatch.get.group(1)
@@ -142,16 +140,16 @@ object MascotPTMUtils extends LazyLogging  {
       }
 
       // Add '-' char if missing
-      if (locConstraintAsStr ~~ "(?i)-term" == false) { locConstraintAsStr = locConstraintAsStr.replaceFirst("term", "-term") }
+      if (!(locConstraintAsStr ~~ "(?i)-term")) { locConstraintAsStr = locConstraintAsStr.replaceFirst("term", "-term") }
 
       // If the location constraint is not specific to the protein
-      if (locConstraintAsStr ~~ "(?i)protein" == false) { locConstraintAsStr = "Any " + locConstraintAsStr }
+      if (!(locConstraintAsStr ~~ "(?i)protein")) { locConstraintAsStr = "Any " + locConstraintAsStr }
       // Else if the space is missing between protein and [NC]-term
       else {
-        val modSuffixMatch = (locConstraintAsStr =# "(?i)protein([NC]-term)")
+        val modSuffixMatch = locConstraintAsStr =# "(?i)protein([NC]-term)"
         //val modSuffix = """(?i)protein([NC]-term)""".r.findFirstMatchIn(locConstraintAsStr).get.group(1)
 
-        if (modSuffixMatch != None) {
+        if (modSuffixMatch.isDefined) {
           locConstraintAsStr = "Protein " + modSuffixMatch.get.group(1)
         }
       }
@@ -174,8 +172,8 @@ object MascotPTMUtils extends LazyLogging  {
 
     }
 
-    val residues = residuesAsStr.toCharArray()
-    if (residues.length > 0) {
+    val residues = residuesAsStr.toCharArray
+    if (residues.nonEmpty) {
       for (residue <- residues) {
         posConstraints += (Some(residue) -> locConstraint)
       }

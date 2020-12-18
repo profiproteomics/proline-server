@@ -5,9 +5,25 @@
     <!-- encoders are assigned the type
          ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
     <encoder>
-      <pattern>%-5level: [%thread] +%-4relative ms  %date{dd MMM yyyy - HH:mm:ss.SSS} %logger{35} - %msg%n</pattern>
+<!--     <pattern>%-5level: [%thread] +%-4relative ms  %date{dd MMM yyyy - HH:mm:ss.SSS} %logger{35} - %msg%n</pattern>-->
+      <pattern>%-5level - %msg%n</pattern>
     </encoder>
-  </appender> 
+  </appender>
+
+  <appender name="RollingfileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <append>true</append>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>mascot_debug_log.%d{yyyy-MM-dd}.txt</fileNamePattern>
+      <maxHistory>30</maxHistory>
+      <totalSizeCap>1GB</totalSizeCap>
+    </rollingPolicy>
+
+    <encoder>
+      TTCCLayout
+      <pattern>%-5level - %msg%n</pattern>
+    </encoder>
+
+  </appender>
 
   <logger name="fr.proline" level="DEBUG" />
 
@@ -16,6 +32,7 @@
 
   <root level="WARN">
     <appender-ref ref="STDOUT" />
+    <appender-ref ref="RollingfileAppender"/>
   </root>
 
 </configuration>

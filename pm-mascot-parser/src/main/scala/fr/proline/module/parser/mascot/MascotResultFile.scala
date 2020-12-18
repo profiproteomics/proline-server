@@ -57,7 +57,7 @@ class MascotResultFile(
   // ---- For Java developers ;) : --- Constructor Code 
 
   // Requirements
-  val fileAbsolutePath = fileLocation.getAbsolutePath
+  val fileAbsolutePath: String = fileLocation.getAbsolutePath
   require(fileLocation.isFile, "Invalid fileLocation : " + fileAbsolutePath)
 
   logger.info("Opening Mascot result file : " + fileAbsolutePath)
@@ -74,7 +74,7 @@ class MascotResultFile(
   rsImportProperties.setSubsetsThreshold(parseProperties.get(MascotParseParams.SUBSET_THRESHOLD).map(toFloat(_)))
 
   /* Load Matrix Science Mascot Parser native libraries */
-  val loaded = NativeLibrariesLoader.loadNativeLibraries
+  val loaded: Boolean = NativeLibrariesLoader.loadNativeLibraries
   if (!loaded) {
     val message = "Mascot Parser native libraries not loaded"
     logger.error(message)
@@ -87,11 +87,12 @@ class MascotResultFile(
   if (!mascotResFile.isValid()) throw new Exception("Invalid Mascot result file " + fileLocation.getAbsolutePath() + " specified : "+mascotResFile.getErrorString(1))
 
   private val mascotSearchParams: ms_searchparams = mascotResFile.params( )
+  private val isErrorTolerantSearch = mascotResFile.isErrorTolerant
 
   /** IResultFile values **/
   val msLevel: Int = 2 // Disable support for PMF data  
   val hasMs2Peaklist: Boolean = true // A Mascot dat file has always a peaklist
-  val hasDecoyResultSet = if (mascotSearchParams.getDECOY == 1) true else false
+  val hasDecoyResultSet: Boolean = if (mascotSearchParams.getDECOY == 1) true else false
 
   // ---- For Java developers ;) : --- END Constructor Code 
 
@@ -178,7 +179,7 @@ class MascotResultFile(
         case ex: Exception => fileComesFromPklInput = true
       }
       
-      if (specTitle.isEmpty()) {
+      if (specTitle.isEmpty) {
         // AW/ABU: ticket #10344 fix
         val qMass = mascotResFile.getObservedMass(q)
         specTitle = s"Cmpd $q, +MSn($qMass), ? min" 
@@ -216,7 +217,7 @@ class MascotResultFile(
 
   lazy val peaklist: Peaklist = {
     
-    var fileNameStr = mascotSearchParams.getFILENAME()
+    var fileNameStr = mascotSearchParams.getFILENAME
 
     // Split string if it correspond to a Proteome Discoverer template
     if (fileNameStr.startsWith("File Name: ")) {
@@ -232,8 +233,8 @@ class MascotResultFile(
     val rawFileIdentifier = peaklistFileName.split('.').headOption.getOrElse(peaklistFileName)
     
     new Peaklist(
-      id = Peaklist.generateNewId,
-      fileType = mascotSearchParams.getFORMAT(), // TODO: check file extension first (ex: .raw)
+      id = Peaklist.generateNewId(),
+      fileType = mascotSearchParams.getFORMAT, // TODO: check file extension first (ex: .raw)
       path = fileNameStr,
       rawFileIdentifier = rawFileIdentifier,
       msLevel = 2
@@ -254,7 +255,7 @@ class MascotResultFile(
     val nbrSearchedQueries = mascotResFile.getNumSeqsAfterTax(0) //Get num of seq in all dbs after taxonomy filter
 
     //--- 1. Verify used SeqDatabases specified for Mascot Search exist, else Stop and throw an exception
-    val nbrDBs = searchParams.getNumberOfDatabases()
+    val nbrDBs = searchParams.getNumberOfDatabases
     logger.debug("Search for " + nbrDBs + " Sequences database(s) used in Mascot result file")
 
     val seqDbs = new Array[SeqDatabase](nbrDBs)
@@ -359,17 +360,23 @@ class MascotResultFile(
       val Subsets = ms_mascotresults.MSRES_SHOW_SUBSETS
       val MudPIT = ms_mascotresults.MSRES_MUDPIT_PROTEIN_SCORE
       val Decoy = ms_mascotresults.MSRES_DECOY
+      val ErrorTolerant = ms_mascotresults.MSRES_INTEGRATED_ERR_TOL
+      val ShowAllFromErrTol = ms_mascotresults.MSRES_SHOW_ALL_FROM_ERR_TOL
     }
 
     var flagCombination = MascotResFlags.Group | MascotResFlags.Subsets
+    if(mascotResFile.isErrorTolerant) {
+        flagCombination = flagCombination |  MascotResFlags.ErrorTolerant //| MascotResFlags.ShowAllFromErrTol
+    }
 
     val scoreType = MascotScores.MudPIT // TODO : retrieve from input parameters
     if (scoreType == MascotScores.MudPIT) { flagCombination = flagCombination | MascotResFlags.MudPIT }
-    if (wantDecoy) { flagCombination = flagCombination | MascotResFlags.Decoy }
+    if (!mascotResFile.isErrorTolerant && wantDecoy) { flagCombination = flagCombination | MascotResFlags.Decoy }
 
     val (minProtProb, maxHitsToReport) = (0, 0) // Report All proteins
     val ignoreIonsScoreBelow = rsImportProperties.ionsScoreCutoff.getOrElse(0f).toDouble // Specify ion score cut off
-    val (unigeneIndexFile, minPepLenInPepSummary, singleHit, flags2) = (null, 0, null, ms_peptidesummary.MSPEPSUM_NO_PROTEIN_GROUPING)
+    val (unigeneIndexFile, minPepLenInPepSummary, singleHit) = (null, 0, null)
+    val flags2 = if(mascotResFile.isErrorTolerant)  ms_peptidesummary.MSPEPSUM_NONE else ms_peptidesummary.MSPEPSUM_NO_PROTEIN_GROUPING
 
     val peptideSummary = new ms_peptidesummary(
       mascotResFile,

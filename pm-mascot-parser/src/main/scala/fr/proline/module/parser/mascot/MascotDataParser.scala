@@ -1,17 +1,13 @@
 package fr.proline.module.parser.mascot
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.chemistry.model.MolecularConstants
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.core.om.provider.msi.IProteinProvider
-import fr.proline.core.om.provider.msi.ProteinEmptyFakeProvider
-import fr.proline.core.om.provider.msi.ProteinFakeProvider
-import matrix_science.msparser.{VectorString, ms_mascotresfile, ms_peptide, ms_peptidesummary, ms_searchparams, vectori}
+import fr.proline.core.om.provider.msi.{IPTMProvider, IPeptideProvider}
+import matrix_science.msparser._
+
+import scala.collection.mutable.{ArrayBuffer, HashMap}
 
 object MascotDataParser {
 
@@ -116,6 +112,7 @@ class MascotDataParser(
             pepMatchMascotProps.setReadableVarMods(Some(readableVarMods))
             pepMatchMascotProps.setVarModsPositions(Some(currentMSPep.getVarModsStr))
           }
+          //TODO A TESTER SI pepSummary.getErrTolModNeutralLoss(q,k) necessaire
           var nlString = currentMSPep.getPrimaryNlStr()
           if (!nlString.isEmpty() && mascotResFile.getMascotVer.startsWith("2.2")) {
             // swap 1 and 2 indices
@@ -471,21 +468,38 @@ class MascotDataParser(
    */
   private def createPeptidePtmFromVarPtm(mascotPeptide: ms_peptide, ptmProvider: IPTMProvider): ArrayBuffer[LocatedPtm] = {
     val pepVarPtms = new ArrayBuffer[LocatedPtm](0)
+    val pepIsErrTol = mascotPeptide.getIsFromErrorTolerant
 
-    // Create Variable PTMs: create LocatedPtm using ms-peptide modsChars
+    // Create Variable PTMs: create LocatedPtm using ms-peptide modsChars (var mod or Err Tolerant mod)
     val modsChars: Array[Char] = mascotPeptide.getVarModsStr.toCharArray() //Mascot peptide PTMs string
     for (k <- 0 until modsChars.length) {
+      val currentChar =  modsChars.apply(k)
+      var mascotMod = ""
+      var modifDefined = false
+      if(pepIsErrTol && 'X'.equals(currentChar) ){
+        mascotMod =  pepSummary.getErrTolModName(mascotPeptide.getQuery,mascotPeptide.getRank)
+        modifDefined = true
+      } else {
+        val numMods: Int =currentChar - 48 //modsChars contains ascii value for char 0->9 so 48 -> 59.
+        if (numMods != 0) {
+          mascotMod = mascotResFile.params().getVarModsName(numMods) //Mascot Modif Name
+          modifDefined = true
+        }
+      }
 
-      val numMods: Int = modsChars.apply(k) - 48 //modsChars contains ascii value for char 0->9 so 48 -> 59.
       // If a modification is defined
-      if (numMods != 0) {
-
-        val mascotMod = mascotResFile.params().getVarModsName(numMods) //Mascot Modif Name
-
+      if (modifDefined) {
         // Get corresponding PtmDefinition
         val msVarPtms = MascotPTMUtils.mascotModToPTMDefinitions(ptmProvider, mascotMod)
         if (msVarPtms.isEmpty) {
-          throw new Exception("Undefined PTM specified for peptide " + mascotPeptide.getQuery + " - " + mascotPeptide.getRank + " (" + mascotPeptide.getPeptideStr + ")")
+          val pepStr =mascotPeptide.getPeptideStr(false)+" ("+mascotPeptide.getQuery + " - " + mascotPeptide.getRank + ")"
+          if(!pepIsErrTol)
+            //If not Error Tolerant search, throw an error
+            throw new Exception("Undefined PTM specified for peptide " + pepStr+": "+mascotMod)
+          else {
+              //TODO Should keep missing PTMs to throw error with all missing PTMs
+            logger.error(" ----**** WARNING *****---- : Peptide "+pepStr+" PTM not found ! "+mascotMod)
+          }
         }
 
         // Get PTM location on Peptide
@@ -499,7 +513,10 @@ class MascotDataParser(
           pepVarPtms += LocatedPtm(ptmDef = msVarPtms.filter(_.residue.equals(mascotPeptide.getPeptideStr().charAt(location-1))).head, seqPos = location)
         } catch {
           // default value is the first ptmDefinition
-          case e: Exception => pepVarPtms += LocatedPtm(ptmDef = msVarPtms(0), seqPos = location)
+          case e: Exception => {
+            if(!msVarPtms.isEmpty)
+              pepVarPtms += LocatedPtm(ptmDef = msVarPtms(0), seqPos = location)
+          }
         }
       } // END A PTM exist on current residue
 
