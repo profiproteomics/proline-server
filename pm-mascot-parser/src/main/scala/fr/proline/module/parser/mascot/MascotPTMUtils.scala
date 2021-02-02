@@ -97,7 +97,7 @@ object MascotPTMUtils extends LazyLogging  {
               ptmId = ptmId
           ))
 
-          logger.debug("-- missiong PTMDefinition:\t"+modName+"\tPTM id=\t"+ptmId+"\tlocation:\t"+location+"\tresChar:\t"+resChar)
+          logger.warn("-- missiong PTMDefinition:\t"+modName+"\tPTM id=\t"+ptmId+"\tlocation:\t"+location+"\tresChar:\t"+resChar)
 
         }
           if(nextPtmDef.isDefined)

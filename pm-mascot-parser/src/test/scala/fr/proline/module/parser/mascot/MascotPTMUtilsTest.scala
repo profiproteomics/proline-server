@@ -44,7 +44,7 @@ class MascotPTMUtilsTest extends LazyLogging {
   @Test
   def testParseProtNterPTM() = {
     val ptmToParse = "Acetyl (Protein N-term)"
-    val ptmDefs = MascotPTMUtils.mascotModToPTMDefinitions(EmptyPTMProvider, ptmToParse)
+    val ptmDefs = MascotPTMUtils.mascotModToPTMDefinitions(PTMFakeProvider, ptmToParse)
     assertNotNull(ptmDefs)
     assertEquals(1, ptmDefs.length)
 
@@ -58,7 +58,7 @@ class MascotPTMUtilsTest extends LazyLogging {
   @Test
   def testParseNterResiduePTM() = {
     val ptmToParse = "Acetyl (Nterm M)"
-    val ptmDefs = MascotPTMUtils.mascotModToPTMDefinitions(EmptyPTMProvider, ptmToParse)
+    val ptmDefs = MascotPTMUtils.mascotModToPTMDefinitions(PTMFakeProvider, ptmToParse)
     assertNotNull(ptmDefs)
     assertEquals(1, ptmDefs.length)
 
@@ -67,5 +67,14 @@ class MascotPTMUtilsTest extends LazyLogging {
     assertEquals(PtmLocation.ANY_N_TERM.toString, singlePtmDef.location)
     assertEquals("Acetyl", singlePtmDef.names.shortName)
     assertEquals('M', singlePtmDef.residue)
+  }
+
+  @Test
+  def testParseMissingPTM() = {
+    val ptmToParse = "Acetyl (Nterm M)"
+    val ptmDefs = MascotPTMUtils.mascotModToPTMDefinitions(EmptyPTMProvider, ptmToParse)
+    assertNotNull(ptmDefs)
+    assertEquals(0, ptmDefs.length)  // Don't create PTM if doesn't exist.. Not enough information to save in DB.
+
   }
 }
