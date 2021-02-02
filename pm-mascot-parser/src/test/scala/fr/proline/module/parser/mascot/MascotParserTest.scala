@@ -47,7 +47,7 @@ class MascotParserTest extends LazyLogging { // }extends DatabaseTestCase {
 
   @Test
   def testVersion {
-    val version = new fr.proline.module.parser.mascot.Version()
+    val version = new fr.proline.module.parser.mascot.ScalaVersion()
     logger.debug("Module name : " + version.getModuleName)
     assert("PM-MascotParser" == version.getModuleName)
     logger.debug("Module version : " + version.getVersion)

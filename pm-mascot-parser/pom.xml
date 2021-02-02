@@ -189,11 +189,12 @@
         <!-- Version & config inherited from ProFI-Pom -->
         <executions>
           <execution>
-			<id>scala-version-generation</id>
+            <id>scala-version-generation</id>
             <phase>generate-sources</phase>
+            <!-- Execution and configuration inherited from ProFI-Pom -->
             <configuration>
-			  <skip>false</skip>
-      	    </configuration>                        
+              <skip>false</skip>
+            </configuration>
           </execution>
         </executions>
       </plugin>
