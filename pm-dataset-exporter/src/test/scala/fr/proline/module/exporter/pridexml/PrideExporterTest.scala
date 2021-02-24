@@ -1,9 +1,9 @@
 package fr.proline.module.exporter.pridexml
 
 import java.io.File
-
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.IExecutionContext
+import fr.proline.core.algo.msi.InferenceMethod
 import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
 import fr.proline.core.algo.msi.filtering.pepmatch.PrettyRankPSMFilter
 import fr.proline.core.algo.msi.validation.{TDAnalyzerBuilder, TargetDecoyAnalyzers}
@@ -60,11 +60,14 @@ class PrideExporterTest extends LazyLogging {
     seqBuilder += new PrettyRankPSMFilter(2) // Only 1, 2 ranks
     val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC)
 
-    val rsValidator = new ResultSetValidator(
+    val rsValidator =  ResultSetValidator(
       execContext = execContext,
       targetRs = rs,
       validationConfig = ValidationConfig(tdAnalyzerBuilder = Some(tdAnalyzerBuilder), pepMatchPreFilters = Option(seqBuilder.result)),
-      storeResultSummary = true)
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = true,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false)
 
     val result = rsValidator.runService()
 
