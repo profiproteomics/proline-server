@@ -283,6 +283,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     //VDS TEST only !
 //    ServiceRegistry.addService(new WaitService())
     ServiceRegistry.addService(new ValidateResultSetV2())
+    ServiceRegistry.addService(new ValidateResultSetV3())
     ServiceRegistry.addService(new CancelService())
  }
 

@@ -6,9 +6,12 @@ import fr.profi.util.serialization.ProfiJson.deserialize
 import fr.profi.util.serialization.ProfiJson.serialize
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.algo.msi.InferenceMethod
-import fr.proline.core.algo.msi.filtering.{IPeptideInstanceFilter, IPeptideMatchFilter, IProteinSetFilter}
+import fr.proline.core.algo.msi.filtering.{IOptimizablePeptideMatchFilter, IPeptideInstanceFilter, IPeptideMatchFilter, IProteinSetFilter, PepMatchFilterParams, ProtSetFilterParams}
 import fr.proline.core.algo.msi.scoring.PepSetScoring
 import fr.proline.core.algo.msi.validation._
+import fr.proline.core.algo.msi.validation.pepinstance.BHPeptideInstanceValidator
+import fr.proline.core.algo.msi.validation.pepmatch.{BHPepMatchValidator, TDPepMatchValidator, TDPepMatchValidatorWithFDROptimization}
+import fr.proline.core.algo.msi.validation.proteinset.BHProtSetValidator
 import fr.proline.core.service.msi.ResultSetValidator
 import fr.proline.core.service.msi.ValidationConfig
 import fr.proline.cortex.api.service.dps.msi._
@@ -45,30 +48,36 @@ object ValidateResultSet {
 
     // val pepMatchFilters =  .parsePepMatchFilters(params,targetRS )
     val pepMatchFilters = parsePepMatchFilters(paramsRetriever)
-    val tdAnalyzerConfig = parseTDAnalyzerConfig(paramsRetriever)
-    val pepMatchValidator = parsePepMatchValidator(paramsRetriever)
+    val fdrAnalyzerConfig = parseFDRAnalyzerConfig(paramsRetriever)
+    val pepMatchValidator = parsePepMatchValidator(paramsRetriever, fdrAnalyzerConfig)
     val peptideBuilder = BuildPeptideInstanceBuilder(PeptideInstanceBuilders.withName(paramsRetriever.getOptString(PEPTIDE_BUILDER_CONFIG_PARAM, true, "STANDARD")))
     val peptideFilters = parsePeptideFilters(paramsRetriever)
+    val peptideValidator = parsePeptideValidator(paramsRetriever, fdrAnalyzerConfig)
     val pepSetScoring = Option(paramsRetriever.getOptString(PEP_SET_SCORE_TYPE_PARAM, true, null)).map(PepSetScoring.withName(_))
     val protSetFilters = parseProtSetFilters(paramsRetriever)
-    val protSetValidator = parseProtSetValidator(paramsRetriever)
+    val protSetValidator = parseProtSetValidator(paramsRetriever, fdrAnalyzerConfig)
 
-    val tdAnalyzer = TargetDecoyAnalyzers.values.find(_.toString.toLowerCase == tdAnalyzerConfig.methodName.toLowerCase()).getOrElse(TargetDecoyAnalyzers.BASIC)
-    val tdEstimator = TargetDecoyComputers.values.find(_.toString.toLowerCase == tdAnalyzerConfig.estimatorName.getOrElse("").toLowerCase())
+    val tdAnalyzerBuilder = if (fdrAnalyzerConfig.isDefined && fdrAnalyzerConfig.get.methodName == FDRAnalyzerMethods.TARGET_DECOY.toString) {
+      val tdAnalyzerConfig = fdrAnalyzerConfig.get.tdAnalyzerConfig
+      require(tdAnalyzerConfig.isDefined, "When fdr control method is set to target/decoy, a td analyzer config must be provided")
+      val tdAnalyzer = TargetDecoyAnalyzers.values.find(_.toString.toLowerCase == tdAnalyzerConfig.get.methodName.toLowerCase()).getOrElse(TargetDecoyAnalyzers.BASIC)
+      val tdEstimator = TargetDecoyEstimators.values.find(_.toString.toLowerCase == tdAnalyzerConfig.get.estimatorName.getOrElse("").toLowerCase())
 
-
-    val tdAnalyzerBuilder = new TDAnalyzerBuilder(
-      analyzer = tdAnalyzer,
-      estimator = tdEstimator,
-      params = tdAnalyzerConfig.params
-    )
+       Some(new TDAnalyzerBuilder(
+        analyzer = tdAnalyzer,
+        estimator = tdEstimator,
+        params = tdAnalyzerConfig.get.params))
+      } else {
+      None
+    }
 
     ValidationConfig(
-      tdAnalyzerBuilder = Some(tdAnalyzerBuilder),
+      tdAnalyzerBuilder = tdAnalyzerBuilder,
       pepMatchPreFilters = pepMatchFilters,
       pepMatchValidator = pepMatchValidator,
       peptideBuilder = peptideBuilder,
       peptideFilters = peptideFilters,
+      peptideValidator = peptideValidator,
       pepSetScoring = pepSetScoring,
       protSetFilters = protSetFilters,
       protSetValidator = protSetValidator
@@ -87,12 +96,7 @@ object ValidateResultSet {
     if (params.hasParam(PEP_MATCH_FILTERS_PARAM)) {
       val pepMatchFiltersConfigs = params.getList(PEP_MATCH_FILTERS_PARAM).toArray.map(parseFilterConfig(_))
 
-      Some(pepMatchFiltersConfigs.map(fc => {
-        val nextFilter = BuildPeptideMatchFilter(fc.parameter, fc.threshold.asInstanceOf[AnyVal])
-        if (fc.postValidation)
-          nextFilter.setAsPostValidationFilter(true)
-        nextFilter
-      }).toSeq)
+      Some(pepMatchFiltersConfigs.map(fc => {BuildPeptideMatchFilter(fc.parameter, fc.threshold.asInstanceOf[AnyVal])} ).toSeq)
 
     } else None
   }
@@ -101,24 +105,31 @@ object ValidateResultSet {
     deserialize[PepMatchValidatorConfig](serialize(paramsMap))
   }
 
-  def parsePepMatchValidator(params: NamedParamsRetriever): Option[IPeptideMatchValidator] = {
+  def parsePepMatchValidator(params: NamedParamsRetriever, fdrAnalyzer: Option[FDRAnalyzerConfig]): Option[IPeptideMatchValidator] = {
 
     if (params.hasParam(PEP_MATCH_VALIDATOR_CONFIG_PARAM)) {
 
       val pepMatchValidatorConfig = parsePepMatchValidatorConfig(params.getMap(PEP_MATCH_VALIDATOR_CONFIG_PARAM))
-      val pepMatchValidationFilter = if (pepMatchValidatorConfig.expectedFdr.isDefined) {
-        BuildOptimizablePeptideMatchFilter(pepMatchValidatorConfig.parameter)
-      } else {
-        BuildPeptideMatchFilter(pepMatchValidatorConfig.parameter, pepMatchValidatorConfig.threshold.get)
-      }
+      if (fdrAnalyzer.isDefined && fdrAnalyzer.get.methodName == FDRAnalyzerMethods.TARGET_DECOY.toString) {
+        val pepMatchValidator = if (pepMatchValidatorConfig.expectedFdr.isDefined) {
 
-      Some(
-        BuildPeptideMatchValidator(
-          pepMatchValidationFilter,
-          pepMatchValidatorConfig.expectedFdr
-        )
-      )
-    } else None
+          val valFilter = BuildOptimizablePeptideMatchFilter(pepMatchValidatorConfig.parameter)
+          new TDPepMatchValidatorWithFDROptimization(valFilter, pepMatchValidatorConfig.expectedFdr)
+        } else {
+
+          val valFilter = BuildPeptideMatchFilter(pepMatchValidatorConfig.parameter, pepMatchValidatorConfig.threshold.get)
+          new TDPepMatchValidator(valFilter)
+        }
+
+        Some(pepMatchValidator)
+      } else if (fdrAnalyzer.isDefined && fdrAnalyzer.get.methodName == FDRAnalyzerMethods.BH.toString) {
+        Some(new BHPepMatchValidator(Some(pepMatchValidatorConfig.expectedFdr.get)))
+      } else {
+        None
+      }
+    } else {
+      None
+    }
   }
 
   def parsePeptideFilters(params: NamedParamsRetriever): Option[Seq[IPeptideInstanceFilter]] = {
@@ -130,13 +141,55 @@ object ValidateResultSet {
     } else None
   }
 
+  def parsePeptideValidator(params: NamedParamsRetriever, fdrAnalyzer: Option[FDRAnalyzerConfig]): Option[IPeptideInstanceValidator] = {
 
+   if (params.hasParam(PEPTIDE_VALIDATOR_CONFIG_PARAM)) {
 
-  def parseTDAnalyzerConfig(params: NamedParamsRetriever): TDAnalyzerConfig = {
-    if (params.hasParam(TD_ANALYZER_PARAM)) {
-      deserialize[TDAnalyzerConfig](serialize(params.getMap(TD_ANALYZER_PARAM)))
+      val peptideValidatorConfig = deserialize[PeptideValidatorConfig](serialize(params.getMap(PEPTIDE_VALIDATOR_CONFIG_PARAM)))
+      val peptideValidator = if (fdrAnalyzer.isDefined && fdrAnalyzer.get.methodName == FDRAnalyzerMethods.BH.toString) {
+        val valFilter = BuildPeptideInstanceFilter(PepMatchFilterParams.BH_AJUSTED_PVALUE.toString, peptideValidatorConfig.expectedFdr.get/100.0f)
+        Some(new BHPeptideInstanceValidator(valFilter, Some(peptideValidatorConfig.expectedFdr.get)))
+      } else {
+
+        //TODO implements some target decoy methods similar to PSM validation methods
+
+        None
+
+      }
+
+      peptideValidator
+
     } else {
-      new TDAnalyzerConfig("BASIC")
+
+      None
+
+    }
+  }
+
+
+  def parseFDRAnalyzerConfig(params: NamedParamsRetriever): Option[FDRAnalyzerConfig] = {
+    if (params.hasParam(FDR_ANALYZER_PARAM)) {
+      Some(deserialize[FDRAnalyzerConfig](serialize(params.getMap(FDR_ANALYZER_PARAM))))
+    } else {
+      // service V2.0 compatibility: if a PSM or Protein validator using an expected FDR is defined, create an basic
+      // target/decoy FDR analyzer
+      if (params.hasParam(PEP_MATCH_VALIDATOR_CONFIG_PARAM)) {
+        val pepMatchValidatorConfig = parsePepMatchValidatorConfig(params.getMap(PEP_MATCH_VALIDATOR_CONFIG_PARAM))
+        if (pepMatchValidatorConfig.expectedFdr.isDefined) {
+          Some(FDRAnalyzerConfig(FDRAnalyzerMethods.TARGET_DECOY.toString, Some(new TDAnalyzerConfig("BASIC"))))
+        } else {
+        None
+        }
+      } else if (params.hasParam(PROT_SET_VALIDATOR_CONFIG_PARAM)) {
+        val protSetValidatorConfig = parseProtSetValidatorConfig(params.getMap(PROT_SET_VALIDATOR_CONFIG_PARAM))
+        if (protSetValidatorConfig.expectedFdr.isDefined) {
+          Some(FDRAnalyzerConfig(FDRAnalyzerMethods.TARGET_DECOY.toString, Some(new TDAnalyzerConfig("BASIC"))))
+        } else {
+          None
+        }
+      } else {
+        None
+      }
     }
   }
 
@@ -151,25 +204,29 @@ object ValidateResultSet {
     deserialize[ProtSetValidatorConfig](serialize(paramsMap))
   }
 
-  def parseProtSetValidator(params: NamedParamsRetriever): Option[IProteinSetValidator] = {
+  def parseProtSetValidator(params: NamedParamsRetriever, fdrAnalyzer: Option[FDRAnalyzerConfig]): Option[IProteinSetValidator] = {
     if (params.hasParam(PROT_SET_VALIDATOR_CONFIG_PARAM)) {
 
       val protSetValidatorConfig = parseProtSetValidatorConfig(params.getMap(PROT_SET_VALIDATOR_CONFIG_PARAM))
-      val thresholds = protSetValidatorConfig.thresholds.map(_.map(e => e._1 -> e._2.asInstanceOf[AnyVal]))
 
-      // Retrieve protein set validation method
-      val protSetValMethod = ProtSetValidationMethods.withName(protSetValidatorConfig.validationMethod)
+      if (! fdrAnalyzer.isDefined || fdrAnalyzer.get.methodName != FDRAnalyzerMethods.BH.toString) {
+        val thresholds = protSetValidatorConfig.thresholds.map(_.map(e => e._1 -> e._2.asInstanceOf[AnyVal]))
+        // Retrieve protein set validation method
+        val protSetValMethod = ProtSetValidationMethods.withName(protSetValidatorConfig.validationMethod)
 
-      // Build ProteinSetValidator
-      Some(
-        BuildProteinSetValidator(
-          protSetValMethod,
-          protSetValidatorConfig.parameter,
-          thresholds,
-          protSetValidatorConfig.expectedFdr
+        // Build ProteinSetValidator
+        Some(
+          BuildProteinSetValidator(
+            protSetValMethod,
+            protSetValidatorConfig.parameter,
+            thresholds,
+            protSetValidatorConfig.expectedFdr
+          )
         )
-      )
-
+      } else {
+        val filter = BuildProteinSetFilter(ProtSetFilterParams.BH_ADJUSTED_PVALUE.toString, protSetValidatorConfig.expectedFdr.get/100.0f)
+        Some(new BHProtSetValidator(filter, Some(protSetValidatorConfig.expectedFdr.get)))
+      }
     } else None
   }
 
@@ -227,15 +284,16 @@ class ValidateResultSet extends AbstractRemoteProcessingService with IValidateRe
 
 }
 
-class ValidateResultSetV2 extends AbstractRemoteProcessingService with IValidateResultSetServiceV2 with LazyLogging {
+abstract class AbstractValidateResultSet extends AbstractRemoteProcessingService {
 
-  def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
+  def process(paramsRetriever: NamedParamsRetriever, serviceParams: IValidateResultSetServiceParams): Any = {
+
     require(paramsRetriever != null, "No Parameters specified")
 
-    val projectId = paramsRetriever.getLong(PROCESS_METHOD.PROJECT_ID_PARAM)
-    val resultSetId = paramsRetriever.getLong(PROCESS_METHOD.RESULT_SET_ID_PARAM)
-    val propagatePSMFilters = if(paramsRetriever.hasParam(PROCESS_METHOD.PROPAGATE_PEP_MATCH_VALIDATION_PARAM)) paramsRetriever.getBoolean(PROCESS_METHOD.PROPAGATE_PEP_MATCH_VALIDATION_PARAM) else false
-    val propagateProtSetFilters = if(paramsRetriever.hasParam(PROCESS_METHOD.PROPAGATE_PROT_SET_VALIDATION_PARAM)) paramsRetriever.getBoolean(PROCESS_METHOD.PROPAGATE_PROT_SET_VALIDATION_PARAM) else false
+    val projectId = paramsRetriever.getLong(serviceParams.PROJECT_ID_PARAM)
+    val resultSetId = paramsRetriever.getLong(serviceParams.RESULT_SET_ID_PARAM)
+    val propagatePSMFilters = if(paramsRetriever.hasParam(serviceParams.PROPAGATE_PEP_MATCH_VALIDATION_PARAM)) paramsRetriever.getBoolean(serviceParams.PROPAGATE_PEP_MATCH_VALIDATION_PARAM) else false
+    val propagateProtSetFilters = if(paramsRetriever.hasParam(serviceParams.PROPAGATE_PROT_SET_VALIDATION_PARAM)) paramsRetriever.getBoolean(serviceParams.PROPAGATE_PROT_SET_VALIDATION_PARAM) else false
 
     var result: HashMap[Long, Long] = null
 
@@ -257,7 +315,6 @@ class ValidateResultSetV2 extends AbstractRemoteProcessingService with IValidate
         execContext = execCtx,
         targetRsId = resultSetId,
         validationConfig = validationConfig,
-        tdAnalyzer = None,
         inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
         storeResultSummary = true,
         propagatePepMatchValidation= propagatePSMFilters,
@@ -282,5 +339,19 @@ class ValidateResultSetV2 extends AbstractRemoteProcessingService with IValidate
 
     result
   }
-
 }
+
+class ValidateResultSetV2 extends AbstractValidateResultSet with IValidateResultSetServiceV2 {
+
+  def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
+    process(paramsRetriever, PROCESS_METHOD)
+  }
+}
+
+class ValidateResultSetV3 extends AbstractValidateResultSet with IValidateResultSetServiceV3 {
+
+    def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
+      process(paramsRetriever, PROCESS_METHOD)
+    }
+
+  }

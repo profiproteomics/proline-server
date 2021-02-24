@@ -270,7 +270,7 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessingService with IImp
         ds.setNumber(dsNbr)
         
         // **** Validate Result Set
-        val rsValidator = new ResultSetValidator(
+        val rsValidator = ResultSetValidator(
           execContext = execCtx,
           targetRs = currentRS,
           validationConfig = ValidationConfig(
@@ -279,8 +279,12 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessingService with IImp
             protSetFilters = validationParam.protSetFilters,
             protSetValidator = validationParam.protSetValidator,
             pepSetScoring = Some(validationParam.pepSetScoring.getOrElse(PepSetScoring.MASCOT_STANDARD_SCORE))),
-          inferenceMethod = Some(InferenceMethod.PARSIMONIOUS)
-        )  
+          inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+          storeResultSummary = true,
+          propagatePepMatchValidation = false,
+          propagateProtSetValidation = false
+        )
+
         rsValidator.run()   
         val currentRSMId = rsValidator.validatedTargetRsm.id
         resultValidate += currentRSMId
