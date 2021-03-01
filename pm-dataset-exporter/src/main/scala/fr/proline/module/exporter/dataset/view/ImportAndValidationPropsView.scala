@@ -44,7 +44,7 @@ class ImportAndValidationPropsView(
     ) {
       val validationParams = valProps.getParams
       
-      val psmFiltersOpt = validationParams.getPeptideFilters
+      val psmFiltersOpt = validationParams.getPsmFilters
       if (psmFiltersOpt.isDefined) {
         psmFiltersCount = Math.max(psmFiltersCount, psmFiltersOpt.get.length)
       }
@@ -144,16 +144,16 @@ class ImportAndValidationPropsView(
         val rsmValParams = rsmValPropsOpt.get.getParams
 
         // Add PSM Filters
-        if (rsmValParams.getPeptideFilters.isDefined) {
-          for(filter <- rsmValParams.getPeptideFilters.get) {
+        if (rsmValParams.getPsmFilters.isDefined) {
+          for(filter <- rsmValParams.getPsmFilters.get) {
             psmFilters += this._stringifyValidationFilter(filter, "PSM")
           }
         }
         
         // Add Peptide Expected FDR
-        if (rsmValParams.getPeptideExpectedFdr.isDefined) {
+        if (rsmValParams.getPsmExpectedFdr.isDefined) {
           psmFilterExpectedFdr = Some(
-            decimalFormat.format(rsmValParams.getPeptideExpectedFdr.get)
+            decimalFormat.format(rsmValParams.getPsmExpectedFdr.get)
           )
         }
 

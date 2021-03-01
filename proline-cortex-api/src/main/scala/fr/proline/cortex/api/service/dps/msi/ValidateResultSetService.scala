@@ -15,7 +15,6 @@ case class FilterConfig(
   threshold: AnyVal,
   postValidation: Boolean = false
 ) 
-  
 
 case class PepMatchValidatorConfig(
   parameter: String,
@@ -24,12 +23,30 @@ case class PepMatchValidatorConfig(
   expectedFdr: Option[Float] = None
 )
 
+case class PeptideValidatorConfig(
+    parameter: String,
+    @JsonDeserialize(contentAs = classOf[java.lang.Float])
+    expectedFdr: Option[Float] = None
+)
+
 case class ProtSetValidatorConfig(
   validationMethod: String,
   parameter: String,
   thresholds: Option[Map[String, AnyVal]] = None,
   @JsonDeserialize(contentAs = classOf[java.lang.Float])
   expectedFdr: Option[Float] = None
+)
+
+case class FDRAnalyzerConfig(
+    methodName: String,
+    tdAnalyzerConfig: Option[TDAnalyzerConfig] = None
+)
+
+case class TDAnalyzerConfig(
+    methodName: String,
+    @JsonDeserialize(contentAs = classOf[java.lang.String])
+    estimatorName: Option[String] = None,
+    params: Option[Map[String, AnyVal]] = None
 )
 
 object ValidateResultSetService extends IValidateResultSetService {
@@ -114,6 +131,45 @@ trait IValidateResultSetServiceV2 extends IMsiService  {
   }
 }
 
+trait IValidateResultSetServiceV3 extends IMsiService  {
+
+  /* JMS Service identification */
+  val serviceLabel = "ValidateResultSet"
+  this.serviceDescription = Some("Filters and validates a Result Set for a given set of rules and eventually propagate the validation to child ResultSets")
+  val serviceVersion= "3.0"
+
+  // List the handled methods
+  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+
+  object PROCESS_METHOD extends JSONRPC2DefaultMethod with IValidateResultSetServiceParams {
+
+    // Method description
+    val name = RemoteServiceIdentity.PROCESS_METHOD_NAME
+    val description = serviceDescription.get
+
+    // Configure service interface
+    val parameters = List(
+      PROJECT_ID_PARAM,
+      RESULT_SET_ID_PARAM,
+      DESCRIPTION_PARAM,
+      FDR_ANALYZER_PARAM,
+      PEP_MATCH_FILTERS_PARAM,
+      PEP_MATCH_VALIDATOR_CONFIG_PARAM,
+      PEPTIDE_FILTERS_PARAM,
+      PEPTIDE_VALIDATOR_CONFIG_PARAM,
+      PEP_SET_SCORE_TYPE_PARAM,
+      PROT_SET_FILTERS_PARAM,
+      PROT_SET_VALIDATOR_CONFIG_PARAM,
+      PROPAGATE_PEP_MATCH_VALIDATION_PARAM,
+      PROPAGATE_PROT_SET_VALIDATION_PARAM
+    )
+    val returns = JSONRPC2MethodResult(
+      description = "The generated ResultSummary IDs.",
+      scalaType = typeOf[AnyRef]
+    )
+
+  }
+}
 
 
 trait IValidateResultSetServiceParams {
@@ -138,6 +194,12 @@ trait IValidateResultSetServiceParams {
     val scalaType = typeOf[Boolean]
     optional = true
   }
+  object FDR_ANALYZER_PARAM extends JSONRPC2DefaultMethodParameter {
+    val name = "fdr_analyzer_config"
+    val description = "FDR Analyzer to be used to control FDR (BH or Target-Decoy))."
+    val scalaType = typeOf[FDRAnalyzerConfig]
+    optional = true
+  }
   object PEP_MATCH_FILTERS_PARAM extends JSONRPC2DefaultMethodParameter {
     val name = "pep_match_filters"
     val description = "List of PSMs filters to apply (name, threshold)."
@@ -150,11 +212,29 @@ trait IValidateResultSetServiceParams {
     val scalaType = typeOf[PepMatchValidatorConfig]
     optional = true
   }
+  object PEPTIDE_VALIDATOR_CONFIG_PARAM extends JSONRPC2DefaultMethodParameter {
+    val name = "pep_validator_config"
+    val description = "Peptide validator config to use: method name + filter type + expected FDR."
+    val scalaType = typeOf[PeptideValidatorConfig]
+    optional = true
+  }
+  object PEPTIDE_FILTERS_PARAM extends JSONRPC2DefaultMethodParameter {
+    val name = "peptide_filters"
+    val description = "List of Peptide filters to apply (name, threshold)."
+    val scalaType = typeOf[Array[FilterConfig]]
+    optional = true
+  }
+  object PEPTIDE_BUILDER_CONFIG_PARAM extends JSONRPC2DefaultMethodParameter {
+    val name = "peptide_builder_config"
+    val description = "Name of the Peptide builder config to use."
+    val scalaType = typeOf[String]
+    optional = true
+  }
   object PEP_SET_SCORE_TYPE_PARAM extends JSONRPC2DefaultMethodParameter {
     val name = "pep_set_score_type"
     val description =
       "The type of score to use for peptide sets. " +
-      "Valid values are: 'mascot:standard score', 'mascot:mudpit score', 'mascot:modified mudpit score'."
+        "Valid values are: 'mascot:standard score', 'mascot:mudpit score', 'mascot:modified mudpit score', 'proline:fisher score'."
     val scalaType = typeOf[String]
     optional = true
   }
@@ -182,5 +262,5 @@ trait IValidateResultSetServiceParams {
     val scalaType = typeOf[Boolean]
     optional = true
   }
-  
+
 }

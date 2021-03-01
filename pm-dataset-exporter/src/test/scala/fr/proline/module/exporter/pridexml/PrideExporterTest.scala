@@ -1,16 +1,16 @@
 package fr.proline.module.exporter.pridexml
 
 import java.io.File
-
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.IExecutionContext
+import fr.proline.core.algo.msi.InferenceMethod
 import fr.proline.core.algo.msi.filtering.IPeptideMatchFilter
 import fr.proline.core.algo.msi.filtering.pepmatch.PrettyRankPSMFilter
-import fr.proline.core.algo.msi.validation.{BasicTDAnalyzer, TargetDecoyModes}
+import fr.proline.core.algo.msi.validation.{TDAnalyzerBuilder, TargetDecoyAnalyzers}
 import fr.proline.core.dal.AbstractDatastoreTestCase
 import fr.proline.core.dbunit.GRE_F068213_M2_4_TD_EColi
 import fr.proline.core.om.model.msi.{ResultSet, ResultSummary}
-import fr.proline.core.service.msi.ResultSetValidator
+import fr.proline.core.service.msi.{ResultSetValidator, ValidationConfig}
 import fr.proline.module.fragmentmatch.service.SpectrumMatchesGenerator
 import fr.proline.repository.DriverType
 import org.junit.Assert.{assertNotNull, assertTrue}
@@ -58,15 +58,16 @@ class PrideExporterTest extends LazyLogging {
     /* PeptideMatch pre-filter on Rank */
     val seqBuilder = Seq.newBuilder[IPeptideMatchFilter]
     seqBuilder += new PrettyRankPSMFilter(2) // Only 1, 2 ranks
+    val tdAnalyzerBuilder = new TDAnalyzerBuilder(TargetDecoyAnalyzers.BASIC)
 
-    val rsValidator = new ResultSetValidator(
+    val rsValidator =  ResultSetValidator(
       execContext = execContext,
       targetRs = rs,
-      tdAnalyzer = Some(new BasicTDAnalyzer(TargetDecoyModes.CONCATENATED)),
-      pepMatchPreFilters = Option(seqBuilder.result),
-      protSetFilters = None,
-      protSetValidator = None,
-      storeResultSummary = true)
+      validationConfig = ValidationConfig(tdAnalyzerBuilder = Some(tdAnalyzerBuilder), pepMatchPreFilters = Option(seqBuilder.result)),
+      inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
+      storeResultSummary = true,
+      propagatePepMatchValidation = false,
+      propagateProtSetValidation = false)
 
     val result = rsValidator.runService()
 
