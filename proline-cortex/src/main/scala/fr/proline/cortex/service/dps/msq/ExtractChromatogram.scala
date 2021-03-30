@@ -119,38 +119,41 @@ class ExtractChromatogram extends AbstractRemoteProcessingService with IExtractC
 
     val mzDbReader = new fr.profi.mzdb.MzDbReader(mzDbFile, true);
     logger.info(s"getMsXicInMzRange '$minMz' '$maxMz' starts")
-    peaks = mzDbReader.getMsXicInMzRange(minMz, maxMz, XicMethod.MAX);
+    try {
+      peaks = mzDbReader.getMsXicInMzRange(minMz, maxMz, XicMethod.MAX);
 
 
-    if ((peaks != null) && (peaks.length > 0)) {
+      if ((peaks != null) && (peaks.length > 0)) {
 
 
-      try {
-        var previousSpectrumId: Int = peaks(0).getLcContext.getSpectrumId.toInt
-        for (peak <- peaks) {
-          val spectrumId: Int = peak.getLcContext.getSpectrumId.toInt
-          if (previousSpectrumId != getPreviousSpectrumId(mzDbReader, spectrumId)) { // there is a gap between peaks, add 0 values after the previous peak and before this one
+        try {
+          var previousSpectrumId: Int = peaks(0).getLcContext.getSpectrumId.toInt
+          for (peak <- peaks) {
+            val spectrumId: Int = peak.getLcContext.getSpectrumId.toInt
+            if (previousSpectrumId != getPreviousSpectrumId(mzDbReader, spectrumId)) { // there is a gap between peaks, add 0 values after the previous peak and before this one
 
-            val peak1 : fr.proline.core.orm.lcms.Peak = new fr.proline.core.orm.lcms.Peak(-1L, moz, (mzDbReader.getSpectrumHeaderById.get(getNextSpectrumId(mzDbReader, previousSpectrumId).toLong).getElutionTime ).toFloat, 0.0F);
-            peakListReturned.append(peak1);
-            if (getPreviousSpectrumId(mzDbReader, spectrumId) > getNextSpectrumId(mzDbReader, previousSpectrumId)) {
-              val peak2 : fr.proline.core.orm.lcms.Peak = new fr.proline.core.orm.lcms.Peak(-1L, moz, (mzDbReader.getSpectrumHeaderById.get(getPreviousSpectrumId(mzDbReader, spectrumId).toLong).getElutionTime ).toFloat, 0.0F);
-              peakListReturned.append(peak2);
+              val peak1: fr.proline.core.orm.lcms.Peak = new fr.proline.core.orm.lcms.Peak(-1L, moz, (mzDbReader.getSpectrumHeaderById.get(getNextSpectrumId(mzDbReader, previousSpectrumId).toLong).getElutionTime).toFloat, 0.0F);
+              peakListReturned.append(peak1);
+              if (getPreviousSpectrumId(mzDbReader, spectrumId) > getNextSpectrumId(mzDbReader, previousSpectrumId)) {
+                val peak2: fr.proline.core.orm.lcms.Peak = new fr.proline.core.orm.lcms.Peak(-1L, moz, (mzDbReader.getSpectrumHeaderById.get(getPreviousSpectrumId(mzDbReader, spectrumId).toLong).getElutionTime).toFloat, 0.0F);
+                peakListReturned.append(peak2);
+              }
             }
+            val rt: Float = peak.getLcContext.getElutionTime
+            val peak1: fr.proline.core.orm.lcms.Peak = new fr.proline.core.orm.lcms.Peak(-1L, moz, rt, peak.getIntensity.toFloat);
+            peakListReturned.append(peak1);
+
+            previousSpectrumId = peak.getLcContext.getSpectrumId.toInt
           }
-          val rt: Float = peak.getLcContext.getElutionTime
-          val peak1 : fr.proline.core.orm.lcms.Peak = new fr.proline.core.orm.lcms.Peak(-1L, moz, rt, peak.getIntensity.toFloat);
-          peakListReturned.append(peak1);
-
-          previousSpectrumId = peak.getLcContext.getSpectrumId.toInt
+        } catch {
+          case sle: SQLiteException =>
+            logger.error("Error while reading mzdb file", sle)
         }
-      } catch {
-        case sle: SQLiteException =>
-          logger.error("Error while reading mzdb file", sle)
       }
-
+    } finally  {
+      logger.debug("Close mzdb file reader ("+mzDbFile.getName+")")
+      mzDbReader.close()
     }
-
     return peakListReturned;
 
   }
