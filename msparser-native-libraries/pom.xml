@@ -8,7 +8,7 @@
   </parent>
 
   <groupId>matrixscience</groupId>
-  <artifactId>msparser-native-libraries-2.7.0</artifactId> <!-- Include Mascot Parser version -->
+  <artifactId>msparser-native-libraries-2.5.2</artifactId> <!-- Include Mascot Parser version -->
   <packaging>jar</packaging>
 
   <name>MSParser-native-libraries</name>

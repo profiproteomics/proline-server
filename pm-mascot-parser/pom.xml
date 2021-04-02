@@ -15,7 +15,7 @@
 
   <properties>
     <version.path>${basedir}/src/main/scala/fr/proline/module/parser/mascot</version.path>
-    <mascot.version>2.7.0</mascot.version>
+    <mascot.version>2.5.2</mascot.version>
   </properties>
 
 
