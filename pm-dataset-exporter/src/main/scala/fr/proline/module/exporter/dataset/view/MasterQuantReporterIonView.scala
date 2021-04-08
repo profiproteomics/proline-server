@@ -124,7 +124,6 @@ class MasterQuantReporterIonView(
             
             val quantRecordBuildingCtx = new MasterQuantReporterIonBuildingContext(
               pepMatch = identPepMatchOpt.get,
-              protMatch = reprProtMatch,
               seqMatch = seqMatchByPepId(peptideId),
               protMatchBuildingCtx = Some(protMatchBuildingCtx),
               mqPep,

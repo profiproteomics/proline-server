@@ -182,7 +182,6 @@ class MasterQuantPeptideIonView(
               
               val quantRecordBuildingCtx = new MasterQuantPeptideIonBuildingContext(
                 pepMatch = parentOrChildBestPepMatchOpt.get,
-                protMatch = reprProtMatch,
                 seqMatch = seqMatchByPepId(peptideId),
                 protMatchBuildingCtx = Some(protMatchBuildingCtx),
                 mqPep,
