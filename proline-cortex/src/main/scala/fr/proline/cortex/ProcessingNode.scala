@@ -39,9 +39,7 @@ import fr.proline.jms.util.ExpiredMessageConsumer
 import fr.proline.jms.util.JMSConstants.MAX_JMS_SERVER_PORT
 import fr.proline.jms.util.MonitoringTopicPublisherRunner
 import fr.proline.jms.util.NodeConfig
-import javax.jms.Connection
-import javax.jms.ExceptionListener
-import javax.jms.JMSException
+import javax.jms.{Connection, ExceptionListener, InvalidDestinationException, JMSException, Session}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -104,6 +102,8 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
    */
   def startJMSConsumers() {
 
+    var tmpSession : Session = null
+
     m_lock.synchronized {
 
       if (m_connection != null) {
@@ -137,6 +137,16 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
         // Step 4.Create a JMS Connection
         m_connection = cf.createConnection()
+
+        //Test queue exist => generate exception if not
+        tmpSession = m_connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
+        tmpSession.createConsumer(serviceRequestQueue)
+        try {
+            tmpSession.close()
+        } catch {
+            case exClose: JMSException => logger.error("Error closing temporary JMS Session", exClose)
+        }
+
 
         // Add an ExceptionListener to handle asynchronous Connection problems
         val exceptionListener = new ExceptionListener() {
@@ -195,10 +205,27 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         logger.info(" ************ Proline Cortex successfully started !")
       } catch {
 
+        case ide: InvalidDestinationException => {
+          logger.error("WARNING: JMS Server may not be configured correctly. Verify it's host, port and queue name in jms-node.config !", ide)
+          if (tmpSession != null) {
+            try {
+              tmpSession.close()
+            } catch {
+              case exClose: JMSException => logger.error("Error closing temporary JMS Session", exClose)
+            }
+          }
+          stopJMSConsumers()
+        }
 
         case ex: Throwable => {
           logger.error("Error starting JMS Consumers", ex)
-
+          if (tmpSession != null) {
+            try {
+              tmpSession.close()
+            } catch {
+              case exClose: JMSException => logger.error("Error closing temporary JMS Session", exClose)
+            }
+          }
           stopJMSConsumers()
         }
 
