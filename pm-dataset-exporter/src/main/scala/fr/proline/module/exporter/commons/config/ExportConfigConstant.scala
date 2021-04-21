@@ -178,7 +178,10 @@ object ExportConfigConstant {
   
   // MasterQuantReporterIon sheet
   val SHEET_MASTER_QUANT_REPORTER_ION = "master_quant_reporter_ion"
-  
+  val FIELD_MASTER_QUANT_PEPTIDE_PROTEIN_SETS = "master_quant_peptide_protein_sets"
+
+  val SHEET_MASTER_QUANT_PEPTIDE = "master_quant_peptide"
+
   // Some properties shared between quantitation sheets
   val FIELD_PROFILIZER_RATIO = "ratio" // incremental
   val FIELD_PROFILIZER_TTEST_PVALUE = "t-test_pvalue" // incremental

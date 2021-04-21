@@ -14,6 +14,7 @@ object DatasetViewType extends IViewTypeEnumeration {
   val PROT_SET_TO_ALL_PEPTIDE_MATCHES = Value
   val TYPICAL_PROT_MATCH_TO_ALL_PEP_MATCHES = Value
   val MASTER_QUANT_PEPTIDE_ION = Value
+  val MASTER_QUANT_PEPTIDE = Value
   val MASTER_QUANT_REPORTER_ION = Value
   val PTM_CLUSTER = Value
 }

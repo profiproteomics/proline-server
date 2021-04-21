@@ -98,7 +98,14 @@ object ExportConfigSheet {
   }
   
   def getMasterQuantPeptidesSheetExportConfig(): ExportConfigSheet = {
-    this.getPeptideMatchesSheetExportConfig(fromXIC = true, fromSC = false, title = "Peptides from protein sets")
+    ExportConfigSheet(
+      id = ExportConfigConstant.SHEET_MASTER_QUANT_PEPTIDE,
+      title = "Quantified Peptides",
+      presentation = ExportConfigConstant.PRESENTATION_SHEET_COLUMNS,
+      fields = CustomFieldConfigFactory.getMasterQuantPeptideSheetFields(),
+      defaultDisplayed = false
+    )
+
   }
 
   // get full config for masterQuantPeptideIon

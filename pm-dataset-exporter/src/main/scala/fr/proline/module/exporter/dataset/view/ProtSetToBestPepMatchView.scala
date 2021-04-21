@@ -56,7 +56,6 @@ class ProtSetToBestPepMatchView(
             new PepMatchBuildingContext(
               pepMatch = bestPepMatch,
               isInSubset = false,
-              protMatch = reprProtMatch,
               seqMatch = seqMatch,
               protMatchBuildingCtx = Some(protMatchBuildingCtx)
             )
@@ -64,7 +63,6 @@ class ProtSetToBestPepMatchView(
           } else {
               new MasterQuantPeptideBuildingContext(
                 pepMatch = bestPepMatch,
-                protMatch = reprProtMatch,
                 seqMatch = seqMatch,
                 protMatchBuildingCtx = Some(protMatchBuildingCtx),
                 mqPepOpt.get,

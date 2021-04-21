@@ -73,7 +73,6 @@ class PTMClusterView(
               ptmCluster,
               ptmCluster.ptmSiteLocations.map(sitesById(_)),
               pepMatch = pepMatch,
-              protMatch = proteinMatch,
               seqMatch = seqMatchByPepId(pepMatch.peptide.id),
               protMatchBuildingCtx = Some(protMatchBuildingCtx)
             )
@@ -101,7 +100,6 @@ class PTMClusterView(
               ptmCluster = ptmCluster,
               ptmSites = ptmCluster.ptmSiteLocations.map(sitesById(_)),
               pepMatch = pepMatch,
-              protMatch = proteinMatch,
               seqMatch = seqMatchByPepId(pepMatch.peptide.id),
               protMatchBuildingCtx = Some(protMatchBuildingCtx),
               mqPep,

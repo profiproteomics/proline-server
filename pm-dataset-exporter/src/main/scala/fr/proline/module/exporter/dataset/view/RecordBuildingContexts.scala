@@ -45,8 +45,7 @@ class ProtMatchBuildingContext(
 class PepMatchBuildingContext(
   var pepMatch: PeptideMatch,
   var isInSubset: Boolean,
-  var protMatch: ProteinMatch,
-  var seqMatch: SequenceMatch,
+    var seqMatch: SequenceMatch,
   var protMatchBuildingCtx: Option[ProtMatchBuildingContext] = None
 ) extends IRecordBuildingContext
 
@@ -76,15 +75,13 @@ class MasterQuantProteinSetProfileBuildingContext(
 
 class MasterQuantPeptideBuildingContext(
   pepMatch: PeptideMatch,
-  protMatch: ProteinMatch,
   seqMatch: SequenceMatch,
   protMatchBuildingCtx: Option[ProtMatchBuildingContext],
   var masterQuantPeptide: MasterQuantPeptide,
   val groupSetupNumber: Int
 ) extends PepMatchBuildingContext(
   pepMatch,
-  false, // isSubset
-  protMatch,
+  false,
   seqMatch,
   protMatchBuildingCtx
 ) with IMasterQuantEntityBuildingContext {
@@ -95,8 +92,7 @@ class MasterQuantPeptideBuildingContext(
 
 class MasterQuantPeptideIonBuildingContext(
   pepMatch: PeptideMatch,
-  protMatch: ProteinMatch,
-  seqMatch: SequenceMatch,
+    seqMatch: SequenceMatch,
   protMatchBuildingCtx: Option[ProtMatchBuildingContext],
   masterQuantPeptide: MasterQuantPeptide,
   var masterQuantPeptideIon: MasterQuantPeptideIon,
@@ -104,7 +100,6 @@ class MasterQuantPeptideIonBuildingContext(
   groupSetupNumber: Int
 ) extends MasterQuantPeptideBuildingContext(
   pepMatch,
-  protMatch,
   seqMatch,
   protMatchBuildingCtx,
   masterQuantPeptide,
@@ -116,8 +111,7 @@ class MasterQuantPeptideIonBuildingContext(
 
 class MasterQuantReporterIonBuildingContext(
   pepMatch: PeptideMatch,
-  protMatch: ProteinMatch,
-  seqMatch: SequenceMatch,
+    seqMatch: SequenceMatch,
   protMatchBuildingCtx: Option[ProtMatchBuildingContext],
   masterQuantPeptide: MasterQuantPeptide,
   masterQuantPeptideIon: MasterQuantPeptideIon,
@@ -126,7 +120,6 @@ class MasterQuantReporterIonBuildingContext(
   groupSetupNumber: Int
 ) extends MasterQuantPeptideIonBuildingContext(
   pepMatch,
-  protMatch,
   seqMatch,
   protMatchBuildingCtx,
   masterQuantPeptide,
@@ -147,13 +140,11 @@ class PTMClusterBuildingContext(
     val ptmCluster: PtmCluster,
     val ptmSites: Array[PtmSite2],
     pepMatch: PeptideMatch,
-    protMatch: ProteinMatch,
     seqMatch: SequenceMatch,
     protMatchBuildingCtx: Option[ProtMatchBuildingContext]
 ) extends PepMatchBuildingContext(
   pepMatch,
   false,
-  protMatch,
   seqMatch,
   protMatchBuildingCtx
 ) with IPTMClusterBuildingContext {
@@ -164,15 +155,13 @@ class QuantPTMClusterBuildingContext(
     val ptmCluster: PtmCluster,
     val ptmSites: Array[PtmSite2],
     pepMatch: PeptideMatch,
-    protMatch: ProteinMatch,
     seqMatch: SequenceMatch,
     protMatchBuildingCtx: Option[ProtMatchBuildingContext],
     masterQuantPeptide: MasterQuantPeptide,
     groupSetupNumber: Int
 ) extends  MasterQuantPeptideBuildingContext(
 pepMatch,
-protMatch,
-seqMatch,
+  seqMatch,
 protMatchBuildingCtx,
 masterQuantPeptide,
 groupSetupNumber
