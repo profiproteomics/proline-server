@@ -314,7 +314,13 @@ class SpectrumMatchesGenerator(
             val stmt = con.createStatement()
             stmt.execute(query)
 
+            query = " ALTER TABLE object_tree DISABLE TRIGGER ALL; "
+            stmt.execute(query)
+
             query = "DELETE FROM object_tree WHERE id IN (" + associatedObjectTreeBuilder.result.mkString(",") + ");"
+            stmt.execute(query)
+
+            query = " ALTER TABLE object_tree ENABLE TRIGGER ALL; "
             stmt.execute(query)
 
             stmt.close()
