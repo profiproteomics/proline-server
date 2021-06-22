@@ -273,12 +273,7 @@ class ImportValidateGenerateSM extends AbstractRemoteProcessingService with IImp
         val rsValidator = ResultSetValidator(
           execContext = execCtx,
           targetRs = currentRS,
-          validationConfig = ValidationConfig(
-            pepMatchPreFilters = validationParam.pepMatchPreFilters,
-            pepMatchValidator = validationParam.pepMatchValidator,
-            protSetFilters = validationParam.protSetFilters,
-            protSetValidator = validationParam.protSetValidator,
-            pepSetScoring = Some(validationParam.pepSetScoring.getOrElse(PepSetScoring.MASCOT_STANDARD_SCORE))),
+          validationConfig = validationParam.copy(pepSetScoring= Some(validationParam.pepSetScoring.getOrElse(PepSetScoring.MASCOT_STANDARD_SCORE))),
           inferenceMethod = Some(InferenceMethod.PARSIMONIOUS),
           storeResultSummary = true,
           propagatePepMatchValidation = false,
