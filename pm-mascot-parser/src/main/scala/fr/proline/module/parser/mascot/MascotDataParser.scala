@@ -188,7 +188,7 @@ class MascotDataParser(
     val searchPeps = pepsToSearch.result
 
     val foundPeps = pepProvider.getPeptidesAsOptionsBySeqAndPtms(searchPeps)
-    logger.debug("Peptides found in PSdb : " + foundPeps.filter(_.isDefined).size)
+    logger.debug("Found {}/{} Peptides in Datastore : ", foundPeps.filter(_.isDefined).size, searchPeps.size)
 
     // Iterate over found peptides in order to put them into existing peptide matches
     for (foundPepOpt <- foundPeps; fPep <- foundPepOpt) {

@@ -1,7 +1,6 @@
 package fr.proline.module.fragmentmatch.service
 
 import java.sql.Connection
-
 import com.typesafe.scalalogging.StrictLogging
 import fr.profi.util.serialization.CustomDoubleJacksonSerializer
 import fr.profi.util.serialization.ProfiJSMSerialization
@@ -20,11 +19,9 @@ import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
 import fr.proline.repository.DriverType
 import fr.proline.repository.util.JDBCWork
-import org.junit.After
+import org.junit.{After, Before, Ignore, Test}
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
-import org.junit.Before
-import org.junit.Test
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -158,7 +155,8 @@ class SpectrumMatchesGeneratorTest extends AbstractMultipleDBTestCase with Stric
     }
   }
 
-    @Test
+  @Ignore
+  @Test
   def testForceGenerateSpectrumMatch(): Unit = {
     try {
       
