@@ -11,7 +11,7 @@ class QuantDataset(
                     val quantRSM: LazyQuantResultSummary,
                     val expDesign: Option[ExperimentalDesign],
                     val quantConfigAndMethod: Option[(String,IQuantMethod)],
-                    val profilizerConfig: Option[String],
+                    val postProcessConfig: Option[String],
                     val masterQuantChannel: MasterQuantChannel,
                     val groupSetupNumber: Int,
                     override protected val loadLeaveResultSummaries: () => Array[LazyResultSummary],

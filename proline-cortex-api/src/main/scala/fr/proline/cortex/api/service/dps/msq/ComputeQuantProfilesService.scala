@@ -50,7 +50,7 @@ trait IComputeQuantProfilesService extends IMsqService with IDefaultServiceVersi
     object CONFIG_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "config"
       val description = "Configuration used for the computation of quantitative profiles."
-      val scalaType = typeOf[Object] // ProfilizerConfig
+      val scalaType = typeOf[Object] // PostProcessingConfig
     }
   }
 }

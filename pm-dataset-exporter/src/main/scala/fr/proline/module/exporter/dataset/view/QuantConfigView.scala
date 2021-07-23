@@ -21,7 +21,7 @@ class QuantConfigView(
   private var developerDictionnary = Map("aln" -> "alignment", "config" -> "", "params" -> "", "tol" -> "tolerance", "ft" -> "feature")
 
   private val quantConfigAndMethodOpt = quantDs.quantConfigAndMethod
-  private val profilizerConfigOpt = quantDs.profilizerConfig
+  private val postProcessConfigOpt = quantDs.postProcessConfig
   private val _fieldValuePairs = {
 
     val quantConfigParams = if (quantConfigAndMethodOpt.isEmpty) {
@@ -32,11 +32,11 @@ class QuantConfigView(
       _stringifyMap(quantConfigAsMap, developerDictionnary)
     }
 
-    val profilizerParams = profilizerConfigOpt.map { profilizerConfig =>
-      _stringifyMap(ProfiJson.deserialize[Map[String,Any]](profilizerConfig), developerDictionnary)
+    val postProcessParams = postProcessConfigOpt.map { postProcessConfig =>
+      _stringifyMap(ProfiJson.deserialize[Map[String,Any]](postProcessConfig), developerDictionnary)
     }.getOrElse( Array() )
 
-    (quantConfigParams ++ profilizerParams).filter(_ != null) // remove null entries
+    (quantConfigParams ++ postProcessParams).filter(_ != null) // remove null entries
   }
 
 

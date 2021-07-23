@@ -285,9 +285,9 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new GenerateSpectrumMatches())
     ServiceRegistry.addService(new GenerateMSDiagReport())
     ServiceRegistry.addService(new FilterRsmProteinSets())
-    ServiceRegistry.addService(new ComputeQuantProfiles())
     ServiceRegistry.addService(new ComputeQuantPostProcessing())
     ServiceRegistry.addService(new ComputeQuantPostProcessingV2())
+    ServiceRegistry.addService(new ComputeQuantPostProcessingV3())
 
     ServiceRegistry.addService(new Quantify())
     ServiceRegistry.addService(new QuantifySC())

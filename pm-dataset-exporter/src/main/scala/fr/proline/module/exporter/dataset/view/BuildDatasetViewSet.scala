@@ -205,12 +205,12 @@ object BuildDatasetViewSet extends LazyLogging {
       // FIXME: how to deal with other MQC ids
       val masterQuantChannelId = masterQcIds.head
       
-      val( quantConfigAndMethodOpt, quantConfigSchemaName, profilizerConfigOpt) = if (mode != ExportConfigConstant.MODE_QUANT_XIC) (None,None, None)
+      val( quantConfigAndMethodOpt, quantConfigSchemaName, postProcessConfigOpt) = if (mode != ExportConfigConstant.MODE_QUANT_XIC) (None,None, None)
       else {
         // Load the quant config and the profilizer config
         var quantSchemaName : Option[ObjectTreeSchema.SchemaName]= None
         val quantConfigProvider = new SQLQuantConfigProvider(udsDbCtx)
-        val profilizerConfigProvider = new SQLProfilizerConfigProvider(udsDbCtx)
+        val postProcessConfigProvider = new SQLPostProcessingConfigProvider(udsDbCtx)
         val quantConfigAsStringOpt = quantConfigProvider.getQuantConfigAsString(dsId)
         val quantConfigAndMethod = if (quantConfigAsStringOpt.isDefined) {
           quantSchemaName = Some(quantConfigAsStringOpt.get._2)
@@ -218,7 +218,7 @@ object BuildDatasetViewSet extends LazyLogging {
         } else {
           None
         }
-        (quantConfigAndMethod,quantSchemaName, profilizerConfigProvider.getProfilizerConfigAsString(dsId))
+        (quantConfigAndMethod,quantSchemaName, postProcessConfigProvider.getPostProcessingAsString(dsId))
       }
 
       // Load the experimental design
@@ -390,7 +390,7 @@ object BuildDatasetViewSet extends LazyLogging {
         lazyQuantRSM,
         expDesignOpt,
         quantConfigAndMethodOpt,
-        profilizerConfigOpt,
+        postProcessConfigOpt,
         masterQc,
         groupSetupNumber,
         identResultSummariesLoader,

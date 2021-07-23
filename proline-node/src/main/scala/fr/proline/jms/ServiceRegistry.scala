@@ -39,7 +39,7 @@ object ServiceRegistry {
         )
 
         require(
-          (service.isDefaultVersion && existingService.isDefaultVersion) == false,
+          !(service.isDefaultVersion && existingService.isDefaultVersion),
           s"Service '${service.serviceName}' already present with a default version"
         )
 
@@ -110,7 +110,7 @@ object ServiceRegistry {
 
       for ( (serviceName,services) <- m_servicesByName) {
 
-        if ((services != null) && !services.isEmpty) {
+        if ((services != null) && services.nonEmpty) {
           for (service <- services) {
 
             if (service.isInstanceOf[ISingleThreadedService]) {
@@ -119,7 +119,7 @@ object ServiceRegistry {
                 // Note: version consistency has already been checked in the addService() method
                 val key = singleThreadedServiceToKey(singleThreadedService)
                 singleThreadedServicesByName.getOrElseUpdate(key, ArrayBuffer()) += singleThreadedService
-             
+
             }
 
           } // End loop for each service

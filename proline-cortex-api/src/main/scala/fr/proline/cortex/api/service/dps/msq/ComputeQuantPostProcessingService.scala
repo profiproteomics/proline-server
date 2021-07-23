@@ -58,3 +58,10 @@ trait IComputeQuantPostProcessingServiceV2 extends IComputeQuantPostProcessingSe
   override val isDefaultVersion = false
 
 }
+trait IComputeQuantPostProcessingServiceV3 extends IComputeQuantPostProcessingService {
+
+  // Override params from IDefaultServiceVersion...
+  override val serviceVersion = "3.0"
+  override val isDefaultVersion = false
+
+}
