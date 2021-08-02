@@ -767,7 +767,6 @@ class MascotResultFile(
   object MascotQuerySection {
     val QUERY_NUM = "query_num"
     val TITLE = "title"
-    val SCANS = "scans"
     val RTINSECONDS = "rtinseconds"
     val INDEX = "index"
     val CHARGE = "charge"
@@ -785,14 +784,6 @@ class MascotResultFile(
     import MascotQuerySection._
 
     lazy val queryNumber = underlyingMap(QUERY_NUM).toInt
-    
-    lazy val scanRangeOpt: Option[(Int, Int)] = if (!underlyingMap.contains(SCANS)) None
-    else {
-      val scansAsStr = underlyingMap(SCANS)
-      val scans = scansAsStr.split(",").map( _.split("-") )
-      Some((scans.head.head.trim.toInt, scans.last.last.trim.toInt))
-    }
-    
     lazy val rtRangeInSeconds: Option[(Float, Float)] = if (!underlyingMap.contains(RTINSECONDS)) None
     else {
       val rtInSecondsAsStr = underlyingMap(RTINSECONDS)
@@ -886,8 +877,8 @@ class MascotResultFile(
           precursorCharge = msq.charge,
           firstCycle = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_CYCLE, 0)),
           lastCycle = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_CYCLE, 0)),
-          firstScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_SCAN, scanRangeOpt.map(_._1).getOrElse(0))),
-          lastScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_SCAN, scanRangeOpt.map(_._2).getOrElse(0))),
+          firstScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.FIRST_SCAN, 0)),
+          lastScan = toIntOrZero(specTitleFieldMap.getOrElse(titleFields.LAST_SCAN, 0)),
           firstTime = toFloatOrMinusOne(specTitleFieldMap.getOrElse(titleFields.FIRST_TIME, firstRT)),
           lastTime = toFloatOrMinusOne(specTitleFieldMap.getOrElse(titleFields.LAST_TIME, lastRT)),
           mozList = Some(sortedMozList),
