@@ -1,77 +1,96 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-	<parent>
-		<artifactId>proline-server</artifactId>
-		<groupId>fr.proline</groupId>
-		<version>2.2.0_jdk11-SNAPSHOT</version>
-	</parent>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>proline-server</artifactId>
+        <groupId>fr.proline</groupId>
+        <version>2.2.0_jdk11-SNAPSHOT</version>
+    </parent>
 
-  <artifactId>pm-maxquant-parser</artifactId>
+    <artifactId>pm-maxquant-parser</artifactId>
     <name>PM-MaxQuantParser</name>
 
+    <dependencies>
+        <dependency>
+            <!-- XML CSV-->
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.3.1</version>
+        </dependency>
 
-  <dependencies>
-  	<dependency>
-  		<groupId>javax.xml.bind</groupId>
-  		<artifactId>jaxb-api</artifactId>
-  		<version>2.2.12</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>fr.proline</groupId>
-  		<artifactId>proline-dal_${scala.compat.version}</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>fr.proline</groupId>
-  		<artifactId>proline-om_${scala.compat.version}</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>fr.profi.util</groupId>
-  		<artifactId>profi-commons-java</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>junit</groupId>
-  		<artifactId>junit</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>ch.qos.logback</groupId>
-  		<artifactId>logback-classic</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>ch.qos.logback</groupId>
-  		<artifactId>logback-core</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>org.slf4j</groupId>
-  		<artifactId>slf4j-api</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>fr.profi.util</groupId>
-  		<artifactId>profi-commons-scala_${scala.compat.version}</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>commons-io</groupId>
-  		<artifactId>commons-io</artifactId>
-  		<version>2.5</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>com.opencsv</groupId>
-  		<artifactId>opencsv</artifactId>
-  		<version>4.0</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>fr.profi</groupId>
-  		<artifactId>profi-proteomics_${scala.compat.version}</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>org.scala-lang</groupId>
-  		<artifactId>scala-library</artifactId>
-  	</dependency>
-  	<dependency>
-  		<groupId>fr.proline</groupId>
-  		<artifactId>proline-databases</artifactId>
-  	</dependency>
-  </dependencies>
-  <build>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.11.0</version>
+        </dependency>
 
-  </build>
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>4.6</version>
+        </dependency>
+
+        <!-- Proline  -->
+        <dependency>
+            <groupId>fr.proline</groupId>
+            <artifactId>proline-dal_${scala.compat.version}</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>fr.proline</groupId>
+            <artifactId>proline-om_${scala.compat.version}</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>fr.profi.util</groupId>
+            <artifactId>profi-commons-java</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>fr.profi.util</groupId>
+            <artifactId>profi-commons-scala_${scala.compat.version}</artifactId>
+        </dependency>
+
+		<dependency>
+			<groupId>fr.profi</groupId>
+			<artifactId>profi-proteomics_${scala.compat.version}</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>fr.proline</groupId>
+			<artifactId>proline-databases</artifactId>
+		</dependency>
+
+        <!-- test -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+
+        <!-- Logging -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+		<!-- scala -->
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+        </dependency>
+
+    </dependencies>
+    <build>
+
+    </build>
 </project>

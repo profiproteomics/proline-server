@@ -19,27 +19,19 @@
     <dependency>
       <groupId>com.typesafe</groupId>
       <artifactId>config</artifactId>
-      <version>1.3.1</version>
-    </dependency>
-
-
-    <dependency>
-      <groupId>com.typesafe.scala-logging</groupId>
-      <artifactId>scala-logging_${scala.compat.version}</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
+      <version>1.4.1</version>
     </dependency>
 
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <!-- Version inherited from ProFI-Pom ${scala-library.version} -->
     </dependency>
 
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-reflect</artifactId>
-      <!-- Version inherited from ProFI-Pom ${scala-library.version} -->
     </dependency>
+
     <!-- JSON-RPC -->
     <dependency>
       <groupId>com.thetransactioncompany</groupId>
@@ -50,8 +42,9 @@
     <dependency>
       <groupId>org.jboss.spec.javax.jms</groupId>
       <artifactId>jboss-jms-api_2.0_spec</artifactId>
-      <version>1.0.0.Final</version>
+      <version>1.0.2.Final</version>
     </dependency>
+
     <dependency>
       <groupId>org.hornetq</groupId>
       <artifactId>hornetq-jms-client</artifactId>
@@ -70,6 +63,7 @@
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-scala_${scala.compat.version}</artifactId>
     </dependency>
+
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-java</artifactId>
@@ -81,11 +75,18 @@
       <artifactId>junit</artifactId>
     </dependency>
 
+    <!-- Logging -->
+    <dependency>
+      <groupId>com.typesafe.scala-logging</groupId>
+      <artifactId>scala-logging_${scala.compat.version}</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-core</artifactId>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>

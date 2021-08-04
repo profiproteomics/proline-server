@@ -25,16 +25,13 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <!-- Version inherited from ProFI-Pom ${scala-library.version} -->
     </dependency>
 
     <!-- Logging -->
     <dependency>
       <groupId>com.typesafe.scala-logging</groupId>
       <artifactId>scala-logging_${scala.compat.version}</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
     </dependency>
-
 
     <!-- Mascot Parser native libraries (for all OSes, loaded at runtime) 
       msparser.jar dependency is defined via Maven profiles -->
@@ -49,10 +46,12 @@
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-java</artifactId>
     </dependency>
+
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-scala_${scala.compat.version}</artifactId>
     </dependency>
+
     <dependency>
       <groupId>fr.profi</groupId>
       <artifactId>profi-proteomics_${scala.compat.version}</artifactId>
@@ -63,18 +62,27 @@
       <groupId>fr.proline</groupId>
       <artifactId>proline-om_${scala.compat.version}</artifactId>
     </dependency>
+
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-dal_${scala.compat.version}</artifactId>
     </dependency>
+
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-omp_${scala.compat.version}</artifactId>
     </dependency>
+
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-databases</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-orm</artifactId>
+    </dependency>
+
     <!-- Tests -->
     <dependency>
       <groupId>junit</groupId>
@@ -87,9 +95,22 @@
       <artifactId>scalatest_${scala.compat.version}</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.scalatestplus</groupId>
+      <artifactId>junit-4-13_${scala.compat.version}</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.dbunit</groupId>
       <artifactId>dbunit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-core</artifactId>
+      <version>2.2</version>
       <scope>test</scope>
     </dependency>
 
@@ -99,6 +120,7 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-dal_${scala.compat.version}</artifactId>
@@ -112,25 +134,20 @@
       <artifactId>logback-core</artifactId>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <scope>test</scope>
     </dependency>
 
+    <!-- Others -->
     <dependency>
     	<groupId>org.hibernate.javax.persistence</groupId>
     	<artifactId>hibernate-jpa-2.1-api</artifactId>
-    	<version>1.0.0.Final</version>
+    	<version>1.0.2.Final</version>
     </dependency>
-    <dependency>
-    	<groupId>org.apache.commons</groupId>
-    	<artifactId>commons-lang3</artifactId>
-    </dependency>
-    <dependency>
-    	<groupId>fr.proline</groupId>
-    	<artifactId>proline-orm</artifactId>
-    </dependency>
+
   </dependencies>
 
   <build>

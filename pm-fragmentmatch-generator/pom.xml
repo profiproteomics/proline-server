@@ -23,12 +23,10 @@
 
     <!-- Logging -->
 
-   		<dependency>
-        <groupId>com.typesafe.scala-logging</groupId>
-        <artifactId>scala-logging_${scala.compat.version}</artifactId>
-      </dependency>
-
-      <!-- Bridge Apache commons-logging over SLF4J -->
+    <dependency>
+      <groupId>com.typesafe.scala-logging</groupId>
+      <artifactId>scala-logging_${scala.compat.version}</artifactId>
+    </dependency>
 
     <!-- Proline -->
     <!-- Version inherited from parent POM -->
@@ -36,11 +34,27 @@
       <groupId>fr.profi</groupId>
       <artifactId>profi-proteomics_${scala.compat.version}</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-om_${scala.compat.version}</artifactId>
+    </dependency>
     
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-dal_${scala.compat.version}</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-databases</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>fr.profi.util</groupId>
+      <artifactId>profi-commons-scala_${scala.compat.version}</artifactId>
+    </dependency>
+
     <!-- Tests -->
     <dependency>
       <groupId>junit</groupId>
@@ -82,10 +96,6 @@
       <scope>test</scope>
     </dependency>
 
-    <dependency>
-    	<groupId>fr.profi.util</groupId>
-    	<artifactId>profi-commons-scala_${scala.compat.version}</artifactId>
-    </dependency>
   </dependencies>
 
   <build>

@@ -1,28 +1,15 @@
 package fr.proline.module.fragmentmatch
 
 import com.typesafe.scalalogging.StrictLogging
-import fr.proline.context.BasicExecutionContext
-import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.core.dal.BuildDbConnectionContext
-import fr.proline.core.dal.BuildMsiDbConnectionContext
-import fr.proline.core.dal.BuildUdsDbConnectionContext
+import fr.proline.context.{BasicExecutionContext, IExecutionContext}
+import fr.proline.core.dal.{AbstractMultipleDBTestCase, BuildMsiDbConnectionContext, BuildUdsDbConnectionContext}
 import fr.proline.core.om.model.msi.{LocatedPtm, Peptide, ResultSet, TheoreticalFragmentSeries}
-import fr.proline.core.om.provider.PeptideCacheExecutionContext
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
-import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
-import fr.proline.core.orm.msi.PtmSpecificity.PtmLocation
+import fr.proline.core.om.provider.{PeptideCacheExecutionContext, ProviderDecoratedExecutionContext}
+import fr.proline.core.om.provider.msi.{IPTMProvider, IPeptideProvider, IResultSetProvider}
+import fr.proline.core.om.provider.msi.impl.{SQLPTMProvider, SQLPeptideProvider, SQLResultSetProvider}
 import fr.proline.repository.DriverType
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.fail
-import org.junit.Before
-import org.junit.Test
+import org.junit.Assert.{assertEquals, fail}
+import org.junit.{After, Before, Test}
 
 import scala.Array.canBuildFrom
 import scala.collection.mutable.ArrayBuffer

@@ -22,27 +22,29 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-       <!-- Version inherited from ProFI-Pom ${jackson.version} -->
     </dependency>
+
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <!-- Version inherited from ProFI-Pom ${jackson.version} -->
     </dependency>
   
     <!-- Scala -->
     <dependency>
       <groupId>org.scala-lang</groupId>
+      <artifactId>scala-reflect</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <!-- Version inherited from ProFI-Pom ${scala-library.version} -->
     </dependency>
 
     <dependency>
       <groupId>com.typesafe.scala-logging</groupId>
       <artifactId>scala-logging_${scala.compat.version}</artifactId>
-    <!-- Version inherited from ProFI-Pom -->
-  </dependency>
-  <!-- Serialization -->
+    </dependency>
+
 
     <!-- JSON-RPC -->
     <dependency>
@@ -55,7 +57,7 @@
     <dependency>
       <groupId>org.jboss.spec.javax.jms</groupId>
       <artifactId>jboss-jms-api_2.0_spec</artifactId>
-      <version>1.0.0.Final</version>
+      <version>1.0.2.Final</version>
     </dependency>
     
     <!-- Proline -->
@@ -68,15 +70,14 @@
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-java</artifactId>
     </dependency>
+
     <!-- Test -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
       <scope>test</scope>
     </dependency>
 
-    
   </dependencies>
   
   <build>
