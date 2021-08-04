@@ -5,7 +5,7 @@ import scala.Array.canBuildFrom
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.scalatest.junit.JUnitSuite
+import org.scalatestplus.junit.JUnitSuite
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.BasicExecutionContext
 import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter

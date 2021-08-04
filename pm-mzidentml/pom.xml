@@ -91,43 +91,42 @@
       <groupId>fr.proline</groupId>
       <artifactId>proline-om_${scala.compat.version}</artifactId>
     </dependency>
+
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-dal_${scala.compat.version}</artifactId>
     </dependency>
+
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-omp_${scala.compat.version}</artifactId>
     </dependency>
+
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-orm</artifactId>
     </dependency>
+
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-databases</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>fr.proline</groupId>
-      <artifactId>proline-databases</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>fr.proline</groupId>
-      <artifactId>proline-dal_${scala.compat.version}</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
     </dependency>
 
    <dependency>
       <groupId>fr.profi</groupId>
       <artifactId>profi-proteomics_${scala.compat.version}</artifactId>
     </dependency>
+
     <dependency>
       <groupId>fr.profi.util</groupId>
       <artifactId>profi-commons-scala_${scala.compat.version}</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>fr.profi.util</groupId>
+      <artifactId>profi-commons-java</artifactId>
+    </dependency>
+
     <!-- Tests -->
     <dependency>
       <groupId>junit</groupId>
@@ -138,6 +137,20 @@
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.compat.version}</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-databases</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-dal_${scala.compat.version}</artifactId>
+      <type>test-jar</type>
       <scope>test</scope>
     </dependency>
 
