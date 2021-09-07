@@ -15,6 +15,10 @@ import org.hornetq.core.remoting.impl.netty.TransportConstants
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.StringUtils
 import fr.profi.util.ThreadLogger
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.orm.uds.Project
+import fr.proline.core.orm.util.JsonSerializer
+import fr.proline.cortex.service.SingleThreadIdentifierType
 import fr.proline.cortex.service.admin.CreateProject
 import fr.proline.cortex.service.admin.GetConnectionTemplate
 import fr.proline.cortex.service.admin.UserAccount
@@ -165,23 +169,43 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
         initServices()
 
+        val projectIdsByGroup = getProjectIdByGroup
+        val nbrProjectGroups = if(projectIdsByGroup != null && !projectIdsByGroup.isEmpty) projectIdsByGroup.size else 0
+
+        /**** Create Executor for poolThreads and SingleThreads service ***/
+        val threadPoolSize = NodeConfig.SERVICE_THREAD_POOL_SIZE
+
         /* Create Executor */
         m_paralleleExecutor = Executors.newCachedThreadPool()
 
         val serviceMonitoringNotifier = new MonitoringTopicPublisherRunner(m_connection)
         m_paralleleExecutor.submit(serviceMonitoringNotifier)
 
-        /* Add SingleThreadedServiceRunner */
-        val handledSingleThreadedServiceIdents = ServiceRegistry.getSingleThreadedServicesByThreadIdent().keySet
-
-        var nbrSingleThreads = 0
-        for (threadIdent <- handledSingleThreadedServiceIdents) {
-          val singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier, threadIdent, true)
-          val singleThreadExecutor =  Executors.newSingleThreadExecutor()
+        /* Manage SingleThreadedServiceRunners : List of Services (a SingleThreadRunner) by ThreadIdent */
+        //Inner method to create SingleThreadRunner and add it to list/maps
+        def createSingleThreadRunner(singleThreadIdent: String, pIds: ArrayBuffer[Long]): Unit ={
+          val singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier, singleThreadIdent, true)
+          if(pIds != null && !pIds.isEmpty)
+            singleThreadedServiceRunner.setProjectIdsSelector(pIds.toArray)
+          val singleThreadExecutor = Executors.newSingleThreadExecutor()
           m_singleExecutor += singleThreadExecutor
-          val singleThreadFuture =  singleThreadExecutor.submit(singleThreadedServiceRunner)
+          val singleThreadFuture = singleThreadExecutor.submit(singleThreadedServiceRunner)
           ServiceManager.addRunnale2FutureEntry(singleThreadedServiceRunner, singleThreadFuture)
-          nbrSingleThreads += 1
+        }
+
+        val handledSingleThreadedServiceIdents = ServiceRegistry.getSingleThreadedServicesByThreadIdent().keySet
+        var nbrSingleThreads = 0
+        for (threadIdent <- handledSingleThreadedServiceIdents) { //For each list of service (for a specific ThreadIdent)
+          //Manage specific ImportServiceThread : if more than one group and at threadPoolSize >=  5
+          if(threadIdent.equals(SingleThreadIdentifierType.IMPORT_SINGLETHREAD_IDENT.toString) && nbrProjectGroups >0 && threadPoolSize>=5){
+            for(index <- 0 until nbrProjectGroups){
+              createSingleThreadRunner(threadIdent, projectIdsByGroup(index))
+              nbrSingleThreads += 1
+            }
+          } else {
+            createSingleThreadRunner(threadIdent, null)
+            nbrSingleThreads += 1
+          }
         }
 
         // Start Expired Message Listener
@@ -233,6 +257,38 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
     } // End of synchronized block on m_lock
 
+  }
+
+  private def getProjectIdByGroup(): ArrayBuffer[ArrayBuffer[Long]] = {
+    val connectorFactory = DbConnectionHelper.getDataStoreConnectorFactory()
+    val udsDbConnectionContext = new DatabaseConnectionContext(connectorFactory.getUdsDbConnector)
+    try{
+      //val pIds = ProjectRepository.findAllProjectIds(udsDbConnectionContext.getEntityManager)
+      val firstProjects  = ArrayBuffer.newBuilder[Long]
+      val otherProjects  = ArrayBuffer.newBuilder[Long]
+      val allProjects = udsDbConnectionContext.getEntityManager.createQuery("SELECT p FROM fr.proline.core.orm.uds.Project p",classOf[Project]).getResultList()
+      allProjects.forEach( p => {
+        var projectClassed = false
+        val serializedPropertiesStr = p.getSerializedProperties()
+        if (serializedPropertiesStr != null) {
+          val serializedPropertiesMap = JsonSerializer.getMapper().readValue(serializedPropertiesStr, classOf[java.util.Map[String,Object]])
+          if(serializedPropertiesMap.containsKey("import_group")){
+            firstProjects += p.getId
+            projectClassed  = true
+          }
+        }
+        if(!projectClassed)
+          otherProjects += p.getId
+      })
+      val allProjectsClassed = ArrayBuffer.newBuilder[ArrayBuffer[Long]]
+      if(!firstProjects.result().isEmpty)
+        allProjectsClassed += firstProjects.result()
+      if(!otherProjects.result().isEmpty)
+       allProjectsClassed += otherProjects.result()
+      allProjectsClassed.result()
+    } finally {
+      DbConnectionHelper.tryToCloseDbContext(udsDbConnectionContext)
+    }
   }
 
   private def initFileSystem() {
