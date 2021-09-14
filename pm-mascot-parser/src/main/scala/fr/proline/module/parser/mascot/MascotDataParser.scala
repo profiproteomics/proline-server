@@ -1,17 +1,13 @@
 package fr.proline.module.parser.mascot
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.chemistry.model.MolecularConstants
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.core.om.provider.msi.IProteinProvider
-import fr.proline.core.om.provider.msi.ProteinEmptyFakeProvider
-import fr.proline.core.om.provider.msi.ProteinFakeProvider
-import matrix_science.msparser.{VectorString, ms_mascotresfile, ms_peptide, ms_peptidesummary, ms_searchparams, vectori}
+import fr.proline.core.om.provider.msi.{IPTMProvider, IPeptideProvider}
+import matrix_science.msparser._
+
+import scala.collection.mutable.{ArrayBuffer, HashMap}
 
 object MascotDataParser {
 
@@ -433,10 +429,10 @@ class MascotDataParser(
     val pepSeq = mascotPeptide.getPeptideStr(false)
 
     //--- Create PTMs : from search settings variable and fixed PTM
-    val pepVarAndFixedPtm = new ArrayBuffer[LocatedPtm](0)
     val pepVarPtm = createPeptidePtmFromVarPtm(mascotPeptide, ptmProvider)
-    pepVarAndFixedPtm ++= pepVarPtm
-    pepVarAndFixedPtm ++= createPeptidePtmFromFixedPtm(mascotPeptide)
+    val pepFixedMod = createPeptidePtmFromFixedPtm(mascotPeptide)
+    val varPtmPositions = pepVarPtm.map(_.seqPosition);
+    val pepVarAndFixedPtm = pepVarPtm ++ pepFixedMod.filter(fm => !varPtmPositions.contains(fm.seqPosition))
     val ptmsAsArray = pepVarAndFixedPtm.toArray[LocatedPtm]
 
     // 1. retrieve peptide from pepByUniqueKey
