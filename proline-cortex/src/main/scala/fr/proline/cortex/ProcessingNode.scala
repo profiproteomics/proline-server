@@ -46,7 +46,7 @@ import fr.proline.jms.util.NodeConfig
 import javax.jms.{Connection, ExceptionListener, InvalidDestinationException, JMSException, Session}
 
 import scala.collection.mutable.ArrayBuffer
-
+import scala.collection.JavaConverters._
 
 object ProcessingNode extends LazyLogging {
 
@@ -267,7 +267,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
       val firstProjects  = ArrayBuffer.newBuilder[Long]
       val otherProjects  = ArrayBuffer.newBuilder[Long]
       val allProjects = udsDbConnectionContext.getEntityManager.createQuery("SELECT p FROM fr.proline.core.orm.uds.Project p",classOf[Project]).getResultList()
-      allProjects.forEach( p => {
+      allProjects.asScala.foreach(p =>{
         var projectClassed = false
         val serializedPropertiesStr = p.getSerializedProperties()
         if (serializedPropertiesStr != null) {
@@ -277,9 +277,12 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
             projectClassed  = true
           }
         }
+
         if(!projectClassed)
           otherProjects += p.getId
+
       })
+
       val allProjectsClassed = ArrayBuffer.newBuilder[ArrayBuffer[Long]]
       if(!firstProjects.result().isEmpty)
         allProjectsClassed += firstProjects.result()
