@@ -1,6 +1,7 @@
 package fr.proline.cortex
 
 import java.io.File
+import java.util.ArrayList
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -169,12 +170,14 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
         initServices()
 
-        val projectIdsByGroup = getProjectIdByGroup
-        val nbrProjectGroups = if(projectIdsByGroup != null && !projectIdsByGroup.isEmpty) projectIdsByGroup.size else 0
-
-        /**** Create Executor for poolThreads and SingleThreads service ***/
         val threadPoolSize = NodeConfig.SERVICE_THREAD_POOL_SIZE
 
+        // Calculate how projects group is to be created => corresponding to import threads number : (SERVICE_THREAD_POOL_SIZE_KEY % 5) + 1
+        val nbrProjectGroupsMax =  (threadPoolSize % 5) + 1
+        val projectIdsByGroup = getProjectIdsByGroup(nbrProjectGroupsMax)
+        val nbrProjectGroups = if(projectIdsByGroup != null) projectIdsByGroup.size else 0
+
+        /**** Create Executor for poolThreads and SingleThreads service ***/
         /* Create Executor */
         m_paralleleExecutor = Executors.newCachedThreadPool()
 
@@ -183,10 +186,10 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
         /* Manage SingleThreadedServiceRunners : List of Services (a SingleThreadRunner) by ThreadIdent */
         //Inner method to create SingleThreadRunner and add it to list/maps
-        def createSingleThreadRunner(singleThreadIdent: String, pIds: ArrayBuffer[Long]): Unit ={
+        def createSingleThreadRunner(singleThreadIdent: String, pIds: ArrayList[Long]): Unit ={
           val singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier, singleThreadIdent, true)
           if(pIds != null && !pIds.isEmpty)
-            singleThreadedServiceRunner.setProjectIdsSelector(pIds.toArray)
+            singleThreadedServiceRunner.setProjectIdsSelector(pIds.asScala.toArray)
           val singleThreadExecutor = Executors.newSingleThreadExecutor()
           m_singleExecutor += singleThreadExecutor
           val singleThreadFuture = singleThreadExecutor.submit(singleThreadedServiceRunner)
@@ -199,7 +202,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
           //Manage specific ImportServiceThread : if more than one group and at threadPoolSize >=  5
           if(threadIdent.equals(SingleThreadIdentifierType.IMPORT_SINGLETHREAD_IDENT.toString) && nbrProjectGroups >0 && threadPoolSize>=5){
             for(index <- 0 until nbrProjectGroups){
-              createSingleThreadRunner(threadIdent, projectIdsByGroup(index))
+              createSingleThreadRunner(threadIdent, projectIdsByGroup.get(index))
               nbrSingleThreads += 1
             }
           } else {
@@ -231,35 +234,108 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
         case ide: InvalidDestinationException => {
           logger.error("WARNING: JMS Server may not be configured correctly. Verify it's host, port and queue name in jms-node.config !", ide)
-          if (tmpSession != null) {
-            try {
-              tmpSession.close()
-            } catch {
-              case exClose: JMSException => logger.error("Error closing temporary JMS Session", exClose)
-            }
-          }
-          stopJMSConsumers()
+          closeSession(tmpSession)
         }
 
         case ex: Throwable => {
           logger.error("Error starting JMS Consumers", ex)
-          if (tmpSession != null) {
-            try {
-              tmpSession.close()
-            } catch {
-              case exClose: JMSException => logger.error("Error closing temporary JMS Session", exClose)
-            }
-          }
-          stopJMSConsumers()
+          closeSession(tmpSession)
         }
 
       }
 
     } // End of synchronized block on m_lock
-
   }
 
-  private def getProjectIdByGroup(): ArrayBuffer[ArrayBuffer[Long]] = {
+  private def closeSession (tmpSession : Session): Unit = {
+    if (tmpSession != null) {
+      try {
+        tmpSession.close()
+      } catch {
+        case exClose: JMSException => logger.error("Error closing temporary JMS Session", exClose)
+      }
+    }
+    stopJMSConsumers()
+  }
+
+  private def getProjectIdsByGroup(nbrGroupMax : Int): ArrayList[ArrayList[Long]] = {
+    val connectorFactory = DbConnectionHelper.getDataStoreConnectorFactory()
+    val udsDbConnectionContext = new DatabaseConnectionContext(connectorFactory.getUdsDbConnector)
+
+    try{
+      val allProjects = udsDbConnectionContext.getEntityManager.createQuery("SELECT p FROM fr.proline.core.orm.uds.Project p", classOf[Project]).getResultList
+      val projectIdsByGroup = new mutable.HashMap[Long, ArrayList[Long]]()
+
+      //Create Map of Project Ids list by import group number
+      allProjects.asScala.foreach(p => {
+        var groupeId: Int = -1
+        val serializedPropertiesStr = p.getSerializedProperties
+        if (serializedPropertiesStr != null) { //an import group property may have be specified
+          val serializedPropertiesMap = JsonSerializer.getMapper.readValue(serializedPropertiesStr, classOf[java.util.Map[String, Object]])
+          if (serializedPropertiesMap.containsKey("import_group")) {
+            try {
+              groupeId = serializedPropertiesMap.get("import_group").asInstanceOf[Int]
+            } catch {
+              case  ex: ClassCastException => groupeId = -1
+            }
+
+            if (groupeId != -1) {
+              val pIds = projectIdsByGroup.getOrElseUpdate(groupeId, new ArrayList[Long]())
+              pIds.add(p.getId)
+            }
+          }
+        }
+
+        if (groupeId == -1) { // No import group property specified, group all "inclassified" project into group -1
+          val pIds = projectIdsByGroup.getOrElseUpdate(groupeId, new ArrayList[Long]())
+          pIds.add(p.getId)
+        }
+      })
+
+
+      //No Project found at all !
+      if(projectIdsByGroup.isEmpty) {
+        return  new ArrayList[ArrayList[Long]]()
+      }
+
+      val allProjectsClassed = new ArrayList[ArrayList[Long]]()
+      //If less project groups was specified than max group count : just return defined groups
+      if(projectIdsByGroup.size <= nbrGroupMax){
+        val projIdsIt = projectIdsByGroup.values.iterator
+        while(projIdsIt.hasNext){
+          allProjectsClassed.add(projIdsIt.next())
+        }
+      } else {
+        //should regroup projects group to have only  "max group count" group
+        var startIndex = 0 // Allow to group few project group in array, starting at specified index
+        if(projectIdsByGroup.containsKey(-1)) { //Unclassified projects defined
+          allProjectsClassed.add(0,projectIdsByGroup(-1))
+          startIndex = 1 // Don't group other projects with "Unclassified projects"
+        }
+
+        var allProjectsIndex = startIndex
+        for(key <- projectIdsByGroup.keySet ){
+          if(key != -1){
+            var projectsInGroup = new ArrayList[Long]()
+            projectsInGroup.addAll(projectIdsByGroup(key))
+            if(allProjectsIndex < allProjectsClassed.size()) { //There are some Projects registered at allProjectsIndex
+              projectsInGroup.addAll(allProjectsClassed.get(allProjectsIndex))
+              allProjectsClassed.set(allProjectsIndex, projectsInGroup)
+            } else
+              allProjectsClassed.add(allProjectsIndex, projectsInGroup)
+              allProjectsIndex = allProjectsIndex+1
+              if(allProjectsIndex == nbrGroupMax)
+                allProjectsIndex = startIndex
+          }
+        }
+      }
+      allProjectsClassed
+    } finally {
+      DbConnectionHelper.tryToCloseDbContext(udsDbConnectionContext)
+    }
+  }
+
+  private def getProjectIdByGroupOLD(): ArrayBuffer[ArrayBuffer[Long]] = {
     val connectorFactory = DbConnectionHelper.getDataStoreConnectorFactory()
     val udsDbConnectionContext = new DatabaseConnectionContext(connectorFactory.getUdsDbConnector)
     try{
