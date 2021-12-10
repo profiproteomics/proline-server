@@ -132,7 +132,7 @@ class PTMClusterView(
     for (fieldConfig <- ptmViewFieldsConfigs) {
       val fieldValue: Any = fieldConfig.id match {
         case FIELD_PTM_CLUSTER_NB_PEPTIDES => ptmCluster.peptideIds.length
-        case FIELD_PTM_CLUSTER_NB_SITES => ptmCluster.ptmSiteLocations.length
+        case FIELD_PTM_CLUSTER_NB_SITES => ptmCluster.ptmSiteLocations.length // VDS TO DO, create site count differently OR save in model !
         case FIELD_PTM_CLUSTER_SITES_LOCALISATION => ptmSites.map(_.seqPosition).mkString(";")
         case FIELD_PTM_CLUSTER_LOCALISATION_CONFIDENCE => ptmCluster.localizationConfidence
       }

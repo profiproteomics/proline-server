@@ -464,13 +464,25 @@ object BuildDatasetViewSet extends LazyLogging {
 
     DoJDBCReturningWork.withEzDBC(executionContext.getMSIDbConnectionContext) { msiEzDBC =>
 
-      val ptmObjectTreeQuery = new SelectQueryBuilder1(MsiDbResultSummaryObjectTreeMapTable).mkSelectQuery((t, c) =>
-        List(t.*) -> "WHERE " ~ t.RESULT_SUMMARY_ID ~ s" = '${rsmId}'" ~ " AND " ~ t.SCHEMA_NAME ~ s" = '${SchemaName.PTM_DATASET.toString}'"
+      val annotatedPtmObjectTreeQuery = new SelectQueryBuilder1(MsiDbResultSummaryObjectTreeMapTable).mkSelectQuery((t, c) =>
+        List(t.*) -> "WHERE " ~ t.RESULT_SUMMARY_ID ~ s" = '${rsmId}'" ~ " AND " ~ t.SCHEMA_NAME ~ s" = '${SchemaName.PTM_DATASET_ANNOTATED.toString}'"
       )
 
-      val objectTreeIdOpt = msiEzDBC.select(ptmObjectTreeQuery) { r =>
+      var objectTreeIdOpt = msiEzDBC.select(annotatedPtmObjectTreeQuery) { r =>
         toLong(r.getAny(MsiDbResultSummaryObjectTreeMapTable.columns.OBJECT_TREE_ID))
       }.headOption
+
+      if(!objectTreeIdOpt.isDefined) {
+        val ptmObjectTreeQuery = new SelectQueryBuilder1(MsiDbResultSummaryObjectTreeMapTable).mkSelectQuery((t, c) =>
+          List(t.*) -> "WHERE " ~ t.RESULT_SUMMARY_ID ~ s" = '${rsmId}'" ~ " AND " ~ t.SCHEMA_NAME ~ s" = '${SchemaName.PTM_DATASET.toString}'"
+        )
+
+        objectTreeIdOpt = msiEzDBC.select(ptmObjectTreeQuery) { r =>
+          toLong(r.getAny(MsiDbResultSummaryObjectTreeMapTable.columns.OBJECT_TREE_ID))
+        }.headOption
+
+      }
+
 
       if (objectTreeIdOpt.isDefined) {
         val ptmSiteQuery = new SelectQueryBuilder1(MsiDbObjectTreeTable).mkSelectQuery((t, c) =>
