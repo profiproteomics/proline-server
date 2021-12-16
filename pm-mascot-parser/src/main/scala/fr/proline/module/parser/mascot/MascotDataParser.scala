@@ -229,35 +229,36 @@ class MascotDataParser(
       val frames = new vectori()
       val multiplicity = new vectori()
       val dbs = new vectori()
-      val protAcc: VectorString = pepSummary.getAllProteinsWithThisPepMatch(q, k, starts, ends, preAAs, postAAs, frames, multiplicity, dbs)
+      val protAccessions: VectorString = pepSummary.getAllProteinsWithThisPepMatch(q, k, starts, ends, preAAs, postAAs, frames, multiplicity, dbs)
 
       try {
 
-        if (protAcc.size() > 0) { // A least one protein matched
+        if (protAccessions.size() > 0) { // A least one protein matched
 
           val parsedPep = bestPepMatch.peptide
 
           // *****  go through matched proteins
-          for (indProt <- 0 until protAcc.size().intValue()) {
+          for (indProt <- 0 until protAccessions.size().intValue()) {
 
             totalNbrSeqMatches += 1
 
             // matchedProt is valid only if parse using grouping !
-            // val matchedProt: ms_protein = pepSummary.getProtein(protAcc.get(indProt), dbs.get(indProt))
+            // val matchedProt: ms_protein = pepSummary.getProtein(protAccessions.get(indProt), dbs.get(indProt))
 
             //Get SeqDatabase in which current protein was retrieve from
             val seqDbs: Array[SeqDatabase] = searchSettings.seqDatabases filter { _.name == mascotResFile.params.getDB(dbs.get(indProt)) }
 
             // --- Get or create ProteinWrapper, and Protein if defined, for matched Protein ---
+            val protAcc = protAccessions.get(indProt).trim
             
             // Check if the protein has been already accessed            
-            val protWrapperKey = new Tuple2(protAcc.get(indProt), (dbs.get(indProt).toString))
+            val protWrapperKey = new Tuple2(protAcc, (dbs.get(indProt).toString))
             val protOpt = if (protAccSeqDbToProteinWrapper.contains(protWrapperKey)) {
               protAccSeqDbToProteinWrapper.get(protWrapperKey).get.wrappedProt
             } else {
               // TODO: Try to get Protein from repository
               val tmpProtOpt = None
-              protAccSeqDbToProteinWrapper += protWrapperKey -> new ProteinWrapper(dbs.get(indProt), protAcc.get(indProt), tmpProtOpt)
+              protAccSeqDbToProteinWrapper += protWrapperKey -> new ProteinWrapper(dbs.get(indProt), protAcc, tmpProtOpt)
               
               tmpProtOpt
             }
@@ -280,7 +281,7 @@ class MascotDataParser(
             val protMatch = if (protMatchOpt.isDefined) protMatchOpt.get
             else {
               val seqDbIds = seqDbs map { _.id }
-              val protMatchAc = protAcc.get(indProt)
+              val protMatchAc = protAccessions.get(indProt).trim
               val protMatchDesc = pepSummary.getProteinDescription(protMatchAc, dbs.get(indProt))
 
               // Not already define, create ProteinMatch and add new entry in protToProtMatch
@@ -321,12 +322,12 @@ class MascotDataParser(
       } finally {
         /* Free memory in finally block (reverse order) */
 
-        if (protAcc != null) {
+        if (protAccessions != null) {
           try {
-            protAcc.clear()
-            protAcc.delete()
+            protAccessions.clear()
+            protAccessions.delete()
           } catch {
-            case t: Throwable => logger.error("Error deleting protAcc", t)
+            case t: Throwable => logger.error("Error deleting protAccessions", t)
           }
         }
 
