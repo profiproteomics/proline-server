@@ -140,8 +140,10 @@ class PTMClusterBuildingContext(
     val ptmCluster: PtmCluster,
     val ptmSites: Array[PtmSite2],
     pepMatch: PeptideMatch,
+    val allPeptides: Array[Peptide],
     seqMatch: SequenceMatch,
-    protMatchBuildingCtx: Option[ProtMatchBuildingContext]
+    protMatchBuildingCtx: Option[ProtMatchBuildingContext],
+    val ptmIds: Array[Long]
 ) extends PepMatchBuildingContext(
   pepMatch,
   false,
@@ -155,8 +157,10 @@ class QuantPTMClusterBuildingContext(
     val ptmCluster: PtmCluster,
     val ptmSites: Array[PtmSite2],
     pepMatch: PeptideMatch,
+    allPeptides: Array[Peptide],
     seqMatch: SequenceMatch,
     protMatchBuildingCtx: Option[ProtMatchBuildingContext],
+    val ptmIds: Array[Long],
     masterQuantPeptide: MasterQuantPeptide,
     groupSetupNumber: Int
 ) extends  MasterQuantPeptideBuildingContext(

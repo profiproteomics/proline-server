@@ -24,6 +24,7 @@ class IdentDataset(
                     protected val loadBioSequences: () => Array[BioSequence],
                     protected val loadSpectraDescriptors: (Array[Long]) => Array[Spectrum],
                     val loadPepMatches: (Array[Long]) => Array[PeptideMatch],
+                    val loadPeptides: (Array[Long]) => Array[Peptide],
                     val loadPtmDataset: () => Option[PtmDataSet]
 ) extends LazyLogging {
 

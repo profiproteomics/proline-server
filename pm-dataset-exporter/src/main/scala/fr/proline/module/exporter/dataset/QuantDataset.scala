@@ -19,6 +19,7 @@ class QuantDataset(
                     override protected val loadBioSequences: () => Array[BioSequence],
                     override protected val loadSpectraDescriptors: (Array[Long]) => Array[Spectrum],
                     override val loadPepMatches: (Array[Long]) => Array[PeptideMatch],
+                    override val loadPeptides :  (Array[Long]) => Array[Peptide],
                     val loadPepMatchesByMsQIs: (Array[Long]) => Array[PeptideMatch],
                     // val qcNameById: LongMap[String], //  update and use the QuantChannel name in the UDSdb
                     //val protMatchStatusByIdPepMatchByQCId: Map[Long, Map[Long, String]],
@@ -26,7 +27,7 @@ class QuantDataset(
                     val peptideCountByMqProtSetByQCId: Option[LongMap[LongMap[Int]]],
                     override val loadPtmDataset: () => Option[PtmDataSet]
   
-) extends IdentDataset(projectName,quantRSM.lazyResultSummary,loadLeaveResultSummaries,loadLeaveResultSets, loadBioSequences,loadSpectraDescriptors, loadPepMatches, loadPtmDataset) {
+) extends IdentDataset(projectName,quantRSM.lazyResultSummary,loadLeaveResultSummaries,loadLeaveResultSets, loadBioSequences,loadSpectraDescriptors, loadPepMatches, loadPeptides, loadPtmDataset) {
 
 
   lazy val identRsmById = childResultSummaries.mapByLong(_.id)

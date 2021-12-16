@@ -187,6 +187,7 @@ object BuildDatasetViewSet extends LazyLogging {
         this._buildBioSequenceLoader(msiDbCtx, lazyRsm),
         this._buildSpectraLoader(msiDbCtx),
         this._buildPepMatchesLoader(executionContext),
+        this._buildPeptidesLoader(executionContext),
         this._buildPTMDatasetLoader(executionContext, rsmId)
       )
 
@@ -398,6 +399,7 @@ object BuildDatasetViewSet extends LazyLogging {
         this._buildBioSequenceLoader(msiDbCtx, lazyQuantRSM.lazyResultSummary),
         this._buildSpectraLoader(msiDbCtx),
         this._buildPepMatchesLoader(executionContext),
+        this._buildPeptidesLoader(executionContext),
         this._buildPepMatchesByMsQIdLoader(executionContext),
         Option(peptideCountByProtMatchIdByQCId),
         Option(peptideCountByMqProtSetIdByQCId),
@@ -449,6 +451,13 @@ object BuildDatasetViewSet extends LazyLogging {
     logger.debug(s"Loading peptide Matches ... ${pepMatchesId.length}")
     val peptideMatchProvider = new SQLPeptideMatchProvider(PeptideCacheExecutionContext(executionContext))
     peptideMatchProvider.getPeptideMatches(pepMatchesId)
+
+  }
+
+  private def _buildPeptidesLoader(executionContext: IExecutionContext) = { pepsId: Array[Long] =>
+    logger.debug(s"Loading peptides ... ${pepsId.length}")
+    val peptidesProvider = new SQLPeptideProvider(PeptideCacheExecutionContext(executionContext))
+    peptidesProvider.getPeptides(pepsId)
 
   }
 
