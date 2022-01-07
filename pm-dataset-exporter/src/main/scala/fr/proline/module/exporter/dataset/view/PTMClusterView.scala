@@ -29,7 +29,11 @@ class PTMClusterView(
     FIELD_PTM_CLUSTER_NB_PEPTIDES,
     FIELD_PTM_CLUSTER_NB_SITES,
     FIELD_PTM_CLUSTER_SITES_LOCALISATION,
-    FIELD_PTM_CLUSTER_LOCALISATION_CONFIDENCE
+    FIELD_PTM_CLUSTER_LOCALISATION_CONFIDENCE,
+    FIELD_PTM_CLUSTER_IS_VALIDATED,
+    FIELD_PTM_CLUSTER_VALIDATION_CONFIDENCE,
+    FIELD_PTM_CLUSTER_VALIDATION_INFO
+
   )
 
   protected val ptmViewFieldsConfigs = sheetConfig.fields.filter( f => ptmViewFieldSet.contains(f.id) )
@@ -142,6 +146,8 @@ class PTMClusterView(
     })
     val recordBuilder = Map.newBuilder[String,Any]
     recordBuilder ++= pepMatchRecord
+    val isValidated  = if( ptmCluster.selectionLevel== null || (ptmCluster.selectionLevel != null && ptmCluster.selectionLevel>=2)) true else false
+
 
     for (fieldConfig <- ptmViewFieldsConfigs) {
       val fieldValue: Any = fieldConfig.id match {
@@ -149,6 +155,9 @@ class PTMClusterView(
         case FIELD_PTM_CLUSTER_NB_SITES => siteCount
         case FIELD_PTM_CLUSTER_SITES_LOCALISATION => ptmSites.map(_.seqPosition).mkString(";")
         case FIELD_PTM_CLUSTER_LOCALISATION_CONFIDENCE => ptmCluster.localizationConfidence
+        case FIELD_PTM_CLUSTER_IS_VALIDATED => isValidated
+        case FIELD_PTM_CLUSTER_VALIDATION_CONFIDENCE => ptmCluster.selectionConfidence
+        case FIELD_PTM_CLUSTER_VALIDATION_INFO => ptmCluster.selectionInformation
       }
       if( fieldValue != null ) recordBuilder += fieldConfig.title -> fieldValue
     }
