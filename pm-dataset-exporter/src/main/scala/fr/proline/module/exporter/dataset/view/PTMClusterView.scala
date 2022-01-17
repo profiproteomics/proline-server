@@ -128,12 +128,12 @@ class PTMClusterView(
   override def buildRecord(buildingContext: IRecordBuildingContext): Map[String, Any] = {
     val pepMatchRecord = super.buildRecord(buildingContext)
 
-    // If this building context is not a MasterQuantPeptideIonBuildingContext then we return the record as is
+    // If this building context is not a PTMClusterBuildingContext then we return the record as is
     if( !buildingContext.isInstanceOf[IPTMClusterBuildingContext]) {
       return pepMatchRecord
     }
 
-    val ptmBuildingCtx = buildingContext.asInstanceOf[PTMClusterBuildingContext]
+    val ptmBuildingCtx = buildingContext.asInstanceOf[IPTMClusterBuildingContext]
     val ptmCluster = ptmBuildingCtx.ptmCluster
     val ptmSites = ptmBuildingCtx.ptmSites
     var siteCount = 1
@@ -146,7 +146,8 @@ class PTMClusterView(
     })
     val recordBuilder = Map.newBuilder[String,Any]
     recordBuilder ++= pepMatchRecord
-    val isValidated  = if( ptmCluster.selectionLevel== null || (ptmCluster.selectionLevel != null && ptmCluster.selectionLevel>=2)) true else false
+    val opSelectionLevel: Option[Integer] = Option(ptmCluster.selectionLevel)
+    val isValidated  = if( opSelectionLevel.isEmpty || (opSelectionLevel.isDefined && opSelectionLevel.get>=2)) true else false
 
 
     for (fieldConfig <- ptmViewFieldsConfigs) {

@@ -45,7 +45,7 @@ class ProtMatchBuildingContext(
 class PepMatchBuildingContext(
   var pepMatch: PeptideMatch,
   var isInSubset: Boolean,
-    var seqMatch: SequenceMatch,
+  var seqMatch: SequenceMatch,
   var protMatchBuildingCtx: Option[ProtMatchBuildingContext] = None
 ) extends IRecordBuildingContext
 
@@ -132,43 +132,45 @@ class MasterQuantReporterIonBuildingContext(
 }
 
 trait IPTMClusterBuildingContext {
-  val ptmCluster : PtmCluster
-  val ptmSites: Array[PtmSite2]
+  def ptmCluster : PtmCluster
+  def ptmSites: Array[PtmSite2]
+  def ptmIds: Array[Long]
+  def allPeptides: Array[Peptide]
 }
 
 class PTMClusterBuildingContext(
-    val ptmCluster: PtmCluster,
-    val ptmSites: Array[PtmSite2],
-    pepMatch: PeptideMatch,
-    val allPeptides: Array[Peptide],
-    seqMatch: SequenceMatch,
-    protMatchBuildingCtx: Option[ProtMatchBuildingContext],
-    val ptmIds: Array[Long]
-) extends PepMatchBuildingContext(
-  pepMatch,
-  false,
-  seqMatch,
-  protMatchBuildingCtx
+  val ptmCluster : PtmCluster,
+  val ptmSites: Array[PtmSite2],
+  pepMatch: PeptideMatch,
+  val allPeptides: Array[Peptide],
+  seqMatch: SequenceMatch,
+  protMatchBuildingCtx: Option[ProtMatchBuildingContext],
+  val ptmIds: Array[Long]
+ ) extends PepMatchBuildingContext(
+    pepMatch,
+    false,
+    seqMatch,
+    protMatchBuildingCtx
 ) with IPTMClusterBuildingContext {
 
 }
 
 class QuantPTMClusterBuildingContext(
-    val ptmCluster: PtmCluster,
-    val ptmSites: Array[PtmSite2],
-    pepMatch: PeptideMatch,
-    allPeptides: Array[Peptide],
-    seqMatch: SequenceMatch,
-    protMatchBuildingCtx: Option[ProtMatchBuildingContext],
-    val ptmIds: Array[Long],
-    masterQuantPeptide: MasterQuantPeptide,
-    groupSetupNumber: Int
+  val ptmCluster: PtmCluster,
+  val ptmSites: Array[PtmSite2],
+  pepMatch: PeptideMatch,
+  val allPeptides: Array[Peptide],
+  seqMatch: SequenceMatch,
+  protMatchBuildingCtx: Option[ProtMatchBuildingContext],
+  val ptmIds: Array[Long],
+  masterQuantPeptide: MasterQuantPeptide,
+  groupSetupNumber: Int
 ) extends  MasterQuantPeptideBuildingContext(
-pepMatch,
+  pepMatch,
   seqMatch,
-protMatchBuildingCtx,
-masterQuantPeptide,
-groupSetupNumber
+  protMatchBuildingCtx,
+  masterQuantPeptide,
+  groupSetupNumber
 ) with IPTMClusterBuildingContext {
 
 }
