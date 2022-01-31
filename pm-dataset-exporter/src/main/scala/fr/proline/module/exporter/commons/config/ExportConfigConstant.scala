@@ -217,6 +217,9 @@ object ExportConfigConstant {
   val FIELD_PTM_CLUSTER_NB_PEPTIDES = "ptm_cluster_nb_peptides"
   val FIELD_PTM_CLUSTER_NB_SITES = "ptm_cluster_nb_sites"
   val FIELD_PTM_CLUSTER_SITES_LOCALISATION = "ptm_cluster_sites_localisation"
+  val FIELD_PTM_CLUSTER_IS_VALIDATED = "ptm_cluster_is_validated"
+  val FIELD_PTM_CLUSTER_VALIDATION_CONFIDENCE= "ptm_cluster_validation_confidence"
+  val FIELD_PTM_CLUSTER_VALIDATION_INFO= "ptm_cluster_validation_information"
   val FIELD_PTM_CLUSTER_LOCALISATION_CONFIDENCE= "ptm_cluster_localisation_confidence"
 
 }
