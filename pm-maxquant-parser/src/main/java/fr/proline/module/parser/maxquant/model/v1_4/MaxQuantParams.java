@@ -1,17 +1,12 @@
 package fr.proline.module.parser.maxquant.model.v1_4;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import fr.proline.module.parser.maxquant.model.IMaxQuantParams;
 import fr.proline.module.parser.maxquant.model.IMsMsParameters;
 import fr.proline.module.parser.maxquant.model.IParameterGroup;
+
+import javax.xml.bind.annotation.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @XmlRootElement(name = "MaxQuantParams")
 @XmlAccessorType(XmlAccessType.PROPERTY)
@@ -36,7 +31,7 @@ public class MaxQuantParams implements IMaxQuantParams  {
 	@XmlElement(nillable = false, required = true,  name="string")
 	private List<String> m_experiments;
 
-	@XmlElement(name="includeContamiants", type=Boolean.class)
+	@XmlElement(name="includeContaminants", type=Boolean.class)
 	private Boolean m_includeContaminants;
 	
 	// XmLElementWrapper generates a wrapper element around XML representation
