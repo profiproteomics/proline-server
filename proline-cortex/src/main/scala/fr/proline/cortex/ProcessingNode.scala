@@ -173,7 +173,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         val threadPoolSize = NodeConfig.SERVICE_THREAD_POOL_SIZE
 
         // Calculate how projects group is to be created => corresponding to import threads number : (SERVICE_THREAD_POOL_SIZE_KEY % 5) + 1
-        val nbrProjectGroupsMax =  (threadPoolSize % 5) + 1
+        val nbrProjectGroupsMax =  (threadPoolSize / 5) + 1
         val projectIdsByGroup = getProjectIdsByGroup(nbrProjectGroupsMax)
         val nbrProjectGroups = if(projectIdsByGroup != null) projectIdsByGroup.size else 0
 
