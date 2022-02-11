@@ -189,6 +189,31 @@ object CustomFieldConfigFactory {
   }
 
   // get all fields for masterQuantPeptideIon
+  def getMasterQuantPeptideSheetFields(): Array[CustomFieldConfig] = {
+
+    val fieldsBuffer = ArrayBuffer(
+      CustomFieldConfig(FIELD_PSM_PEPTIDE_ID, "peptide_id"),
+      CustomFieldConfig(FIELD_PSM_SEQUENCE, "sequence"),
+      CustomFieldConfig(FIELD_PSM_MODIFICATIONS, "modifications"),
+      CustomFieldConfig(FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id"),
+      CustomFieldConfig(FIELD_PSM_QUANT_ELUTION_TIME, "master_elution_time"),
+      CustomFieldConfig(FIELD_PSM_QUANT_SELECTION_LEVEL, "is_validated_for_quanti"),
+      CustomFieldConfig(FIELD_PSM_NB_PROTEIN_SETS, "#psm_prot_sets"),
+      CustomFieldConfig(FIELD_MASTER_QUANT_PEPTIDE_PROTEIN_SETS, "protein_sets_list"),
+      CustomFieldConfig(FIELD_MASTER_QUANT_PEPTIDE_ION_MOZ, "master_quant_peptide_moz"),
+      CustomFieldConfig(FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME, "master_quant_peptide_elution_time")
+    )
+
+    fieldsBuffer ++= Array(
+      CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PSM_COUNT, "psm_count"), // incremental
+      CustomFieldConfig(FIELD_QUANT_PEPTIDE_ION_ELUTION_TIME, "elution_time"), // incremental
+      CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE, "raw_abundance"), // incremental
+      CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_ABUNDANCE, "abundance") // incremental
+    )
+
+    fieldsBuffer.toArray
+  }
+  // get all fields for masterQuantPeptideIon
   def getMasterQuantPepIonSheetFields(): Array[CustomFieldConfig] = {
     
     val fieldsBuffer = ArrayBuffer(
@@ -257,6 +282,9 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_PTM_CLUSTER_NB_PEPTIDES, "ptm_cluster_nb_peptides"),
       CustomFieldConfig(FIELD_PTM_CLUSTER_NB_SITES, "ptm_cluster_nb_sites"),
       CustomFieldConfig(FIELD_PTM_CLUSTER_SITES_LOCALISATION,"ptm_cluster_sites_localisations"),
+      CustomFieldConfig(FIELD_PTM_CLUSTER_IS_VALIDATED, "ptm_cluster_is_validated"),
+      CustomFieldConfig(FIELD_PTM_CLUSTER_VALIDATION_CONFIDENCE, "ptm_cluster_validation_confidence"),
+      CustomFieldConfig(FIELD_PTM_CLUSTER_VALIDATION_INFO, "ptm_cluster_validation_information"),
       CustomFieldConfig(FIELD_PTM_CLUSTER_LOCALISATION_CONFIDENCE, "ptm_cluster_localisation_confidence"),
       CustomFieldConfig(FIELD_PSM_PEPTIDE_ID, "peptide_id"),
       CustomFieldConfig(FIELD_PSM_SEQUENCE, "sequence"),

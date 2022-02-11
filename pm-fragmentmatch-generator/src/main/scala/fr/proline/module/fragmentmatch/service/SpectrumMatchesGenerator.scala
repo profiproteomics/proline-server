@@ -305,24 +305,34 @@ class SpectrumMatchesGenerator(
 
       //If forceInsert set to true, remove existing spectrum matches Otherwise, remove these Ids from peptideMatches to considere.
       if (forceInsert) {
-        // Remove existing spectrum matches
+        var triggerDisable = false
+        try {
+          // Remove existing spectrum matches
+          val removeExistingMatchesWork =
+            new JDBCWork() {
+              override def execute(con: Connection) {
 
-        val removeExistingMatchesWork = new JDBCWork() {
-          override def execute(con: Connection) {
+                var query = "DELETE FROM peptide_match_object_tree_map WHERE peptide_match_id IN (" + existingMatchPepMatchIds.mkString(",") + ") AND schema_name = 'peptide_match.spectrum_match'; "
+                val stmt = con.createStatement()
+                stmt.execute(query)
+                query = "DELETE FROM object_tree WHERE id IN (" + associatedObjectTreeBuilder.result.mkString(",") + ");"
+                stmt.execute(query)
+                stmt.close()
+              }
+            } // End of jdbcWork anonymous inner class
 
-            var query = "DELETE FROM peptide_match_object_tree_map WHERE peptide_match_id IN (" + existingMatchPepMatchIds.mkString(",") + ") AND schema_name = 'peptide_match.spectrum_match'; "
-            val stmt = con.createStatement()
-            stmt.execute(query)
-
-            query = "DELETE FROM object_tree WHERE id IN (" + associatedObjectTreeBuilder.result.mkString(",") + ");"
-            stmt.execute(query)
-
-            stmt.close()
+          msiDbCtx.doTableTriggerAlter("object_tree", "DISABLE")
+          triggerDisable = true
+          executionContext.getMSIDbConnectionContext.doWork(removeExistingMatchesWork, false)
+          msiDbCtx.doTableTriggerAlter("object_tree", "ENABLE")
+          triggerDisable = false
+        }catch {
+          case ex: Exception =>{
+            if(triggerDisable)
+              msiDbCtx.doTableTriggerAlter("object_tree", "ENABLE")
+              throw ex;
           }
-
-        } // End of jdbcWork anonymous inner class
-        executionContext.getMSIDbConnectionContext.doWork(removeExistingMatchesWork, false)
-
+        }
       } else {
         // just Ignore existing spectrum matches
         generatePepMatchesId = pepMatchIds.diff(existingMatchPepMatchIds)

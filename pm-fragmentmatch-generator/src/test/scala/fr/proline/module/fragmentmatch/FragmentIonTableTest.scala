@@ -1,28 +1,15 @@
 package fr.proline.module.fragmentmatch
 
 import com.typesafe.scalalogging.StrictLogging
-import fr.proline.context.BasicExecutionContext
-import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.core.dal.BuildDbConnectionContext
-import fr.proline.core.dal.BuildMsiDbConnectionContext
-import fr.proline.core.dal.BuildUdsDbConnectionContext
+import fr.proline.context.{BasicExecutionContext, IExecutionContext}
+import fr.proline.core.dal.{AbstractMultipleDBTestCase, BuildMsiDbConnectionContext, BuildUdsDbConnectionContext}
 import fr.proline.core.om.model.msi.{LocatedPtm, Peptide, ResultSet, TheoreticalFragmentSeries}
-import fr.proline.core.om.provider.PeptideCacheExecutionContext
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.IPTMProvider
-import fr.proline.core.om.provider.msi.IPeptideProvider
-import fr.proline.core.om.provider.msi.IResultSetProvider
-import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
-import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
-import fr.proline.core.orm.msi.PtmSpecificity.PtmLocation
+import fr.proline.core.om.provider.msi.impl.{SQLPTMProvider, SQLPeptideProvider, SQLResultSetProvider}
+import fr.proline.core.om.provider.msi.{IPTMProvider, IPeptideProvider, IResultSetProvider}
+import fr.proline.core.om.provider.{PeptideCacheExecutionContext, ProviderDecoratedExecutionContext}
 import fr.proline.repository.DriverType
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.fail
-import org.junit.Before
-import org.junit.Test
+import org.junit.Assert.{assertEquals, fail}
+import org.junit.{After, Before, Test}
 
 import scala.Array.canBuildFrom
 import scala.collection.mutable.ArrayBuffer
@@ -197,6 +184,32 @@ class FragmentIonTableTest extends AbstractMultipleDBTestCase with StrictLogging
     logger.debug(table.toString)
   }
 
+
+  @Test
+  def manual2(): Unit = {
+    val ptmProvider = executionContext.asInstanceOf[ProviderDecoratedExecutionContext].getProvider(classOf[IPTMProvider])
+    val carbaCDef = ptmProvider.getPtmDefinition(19L).get
+    val ggCDef = ptmProvider.getPtmDefinition(241L).get
+    val ggKDef = ptmProvider.getPtmDefinition(242L).get
+    val ggSDef = ptmProvider.getPtmDefinition(240L).get
+
+    val c1carba = new LocatedPtm(carbaCDef, 1, carbaCDef.ptmEvidences(0).monoMass, carbaCDef.ptmEvidences(0).averageMass, carbaCDef.ptmEvidences(0).composition)
+    val c17carba = new LocatedPtm(carbaCDef, 17, carbaCDef.ptmEvidences(0).monoMass, carbaCDef.ptmEvidences(0).averageMass, carbaCDef.ptmEvidences(0).composition)
+
+    val c4carba = new LocatedPtm(carbaCDef, 4, carbaCDef.ptmEvidences(0).monoMass, carbaCDef.ptmEvidences(0).averageMass, carbaCDef.ptmEvidences(0).composition)
+    val c4gg = new LocatedPtm(ggCDef, 4, ggCDef.ptmEvidences(0).monoMass, ggCDef.ptmEvidences(0).averageMass, ggCDef.ptmEvidences(0).composition)
+    val s5 = new LocatedPtm(ggSDef, 5, ggSDef.ptmEvidences(0).monoMass, ggSDef.ptmEvidences(0).averageMass, ggSDef.ptmEvidences(0).composition)
+    val s12 = new LocatedPtm(ggSDef, 12, ggSDef.ptmEvidences(0).monoMass, ggSDef.ptmEvidences(0).averageMass, ggSDef.ptmEvidences(0).composition)
+    val k11 = new LocatedPtm(ggKDef, 11, ggKDef.ptmEvidences(0).monoMass, ggKDef.ptmEvidences(0).averageMass, ggKDef.ptmEvidences(0).composition)
+
+    val ptms = Array(c1carba, c4gg, s5, k11, s12, c17carba)
+
+    val peptide = new Peptide(-1L, "CEECSGQLVFKSDAYYCTGDVTAWTK", "", ptms , 3473.4600)
+    val currentFragmentIonTypes = new FragmentIons(ionTypeB = true, ionTypeY = true, chargeForIonsB = 2, chargeForIonsY = 2)
+    val table = new FragmentIonTable(peptide, currentFragmentIonTypes, ptmNeutralLosses = None)
+
+    logger.debug(table.toString)
+  }
   def compareTheoreticalFragments(expected: Array[TheoreticalFragmentSeries], actual: Array[TheoreticalFragmentSeries] ): Unit = {
     assertEquals(expected.length, actual.length)
     for (expectedSerie <- expected) {
