@@ -174,6 +174,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
         // Calculate how projects group is to be created => corresponding to import threads number : (SERVICE_THREAD_POOL_SIZE_KEY % 5) + 1
         val nbrProjectGroupsMax =  (threadPoolSize / 5) + 1
+        //VDS WARNING. Currently Index 0 = all other projects. Change to "Not Project in groups" so list at index 0 contains all Ids of all groups
         val projectIdsByGroup = getProjectIdsByGroup(nbrProjectGroupsMax)
         val nbrProjectGroups = if(projectIdsByGroup != null) projectIdsByGroup.size else 0
 
@@ -186,10 +187,10 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
         /* Manage SingleThreadedServiceRunners : List of Services (a SingleThreadRunner) by ThreadIdent */
         //Inner method to create SingleThreadRunner and add it to list/maps
-        def createSingleThreadRunner(singleThreadIdent: String, pIds: ArrayList[Long]): Unit ={
+        def createSingleThreadRunner(singleThreadIdent: String, pIds: ArrayList[Long], useIdsAsNot : Boolean = false): Unit ={
           val singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier, singleThreadIdent, true)
           if(pIds != null && !pIds.isEmpty)
-            singleThreadedServiceRunner.setProjectIdsSelector(pIds.asScala.toArray)
+            singleThreadedServiceRunner.setProjectIdsSelector(pIds.asScala.toArray, useIdsAsNot)
           val singleThreadExecutor = Executors.newSingleThreadExecutor()
           m_singleExecutor += singleThreadExecutor
           val singleThreadFuture = singleThreadExecutor.submit(singleThreadedServiceRunner)
@@ -199,10 +200,12 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         val handledSingleThreadedServiceIdents = ServiceRegistry.getSingleThreadedServicesByThreadIdent().keySet
         var nbrSingleThreads = 0
         for (threadIdent <- handledSingleThreadedServiceIdents) { //For each list of service (for a specific ThreadIdent)
+
           //Manage specific ImportServiceThread : if more than one group and at threadPoolSize >=  5
           if(threadIdent.equals(SingleThreadIdentifierType.IMPORT_SINGLETHREAD_IDENT.toString) && nbrProjectGroups >0 && threadPoolSize>=5){
             for(index <- 0 until nbrProjectGroups){
-              createSingleThreadRunner(threadIdent, projectIdsByGroup.get(index))
+              val useIdsAsNot = index == 0
+              createSingleThreadRunner(threadIdent, projectIdsByGroup.get(index),useIdsAsNot)
               nbrSingleThreads += 1
             }
           } else {
@@ -258,6 +261,14 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     stopJMSConsumers()
   }
 
+  /**
+   * Group project Ids depending on their serializedProperties. If too much group specified, few groups will be regrouped
+   * to keep only "nbrGroupMax" group.
+   * The first group correspond to all unclassified projects. Currently this will contains Ids of all other group to apply
+   * a NOT IN operator.
+   * In further version, we should modify it to be able to add new Ids dynamically when Create Project is called
+   *
+   */
   private def getProjectIdsByGroup(nbrGroupMax : Int): ArrayList[ArrayList[Long]] = {
     val connectorFactory = DbConnectionHelper.getDataStoreConnectorFactory()
     val udsDbConnectionContext = new DatabaseConnectionContext(connectorFactory.getUdsDbConnector)
@@ -270,7 +281,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
       allProjects.asScala.foreach(p => {
         var groupeId: Int = -1
         val serializedPropertiesStr = p.getSerializedProperties
-        if (serializedPropertiesStr != null) { //an import group property may have be specified
+        if (serializedPropertiesStr != null && !serializedPropertiesStr.isEmpty) { //an import group property may have be specified
           val serializedPropertiesMap = JsonSerializer.getMapper.readValue(serializedPropertiesStr, classOf[java.util.Map[String, Object]])
           if (serializedPropertiesMap.containsKey("import_group")) {
             try {
@@ -299,33 +310,47 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
       }
 
       val allProjectsClassed = new ArrayList[ArrayList[Long]]()
+
+      // Set Unclassified projects at index 0: Even if empty.
+//      if(projectIdsByGroup.containsKey(-1)) { //Unclassified projects defined
+//        allProjectsClassed.add(0,projectIdsByGroup(-1))
+//      } else
+//        allProjectsClassed.add(0,new util.ArrayList[Long]())
+      // VDS Create a first group with all grouped Ids
+      val allClassedProjectsId = new ArrayList[Long]()
+      projectIdsByGroup.foreach(projBygId  =>{
+        if(projBygId._1 != -1)
+          allClassedProjectsId.addAll(projBygId._2)
+      })
+      allProjectsClassed.add(0,allClassedProjectsId)
+
       //If less project groups was specified than max group count : just return defined groups
       if(projectIdsByGroup.size <= nbrGroupMax){
-        val projIdsIt = projectIdsByGroup.values.iterator
-        while(projIdsIt.hasNext){
-          allProjectsClassed.add(projIdsIt.next())
-        }
-      } else {
-        //should regroup projects group to have only  "max group count" group
-        var startIndex = 0 // Allow to group few project group in array, starting at specified index
-        if(projectIdsByGroup.containsKey(-1)) { //Unclassified projects defined
-          allProjectsClassed.add(0,projectIdsByGroup(-1))
-          startIndex = 1 // Don't group other projects with "Unclassified projects"
+        for(key <- projectIdsByGroup.keySet ){
+          if(key != -1) {
+            allProjectsClassed.add(projectIdsByGroup(key))
+          }
         }
 
+      } else {
+        //should regroup projects group to have only  "max group count" group
+        var startIndex = 1  // Don't group other projects with "Unclassified projects"
         var allProjectsIndex = startIndex
         for(key <- projectIdsByGroup.keySet ){
           if(key != -1){
-            var projectsInGroup = new ArrayList[Long]()
-            projectsInGroup.addAll(projectIdsByGroup(key))
+
+            val projectsInGroup = new ArrayList[Long]()
+            projectsInGroup.addAll(projectIdsByGroup(key)) // get current project group
+
             if(allProjectsIndex < allProjectsClassed.size()) { //There are some Projects registered at allProjectsIndex
               projectsInGroup.addAll(allProjectsClassed.get(allProjectsIndex))
               allProjectsClassed.set(allProjectsIndex, projectsInGroup)
             } else
               allProjectsClassed.add(allProjectsIndex, projectsInGroup)
-              allProjectsIndex = allProjectsIndex+1
-              if(allProjectsIndex == nbrGroupMax)
-                allProjectsIndex = startIndex
+
+            allProjectsIndex = allProjectsIndex+1
+            if(allProjectsIndex == nbrGroupMax) // when max is reached, restart grouping projects from index 1
+              allProjectsIndex = startIndex
           }
         }
       }
@@ -335,40 +360,6 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     }
   }
 
-  private def getProjectIdByGroupOLD(): ArrayBuffer[ArrayBuffer[Long]] = {
-    val connectorFactory = DbConnectionHelper.getDataStoreConnectorFactory()
-    val udsDbConnectionContext = new DatabaseConnectionContext(connectorFactory.getUdsDbConnector)
-    try{
-      //val pIds = ProjectRepository.findAllProjectIds(udsDbConnectionContext.getEntityManager)
-      val firstProjects  = ArrayBuffer.newBuilder[Long]
-      val otherProjects  = ArrayBuffer.newBuilder[Long]
-      val allProjects = udsDbConnectionContext.getEntityManager.createQuery("SELECT p FROM fr.proline.core.orm.uds.Project p",classOf[Project]).getResultList()
-      allProjects.asScala.foreach(p =>{
-        var projectClassed = false
-        val serializedPropertiesStr = p.getSerializedProperties()
-        if (serializedPropertiesStr != null) {
-          val serializedPropertiesMap = JsonSerializer.getMapper().readValue(serializedPropertiesStr, classOf[java.util.Map[String,Object]])
-          if(serializedPropertiesMap.containsKey("import_group")){
-            firstProjects += p.getId
-            projectClassed  = true
-          }
-        }
-
-        if(!projectClassed)
-          otherProjects += p.getId
-
-      })
-
-      val allProjectsClassed = ArrayBuffer.newBuilder[ArrayBuffer[Long]]
-      if(!firstProjects.result().isEmpty)
-        allProjectsClassed += firstProjects.result()
-      if(!otherProjects.result().isEmpty)
-       allProjectsClassed += otherProjects.result()
-      allProjectsClassed.result()
-    } finally {
-      DbConnectionHelper.tryToCloseDbContext(udsDbConnectionContext)
-    }
-  }
 
   private def initFileSystem() {
 
