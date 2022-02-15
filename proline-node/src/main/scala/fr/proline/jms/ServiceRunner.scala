@@ -55,7 +55,7 @@ object ServiceRunner extends LazyLogging {
     buildConcreteSelectorString(handledServices, parallelizableRunner, null)
   }
 
-  private def addSpecificDataToSelector( service: IRemoteServiceIdentity, selectorBuffer : StringBuilder, specificProjectIdsSelector : Array[Long]): Unit ={
+  private def addSpecificDataToSelector( service: IRemoteServiceIdentity, selectorBuffer : StringBuilder, specificProjectIdsSelector : Array[Long], useProjectIdsAsNot : Boolean): Unit ={
     if(service.isNodeSpecific){ //Add node ID in condition
       selectorBuffer.append(" AND (").append(PROLINE_NODE_ID_KEY)
       selectorBuffer.append(" = \'").append(NodeConfig.NODE_ID).append("\')")
@@ -70,12 +70,17 @@ object ServiceRunner extends LazyLogging {
       }
 
       selectorBuffer.append(" AND (").append(PROLINE_SERVICE_PROJECT_ID_KEY)
-      selectorBuffer.append(" IN (").append(idsAsStr.result()).append(") )")
+      if(useProjectIdsAsNot)
+        selectorBuffer.append(" NOT IN (")
+      else
+        selectorBuffer.append(" IN (")
+
+      selectorBuffer.append(idsAsStr.result()).append(") )")
     }
 
   }
 
-  def buildConcreteSelectorString(handledServices: Seq[IRemoteServiceIdentity], parallelizableRunner: Boolean, specificProjectIdsSelector : Array[Long]): String = {
+  def buildConcreteSelectorString(handledServices: Seq[IRemoteServiceIdentity], parallelizableRunner: Boolean, specificProjectIdsSelector : Array[Long], useProjectIdsAsNot : Boolean = false): String = {
     require(handledServices != null, "handledServices List is null")
 
     val buff = new StringBuilder()
@@ -115,7 +120,7 @@ object ServiceRunner extends LazyLogging {
       buff.append(" = \'").append(service.serviceName).append("\') AND (")
       buff.append(PROLINE_SERVICE_VERSION_KEY)
       buff.append(" = \'").append(service.serviceVersion).append("\')")
-      addSpecificDataToSelector(service, buff,  specificProjectIdsSelector)
+      addSpecificDataToSelector(service, buff,  specificProjectIdsSelector, useProjectIdsAsNot)
       buff.append(")") //close condition
 
       if (service.isDefaultVersion) {
@@ -124,7 +129,7 @@ object ServiceRunner extends LazyLogging {
         buff.append(" = \'").append(service.serviceName).append("\') AND (")
         buff.append(PROLINE_SERVICE_VERSION_KEY)
         buff.append(" IS NULL)")
-        addSpecificDataToSelector(service, buff,  specificProjectIdsSelector)
+        addSpecificDataToSelector(service, buff,  specificProjectIdsSelector, useProjectIdsAsNot)
         buff.append(")") //close condition
       }
       
@@ -647,16 +652,18 @@ class SingleThreadedServiceRunner(queue: Queue, connection: Connection, serviceM
 
   val handledServices = retrieveHandledServices()
   var m_specificProjectIdsSelector : Array[Long] = null
+  var m_useProjectIdsAsNot = false
 
   require(handledServices != null && !handledServices.isEmpty, s"No SingleThreadedService for [$serviceIdent]")
 
-  def setProjectIdsSelector(projectIds : Array[Long]): Unit ={
+  def setProjectIdsSelector(projectIds : Array[Long], useProjectIdsAsNot: Boolean ): Unit ={
     m_specificProjectIdsSelector = projectIds
+    m_useProjectIdsAsNot = useProjectIdsAsNot
   }
 
   protected override def buildSelectorString(): String = {
     /* NON-Parallelizable ServiceRunner */
-    buildConcreteSelectorString(handledServices, false, m_specificProjectIdsSelector)
+    buildConcreteSelectorString(handledServices, false, m_specificProjectIdsSelector, m_useProjectIdsAsNot)
   }
 
   /* Private methods */
