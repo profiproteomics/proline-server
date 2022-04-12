@@ -387,7 +387,8 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     if (NodeConfig.ENABLE_IMPORTS) {
       ServiceRegistry.addService(new ImportResultFilesDecoyRegExp())
       ServiceRegistry.addService(new ImportResultFilesProtMatchDecoyRule())
-      ServiceRegistry.addService(new ImportValidateGenerateSM())
+      ServiceRegistry.addService(new ImportValidateGenerateSMV1())
+      ServiceRegistry.addService(new ImportValidateGenerateSMV2())
       logger.info("This node HANDLES Result Files Import")
     } else {
       logger.info("This node does NOT handle Result Files Import")
