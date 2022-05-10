@@ -291,13 +291,12 @@ abstract class AbstractImportValidateGenerateSM extends AbstractRemoteProcessing
 
           //Complete DS info and persist it
           ds.setResultSummaryId(currentRSMId)
-          udsEM.persist(ds)
-
           if (generateSpectrumMatches) {
             val spectrumMatchesGenerator = new SpectrumMatchesGenerator(execCtx, currentRSId, Some(currentRSMId), None, None, gsmForceInsert)
             spectrumMatchesGenerator.runService()
           }
         }
+        udsEM.persist(ds)
       } // End Go through RS
 
       // Commit transaction
