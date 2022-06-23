@@ -143,9 +143,9 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
                   if (normSite.length() == 1)
                     normSite.charAt(0)
                   else
-                    '\0'
+                    '\u0000'
                 } else {
-                  '\0'
+                  '\u0000'
                 }
               },
               classification = specificity.getClassification,

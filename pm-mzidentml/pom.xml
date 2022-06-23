@@ -5,7 +5,7 @@
   <parent>
     <artifactId>proline-server</artifactId>
     <groupId>fr.proline</groupId>
-    <version>2.2.0_jdk11-SNAPSHOT</version>
+    <version>2.2.0_jdk17-SNAPSHOT</version>
   </parent>
 
   <artifactId>pm-mzidentml</artifactId>
@@ -27,6 +27,11 @@
     </dependency>
 
     <!-- Logging -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>com.typesafe.scala-logging</groupId>
       <artifactId>scala-logging_${scala.compat.version}</artifactId>
@@ -127,6 +132,12 @@
       <artifactId>profi-commons-java</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <scope>compile</scope>
+    </dependency>
+
     <!-- Tests -->
     <dependency>
       <groupId>junit</groupId>
@@ -134,22 +145,17 @@
       <scope>test</scope>
     </dependency>
 
-    <dependency>
-      <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_${scala.compat.version}</artifactId>
-      <scope>test</scope>
-    </dependency>
 
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-databases</artifactId>
+      <artifactId>proline-dal_${scala.compat.version}</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-dal_${scala.compat.version}</artifactId>
+      <artifactId>proline-databases</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
@@ -176,7 +182,13 @@
 
       <plugin>
         <groupId>net.alchim31.maven</groupId>
-        <artifactId>scala-maven-plugin</artifactId>        
+        <artifactId>scala-maven-plugin</artifactId>
+        <configuration>
+          <args>
+            <arg>-deprecation</arg>
+            <arg>-feature</arg>
+          </args>
+        </configuration>
       </plugin>
 
       <plugin>

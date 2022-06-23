@@ -6,7 +6,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-import scala.collection.JavaConversions.mutableMapAsJavaMap
+import scala.collection.JavaConverters
 import scala.collection.mutable
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.jms.HornetQJMSClient
@@ -132,7 +132,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
         val transportConfiguration = new TransportConfiguration(
           classOf[NettyConnectorFactory].getName,
-          connectionParams
+          connectionParams.asJava
         )
 
         // Step 3 Directly instantiate the JMS ConnectionFactory object using that TransportConfiguration

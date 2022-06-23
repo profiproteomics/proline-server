@@ -31,7 +31,6 @@ import fr.proline.module.exporter.msi.view.{BuildRSMSpectraViewSet, FormatCompat
 import fr.proline.module.exporter.mzidentml.MzIdExporter
 import fr.proline.module.exporter.mzidentml.model.Contact
 import fr.proline.module.exporter.mzidentml.model.Organization
-import fr.proline.module.exporter.pridexml.PrideExporterService
 
 /**
  * Define a JMS Service to :
@@ -208,34 +207,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
     extraParams: Option[Map[String, Object]]
   ): Object = {
 
-    //    require(extraParams.isDefined, "some extra parameters must be provided")
-
-    val filePath = fileDir + File.separator + fileName
-    var executionContext: IExecutionContext = null
-
-    try {
-      executionContext = DbConnectionHelper.createSQLExecutionContext(rsmIdentifier.projectId)
-
-      val extraParameters: Map[String, Object] = if (extraParams.isDefined) extraParams.get else Map.empty
-      // Export
-
-      val exporter = new PrideExporterService(executionContext, rsmIdentifier.rsmId, filePath, extraParameters)
-      exporter.runService()
-
-    } finally {
-      DbConnectionHelper.tryToCloseExecContext(executionContext)
-    }
-
-    if (outputFormat == ExportOutputMode.STREAM) {
-      // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
-      val resultMap = new HashMap[String, Object]()
-      resultMap.put("file_paths", Seq(filePath))
-      resultMap.put(JMSConstants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
-      resultMap
-    } else {
-      Seq(filePath)
-    }
-
+    throw new UnsupportedOperationException("Pride format in no more supported !")
   }
 
   def exportToTemplatedFile(

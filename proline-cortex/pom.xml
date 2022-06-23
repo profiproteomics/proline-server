@@ -5,14 +5,14 @@
   <parent>
     <artifactId>proline-server</artifactId>
     <groupId>fr.proline</groupId>
-    <version>2.2.0_jdk11-SNAPSHOT</version>
+    <version>2.2.0_jdk17-SNAPSHOT</version>
   </parent>
 
   <artifactId>proline-cortex</artifactId>
   <name>Proline-Cortex</name>
   <properties>
     <version.path>${project.basedir}/src/main/scala/fr/proline/cortex</version.path>
-    <proline.admin.version>2.2.0_jdk11-SNAPSHOT</proline.admin.version>
+    <proline.admin.version>2.2.0_jdk17-SNAPSHOT</proline.admin.version>
   </properties>
 
   <dependencies>
@@ -30,6 +30,12 @@
 
     <!-- Logging -->
     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+
+
+    <dependency>
       <groupId>com.typesafe.scala-logging</groupId>
       <artifactId>scala-logging_${scala.compat.version}</artifactId>
     </dependency>
@@ -38,7 +44,16 @@
     <dependency>
       <groupId>com.typesafe</groupId>
       <artifactId>config</artifactId>
-      <version>1.4.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
     </dependency>
 
     <!-- JMS Spec 2.0 + HornetQ JMS client + Netty (versions checked 10 july 2014) -->
@@ -58,7 +73,7 @@
     <dependency>
       <groupId>org.jboss.logging</groupId>
       <artifactId>jboss-logging</artifactId>
-      <version>3.3.0.Final</version>
+      <version>3.5.0.Final</version>
     </dependency>
 
     <dependency>
@@ -237,26 +252,6 @@
       <artifactId>logback-classic</artifactId>
     </dependency>
 
-    <!-- Test -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-       <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>fr.proline</groupId>
-      <artifactId>proline-databases</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>fr.proline</groupId>
-      <artifactId>proline-dal_${scala.compat.version}</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
   
     <dependencyManagement>
@@ -366,6 +361,11 @@
         <!-- Version inherited from ProFI-Pom -->
         <configuration>
         	<charset>UTF-8</charset>
+          <args>
+            <arg>-deprecation</arg>
+            <arg>-feature</arg>
+          </args>
+
         </configuration>
       </plugin>
 

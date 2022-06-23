@@ -62,8 +62,8 @@ public final class RetrieveService {
 		Thread.currentThread().setUncaughtExceptionHandler(new ThreadLogger(LOG));
 
 		final RetrieveCommand params = new RetrieveCommand();
-		JCommander command = new JCommander(params, args);
-
+		JCommander command = new JCommander(params);
+		command.parse(args);
 		command.usage();
 
 		if (params.debug) {

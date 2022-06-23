@@ -36,7 +36,7 @@ object BuildJSONRPC2Response {
       messageBuilder.append(exMessage)
     }
     
-    val error = new JSONRPC2Error(code, messageBuilder.toString, t.getStackTraceString)
+    val error = new JSONRPC2Error(code, messageBuilder.toString, t.getStackTrace)
     new JSONRPC2Response(error, requestId)
   }
   

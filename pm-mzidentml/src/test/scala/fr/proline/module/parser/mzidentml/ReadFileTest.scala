@@ -11,6 +11,7 @@ import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
 import fr.proline.repository.DriverType
 import org.junit.BeforeClass
 import org.junit.Test
+import org.junit.Assert
 
 object ReadFileTest extends AbstractDatastoreTestCase with StrictLogging {
 
@@ -40,7 +41,7 @@ object ReadFileTest extends AbstractDatastoreTestCase with StrictLogging {
 
 }
 
-class ReadFileTest {
+class ReadFileTest extends StrictLogging {
   
   val mascotFilePath = "/result_files/mascotExample.mzid"
   val mgfPFilePath = "/result_files/mgfPlus.mzid"

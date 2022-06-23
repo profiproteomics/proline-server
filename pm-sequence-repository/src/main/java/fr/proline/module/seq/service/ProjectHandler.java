@@ -196,7 +196,7 @@ public class ProjectHandler {
 
 			final Query udsQuery = udsEM.createQuery(LIST_RSM_IN_DATASET_ID_QUERY);
 			udsQuery.setParameter("projectId", projectId);
-		  List<Long> rsmIds = udsQuery.getResultList();
+		  	List<Long> rsmIds = udsQuery.getResultList();
 
 			final Query udsQuantQuery = udsEM.createQuery(LIST_QUANT_RSM_ID_QUERY);
 			udsQuantQuery.setParameter("projectId", projectId);
@@ -238,12 +238,11 @@ public class ProjectHandler {
 	}
 
 	private static JsonObject getPropertiesAsJsonObject(String properties) {
-		JsonParser parser = new JsonParser();
 		JsonObject array = null;
 		if ((properties == null) || (properties.isEmpty()))
 			properties = "{}";
 		try {
-			array = parser.parse(properties).getAsJsonObject();
+			array = JsonParser.parseString(properties).getAsJsonObject();
 		} catch (Exception e) {
 			LOG.error("error accessing properties");
 			throw e;
@@ -727,7 +726,7 @@ public class ProjectHandler {
 					//Calculate Coverage and store in MSI
 					double coverage = calculateSequenceCoverage(bioSequenceLenght, coveredSequenceLength);
 					ProteinSetProteinMatchItem proSetMap = protSetMapByProtMatch.get(protMatch);
-					proSetMap.setCoverage(new Float(coverage));
+					proSetMap.setCoverage(Float.valueOf((float) coverage));
 					msiEM.merge(proSetMap);
 
 					//Calculate number of observable peptides and store in MSI
@@ -756,7 +755,7 @@ public class ProjectHandler {
 						msiBioSeq.setLength(bioSeq.getSequence().length());
 						msiBioSeq.setMass(nmass);
 						msiBioSeq.setCrc64(HashUtil.calculateCRC64(bioSeq.getSequence()));
-						msiBioSeq.setPi(new Float(bioSeq.getPI()));
+						msiBioSeq.setPi(Float.valueOf((float) bioSeq.getPI()));
 						msiBioSeq.setSequence(bioSeq.getSequence());
 						msiEM.persist(msiBioSeq);
 					} else {

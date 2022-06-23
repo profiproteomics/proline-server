@@ -76,7 +76,7 @@ public class RetrieveJMSService extends AbstractRemoteProcessingService {
 		Long projectId = paramsRetriever.getLong("project_id");
 		List<Object> rsmsIdsStr = paramsRetriever.getList("result_summaries_ids");
 		List<Long> rsmsIds = new ArrayList<Long>();
-		rsmsIdsStr.forEach(idAsStr -> rsmsIds.add(new Long(idAsStr.toString())));
+		rsmsIdsStr.forEach(idAsStr -> rsmsIds.add(Long.valueOf(idAsStr.toString())));
 
 		RetrieveService.retrieveBioSequences(projectId, force, rsmsIds);
 

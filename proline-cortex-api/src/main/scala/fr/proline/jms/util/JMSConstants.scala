@@ -24,16 +24,16 @@ object JMSConstants {
   val JMSTimestamp = JmsHeader.JMSTimestamp.toString()
   val JMSType = JmsHeader.JMSType.toString()
   
-  // TODO: use the Standard Key "JMSCorrelationID" instead
-  @deprecated val JMS_CORRELATION_ID_KEY = JMSCorrelationID
-  // TODO: use the Standard Key "JMSDestination" instead
-  @deprecated val JMS_DESTINATION_KEY = JMSDestination
-  // TODO: use the Standard Key "JMSMessageID" instead
-  @deprecated val JMS_MESSAGE_ID_KEY = JMSMessageID
-  // TODO: use the Standard Key "JMSReplyTo" instead
-  @deprecated val JMS_REPLY_TO_KEY = JMSReplyTo
-  // TODO: use the Standard Key "JMSTimestamp" instead
-  @deprecated val JMS_TIMESTAMP_KEY = JMSTimestamp
+  @deprecated  (message = " use the Standard Key 'JMSCorrelationID' instead", since = "ProlineSuite 2.0")
+  val JMS_CORRELATION_ID_KEY = JMSCorrelationID
+  @deprecated (message = " use the Standard Key 'JMSDestination' instead", since = "ProlineSuite 2.0")
+  val JMS_DESTINATION_KEY = JMSDestination
+  @deprecated (message = " use the Standard Key 'JMSMessageID' instead", since = "ProlineSuite 2.0")
+  val JMS_MESSAGE_ID_KEY = JMSMessageID
+  @deprecated (message = " use the Standard Key 'JMSMessageID' JMSReplyTo", since = "ProlineSuite 2.0")
+  val JMS_REPLY_TO_KEY = JMSReplyTo
+  @deprecated  (message = " use the Standard Key 'JMSTimestamp' JMSReplyTo", since = "ProlineSuite 2.0")
+  val JMS_TIMESTAMP_KEY = JMSTimestamp
 
   /* JMS Message Property keys (Proline_ ) */
   val PROLINE_NODE_ID_KEY = "Proline_NodeId"

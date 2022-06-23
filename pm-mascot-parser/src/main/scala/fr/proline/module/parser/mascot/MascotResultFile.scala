@@ -417,7 +417,7 @@ class MascotResultFile(
 
   override def finalize() {
 
-    try {
+//    try {
 
       try {
         doClose(true)
@@ -425,9 +425,9 @@ class MascotResultFile(
         case ex: Exception => logger.error("Error closing MascotResultFile", ex)
       }
 
-    } finally {
-      super.finalize()
-    }
+//    } finally {
+//      super.finalize()
+//    }
 
   }
 

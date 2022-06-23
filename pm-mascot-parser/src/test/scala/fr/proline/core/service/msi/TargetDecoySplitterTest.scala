@@ -20,7 +20,7 @@ import fr.proline.core.om.provider.msi.SeqDbFakeProvider
 import fr.proline.core.om.provider.msi.PTMFakeProvider
 import fr.proline.core.om.provider.msi.ProteinFakeProvider
 import fr.proline.core.om.provider.msi.PeptideFakeProvider
-import org.junit.Ignore
+
 @Test
 class TargetDecoySplitterTest extends JUnitSuite with LazyLogging { 
 

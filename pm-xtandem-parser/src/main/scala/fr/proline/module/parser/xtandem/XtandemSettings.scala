@@ -1,6 +1,7 @@
 package fr.proline.module.parser.xtandem
 
 import java.io.File
+import java.text.DateFormat
 import java.util.Date
 
 import scala.collection.mutable.ArrayBuffer
@@ -68,7 +69,8 @@ case class XtandemSettings(resultBioml: XTBioml, parserContext: ProviderDecorate
     // date is like "2015:04:27:15:41:28"
     if(settings.isDefinedAt("process, start time")) {
       val items = settings("process, start time").toString.split(":")
-      new Date(items(0)+"/"+items(1)+"/"+items(2)+" "+items(3)+":"+items(4)+":"+items(5))
+      val dateStr  = items(0)+"/"+items(1)+"/"+items(2)+" "+items(3)+":"+items(4)+":"+items(5)
+       DateFormat.getInstance().parse(dateStr)
     } else new Date
   }
 

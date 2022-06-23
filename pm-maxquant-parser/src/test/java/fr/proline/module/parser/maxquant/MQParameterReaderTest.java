@@ -31,8 +31,8 @@ public class MQParameterReaderTest  {
 		    Assert.assertEquals(2, mqParams.getFilePaths().size());
 		    Assert.assertNotNull( mqParams.getParameters()) ;
 		    
-		    Assert.assertEquals(new Integer(7), mqParams.getParameters().get(0).getMaxCharge());
-		    Assert.assertEquals(new Integer(2), mqParams.getParameters().get(0).getMaxMissedCleavages());
+		    Assert.assertEquals(Integer.valueOf(7), mqParams.getParameters().get(0).getMaxCharge());
+		    Assert.assertEquals(Integer.valueOf(2), mqParams.getParameters().get(0).getMaxMissedCleavages());
 	    	    
 			Peaklist peaklist = new Peaklist(Peaklist.generateNewId(), //id
 				"MaxQuant RAW FILE", // fileType
@@ -51,22 +51,22 @@ public class MQParameterReaderTest  {
 			for(IMsMsParameters msmsParam : msmsParams){
 				switch(msmsParam.getInstrumTypeName()){
 				case "FTMS" :
-					Assert.assertEquals(new Float(20),msmsParam.getMatchTolerance());
+					Assert.assertEquals(Float.valueOf(20),msmsParam.getMatchTolerance());
 					break;
 				case "ITMS" :
-					Assert.assertEquals(new Float(0.5),msmsParam.getMatchTolerance());
+					Assert.assertEquals(Float.valueOf(0.5f),msmsParam.getMatchTolerance());
 					break;
 				case "TOF" :
-					Assert.assertEquals(new Float(40),msmsParam.getMatchTolerance());
+					Assert.assertEquals(Float.valueOf(40),msmsParam.getMatchTolerance());
 					break;
 				case "Unknown":
-					Assert.assertEquals(new Float(0.5),msmsParam.getMatchTolerance());
+					Assert.assertEquals(Float.valueOf(0.5f),msmsParam.getMatchTolerance());
 					break;
 				default:
 					Assert.fail("Unexpected Instrument type ! ");
 				}
 				if(msmsParam.getInstrumTypeName().equalsIgnoreCase("FTMS")){
-					Assert.assertEquals(new Float(20.0),msmsParam.getMatchTolerance());
+					Assert.assertEquals(Float.valueOf(20.0f),msmsParam.getMatchTolerance());
 				}
 			}
 			
@@ -92,30 +92,30 @@ public class MQParameterReaderTest  {
 		    Assert.assertEquals(24, mqParams.getFilePaths().size());
 		    Assert.assertNotNull( mqParams.getParameters()) ;
 		    
-		    Assert.assertEquals(new Integer(7), mqParams.getParameters().get(0).getMaxCharge());
-		    Assert.assertEquals(new Integer(2), mqParams.getParameters().get(0).getMaxMissedCleavages());
+		    Assert.assertEquals(Integer.valueOf(7), mqParams.getParameters().get(0).getMaxCharge());
+		    Assert.assertEquals(Integer.valueOf(2), mqParams.getParameters().get(0).getMaxMissedCleavages());
 	    	    
 			List<? extends IMsMsParameters> msmsParams = mqParams.getMsMsParameters();
 			Assert.assertEquals(4,msmsParams.size());
 			for(IMsMsParameters msmsParam : msmsParams){
 				switch(msmsParam.getInstrumTypeName()){
 				case "FTMS" :
-					Assert.assertEquals(new Float(20),msmsParam.getMatchTolerance());
+					Assert.assertEquals(Float.valueOf(20),msmsParam.getMatchTolerance());
 					break;
 				case "ITMS" :
-					Assert.assertEquals(new Float(0.5),msmsParam.getMatchTolerance());
+					Assert.assertEquals(Float.valueOf(0.5f),msmsParam.getMatchTolerance());
 					break;
 				case "TOF" :
-					Assert.assertEquals(new Float(0.1),msmsParam.getMatchTolerance());
+					Assert.assertEquals(Float.valueOf(0.1f),msmsParam.getMatchTolerance());
 					break;
 				case "Unknown":
-					Assert.assertEquals(new Float(0.5),msmsParam.getMatchTolerance());
+					Assert.assertEquals(Float.valueOf(0.5f),msmsParam.getMatchTolerance());
 					break;
 				default:
 					Assert.fail("Unexpected Instrument type ! ");
 				}
 				if(msmsParam.getInstrumTypeName().equalsIgnoreCase("FTMS")){
-					Assert.assertEquals(new Float(20.0),msmsParam.getMatchTolerance());
+					Assert.assertEquals(Float.valueOf(20.0f),msmsParam.getMatchTolerance());
 				}
 			}
 			
