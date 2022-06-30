@@ -144,10 +144,10 @@
         <artifactId>scala-maven-plugin</artifactId>
         <configuration>
           <charset>UTF-8</charset>
-          <args>
-            <arg>-deprecation</arg>
-            <arg>-feature</arg>
-          </args>
+<!--          <args>-->
+<!--            <arg>-deprecation</arg>-->
+<!--            <arg>-feature</arg>-->
+<!--          </args>-->
         </configuration>
       </plugin>
 

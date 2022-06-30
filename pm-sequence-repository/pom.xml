@@ -204,13 +204,13 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<compilerArgs>
-						<arg>-deprecation</arg>
-						<arg>-Xlint:all</arg>
-						<arg>-Xlint:-unchecked</arg>
-					</compilerArgs>
-				</configuration>
+<!--				<configuration>-->
+<!--					<compilerArgs>-->
+<!--						<arg>-deprecation</arg>-->
+<!--						<arg>-Xlint:all</arg>-->
+<!--						<arg>-Xlint:-unchecked</arg>-->
+<!--					</compilerArgs>-->
+<!--				</configuration>-->
 			</plugin>
 
 			<plugin>
