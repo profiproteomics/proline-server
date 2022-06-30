@@ -12,6 +12,7 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
   protected val pepMatchFieldSet = Set(
     FIELD_PSM_PEPTIDE_ID,
     FIELD_PSM_SEQUENCE,
+    FIELD_PSM_SEQUENCE_NONE_AMBIGUOUS,
     FIELD_PSM_MODIFICATIONS,
     FIELD_PSM_PTM_PROTEIN_POSITIONS,
     FIELD_PSM_ID,
@@ -107,6 +108,7 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
       val fieldValue: Any = fieldConfig.id match {
         case FIELD_PSM_PEPTIDE_ID => peptide.id
         case FIELD_PSM_SEQUENCE => peptide.sequence
+        case FIELD_PSM_SEQUENCE_NONE_AMBIGUOUS => pepMatch.getDisambiguatedSeq()
         case FIELD_PSM_MODIFICATIONS => peptide.readablePtmString
         case FIELD_PSM_PTM_PROTEIN_POSITIONS => ptmProtPositions
         case FIELD_PSM_ID => pepMatch.id
