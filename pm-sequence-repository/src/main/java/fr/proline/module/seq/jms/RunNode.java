@@ -12,6 +12,7 @@ import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.Queue;
 
+import fr.proline.module.seq.jms.service.RetrieveInfoService;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.jms.HornetQJMSClient;
 import org.hornetq.api.jms.JMSFactoryType;
@@ -204,5 +205,6 @@ public class RunNode {
 		/* Parallelizable Service */
 		//		    ServiceRegistry.addService(new InfoService()) // Monitoring
 		ServiceRegistry.addService(new RetrieveJMSService());
+		ServiceRegistry.addService(new RetrieveInfoService());
 	}
 }
