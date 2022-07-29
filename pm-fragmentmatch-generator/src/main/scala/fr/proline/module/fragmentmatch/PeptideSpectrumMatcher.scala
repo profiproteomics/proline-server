@@ -128,7 +128,7 @@ trait PeptideSpectrumMatcher extends LazyLogging {
     else if(Array("x").contains(serie)) return "x"
     else if(Array("z", "z+1", "z+2").contains(serie)) return "z"
     else {
-      logger.info("Ion serie ["+serie+"] not considered")
+      logger.trace("Ion serie ["+serie+"] not considered")
       return ""
     }
   }
