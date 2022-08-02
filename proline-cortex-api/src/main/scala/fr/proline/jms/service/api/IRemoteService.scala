@@ -103,7 +103,7 @@ trait IRemoteJsonRPC2Service extends IRemoteServiceIdentity {
 /**
  * Interface for services
  *  - consuming of TextMessage
- *  - returning an a complete jms Message Object which will be replied as it is
+ *  - returning a complete jms Message Object which will be replied as it is
  */
 trait IRemoteCompleteJsonRPC2Service extends IRemoteServiceIdentity {
 
