@@ -85,12 +85,6 @@
 
     <!-- Tests -->
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
       <groupId>org.scalatestplus</groupId>
       <artifactId>junit-4-13_${scala.compat.version}</artifactId>
     </dependency>
@@ -98,13 +92,6 @@
     <dependency>
       <groupId>org.dbunit</groupId>
       <artifactId>dbunit</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest</artifactId>
-      <version>2.2</version>
       <scope>test</scope>
     </dependency>
 
@@ -122,18 +109,6 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- Logging -->
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <scope>test</scope>
-    </dependency>
 
     <!-- Others -->
     <dependency>

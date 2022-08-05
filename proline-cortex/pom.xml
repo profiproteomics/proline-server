@@ -30,12 +30,6 @@
 
     <!-- Logging -->
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
-
-
-    <dependency>
       <groupId>com.typesafe.scala-logging</groupId>
       <artifactId>scala-logging_${scala.compat.version}</artifactId>
     </dependency>

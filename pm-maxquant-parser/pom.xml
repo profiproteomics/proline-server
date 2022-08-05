@@ -28,6 +28,12 @@
             <groupId>com.opencsv</groupId>
             <artifactId>opencsv</artifactId>
             <version>5.6</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Proline  -->
@@ -61,27 +67,6 @@
 			<artifactId>proline-databases</artifactId>
 		</dependency>
 
-        <!-- test -->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-        </dependency>
-
-        <!-- Logging -->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
 
 		<!-- scala -->
         <dependency>

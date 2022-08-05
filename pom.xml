@@ -126,4 +126,20 @@
             </dependency>
        </dependencies>
     </dependencyManagement>
+
+    <dependencies>
+        <!-- JUnit tests -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <!-- Version inherited from ProFI-Pom -->
+            <scope>test</scope>
+        </dependency>
+
+        <dependency> <!-- includes logback-core and slf4j-->
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
+
+    </dependencies>
 </project>

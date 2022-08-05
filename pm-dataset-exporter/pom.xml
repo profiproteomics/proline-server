@@ -28,26 +28,10 @@
 
         <!-- Logging -->
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>com.typesafe.scala-logging</groupId>
             <artifactId>scala-logging_${scala.compat.version}</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <scope>test</scope>
-        </dependency>
 
         <!-- Commons IO used for resursive delete -->
         <dependency>
@@ -130,11 +114,6 @@
         </dependency>
 
         <!-- Tests -->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>fr.proline</groupId>
             <artifactId>proline-dal_${scala.compat.version}</artifactId>
