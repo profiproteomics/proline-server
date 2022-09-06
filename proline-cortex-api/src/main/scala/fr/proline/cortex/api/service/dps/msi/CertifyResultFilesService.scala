@@ -1,15 +1,9 @@
 package fr.proline.cortex.api.service.dps.msi
 
-import scala.reflect.runtime.universe
-import scala.reflect.runtime.universe.typeOf
+import fr.profi.util.jsonrpc.{IJSONRPC2Method, JSONRPC2DefaultMethod, JSONRPC2DefaultMethodParameter, JSONRPC2MethodResult}
+import fr.proline.jms.service.api.{IDefaultServiceVersion, RemoteServiceIdentity}
 
-import fr.proline.jms.service.api.IDefaultServiceVersion
-import fr.proline.jms.service.api.RemoteServiceIdentity
-import fr.profi.util.jsonrpc.IJSONRPC2Method
-import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
-import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
-import fr.profi.util.jsonrpc.JSONRPC2MethodResult
-import fr.profi.util.reflect.FieldDescription
+import scala.reflect.runtime.universe.typeOf
 
 object CertifyResultFilesService extends ICertifyResultFilesService
 

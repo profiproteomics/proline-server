@@ -568,6 +568,7 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
        if(jsonErrResponse == null){//Should never be the case !
         jsonErrResponse = new JSONRPC2Response(ServiceRunner.buildJSONRPC2Error(JMSConstants.SERVICE_ERROR_CODE, new  RuntimeException("Unknow Error in ProlineResourceService")), jsonRequestId)
       }
+      jsonErrResponse.appendNonStdAttribute(PROLINE_SERVICE_NAME_KEY,serviceName);
       retMessage =  ServiceRunner.buildJMSMsgFromJSONRPC2Response(session, jsonErrResponse,jmsMessageContext)
     }
     
@@ -623,7 +624,9 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
           val errorMessage = s"Thread interrupted while running service [$serviceName]"
           logger.error(errorMessage, intEx)
 
-          new JSONRPC2Response(buildJSONRPC2Error(CANCELLED_MSG_ERROR_CODE, intEx), jsonRequestId)
+          val jsonResp  = new JSONRPC2Response(buildJSONRPC2Error(CANCELLED_MSG_ERROR_CODE, intEx), jsonRequestId)
+          jsonResp.appendNonStdAttribute(PROLINE_SERVICE_NAME_KEY,serviceName);
+          jsonResp
         }
 
         /* Catch all Throwables */
@@ -631,7 +634,9 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
           val errorMessage = s"An error occurred while calling service [$serviceName]"
           logger.error(errorMessage, t)
 
-          new JSONRPC2Response(buildJSONRPC2Error(SERVICE_ERROR_CODE, t), jsonRequestId)
+          val jsonResp  = new JSONRPC2Response(buildJSONRPC2Error(SERVICE_ERROR_CODE, t), jsonRequestId)
+          jsonResp.appendNonStdAttribute(PROLINE_SERVICE_NAME_KEY,serviceName);
+          jsonResp
         }
 
       }

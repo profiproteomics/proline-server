@@ -4,7 +4,7 @@
   <parent>
     <artifactId>proline-server</artifactId>
     <groupId>fr.proline</groupId>
-    <version>2.3.0-SNAPSHOT</version>
+    <version>2.2.0_jdk17-SNAPSHOT</version>
   </parent>
 
   <artifactId>pm-omssa-parser</artifactId>
@@ -20,6 +20,11 @@
 
   <dependencies>
 
+    <dependency>
+      <groupId>org.codehaus.woodstox</groupId>
+      <artifactId>stax2-api</artifactId>
+      <version>4.2.1</version>
+    </dependency>
     <!-- Scala library -->
     <dependency>
       <groupId>org.scala-lang</groupId>
@@ -29,79 +34,64 @@
 
     <!-- Logging -->
     <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
-    </dependency>
-    <dependency>
       <groupId>com.typesafe.scala-logging</groupId>
-      <artifactId>scala-logging_${scala.version}</artifactId>
-      <!-- Version inherited from ProFI-Pom -->
+      <artifactId>scala-logging_${scala.compat.version}</artifactId>
     </dependency>
 
     <!-- XML parser -->
     <dependency>
       <groupId>com.fasterxml.staxmate</groupId>
       <artifactId>staxmate</artifactId>
-      <version>2.3.0</version>
+      <version>2.4.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-compress</artifactId>
-      <version>1.19</version>
+      <version>1.21</version>
     </dependency>
 
     <!-- Proline -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-om_${scala.version}</artifactId>
+      <artifactId>proline-om_${scala.compat.version}</artifactId>
     </dependency>
+
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-dal_${scala.version}</artifactId>
+      <artifactId>proline-dal_${scala.compat.version}</artifactId>
     </dependency>
+
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-omp_${scala.version}</artifactId>
+      <artifactId>proline-omp_${scala.compat.version}</artifactId>
     </dependency>
+
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>proline-databases</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>fr.proline</groupId>
-      <artifactId>proline-dal_${scala.version}</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
+
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>pm-fragmentmatch-generator</artifactId>
       <version>${server.version}</version>
     </dependency>
+
     <dependency>
       <groupId>fr.profi</groupId>
-      <artifactId>profi-proteomics_${scala.version}</artifactId>
-    </dependency>
-    <!-- Testing -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
+      <artifactId>profi-proteomics_${scala.compat.version}</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_${scala.version}</artifactId>
-      <scope>test</scope>
+      <groupId>fr.profi.util</groupId>
+      <artifactId>profi-commons-java</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>fr.profi.util</groupId>
+      <artifactId>profi-commons-scala_${scala.compat.version}</artifactId>
+    </dependency>
+    <!-- Testing -->
     <dependency>
       <groupId>org.dbunit</groupId>
       <artifactId>dbunit</artifactId>
@@ -115,67 +105,22 @@
       </exclusions>
     </dependency>
 
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-databases</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>proline-dal_${scala.compat.version}</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
-
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.eclipse.m2e</groupId>
-          <artifactId>lifecycle-mapping</artifactId>
-          <version>1.0.0</version>
-          <configuration>
-            <lifecycleMappingMetadata>
-              <pluginExecutions>
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-dependency-plugin</artifactId>
-                    <versionRange>[2.0,)</versionRange>
-                    <goals>
-                      <goal>copy-dependencies</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <execute />
-                  </action>
-                </pluginExecution>
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-antrun-plugin</artifactId>
-                    <versionRange>[1.6,)</versionRange>
-                    <goals>
-                      <goal>run</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <execute />
-                  </action>
-                </pluginExecution>
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>com.google.code.maven-replacer-plugin</groupId>
-                    <artifactId>replacer</artifactId>
-                    <versionRange>[1.5.2,)</versionRange>
-                    <goals>
-                      <goal>replace</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <execute>
-                      <runOnIncremental>false</runOnIncremental>
-                    </execute>
-                  </action>
-                </pluginExecution>
-              </pluginExecutions>
-            </lifecycleMappingMetadata>
-          </configuration>
-        </plugin>
-
-      </plugins>
-    </pluginManagement>
 
     <plugins>
 
@@ -197,7 +142,12 @@
       <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
-        <!-- Version inherited from ProFI-Pom -->
+<!--        <configuration>-->
+<!--          <args>-->
+<!--            <arg>-deprecation</arg>-->
+<!--            <arg>-feature</arg>-->
+<!--          </args>-->
+<!--        </configuration>-->
       </plugin>
 
       <plugin>
@@ -222,43 +172,6 @@
           </execution>
         </executions>
       </plugin>
-
-<!--       <plugin> -->
-<!--         <groupId>org.apache.maven.plugins</groupId> -->
-<!--         <artifactId>maven-dependency-plugin</artifactId> -->
-<!--         Version inherited from ProFI-Pom -->
-<!--         <executions> -->
-<!--           <execution> -->
-<!--             <id>copy-dependencies</id> -->
-<!--             <phase>package</phase> -->
-<!--             <goals> -->
-<!--               <goal>copy-dependencies</goal> -->
-<!--             </goals> -->
-<!--             <configuration> -->
-<!--               <outputDirectory>${project.build.directory}/lib</outputDirectory> -->
-<!--               <includeTypes>jar</includeTypes> -->
-<!--               <overWriteReleases>false</overWriteReleases> -->
-<!--               <overWriteSnapshots>false</overWriteSnapshots> -->
-<!--               <overWriteIfNewer>true</overWriteIfNewer> -->
-<!--             </configuration> -->
-<!--           </execution> -->
-<!--           <execution> -->
-<!--             <id>copy-dll</id> -->
-<!--             <phase>compile</phase> -->
-<!--             <goals> -->
-<!--               <goal>copy-dependencies</goal> -->
-<!--             </goals> -->
-<!--             <configuration> -->
-<!--               <outputDirectory>${project.build.directory}/lib</outputDirectory> -->
-<!--               <includeTypes>dll,exe</includeTypes> -->
-<!--               <stripVersion>true</stripVersion> -->
-<!--               <overWriteReleases>false</overWriteReleases> -->
-<!--               <overWriteSnapshots>false</overWriteSnapshots> -->
-<!--               <overWriteIfNewer>true</overWriteIfNewer> -->
-<!--             </configuration> -->
-<!--           </execution> -->
-<!--         </executions> -->
-<!--       </plugin> -->
 
     </plugins>
 

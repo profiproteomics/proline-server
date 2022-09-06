@@ -9,9 +9,10 @@ import fr.profi.util.jsonrpc.JSONRPC2DefaultMethod
 import fr.profi.util.jsonrpc.JSONRPC2DefaultMethodParameter
 import fr.profi.util.jsonrpc.JSONRPC2MethodResult
 
+@deprecated (message = "Use ComputeQuantPostProcessingService instead", since = "ProlineSuite 2.0")
 object ComputeQuantProfilesService extends IComputeQuantProfilesService
 
-@deprecated
+@deprecated (message = "Use IComputeQuantPostProcessingService instead", since = "ProlineSuite 2.0")
 trait IComputeQuantProfilesService extends IMsqService with IDefaultServiceVersion {
 
   /* JMS Service identification */

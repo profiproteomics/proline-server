@@ -201,7 +201,7 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
 
     // --- Create final ResultSet issued from Omssa Result File
     val pepMatchesByPep = pepToPeptideMatches.map { case (k, v) => k -> v.toArray } // this hash contains the peptides/peptidematches corresponding to the target/decoy value given
-    var allPepMatches = pepMatchesByPep.values.flatMap { p => p } toArray
+    var allPepMatches = pepMatchesByPep.values.flatMap { p => p }.toArray
     val protMatches = proteinAccessionNumberToProteinMatch.values.toArray
 
     val rsProps = new ResultSetProperties()
@@ -253,9 +253,9 @@ class OmssaResultFile(val fileLocation: File, val parserContext: ProviderDecorat
     pepToPeptideMatches = peptideToPeptideMatches
     logger.debug(" Go through query / pep done . Found " + pepToPeptideMatches.size + " different peptides")
 
-    val pepsToSearch = Array.newBuilder[Pair[String, Array[LocatedPtm]]]
+    val pepsToSearch = Array.newBuilder[Tuple2[String, Array[LocatedPtm]]]
     pepToPeptideMatches.foreach(entry => {
-      pepsToSearch += Pair(entry._1.sequence, entry._1.ptms)
+      pepsToSearch += Tuple2(entry._1.sequence, entry._1.ptms)
     })
     val searchPeps = pepsToSearch.result
 

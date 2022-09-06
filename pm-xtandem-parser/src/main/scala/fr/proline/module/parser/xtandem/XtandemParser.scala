@@ -379,7 +379,7 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
         case PtmLocation.ANY_N_TERM => if(ptmPosition == peptideStart) ptmOpt = Some(ptmDef)
         case PtmLocation.PROT_N_TERM => if(ptmPosition <= 3 && peptidePre.startsWith("[")) ptmOpt = Some(ptmDef)
         case PtmLocation.PROT_C_TERM => if(ptmPosition == peptideEnd && peptidePost.endsWith("]")) ptmOpt = Some(ptmDef)
-        case PtmLocation.ANYWHERE => if(ptmDef.residue == '\0' || ptmResidue == ptmDef.residue) ptmOpt = Some(ptmDef)
+        case PtmLocation.ANYWHERE => if(ptmDef.residue == '\u0000' || ptmResidue == ptmDef.residue) ptmOpt = Some(ptmDef)
       }
     }
     ptmOpt.isDefined

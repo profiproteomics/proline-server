@@ -22,7 +22,7 @@ import fr.proline.jms.service.api.AbstractRemoteProcessingService
  *  Output params :
  *    Boolean for service run status
  */
-@deprecated
+@deprecated(message = "Use ComputeQuantPostProcessing instead", since = "ProlineSuite 2.0")
 class ComputeQuantProfiles extends AbstractRemoteProcessingService with IComputeQuantProfilesService with LazyLogging {
 
   def doProcess(paramsRetriever: NamedParamsRetriever): Any = {

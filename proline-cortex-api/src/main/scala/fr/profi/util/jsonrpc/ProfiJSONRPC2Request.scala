@@ -45,7 +45,7 @@ class ProfiJSONRPC2Request private() extends JSONRPC2Request(null,null) {
     new SerializableJSONRPC2Request(
       this.getID(),
       this.getMethod(),
-      this.getParams
+      this.getNamedParams
     ).toJSONString()
     
   }

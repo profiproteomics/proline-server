@@ -66,7 +66,7 @@ object MascotPTMUtils extends LazyLogging  {
     posConstraints.foreach {
       case (residue, location) =>
 
-        val resChar = if (residue != None) residue.get else '\0'
+        val resChar = if (residue != None) residue.get else '\u0000'
         var nextPtmDef = Option.empty[PtmDefinition]
 
           nextPtmDef = ptmProvider.getPtmDefinition(modName, resChar, location)

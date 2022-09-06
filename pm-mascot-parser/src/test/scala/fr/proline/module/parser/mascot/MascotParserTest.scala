@@ -12,8 +12,7 @@ import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.{IProteinProvider, ISeqDatabaseProvider, ProteinFakeProvider, SeqDbFakeProvider}
 import fr.proline.repository.DriverType
 import fr.proline.repository.util.DatabaseTestCase
-import org.hamcrest.CoreMatchers
-import org.junit.Assert.{assertEquals, assertNotNull, assertThat, assertTrue}
+import org.junit.Assert.{assertEquals, assertNotNull, assertTrue}
 import org.junit.{After, Before, Test}
 
 @Test
@@ -106,23 +105,23 @@ class MascotParserTest extends LazyLogging { // }extends DatabaseTestCase {
 
     val expectedDate = Calendar.getInstance()
     expectedDate.set(2013, 1, 5)
-    assertThat(msiSearchDate.get(Calendar.MONTH), CoreMatchers.equalTo(expectedDate.get(Calendar.MONTH)))
-    assertThat(msiSearchDate.get(Calendar.DAY_OF_MONTH), CoreMatchers.equalTo(expectedDate.get(Calendar.DAY_OF_MONTH)))
-    assertThat(msiSearchDate.get(Calendar.YEAR), CoreMatchers.equalTo(expectedDate.get(Calendar.YEAR)))
+    assertEquals(msiSearchDate.get(Calendar.MONTH),expectedDate.get(Calendar.MONTH))
+    assertEquals(msiSearchDate.get(Calendar.DAY_OF_MONTH),expectedDate.get(Calendar.DAY_OF_MONTH))
+    assertEquals(msiSearchDate.get(Calendar.YEAR),expectedDate.get(Calendar.YEAR))
 
-    assertThat(msiSearch.jobNumber, CoreMatchers.equalTo(68213))
-    assertThat(msiSearch.queriesCount, CoreMatchers.equalTo(7047))
-    assertThat(msiSearch.resultFileName, CoreMatchers.equalTo("GRE_F068213_M2.4_TD_EColi.dat"))
-    assertThat(msiSearch.searchedSequencesCount, CoreMatchers.equalTo(32182))
-    assertThat(msiSearch.title, CoreMatchers.equalTo("K12 Test nano trap duree gradient T12 HCD QEx1_000192.raw (DH5_50)"))
-    assertThat(msiSearch.userName, CoreMatchers.equalTo("AMH"))
+    assertEquals(msiSearch.jobNumber, 68213)
+    assertEquals(msiSearch.queriesCount,7047)
+    assertEquals(msiSearch.resultFileName, "GRE_F068213_M2.4_TD_EColi.dat")
+    assertEquals(msiSearch.searchedSequencesCount, 32182)
+    assertEquals(msiSearch.title, "K12 Test nano trap duree gradient T12 HCD QEx1_000192.raw (DH5_50)")
+    assertEquals(msiSearch.userName,"AMH")
 
-    assertThat(msiSearch.searchSettings.fixedPtmDefs.length, CoreMatchers.equalTo(1))
-    assertThat(msiSearch.searchSettings.variablePtmDefs.length, CoreMatchers.equalTo(2))
-    assertThat(msiSearch.searchSettings.variablePtmDefs(0).names.shortName, CoreMatchers.equalTo("Acetyl"))
-    assertThat(msiSearch.searchSettings.variablePtmDefs(0).residue, CoreMatchers.equalTo('\0'))
-    assertThat(msiSearch.searchSettings.variablePtmDefs(1).names.shortName, CoreMatchers.equalTo("Oxidation"))
-    assertThat(msiSearch.searchSettings.variablePtmDefs(1).residue, CoreMatchers.equalTo('M'))
+    assertEquals(msiSearch.searchSettings.fixedPtmDefs.length, 1)
+    assertEquals(msiSearch.searchSettings.variablePtmDefs.length, 2)
+    assertEquals(msiSearch.searchSettings.variablePtmDefs(0).names.shortName, "Acetyl")
+    assertEquals(msiSearch.searchSettings.variablePtmDefs(0).residue, '\u0000')
+    assertEquals(msiSearch.searchSettings.variablePtmDefs(1).names.shortName, "Oxidation")
+    assertEquals(msiSearch.searchSettings.variablePtmDefs(1).residue, 'M')
   }
 
   private def testEColiPeptidePtms(rs: ResultSet) = {

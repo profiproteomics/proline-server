@@ -121,13 +121,13 @@ object BuildRSMSpectraViewSet extends LazyLogging {
     val spectrumProvider = new SQLSpectrumProvider(msiSQLCtx)
     val spectrumIdByPepMatchId = {
       val map = new HashMap[Long, Long]
-      DoJDBCWork.withEzDBC(msiSQLCtx, { ezDBC =>
+      DoJDBCWork.withEzDBC(msiSQLCtx) { ezDBC =>
         ezDBC.selectAndProcess("SELECT peptide_match.id, ms_query.spectrum_id FROM peptide_match, ms_query WHERE peptide_match.ms_query_id = ms_query.id and peptide_match.id IN (" + pepMatchesAsStr + ")") { r =>
           val pepMatchId: Long = r.nextLong
           val spectrumId: Long = r.nextLong
           map += (pepMatchId -> spectrumId)
         }
-      })
+      } // end DoJDBCWork
       Map() ++ map
     }
 
@@ -139,7 +139,7 @@ object BuildRSMSpectraViewSet extends LazyLogging {
 
     //************* Load Spectrum Info    
     val spectrumMatchesByPeptMatchId = new HashMap[Long, SpectrumMatch]
-    DoJDBCReturningWork.withEzDBC(msiSQLCtx, { msiEzDBC =>
+    DoJDBCReturningWork.withEzDBC(msiSQLCtx) { msiEzDBC =>
       val pepMatchSpectrumMatchQuery = new SelectQueryBuilder2(MsiDbPeptideMatchObjectTreeMapTable, MsiDbObjectTreeTable).mkSelectQuery((pmT, pmC, otT, otC) =>
         List(pmT.PEPTIDE_MATCH_ID, otT.CLOB_DATA) -> " WHERE " ~ pmT.OBJECT_TREE_ID ~ "=" ~ otT.ID ~ " AND " ~ pmT.SCHEMA_NAME ~ "= 'peptide_match.spectrum_match' AND " ~
           pmT.PEPTIDE_MATCH_ID ~ " IN (" ~ pepMatchesAsStr ~ ")")
@@ -149,7 +149,7 @@ object BuildRSMSpectraViewSet extends LazyLogging {
         val spectrumMatch = CustomSerializer.deserialize[SpectrumMatch](r.nextString)
         spectrumMatchesByPeptMatchId += (id -> spectrumMatch)
       }
-    })
+    } //End DoJDBCWork
 
     logger.debug(" Found {} Spectrum Matches for {} pep matches.", spectrumMatchesByPeptMatchId.size, bestPeptideMatchesByPeptideAndCharge.values.size)
     if(spectrumMatchesByPeptMatchId.size < bestPeptideMatchesByPeptideAndCharge.values.size ) // or if(spectrumMatchesByPeptMatchId.isEmpty()) ??

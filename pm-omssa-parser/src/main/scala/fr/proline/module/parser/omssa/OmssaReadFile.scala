@@ -380,22 +380,22 @@ class OmssaReadFile(val omxFile: File,
                                   index = peptideSequence.indexOf(ptm.residue, index+1)
                                 }
                               case PtmLocation.ANY_N_TERM => // fixed ptm on N-terminal amino acid
-                                if(ptm.residue == '\0') peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = 0)
+                                if(ptm.residue == '\u0000') peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = 0)
                                 else if(peptideSequence.startsWith(ptm.residue.toString())) peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = 0)
                               case PtmLocation.ANY_C_TERM => // fixed ptm on C-terminal amino acid 
-                                if(ptm.residue == '\0') peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = -1)
+                                if(ptm.residue == '\u0000') peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = -1)
                                 else if(peptideSequence.endsWith(ptm.residue.toString())) peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = -1)
                               case PtmLocation.PROT_N_TERM => // if residueBefore is null, then it's protein Nter
                                 if(sequenceMatchResidueBefore == None) {
-                                  if(ptm.residue == '\0') peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = 0)
+                                  if(ptm.residue == '\u0000') peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = 0)
                                   else if(peptideSequence.startsWith(ptm.residue.toString())) peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = 0)
-                                } else if(allowNtermMethionineCleavage && sequenceMatchResidueBefore.get == 'M' && (ptm.residue == '\0' || ptm.residue == 'M') && proteinMatchIdToSequenceMatches.filter(_._2.start <= 2).size > 0) {
+                                } else if(allowNtermMethionineCleavage && sequenceMatchResidueBefore.get == 'M' && (ptm.residue == '\u0000' || ptm.residue == 'M') && proteinMatchIdToSequenceMatches.filter(_._2.start <= 2).size > 0) {
                                   // omssa has an option to allow cleavage of methionine if it's protein n-terminal
                                   // this is why there is no many conditions : option has to be activated and previous AA has to be M and first AA in the protein sequence
                                   peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = 0)
                                 }
                               case PtmLocation.PROT_C_TERM => // if residueAfter is null, then it's protein Cter
-                                if(sequenceMatchResidueAfter == None && (ptm.residue == '\0' || peptideSequence.endsWith(ptm.residue.toString()))) peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = -1) 
+                                if(sequenceMatchResidueAfter == None && (ptm.residue == '\u0000' || peptideSequence.endsWith(ptm.residue.toString()))) peptideLocatedPtms += LocatedPtm(ptmDef = ptm, seqPos = -1)
                             }
                           })
                           // create the Peptide object

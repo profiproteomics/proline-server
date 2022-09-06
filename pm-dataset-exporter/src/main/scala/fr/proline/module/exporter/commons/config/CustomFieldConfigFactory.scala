@@ -135,6 +135,7 @@ object CustomFieldConfigFactory {
     val fieldsBuffer = ArrayBuffer(
       CustomFieldConfig(FIELD_PSM_PEPTIDE_ID, "peptide_id"),
       CustomFieldConfig(FIELD_PSM_SEQUENCE, "sequence"),
+      CustomFieldConfig(FIELD_PSM_SEQUENCE_NONE_AMBIGUOUS, "none_ambiguous_psm_sequence"),
       CustomFieldConfig(FIELD_PSM_MODIFICATIONS, "modifications"),
       CustomFieldConfig(FIELD_PSM_PTM_PROTEIN_POSITIONS, "ptm_protein_positions"),
       CustomFieldConfig(FIELD_PSM_ID, "psm_id"),
@@ -194,6 +195,7 @@ object CustomFieldConfigFactory {
     val fieldsBuffer = ArrayBuffer(
       CustomFieldConfig(FIELD_PSM_PEPTIDE_ID, "peptide_id"),
       CustomFieldConfig(FIELD_PSM_SEQUENCE, "sequence"),
+      CustomFieldConfig(FIELD_PSM_SEQUENCE_NONE_AMBIGUOUS, "none_ambiguous_psm_sequence"),
       CustomFieldConfig(FIELD_PSM_MODIFICATIONS, "modifications"),
       CustomFieldConfig(FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id"),
       CustomFieldConfig(FIELD_PSM_QUANT_ELUTION_TIME, "master_elution_time"),
@@ -219,6 +221,7 @@ object CustomFieldConfigFactory {
     val fieldsBuffer = ArrayBuffer(
       CustomFieldConfig(FIELD_PSM_PEPTIDE_ID, "peptide_id"),
       CustomFieldConfig(FIELD_PSM_SEQUENCE, "sequence"),
+      CustomFieldConfig(FIELD_PSM_SEQUENCE_NONE_AMBIGUOUS, "none_ambiguous_psm_sequence"),
       CustomFieldConfig(FIELD_PSM_MODIFICATIONS, "modifications"),
       CustomFieldConfig(FIELD_PSM_PTM_PROTEIN_POSITIONS, "ptm_protein_positions"),
       CustomFieldConfig(FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id"),

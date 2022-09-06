@@ -15,6 +15,10 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.exceptions.CsvValidationException;
 import fr.proline.core.om.model.msi.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +109,10 @@ public class MSDataReader {
 		try {
 			
 			//Read Headers
-			reader = new CSVReader(new FileReader(m_msmsFile),'\t');
+			final CSVParser parser =
+					new CSVParserBuilder().withSeparator('\t').build();
+			reader = new CSVReaderBuilder(new FileReader(m_msmsFile)).withCSVParser(parser).build();
+
 			String[] headers = reader.readNext();
 			Map<Integer,String> headerByIndex = new HashMap<Integer, String>();			
 			for(int i=0; i<headers.length; i++){
@@ -134,7 +141,7 @@ public class MSDataReader {
 				
 				//Get or Create Spectrum
 				Spectrum sp = getOrCreateSpectrum(spectrumByScan, valByHeader, warningMsg);
-				m_rsMapper.addSpectrum(rsName, new Long(sp.id()), sp);
+				m_rsMapper.addSpectrum(rsName, sp.id(), sp);
 				
 				//Get or Create Ms2Query
 				Ms2Query query = getOrCreateMSQuery(queryByInitialId,sp, valByHeader);
@@ -174,9 +181,11 @@ public class MSDataReader {
 			throw new RuntimeException("Error reading MSMS file.", e);
 		} catch (NumberFormatException nbe){
 			throw new RuntimeException("Error parsing MSMS data.", nbe);
-		}	
-		
-		
+		} catch (CsvValidationException e) {
+			throw new RuntimeException("Error parsing MSMS data.", e);
+		}
+
+
 		return m_rsMapper;
 	}
 
@@ -267,7 +276,7 @@ public class MSDataReader {
 			
 			if(currentProtMatch==null) { //ProtMatch Not found
 				//Create associated SeqMatch
-				Option<SequenceMatchProperties> noOpt =Option.empty();
+				Option<SequenceMatchProperties> noOpt =Option.<SequenceMatchProperties>empty();
 				//FIXME : Arbitrary seqPosition defined !
 				SequenceMatch seqM = new SequenceMatch(1, 1+pepMatch.peptide().sequence().length(), //start - end 
 													'?', '?',  //residue bef/after
@@ -278,8 +287,8 @@ public class MSDataReader {
 													noOpt);
 				SequenceMatch[] allSeqMatches = new SequenceMatch[1];
 				allSeqMatches[0] = seqM;
-				Option<Protein> noProtOp =  Option.empty();
-				Option<ProteinMatchProperties> noPrpOp = Option.empty();
+				Option<Protein> noProtOp =  Option.<Protein>empty();
+				Option<ProteinMatchProperties> noPrpOp = Option.<ProteinMatchProperties>empty();
 				currentProtMatch = new ProteinMatch(pName,
 												pDesc,
 												false, //isDecoy,
@@ -348,12 +357,12 @@ public class MSDataReader {
 		Integer missCle = Integer.valueOf(valByHeader.get(MISSED_CLEAVAGES_HEADER));
 		Integer fragmMatchCount = Integer.valueOf(valByHeader.get(NBR_MATCHES_HEADER));
 		Float moz =  Float.parseFloat(valByHeader.get(MOZ_HEADER));		
-		Float deltaMass = moz - new Float(peptide.calculatedMass());
+		Float deltaMass = moz -  Float.valueOf((float)peptide.calculatedMass());
 		String rawName = valByHeader.get(RS_NAME_HEADER);
 		Long rsId = rsIdByName.get(rawName);
-		Option<PeptideMatch[]> noChildsOp = Option.empty();
-		Option<PeptideMatchProperties> noPropOp = Option.empty();
-		Option<PeptideMatchResultSummaryProperties> noValidPropOp = Option.empty();
+		Option<PeptideMatch[]> noChildsOp = Option.<PeptideMatch[]>empty();
+		Option<PeptideMatchProperties> noPropOp = Option.<PeptideMatchProperties>empty();
+		Option<PeptideMatchResultSummaryProperties> noValidPropOp = Option.<PeptideMatchResultSummaryProperties>empty();
 		PeptideMatch pm = new PeptideMatch(PeptideMatch.generateNewId(),
 			1, // Rank will be calculated once all Pep matches are read
 			score,
@@ -564,12 +573,13 @@ public class MSDataReader {
 				warningMsg.append(" No intensities for scan ").append(title);
 			}
 
-			Option<Object> rtVal= Option.apply(rt);
+			Option<Object> rtVal= Option.<Object>apply(rt);
 			SpectrumProperties spectrumProp = new SpectrumProperties( rtVal);
 
-			Option<Object> frs = Option.empty();
+			Option<Long> frs = Option.<Long>empty();
 			if(m_fragmentationRuleSetId> 0)
-				frs = Option.apply(m_fragmentationRuleSetId);
+				frs = Option.<Long>apply(m_fragmentationRuleSetId);
+
 			readSp = new Spectrum(Spectrum.generateNewId(), title,
 			moz, Float.NaN /*Prec Intenity*/, charge, //Precursor data 
 			false, //isSummed, 
@@ -579,7 +589,7 @@ public class MSDataReader {
 			(Option<double[]>) Option.apply(mozList),
 			(Option<float[]>) Option.apply(intensitiesList),
 			mozList.length,
-			frs,
+			frs.map(l ->l.longValue()),
 			m_peaklistSoftware.id(), 
 			(Option<SpectrumProperties>) Option.apply(spectrumProp));
 			spectrumByScan.put(scanNbr, readSp);

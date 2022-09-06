@@ -12,6 +12,7 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
   protected val pepMatchFieldSet = Set(
     FIELD_PSM_PEPTIDE_ID,
     FIELD_PSM_SEQUENCE,
+    FIELD_PSM_SEQUENCE_NONE_AMBIGUOUS,
     FIELD_PSM_MODIFICATIONS,
     FIELD_PSM_PTM_PROTEIN_POSITIONS,
     FIELD_PSM_ID,
@@ -107,6 +108,7 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
       val fieldValue: Any = fieldConfig.id match {
         case FIELD_PSM_PEPTIDE_ID => peptide.id
         case FIELD_PSM_SEQUENCE => peptide.sequence
+        case FIELD_PSM_SEQUENCE_NONE_AMBIGUOUS => pepMatch.getDisambiguatedSeq()
         case FIELD_PSM_MODIFICATIONS => peptide.readablePtmString
         case FIELD_PSM_PTM_PROTEIN_POSITIONS => ptmProtPositions
         case FIELD_PSM_ID => pepMatch.id
@@ -129,8 +131,8 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
         case FIELD_PSM_NB_DATABANK_PROTEIN_MATCHES => identDS.allProtMatchSetByPepId.get(peptide.id).map(_.size).getOrElse(0)
         case FIELD_PSM_START => seqMatch.start
         case FIELD_PSM_END => seqMatch.end
-        case FIELD_PSM_RESIDUE_BEFORE => if (seqMatch.residueBefore == '\0') '-' else seqMatch.residueBefore
-        case FIELD_PSM_RESIDUE_AFTER => if (seqMatch.residueAfter == '\0') '-' else seqMatch.residueAfter
+        case FIELD_PSM_RESIDUE_BEFORE => if (seqMatch.residueBefore == '\u0000') '-' else seqMatch.residueBefore
+        case FIELD_PSM_RESIDUE_AFTER => if (seqMatch.residueAfter == '\u0000') '-' else seqMatch.residueAfter
         case FIELD_PSM_PTM_SCORE => ptmScoreOpt.map( dcf2.format(_) ).orNull
         case FIELD_PSM_PTM_SITES_CONFIDENCE => ptmSitesOpt.orNull
         case FIELD_PSM_PHOSPHO_RS_RESULT => ptmSitePropsOpt.flatMap( _.phosphoRsString ).orNull

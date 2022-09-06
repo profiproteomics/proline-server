@@ -5,6 +5,7 @@ import fr.proline.core.om.model.msi.FragmentIonSeries
 
 import scala.io.BufferedSource
 import scala.io.Source
+import scala.language.implicitConversions
 
 object PsiMsOntology extends Ontology {
 

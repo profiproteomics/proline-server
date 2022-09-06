@@ -1,6 +1,6 @@
 package fr.proline.module.parser
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 import fr.profi.cv._
 import fr.profi.obo.PsiMs
@@ -25,7 +25,7 @@ package object mzidentml {
     def findFilter( termId: PsiMsTermId.Value ): Option[Filter] = {
       require( dbFilters != null, "dbFilters is null" )
       
-      dbFilters.getFilter().find(_.getFilterType.getCvParam.getAccession == termId.toString)
+      dbFilters.getFilter().asScala.find(_.getFilterType.getCvParam.getAccession == termId.toString)
     }
     
     def findFilterParamValue(
@@ -51,16 +51,16 @@ package object mzidentml {
   }
   
   def findParam( params: java.util.List[AbstractParam], paramName: String ): Option[AbstractParam] = {
-    params.find(_.getName() == paramName)
+    params.asScala.find(_.getName() == paramName)
   }
 
   def findCvParam( cvParams: java.util.List[CvParam], term: PsiMs.Value ): Option[CvParam] = {
-    cvParams.find(_.getAccession == term.toString)
+    cvParams.asScala.find(_.getAccession == term.toString)
   }
   
   def filterCvParams( cvParams: java.util.List[CvParam], termSet: Set[PsiMs.Value] ): List[CvParam] = {
     val termsAsStrSet = termSet.map(_.toString())
-    cvParams.filter( cvParam => termsAsStrSet.contains(cvParam.getAccession) ).toList
+    cvParams.asScala.filter( cvParam => termsAsStrSet.contains(cvParam.getAccession) ).toList
   }
   
   def findCvParamValue( cvParams: java.util.List[CvParam], termId: PsiMs.Value ): Option[String] = {
@@ -68,7 +68,7 @@ package object mzidentml {
   }
   
   def findUserParam( userParams: java.util.List[UserParam], name: String ): Option[UserParam] = {
-    userParams.find(_.getName == name)
+    userParams.asScala.find(_.getName == name)
   }
   
   def findUserParamValue( userParams: java.util.List[UserParam], name: String ): Option[String] = {
@@ -78,7 +78,7 @@ package object mzidentml {
   def userParamsToStringMap( userParams: java.util.List[UserParam] ): StringMap = {
     val paramMap = new StringMap()
     
-    userParams.map { userParam =>
+    userParams.asScala.map { userParam =>
       paramMap += userParam.getName() -> userParam.getValue()
     }
     

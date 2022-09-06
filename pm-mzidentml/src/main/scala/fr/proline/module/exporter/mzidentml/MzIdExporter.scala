@@ -1,13 +1,8 @@
 package fr.proline.module.exporter.mzidentml
 
-import java.io.ByteArrayInputStream
-import java.io.FileWriter
+import java.io.{ByteArrayInputStream, FileWriter}
 import java.util
 import java.util.Calendar
-import javax.xml.bind.JAXBContext
-import javax.xml.bind.JAXBElement
-import javax.xml.bind.Unmarshaller
-import javax.xml.parsers.SAXParserFactory
 
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.chemistry.algo.IsoelectricPointComputer
@@ -15,26 +10,22 @@ import fr.profi.chemistry.model.ProteinogenicAminoAcidTable
 import fr.profi.cv._
 import fr.profi.obo._
 import fr.profi.util.collection._
-import fr.profi.util.serialization.CustomDoubleJacksonSerializer
-import fr.profi.util.serialization.ProfiJSMSerialization
+import fr.profi.util.serialization.{CustomDoubleJacksonSerializer, ProfiJSMSerialization}
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msi.filtering.ResultSummaryFilterBuilder
 import fr.proline.core.dal.DoJDBCReturningWork
 import fr.proline.core.dal.helper.MsiDbHelper
 import fr.proline.core.dal.tables.SelectQueryBuilder.any2ClauseAdd
 import fr.proline.core.dal.tables.SelectQueryBuilder2
-import fr.proline.core.dal.tables.msi.MsiDbObjectTreeTable
-import fr.proline.core.dal.tables.msi.MsiDbPeptideMatchObjectTreeMapTable
-import fr.proline.core.om.model.msi.FragmentIonSeries
-import fr.proline.core.om.model.msi._
+import fr.proline.core.dal.tables.msi.{MsiDbObjectTreeTable, MsiDbPeptideMatchObjectTreeMapTable}
+import fr.proline.core.om.model.msi.{FragmentIonSeries, _}
 import fr.proline.core.om.provider.PeptideCacheExecutionContext
 import fr.proline.core.om.provider.msi.IMSISearchProvider
-import fr.proline.core.om.provider.msi.impl.SQLBioSequenceProvider
-import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider
-import fr.proline.core.om.provider.msi.impl.SQLResultSummaryProvider
+import fr.proline.core.om.provider.msi.impl.{SQLBioSequenceProvider, SQLMsiSearchProvider, SQLResultSummaryProvider}
 import fr.proline.core.orm.msi.Scoring
-import fr.proline.module.exporter.mzidentml.model.Contact
-import fr.proline.module.exporter.mzidentml.model.Organization
+import fr.proline.module.exporter.mzidentml.model.{Contact, Organization}
+import javax.xml.bind.{JAXBContext, JAXBElement, Unmarshaller}
+import javax.xml.parsers.SAXParserFactory
 import org.xml.sax.XMLReader
 import uk.ac.ebi.jmzidml.model.mzidml._
 import uk.ac.ebi.jmzidml.model.mzidml.{Enzyme => MzIdEnzyme}
@@ -43,9 +34,8 @@ import uk.ac.ebi.jmzidml.model.mzidml.{Organization => MzIdOrganization}
 import uk.ac.ebi.jmzidml.model.utils.ModelConstants
 import uk.ac.ebi.jmzidml.xml.io.MzIdentMLMarshaller
 
-import scala.collection.JavaConversions
-import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.{JavaConverters, mutable}
 import scala.util.control.Breaks._
 
 object MzIdExporter {
@@ -544,7 +534,7 @@ class MzIdExporter(rsmId: Long, executionContext: IExecutionContext) extends Par
    //**** Exporting  SpectrumIdentificationResult
    val pepMatches: Array[PeptideMatch] = if(validatedResult)  rsm.peptideInstances.flatMap(_.peptideMatches)   else rs.peptideMatches
    logger.debug(" **** Will export pepMatches "+pepMatches.length)
-   val measureById: Map[String, Measure] = JavaConversions.asScalaBuffer(fragTable.getMeasure).map(m => m.getId ->m).toMap
+   val measureById: Map[String, Measure] = JavaConverters.asScalaBufferConverter(fragTable.getMeasure).asScala.map(m => m.getId ->m).toMap
    val allSpectrumIdentResults = _buildSpectrumIdentificationResult(pepMatches,measureById, mzidPepByPepId, pepEvidencesByPepId, inputs)
    logger.debug(" **** Got "+allSpectrumIdentResults.length+" SpectrumIdentResults ")
     allSpectrumIdentResults.foreach( sir => {
@@ -856,7 +846,7 @@ class MzIdExporter(rsmId: Long, executionContext: IExecutionContext) extends Par
       spectrumIdentification.setSpectrumIdentificationList(spectrumIdentificationList)
 
       //get SpectrumIdentificationProtocol for this msiSearch
-      val result = JavaConversions.asScalaIterator(analyseProtocolColl.getSpectrumIdentificationProtocol.iterator()).filter(_.getId.equals(spectrumIdentificationProtocolIdPrefix+msiSearch.id))
+      val result = JavaConverters.asScalaIteratorConverter(analyseProtocolColl.getSpectrumIdentificationProtocol.iterator()).asScala.filter(_.getId.equals(spectrumIdentificationProtocolIdPrefix+msiSearch.id))
       if(result.hasNext)
         spectrumIdentification.setSpectrumIdentificationProtocol(result.next())
       else
@@ -866,7 +856,7 @@ class MzIdExporter(rsmId: Long, executionContext: IExecutionContext) extends Par
       calDate.setTime(msiSearch.date)
       spectrumIdentification.setActivityDate(calDate)
 
-      val allSpectras =  JavaConversions.asScalaIterator(inputs.getSpectraData.iterator())
+      val allSpectras =  JavaConverters.asScalaIteratorConverter(inputs.getSpectraData.iterator()).asScala
       breakable {
         for( currentSpectraData <- allSpectras){
           if(currentSpectraData.getId.equals(spectraDataIdPrefix+msiSearch.peakList.id)) {
@@ -1017,7 +1007,7 @@ class MzIdExporter(rsmId: Long, executionContext: IExecutionContext) extends Par
 
     // Set the spectrum identification protocol
     val specIdentProtoList = anlProtoCollec.getSpectrumIdentificationProtocol
-    specIdentProtoList.addAll(JavaConversions.asJavaCollection(this._buildSpectrumIdentificationProtocols()))
+    specIdentProtoList.addAll(JavaConverters.asJavaCollectionConverter(this._buildSpectrumIdentificationProtocols()).asJavaCollection)
 
     // Set the protein detection protocol
     if(rsmFromValidation)
@@ -1270,7 +1260,7 @@ class MzIdExporter(rsmId: Long, executionContext: IExecutionContext) extends Par
       mod.setFixedMod(isFixed)
       mod.setMassDelta(ptmDef.precursorDelta.monoMass.toFloat) // TODO: add to usedPtm ? ... pourquoi ?
 
-      val modRes = if (ptmDef.residue == '\0') "." else ptmDef.residue.toString
+      val modRes = if (ptmDef.residue == '\u0000') "." else ptmDef.residue.toString
       mod.getResidues.add(modRes)
 
       mod.getCvParam.add(
@@ -1366,7 +1356,7 @@ class MzIdExporter(rsmId: Long, executionContext: IExecutionContext) extends Par
   protected def _buildInputs(): Inputs = {
     val inputs = new Inputs()
 
-    inputs.getSearchDatabase.addAll(JavaConversions.asJavaCollection(searchDatabases))
+    inputs.getSearchDatabase.addAll(JavaConverters.asJavaCollectionConverter(searchDatabases).asJavaCollection)
 
     msiSearches.foreach( msiSearch => {
       val sourceFile = new SourceFile()

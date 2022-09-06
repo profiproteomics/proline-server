@@ -120,9 +120,9 @@ class OmssaResultFileVerifier extends IResultFileVerifier with LazyLogging {
   private def getUsermodFileLocation(importProperties: Map[String, Any]): java.net.URL = {
     val parseProperties: Map[OmssaParseParams.OmssaParseParam, Any] = importProperties.map(entry => OmssaParseParams.withName(entry._1) -> entry._2)
     if (parseProperties.get(OmssaParseParams.USERMOD_XML_FILE) == None) {
-      new File(this.getClass().getClassLoader().getResource("omssa_config/usermods.xml").getPath()).toURL()
+      new File(this.getClass().getClassLoader().getResource("omssa_config/usermods.xml").getPath()).toURI.toURL()
     } else {
-      new File(parseProperties.get(OmssaParseParams.USERMOD_XML_FILE).get.toString).toURL()
+      new File(parseProperties.get(OmssaParseParams.USERMOD_XML_FILE).get.toString).toURI.toURL()
     }
   }
 
@@ -197,7 +197,7 @@ class OmssaResultFileVerifier extends IResultFileVerifier with LazyLogging {
       if(shortName.isDefined && shortName.get.startsWith("usermod")) {
         shortName = fullName
       }
-      if (residues.length == 0) residues += '\0';
+      if (residues.length == 0) residues += '\u0000';
       residues.foreach(residue => {
         ptms.update(id.get, residue, new PtmDefinition(
           id = PtmDefinition.generateNewId(),
@@ -295,7 +295,7 @@ class OmssaResultFileVerifier extends IResultFileVerifier with LazyLogging {
   def getCompositionsFileLocation(importProperties: Map[String, Any]): java.net.URL = {
     val parseProperties: Map[OmssaParseParams.OmssaParseParam, Any] = importProperties.map(entry => OmssaParseParams.withName(entry._1) -> entry._2)
     if (parseProperties.get(OmssaParseParams.PTM_COMPOSITION_FILE) != None) {
-      new File(parseProperties.get(OmssaParseParams.PTM_COMPOSITION_FILE).get.toString).toURL()
+      new File(parseProperties.get(OmssaParseParams.PTM_COMPOSITION_FILE).get.toString).toURI.toURL()
     } else {
       null
     }

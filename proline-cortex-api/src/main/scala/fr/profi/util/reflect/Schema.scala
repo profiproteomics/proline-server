@@ -248,7 +248,7 @@ object Schema {
         annotateField( field, fieldSchema )
         
         (fieldName, fieldSchema)
-      } toList
+      }.toList
       
     }
 
@@ -258,6 +258,8 @@ object Schema {
   private def annotateField( field: Symbol, fieldSchema: Schema ) {
     field.annotations.find(_.tree.tpe =:= typeOf[FieldDescription]).map { fieldAnnotation =>
       val deprecatedDesc = fieldAnnotation.javaArgs.head._2.toString
+      val deprecatedDesc2 = fieldAnnotation.tree.children.tail.head.toString
+      System.out.println(" ---> annotateField : deprecatedDesc1 "+deprecatedDesc +"; deprecatedDesc2 "+deprecatedDesc2)
       val desc = fieldAnnotation.tree.children.last.productElement(1).toString
       assert( desc == deprecatedDesc, "The description has not been retrieved correctly by reflection")
       

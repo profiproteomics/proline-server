@@ -10,13 +10,13 @@ object ProfiJSONRPC2Response {
   def apply( result: java.lang.Object, requestId: java.lang.Object ): ProfiJSONRPC2Response  = {
     new ProfiJSONRPC2Response(result, requestId)
   }
-  
-  def apply( requestId: java.lang.Object ): ProfiJSONRPC2Response  = {
-    new ProfiJSONRPC2Response(requestId)
-  }
+//
+//  def apply( requestId: java.lang.Object ): ProfiJSONRPC2Response  = {
+//    new ProfiJSONRPC2Response(requestId)
+//  }
   
   def forError(error: JSONRPC2Error)( requestId: java.lang.Object): ProfiJSONRPC2Response  = {
-    val resp = new ProfiJSONRPC2Response(requestId)
+    val resp = new ProfiJSONRPC2Response(null, requestId)
     resp.setError(error)
     resp
   }
@@ -31,20 +31,12 @@ object ProfiJSONRPC2Response {
  * The Response result and id must be serializable via ProfiJson.
  *
  */
-class ProfiJSONRPC2Response() extends JSONRPC2Response() {
-  
-  def this(result: java.lang.Object, id: java.lang.Object) = {
-    this()
-    this.setResult(result)
-    this.setID(id)
-  }
-  
-  def this(id: java.lang.Object) = {
-    this()
-    this.setResult(null)
-    this.setID(id)
-  }
-  
+class ProfiJSONRPC2Response(result: java.lang.Object, id: java.lang.Object) extends JSONRPC2Response(result, id) {
+
+//  def this(id: java.lang.Object) = {
+//    this(null ,id)
+//  }
+//
   protected case class SerializableJSONRPC2Response(
     id: java.lang.Object,
     result: Any,

@@ -15,7 +15,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-import scala.collection.JavaConversions.collectionAsScalaIterable
+import scala.collection.JavaConverters._
 
 @Test
 class RFImporterNewPTMTest extends AbstractRFImporterTestCase {
@@ -104,7 +104,7 @@ class RFImporterNewPTMTest extends AbstractRFImporterTestCase {
       ).getSingleResult
       
       // Check we have inserted the right number of PTM specificities
-      val ptmSpecifs = psPTM.getSpecificities.toList
+      val ptmSpecifs = psPTM.getSpecificities.asScala.toList
       assertEquals( 11, ptmSpecifs.size )
       
       // Check we have inserted the right number of PTM evidences for the Methionine specificity

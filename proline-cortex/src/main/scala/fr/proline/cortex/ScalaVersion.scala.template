@@ -4,8 +4,8 @@ import fr.profi.util.version.IVersion
 
 class Version extends IVersion {
 
-  override val getModuleName = "@moduleName@"
+  override val getModuleName = "_moduleName_"
 
-  override val getVersion = "@version@"
+  override val getVersion = "_version_"
 
 }

@@ -4,9 +4,9 @@ import com.typesafe.scalalogging.StrictLogging
 import fr.proline.context.{BasicExecutionContext, IExecutionContext}
 import fr.proline.core.dal.{AbstractMultipleDBTestCase, BuildMsiDbConnectionContext, BuildUdsDbConnectionContext}
 import fr.proline.core.om.model.msi.{LocatedPtm, Peptide, ResultSet, TheoreticalFragmentSeries}
-import fr.proline.core.om.provider.msi.impl.{SQLPTMProvider, SQLPeptideProvider, SQLResultSetProvider}
-import fr.proline.core.om.provider.msi.{IPTMProvider, IPeptideProvider, IResultSetProvider}
 import fr.proline.core.om.provider.{PeptideCacheExecutionContext, ProviderDecoratedExecutionContext}
+import fr.proline.core.om.provider.msi.{IPTMProvider, IPeptideProvider, IResultSetProvider}
+import fr.proline.core.om.provider.msi.impl.{SQLPTMProvider, SQLPeptideProvider, SQLResultSetProvider}
 import fr.proline.repository.DriverType
 import org.junit.Assert.{assertEquals, fail}
 import org.junit.{After, Before, Test}

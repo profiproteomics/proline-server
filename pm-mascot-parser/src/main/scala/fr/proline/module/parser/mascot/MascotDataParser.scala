@@ -2,6 +2,7 @@ package fr.proline.module.parser.mascot
 
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.chemistry.model.MolecularConstants
+import fr.profi.util.StringUtils
 import fr.proline.core.om.model.msi._
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.{IPTMProvider, IPeptideProvider}
@@ -177,9 +178,9 @@ class MascotDataParser(
 
     logger.debug("Go through Queries/PSM done")
     logger.debug("Search for " + pepToPeptideMatches.size + " different Peptides.")
-    val pepsToSearch = Array.newBuilder[Pair[String, Array[LocatedPtm]]]
+    val pepsToSearch = Array.newBuilder[Tuple2[String, Array[LocatedPtm]]]
     pepToPeptideMatches.foreach(entry => {
-      pepsToSearch += Pair(entry._1.sequence, entry._1.ptms)
+      pepsToSearch += Tuple2(entry._1.sequence, entry._1.ptms)
     })
     val searchPeps = pepsToSearch.result
 
@@ -480,7 +481,12 @@ class MascotDataParser(
         val mascotMod = mascotResFile.params().getVarModsName(numMods) //Mascot Modif Name
 
         // Get corresponding PtmDefinition
-        val msVarPtms = MascotPTMUtils.mascotModToPTMDefinitions(ptmProvider, mascotMod)
+        val msVarPtms = if (StringUtils.isNotEmpty(mascotMod)) {
+          MascotPTMUtils.mascotModToPTMDefinitions(ptmProvider, mascotMod)
+        } else {
+          Array.empty[PtmDefinition]
+        }
+
         if (msVarPtms.isEmpty) {
           throw new Exception("Undefined PTM specified for peptide " + mascotPeptide.getQuery + " - " + mascotPeptide.getRank + " (" + mascotPeptide.getPeptideStr + ")")
         }

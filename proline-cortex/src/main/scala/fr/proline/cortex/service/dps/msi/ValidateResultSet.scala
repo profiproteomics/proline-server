@@ -327,7 +327,7 @@ abstract class AbstractValidateResultSet extends AbstractRemoteProcessingService
       msiDbConnectionContext.commitTransaction()
       msiDbTransacOk = true
 
-      result = rsValidator.targetRSMIdPerRsId
+      result = HashMap.empty[Long, Long] ++ rsValidator.targetRSMIdPerRsId
     } finally {
 
       if (!msiDbTransacOk) {

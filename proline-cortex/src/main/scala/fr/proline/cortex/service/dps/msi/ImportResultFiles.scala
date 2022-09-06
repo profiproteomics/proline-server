@@ -18,7 +18,7 @@ import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.fs.MountPointRegistry
 import fr.proline.jms.service.api.{AbstractRemoteProcessingService, ISingleThreadedService}
 
-import scala.collection.JavaConversions.mapAsScalaMap
+import scala.collection.JavaConverters._
 import scala.language.postfixOps
 import scala.util.matching.Regex
 
@@ -75,7 +75,7 @@ abstract class AbstractImportResultFiles extends AbstractRemoteProcessingService
     val instrumentConfigId = params.getLong(INSTRUMENT_CONFIG_ID_PARAM)
     val peaklistSoftwareId = params.getLong(PEAKLIST_SOFTWARE_ID_PARAM)
     val importerProperties = if (!params.hasParam(IMPORTER_PROPERTIES_PARAM)) Map.empty[String, Any]
-    else params.getMap(IMPORTER_PROPERTIES_PARAM).map {
+    else params.getMap(IMPORTER_PROPERTIES_PARAM).asScala.map {
       case (a, b) => {
         if (a.endsWith(".file")) {
           a -> MountPointRegistry.replacePossibleLabel(b.toString, Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname

@@ -3,7 +3,7 @@ package fr.proline.cortex.util.fs
 import java.nio.file.FileSystems
 import java.nio.file.Files
 
-import scala.collection.JavaConversions.asScalaSet
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -357,7 +357,7 @@ object MountPointRegistry extends LazyLogging {
 
     val defaultFileSystem = FileSystems.getDefault
     val invalidPathLabels = new ArrayBuffer[String]() 
-    val entries = config.entrySet
+    val entries = config.entrySet.asScala
 
     for (entry <- entries) {
       val label = entry.getKey
