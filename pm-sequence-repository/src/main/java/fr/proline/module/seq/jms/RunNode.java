@@ -129,7 +129,7 @@ public class RunNode {
 				}
 
 				m_connection.start(); // Start connection to begin Consumer reception
-				LOG.debug("JMS Connection : " + m_connection + "  started");
+				LOG.info("Sequence Repository JMS Connection started "); //used bu zero for detecting started
 			} catch (Exception ex) {
 				LOG.error("Error starting JMS Consumers", ex);
 				stopJMSConsumers();
