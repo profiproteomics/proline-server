@@ -433,6 +433,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
     ServiceRegistry.addService(new IdentifyPtmSites())
     ServiceRegistry.addService(new IdentifyPtmSitesV2_0())
+    ServiceRegistry.addService(new IdentifyPtmSitesV3_0())
     ServiceRegistry.addService(new ProlineResourceService())
     //VDS TEST only !
 //    ServiceRegistry.addService(new WaitService())

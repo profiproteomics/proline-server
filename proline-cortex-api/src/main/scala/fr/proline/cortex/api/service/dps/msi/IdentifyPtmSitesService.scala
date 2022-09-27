@@ -69,6 +69,9 @@ trait IIdentifyPtmSitesServiceV2 extends IMsiService {
   }
 
 }
+trait IIdentifyPtmSitesServiceV3 extends IIdentifyPtmSitesServiceV2 {
+  override val serviceVersion= "3.0"
+}
 
 trait IIdentifyPtmSitesParams {
 
