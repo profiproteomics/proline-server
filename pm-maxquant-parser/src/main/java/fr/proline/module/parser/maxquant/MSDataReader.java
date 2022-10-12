@@ -19,23 +19,13 @@ import java.net.URL;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvValidationException;
-import fr.proline.core.om.model.msi.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.opencsv.CSVReader;
-
-import fr.profi.util.StringUtils;
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext;
-import fr.proline.core.om.provider.msi.IPTMProvider;
-import fr.proline.core.om.provider.msi.IPeptideProvider;
-import fr.proline.module.parser.maxquant.model.ResultSetsDataMapper;
-import scala.Option;
 
 public class MSDataReader {
 
