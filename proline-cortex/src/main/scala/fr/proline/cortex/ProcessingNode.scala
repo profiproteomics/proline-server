@@ -1,6 +1,7 @@
 package fr.proline.cortex
 
 import java.io.File
+import java.util.ArrayList
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -15,6 +16,10 @@ import org.hornetq.core.remoting.impl.netty.TransportConstants
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.StringUtils
 import fr.profi.util.ThreadLogger
+import fr.proline.context.DatabaseConnectionContext
+import fr.proline.core.orm.uds.Project
+import fr.proline.core.orm.util.JsonSerializer
+import fr.proline.cortex.service.SingleThreadIdentifierType
 import fr.proline.cortex.service.admin.CreateProject
 import fr.proline.cortex.service.admin.GetConnectionTemplate
 import fr.proline.cortex.service.admin.UserAccount
@@ -39,12 +44,10 @@ import fr.proline.jms.util.ExpiredMessageConsumer
 import fr.proline.jms.util.JMSConstants.MAX_JMS_SERVER_PORT
 import fr.proline.jms.util.MonitoringTopicPublisherRunner
 import fr.proline.jms.util.NodeConfig
-import javax.jms.Connection
-import javax.jms.ExceptionListener
-import javax.jms.JMSException
+import javax.jms.{Connection, ExceptionListener, InvalidDestinationException, JMSException, Session}
 
 import scala.collection.mutable.ArrayBuffer
-
+import scala.collection.JavaConverters._
 
 object ProcessingNode extends LazyLogging {
 
@@ -104,6 +107,8 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
    */
   def startJMSConsumers() {
 
+    var tmpSession : Session = null
+
     m_lock.synchronized {
 
       if (m_connection != null) {
@@ -138,6 +143,16 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         // Step 4.Create a JMS Connection
         m_connection = cf.createConnection()
 
+        //Test queue exist => generate exception if not
+        tmpSession = m_connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
+        tmpSession.createConsumer(serviceRequestQueue)
+        try {
+            tmpSession.close()
+        } catch {
+            case exClose: JMSException => logger.error("Error closing temporary JMS Session", exClose)
+        }
+
+
         // Add an ExceptionListener to handle asynchronous Connection problems
         val exceptionListener = new ExceptionListener() {
           override def onException(exception: JMSException): Unit = {
@@ -155,23 +170,48 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
         initServices()
 
+        val threadPoolSize = NodeConfig.SERVICE_THREAD_POOL_SIZE
+
+        // Calculate how projects group is to be created => corresponding to import threads number : (SERVICE_THREAD_POOL_SIZE_KEY % 5) + 1
+        val nbrProjectGroupsMax =  (threadPoolSize / 5) + 1
+        //VDS WARNING. Currently Index 0 = all other projects. Change to "Not Project in groups" so list at index 0 contains all Ids of all groups
+        val projectIdsByGroup = getProjectIdsByGroup(nbrProjectGroupsMax)
+        val nbrProjectGroups = if(projectIdsByGroup != null) projectIdsByGroup.size else 0
+
+        /**** Create Executor for poolThreads and SingleThreads service ***/
         /* Create Executor */
         m_paralleleExecutor = Executors.newCachedThreadPool()
 
         val serviceMonitoringNotifier = new MonitoringTopicPublisherRunner(m_connection)
         m_paralleleExecutor.submit(serviceMonitoringNotifier)
 
-        /* Add SingleThreadedServiceRunner */
-        val handledSingleThreadedServiceIdents = ServiceRegistry.getSingleThreadedServicesByThreadIdent().keySet
-
-        var nbrSingleThreads = 0
-        for (threadIdent <- handledSingleThreadedServiceIdents) {
-          val singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier, threadIdent, true)
-          val singleThreadExecutor =  Executors.newSingleThreadExecutor()
+        /* Manage SingleThreadedServiceRunners : List of Services (a SingleThreadRunner) by ThreadIdent */
+        //Inner method to create SingleThreadRunner and add it to list/maps
+        def createSingleThreadRunner(singleThreadIdent: String, pIds: ArrayList[Long], useIdsAsNot : Boolean = false): Unit ={
+          val singleThreadedServiceRunner = new SingleThreadedServiceRunner(serviceRequestQueue, m_connection, serviceMonitoringNotifier, singleThreadIdent, true)
+          if(pIds != null && !pIds.isEmpty)
+            singleThreadedServiceRunner.setProjectIdsSelector(pIds.asScala.toArray, useIdsAsNot)
+          val singleThreadExecutor = Executors.newSingleThreadExecutor()
           m_singleExecutor += singleThreadExecutor
-          val singleThreadFuture =  singleThreadExecutor.submit(singleThreadedServiceRunner)
+          val singleThreadFuture = singleThreadExecutor.submit(singleThreadedServiceRunner)
           ServiceManager.addRunnale2FutureEntry(singleThreadedServiceRunner, singleThreadFuture)
-          nbrSingleThreads += 1
+        }
+
+        val handledSingleThreadedServiceIdents = ServiceRegistry.getSingleThreadedServicesByThreadIdent().keySet
+        var nbrSingleThreads = 0
+        for (threadIdent <- handledSingleThreadedServiceIdents) { //For each list of service (for a specific ThreadIdent)
+
+          //Manage specific ImportServiceThread : if more than one group and at threadPoolSize >=  5
+          if(threadIdent.equals(SingleThreadIdentifierType.IMPORT_SINGLETHREAD_IDENT.toString) && nbrProjectGroups >0 && threadPoolSize>=5){
+            for(index <- 0 until nbrProjectGroups){
+              val useIdsAsNot = index == 0
+              createSingleThreadRunner(threadIdent, projectIdsByGroup.get(index),useIdsAsNot)
+              nbrSingleThreads += 1
+            }
+          } else {
+            createSingleThreadRunner(threadIdent, null)
+            nbrSingleThreads += 1
+          }
         }
 
         // Start Expired Message Listener
@@ -195,18 +235,131 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
         logger.info(" ************ Proline Cortex successfully started !")
       } catch {
 
+        case ide: InvalidDestinationException => {
+          logger.error("WARNING: JMS Server may not be configured correctly. Verify it's host, port and queue name in jms-node.config !", ide)
+          closeSession(tmpSession)
+        }
 
         case ex: Throwable => {
           logger.error("Error starting JMS Consumers", ex)
-
-          stopJMSConsumers()
+          closeSession(tmpSession)
         }
 
       }
 
     } // End of synchronized block on m_lock
-
   }
+
+  private def closeSession (tmpSession : Session): Unit = {
+    if (tmpSession != null) {
+      try {
+        tmpSession.close()
+      } catch {
+        case exClose: JMSException => logger.error("Error closing temporary JMS Session", exClose)
+      }
+    }
+    stopJMSConsumers()
+  }
+
+  /**
+   * Group project Ids depending on their serializedProperties. If too much group specified, few groups will be regrouped
+   * to keep only "nbrGroupMax" group.
+   * The first group correspond to all unclassified projects. Currently this will contains Ids of all other group to apply
+   * a NOT IN operator.
+   * In further version, we should modify it to be able to add new Ids dynamically when Create Project is called
+   *
+   */
+  private def getProjectIdsByGroup(nbrGroupMax : Int): ArrayList[ArrayList[Long]] = {
+    val connectorFactory = DbConnectionHelper.getDataStoreConnectorFactory()
+    val udsDbConnectionContext = new DatabaseConnectionContext(connectorFactory.getUdsDbConnector)
+
+    try{
+      val allProjects = udsDbConnectionContext.getEntityManager.createQuery("SELECT p FROM fr.proline.core.orm.uds.Project p", classOf[Project]).getResultList
+      val projectIdsByGroup = new mutable.HashMap[Long, ArrayList[Long]]()
+
+      //Create Map of Project Ids list by import group number
+      allProjects.asScala.foreach(p => {
+        var groupeId: Int = -1
+        val serializedPropertiesStr = p.getSerializedProperties
+        if (serializedPropertiesStr != null && !serializedPropertiesStr.isEmpty) { //an import group property may have be specified
+          val serializedPropertiesMap = JsonSerializer.getMapper.readValue(serializedPropertiesStr, classOf[java.util.Map[String, Object]])
+          if (serializedPropertiesMap.containsKey("import_group")) {
+            try {
+              groupeId = serializedPropertiesMap.get("import_group").asInstanceOf[Int]
+            } catch {
+              case  ex: ClassCastException => groupeId = -1
+            }
+
+            if (groupeId != -1) {
+              val pIds = projectIdsByGroup.getOrElseUpdate(groupeId, new ArrayList[Long]())
+              pIds.add(p.getId)
+            }
+          }
+        }
+
+        if (groupeId == -1) { // No import group property specified, group all "inclassified" project into group -1
+          val pIds = projectIdsByGroup.getOrElseUpdate(groupeId, new ArrayList[Long]())
+          pIds.add(p.getId)
+        }
+      })
+
+
+      //No Project found at all !
+      if(projectIdsByGroup.isEmpty) {
+        return  new ArrayList[ArrayList[Long]]()
+      }
+
+      val allProjectsClassed = new ArrayList[ArrayList[Long]]()
+
+      // Set Unclassified projects at index 0: Even if empty.
+//      if(projectIdsByGroup.containsKey(-1)) { //Unclassified projects defined
+//        allProjectsClassed.add(0,projectIdsByGroup(-1))
+//      } else
+//        allProjectsClassed.add(0,new util.ArrayList[Long]())
+      // VDS Create a first group with all grouped Ids
+      val allClassedProjectsId = new ArrayList[Long]()
+      projectIdsByGroup.foreach(projBygId  =>{
+        if(projBygId._1 != -1)
+          allClassedProjectsId.addAll(projBygId._2)
+      })
+      allProjectsClassed.add(0,allClassedProjectsId)
+
+      //If less project groups was specified than max group count : just return defined groups
+      if(projectIdsByGroup.size <= nbrGroupMax){
+        for(key <- projectIdsByGroup.keySet ){
+          if(key != -1) {
+            allProjectsClassed.add(projectIdsByGroup(key))
+          }
+        }
+
+      } else {
+        //should regroup projects group to have only  "max group count" group
+        var startIndex = 1  // Don't group other projects with "Unclassified projects"
+        var allProjectsIndex = startIndex
+        for(key <- projectIdsByGroup.keySet ){
+          if(key != -1){
+
+            val projectsInGroup = new ArrayList[Long]()
+            projectsInGroup.addAll(projectIdsByGroup(key)) // get current project group
+
+            if(allProjectsIndex < allProjectsClassed.size()) { //There are some Projects registered at allProjectsIndex
+              projectsInGroup.addAll(allProjectsClassed.get(allProjectsIndex))
+              allProjectsClassed.set(allProjectsIndex, projectsInGroup)
+            } else
+              allProjectsClassed.add(allProjectsIndex, projectsInGroup)
+
+            allProjectsIndex = allProjectsIndex+1
+            if(allProjectsIndex == nbrGroupMax) // when max is reached, restart grouping projects from index 1
+              allProjectsIndex = startIndex
+          }
+        }
+      }
+      allProjectsClassed
+    } finally {
+      DbConnectionHelper.tryToCloseDbContext(udsDbConnectionContext)
+    }
+  }
+
 
   private def initFileSystem() {
 
@@ -234,7 +387,8 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     if (NodeConfig.ENABLE_IMPORTS) {
       ServiceRegistry.addService(new ImportResultFilesDecoyRegExp())
       ServiceRegistry.addService(new ImportResultFilesProtMatchDecoyRule())
-      ServiceRegistry.addService(new ImportValidateGenerateSM())
+      ServiceRegistry.addService(new ImportValidateGenerateSMV1())
+      ServiceRegistry.addService(new ImportValidateGenerateSMV2())
       logger.info("This node HANDLES Result Files Import")
     } else {
       logger.info("This node does NOT handle Result Files Import")

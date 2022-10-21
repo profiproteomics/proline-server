@@ -12,6 +12,7 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
   protected val pepMatchFieldSet = Set(
     FIELD_PSM_PEPTIDE_ID,
     FIELD_PSM_SEQUENCE,
+    FIELD_PSM_SEQUENCE_NONE_AMBIGUOUS,
     FIELD_PSM_MODIFICATIONS,
     FIELD_PSM_PTM_PROTEIN_POSITIONS,
     FIELD_PSM_ID,
@@ -107,6 +108,7 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
       val fieldValue: Any = fieldConfig.id match {
         case FIELD_PSM_PEPTIDE_ID => peptide.id
         case FIELD_PSM_SEQUENCE => peptide.sequence
+        case FIELD_PSM_SEQUENCE_NONE_AMBIGUOUS => pepMatch.getDisambiguatedSeq()
         case FIELD_PSM_MODIFICATIONS => peptide.readablePtmString
         case FIELD_PSM_PTM_PROTEIN_POSITIONS => ptmProtPositions
         case FIELD_PSM_ID => pepMatch.id
@@ -123,7 +125,7 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
         case FIELD_PSM_CD_PRETTY_RANK => pepMatch.cdPrettyRank
         case FIELD_PSM_FRAGMENT_MATCHES_COUNT => pepMatch.fragmentMatchesCount
         case FIELD_PSM_SPECTRUM_TITLE => msQueryOpt.map(_.spectrumTitle).orNull
-        case FIELD_PSM_NB_PROTEIN_SETS => identDS.validProtSetIdSetByPeptideId.get(peptide.id).map(_.size).getOrElse(0)
+        case FIELD_PSM_NB_PROTEIN_SETS => identDS.validProtSetsByPeptideId.get(peptide.id).map(_.size).getOrElse(0)
         case FIELD_PSM_NB_SAMESET_PROTEIN_MATCHES => identDS.validSamesetProtMatchIdSetByPepMatchId.get(pepMatch.id).map(_.size).getOrElse(0)
         case FIELD_PSM_NB_PROTEIN_MATCHES => identDS.validProtMatchIdSetByPepMatchId.get(pepMatch.id).map(_.size).getOrElse(0)
         case FIELD_PSM_NB_DATABANK_PROTEIN_MATCHES => identDS.allProtMatchSetByPepId.get(peptide.id).map(_.size).getOrElse(0)

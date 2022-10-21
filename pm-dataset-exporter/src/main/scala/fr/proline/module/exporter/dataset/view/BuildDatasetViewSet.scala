@@ -187,6 +187,7 @@ object BuildDatasetViewSet extends LazyLogging {
         this._buildBioSequenceLoader(msiDbCtx, lazyRsm),
         this._buildSpectraLoader(msiDbCtx),
         this._buildPepMatchesLoader(executionContext),
+        this._buildPeptidesLoader(executionContext),
         this._buildPTMDatasetLoader(executionContext, rsmId)
       )
 
@@ -398,6 +399,7 @@ object BuildDatasetViewSet extends LazyLogging {
         this._buildBioSequenceLoader(msiDbCtx, lazyQuantRSM.lazyResultSummary),
         this._buildSpectraLoader(msiDbCtx),
         this._buildPepMatchesLoader(executionContext),
+        this._buildPeptidesLoader(executionContext),
         this._buildPepMatchesByMsQIdLoader(executionContext),
         Option(peptideCountByProtMatchIdByQCId),
         Option(peptideCountByMqProtSetIdByQCId),
@@ -452,6 +454,13 @@ object BuildDatasetViewSet extends LazyLogging {
 
   }
 
+  private def _buildPeptidesLoader(executionContext: IExecutionContext) = { pepsId: Array[Long] =>
+    logger.debug(s"Loading peptides ... ${pepsId.length}")
+    val peptidesProvider = new SQLPeptideProvider(PeptideCacheExecutionContext(executionContext))
+    peptidesProvider.getPeptides(pepsId)
+
+  }
+
   private def _buildPepMatchesByMsQIdLoader(executionContext: IExecutionContext) = { msQueriesIds: Array[Long] =>
     logger.debug(s"Loading peptide Matches from msQuery Ids ... ${msQueriesIds.length}")
     val peptideMatchProvider = new SQLPeptideMatchProvider(PeptideCacheExecutionContext(executionContext))
@@ -464,13 +473,25 @@ object BuildDatasetViewSet extends LazyLogging {
 
     DoJDBCReturningWork.withEzDBC(executionContext.getMSIDbConnectionContext) { msiEzDBC =>
 
-      val ptmObjectTreeQuery = new SelectQueryBuilder1(MsiDbResultSummaryObjectTreeMapTable).mkSelectQuery((t, c) =>
-        List(t.*) -> "WHERE " ~ t.RESULT_SUMMARY_ID ~ s" = '${rsmId}'" ~ " AND " ~ t.SCHEMA_NAME ~ s" = '${SchemaName.PTM_DATASET.toString}'"
+      val annotatedPtmObjectTreeQuery = new SelectQueryBuilder1(MsiDbResultSummaryObjectTreeMapTable).mkSelectQuery((t, c) =>
+        List(t.*) -> "WHERE " ~ t.RESULT_SUMMARY_ID ~ s" = '${rsmId}'" ~ " AND " ~ t.SCHEMA_NAME ~ s" = '${SchemaName.PTM_DATASET_ANNOTATED.toString}'"
       )
 
-      val objectTreeIdOpt = msiEzDBC.select(ptmObjectTreeQuery) { r =>
+      var objectTreeIdOpt = msiEzDBC.select(annotatedPtmObjectTreeQuery) { r =>
         toLong(r.getAny(MsiDbResultSummaryObjectTreeMapTable.columns.OBJECT_TREE_ID))
       }.headOption
+
+      if(!objectTreeIdOpt.isDefined) {
+        val ptmObjectTreeQuery = new SelectQueryBuilder1(MsiDbResultSummaryObjectTreeMapTable).mkSelectQuery((t, c) =>
+          List(t.*) -> "WHERE " ~ t.RESULT_SUMMARY_ID ~ s" = '${rsmId}'" ~ " AND " ~ t.SCHEMA_NAME ~ s" = '${SchemaName.PTM_DATASET.toString}'"
+        )
+
+        objectTreeIdOpt = msiEzDBC.select(ptmObjectTreeQuery) { r =>
+          toLong(r.getAny(MsiDbResultSummaryObjectTreeMapTable.columns.OBJECT_TREE_ID))
+        }.headOption
+
+      }
+
 
       if (objectTreeIdOpt.isDefined) {
         val ptmSiteQuery = new SelectQueryBuilder1(MsiDbObjectTreeTable).mkSelectQuery((t, c) =>

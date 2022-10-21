@@ -38,6 +38,7 @@ object JMSConstants {
   /* JMS Message Property keys (Proline_ ) */
   val PROLINE_NODE_ID_KEY = "Proline_NodeId"
   val PROLINE_SERVICE_NAME_KEY = "Proline_ServiceName"
+  val PROLINE_SERVICE_PROJECT_ID_KEY = "Proline_Service_ProjectId"
   val PROLINE_SERVICE_VERSION_KEY = "Proline_ServiceVersion"
   val PROLINE_SERVICE_SOURCE_KEY = "Proline_ServiceSource"
   val PROLINE_SERVICE_DESCR_KEY = "Proline_ServiceDescription"  

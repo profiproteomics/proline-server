@@ -133,6 +133,7 @@ object ExportConfigConstant {
   // see  also FIELD_PROTEIN_SETS_*
   val FIELD_PSM_PEPTIDE_ID = "psm_peptide_id"
   val FIELD_PSM_SEQUENCE = "psm_sequence"
+  val FIELD_PSM_SEQUENCE_NONE_AMBIGUOUS = "none_ambiguous_psm_sequence"
   val FIELD_PSM_MODIFICATIONS = "psm_modifications"
   val FIELD_PSM_PTM_PROTEIN_POSITIONS = "psm_ptm_protein_positions"
   val FIELD_PSM_ID = "psm_id"
@@ -178,7 +179,10 @@ object ExportConfigConstant {
   
   // MasterQuantReporterIon sheet
   val SHEET_MASTER_QUANT_REPORTER_ION = "master_quant_reporter_ion"
-  
+  val FIELD_MASTER_QUANT_PEPTIDE_PROTEIN_SETS = "master_quant_peptide_protein_sets"
+
+  val SHEET_MASTER_QUANT_PEPTIDE = "master_quant_peptide"
+
   // Some properties shared between quantitation sheets
   val FIELD_PROFILIZER_RATIO = "ratio" // incremental
   val FIELD_PROFILIZER_TTEST_PVALUE = "t-test_pvalue" // incremental
@@ -214,6 +218,9 @@ object ExportConfigConstant {
   val FIELD_PTM_CLUSTER_NB_PEPTIDES = "ptm_cluster_nb_peptides"
   val FIELD_PTM_CLUSTER_NB_SITES = "ptm_cluster_nb_sites"
   val FIELD_PTM_CLUSTER_SITES_LOCALISATION = "ptm_cluster_sites_localisation"
+  val FIELD_PTM_CLUSTER_IS_VALIDATED = "ptm_cluster_is_validated"
+  val FIELD_PTM_CLUSTER_VALIDATION_CONFIDENCE= "ptm_cluster_validation_confidence"
+  val FIELD_PTM_CLUSTER_VALIDATION_INFO= "ptm_cluster_validation_information"
   val FIELD_PTM_CLUSTER_LOCALISATION_CONFIDENCE= "ptm_cluster_localisation_confidence"
 
 }

@@ -177,6 +177,7 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
           }
           // from this point, use accession instead of proteinItem.label
           // for each Domain (peptide)
+//          logger.trace(" Create Peptide fot protein "+proteinItem.label)
           proteinItem.peptide.domainList.foreach(peptideItem => {
             // when "include reverse" parameter is set to yes, tag ":reversed" is added to the protein description
             val isDecoy = proteinItem.note.info.endsWith(":reversed")
@@ -399,16 +400,20 @@ class XtandemParser(val xtandemFile: File, val parserContext: ProviderDecoratedE
         _ptm = msiSearch.searchSettings.variablePtmDefs.filter(ptmDef => ptmMatch(ptmDef, ptmMass, ptmPosition, ptmResidue, peptide.start, peptide.end, peptide.pre, peptide.post)).headOption
       }
       if (_ptm.isDefined) {
+        var locatedPtmFound = false //Only create 1 locatedPTM per "aaMarkup"
         _ptm.get.ptmEvidences.filter(e => e.ionType.equals(IonTypes.Precursor) && scala.math.abs(ptmMass - e.monoMass) <= XtandemPtmVerifier.ptmMonoMassMargin).foreach(e => {
-          if (_ptm.get.location matches ".+N-term$") {
+          if ( (_ptm.get.location matches ".+N-term$" ) && !locatedPtmFound) {
             locatedPtms += new LocatedPtm(definition = _ptm.get, seqPosition = 0, monoMass = e.monoMass, averageMass = e.averageMass, 
                 composition = e.composition, isNTerm = true, isCTerm = false)
-          } else if (_ptm.get.location matches ".+C-term$") {
+            locatedPtmFound=true
+          } else if ((_ptm.get.location matches ".+C-term$") && !locatedPtmFound) {
             locatedPtms += new LocatedPtm(definition = _ptm.get, seqPosition = -1, monoMass = e.monoMass, averageMass = e.averageMass, 
                 composition = e.composition, isNTerm = false, isCTerm = true)
-          } else {
+            locatedPtmFound=true
+          } else if(!locatedPtmFound){
             locatedPtms += new LocatedPtm(definition = _ptm.get, seqPosition = ptmPosition - peptide.start + 1, monoMass = e.monoMass, averageMass = e.averageMass, 
                 composition = e.composition, isNTerm = false, isCTerm = false)
+            locatedPtmFound=true
           }
         })
       } else {

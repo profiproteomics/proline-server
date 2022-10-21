@@ -57,7 +57,6 @@ class ProtSetToAllPepMatchesView(
               val identRecordBuildingCtx = new PepMatchBuildingContext(
                 pepMatch = pepMatch,
                 isInSubset = false,
-                protMatch = reprProtMatch,
                 seqMatch = seqMatch,
                 protMatchBuildingCtx = Some(protMatchBuildingCtx)
               )
@@ -69,7 +68,6 @@ class ProtSetToAllPepMatchesView(
             for (pepMatch <- allPepMatches.sortBy(_.charge)) {
               val quantRecordBuildingCtx = new MasterQuantPeptideBuildingContext(
                 pepMatch = pepMatch,
-                protMatch = reprProtMatch,
                 seqMatch = seqMatch,
                 protMatchBuildingCtx = Some(protMatchBuildingCtx),
                 mqPepOpt.get,

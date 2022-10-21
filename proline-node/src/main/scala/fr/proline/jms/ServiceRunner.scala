@@ -1,6 +1,7 @@
 package fr.proline.jms
 
 import java.util.concurrent.Future
+
 import scala.collection.mutable
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Error
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
@@ -14,19 +15,7 @@ import fr.proline.jms.service.api.IRemoteJsonRPC2Service
 import fr.proline.jms.service.api.IRemoteServiceIdentity
 import fr.proline.jms.service.api.ISingleThreadedService
 import fr.proline.jms.util.IServiceMonitoringNotifier
-import fr.proline.jms.util.JMSConstants.JMSCorrelationID
-import fr.proline.jms.util.JMSConstants.JMSDestination
-import fr.proline.jms.util.JMSConstants.JMSMessageID
-import fr.proline.jms.util.JMSConstants.JMSReplyTo
-import fr.proline.jms.util.JMSConstants.JMSTimestamp
-import fr.proline.jms.util.JMSConstants.MESSAGE_ERROR_CODE
-import fr.proline.jms.util.JMSConstants.PROLINE_NODE_ID_KEY
-import fr.proline.jms.util.JMSConstants.PROLINE_SERVICE_DESCR_KEY
-import fr.proline.jms.util.JMSConstants.PROLINE_SERVICE_NAME_KEY
-import fr.proline.jms.util.JMSConstants.PROLINE_SERVICE_SOURCE_KEY
-import fr.proline.jms.util.JMSConstants.PROLINE_SERVICE_VERSION_KEY
-import fr.proline.jms.util.JMSConstants.SERVICE_ERROR_CODE
-import fr.proline.jms.util.JMSConstants.CANCELLED_MSG_ERROR_CODE
+import fr.proline.jms.util.JMSConstants._
 import fr.proline.jms.util.MonitoringTopicPublisherRunner
 import fr.proline.jms.util.NodeConfig
 import javax.jms.BytesMessage
@@ -63,6 +52,35 @@ object ServiceRunner extends LazyLogging {
   }
 
   def buildConcreteSelectorString(handledServices: Seq[IRemoteServiceIdentity], parallelizableRunner: Boolean): String = {
+    buildConcreteSelectorString(handledServices, parallelizableRunner, null)
+  }
+
+  private def addSpecificDataToSelector( service: IRemoteServiceIdentity, selectorBuffer : StringBuilder, specificProjectIdsSelector : Array[Long], useProjectIdsAsNot : Boolean): Unit ={
+    if(service.isNodeSpecific){ //Add node ID in condition
+      selectorBuffer.append(" AND (").append(PROLINE_NODE_ID_KEY)
+      selectorBuffer.append(" = \'").append(NodeConfig.NODE_ID).append("\')")
+    }
+
+    if(specificProjectIdsSelector != null && !specificProjectIdsSelector.isEmpty){
+      val idsAsStr = new StringBuilder()
+      for(index <- 0 until( specificProjectIdsSelector.size)) {
+        if(index>0)
+          idsAsStr.append(",")
+        idsAsStr.append("\'").append(specificProjectIdsSelector(index).toString).append("\'")
+      }
+
+      selectorBuffer.append(" AND (").append(PROLINE_SERVICE_PROJECT_ID_KEY)
+      if(useProjectIdsAsNot)
+        selectorBuffer.append(" NOT IN (")
+      else
+        selectorBuffer.append(" IN (")
+
+      selectorBuffer.append(idsAsStr.result()).append(") )")
+    }
+
+  }
+
+  def buildConcreteSelectorString(handledServices: Seq[IRemoteServiceIdentity], parallelizableRunner: Boolean, specificProjectIdsSelector : Array[Long], useProjectIdsAsNot : Boolean = false): String = {
     require(handledServices != null, "handledServices List is null")
 
     val buff = new StringBuilder()
@@ -97,14 +115,12 @@ object ServiceRunner extends LazyLogging {
         buff.append("\n OR ")
       }
 
+      // First condition using version
       buff.append("((").append(PROLINE_SERVICE_NAME_KEY)
       buff.append(" = \'").append(service.serviceName).append("\') AND (")
       buff.append(PROLINE_SERVICE_VERSION_KEY)
       buff.append(" = \'").append(service.serviceVersion).append("\')")
-      if(service.isNodeSpecific){ //Add node ID in condition
-        buff.append(" AND (").append(PROLINE_NODE_ID_KEY)
-        buff.append(" = \'").append(NodeConfig.NODE_ID).append("\')")
-      }        
+      addSpecificDataToSelector(service, buff,  specificProjectIdsSelector, useProjectIdsAsNot)
       buff.append(")") //close condition
 
       if (service.isDefaultVersion) {
@@ -113,10 +129,7 @@ object ServiceRunner extends LazyLogging {
         buff.append(" = \'").append(service.serviceName).append("\') AND (")
         buff.append(PROLINE_SERVICE_VERSION_KEY)
         buff.append(" IS NULL)")
-        if(service.isNodeSpecific){ //Add node ID in condition
-          buff.append(" AND (").append(PROLINE_NODE_ID_KEY)
-          buff.append(" = \'").append(NodeConfig.NODE_ID).append("\')")
-        }   
+        addSpecificDataToSelector(service, buff,  specificProjectIdsSelector, useProjectIdsAsNot)
         buff.append(")") //close condition
       }
       
@@ -229,20 +242,24 @@ class ServiceRunner(queue: Queue, connection: Connection, serviceMonitoringNotif
       while (goOn) {
 
         try {
+
           val message = consumer.receive() // blocks indefinitely
 
           if (message == null) {
             goOn = false            
             logger.warn("Consumer connection is closed: exiting receive loop") 
-          } else if (resourceService.serviceName.equals(message.getStringProperty(PROLINE_SERVICE_NAME_KEY)) &&
-            nodeId.equals(message.getStringProperty(PROLINE_NODE_ID_KEY))) {
-            /* Special ResourceService handling */
-            resourceService.handleMessage(session, message, replyProducer, serviceMonitoringNotifier)
           } else {
-            /* Normal Service Request handling */
-            handleMessage(session, message, replyProducer)
+            val result = message.getStringProperty(PROLINE_SERVICE_PROJECT_ID_KEY);
+            logger.info("********* Receive Message with project ID  "+result)
+            if (resourceService.serviceName.equals(message.getStringProperty(PROLINE_SERVICE_NAME_KEY)) &&
+              nodeId.equals(message.getStringProperty(PROLINE_NODE_ID_KEY))) {
+              /* Special ResourceService handling */
+              resourceService.handleMessage(session, message, replyProducer, serviceMonitoringNotifier)
+            } else {
+              /* Normal Service Request handling */
+              handleMessage(session, message, replyProducer)
+            }
           }
-
         } catch {
           /* Catch all Throwable to run INFINITE loop */
           case t: Throwable => logger.error("Got unexpected error while running the consumer reception loop", t)
@@ -634,12 +651,19 @@ class SingleThreadedServiceRunner(queue: Queue, connection: Connection, serviceM
   require(!StringUtils.isEmpty(serviceIdent), "Invalid single thread service identification ")
 
   val handledServices = retrieveHandledServices()
+  var m_specificProjectIdsSelector : Array[Long] = null
+  var m_useProjectIdsAsNot = false
 
   require(handledServices != null && !handledServices.isEmpty, s"No SingleThreadedService for [$serviceIdent]")
 
+  def setProjectIdsSelector(projectIds : Array[Long], useProjectIdsAsNot: Boolean ): Unit ={
+    m_specificProjectIdsSelector = projectIds
+    m_useProjectIdsAsNot = useProjectIdsAsNot
+  }
+
   protected override def buildSelectorString(): String = {
     /* NON-Parallelizable ServiceRunner */
-    buildConcreteSelectorString(handledServices, false)
+    buildConcreteSelectorString(handledServices, false, m_specificProjectIdsSelector, m_useProjectIdsAsNot)
   }
 
   /* Private methods */
