@@ -111,7 +111,7 @@ class MasterQuantPeptideIonBuildingContext(
 
 class MasterQuantReporterIonBuildingContext(
   pepMatch: PeptideMatch,
-    seqMatch: SequenceMatch,
+  seqMatch: SequenceMatch,
   protMatchBuildingCtx: Option[ProtMatchBuildingContext],
   masterQuantPeptide: MasterQuantPeptide,
   masterQuantPeptideIon: MasterQuantPeptideIon,
