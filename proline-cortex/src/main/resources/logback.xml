@@ -64,8 +64,8 @@
   </appender>
 
 
-  <logger name="fr.profi" level="debug"/>
-  <logger name="fr.proline" level="debug"/>
+  <logger name="fr.profi" level="trace"/>
+  <logger name="fr.proline" level="trace"/>
   
 
   <logger name="fr.profi.mzdb" additivity="false">
