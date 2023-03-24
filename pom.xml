@@ -33,7 +33,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <core.version>2.3.0-SNAPSHOT</core.version>  <!-- core version to use in all modules-->
+        <core.version>2.3.0tmt-SNAPSHOT</core.version>  <!-- core version to use in all modules-->
         <mzdb.version>1.2.0-SNAPSHOT</mzdb.version>  <!-- mzdb version to use in all modules -->
         <commons.version>1.2.0-SNAPSHOT</commons.version>
         <server.version>${project.version}</server.version>  <!-- server version to use in all modules -->
