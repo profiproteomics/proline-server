@@ -71,10 +71,11 @@ class ComputeQuantPostProcessingV2 extends AbstractRemoteProcessingService with 
     logger.debug("Quantification Post Processing with following config: " + serialize(quantPostProcessingConfig))
     //For tests only ! VDS FIXME get default purity correction matrix.. to remove
     val matrixFolder : Option[File] =  if(quantPostProcessingConfig.usePurityCorrectionMatrix && quantPostProcessingConfig.purityCorrectionMatrix.isEmpty){
-      if(SetupProline.getUpdatedConfig().dataDirectoryOpt.isEmpty)
+      if(!SetupProline.getConfigParams().hasPath("proline-config") || !SetupProline.getConfigParams().getConfig("proline-config").hasPath("data-directory") )
         throw new RuntimeException(" Can not access to Data Directory to get default matrix !")
 
-        Some(SetupProline.getUpdatedConfig().dataDirectoryOpt.get)
+      val fileName = SetupProline.getConfigParams().getConfig("proline-config").getString("data-directory")
+      Some(new File(fileName))
     } else None
 
     val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId) // Use JPA context
