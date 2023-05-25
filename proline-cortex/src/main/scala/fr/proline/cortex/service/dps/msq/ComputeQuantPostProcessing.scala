@@ -69,19 +69,19 @@ class ComputeQuantPostProcessingV2 extends AbstractRemoteProcessingService with 
 
     val quantPostProcessingConfig = deserialize[PostProcessingConfig](quantConfAsStr)
     logger.debug("Quantification Post Processing with following config: " + serialize(quantPostProcessingConfig))
-    //For tests only ! VDS FIXME get default purity correction matrix.. to remove
-    val matrixFolder : Option[File] =  if(quantPostProcessingConfig.usePurityCorrectionMatrix && quantPostProcessingConfig.purityCorrectionMatrix.isEmpty){
-      if(!SetupProline.getConfigParams().hasPath("proline-config") || !SetupProline.getConfigParams().getConfig("proline-config").hasPath("data-directory") )
-        throw new RuntimeException(" Can not access to Data Directory to get default matrix !")
-
-      val fileName = SetupProline.getConfigParams().getConfig("proline-config").getString("data-directory")
-      Some(new File(fileName))
-    } else None
+//    //For tests only ! VDS FIXME get default purity correction matrix.. to remove
+//    val matrixFolder : Option[File] =  if(quantPostProcessingConfig.usePurityCorrectionMatrix && quantPostProcessingConfig.purityCorrectionMatrix.isEmpty){
+//      if(!SetupProline.getConfigParams().hasPath("proline-config") || !SetupProline.getConfigParams().getConfig("proline-config").hasPath("data-directory") )
+//        throw new RuntimeException(" Can not access to Data Directory to get default matrix !")
+//
+//      val fileName = SetupProline.getConfigParams().getConfig("proline-config").getString("data-directory")
+//      Some(new File(fileName))
+//    } else None
 
     val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId) // Use JPA context
 
     try {
-      val quantPostProcessComputer = QuantPostProcessingComputer(execCtx, mqcId, quantPostProcessingConfig, matrixFolder)
+      val quantPostProcessComputer = QuantPostProcessingComputer(execCtx, mqcId, quantPostProcessingConfig)
 
       this.logger.info("Starting quantitation Post Processing for Master Quant Channel with id=" + mqcId)
       quantPostProcessComputer.run()
