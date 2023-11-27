@@ -86,3 +86,8 @@ trait IQuantifyServiceV3 extends IQuantifyService  {
   override val isDefaultVersion = false
 }
 
+trait IQuantifyServiceV4 extends IQuantifyService  {
+  override val serviceVersion = "4.0"
+  override val isDefaultVersion = false
+}
+
