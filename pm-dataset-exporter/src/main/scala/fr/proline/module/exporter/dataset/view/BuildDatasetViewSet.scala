@@ -188,7 +188,8 @@ object BuildDatasetViewSet extends LazyLogging {
         this._buildSpectraLoader(msiDbCtx),
         this._buildPepMatchesLoader(executionContext),
         this._buildPeptidesLoader(executionContext),
-        this._buildPTMDatasetLoader(executionContext, rsmId)
+        this._buildPTMDatasetLoader(executionContext, rsmId),
+        dsId
       )
 
       this.apply(identDs, viewSetName, viewSetTemplate, exportConfig)
@@ -403,7 +404,8 @@ object BuildDatasetViewSet extends LazyLogging {
         this._buildPepMatchesByMsQIdLoader(executionContext),
         Option(peptideCountByProtMatchIdByQCId),
         Option(peptideCountByMqProtSetIdByQCId),
-        this._buildPTMDatasetLoader(executionContext, quantRsmId)
+        this._buildPTMDatasetLoader(executionContext, quantRsmId),
+        dsId
       )
 
       this.apply(quantDs, viewSetName, viewSetTemplate, exportConfig)

@@ -256,6 +256,9 @@ object CustomFieldConfigFactory {
   // get all fields for stat sheet
   def getStatisticsSheetFields(): Array[CustomFieldConfig] = {
     Array(
+      CustomFieldConfig(FIELD_STAT_MODULE_VERSION, "version"),
+      CustomFieldConfig(FIELD_STAT_DATASET_ID, "dataset_id"),
+      CustomFieldConfig(FIELD_STAT_DATASET_IS_QUANT, "dataset_is_quant"),
       CustomFieldConfig(FIELD_STAT_PSM_VALIDATION, "psm_validation"),
       CustomFieldConfig(FIELD_STAT_NB_TOTAL_PSMS, "#total_psms"),
       CustomFieldConfig(FIELD_STAT_NB_TOTAL_PRECURSORS, "#total_precursors"),

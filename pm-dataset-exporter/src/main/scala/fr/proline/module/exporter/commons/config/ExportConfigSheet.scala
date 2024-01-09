@@ -134,7 +134,7 @@ object ExportConfigSheet {
   def getStatisticsSheetExportConfig(defaultDisplayed: Boolean = true): ExportConfigSheet = {
     ExportConfigSheet(
       id = ExportConfigConstant.SHEET_STAT,
-      title = "Dataset statistics",
+      title = "Dataset statistics and infos",
       presentation = ExportConfigConstant.PRESENTATION_SHEET_ROWS,
       fields = CustomFieldConfigFactory.getStatisticsSheetFields(),
       defaultDisplayed
