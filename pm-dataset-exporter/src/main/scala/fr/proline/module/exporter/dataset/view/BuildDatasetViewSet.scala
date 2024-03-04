@@ -207,7 +207,7 @@ object BuildDatasetViewSet extends LazyLogging {
       // FIXME: how to deal with other MQC ids
       val masterQuantChannelId = masterQcIds.head
       
-      val( quantConfigAndMethodOpt, quantConfigSchemaName, profilizerConfigOpt) = if (mode != ExportConfigConstant.MODE_QUANT_XIC) (None,None, None)
+      val( quantConfigAndMethodOpt, quantConfigSchemaName, profilizerConfigOpt) = if (mode != ExportConfigConstant.MODE_QUANT_XIC && mode != ExportConfigConstant.MODE_QUANT_TAGGING ) (None,None, None)
       else {
         // Load the quant config and the profilizer config
         var quantSchemaName : Option[ObjectTreeSchema.SchemaName]= None
