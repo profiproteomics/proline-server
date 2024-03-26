@@ -1,12 +1,10 @@
 package fr.proline.jms
 
 import java.util.Date
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import com.thetransactioncompany.jsonrpc2.JSONRPC2Notification
 import fr.profi.util.StringUtils
-import javax.jms.TextMessage
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Message
 
 object ServiceEvent {
 
@@ -89,7 +87,7 @@ case class ServiceEvent(requestJMSMessageId: String, jsonRPCRequestId: java.lang
     namedParams.put(EVENT_TYPE, eventType)
 
     val notification = new JSONRPC2Notification(NOTIFY_METHOD_NAME)
-    notification.setNamedParams(namedParams)
+    notification.setNamedParams(namedParams.asJava)
 
     notification
   }

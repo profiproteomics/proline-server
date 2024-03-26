@@ -192,6 +192,9 @@ object ExportConfigConstant {
   // Statistics sheet
   val SHEET_STAT = "stat"
 
+  val FIELD_STAT_MODULE_VERSION = "Version"
+  val FIELD_STAT_DATASET_ID = "stat_dataset_id"
+  val FIELD_STAT_DATASET_IS_QUANT = "stat_dataset_is_quant"
   val FIELD_STAT_PSM_VALIDATION = "stat_psm_validation"
   val FIELD_STAT_NB_TOTAL_PSMS = "stat_nb_total_psms"
   val FIELD_STAT_NB_TOTAL_PRECURSORS = "stat_nb_total_precursors"

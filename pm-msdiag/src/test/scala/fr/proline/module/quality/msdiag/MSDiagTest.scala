@@ -1,21 +1,14 @@
 package fr.proline.module.quality.msdiag
 
 import com.typesafe.scalalogging.StrictLogging
-import fr.proline.context.BasicExecutionContext
-import fr.proline.context.IExecutionContext
-import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.core.dal.BuildDbConnectionContext
-import fr.proline.core.dal.BuildMsiDbConnectionContext
-import fr.proline.core.dal.BuildUdsDbConnectionContext
-import fr.proline.core.om.provider.PeptideCacheExecutionContext
-import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
+import fr.proline.context.{BasicExecutionContext, IExecutionContext}
+import fr.proline.core.dal.{AbstractMultipleDBTestCase, BuildMsiDbConnectionContext, BuildUdsDbConnectionContext}
+import fr.proline.core.om.provider.{PeptideCacheExecutionContext, ProviderDecoratedExecutionContext}
 import fr.proline.core.om.provider.msi.IResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.module.quality.msdiag.msi.MSDiagOutput
 import fr.proline.repository.DriverType
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
+import org.junit.{After, Before, Test}
 
 @Test
 class MSDiagTest extends AbstractMultipleDBTestCase with StrictLogging {

@@ -7,8 +7,6 @@ import java.io.IOException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
-import scala.collection.JavaConversions.asScalaBuffer
-import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Map
@@ -215,7 +213,7 @@ class ImportMaxQuantResults extends AbstractRemoteProcessingService with IImport
       )
       rsMQImporter.run()
       val rsIds = rsMQImporter.getCreatedResultSetIds
-      result.put("result_set_Ids", rsIds.keySet.toList)
+      result.put("result_set_Ids", rsIds.keySet.asScala.toList)
       result.put("warning_msg", rsMQImporter.getWarningMessage)
       logger.debug("Import MaxQuant result done : " + result)
 
@@ -282,7 +280,7 @@ class ImportMaxQuantResultsV2_0 extends AbstractRemoteProcessingService with IIm
 
 
       val rsIds = rsMQImporter.getCreatedResultSetIds
-      result.put("result_set_Ids", rsIds.keySet.toList)
+      result.put("result_set_Ids", rsIds.keySet.asScala.toList)
       result.put("warning_msg", rsMQImporter.getWarningMessage)
 
 
@@ -456,7 +454,7 @@ class ImportMaxQuantResultsV2_0 extends AbstractRemoteProcessingService with IIm
           val udsQuantitation = udsEM.find(classOf[UdsDataset], quantiCreator.getUdsQuantitation.getId)
 
           // Retrieve master quant channels (they should be sorted by their number)
-          val udsMasterQuantitationChannels = udsQuantitation.getMasterQuantitationChannels.toList
+          val udsMasterQuantitationChannels = udsQuantitation.getMasterQuantitationChannels.asScala.toList
 
           for (udsMasterQuantChannel <- udsMasterQuantitationChannels) {
 

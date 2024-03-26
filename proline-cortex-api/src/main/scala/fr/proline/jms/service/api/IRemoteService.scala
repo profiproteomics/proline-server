@@ -1,17 +1,9 @@
 package fr.proline.jms.service.api
 
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Request
-import com.thetransactioncompany.jsonrpc2.JSONRPC2Response
-import fr.profi.util.jsonrpc.BuildJSONRPC2Response
-import fr.profi.util.jsonrpc.IJSONRPC2Method
-import fr.profi.util.jsonrpc.JSONRPC2ServiceDescription
-import fr.profi.util.jsonrpc.JSONRPC2ServiceEnvelope
-import fr.profi.util.jsonrpc.JSONRPC2ServiceEnvelope.enumToString
-import fr.profi.util.jsonrpc.JSONRPC2ServiceTransport
+import com.thetransactioncompany.jsonrpc2.{JSONRPC2Request, JSONRPC2Response}
+import fr.profi.util.jsonrpc._
 import fr.profi.util.jsonrpc.JSONRPC2ServiceTransport.enumToString
-import javax.jms.BytesMessage
-import javax.jms.Message
-import javax.jms.Session
+import javax.jms.{BytesMessage, Message, Session}
  
 
 trait IRemoteServiceIdentity {
@@ -111,7 +103,7 @@ trait IRemoteJsonRPC2Service extends IRemoteServiceIdentity {
 /**
  * Interface for services
  *  - consuming of TextMessage
- *  - returning an a complete jms Message Object which will be replied as it is
+ *  - returning a complete jms Message Object which will be replied as it is
  */
 trait IRemoteCompleteJsonRPC2Service extends IRemoteServiceIdentity {
 

@@ -1,6 +1,6 @@
 package fr.proline.cortex.service.admin
 
-import scala.collection.JavaConversions.mapAsScalaMap
+import scala.collection.JavaConverters._
 import scala.collection.mutable.HashMap
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
@@ -32,7 +32,7 @@ class GetConnectionTemplate extends AbstractRemoteProcessingService with IGetCon
     val prolineConf = SetupProline.config
 
     val connection = new HashMap[Object, Object]()
-    connection ++= (prolineConf.udsDBConfig.dbConnProperties - "javax.persistence.jdbc.password")
+    connection ++= (prolineConf.udsDBConfig.dbConnProperties.asScala - "javax.persistence.jdbc.password")
 
 //    if (SetupProline.getConfigParams.hasPath("jms-config.host")) {
 //      val jmsHost = SetupProline.getConfigParams.getConfig("jms-config").getString("host")

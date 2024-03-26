@@ -1,15 +1,15 @@
 package fr.profi.util.jsonrpc
 
 import scala.reflect.runtime.universe.Type
-
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.typesafe.scalalogging.LazyLogging
-
 import fr.profi.util.lang.EnhancedEnum
 import fr.profi.util.json.JSONType
 import fr.profi.util.json.JsonSchema
 import fr.profi.util.json.JsonSchemaRef
 import fr.profi.util.reflect.Schema
+
+import scala.language.implicitConversions
 
 /** JSONRPC2 Service Description
  * 

@@ -24,7 +24,7 @@ object ViewSetExporter {
       viewSet.templatedViews.map { templatedView =>
         val formatter = BuildViewFormatter(templatedView.template, viewSetCreationContext)      
         formatter.formatView(templatedView.dataView)
-      } distinct
+      }.distinct
       
     }
 

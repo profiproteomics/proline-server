@@ -74,7 +74,7 @@ class ChangeTypicalProteinMatch extends AbstractRemoteProcessingService with ICh
       typProtChooser.run()
     } catch {
       case t: Throwable => {
-        throw new Exception("Can't change the reprensentative protein match in this dataset", t)
+        throw new Exception("Can't change the representative protein match in this dataset", t)
       }
     } finally {
       DbConnectionHelper.tryToCloseExecContext(execCtx)

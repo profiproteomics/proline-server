@@ -16,8 +16,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
-import scala.collection.JavaConversions.asScalaBuffer
-import scala.collection.JavaConversions.asScalaSet
+import scala.collection.JavaConverters._
 
 @Test
 class RFCertifierH2CTDTest extends AbstractRFImporterTestCase {
@@ -142,7 +141,7 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTestCase {
     val msiEM = execCtx.getMSIDbConnectionContext.getEntityManager
     val msiPtm = MsiPtmRepository.findPtmForShortName(msiEM, ptmShortName)
 
-    val psPtmSpecifs = msiPtm.getSpecificities.toList
+    val psPtmSpecifs = msiPtm.getSpecificities.asScala.toList
 
     val psMatchingPtmSpecifOpt = psPtmSpecifs.find { psPtmSpecif =>
       characterToScalaChar(psPtmSpecif.getResidue) == residue
@@ -168,7 +167,7 @@ class RFCertifierH2CTDTest extends AbstractRFImporterTestCase {
 
     val composition = msiPtm.getEvidences.iterator().next().getComposition
     val query = msiEM.createQuery("FROM fr.proline.core.orm.msi.PtmEvidence WHERE composition = :composition", classOf[PtmEvidence])
-    val defs = query.setParameter("composition", composition).getResultList.toList
+    val defs = query.setParameter("composition", composition).getResultList.asScala.toList
     msiEM.remove(msiPtm)
     for (e <- defs) {
       val ptm = e.getPtm

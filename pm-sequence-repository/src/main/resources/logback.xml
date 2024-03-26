@@ -43,7 +43,7 @@
 
   </appender>
 
-  <logger name="fr.proline" level="DEBUG" />
+  <logger name="fr.proline" level="INFO" />
 
   <root level="WARN">
     <appender-ref ref="STDOUT" /> 

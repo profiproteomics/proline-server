@@ -13,6 +13,10 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.exceptions.CsvValidationException;
 import fr.proline.core.om.model.msi.FragmentationRuleSet;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
@@ -151,7 +155,7 @@ public class ExperimentPropertiesReader {
 				Unmarshaller unmarshaller = context.createUnmarshaller();
 				FileInputStream is = new FileInputStream(paramFile);
 				m_mqParams = (IMaxQuantParams) unmarshaller.unmarshal(is);
-				HashSet fixedModifsSet = new HashSet();
+				HashSet<String> fixedModifsSet = new HashSet<>();
 				List<? extends IParameterGroup> parameterGroups = m_mqParams.getParameters();
 				for(IParameterGroup paramGrp : parameterGroups){
 					fixedModifsSet.addAll(((fr.proline.module.parser.maxquant.model.v1_6.ParameterGroup) paramGrp).getFixedModifications());
@@ -160,11 +164,9 @@ public class ExperimentPropertiesReader {
 			}
 			
 			
-		} catch (JAXBException e) {
+		} catch (JAXBException | IOException e) {
 			throw new RuntimeException(" Error reading parameters file : "+e.getMessage());
-		} catch (IOException ioe) {
-			throw new RuntimeException(" Error reading parameters file : "+ioe.getMessage());
-		} 
+		}
 	}
 
 	
@@ -173,7 +175,9 @@ public class ExperimentPropertiesReader {
 		CSVReader paramFileCSVReader =null;
 		String version = null;
 		try {
-			paramFileCSVReader = new CSVReader(new FileReader(paramFile), '\t');
+			final CSVParser parser = new CSVParserBuilder().withSeparator('\t').build();
+			paramFileCSVReader = new CSVReaderBuilder(new FileReader(paramFile)).withCSVParser(parser).build();
+
 			paramFileCSVReader.readNext(); //Skip header
 			String[] nextLine = paramFileCSVReader.readNext();			
 			while (nextLine != null) {
@@ -182,8 +186,9 @@ public class ExperimentPropertiesReader {
 					version =  nextLine[1];
 					break;
 				}
+				nextLine = paramFileCSVReader.readNext();
 			}
-		} catch (IOException e) {
+		} catch (IOException | CsvValidationException e) {
 			if(paramFileCSVReader != null){
 				try {
 					paramFileCSVReader.close();
@@ -211,7 +216,7 @@ public class ExperimentPropertiesReader {
 	}
 	
 	private void initResultSetIdByName(){
-		m_rsIdByName = new HashMap<String, Long>();
+		m_rsIdByName = new HashMap<>();
 		for(String nextFilePath : m_mqParams.getFilePaths()){
 			String rsName = FilenameUtils.getBaseName(nextFilePath);
 			Long rsId = ResultSet.generateNewId();
@@ -242,13 +247,11 @@ public class ExperimentPropertiesReader {
 			
 			List<Peptide> pepList = rsMapper.getPeptidesForRs(rsName);
 			List<PeptideMatch> pepMList = rsMapper.getPeptideMatchesForRs(rsName);
-			List<ProteinMatch> protMList = new ArrayList<ProteinMatch>();
-			rsMapper.getProteinMatchesForRs(rsName).values().forEach(prots4PepM -> {
-							prots4PepM.forEach(protMatch -> {if(!protMList.contains(protMatch)) protMList.add(protMatch); });
-						});
-			resultSets.add(new ResultSet(pepList.toArray(new Peptide[pepList.size()]),
-										pepMList.toArray(new PeptideMatch[pepMList.size()]), 
-										protMList.toArray(new ProteinMatch[protMList.size()]), 
+			List<ProteinMatch> protMList = new ArrayList<>();
+			rsMapper.getProteinMatchesForRs(rsName).values().forEach(prots4PepM -> prots4PepM.forEach(protMatch -> {if(!protMList.contains(protMatch)) protMList.add(protMatch); }));
+			resultSets.add(new ResultSet(pepList.toArray(new Peptide[0]),
+										pepMList.toArray(new PeptideMatch[0]),
+										protMList.toArray(new ProteinMatch[0]),
 										false, //isDecoy
 										true, //isSearchResult
 										true,//isValidatedContent 
@@ -293,7 +296,7 @@ public class ExperimentPropertiesReader {
 		for(String fileName : fastaFileNames){
 			File seqFile = new File(fileName);			
 			Option<SeqDatabase> seqDBOpt = m_seqDbProvider.getSeqDatabase(seqFile.getName(), seqFile.getPath());
-			SeqDatabase seqDB = null;
+			SeqDatabase seqDB;
 			if(seqDBOpt.isEmpty()){
 				//Create new one
 				seqDB = new SeqDatabase(SeqDatabase.generateNewId(),
@@ -321,7 +324,7 @@ public class ExperimentPropertiesReader {
 		 //-- Retrieve the instrument configuration	
 		String instrTypeName =getAnalyzerName();
 				
-		Double ms2ErrorTol = 0.0d;
+		double ms2ErrorTol = 0.0d;
 		String ms2ErrorTolUnit = "";
 
 		for(IMsMsParameters msmsParam : m_mqParams.getMsMsParameters()){
@@ -333,11 +336,11 @@ public class ExperimentPropertiesReader {
 		}
 		
 		List<String> fixedModifs = m_mqParams.getFixedModifications();
-		List<PtmDefinition> fixedPtms = new ArrayList<PtmDefinition>();		
+		List<PtmDefinition> fixedPtms = new ArrayList<>();
 		fixedModifs.forEach(item -> fixedPtms.addAll(PTMUtils.parsePTMString(m_ptmProvider, item)) );
 		
 		List<String> varModifs = pg.getVariableModifications();
-		List<PtmDefinition> varPtms = new ArrayList<PtmDefinition>();	
+		List<PtmDefinition> varPtms = new ArrayList<>();
 		varModifs.forEach(item -> varPtms.addAll(PTMUtils.parsePTMString(m_ptmProvider, item)) );
 		varPtms.toArray();
 		
@@ -355,8 +358,8 @@ public class ExperimentPropertiesReader {
 			pg.getMainSearchTol().doubleValue(), tolUnit, //MS1ErrorTol
 			false,  //isDecoy
 			enzymes, 
-			varPtms.toArray(new PtmDefinition[varPtms.size()]), fixedPtms.toArray(new PtmDefinition[fixedPtms.size()]), 
-			seqDbsList.toArray(new SeqDatabase[seqDbsList.size()]),
+			varPtms.toArray(new PtmDefinition[0]), fixedPtms.toArray(new PtmDefinition[0]),
+			seqDbsList.toArray(new SeqDatabase[0]),
 			m_instrumentConfig, m_fragmentationRuleSetOpt,
 			Option.apply(ssProp),
 			Option.empty(), // PMFSearchSettings
@@ -369,10 +372,12 @@ public class ExperimentPropertiesReader {
 		String analyzer = UNKNOWN_ANALYZER;
 		CSVReader msmsScanCSVReader  = null;
 		try {
-			msmsScanCSVReader= new CSVReader(new FileReader(msmsScanFile),'\t');
+			final CSVParser parser = new CSVParserBuilder().withSeparator('\t').build();
+			msmsScanCSVReader = new CSVReaderBuilder(new FileReader(msmsScanFile)).withCSVParser(parser).build();
+
 			//Get Analyzer col index
 			String[] headers = msmsScanCSVReader.readNext();
-			Integer analyzerIndex = -1;			
+			int analyzerIndex = -1;
 			for(int i=0; i<headers.length; i++){
 				if(headers[i].equals(ANALYZER_HEADER)){
 					analyzerIndex = i;
@@ -384,7 +389,7 @@ public class ExperimentPropertiesReader {
 			String[] nextRow = msmsScanCSVReader.readNext();
 			analyzer = nextRow[analyzerIndex];
 			msmsScanCSVReader.close();
-		} catch (IOException e) {
+		} catch (IOException | CsvValidationException e) {
 			if(msmsScanCSVReader != null){
 				try {
 					msmsScanCSVReader.close();
@@ -437,7 +442,9 @@ public class ExperimentPropertiesReader {
 		CSVReader reader  = null;
 		Map<String, Integer> queriesCountByRS = new HashMap<>();
 		try {
-			reader= new CSVReader(new FileReader(summFile), '\t');
+			final CSVParser parser = new CSVParserBuilder().withSeparator('\t').build();
+			reader = new CSVReaderBuilder(new FileReader(summFile)).withCSVParser(parser).build();
+
 			//Get Submitted Queries count index
 			String[] headers = reader.readNext();
 			Integer rawFileIndex = -1;
@@ -463,7 +470,7 @@ public class ExperimentPropertiesReader {
 			}
 			
 			reader.close();
-		} catch (IOException e) {
+		} catch (IOException | CsvValidationException e) {
 			if(reader != null){
 				try {
 					reader.close();

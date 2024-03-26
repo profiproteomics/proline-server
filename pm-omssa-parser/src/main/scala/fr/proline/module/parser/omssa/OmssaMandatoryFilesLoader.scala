@@ -47,14 +47,14 @@ class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val ptmComposition
     if(ptmExpectsResidue(id)) {
       _ptmDefinitions.getOption(id, site)
     } else {
-      _ptmDefinitions.getOption(id, '\0')
+      _ptmDefinitions.getOption(id, '\u0000')
     }
   }
   private def ptmExpectsResidue(id: Long): Boolean = _ptmSpecificity.get(id).get
 
   parseXsd // parse the xsd file as soon as possible
   parseMods(this.getClass().getClassLoader().getResource("omssa_config/mods.xml"))
-  if (_userptmFilePath != "") parseMods((new File(_userptmFilePath)).toURL()) // parse the user's ptms file as soon as possible
+  if (_userptmFilePath != "") parseMods((new File(_userptmFilePath)).toURI.toURL()) // parse the user's ptms file as soon as possible
   else parseMods(this.getClass().getClassLoader().getResource("omssa_config/usermods.xml"))
   
   /**
@@ -150,7 +150,7 @@ class OmssaMandatoryFilesLoader(val _userptmFilePath: String, val ptmComposition
    */
   private def parseMods(modFile: java.net.URL) {
     val verifier = new OmssaResultFileVerifier
-    verifier.getPtmDefinitionsByInternalId(modFile, verifier.parsePtmCompositions(new File(ptmCompositionFilePath).toURL())).foreach((key, ptm) => {
+    verifier.getPtmDefinitionsByInternalId(modFile, verifier.parsePtmCompositions(new File(ptmCompositionFilePath).toURI.toURL())).foreach((key, ptm) => {
       val _ptm = ptmProvider.getPtmDefinition(ptm.names.shortName, ptm.residue, PtmLocation.withName(ptm.location))
       if (_ptm.isDefined) _ptmDefinitions.update(key._1, key._2, _ptm.get)
       else logger.error("Unknown ptm, will not be considered: " + ptm.toString)

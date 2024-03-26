@@ -24,7 +24,7 @@ public final class PeptideUtils {
 		AminoAcidCompound X = aaSet.getCompoundForString("X");
 		AminoAcidCompound Z = aaSet.getCompoundForString("Z");
 			
-		Constraints.aa2MolecularWeight.put(U, new Double(U.getMolecularWeight()));
+		Constraints.aa2MolecularWeight.put(U, Double.valueOf(U.getMolecularWeight()));
 		Constraints.aa2MolecularWeight.put(J, (aaSet.getCompoundForString("I").getMolecularWeight() + aaSet.getCompoundForString("L").getMolecularWeight())/2.0);
 		Constraints.aa2MolecularWeight.put(B, (aaSet.getCompoundForString("N").getMolecularWeight() + aaSet.getCompoundForString("D").getMolecularWeight())/2.0);
 		Constraints.aa2MolecularWeight.put(Z, (aaSet.getCompoundForString("E").getMolecularWeight() + aaSet.getCompoundForString("Q").getMolecularWeight())/2.0);

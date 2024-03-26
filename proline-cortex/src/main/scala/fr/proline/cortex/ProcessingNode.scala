@@ -1,53 +1,33 @@
 package fr.proline.cortex
 
-import java.io.File
-import java.util.ArrayList
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-
-import scala.collection.JavaConversions.mutableMapAsJavaMap
-import scala.collection.mutable
-import org.hornetq.api.core.TransportConfiguration
-import org.hornetq.api.jms.HornetQJMSClient
-import org.hornetq.api.jms.JMSFactoryType
-import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory
-import org.hornetq.core.remoting.impl.netty.TransportConstants
 import com.typesafe.scalalogging.LazyLogging
-import fr.profi.util.StringUtils
-import fr.profi.util.ThreadLogger
+import fr.profi.util.{StringUtils, ThreadLogger}
 import fr.proline.context.DatabaseConnectionContext
 import fr.proline.core.orm.uds.Project
 import fr.proline.core.orm.util.JsonSerializer
 import fr.proline.cortex.service.SingleThreadIdentifierType
-import fr.proline.cortex.service.admin.CreateProject
-import fr.proline.cortex.service.admin.GetConnectionTemplate
-import fr.proline.cortex.service.admin.UserAccount
+import fr.proline.cortex.service.admin.{CreateProject, GetConnectionTemplate, UserAccount}
 import fr.proline.cortex.service.dps.msi._
 import fr.proline.cortex.service.dps.msq._
-import fr.proline.cortex.service.dps.uds.GetExportInformation
-import fr.proline.cortex.service.dps.uds.RegisterRawFile
-import fr.proline.cortex.service.dps.uds.ValidateIdentDSInTree
-import fr.proline.cortex.service.misc.CancelService
-import fr.proline.cortex.service.misc.FileSystem
-import fr.proline.cortex.service.misc.FileUpload
-import fr.proline.cortex.service.misc.ProlineResourceService
+import fr.proline.cortex.service.dps.uds.{GetExportInformation, RegisterRawFile, ValidateIdentDSInTree}
+import fr.proline.cortex.service.misc.{CancelService, FileSystem, FileUpload, ProlineResourceService}
 import fr.proline.cortex.service.monitoring.InfoService
 import fr.proline.cortex.util.DbConnectionHelper
-import fr.proline.cortex.util.fs.MountPointRegistry
-import fr.proline.cortex.util.fs.WorkDirectoryRegistry
-import fr.proline.jms.ServiceManager
-import fr.proline.jms.ServiceRegistry
-import fr.proline.jms.ServiceRunner
-import fr.proline.jms.SingleThreadedServiceRunner
-import fr.proline.jms.util.ExpiredMessageConsumer
+import fr.proline.cortex.util.fs.{MountPointRegistry, WorkDirectoryRegistry}
+import fr.proline.jms.{ServiceManager, ServiceRegistry, ServiceRunner, SingleThreadedServiceRunner}
 import fr.proline.jms.util.JMSConstants.MAX_JMS_SERVER_PORT
-import fr.proline.jms.util.MonitoringTopicPublisherRunner
-import fr.proline.jms.util.NodeConfig
-import javax.jms.{Connection, ExceptionListener, InvalidDestinationException, JMSException, Session}
+import fr.proline.jms.util.{ExpiredMessageConsumer, MonitoringTopicPublisherRunner, NodeConfig}
+import org.hornetq.api.core.TransportConfiguration
+import org.hornetq.api.jms.{HornetQJMSClient, JMSFactoryType}
+import org.hornetq.core.remoting.impl.netty.{NettyConnectorFactory, TransportConstants}
 
-import scala.collection.mutable.ArrayBuffer
+import java.io.File
+import java.util.ArrayList
+import java.util.concurrent.{ExecutorService, Executors, TimeUnit}
+import javax.jms._
 import scala.collection.JavaConverters._
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 
 object ProcessingNode extends LazyLogging {
 
@@ -100,7 +80,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
   private var m_connection: Connection = _
 
   private var m_paralleleExecutor: ExecutorService = _
-  private var m_singleExecutor: ArrayBuffer[ExecutorService] = new ArrayBuffer[ExecutorService]()
+  private val m_singleExecutor: ArrayBuffer[ExecutorService] = new ArrayBuffer[ExecutorService]()
 
   /**
    * Starts JMS Connection and Executor running Consumers receive loop.
@@ -132,7 +112,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
         val transportConfiguration = new TransportConfiguration(
           classOf[NettyConnectorFactory].getName,
-          connectionParams
+          connectionParams.asJava
         )
 
         // Step 3 Directly instantiate the JMS ConnectionFactory object using that TransportConfiguration
@@ -281,13 +261,13 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
       allProjects.asScala.foreach(p => {
         var groupeId: Int = -1
         val serializedPropertiesStr = p.getSerializedProperties
-        if (serializedPropertiesStr != null && !serializedPropertiesStr.isEmpty) { //an import group property may have be specified
+        if (serializedPropertiesStr != null && serializedPropertiesStr.nonEmpty) { //an import group property may have be specified
           val serializedPropertiesMap = JsonSerializer.getMapper.readValue(serializedPropertiesStr, classOf[java.util.Map[String, Object]])
           if (serializedPropertiesMap.containsKey("import_group")) {
             try {
               groupeId = serializedPropertiesMap.get("import_group").asInstanceOf[Int]
             } catch {
-              case  ex: ClassCastException => groupeId = -1
+              case  _: ClassCastException => groupeId = -1
             }
 
             if (groupeId != -1) {
@@ -334,7 +314,7 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
 
       } else {
         //should regroup projects group to have only  "max group count" group
-        var startIndex = 1  // Don't group other projects with "Unclassified projects"
+        val startIndex = 1 // Don't group other projects with "Unclassified projects"
         var allProjectsIndex = startIndex
         for(key <- projectIdsByGroup.keySet ){
           if(key != -1){
@@ -412,11 +392,12 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new GenerateSpectrumMatches())
     ServiceRegistry.addService(new GenerateMSDiagReport())
     ServiceRegistry.addService(new FilterRsmProteinSets())
-    ServiceRegistry.addService(new ComputeQuantProfiles())
     ServiceRegistry.addService(new ComputeQuantPostProcessing())
     ServiceRegistry.addService(new ComputeQuantPostProcessingV2())
 
     ServiceRegistry.addService(new Quantify())
+    ServiceRegistry.addService(new QuantifyV3_0())
+    ServiceRegistry.addService(new QuantifyV4_0())
     ServiceRegistry.addService(new QuantifySC())
     ServiceRegistry.addService(new QuantifySC_V02())
     ServiceRegistry.addService(new AggregateQuantitation())
@@ -427,12 +408,13 @@ class ProcessingNode(jmsServerHost: String, jmsServerPort: Int) extends LazyLogg
     ServiceRegistry.addService(new CreateProject())
     ServiceRegistry.addService(new RegisterRawFile())
     ServiceRegistry.addService(new DeleteOrphanData())
-    ServiceRegistry.addService(new QuantifyV3_0())
+
     ServiceRegistry.addService(new ImportMaxQuantResults())
     ServiceRegistry.addService(new ImportMaxQuantResultsV2_0())
 
     ServiceRegistry.addService(new IdentifyPtmSites())
     ServiceRegistry.addService(new IdentifyPtmSitesV2_0())
+    ServiceRegistry.addService(new IdentifyPtmSitesV3_0())
     ServiceRegistry.addService(new ProlineResourceService())
     //VDS TEST only !
 //    ServiceRegistry.addService(new WaitService())

@@ -155,7 +155,7 @@ public class PTMUtils {
 		char[] residues = residuesAsStr.toCharArray();
 	    if (residues.length > 0) {
 	      for (char residue : residues) {
-	        posConstraints.put(new Character(residue), locVal);
+	        posConstraints.put(residue, locVal);
 	      }
 	    } else {
 	      posConstraints.put(null, locVal);

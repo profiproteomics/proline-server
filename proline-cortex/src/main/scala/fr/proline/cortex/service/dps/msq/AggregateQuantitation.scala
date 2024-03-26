@@ -18,7 +18,7 @@ import fr.proline.cortex.service.SingleThreadIdentifierType
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.{AbstractRemoteProcessingService, ISingleThreadedService}
 
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConverters._
 
 /**
  *  Define JMS Service which allows to creates a new quantitation and perform the corresponding data analysis.
@@ -82,7 +82,7 @@ class AggregateQuantitation extends AbstractRemoteProcessingService with IAggreg
         val udsQuantitation = udsEM.find(classOf[UdsDataset], quantiId)
 
         // Retrieve master quant channels (they should be sorted by their number)
-        val udsMasterQuantChannels = udsQuantitation.getMasterQuantitationChannels.toList
+        val udsMasterQuantChannels = udsQuantitation.getMasterQuantitationChannels.asScala.toList
 
 
         require(!quantConfig.quantitationIds.isEmpty, "List of datasets to aggregate cannot be empty")

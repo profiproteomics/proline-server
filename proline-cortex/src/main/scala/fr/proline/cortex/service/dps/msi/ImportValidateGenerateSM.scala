@@ -36,7 +36,7 @@ import fr.proline.jms.service.api.AbstractRemoteProcessingService
 import fr.proline.jms.service.api.ISingleThreadedService
 import fr.proline.module.fragmentmatch.service.SpectrumMatchesGenerator
 
-import scala.collection.JavaConversions.mapAsScalaMap
+import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 
@@ -143,13 +143,13 @@ abstract class AbstractImportValidateGenerateSM extends AbstractRemoteProcessing
     val instrumentConfigId = params.getLong(INSTRUMENT_CONFIG_ID_PARAM)
     val peaklistSoftwareId = params.getLong(PEAKLIST_SOFTWARE_ID_PARAM)
     val importerProperties = if (!params.hasParam(IMPORTER_PROPERTIES_PARAM)) Map.empty[String, Any]
-    else params.getMap(IMPORTER_PROPERTIES_PARAM).map {
+    else params.getMap(IMPORTER_PROPERTIES_PARAM).asScala.map {
       case (a, b) => {
         if (a.endsWith(".file")) {
           a -> MountPointRegistry.replacePossibleLabel(b.toString, Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname
         } else a -> b.asInstanceOf[Any]
       }
-    } toMap
+    }.toMap
 
     // Is Validation enabled ?
     val doValidation = isValidationEnabled(params)

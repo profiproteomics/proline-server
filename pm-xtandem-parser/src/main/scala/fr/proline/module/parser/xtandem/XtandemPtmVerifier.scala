@@ -35,7 +35,7 @@ object XtandemPtmVerifier extends LazyLogging {
   def getVariablePtms(ptmProvider: IPTMProvider, residuePtms: String, refinePtms: String, refineCtermPtms: String, refineNtermPtms: String, quickAcetyl: Boolean, quickPyrolidone: Boolean, refine: Boolean): Array[PtmDefinition] = {
     val ptms = new ArrayBuffer[PtmDefinition]
     if(quickAcetyl) {
-      val ptm = ptmProvider.getPtmDefinition(42.01057, ptmMonoMassMargin, '\0', PtmLocation.PROT_N_TERM)
+      val ptm = ptmProvider.getPtmDefinition(42.01057, ptmMonoMassMargin, '\u0000', PtmLocation.PROT_N_TERM)
       if(ptm.isDefined) ptms.append(ptm.get) else logger.error("Acetylation on PROT_N_TERM not found")
     }
     if(quickPyrolidone) {
@@ -64,12 +64,12 @@ object XtandemPtmVerifier extends LazyLogging {
         if(ptmAsString.contains("@")) {
           val Array(mass, residue) = ptmAsString.split("@")
           residue match {
-            case "[" => ptm = ptmProvider.getPtmDefinition(mass.toDouble, ptmMonoMassMargin, '\0', PtmLocation.ANY_N_TERM)
-            case "]" => ptm = ptmProvider.getPtmDefinition(mass.toDouble, ptmMonoMassMargin, '\0', PtmLocation.ANY_C_TERM)
+            case "[" => ptm = ptmProvider.getPtmDefinition(mass.toDouble, ptmMonoMassMargin, '\u0000', PtmLocation.ANY_N_TERM)
+            case "]" => ptm = ptmProvider.getPtmDefinition(mass.toDouble, ptmMonoMassMargin, '\u0000', PtmLocation.ANY_C_TERM)
             case _   => ptm = ptmProvider.getPtmDefinition(mass.toDouble, ptmMonoMassMargin, residue.charAt(0), PtmLocation.ANYWHERE)
           }
         } else if(location != null) {
-          ptm = ptmProvider.getPtmDefinition(ptmAsString.toDouble, ptmMonoMassMargin, '\0', location)
+          ptm = ptmProvider.getPtmDefinition(ptmAsString.toDouble, ptmMonoMassMargin, '\u0000', location)
         }
         if(ptm.isDefined) ptms.append(ptm.get)
       })

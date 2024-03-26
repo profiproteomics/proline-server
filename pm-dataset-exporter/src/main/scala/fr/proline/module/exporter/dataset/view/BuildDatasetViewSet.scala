@@ -188,7 +188,8 @@ object BuildDatasetViewSet extends LazyLogging {
         this._buildSpectraLoader(msiDbCtx),
         this._buildPepMatchesLoader(executionContext),
         this._buildPeptidesLoader(executionContext),
-        this._buildPTMDatasetLoader(executionContext, rsmId)
+        this._buildPTMDatasetLoader(executionContext, rsmId),
+        dsId
       )
 
       this.apply(identDs, viewSetName, viewSetTemplate, exportConfig)
@@ -206,7 +207,7 @@ object BuildDatasetViewSet extends LazyLogging {
       // FIXME: how to deal with other MQC ids
       val masterQuantChannelId = masterQcIds.head
       
-      val( quantConfigAndMethodOpt, quantConfigSchemaName, profilizerConfigOpt) = if (mode != ExportConfigConstant.MODE_QUANT_XIC) (None,None, None)
+      val( quantConfigAndMethodOpt, quantConfigSchemaName, profilizerConfigOpt) = if (mode != ExportConfigConstant.MODE_QUANT_XIC && mode != ExportConfigConstant.MODE_QUANT_TAGGING ) (None,None, None)
       else {
         // Load the quant config and the profilizer config
         var quantSchemaName : Option[ObjectTreeSchema.SchemaName]= None
@@ -403,7 +404,8 @@ object BuildDatasetViewSet extends LazyLogging {
         this._buildPepMatchesByMsQIdLoader(executionContext),
         Option(peptideCountByProtMatchIdByQCId),
         Option(peptideCountByMqProtSetIdByQCId),
-        this._buildPTMDatasetLoader(executionContext, quantRsmId)
+        this._buildPTMDatasetLoader(executionContext, quantRsmId),
+        dsId
       )
 
       this.apply(quantDs, viewSetName, viewSetTemplate, exportConfig)
