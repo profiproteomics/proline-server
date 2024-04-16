@@ -149,6 +149,7 @@ object ExportConfigConstant {
   val FIELD_PSM_RANK = "psm_rank"
   val FIELD_PSM_CD_PRETTY_RANK = "psm_cd_pretty_rank"
   val FIELD_PSM_FRAGMENT_MATCHES_COUNT = "psm_fragment_matches_count"
+  val FIELD_PSM_PIF_VALUE = "psm_pif_value"
   val FIELD_PSM_SPECTRUM_TITLE = "psm_spectrum_title"
   val FIELD_PSM_NB_PROTEIN_SETS = "psm_nb_protein_sets"
   val FIELD_PSM_NB_SAMESET_PROTEIN_MATCHES = "psm_nb_sameset_protein_matches"
@@ -165,6 +166,7 @@ object ExportConfigConstant {
   val FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID = "psm_master_quant_peptide_id"
   val FIELD_PSM_QUANT_ELUTION_TIME = "psm_quant_elution_time"
   val FIELD_PSM_QUANT_SELECTION_LEVEL = "psm_quant_selection_level"
+  val FIELD_PSM_QUANT_IS_VALID_FOR_PROT_SET = "psm_quant_is_valid_for_prot_set"
 
   // MasterQuantPeptideIon sheet
   val SHEET_MASTER_QUANT_PEPTIDE_ION = "master_quant_peptide_ion"
