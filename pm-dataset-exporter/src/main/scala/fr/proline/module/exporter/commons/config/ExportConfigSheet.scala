@@ -125,7 +125,7 @@ object ExportConfigSheet {
       id = ExportConfigConstant.SHEET_MASTER_QUANT_REPORTER_ION,
       title = "Quantified peptide matches",
       presentation = ExportConfigConstant.PRESENTATION_SHEET_COLUMNS,
-      fields = CustomFieldConfigFactory.getPeptideMatchesSheetFields(fromXIC = true, fromSC = false),
+      fields = CustomFieldConfigFactory.getPeptideMatchesSheetFields(fromXIC = true, fromSC = false, fromIsobaric = true),
       defaultDisplayed = false
     )
   }
