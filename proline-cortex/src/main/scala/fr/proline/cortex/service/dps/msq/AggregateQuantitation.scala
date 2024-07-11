@@ -7,10 +7,11 @@ import fr.profi.util.serialization.ProfiJson.{deserialize, serialize}
 import fr.proline.context.IExecutionContext
 import fr.proline.core.algo.msq.config.AggregationQuantConfig
 import fr.proline.core.dal.context.execCtxToTxExecCtx
-import fr.proline.core.om.model.msq.ExperimentalDesign
+import fr.proline.core.om.model.msq.{AbundanceUnit, ExperimentalDesign, QuantMethodType}
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.orm.uds.ObjectTreeSchema.{SchemaName => UdsSchemaName}
-import fr.proline.core.orm.uds.{Dataset => UdsDataset, MasterQuantitationChannel => UdsMasterQuantChannel}
+import fr.proline.core.orm.uds.repository.QuantitationMethodRepository
+import fr.proline.core.orm.uds.{QuantitationLabel, QuantitationMethod, Dataset => UdsDataset, MasterQuantitationChannel => UdsMasterQuantChannel}
 import fr.proline.core.service.msq.quantify.AggregationQuantifier
 import fr.proline.core.service.uds.{CreateQuantitation, Quantifier}
 import fr.proline.cortex.api.service.dps.msq.IAggregateQuantitationService
@@ -58,11 +59,22 @@ class AggregateQuantitation extends AbstractRemoteProcessingService with IAggreg
         // Parse the quant configuration
         val quantConfigAsStr = serialize(quantConfigAsMap)
         val quantConfig = deserialize[AggregationQuantConfig](quantConfigAsStr)
-        val qId:  Long = quantConfig.quantitationIds(0)
+
         // Retrieve entity manager
         val udsDbCtx = executionContext.getUDSDbConnectionContext()
         val udsEM = udsDbCtx.getEntityManager()
-        val childQuantitation = udsEM.find(classOf[UdsDataset], qId)
+
+        //Suppose that exp. design is valid : if quantLabelId is define, all labels must belongs to same quantMethod (at least same method type...)
+        val qLabelId = experimentalDesign.masterQuantChannels(0).quantChannels(0).quantLabelId
+        var qMethod : QuantitationMethod = null
+        if(qLabelId.isDefined) {
+          val qLabel = udsEM.find(classOf[QuantitationLabel], qLabelId.get)
+          if(qLabel != null)
+            qMethod= qLabel.getMethod
+        }
+        if(qMethod == null){//find no method. set default
+          qMethod = QuantitationMethodRepository.findQuantMethodForTypeAndAbundanceUnit(udsEM, QuantMethodType.LABEL_FREE.toString, AbundanceUnit.FEATURE_INTENSITY);
+        }
 
         // Store quantitation in the UDSdb
         val quantiCreator = new CreateQuantitation(
@@ -70,7 +82,7 @@ class AggregateQuantitation extends AbstractRemoteProcessingService with IAggreg
           name = paramsRetriever.getString(PROCESS_METHOD.NAME_PARAM),
           description = paramsRetriever.getString(PROCESS_METHOD.DESCRIPTION_PARAM),
           projectId = projectId,
-          methodId = childQuantitation.getMethod.getId,
+          methodId = qMethod.getId,
           experimentalDesign = experimentalDesign
         )
         quantiCreator.runService()
@@ -118,10 +130,10 @@ class AggregateQuantitation extends AbstractRemoteProcessingService with IAggreg
     quantiId
   }
 
-  protected def aggregateMasterQuantChannels(executionContext: IExecutionContext,
-                                             experimentalDesign: ExperimentalDesign,
-                                             udsMasterQuantChannels: List[UdsMasterQuantChannel],
-                                             aggQuantConfig: AggregationQuantConfig) {
+  private def aggregateMasterQuantChannels(executionContext: IExecutionContext,
+                                           experimentalDesign: ExperimentalDesign,
+                                           udsMasterQuantChannels: List[UdsMasterQuantChannel],
+                                           aggQuantConfig: AggregationQuantConfig): Unit = {
 
     // Quantify each master quant channel
     for (udsMasterQuantChannel <- udsMasterQuantChannels) {
