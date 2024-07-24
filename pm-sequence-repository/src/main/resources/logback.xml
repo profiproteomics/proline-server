@@ -30,6 +30,7 @@
 
   </appender>
 
+
   <appender name="debugFileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <append>true</append>
 
