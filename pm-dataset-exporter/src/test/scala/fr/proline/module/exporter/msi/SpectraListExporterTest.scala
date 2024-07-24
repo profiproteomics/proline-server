@@ -28,10 +28,10 @@ object SpectraListExporterTest extends AbstractDatastoreTestCase {
 class SpectraListExporterTest extends LazyLogging {
 
   val targetRSMId = 2L
-  val targetRSId = 4L
+  val targetRSId = 2L
 
-  val quantRSMId = 6L
-  val quantRSId = 6L
+  val quantRSMId = 7L
+  val quantRSId = 7L
 
   val executionContext = SpectraListExporterTest.executionContext
   val viewSetTemplate = SpectraListAsTSV
