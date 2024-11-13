@@ -15,6 +15,7 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_INFORMATION_SEARCH_DATE, "search_date"),
       CustomFieldConfig(FIELD_INFORMATION_RAW_FILE_NAME, "raw_file_name"),
       CustomFieldConfig(FIELD_INFORMATION_PEAKLIST_FILE_PATH, "peaklist_file_path"),
+      CustomFieldConfig(FIELD_INFORMATION_PEAKLIST_SOFTWARE, "peaklist_software"),
       CustomFieldConfig(FIELD_INFORMATION_RESULT_FILE_NAME, "result_file_name"),
       CustomFieldConfig(FIELD_INFORMATION_RESULT_FILE_DIRECTORY, "result_file_directory"),
       CustomFieldConfig(FIELD_INFORMATION_JOB_NUMBER, "job_number"),
@@ -46,10 +47,13 @@ object CustomFieldConfigFactory {
     val identFields = Array(
       CustomFieldConfig(FIELD_INFORMATION_RESULT_FILE_NAME, "result_file_name"),
       CustomFieldConfig(FIELD_IMPORT_PARAMS, "import_params"),
+      CustomFieldConfig(FIELD_IMPORT_FILTER_FDR_METHOD, "filter_fdr_method"),
       CustomFieldConfig(FIELD_IMPORT_PSM_FILTER_EXPECTED_FDR, "psm_filter_expected_fdr"),
       CustomFieldConfig(FIELD_IMPORT_PSM_FILTER, "psm_filter"), // incremental
       CustomFieldConfig(FIELD_IMPORT_PROT_FILTER_EXPECTED_FDR, "prot_filter_expected_fdr"),
-      CustomFieldConfig(FIELD_IMPORT_PROT_FILTER, "import_prot_filter") // incremental
+      CustomFieldConfig(FIELD_IMPORT_PROT_FILTER, "import_prot_filter") ,// incremental
+      CustomFieldConfig(FIELD_IMPORT_PROT_SCORING, "import_prot_scoring")
+
     )
     
     if (!fromXIC) identFields
