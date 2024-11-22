@@ -33,6 +33,15 @@
       <outputDirectory>/</outputDirectory>
     </fileSet>
 
+    <!-- JRE -->
+    <fileSet>
+      <directory>${project.build.directory}</directory>
+      <includes>
+        <include>jre1.8/**</include>
+      </includes>
+      <outputDirectory>/hornetq_light-2.4.0.Final/</outputDirectory>
+    </fileSet>
+
     <!-- Config files -->
     <fileSet>
       <directory>${project.build.directory}/config</directory>
