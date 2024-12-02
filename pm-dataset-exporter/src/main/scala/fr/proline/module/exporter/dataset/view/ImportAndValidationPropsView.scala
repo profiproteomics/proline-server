@@ -135,14 +135,15 @@ class ImportAndValidationPropsView(
     var psmFilterExpectedFdr = Option.empty[Any]
     val protFilters = new ArrayBuffer[String]()
     var proteinFilterExpectedFdr = Option.empty[Any]
-
+    var scoring = "-"
+    var fdrValidationMethod = Option.empty[String]
     // *** Get Filters Parameters
     val rsmPropsOpt = rsm.descriptor.properties
     if (rsmPropsOpt.isDefined) {
       val rsmValPropsOpt = rsmPropsOpt.get.getValidationProperties
       if (rsmValPropsOpt.isDefined) {
         val rsmValParams = rsmValPropsOpt.get.getParams
-
+        scoring = rsmValParams.proteinScoring.getOrElse("-")
         // Add PSM Filters
         if (rsmValParams.getPsmFilters.isDefined) {
           for(filter <- rsmValParams.getPsmFilters.get) {
@@ -155,6 +156,14 @@ class ImportAndValidationPropsView(
           psmFilterExpectedFdr = Some(
             decimalFormat.format(rsmValParams.getPsmExpectedFdr.get)
           )
+        }
+        // Add Peptide FDR Method
+        if (rsmValParams.getPsmValidator.isDefined) {
+          fdrValidationMethod = Some(rsmValParams.getPsmValidator.get.name)
+        } else if( rsmValParams.peptideValidator.isDefined) {
+          fdrValidationMethod = Some(rsmValParams.peptideValidator.get.name)
+        } else if (rsmValParams.proteinValidator.isDefined) {
+          fdrValidationMethod = Some(rsmValParams.proteinValidator.get.name)
         }
 
         // Add Protein Filters
@@ -184,9 +193,11 @@ class ImportAndValidationPropsView(
         case FIELD_INFORMATION_RESULT_FILE_NAME => fileName
         case FIELD_IMPORT_PARAMS => importParams.mkString("; ")
         case FIELD_IMPORT_PSM_FILTER_EXPECTED_FDR => psmFilterExpectedFdr.getOrElse("-")
+        case FIELD_IMPORT_FILTER_FDR_METHOD => fdrValidationMethod.getOrElse("-")
         case FIELD_IMPORT_PSM_FILTER => psmFilters
         case FIELD_IMPORT_PROT_FILTER_EXPECTED_FDR => proteinFilterExpectedFdr.getOrElse("-")
         case FIELD_IMPORT_PROT_FILTER => protFilters
+        case FIELD_IMPORT_PROT_SCORING => scoring
       }
       
       fieldValue match {

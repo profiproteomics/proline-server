@@ -51,6 +51,7 @@ object ExportConfigConstant {
   val FIELD_INFORMATION_SEARCH_DATE = "information_search_date"
   val FIELD_INFORMATION_RAW_FILE_NAME = "information_raw_file_name"
   val FIELD_INFORMATION_PEAKLIST_FILE_PATH = "information_peaklist_file_path"
+  val FIELD_INFORMATION_PEAKLIST_SOFTWARE = "information_peaklist_software"
   val FIELD_INFORMATION_RESULT_FILE_NAME = "information_result_file_name"
   val FIELD_INFORMATION_RESULT_FILE_DIRECTORY = "information_result_file_directory"
   val FIELD_INFORMATION_JOB_NUMBER = "information_job_number"
@@ -78,10 +79,12 @@ object ExportConfigConstant {
   val SHEET_IMPORT = "import"
 
   val FIELD_IMPORT_PARAMS = "import_params"
+  val FIELD_IMPORT_FILTER_FDR_METHOD = "import_filter_fdr_method"
   val FIELD_IMPORT_PSM_FILTER_EXPECTED_FDR = "import_psm_filter_expected_fdr"
   val FIELD_IMPORT_PSM_FILTER = "import_psm_filter" // incremental 
   val FIELD_IMPORT_PROT_FILTER_EXPECTED_FDR = "import_prot_filter_expected_fdr"
   val FIELD_IMPORT_PROT_FILTER = "import_prot_filter" //incremental
+  val FIELD_IMPORT_PROT_SCORING = "import_prot_scoring" //incremental
 
   // Protein set sheet
   val SHEET_PROTEIN_SETS = "protein_sets"
