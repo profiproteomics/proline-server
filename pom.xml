@@ -33,7 +33,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <core.version>2.3.0-SNAPSHOT</core.version>  <!-- core version to use in all modules-->
+        <core.version>2.3.0</core.version>  <!-- core version to use in all modules-->
         <mzdb.version>1.2.1</mzdb.version>  <!-- mzdb version to use in all modules -->
         <commons.version>1.2.0</commons.version>
         <server.version>${project.version}</server.version>  <!-- server version to use in all modules -->
@@ -48,7 +48,7 @@
             <dependency>
                 <groupId>fr.profi.util</groupId>
                 <artifactId>profi-commons-scala_${scala.compat.version}</artifactId>
-                <version>${commons.version}</version> <!-- Snapshot Trunk version -->
+                <version>${commons.version}</version>
             </dependency>
             <dependency>
                 <groupId>fr.profi.util</groupId>
