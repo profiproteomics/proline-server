@@ -31,7 +31,6 @@ import fr.proline.module.exporter.msi.view.{BuildRSMSpectraViewSet, FormatCompat
 import fr.proline.module.exporter.mzidentml.MzIdExporter
 import fr.proline.module.exporter.mzidentml.model.Contact
 import fr.proline.module.exporter.mzidentml.model.Organization
-import fr.proline.module.exporter.pridexml.PrideExporterService
 
 /**
  * Define a JMS Service to :
@@ -78,7 +77,7 @@ class ExportResultSummary extends AbstractRemoteProcessingService with IExportRe
     val outputParams = ExportOutputMode.withName(paramsRetriever.getOptString(OUTPUT_MODE_PARAM, ExportOutputMode.FILE))
     
     fileFormat match {
-      case ExportFileFormat.MZIDENTML    => exportV2.exportToMzIdentML(rsmIdentifier, fileName, fileDirectory, outputParams, extraParams)
+      case ExportFileFormat.MZIDENTML    => exportV2.exportToMzIdentML(Seq(rsmIdentifier), fileName, fileDirectory, outputParams, extraParams)
       case ExportFileFormat.TEMPLATED    => exportV2.exportToTemplatedFile(Seq(rsmIdentifier), fileName, fileDirectory, outputParams, extraParams)
       case ExportFileFormat.PRIDE        => exportV2.exportToPrideFile(rsmIdentifier, fileName, fileDirectory, outputParams, extraParams)
       case ExportFileFormat.SPECTRA_LIST => exportV2.exportToSpectraList(rsmIdentifier, fileName, fileDirectory, outputParams, extraParams)
@@ -126,16 +125,16 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
 
     val fileFormat = ExportFileFormat.withName(paramsRetriever.getString(FILE_FORMAT_PARAM))
     fileFormat match {
-      case ExportFileFormat.MZIDENTML    => require(rsmIdentifiers.size == 1, "Could export only one Result into MzIdent")
+      case ExportFileFormat.MZIDENTML    => require(rsmIdentifiers.nonEmpty, "Could export at least one Result into MzIdent format")
       case ExportFileFormat.TEMPLATED    => require(rsmIdentifiers.nonEmpty, "Could export at least one Result into Excel format")
       case ExportFileFormat.PRIDE        => require(rsmIdentifiers.size == 1, "Could export only one Result into Pride format")
       case ExportFileFormat.SPECTRA_LIST => require(rsmIdentifiers.size == 1, "Could export only one Result into Spectra List")
     }
     
     var fileName = paramsRetriever.getOptString("file_name", null)
-    // Don't set default name in case of tempateds : may have more thant one and returned filename format is used by Studio.  
-    if ( !fileFormat.equals(ExportFileFormat.TEMPLATED) && StringUtils.isEmpty(fileName)) { 
-      fileName = "DatasetExport-" + UUID.randomUUID().toString 
+    // Don't set default name in case of templated/mzIdentML : may have more thant one and returned filename format is used by Studio.
+    if ( (!fileFormat.equals(ExportFileFormat.TEMPLATED) && !fileFormat.equals(ExportFileFormat.MZIDENTML)) && StringUtils.isEmpty(fileName)) {
+      fileName = "DatasetExport-" + UUID.randomUUID().toString
     }
     val fileDirectory = this.parseFileDirectory(paramsRetriever)
 
@@ -144,7 +143,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
     val outputMode = ExportOutputMode.withName(paramsRetriever.getOptString("output_mode", "FILE"))
 
     fileFormat match {
-      case ExportFileFormat.MZIDENTML    => exportToMzIdentML(rsmIdentifiers(0), fileName, fileDirectory, outputMode, extraParams)
+      case ExportFileFormat.MZIDENTML    => exportToMzIdentML(rsmIdentifiers, fileName, fileDirectory, outputMode, extraParams)
       case ExportFileFormat.TEMPLATED    => exportToTemplatedFile(rsmIdentifiers, fileName, fileDirectory, outputMode, extraParams)
       case ExportFileFormat.PRIDE        => exportToPrideFile(rsmIdentifiers(0), fileName, fileDirectory, outputMode, extraParams)
       case ExportFileFormat.SPECTRA_LIST => exportToSpectraList(rsmIdentifiers(0), fileName, fileDirectory, outputMode, extraParams)
@@ -152,51 +151,56 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
   }
 
   def exportToMzIdentML(
-    rsmIdentifier: ExportResultSummaryIdentifier,
+    rsmIdentifiers: Seq[ExportResultSummaryIdentifier],
     fileName: String,
     fileDir: String,
     outputFormat: ExportOutputMode.Value,
     extraParams: Option[Map[String, Any]]
   ): Object = {
 
-    // require(rsmIdentifiers.length == 1, "can only export one RSM at a time for the mzIdentML file format")
+    var exportedFiles: ArrayBuffer[String] = new ArrayBuffer()
     import fr.profi.util.serialization.ProfiJson.deserialize
-    // val rsmIdentifier = rsmIdentifiers(0)
-    var filePath = ""
-    val exportContact = if(extraParams.isDefined && extraParams.get.contains("contact")){
-      val contactInfo = serialize(extraParams.get.apply("contact"))
-       deserialize[Contact](contactInfo)
-    } else {
-      new Contact("Proline User", "ProFi", None, None)
-    }
-    val exportOrg = if(extraParams.isDefined && extraParams.get.contains("organization")){
-      val orgInfo = serialize(extraParams.get.apply("organization"))
-      deserialize[Organization](orgInfo)
-    } else {
-      new Organization("Proline User", None)
-    }
+    for (rsmIdentifier <- rsmIdentifiers) {
+      var filePath = ""
+      val exportContact = if (extraParams.isDefined && extraParams.get.contains("contact")) {
+        val contactInfo = serialize(extraParams.get.apply("contact"))
+        deserialize[Contact](contactInfo)
+      } else {
+        new Contact("Proline User", "ProFi", None, None)
+      }
+      val exportOrg = if (extraParams.isDefined && extraParams.get.contains("organization")) {
+        val orgInfo = serialize(extraParams.get.apply("organization"))
+        deserialize[Organization](orgInfo)
+      } else {
+        new Organization("Proline User", None)
+      }
 
-    val execCtx = DbConnectionHelper.createSQLExecutionContext(rsmIdentifier.projectId)
+      val execCtx = DbConnectionHelper.createSQLExecutionContext(rsmIdentifier.projectId)
 
-    try {
+      try {
 
-      val exporter = new MzIdExporter(rsmIdentifier.rsmId, execCtx)
-
-      filePath = fileDir + File.separatorChar + fileName + ".mzid"
-      exporter.exportResultSummary(filePath, exportContact, exportOrg)
-
-    } finally {
-      DbConnectionHelper.tryToCloseExecContext(execCtx)
+        val exporter = new MzIdExporter(rsmIdentifier.rsmId, execCtx)
+        var fileDatasetName = fileName
+//        if (StringUtils.isEmpty(fileName)) {
+          fileDatasetName = "DatasetMzIdentExport-" + rsmIdentifier.dsId.get + "_" + UUID.randomUUID().toString //In this version of exported DSId is mandatory
+//        }
+        logger.debug(" ----------- filename "+fileName+" new one "+fileDatasetName)
+        filePath = fileDir + File.separatorChar + fileDatasetName + ".mzid"
+        exporter.exportResultSummary(filePath, exportContact, exportOrg)
+        exportedFiles += filePath
+      } finally {
+        DbConnectionHelper.tryToCloseExecContext(execCtx)
+      }
     }
 
     if (outputFormat == ExportOutputMode.STREAM) {
       // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
       val resultMap = new HashMap[String, Object]()
-      resultMap.put("file_paths", Seq(filePath))
+      resultMap.put("file_paths", exportedFiles.toArray)
       resultMap.put(JMSConstants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
       resultMap
     } else {
-      Seq(filePath)
+      exportedFiles.toArray
     }
   }
 
@@ -208,34 +212,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
     extraParams: Option[Map[String, Object]]
   ): Object = {
 
-    //    require(extraParams.isDefined, "some extra parameters must be provided")
-
-    val filePath = fileDir + File.separator + fileName
-    var executionContext: IExecutionContext = null
-
-    try {
-      executionContext = DbConnectionHelper.createSQLExecutionContext(rsmIdentifier.projectId)
-
-      val extraParameters: Map[String, Object] = if (extraParams.isDefined) extraParams.get else Map.empty
-      // Export
-
-      val exporter = new PrideExporterService(executionContext, rsmIdentifier.rsmId, filePath, extraParameters)
-      exporter.runService()
-
-    } finally {
-      DbConnectionHelper.tryToCloseExecContext(executionContext)
-    }
-
-    if (outputFormat == ExportOutputMode.STREAM) {
-      // TODO for distributed (JMS) deployed services, return a complete URL with fully qualified host name
-      val resultMap = new HashMap[String, Object]()
-      resultMap.put("file_paths", Seq(filePath))
-      resultMap.put(JMSConstants.PROLINE_NODE_ID_KEY, NodeConfig.NODE_ID)
-      resultMap
-    } else {
-      Seq(filePath)
-    }
-
+    throw new UnsupportedOperationException("Pride format in no more supported !")
   }
 
   def exportToTemplatedFile(

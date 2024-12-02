@@ -11,6 +11,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.exceptions.CsvValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,7 +102,10 @@ public class PeptidesDataReader {
         try {
 
             //Read evidence Headers
-            reader = new CSVReader(new FileReader(m_evidenceFile),'\t');
+			final CSVParser parser =
+					new CSVParserBuilder().withSeparator('\t').build();
+			reader = new CSVReaderBuilder(new FileReader(m_evidenceFile)).withCSVParser(parser).build();
+
             String[] headers = reader.readNext();
             Map<Integer,String> headerByIndex = new HashMap<Integer, String>();
             for(int i=0; i<headers.length; i++){
@@ -142,8 +149,10 @@ public class PeptidesDataReader {
             throw new RuntimeException("Error reading MSMS file.", e);
         } catch (NumberFormatException nbe){
             throw new RuntimeException("Error parsing MSMS data.", nbe);
-        }
-        return result;
+        } catch (CsvValidationException e) {
+			throw new RuntimeException("Error parsing MSMS data.", e);
+		}
+		return result;
     }
 
 	public ResultSetsDataMapper parseQuantitationData(Map<String, Long> rsIdByName, StringBuffer warningMsg) {
@@ -157,7 +166,9 @@ public class PeptidesDataReader {
 		try {
 			
 			//Read Headers
-			reader = new CSVReader(new FileReader(m_peptidesFile),'\t');
+			final CSVParser parser =
+					new CSVParserBuilder().withSeparator('\t').build();
+			reader = new CSVReaderBuilder(new FileReader(m_peptidesFile)).withCSVParser(parser).build();
 			String[] headers = reader.readNext();
 			Map<Integer,String> headerByIndex = new HashMap<Integer, String>();			
 			for(int i=0; i<headers.length; i++){
@@ -214,6 +225,8 @@ public class PeptidesDataReader {
 			throw new RuntimeException("Error reading MSMS file.", e);
 		} catch (NumberFormatException nbe){
 			throw new RuntimeException("Error parsing MSMS data.", nbe);
+		} catch (CsvValidationException e) {
+			throw new RuntimeException("Error parsing MSMS data.", e);
 		} catch ( Throwable t) {
 			logger.error("Error while parsing line "+String.join(",", nextRow), t);
 			throw t;

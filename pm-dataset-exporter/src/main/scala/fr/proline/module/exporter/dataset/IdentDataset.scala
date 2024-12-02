@@ -25,7 +25,8 @@ class IdentDataset(
                     protected val loadSpectraDescriptors: (Array[Long]) => Array[Spectrum],
                     val loadPepMatches: (Array[Long]) => Array[PeptideMatch],
                     val loadPeptides: (Array[Long]) => Array[Peptide],
-                    val loadPtmDataset: () => Option[PtmDataSet]
+                    val loadPtmDataset: () => Option[PtmDataSet],
+                    val datasetID: Long
 ) extends LazyLogging {
 
   // Count the number of protein sets and proteins matches related to a given peptide match

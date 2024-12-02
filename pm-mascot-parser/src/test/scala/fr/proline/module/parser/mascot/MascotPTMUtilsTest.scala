@@ -52,7 +52,7 @@ class MascotPTMUtilsTest extends LazyLogging {
     assertEquals("Post-translational", singlePtmDef.classification)
     assertEquals(PtmLocation.PROT_N_TERM.toString, singlePtmDef.location)
     assertEquals("Acetyl", singlePtmDef.names.shortName)
-    assertEquals('\0', singlePtmDef.residue)
+    assertEquals('\u0000', singlePtmDef.residue)
   }
 
   @Test

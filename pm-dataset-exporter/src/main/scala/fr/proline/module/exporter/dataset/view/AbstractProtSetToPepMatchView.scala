@@ -29,6 +29,7 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
     FIELD_PSM_CD_PRETTY_RANK,
     FIELD_PSM_FRAGMENT_MATCHES_COUNT,
     FIELD_PSM_SPECTRUM_TITLE,
+    FIELD_PSM_PIF_VALUE,
     FIELD_PSM_NB_PROTEIN_SETS,
     FIELD_PSM_NB_SAMESET_PROTEIN_MATCHES,
     FIELD_PSM_NB_PROTEIN_MATCHES,
@@ -53,7 +54,7 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
     val pepMatch = pepMatchBuildingCtx.pepMatch
     val seqMatch = pepMatchBuildingCtx.seqMatch
     val peptide = pepMatch.peptide
-    val msQueryOpt = Option(pepMatch.getMs2Query)
+    val msQueryOpt = Option(pepMatch.getMs2Query())
 
     val protSetPepSet = protMatchBuildingCtx.peptideSet
     val subSetProtMatchesIds : mutable.HashSet[Long] =new  mutable.HashSet[Long]()
@@ -77,6 +78,7 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
     }
     
     val ptmSitePropsOpt = pepMatch.properties.flatMap( _.getPtmSiteProperties )
+    val pifValOpt = pepMatch.properties.flatMap( _.getPrecursorIntensityFraction )
     val ptmScoreOpt = ptmSitePropsOpt.flatMap(_.getMascotDeltaScore)
     
     val ptmSitesOpt = if (ptmSitePropsOpt.isEmpty) None
@@ -124,6 +126,7 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
         case FIELD_PSM_RANK => pepMatch.rank
         case FIELD_PSM_CD_PRETTY_RANK => pepMatch.cdPrettyRank
         case FIELD_PSM_FRAGMENT_MATCHES_COUNT => pepMatch.fragmentMatchesCount
+        case FIELD_PSM_PIF_VALUE => if(pifValOpt.isDefined) pifValOpt.get else "-"
         case FIELD_PSM_SPECTRUM_TITLE => msQueryOpt.map(_.spectrumTitle).orNull
         case FIELD_PSM_NB_PROTEIN_SETS => identDS.validProtSetsByPeptideId.get(peptide.id).map(_.size).getOrElse(0)
         case FIELD_PSM_NB_SAMESET_PROTEIN_MATCHES => identDS.validSamesetProtMatchIdSetByPepMatchId.get(pepMatch.id).map(_.size).getOrElse(0)
@@ -131,8 +134,8 @@ abstract class AbstractProtSetToPepMatchView extends AbstractProtSetToTypicalPro
         case FIELD_PSM_NB_DATABANK_PROTEIN_MATCHES => identDS.allProtMatchSetByPepId.get(peptide.id).map(_.size).getOrElse(0)
         case FIELD_PSM_START => seqMatch.start
         case FIELD_PSM_END => seqMatch.end
-        case FIELD_PSM_RESIDUE_BEFORE => if (seqMatch.residueBefore == '\0') '-' else seqMatch.residueBefore
-        case FIELD_PSM_RESIDUE_AFTER => if (seqMatch.residueAfter == '\0') '-' else seqMatch.residueAfter
+        case FIELD_PSM_RESIDUE_BEFORE => if (seqMatch.residueBefore == '\u0000') '-' else seqMatch.residueBefore
+        case FIELD_PSM_RESIDUE_AFTER => if (seqMatch.residueAfter == '\u0000') '-' else seqMatch.residueAfter
         case FIELD_PSM_PTM_SCORE => ptmScoreOpt.map( dcf2.format(_) ).orNull
         case FIELD_PSM_PTM_SITES_CONFIDENCE => ptmSitesOpt.orNull
         case FIELD_PSM_PHOSPHO_RS_RESULT => ptmSitePropsOpt.flatMap( _.phosphoRsString ).orNull

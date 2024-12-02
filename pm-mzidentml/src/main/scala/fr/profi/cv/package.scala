@@ -3,6 +3,7 @@ package fr.profi
 import fr.profi.obo.PsiMs
 import fr.profi.obo.PsiMsTermId
 import uk.ac.ebi.jmzidml.model.mzidml.CvParam
+import scala.language.implicitConversions
 
 package object cv {
   

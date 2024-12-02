@@ -1,14 +1,14 @@
 package fr.proline.module.exporter.dataset.view
 
 import java.text.SimpleDateFormat
-
 import fr.proline.core.om.model.msi._
 import fr.proline.module.exporter.api.view._
 import fr.proline.module.exporter.commons.config.ExportConfigConstant._
-import fr.proline.module.exporter.commons.config.ExportConfigSheet
+import fr.proline.module.exporter.commons.config.{ExportConfigConstant, ExportConfigSheet}
 import fr.proline.module.exporter.commons.config.view.CustomViewFields
 import fr.proline.module.exporter.commons.view.SmartDecimalFormat
 import fr.proline.module.exporter.dataset._
+import org.apache.commons.lang3.StringUtils
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -69,6 +69,11 @@ class MsiSearchExtendedView(
         case FIELD_INFORMATION_SEARCH_DATE                   => dateFormat.format(msiSearch.date)
         case FIELD_INFORMATION_RAW_FILE_NAME                 => Option(pkl.rawFileIdentifier).getOrElse("")
         case FIELD_INFORMATION_PEAKLIST_FILE_PATH            => pkl.path
+        case FIELD_INFORMATION_PEAKLIST_SOFTWARE             => {
+          val pklSoftVersion = if(StringUtils.isEmpty(pkl.peaklistSoftware.version) )"" else " "+pkl.peaklistSoftware.version
+          val pklSoftware =  pkl.peaklistSoftware.name +pklSoftVersion
+          pklSoftware
+        }
         case FIELD_INFORMATION_RESULT_FILE_NAME              => msiSearch.resultFileName
         case FIELD_INFORMATION_RESULT_FILE_DIRECTORY         => msiSearch.resultFileDirectory
         case FIELD_INFORMATION_JOB_NUMBER                    => msiSearch.jobNumber

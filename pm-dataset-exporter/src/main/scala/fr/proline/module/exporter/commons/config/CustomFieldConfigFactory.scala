@@ -15,6 +15,7 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_INFORMATION_SEARCH_DATE, "search_date"),
       CustomFieldConfig(FIELD_INFORMATION_RAW_FILE_NAME, "raw_file_name"),
       CustomFieldConfig(FIELD_INFORMATION_PEAKLIST_FILE_PATH, "peaklist_file_path"),
+      CustomFieldConfig(FIELD_INFORMATION_PEAKLIST_SOFTWARE, "peaklist_software"),
       CustomFieldConfig(FIELD_INFORMATION_RESULT_FILE_NAME, "result_file_name"),
       CustomFieldConfig(FIELD_INFORMATION_RESULT_FILE_DIRECTORY, "result_file_directory"),
       CustomFieldConfig(FIELD_INFORMATION_JOB_NUMBER, "job_number"),
@@ -46,17 +47,20 @@ object CustomFieldConfigFactory {
     val identFields = Array(
       CustomFieldConfig(FIELD_INFORMATION_RESULT_FILE_NAME, "result_file_name"),
       CustomFieldConfig(FIELD_IMPORT_PARAMS, "import_params"),
+      CustomFieldConfig(FIELD_IMPORT_FILTER_FDR_METHOD, "filter_fdr_method"),
       CustomFieldConfig(FIELD_IMPORT_PSM_FILTER_EXPECTED_FDR, "psm_filter_expected_fdr"),
       CustomFieldConfig(FIELD_IMPORT_PSM_FILTER, "psm_filter"), // incremental
       CustomFieldConfig(FIELD_IMPORT_PROT_FILTER_EXPECTED_FDR, "prot_filter_expected_fdr"),
-      CustomFieldConfig(FIELD_IMPORT_PROT_FILTER, "import_prot_filter") // incremental
+      CustomFieldConfig(FIELD_IMPORT_PROT_FILTER, "import_prot_filter") ,// incremental
+      CustomFieldConfig(FIELD_IMPORT_PROT_SCORING, "import_prot_scoring")
+
     )
     
     if (!fromXIC) identFields
     else Array(CustomFieldConfig(FIELD_INFORMATION_QUANT_CHANNEL_NAME, "quant_channel_name")) ++ identFields
   }
 
-  // get all fields for protein sets sheet
+  // get all fields for protein sets sheet (and other sheets which includes protset info ..)
   def getProteinSetsSheetFields(fromProtein: Boolean, fromXIC: Boolean, fromSC: Boolean): Array[CustomFieldConfig] = {
 
     val fieldsBuffer = ArrayBuffer(
@@ -129,8 +133,8 @@ object CustomFieldConfigFactory {
     )
   }
 
-  // get all fields for Best PSM sheet
-  def getPeptideMatchesSheetFields(fromXIC: Boolean, fromSC: Boolean): Array[CustomFieldConfig] = {
+  // get all fields for All PSM sheet
+  def getPeptideMatchesSheetFields(fromXIC: Boolean, fromSC: Boolean, fromIsobaric : Boolean = false): Array[CustomFieldConfig] = {
     
     val fieldsBuffer = ArrayBuffer(
       CustomFieldConfig(FIELD_PSM_PEPTIDE_ID, "peptide_id"),
@@ -151,6 +155,7 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_PSM_RANK, "rank"),
       CustomFieldConfig(FIELD_PSM_CD_PRETTY_RANK, "cd_pretty_rank"),
       CustomFieldConfig(FIELD_PSM_FRAGMENT_MATCHES_COUNT, "fragment_matches_count"),
+      if(!fromIsobaric) null else  CustomFieldConfig(FIELD_PSM_PIF_VALUE, "PIF"),
       CustomFieldConfig(FIELD_PSM_SPECTRUM_TITLE, "spectrum_title"),
       CustomFieldConfig(FIELD_PSM_NB_PROTEIN_SETS, "#psm_prot_sets"),
       CustomFieldConfig(FIELD_PSM_NB_SAMESET_PROTEIN_MATCHES, "#psm_sameset_prot_matches"),
@@ -172,6 +177,7 @@ object CustomFieldConfigFactory {
       fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id")
       fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_ELUTION_TIME, "master_elution_time")
       fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_SELECTION_LEVEL, "is_validated_for_quanti")
+      fieldsBuffer += CustomFieldConfig(FIELD_PSM_QUANT_IS_VALID_FOR_PROT_SET, "quant_is_valid_for_protein_set")
       fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_PSM_COUNT, if (fromXIC) "psm_count" else "Basic SC")
       fieldsBuffer += CustomFieldConfig(FIELD_PROTEIN_SETS_QUANT_RAW_ABUNDANCE, if (fromXIC) "raw_abundance" else "Specific SC")      
     }
@@ -184,12 +190,12 @@ object CustomFieldConfigFactory {
     fieldsBuffer.toArray
   }
 
-  // get all fields for all PSM sheet
+  // get all fields for Best PSM sheet (same as All psm)
   def getBestPeptideMatchesSheetFields(fromXIC: Boolean, fromSC: Boolean): Array[CustomFieldConfig] = {
     getPeptideMatchesSheetFields(fromXIC, fromSC)
   }
 
-  // get all fields for masterQuantPeptideIon
+  // get all fields for masterQuantPeptide
   def getMasterQuantPeptideSheetFields(): Array[CustomFieldConfig] = {
 
     val fieldsBuffer = ArrayBuffer(
@@ -201,7 +207,7 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_PSM_QUANT_ELUTION_TIME, "master_elution_time"),
       CustomFieldConfig(FIELD_PSM_QUANT_SELECTION_LEVEL, "is_validated_for_quanti"),
       CustomFieldConfig(FIELD_PSM_NB_PROTEIN_SETS, "#psm_prot_sets"),
-      CustomFieldConfig(FIELD_MASTER_QUANT_PEPTIDE_PROTEIN_SETS, "protein_sets_list"),
+      CustomFieldConfig(FIELD_MASTER_QUANT_PEPTIDE_PROTEIN_SETS, "quant_protein_sets_list"),
       CustomFieldConfig(FIELD_MASTER_QUANT_PEPTIDE_ION_MOZ, "master_quant_peptide_moz"),
       CustomFieldConfig(FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME, "master_quant_peptide_elution_time")
     )
@@ -215,7 +221,7 @@ object CustomFieldConfigFactory {
 
     fieldsBuffer.toArray
   }
-  // get all fields for masterQuantPeptideIon
+  // get all fields for  Quant Peptide Ion
   def getMasterQuantPepIonSheetFields(): Array[CustomFieldConfig] = {
     
     val fieldsBuffer = ArrayBuffer(
@@ -227,6 +233,7 @@ object CustomFieldConfigFactory {
       CustomFieldConfig(FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID, "master_quant_peptide_id"),
       CustomFieldConfig(FIELD_PSM_QUANT_ELUTION_TIME, "master_elution_time"),
       CustomFieldConfig(FIELD_PSM_QUANT_SELECTION_LEVEL, "is_validated_for_quanti"),
+      CustomFieldConfig(FIELD_PSM_QUANT_IS_VALID_FOR_PROT_SET, "quant_is_valid_for_protein_set"),
       CustomFieldConfig(FIELD_PSM_NB_PROTEIN_SETS, "#psm_prot_sets"),
       CustomFieldConfig(FIELD_MASTER_QUANT_PEPTIDE_ION_ID, "master_quant_peptide_ion_id"),
       CustomFieldConfig(FIELD_MASTER_QUANT_PEPTIDE_ION_MOZ, "master_quant_peptide_ion_moz"),
@@ -256,6 +263,9 @@ object CustomFieldConfigFactory {
   // get all fields for stat sheet
   def getStatisticsSheetFields(): Array[CustomFieldConfig] = {
     Array(
+      CustomFieldConfig(FIELD_STAT_MODULE_VERSION, "version"),
+      CustomFieldConfig(FIELD_STAT_DATASET_ID, "dataset_id"),
+      CustomFieldConfig(FIELD_STAT_DATASET_IS_QUANT, "dataset_is_quant"),
       CustomFieldConfig(FIELD_STAT_PSM_VALIDATION, "psm_validation"),
       CustomFieldConfig(FIELD_STAT_NB_TOTAL_PSMS, "#total_psms"),
       CustomFieldConfig(FIELD_STAT_NB_TOTAL_PRECURSORS, "#total_precursors"),
@@ -278,7 +288,7 @@ object CustomFieldConfigFactory {
 
 
 
-  // get all fields for Best PSM sheet
+  // get all fields for PTM Cluster sheet
   def getPtmClusterSheetFields(fromXIC: Boolean): Array[CustomFieldConfig] = {
 
     val fieldsBuffer = ArrayBuffer(

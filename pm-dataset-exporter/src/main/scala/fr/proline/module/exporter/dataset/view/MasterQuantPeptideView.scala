@@ -1,16 +1,13 @@
 package fr.proline.module.exporter.dataset.view
 
-import fr.profi.util.collection._
-import fr.proline.core.om.model.msi.{PeptideInstance, ProteinSet}
-import fr.proline.core.om.model.msq.QuantPeptideIon
+import fr.proline.core.om.model.msi.ProteinSet
 import fr.proline.module.exporter.api.view.IRecordBuildingContext
 import fr.proline.module.exporter.commons.config.ExportConfigConstant._
-import fr.proline.module.exporter.commons.config.{CustomFieldConfig, ExportConfigSheet}
+import fr.proline.module.exporter.commons.config.ExportConfigSheet
 import fr.proline.module.exporter.commons.view.SmartDecimalFormat
 import fr.proline.module.exporter.dataset.IdentDataset
 
 import java.text.SimpleDateFormat
-import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, HashMap}
 
 class MasterQuantPeptideView(
@@ -34,14 +31,14 @@ class MasterQuantPeptideView(
   protected val mqPeptideFieldsConfigs = sheetConfig.fields.filter( f => mqPeptideFieldSet.contains(f.id) )
 
   // TODO: factorize this code with ProtSetToBestPepMatchView in AbsractProtSetToPepMatchView (onEachPeptideMatch method)
-  override def formatView(recordFormatter: Map[String, Any] => Unit) {
+  override def formatView(recordFormatter: Map[String, Any] => Unit) : Unit = {
 
     val rsm = identDS.resultSummary
 
     val proteinSets = rsm.proteinSets.filter(exportAllProteinSet || _.isValidated)
     val protSetsByPepInst = new HashMap[Long, ArrayBuffer[ProteinSet]]
     proteinSets.map { protSet =>
-      protSet.peptideSet.getPeptideInstances.foreach { pepInst =>
+      protSet.peptideSet.getPeptideInstances().foreach { pepInst =>
         protSetsByPepInst.getOrElseUpdate(pepInst.id, new ArrayBuffer[ProteinSet]()) += protSet
       }
     }
@@ -60,7 +57,7 @@ class MasterQuantPeptideView(
 
       // these values are necessary for inherited methods (due to incorrect inheritance design) but the fields extracted from this value
       // wont be used in this export view.
-      val protSet = protSetsByPepInst.get(pepInst.id).get.maxBy(_.peptideSet.score)
+      val protSet = protSetsByPepInst(pepInst.id).maxBy(_.peptideSet.score)
       val reprProtMatch = protSet.getRepresentativeProteinMatch().getOrElse(protSet.samesetProteinMatches.get.head)
       val seqMatch = reprProtMatch.sequenceMatches.filter(_.getPeptideId() == peptideId).head
 
@@ -81,12 +78,26 @@ class MasterQuantPeptideView(
         this.formatRecord(identRecordBuildingCtx, recordFormatter)
       } else {
 
+        val proteinSets = identDS.validProtSetsByPeptideId(peptideId)
+        var quantProtSetList = ""
+        for(nextProtSet <- proteinSets){
+          if (quantDs.mqProtSetByProtSetId.contains(nextProtSet.id)) {
+            val mqProtSet = quantDs.mqProtSetByProtSetId(nextProtSet.id)
+            if(mqProtSet.properties.isDefined && mqProtSet.properties.get.getSelectionLevelByMqPeptideId().isDefined) {
+              val selLevel = mqProtSet.properties.get.getSelectionLevelByMqPeptideId().get.get(mqPepOpt.get.id)
+              if(selLevel.isDefined && selLevel.get>=2)
+                quantProtSetList = quantProtSetList+nextProtSet.getRepresentativeProteinMatch().get.accession+';'
+            }
+          }
+        }
+
         val quantRecordBuildingCtx = new MasterQuantPeptideBuildingContext(
           pepMatch = bestPepMatch,
           seqMatch = seqMatch,
           protMatchBuildingCtx = Some(protMatchBuildingCtx),
           mqPepOpt.get,
-          groupSetupNumber = groupSetupNumber
+          groupSetupNumber = groupSetupNumber,
+          quantProtSetList
         )
 
         // Format this peptide match with protein set information
@@ -107,14 +118,12 @@ class MasterQuantPeptideView(
     recordBuilder ++= pepMatchRecord
 
     val mqPepBuildingCtx = buildingContext.asInstanceOf[MasterQuantPeptideBuildingContext]
-    val peptideId = mqPepBuildingCtx.masterQuantPeptide.getPeptideId.get
-    val proteinSets = identDS.validProtSetsByPeptideId(peptideId)
 
-    val reprProtSet = proteinSets.map(ps => ps.getRepresentativeProteinMatch().getOrElse(ps.samesetProteinMatches.get.head))
+    val reprProtSet = mqPepBuildingCtx.quantProtListAccession
 
-    for (fieldConfig <- mqPeptideFieldsConfigs) {
+      for (fieldConfig <- mqPeptideFieldsConfigs) {
       val fieldValue: Any = fieldConfig.id match {
-        case FIELD_MASTER_QUANT_PEPTIDE_PROTEIN_SETS => reprProtSet.map(_.accession).mkString(";")
+        case FIELD_MASTER_QUANT_PEPTIDE_PROTEIN_SETS => reprProtSet
       }
       if (fieldValue != null) recordBuilder += fieldConfig.title -> fieldValue
 

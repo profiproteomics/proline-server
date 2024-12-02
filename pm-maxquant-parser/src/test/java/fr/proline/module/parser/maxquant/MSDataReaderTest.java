@@ -1,23 +1,7 @@
 package fr.proline.module.parser.maxquant;
 
-import java.net.URL;
-import java.util.Arrays;
-import java.util.Map;
-
-import fr.proline.core.om.model.msi.FragmentationRule;
-import fr.proline.core.om.model.msi.FragmentationRuleSet;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import fr.proline.context.BasicExecutionContext;
-import fr.proline.core.om.model.msi.Instrument;
-import fr.proline.core.om.model.msi.InstrumentConfig;
-import fr.proline.core.om.model.msi.PeaklistSoftware;
-import fr.proline.core.om.model.msi.PtmDefinition;
-import fr.proline.core.om.model.msi.SearchSettings;
+import fr.proline.core.om.model.msi.*;
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext;
 import fr.proline.core.om.provider.msi.IPTMProvider;
 import fr.proline.core.om.provider.msi.IPeptideProvider;
@@ -26,7 +10,16 @@ import fr.proline.module.parser.maxquant.model.ResultSetsDataMapper;
 import fr.proline.module.parser.maxquant.util.TestPTMProvider;
 import fr.proline.module.parser.maxquant.util.TestPeptideProvider;
 import fr.proline.module.parser.maxquant.util.TestSeqdDBProvider;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scala.Option;
+
+import java.net.URL;
+import java.util.Map;
 
 public class MSDataReaderTest {
 
@@ -57,13 +50,11 @@ public class MSDataReaderTest {
 		SearchSettings ss = reader.getSearchSettings();
 		PtmDefinition[] varPtms = ss.variablePtmDefs();
 		PtmDefinition[] fixedPtms = ss.fixedPtmDefs();
-		PtmDefinition[] allPtms = Arrays.copyOf(varPtms, varPtms.length+fixedPtms.length);
-		System.arraycopy(fixedPtms, 0, allPtms, varPtms.length, fixedPtms.length);
-		
+
 		StringBuffer warningMsg = new StringBuffer();
 		MSDataReader dataReader = new MSDataReader(folderURL, m_pec, -1l, ps);
 		Long start = System.currentTimeMillis();
-		ResultSetsDataMapper rsMapper= dataReader.parseMSData2ResulSets(rsidByName, allPtms, "(.*)\\|", warningMsg);
+		ResultSetsDataMapper rsMapper= dataReader.parseMSData2ResulSets(rsidByName, fixedPtms, "(.*)\\|", warningMsg);
 		logger.info("MS parsed in "+(System.currentTimeMillis() - start)+" ms");
 		Assert.assertEquals(0,warningMsg.length());
 		Assert.assertNotNull(rsMapper);
@@ -96,12 +87,10 @@ public class MSDataReaderTest {
 		SearchSettings ss = reader.getSearchSettings();
 		PtmDefinition[] varPtms = ss.variablePtmDefs();
 		PtmDefinition[] fixedPtms = ss.fixedPtmDefs();
-		PtmDefinition[] allPtms = Arrays.copyOf(varPtms, varPtms.length+fixedPtms.length);
-		System.arraycopy(fixedPtms, 0, allPtms, varPtms.length, fixedPtms.length);
-		
+
 		StringBuffer warningMsg = new StringBuffer();
 		MSDataReader dataReader = new MSDataReader(folderURL, m_pec, -1l,ps);
-		ResultSetsDataMapper rsMapper= dataReader.parseMSData2ResulSets(rsidByName, allPtms, "(.*)\\|", warningMsg);
+		ResultSetsDataMapper rsMapper= dataReader.parseMSData2ResulSets(rsidByName, fixedPtms, "(.*)\\|", warningMsg);
 		Assert.assertNotEquals(0,warningMsg.length());
 		logger.info(" Warning Msg: "+warningMsg.toString());
 		Assert.assertNotNull(rsMapper);
@@ -118,4 +107,44 @@ public class MSDataReaderTest {
 		Assert.assertEquals(251,rsMapper.getPeptideMatchesForRs("OVEMB150205_27").size());
 		
 	}
+
+	@Ignore
+	@Test
+	public void testReadMSDataV_Laura(){
+
+		String folder = "/mq_results/1_5/test_Maxquant";
+		InstrumentConfig ic = new InstrumentConfig(-1, new Instrument(-1, "test", "", null) , "FTMS", "FTMS", "CID");
+		PeaklistSoftware ps = new PeaklistSoftware(-1,"test ","1.0", null,null);
+		URL folderURL = this.getClass().getResource(folder);
+		FragmentationRuleSet frs = new FragmentationRuleSet(-1,"test",  new FragmentationRule[0]);
+
+		ExperimentPropertiesReader reader = new ExperimentPropertiesReader(folderURL,m_pec.getProvider(ISeqDatabaseProvider.class),m_pec.getProvider(IPTMProvider.class), ic, Option.apply(frs), ps);
+		Map<String, Long> rsidByName = reader.getResultSetIds();
+
+		SearchSettings ss = reader.getSearchSettings();
+		PtmDefinition[] varPtms = ss.variablePtmDefs();
+		PtmDefinition[] fixedPtms = ss.fixedPtmDefs();
+
+		StringBuffer warningMsg = new StringBuffer();
+		MSDataReader dataReader = new MSDataReader(folderURL, m_pec, -1l, ps);
+		Long start = System.currentTimeMillis();
+		ResultSetsDataMapper rsMapper= dataReader.parseMSData2ResulSets(rsidByName, fixedPtms, "(.*)\\|", warningMsg);
+		logger.info("MS parsed in "+(System.currentTimeMillis() - start)+" ms");
+		Assert.assertEquals(0,warningMsg.length());
+		Assert.assertNotNull(rsMapper);
+		Assert.assertNotNull(rsMapper.getPeptideMatchesForRs("OVEMB150205_12"));
+		Assert.assertNotNull(rsMapper.getPeptideMatchesForRs("OVEMB150205_27"));
+		Assert.assertNotNull(rsMapper.getPeptidesForRs("OVEMB150205_12"));
+		Assert.assertNotNull(rsMapper.getPeptidesForRs("OVEMB150205_27"));
+		Assert.assertNotNull(rsMapper.getProteinMatchesForRs("OVEMB150205_12"));
+		Assert.assertNotNull(rsMapper.getProteinMatchesForRs("OVEMB150205_27"));
+		Assert.assertNotNull(rsMapper.getSpectrumByIdForRs("OVEMB150205_12"));
+		Assert.assertNotNull(rsMapper.getSpectrumByIdForRs("OVEMB150205_27"));
+
+		Assert.assertEquals(184,rsMapper.getPeptideMatchesForRs("OVEMB150205_12").size());
+		Assert.assertEquals(251,rsMapper.getPeptideMatchesForRs("OVEMB150205_27").size());
+
+	}
+
+
 }

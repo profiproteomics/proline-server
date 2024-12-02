@@ -14,7 +14,7 @@ import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
 import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.repository.DriverType
 import fr.proline.context.BasicExecutionContext
-import fr.proline.core.om.provider.msi.impl.{ ORMResultSetProvider, SQLPTMProvider, SQLResultSetProvider }
+import fr.proline.core.om.provider.msi.impl.{ORMResultSetProvider, SQLPTMProvider, SQLResultSetProvider}
 import fr.proline.core.om.provider.msi.impl.SQLMsiSearchProvider
 import fr.proline.core.dal.AbstractMultipleDBTestCase
 import fr.proline.core.om.provider.msi.ResultFileProviderRegistry
@@ -32,6 +32,8 @@ import java.io.ByteArrayOutputStream
 import fr.proline.core.dal.BuildUdsDbConnectionContext
 import fr.proline.core.dal.BuildDbConnectionContext
 import fr.proline.core.dal.BuildMsiDbConnectionContext
+
+import java.text.SimpleDateFormat
 import scala.collection.mutable.HashMap
 
 class XTandemParserTest extends AbstractMultipleDBTestCase {
@@ -236,7 +238,18 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
     val myXtandemResultFileProvider = new XtandemResultFileProvider
     myXtandemResultFileProvider.setParserContext(parserContext)
     try {
-    myXtandemResultFileProvider.getResultFile(file, null, parserContext).getResultSet(false)
+      val rs: ResultSet = myXtandemResultFileProvider.getResultFile(file, null, parserContext).getResultSet(false)
+      assertNotNull(rs)
+      assertNotNull(rs.properties.get.xtandemImportProperties)
+      assertEquals(rs.proteinMatches.length, 3018)
+      assertNotNull(rs.childMsiSearches)
+      assertNotNull(rs.properties.get.xtandemImportProperties.get.rawSettings)
+      assertEquals(rs.properties.get.xtandemImportProperties.get.rawSettings.get("protein, taxon"), "yeast")
+      assertEquals(rs.properties.get.xtandemImportProperties.get.rawSettings.get("process, start time"), "2014:11:18:11:38:43")
+      val sdf : SimpleDateFormat = new SimpleDateFormat("yyyy:MM:dd:HH:mm:ss")
+      val rsDate = sdf.parse("2014:11:18:11:38:43")
+      assertEquals(rs.msiSearch.get.date, rsDate)
+
     } catch {
       case e: Exception =>
         logger.error("Error on XtandemResultFileProviderTest", e)

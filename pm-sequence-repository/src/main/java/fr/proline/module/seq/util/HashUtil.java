@@ -9,8 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import fr.profi.util.StringUtils;
-import jonelo.jacksum.JacksumAPI;
-import jonelo.jacksum.algorithm.AbstractChecksum;
+import net.jacksum.JacksumAPI;
+import net.jacksum.algorithms.AbstractChecksum;
 
 public class HashUtil {
 

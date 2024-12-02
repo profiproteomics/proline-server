@@ -1,21 +1,11 @@
 package fr.proline.module.parser.xtandem
 
-import java.io.File
-
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Test
-
-import fr.proline.core.dal.AbstractMultipleDBTestCase
-import fr.proline.core.dal.BuildLazyExecutionContext
+import fr.proline.core.dal.{AbstractMultipleDBTestCase, BuildLazyExecutionContext}
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext
-import fr.proline.core.om.provider.msi.IPTMProvider
 import fr.proline.core.om.provider.msi.impl.ORMResultSetProvider
-import fr.proline.core.om.provider.msi.impl.SQLPTMProvider
-import fr.proline.core.om.provider.msi.impl.SQLPeptideProvider
-import fr.proline.core.service.msi.ResultFileImporter
 import fr.proline.repository.DriverType
+import org.junit.Assert.assertNotNull
+import org.junit.{Before, Test}
 
 @Test
 class XtandemRFImporterTest extends AbstractMultipleDBTestCase {

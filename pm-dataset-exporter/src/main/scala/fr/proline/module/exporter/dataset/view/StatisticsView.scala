@@ -1,18 +1,18 @@
 package fr.proline.module.exporter.dataset.view
 
 import java.text.{DecimalFormat, SimpleDateFormat}
-
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.LongMap
-
 import fr.proline.core.om.model.msi._
+import fr.proline.module.exporter.api.Version
 import fr.proline.module.exporter.api.view.IFormLikeView
 import fr.proline.module.exporter.commons.config.ExportConfigConstant._
 import fr.proline.module.exporter.commons.config.ExportConfigSheet
 import fr.proline.module.exporter.commons.config.view.CustomViewFields
+import fr.proline.module.exporter.dataset.{IdentDataset, QuantDataset}
 
 class StatisticsView(
-  val rsm: LazyResultSummary,
+  val identDS: IdentDataset,
   val sheetConfig: ExportConfigSheet,
   val dateFormat: SimpleDateFormat,
   val decimalFormat: DecimalFormat
@@ -21,7 +21,11 @@ class StatisticsView(
   var viewName = "stats"
   val fieldsTitles = sheetConfig.fields.map(_.title)
   val fields = new CustomViewFields(fieldsTitles)
-
+  val quantDS: QuantDataset = identDS match {
+    case qds: QuantDataset => qds
+    case _ => null
+  }
+  val rsm = identDS.resultSummary
   def getFieldValueMap() = _fieldValueMap
   def getFieldsNames() = fieldsTitles
 
@@ -72,9 +76,12 @@ class StatisticsView(
     val multiSpeSeqsProtSetCount = specificSeqsCounts.size - singleSpeSeqProtSetCount
 
     val recordBuilder = Map.newBuilder[String,Any]
-
+    val version = new Version
     for (fieldConfig <- sheetConfig.fields) {
       val fieldValue: Any = fieldConfig.id match {
+        case FIELD_STAT_MODULE_VERSION => version.getVersion
+        case FIELD_STAT_DATASET_ID => identDS.datasetID
+        case FIELD_STAT_DATASET_IS_QUANT => (quantDS!=null)
         case FIELD_STAT_PSM_VALIDATION => psmValResultsAsStr
         case FIELD_STAT_NB_TOTAL_PSMS => pepMatches.length
         case FIELD_STAT_NB_TOTAL_PRECURSORS => allZCount

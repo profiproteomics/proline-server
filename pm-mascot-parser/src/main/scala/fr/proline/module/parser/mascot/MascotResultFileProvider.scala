@@ -143,9 +143,9 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
                   if (normSite.length() == 1)
                     normSite.charAt(0)
                   else
-                    '\0'
+                    '\u0000'
                 } else {
-                  '\0'
+                  '\u0000'
                 }
               },
               classification = specificity.getClassification,
@@ -202,7 +202,7 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
         }
         line = bfr.readLine()
       }
-
+      section
     } finally {
 
       try {
@@ -210,10 +210,9 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
       } catch {
         case exClose: Exception => logger.error("Error closing [" + absolutePathname + ']', exClose)
       }
-
+      section
     }
 
-    section
   }
 
   // TODO ABU

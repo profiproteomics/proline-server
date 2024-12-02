@@ -2,7 +2,7 @@ package fr.proline.cortex.service.dps.msi
 
 import java.io.File
 
-import scala.collection.JavaConversions.mapAsScalaMap
+import scala.collection.JavaConverters._
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.StringUtils
@@ -55,13 +55,13 @@ class CertifyResultFiles extends AbstractRemoteProcessingService with ICertifyRe
 
     val importerProperties = if (!paramsRetriever.hasParam(PROCESS_METHOD.IMPORTER_PROPERTIES_PARAM)) Map.empty[String, Any]
     // TODO: DBO => please, comment what is performed here
-    else paramsRetriever.getMap(PROCESS_METHOD.IMPORTER_PROPERTIES_PARAM).map {
+    else paramsRetriever.getMap(PROCESS_METHOD.IMPORTER_PROPERTIES_PARAM).asScala.map {
       case (a, b) => {
         if (a.endsWith(".file")) {
           a -> _mountPointBasedPathToLocalPath(b.toString)
         } else a -> b.asInstanceOf[Any]
       }
-    } toMap
+    }.toMap
 
     // Initialize the providers    
     val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId) // Use JPA context
@@ -104,7 +104,7 @@ class CertifyResultFiles extends AbstractRemoteProcessingService with ICertifyRe
           errorMessage.append(message).append(" : ").append(t)
           errorMessage.append(StringUtils.LINE_SEPARATOR)
 
-          errorMessage.append(t.getStackTraceString)
+          errorMessage.append(t.getStackTrace())
         }
       }
        

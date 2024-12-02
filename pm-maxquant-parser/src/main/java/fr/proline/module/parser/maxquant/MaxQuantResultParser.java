@@ -1,36 +1,17 @@
 package fr.proline.module.parser.maxquant;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import fr.proline.core.om.model.lcms.*;
-import fr.proline.core.om.model.msi.FragmentationRuleSet;
-import fr.proline.core.om.provider.msi.impl.SQLFragmentationRuleProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import fr.profi.api.service.IServiceWrapper;
 import fr.profi.util.StringUtils;
 import fr.profi.util.serialization.ProfiJson;
-import fr.profi.api.service.IServiceWrapper;
 import fr.proline.context.DatabaseConnectionContext;
 import fr.proline.context.MsiDbConnectionContext;
 import fr.proline.core.dal.tables.msi.MsiDbPeaklistSoftwareColumns;
-import fr.proline.core.om.model.msi.InstrumentConfig;
-import fr.proline.core.om.model.msi.MsQuery;
-import fr.proline.core.om.model.msi.Peaklist;
-import fr.proline.core.om.model.msi.PeaklistSoftware;
-import fr.proline.core.om.model.msi.Peptide;
-import fr.proline.core.om.model.msi.PeptideMatch;
-import fr.proline.core.om.model.msi.PtmDefinition;
-import fr.proline.core.om.model.msi.ResultSet;
-import fr.proline.core.om.model.msi.SearchSettings;
-import fr.proline.core.om.model.msi.Spectrum;
+import fr.proline.core.om.model.lcms.*;
+import fr.proline.core.om.model.msi.*;
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext;
 import fr.proline.core.om.provider.msi.IPTMProvider;
 import fr.proline.core.om.provider.msi.ISeqDatabaseProvider;
+import fr.proline.core.om.provider.msi.impl.SQLFragmentationRuleProvider;
 import fr.proline.core.om.provider.msi.impl.SQLInstrumentConfigProvider;
 import fr.proline.core.om.storer.msi.IPeaklistWriter;
 import fr.proline.core.om.storer.msi.IRsStorer;
@@ -40,8 +21,19 @@ import fr.proline.core.om.storer.msi.impl.StorerContext;
 import fr.proline.module.parser.maxquant.model.MQPeaklistContainer;
 import fr.proline.module.parser.maxquant.model.ResultSetsDataMapper;
 import fr.proline.repository.util.JDBCWork;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scala.Option;
 import scala.collection.JavaConversions;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MaxQuantResultParser extends IServiceWrapper {
 	
@@ -125,13 +117,11 @@ public class MaxQuantResultParser extends IServiceWrapper {
 			SearchSettings ss = propReader.getSearchSettings();
 			PtmDefinition[] varPtms = ss.variablePtmDefs();
 			PtmDefinition[] fixedPtms = ss.fixedPtmDefs();
-			PtmDefinition[] allPtms = Arrays.copyOf(varPtms, varPtms.length+fixedPtms.length);
-			System.arraycopy(fixedPtms, 0, allPtms, varPtms.length, fixedPtms.length);
-	
+
 			//Parse ResultSet data : queries to protein matches
 			logger.info("Parse and create ResultSet MS Data ");
 			MSDataReader dataReader = new MSDataReader(m_resultFolder, m_parserContext, m_fragmentationRuleSetId, peaklistSoft);
-			ResultSetsDataMapper rsMapper= dataReader.parseMSData2ResulSets(m_rsIdByName, allPtms, m_accessionRegexp, m_warningMsg);
+			ResultSetsDataMapper rsMapper= dataReader.parseMSData2ResulSets(m_rsIdByName, fixedPtms, m_accessionRegexp, m_warningMsg);
 			m_peptideByModSequence = dataReader.getPeptidesByMQModifiedSequence();
 			
 			logger.info("Create Experiment properties ");

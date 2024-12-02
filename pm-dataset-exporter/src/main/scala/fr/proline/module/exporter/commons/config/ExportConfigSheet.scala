@@ -123,9 +123,9 @@ object ExportConfigSheet {
   def getMasterQuantRepIonsSheetSheetExportConfig(): ExportConfigSheet = {
     ExportConfigSheet(
       id = ExportConfigConstant.SHEET_MASTER_QUANT_REPORTER_ION,
-      title = "Quantified reporter ions",
+      title = "Quantified peptide matches",
       presentation = ExportConfigConstant.PRESENTATION_SHEET_COLUMNS,
-      fields = CustomFieldConfigFactory.getPeptideMatchesSheetFields(fromXIC = true, fromSC = false),
+      fields = CustomFieldConfigFactory.getPeptideMatchesSheetFields(fromXIC = true, fromSC = false, fromIsobaric = true),
       defaultDisplayed = false
     )
   }
@@ -134,7 +134,7 @@ object ExportConfigSheet {
   def getStatisticsSheetExportConfig(defaultDisplayed: Boolean = true): ExportConfigSheet = {
     ExportConfigSheet(
       id = ExportConfigConstant.SHEET_STAT,
-      title = "Dataset statistics",
+      title = "Dataset statistics and infos",
       presentation = ExportConfigConstant.PRESENTATION_SHEET_ROWS,
       fields = CustomFieldConfigFactory.getStatisticsSheetFields(),
       defaultDisplayed

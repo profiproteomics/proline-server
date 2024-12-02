@@ -12,6 +12,7 @@ import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.Queue;
 
+import fr.proline.module.seq.jms.service.RetrieveInfoService;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.jms.HornetQJMSClient;
 import org.hornetq.api.jms.JMSFactoryType;
@@ -128,7 +129,7 @@ public class RunNode {
 				}
 
 				m_connection.start(); // Start connection to begin Consumer reception
-				LOG.debug("JMS Connection : " + m_connection + "  started");
+				LOG.info("Sequence Repository JMS Connection started "); //used bu zero for detecting started
 			} catch (Exception ex) {
 				LOG.error("Error starting JMS Consumers", ex);
 				stopJMSConsumers();
@@ -204,5 +205,6 @@ public class RunNode {
 		/* Parallelizable Service */
 		//		    ServiceRegistry.addService(new InfoService()) // Monitoring
 		ServiceRegistry.addService(new RetrieveJMSService());
+		ServiceRegistry.addService(new RetrieveInfoService());
 	}
 }

@@ -51,6 +51,7 @@ object ExportConfigConstant {
   val FIELD_INFORMATION_SEARCH_DATE = "information_search_date"
   val FIELD_INFORMATION_RAW_FILE_NAME = "information_raw_file_name"
   val FIELD_INFORMATION_PEAKLIST_FILE_PATH = "information_peaklist_file_path"
+  val FIELD_INFORMATION_PEAKLIST_SOFTWARE = "information_peaklist_software"
   val FIELD_INFORMATION_RESULT_FILE_NAME = "information_result_file_name"
   val FIELD_INFORMATION_RESULT_FILE_DIRECTORY = "information_result_file_directory"
   val FIELD_INFORMATION_JOB_NUMBER = "information_job_number"
@@ -78,10 +79,12 @@ object ExportConfigConstant {
   val SHEET_IMPORT = "import"
 
   val FIELD_IMPORT_PARAMS = "import_params"
+  val FIELD_IMPORT_FILTER_FDR_METHOD = "import_filter_fdr_method"
   val FIELD_IMPORT_PSM_FILTER_EXPECTED_FDR = "import_psm_filter_expected_fdr"
   val FIELD_IMPORT_PSM_FILTER = "import_psm_filter" // incremental 
   val FIELD_IMPORT_PROT_FILTER_EXPECTED_FDR = "import_prot_filter_expected_fdr"
   val FIELD_IMPORT_PROT_FILTER = "import_prot_filter" //incremental
+  val FIELD_IMPORT_PROT_SCORING = "import_prot_scoring" //incremental
 
   // Protein set sheet
   val SHEET_PROTEIN_SETS = "protein_sets"
@@ -149,6 +152,7 @@ object ExportConfigConstant {
   val FIELD_PSM_RANK = "psm_rank"
   val FIELD_PSM_CD_PRETTY_RANK = "psm_cd_pretty_rank"
   val FIELD_PSM_FRAGMENT_MATCHES_COUNT = "psm_fragment_matches_count"
+  val FIELD_PSM_PIF_VALUE = "psm_pif_value"
   val FIELD_PSM_SPECTRUM_TITLE = "psm_spectrum_title"
   val FIELD_PSM_NB_PROTEIN_SETS = "psm_nb_protein_sets"
   val FIELD_PSM_NB_SAMESET_PROTEIN_MATCHES = "psm_nb_sameset_protein_matches"
@@ -165,6 +169,7 @@ object ExportConfigConstant {
   val FIELD_PSM_QUANT_MASTER_QUANT_PEPTIDE_ID = "psm_master_quant_peptide_id"
   val FIELD_PSM_QUANT_ELUTION_TIME = "psm_quant_elution_time"
   val FIELD_PSM_QUANT_SELECTION_LEVEL = "psm_quant_selection_level"
+  val FIELD_PSM_QUANT_IS_VALID_FOR_PROT_SET = "psm_quant_is_valid_for_prot_set"
 
   // MasterQuantPeptideIon sheet
   val SHEET_MASTER_QUANT_PEPTIDE_ION = "master_quant_peptide_ion"
@@ -192,6 +197,9 @@ object ExportConfigConstant {
   // Statistics sheet
   val SHEET_STAT = "stat"
 
+  val FIELD_STAT_MODULE_VERSION = "Version"
+  val FIELD_STAT_DATASET_ID = "stat_dataset_id"
+  val FIELD_STAT_DATASET_IS_QUANT = "stat_dataset_is_quant"
   val FIELD_STAT_PSM_VALIDATION = "stat_psm_validation"
   val FIELD_STAT_NB_TOTAL_PSMS = "stat_nb_total_psms"
   val FIELD_STAT_NB_TOTAL_PRECURSORS = "stat_nb_total_precursors"

@@ -62,11 +62,12 @@ public final class RetrieveService {
 		Thread.currentThread().setUncaughtExceptionHandler(new ThreadLogger(LOG));
 
 		final RetrieveCommand params = new RetrieveCommand();
-		JCommander command = new JCommander(params, args);
-
+		JCommander command = new JCommander(params);
+		command.parse(args);
 		command.usage();
 
 		if (params.debug) {
+			// warn, using backend (but no other solution)
 			ch.qos.logback.classic.Logger prolineLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("fr.proline");
 			prolineLogger.setLevel(Level.DEBUG);
 			LOG.debug("--- Proline Logger set to DEBUG level ");

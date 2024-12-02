@@ -3,13 +3,15 @@ package fr.proline.cortex.service.dps.msq
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.exception.ExceptionUtils
-import fr.profi.util.serialization.ProfiJson.deserialize
-import fr.profi.util.serialization.ProfiJson.serialize
-import fr.proline.core.algo.msq.config.profilizer.{PostProcessingConfigV2, PostProcessingConfig}
+import fr.profi.util.serialization.ProfiJson.{deserialize, serialize}
+import fr.proline.admin.service.db.SetupProline
+import fr.proline.core.algo.msq.config.profilizer.{PostProcessingConfig, PostProcessingConfigV2}
 import fr.proline.core.service.msq.QuantPostProcessingComputer
 import fr.proline.cortex.api.service.dps.msq.{IComputeQuantPostProcessingService, IComputeQuantPostProcessingServiceV2}
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
+
+import java.io.File
 
 /**
   *  Define JMS Service which allows to quantitation post processing of peptides and protein sets
@@ -55,6 +57,8 @@ class ComputeQuantPostProcessing extends AbstractRemoteProcessingService with IC
 
 class ComputeQuantPostProcessingV2 extends AbstractRemoteProcessingService with IComputeQuantPostProcessingServiceV2 with LazyLogging {
 
+
+
   def doProcess(paramsRetriever: NamedParamsRetriever): Any = {
 
     require(paramsRetriever != null, "no parameter specified")
@@ -65,14 +69,22 @@ class ComputeQuantPostProcessingV2 extends AbstractRemoteProcessingService with 
 
     val quantPostProcessingConfig = deserialize[PostProcessingConfig](quantConfAsStr)
     logger.debug("Quantification Post Processing with following config: " + serialize(quantPostProcessingConfig))
+//    //For tests only ! VDS FIXME get default purity correction matrix.. to remove
+//    val matrixFolder : Option[File] =  if(quantPostProcessingConfig.usePurityCorrectionMatrix && quantPostProcessingConfig.purityCorrectionMatrix.isEmpty){
+//      if(!SetupProline.getConfigParams().hasPath("proline-config") || !SetupProline.getConfigParams().getConfig("proline-config").hasPath("data-directory") )
+//        throw new RuntimeException(" Can not access to Data Directory to get default matrix !")
+//
+//      val fileName = SetupProline.getConfigParams().getConfig("proline-config").getString("data-directory")
+//      Some(new File(fileName))
+//    } else None
 
     val execCtx = DbConnectionHelper.createJPAExecutionContext(projectId) // Use JPA context
 
     try {
-      val quantProfilesComputer = QuantPostProcessingComputer(execCtx, mqcId, quantPostProcessingConfig)
+      val quantPostProcessComputer = QuantPostProcessingComputer(execCtx, mqcId, quantPostProcessingConfig)
 
       this.logger.info("Starting quantitation Post Processing for Master Quant Channel with id=" + mqcId)
-      quantProfilesComputer.run()
+      quantPostProcessComputer.run()
     } catch {
       case t: Throwable =>
         throw ExceptionUtils.wrapThrowable("Error while running quantitation post-processing", t, appendCause = true)

@@ -68,7 +68,7 @@ class MasterQuantProteinSetProfileBuildingContext(
 ) with IMasterQuantEntityBuildingContext {
   def getQuantComponentMap(): LongMap[_ <: QuantComponent] = {
     //#17395 confusion between raw abundance in GUI and export. always use inital raw_abundance
-    masterQuantProteinSet.getQuantComponentMap
+    masterQuantProteinSet.getQuantComponentMap()
   }
   def getRatios(): Option[List[Option[ComputedRatio]]] = profile.map(_.getRatios())
 }
@@ -78,7 +78,9 @@ class MasterQuantPeptideBuildingContext(
   seqMatch: SequenceMatch,
   protMatchBuildingCtx: Option[ProtMatchBuildingContext],
   var masterQuantPeptide: MasterQuantPeptide,
-  val groupSetupNumber: Int
+  val groupSetupNumber: Int,
+  val quantProtListAccession : String = "",
+  val isUsedForProteinQuantification : Option[Boolean] = None
 ) extends PepMatchBuildingContext(
   pepMatch,
   false,
@@ -97,13 +99,16 @@ class MasterQuantPeptideIonBuildingContext(
   masterQuantPeptide: MasterQuantPeptide,
   var masterQuantPeptideIon: MasterQuantPeptideIon,
   val childPepMatchById: Map[Long, PeptideMatch],
-  groupSetupNumber: Int
-) extends MasterQuantPeptideBuildingContext(
+  groupSetupNumber: Int,
+  isUsedForProteinQuantification : Option[Boolean]
+  ) extends MasterQuantPeptideBuildingContext(
   pepMatch,
   seqMatch,
   protMatchBuildingCtx,
   masterQuantPeptide,
-  groupSetupNumber
+  groupSetupNumber,
+  quantProtListAccession =   "",
+  isUsedForProteinQuantification
 ) {
   override def getQuantComponentMap(): LongMap[_ <: QuantComponent] = masterQuantPeptideIon.quantPeptideIonMap
   override def getRatios(): Option[List[Option[ComputedRatio]]] = None
@@ -111,13 +116,14 @@ class MasterQuantPeptideIonBuildingContext(
 
 class MasterQuantReporterIonBuildingContext(
   pepMatch: PeptideMatch,
-    seqMatch: SequenceMatch,
+  seqMatch: SequenceMatch,
   protMatchBuildingCtx: Option[ProtMatchBuildingContext],
   masterQuantPeptide: MasterQuantPeptide,
   masterQuantPeptideIon: MasterQuantPeptideIon,
   childPepMatchById : Map[Long,PeptideMatch],
   val masterQuantReporterIon: MasterQuantReporterIon,
-  groupSetupNumber: Int
+  groupSetupNumber: Int,
+  isUsedForProteinQuantification : Option[Boolean]
 ) extends MasterQuantPeptideIonBuildingContext(
   pepMatch,
   seqMatch,
@@ -125,7 +131,8 @@ class MasterQuantReporterIonBuildingContext(
   masterQuantPeptide,
   masterQuantPeptideIon,
   childPepMatchById,
-  groupSetupNumber
+  groupSetupNumber,
+  isUsedForProteinQuantification
 ) {
   override def getQuantComponentMap(): LongMap[_ <: QuantComponent] = masterQuantReporterIon.quantReporterIonMap
   override def getRatios(): Option[List[Option[ComputedRatio]]] = None

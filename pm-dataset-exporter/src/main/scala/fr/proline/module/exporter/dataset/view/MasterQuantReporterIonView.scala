@@ -28,18 +28,15 @@ class MasterQuantReporterIonView(
   // Override getQcFieldSet in order to generate QuantChannel based columns
   override protected def getQcFieldSet() =  super.getQcFieldSet()// ++ qRepIonFieldSet
   
-  protected val mqRepIonViewFieldSet = Set(
+  private val mqRepIonViewFieldSet = Set(
     FIELD_MASTER_QUANT_PEPTIDE_ION_ID,
     FIELD_MASTER_QUANT_PEPTIDE_ION_MOZ,
     FIELD_MASTER_QUANT_PEPTIDE_ION_CHARGE,
     FIELD_MASTER_QUANT_PEPTIDE_ION_ELUTION_TIME
   ) //++ qRepIonFieldSet
   
-  protected val mqRepIonViewFieldsConfigs = sheetConfig.fields.filter( f => mqRepIonViewFieldSet.contains(f.id) )
-  
-  protected lazy val identPepMatchesByMsQueryId = identDS.childResultSummaries.flatMap { childRsm =>
-    childRsm.lazyResultSet.peptideMatches
-  } groupByLong { pepMatch => pepMatch.msQueryId }
+  private val mqRepIonViewFieldsConfigs = sheetConfig.fields.filter(f => mqRepIonViewFieldSet.contains(f.id) )
+
 
   override def buildRecord(buildingContext: IRecordBuildingContext): Map[String, Any] = {
 
@@ -73,7 +70,7 @@ class MasterQuantReporterIonView(
     recordBuilder.result()
   }
   
-  override def formatView(recordFormatter: Map[String, Any] => Unit) {
+  override def formatView(recordFormatter: Map[String, Any] => Unit): Unit = {
     
     val rsm = identDS.resultSummary
 
@@ -108,10 +105,11 @@ class MasterQuantReporterIonView(
           reprProtMatch
         )
 
-        for (pepInst <- protSet.peptideSet.getPeptideInstances.sortBy(_.peptide.calculatedMass) ) {
+        for (pepInst <- protSet.peptideSet.getPeptideInstances().sortBy(_.peptide.calculatedMass)) {
 
           val peptideId = pepInst.peptide.id
           val mqPepOpt = quantDs.mqPepByPepId.get(peptideId)
+          val isValidForProtSetopt = if(mqPepOpt.isDefined) Some(isPepQuantValidForProtSet(protSet, mqPepOpt.get.id)) else None
 
           for (
             mqPep <- mqPepOpt;
@@ -119,7 +117,15 @@ class MasterQuantReporterIonView(
             mqRepIon <- mqPepIon.masterQuantReporterIons
           ) {
 
-            val identPepMatchOpt = childPepMatchByMsQueryIds(mqRepIon.msQueryId).find(pepMatch => pepMatch.peptideId == peptideId)
+            val identPepMatchList = childPepMatchByMsQueryIds(mqRepIon.msQueryId).filter(pepMatch => pepMatch.peptideId == peptideId)
+            val identPepMatchOpt = if(identPepMatchList.length<=0)
+              None
+            else if(identPepMatchList.length ==1)
+              Some(identPepMatchList(0))
+            else {
+              identPepMatchList.find(pepMatch => pepMatch.resultSetId == quantDs.quantRSM.lazyResultSummary.resultSetId)
+            }
+
             assert(identPepMatchOpt.isDefined, "can't find a peptide match for the MS query id = " + mqRepIon.msQueryId)
             
             val quantRecordBuildingCtx = new MasterQuantReporterIonBuildingContext(
@@ -130,7 +136,8 @@ class MasterQuantReporterIonView(
               mqPepIon,
               childPepMatchById,
               mqRepIon,
-              groupSetupNumber = groupSetupNumber
+              groupSetupNumber = groupSetupNumber,
+              isValidForProtSetopt
             )
 
             // Format this master quant peptide ion with protein set information

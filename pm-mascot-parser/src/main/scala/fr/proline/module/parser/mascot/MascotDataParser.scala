@@ -178,9 +178,9 @@ class MascotDataParser(
 
     logger.debug("Go through Queries/PSM done")
     logger.debug("Search for " + pepToPeptideMatches.size + " different Peptides.")
-    val pepsToSearch = Array.newBuilder[Pair[String, Array[LocatedPtm]]]
+    val pepsToSearch = Array.newBuilder[Tuple2[String, Array[LocatedPtm]]]
     pepToPeptideMatches.foreach(entry => {
-      pepsToSearch += Pair(entry._1.sequence, entry._1.ptms)
+      pepsToSearch += Tuple2(entry._1.sequence, entry._1.ptms)
     })
     val searchPeps = pepsToSearch.result
 

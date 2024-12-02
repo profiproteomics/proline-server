@@ -5,7 +5,7 @@ import scala.Array.canBuildFrom
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.scalatest.junit.JUnitSuite
+import org.scalatestplus.junit.JUnitSuite
 import com.typesafe.scalalogging.LazyLogging
 import fr.proline.context.BasicExecutionContext
 import fr.proline.core.algo.msi.TargetDecoyResultSetSplitter
@@ -20,7 +20,7 @@ import fr.proline.core.om.provider.msi.SeqDbFakeProvider
 import fr.proline.core.om.provider.msi.PTMFakeProvider
 import fr.proline.core.om.provider.msi.ProteinFakeProvider
 import fr.proline.core.om.provider.msi.PeptideFakeProvider
-import org.junit.Ignore
+
 @Test
 class TargetDecoySplitterTest extends JUnitSuite with LazyLogging { 
 

@@ -1,8 +1,8 @@
 package fr.proline.module.parser.xtandem
 
 import java.io.File
+import java.text.{DateFormat, SimpleDateFormat}
 import java.util.Date
-
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.LazyLogging
@@ -67,8 +67,12 @@ case class XtandemSettings(resultBioml: XTBioml, parserContext: ProviderDecorate
   private def getSearchStartTime: Date = {
     // date is like "2015:04:27:15:41:28"
     if(settings.isDefinedAt("process, start time")) {
-      val items = settings("process, start time").toString.split(":")
-      new Date(items(0)+"/"+items(1)+"/"+items(2)+" "+items(3)+":"+items(4)+":"+items(5))
+      val dateFormat = new SimpleDateFormat("yyyy:MM:dd:HH:mm:ss")
+      try {
+        dateFormat.parse(settings("process, start time"))
+      } catch {
+        case ex: Exception => new Date
+      }
     } else new Date
   }
 
