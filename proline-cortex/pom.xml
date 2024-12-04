@@ -12,7 +12,7 @@
   <name>Proline-Cortex</name>
   <properties>
     <version.path>${project.basedir}/src/main/scala/fr/proline/cortex</version.path>
-    <proline.admin.version>2.3.0</proline.admin.version>
+    <proline.admin.version>2.3.1-SNAPSHOT</proline.admin.version>
     <jre.version>1.8.0_51</jre.version>
   </properties>
 
