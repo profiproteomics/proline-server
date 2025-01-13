@@ -157,7 +157,9 @@ object BuildDatasetViewSet extends LazyLogging {
       // TODO: add children ids to the RsmDescriptor
       val leaveResultSummariesLoader = () => {
         logger.debug("Loading leave result summaries (merge)...")
-        val leavesRsmIds = msiDbHelper.getResultSummaryLeavesIds(rsmId)
+        var leavesRsmIds = msiDbHelper.getResultSummaryLeavesIds(rsmId)
+        if(leavesRsmIds.length==1 && leavesRsmIds(0).equals(rsmId)) //No leaveRsm, only current set to empty (search for leave & child)
+          leavesRsmIds = Array()
         val childResultSummaries = lazyRsmProvider.getLazyResultSummaries(
           leavesRsmIds,
           loadFullResultSet = loadFullResultSet,
