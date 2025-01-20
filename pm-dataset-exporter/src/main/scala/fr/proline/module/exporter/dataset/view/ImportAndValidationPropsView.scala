@@ -214,7 +214,7 @@ class ImportAndValidationPropsView(
   }
 
   def formatView(recordFormatter: Map[String, Any] => Unit) {
-    for (rsm <- identDS.allResultSummaries) {
+    for (rsm <- identDS.allResultSummaries.distinct) {
       this.formatRecord(MyBuildingContext(rsm), recordFormatter)
     }
   }
