@@ -132,9 +132,9 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
     }
     
     var fileName = paramsRetriever.getOptString("file_name", null)
-    // Don't set default name in case of tempateds : may have more thant one and returned filename format is used by Studio.  
-    if ( (!fileFormat.equals(ExportFileFormat.TEMPLATED) || !fileFormat.equals(ExportFileFormat.MZIDENTML)) && StringUtils.isEmpty(fileName)) {
-      fileName = "DatasetExport-" + UUID.randomUUID().toString 
+    // Don't set default name in case of templated/mzIdentML : may have more thant one and returned filename format is used by Studio.
+    if ( (!fileFormat.equals(ExportFileFormat.TEMPLATED) && !fileFormat.equals(ExportFileFormat.MZIDENTML)) && StringUtils.isEmpty(fileName)) {
+      fileName = "DatasetExport-" + UUID.randomUUID().toString
     }
     val fileDirectory = this.parseFileDirectory(paramsRetriever)
 

@@ -10,13 +10,18 @@
   </appender>
 
 
-  <appender name="fileAppender" class="ch.qos.logback.core.FileAppender">
+  <appender name="fileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <append>true</append>
-    <file>sequence_repository_log.txt</file>
 
     <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
       <level>INFO</level>
     </filter>
+
+   <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>logs/sequence_repository_log_%d{yyyy-MM-dd}.txt</fileNamePattern>
+      <totalSizeCap>2GB</totalSizeCap>
+    </rollingPolicy>
+
 
     <encoder>
       <!-- TTCCLayout -->
@@ -28,13 +33,11 @@
   <appender name="debugFileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <append>true</append>
 
-    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>sequence_repository_debug_%d{yyyy-MM-dd}.txt</fileNamePattern>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <fileNamePattern>logs/sequence_repository_debug_%d{yyyy-MM-dd}.%i.txt</fileNamePattern>
+       <maxFileSize>100MB</maxFileSize>
+       <totalSizeCap>2GB</totalSizeCap>
     </rollingPolicy>
-
-    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-      <maxFileSize>50MB</maxFileSize>
-    </triggeringPolicy>
 
     <encoder>
       <!-- TTCCLayout -->
@@ -43,7 +46,7 @@
 
   </appender>
 
-  <logger name="fr.proline" level="INFO" />
+  <logger name="fr.proline" level="DEBUG" />
 
   <root level="WARN">
     <appender-ref ref="STDOUT" /> 

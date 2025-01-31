@@ -13,6 +13,7 @@
   <properties>
     <version.path>${project.basedir}/src/main/scala/fr/proline/cortex</version.path>
     <proline.admin.version>2.4.0-SNAPSHOT</proline.admin.version>
+    <jre.version>1.8.0_51</jre.version>
   </properties>
 
   <dependencies>
@@ -434,7 +435,19 @@
               </artifactItems>
             </configuration>
           </execution>
-
+          <execution>
+            <id>unpack-dependencies</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>unpack-dependencies</goal>
+            </goals>
+            <configuration>
+              <includeTypes>zip</includeTypes>
+              <outputDirectory>${project.build.directory}/
+              </outputDirectory>
+              <overWriteIfNewer>true</overWriteIfNewer>
+            </configuration>
+          </execution>
         </executions>
 
       </plugin>
@@ -456,17 +469,44 @@
 
   
 	<profiles>
-
 		<profile>
 			<!-- Full Profile : create assembly with hornetQ stand alone Server -->
-			<id>full_distrib</id>
+			<id>full_distrib-win64</id>
 			<properties>
 				<assembly.file.path>assembly/assembly_full.xml</assembly.file.path>
+                <os.classifier>windows-x64</os.classifier>
 			</properties>
 			<activation>
 				<activeByDefault>true</activeByDefault>
 			</activation>
+          <dependencies>
+            <dependency>
+              <groupId>com.oracle</groupId>
+              <artifactId>jre</artifactId>
+              <version>${jre.version}</version>
+              <classifier>windows-x64</classifier>
+              <type>zip</type>
+            </dependency>
+          </dependencies>
 		</profile> <!-- End of full_distrib profile -->
+
+      <profile>
+        <!-- Full Profile : create assembly with hornetQ stand alone Server -->
+        <id>full_distrib-linux-64</id>
+        <properties>
+          <os.classifier>linux-x64</os.classifier>
+          <assembly.file.path>assembly/assembly_full.xml</assembly.file.path>
+        </properties>
+        <dependencies>
+          <dependency>
+            <groupId>com.oracle</groupId>
+            <artifactId>jre</artifactId>
+            <version>${jre.version}</version>
+            <classifier>linux-x64</classifier>
+            <type>zip</type>
+          </dependency>
+        </dependencies>
+      </profile> <!-- End of full_distrib profile -->
 
 		<profile>
 			<!-- Cortex Profile: create assembly with ProlineCortex only -->
