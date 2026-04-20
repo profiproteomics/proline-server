@@ -1,0 +1,143 @@
+DIA-NN 1.9.2 (Data-Independent Acquisition by Neural Networks)
+Compiled on Oct 17 2024 21:58:43
+Current date and time: Fri Oct  3 13:46:00 2025
+CPU: GenuineIntel Intel(R) Core(TM) i5-8365U CPU @ 1.60GHz
+SIMD instructions: AVX AVX2 FMA SSE4.1 SSE4.2 
+Logical CPU cores: 8
+diann.exe --f C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\20221016_PRO1_LSVD_00_30-0051_10ng_Regular_P1-B6_1_11227.d  --f C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\20221016_PRO1_LSVD_00_30-0051_10ng_Regular_P1-B6_1_11228.d  --lib C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\speclibs\fastaOnly-speclib-report-lib.predicted.speclib --threads 4 --verbose 1 --out C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\result2Files\Run2-NoAnnotationMBR\report.tsv --qvalue 0.01 --matrices --temp C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\temp --unimod4 --reanalyse --relaxed-prot-inf --rt-profiling 
+
+Thread number set to 4
+Output will be filtered at 0.01 FDR
+Precursor/protein x samples expression level matrices will be saved along with the main report
+Cysteine carbamidomethylation enabled as a fixed modification
+A spectral library will be created from the DIA runs and used to reanalyse them; .quant files will only be saved to disk during the first step
+Heuristic protein grouping will be used, to reduce the number of protein groups obtained; this mode is recommended for benchmarking protein ID numbers, GO/pathway and system-scale analyses
+The spectral library (if generated) will retain the original spectra but will include empirically-aligned RTs
+DIA-NN will optimise the mass accuracy automatically using the first run in the experiment. This is useful primarily for quick initial analyses, when it is not yet known which mass accuracy setting works best for a particular acquisition scheme.
+WARNING: protein inference is enabled but no FASTA provided - is this intended?
+
+2 files will be processed
+[0:00] Loading spectral library C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\speclibs\fastaOnly-speclib-report-lib.predicted.speclib
+[0:04] Library annotated with sequence database(s): C:\vero\DEV\DIA\DiaNN\rawFiles\human_canonical_uniprotkb_proteome_UP000005640_2023_12_16.fasta
+[0:04] Gene names missing for some isoforms
+[0:04] Library contains 82366 proteins, and 20511 genes
+[0:05] Spectral library loaded: 82366 protein isoforms, 151862 protein groups and 3190013 precursors in 1704237 elution groups.
+[0:06] Initialising library
+
+First pass: generating a spectral library from DIA data
+
+[0:15] File #1/2
+[0:15] Loading run C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\20221016_PRO1_LSVD_00_30-0051_10ng_Regular_P1-B6_1_11227.d
+WARNING: for most Slice/DIA-PASEF datasets it is better to manually fix both the MS1 and MS2 mass accuracies to values in the range 10-15 ppm
+[0:28] 3177990 library precursors are potentially detectable
+[0:31] Calibrating with mass accuracies 20 (MS1), 20 (MS2)
+[9:54] RT window set to 0.26889
+[9:54] Ion mobility window set to 0.0334442
+[9:54] Peak width: 2.472
+[9:54] Scan window radius set to 5
+[9:54] Recommended MS1 mass accuracy setting: 18.6282 ppm
+[25:28] Optimised mass accuracy: 20.4512 ppm
+[35:14] Removing low confidence identifications
+[35:14] Removing interfering precursors
+[35:20] Training neural networks on 15005 PSMs
+[35:24] Number of IDs at 0.01 FDR: 2973
+[35:25] Calculating protein q-values
+[35:26] Number of genes identified at 1% FDR: 783 (precursor-level), 721 (protein-level) (inference performed using proteotypic peptides only)
+[35:26] Quantification
+[35:27] Quantification information saved to C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\temp/C__vero_DEV_DIA_DiaNN_small-dia-PASEF 10ng_20221016_PRO1_LSVD_00_30-0051_10ng_Regular_P1-B6_1_11227_d.quant
+
+[35:27] File #2/2
+[35:27] Loading run C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\20221016_PRO1_LSVD_00_30-0051_10ng_Regular_P1-B6_1_11228.d
+[35:43] 3177990 library precursors are potentially detectable
+[35:46] Calibrating with mass accuracies 20 (MS1), 20.4512 (MS2)
+[50:14] RT window set to 0.263154
+[50:14] Ion mobility window set to 0.037376
+[50:15] Recommended MS1 mass accuracy setting: 17.886 ppm
+[58:48] Removing low confidence identifications
+[58:49] Removing interfering precursors
+[58:55] Training neural networks on 14231 PSMs
+[59:02] Number of IDs at 0.01 FDR: 3034
+[59:03] Calculating protein q-values
+[59:04] Number of genes identified at 1% FDR: 789 (precursor-level), 726 (protein-level) (inference performed using proteotypic peptides only)
+[59:04] Quantification
+[59:05] Quantification information saved to C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\temp/C__vero_DEV_DIA_DiaNN_small-dia-PASEF 10ng_20221016_PRO1_LSVD_00_30-0051_10ng_Regular_P1-B6_1_11228_d.quant
+
+[59:05] Cross-run analysis
+[59:05] Reading quantification information: 2 files
+[59:07] Quantifying peptides
+[59:08] Assembling protein groups
+[59:12] Quantifying proteins
+[59:12] Calculating q-values for protein and gene groups
+[59:12] Calculating global q-values for protein and gene groups
+[59:13] Protein groups with global q-value <= 0.01: 915
+[59:13] Compressed report saved to C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\result2Files\Run2-NoAnnotationMBR\report-first-pass.parquet. Use R 'arrow' or Python 'PyArrow' package to process
+[59:13] Writing report
+[59:13] Report saved to C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\result2Files\Run2-NoAnnotationMBR\report-first-pass.tsv.
+[59:13] Saving precursor levels matrix
+[59:14] Precursor levels matrix (1% precursor and protein group FDR) saved to C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\result2Files\Run2-NoAnnotationMBR\report-first-pass.pr_matrix.tsv.
+[59:14] Manifest saved to C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\result2Files\Run2-NoAnnotationMBR\report-first-pass.manifest.txt
+[59:14] Stats report saved to C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\result2Files\Run2-NoAnnotationMBR\report-first-pass.stats.tsv
+[59:14] Generating spectral library:
+[59:14] 3675 target and 36 decoy precursors saved
+[59:14] Spectral library saved to C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\result2Files\Run2-NoAnnotationMBR\report-lib.parquet
+
+[59:14] Loading spectral library C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\result2Files\Run2-NoAnnotationMBR\report-lib.parquet
+[59:14] Spectral library loaded: 1093 protein isoforms, 993 protein groups and 3711 precursors in 3560 elution groups.
+[59:14] Initialising library
+[59:15] Saving the library to C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\result2Files\Run2-NoAnnotationMBR\report-lib.parquet.skyline.speclib
+
+
+Second pass: using the newly created spectral library to reanalyse the data
+
+[59:15] File #1/2
+[59:15] Loading run C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\20221016_PRO1_LSVD_00_30-0051_10ng_Regular_P1-B6_1_11227.d
+[59:46] 3675 library precursors are potentially detectable
+[59:46] Calibrating with mass accuracies 20 (MS1), 20.4512 (MS2)
+[59:48] RT window set to 0.088785
+[59:48] Ion mobility window set to 0.01
+[59:48] Recommended MS1 mass accuracy setting: 19.1334 ppm
+[59:49] Removing low confidence identifications
+[59:49] Removing interfering precursors
+[59:49] Training neural networks on 3664 PSMs
+[59:52] Number of IDs at 0.01 FDR: 3149
+[59:52] No protein annotation, skipping protein q-value calculation
+[59:52] Quantification
+
+[59:52] File #2/2
+[59:52] Loading run C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\20221016_PRO1_LSVD_00_30-0051_10ng_Regular_P1-B6_1_11228.d
+[60:22] 3675 library precursors are potentially detectable
+[60:22] Calibrating with mass accuracies 20 (MS1), 20.4512 (MS2)
+[60:24] RT window set to 0.0874943
+[60:24] Ion mobility window set to 0.0129284
+[60:24] Recommended MS1 mass accuracy setting: 20.0319 ppm
+[60:26] Removing low confidence identifications
+[60:26] Removing interfering precursors
+[60:26] Training neural networks on 3829 PSMs
+[60:29] Number of IDs at 0.01 FDR: 3320
+[60:29] No protein annotation, skipping protein q-value calculation
+[60:29] Quantification
+
+[60:29] Cross-run analysis
+[60:29] Reading quantification information: 2 files
+[60:29] Quantifying peptides
+WARNING: QuantUMS requires 6 or more runs for the optimisation of its hyperparameters to perform best.
+WARNING: non-LC-MS variation in the data is < 0.03, QuantUMS bias removal is unreliable, use QuantUMS with --quant-acc 0.0 only.
+[60:33] Quantification parameters: 0.380074, 0.0127874, 0.00988112, 0.0121718, 0.0138376, 0.0121219, 0.219757, 0.0491554, 0.105283, 0.0124169, 0.0127103, 0.0127033, 0.714778, 0.19942, 0.319393, 0.264169
+[60:34] Quantifying proteins
+[60:34] Calculating q-values for protein and gene groups
+[60:34] Calculating global q-values for protein and gene groups
+[60:34] Protein groups with global q-value <= 0.01: 793
+[60:34] Compressed report saved to C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\result2Files\Run2-NoAnnotationMBR\report.parquet. Use R 'arrow' or Python 'PyArrow' package to process
+[60:34] Writing report
+[60:34] Report saved to C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\result2Files\Run2-NoAnnotationMBR\report.tsv.
+[60:34] Saving precursor levels matrix
+[60:34] Precursor levels matrix (1% precursor and protein group FDR) saved to C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\result2Files\Run2-NoAnnotationMBR\report.pr_matrix.tsv.
+[60:34] Saving protein group levels matrix
+[60:34] Protein group levels matrix (1% precursor FDR and protein group FDR) saved to C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\result2Files\Run2-NoAnnotationMBR\report.pg_matrix.tsv.
+[60:34] Saving gene group levels matrix
+[60:34] Gene groups levels matrix (1% precursor FDR and protein group FDR) saved to C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\result2Files\Run2-NoAnnotationMBR\report.gg_matrix.tsv.
+[60:34] Saving unique genes levels matrix
+[60:34] Unique genes levels matrix (1% precursor FDR and protein group FDR) saved to C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\result2Files\Run2-NoAnnotationMBR\report.unique_genes_matrix.tsv.
+[60:34] Manifest saved to C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\result2Files\Run2-NoAnnotationMBR\report.manifest.txt
+[60:34] Stats report saved to C:\vero\DEV\DIA\DiaNN\small-dia-PASEF 10ng\result2Files\Run2-NoAnnotationMBR\report.stats.tsv
+

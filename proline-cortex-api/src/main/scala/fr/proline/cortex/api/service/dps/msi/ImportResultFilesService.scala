@@ -185,7 +185,6 @@ trait IImportResultFilesServiceV1_0 extends IImportResultFilesService with IDefa
       FRAGMENTATION_RULE_SET_ID_PARAM
     )
     val returns = JSONRPC2MethodResult(
-      // TODO: create a case class for these parameters
       typeOf[Array[ImportedResultFile]],
       "List of ImportedResultFile: path of imported file and id of created target RS."
     )

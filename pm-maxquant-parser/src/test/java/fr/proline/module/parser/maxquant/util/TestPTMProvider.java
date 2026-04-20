@@ -15,6 +15,11 @@ public class TestPTMProvider implements IPTMProvider {
 	}
 
 	@Override
+	public PtmDefinition[] getUnimodPtmDefinition(int unimodID) {
+		return PTMFakeProvider.getUnimodPtmDefinition(unimodID);
+	}
+
+	@Override
 	public Option<PtmDefinition> getPtmDefinition(String arg0, char arg1, Value arg2) {
 		return PTMFakeProvider.getPtmDefinition(arg0, arg1, arg2);
 	}

@@ -1,0 +1,138 @@
+DIA-NN 1.9.2 (Data-Independent Acquisition by Neural Networks)
+Compiled on Oct 17 2024 21:58:43
+Current date and time: Tue Oct  7 11:51:58 2025
+CPU: GenuineIntel Intel(R) Core(TM) i5-8365U CPU @ 1.60GHz
+SIMD instructions: AVX AVX2 FMA SSE4.1 SSE4.2 
+Logical CPU cores: 8
+diann.exe --f C:\vero\DEV\DIA\DiaNN\demoAscent\241206_Demo_Grenoble_Ecoli_10ng_1.raw  --f C:\vero\DEV\DIA\DiaNN\demoAscent\241206_Demo_Grenoble_Ecoli_10ng_2.raw  --lib C:\vero\DEV\DIA\DiaNN\demoAscent\speclibs\r1-report-lib.predicted.speclib --threads 4 --verbose 1 --out C:\vero\DEV\DIA\DiaNN\demoAscent\results\report.tsv --qvalue 0.01 --matrices --temp C:\vero\DEV\DIA\DiaNN\demoAscent\temp --out-lib C:\vero\DEV\DIA\DiaNN\demoAscent\speclibs\report-lib.parquet --gen-spec-lib --unimod4 --reanalyse --relaxed-prot-inf --rt-profiling 
+
+Thread number set to 4
+Output will be filtered at 0.01 FDR
+Precursor/protein x samples expression level matrices will be saved along with the main report
+A spectral library will be generated
+Cysteine carbamidomethylation enabled as a fixed modification
+A spectral library will be created from the DIA runs and used to reanalyse them; .quant files will only be saved to disk during the first step
+Heuristic protein grouping will be used, to reduce the number of protein groups obtained; this mode is recommended for benchmarking protein ID numbers, GO/pathway and system-scale analyses
+The spectral library (if generated) will retain the original spectra but will include empirically-aligned RTs
+DIA-NN will optimise the mass accuracy automatically using the first run in the experiment. This is useful primarily for quick initial analyses, when it is not yet known which mass accuracy setting works best for a particular acquisition scheme.
+WARNING: protein inference is enabled but no FASTA provided - is this intended?
+
+2 files will be processed
+[0:00] Loading spectral library C:\vero\DEV\DIA\DiaNN\demoAscent\speclibs\r1-report-lib.predicted.speclib
+[0:00] Library annotated with sequence database(s): C:\vero\DEV\DIA\DiaNN\demoAscent\Standard_K12-83333_2014_09.fasta
+[0:00] Gene names missing for some isoforms
+[0:00] Library contains 24103 proteins, and 5114 genes
+[0:00] Spectral library loaded: 24103 protein isoforms, 5561 protein groups and 333364 precursors in 176627 elution groups.
+[0:00] Initialising library
+
+First pass: generating a spectral library from DIA data
+
+[0:02] File #1/2
+[0:02] Loading run C:\vero\DEV\DIA\DiaNN\demoAscent\241206_Demo_Grenoble_Ecoli_10ng_1.raw
+[0:24] 298823 library precursors are potentially detectable
+[0:25] Calibrating with mass accuracies 30 (MS1), 20 (MS2)
+[1:20] RT window set to 1.16346
+[1:20] Peak width: 2.86
+[1:20] Scan window radius set to 6
+[1:20] Recommended MS1 mass accuracy setting: 1.68863 ppm
+[3:04] Optimised mass accuracy: 11.0871 ppm
+[6:01] Removing low confidence identifications
+[6:03] Removing interfering precursors
+[6:05] Training neural networks on 89306 PSMs
+[6:24] Number of IDs at 0.01 FDR: 38672
+[6:25] Calculating protein q-values
+[6:25] Number of genes identified at 1% FDR: 2338 (precursor-level), 2168 (protein-level) (inference performed using proteotypic peptides only)
+[6:25] Quantification
+[6:27] Quantification information saved to C:\vero\DEV\DIA\DiaNN\demoAscent\temp/C__vero_DEV_DIA_DiaNN_demoAscent_241206_Demo_Grenoble_Ecoli_10ng_1_raw.quant
+
+[6:27] File #2/2
+[6:27] Loading run C:\vero\DEV\DIA\DiaNN\demoAscent\241206_Demo_Grenoble_Ecoli_10ng_2.raw
+[6:57] 298823 library precursors are potentially detectable
+[6:57] Calibrating with mass accuracies 30 (MS1), 15.9101 (MS2)
+[7:32] RT window set to 1.19616
+[7:32] Recommended MS1 mass accuracy setting: 1.7736 ppm
+[12:31] Removing low confidence identifications
+[12:33] Removing interfering precursors
+[12:37] Training neural networks on 90362 PSMs
+[13:03] Number of IDs at 0.01 FDR: 39094
+[13:04] Calculating protein q-values
+[13:04] Number of genes identified at 1% FDR: 2322 (precursor-level), 2148 (protein-level) (inference performed using proteotypic peptides only)
+[13:04] Quantification
+[13:06] Quantification information saved to C:\vero\DEV\DIA\DiaNN\demoAscent\temp/C__vero_DEV_DIA_DiaNN_demoAscent_241206_Demo_Grenoble_Ecoli_10ng_2_raw.quant
+
+[13:06] Cross-run analysis
+[13:06] Reading quantification information: 2 files
+[13:07] Quantifying peptides
+[13:13] Assembling protein groups
+[13:13] Quantifying proteins
+[13:13] Calculating q-values for protein and gene groups
+[13:13] Calculating global q-values for protein and gene groups
+[13:13] Protein groups with global q-value <= 0.01: 2539
+[13:14] Compressed report saved to C:\vero\DEV\DIA\DiaNN\demoAscent\results\report-first-pass.parquet. Use R 'arrow' or Python 'PyArrow' package to process
+[13:14] Writing report
+[13:20] Report saved to C:\vero\DEV\DIA\DiaNN\demoAscent\results\report-first-pass.tsv.
+[13:20] Saving precursor levels matrix
+[13:20] Precursor levels matrix (1% precursor and protein group FDR) saved to C:\vero\DEV\DIA\DiaNN\demoAscent\results\report-first-pass.pr_matrix.tsv.
+[13:20] Manifest saved to C:\vero\DEV\DIA\DiaNN\demoAscent\results\report-first-pass.manifest.txt
+[13:20] Stats report saved to C:\vero\DEV\DIA\DiaNN\demoAscent\results\report-first-pass.stats.tsv
+[13:20] Generating spectral library:
+[13:21] 41056 target and 374 decoy precursors saved
+[13:21] Spectral library saved to C:\vero\DEV\DIA\DiaNN\demoAscent\speclibs\report-lib.parquet
+
+[13:21] Loading spectral library C:\vero\DEV\DIA\DiaNN\demoAscent\speclibs\report-lib.parquet
+[13:22] Spectral library loaded: 4189 protein isoforms, 2831 protein groups and 41430 precursors in 34842 elution groups.
+[13:22] Initialising library
+[13:22] Saving the library to C:\vero\DEV\DIA\DiaNN\demoAscent\speclibs\report-lib.parquet.skyline.speclib
+
+
+Second pass: using the newly created spectral library to reanalyse the data
+
+[13:23] File #1/2
+[13:23] Loading run C:\vero\DEV\DIA\DiaNN\demoAscent\241206_Demo_Grenoble_Ecoli_10ng_1.raw
+[13:49] 41056 library precursors are potentially detectable
+[13:49] Calibrating with mass accuracies 30 (MS1), 16.0363 (MS2)
+[13:55] RT window set to 0.523907
+[13:56] Recommended MS1 mass accuracy setting: 1.53714 ppm
+[14:22] Removing low confidence identifications
+[14:24] Removing interfering precursors
+[14:25] Training neural networks on 53603 PSMs
+[14:44] Number of IDs at 0.01 FDR: 38751
+[14:44] No protein annotation, skipping protein q-value calculation
+[14:44] Quantification
+
+[14:46] File #2/2
+[14:46] Loading run C:\vero\DEV\DIA\DiaNN\demoAscent\241206_Demo_Grenoble_Ecoli_10ng_2.raw
+[15:17] 41056 library precursors are potentially detectable
+[15:17] Calibrating with mass accuracies 30 (MS1), 16.1398 (MS2)
+[15:24] RT window set to 0.524311
+[15:24] Recommended MS1 mass accuracy setting: 1.62521 ppm
+[15:42] Removing low confidence identifications
+[15:44] Removing interfering precursors
+[15:45] Training neural networks on 53760 PSMs
+[16:00] Number of IDs at 0.01 FDR: 39389
+[16:00] No protein annotation, skipping protein q-value calculation
+[16:00] Quantification
+
+[16:02] Cross-run analysis
+[16:02] Reading quantification information: 2 files
+[16:03] Quantifying peptides
+WARNING: QuantUMS requires 6 or more runs for the optimisation of its hyperparameters to perform best.
+[17:51] Quantification parameters: 0.275109, 0.00391466, 0.00338835, 0.0126382, 0.0124643, 0.0125654, 0.163049, 0.026077, 0.031245, 0.0141283, 0.0475858, 0.0407979, 0.274011, 0.0506851, 0.0601891, 0.0106778
+[17:56] Quantifying proteins
+[17:56] Calculating q-values for protein and gene groups
+[17:57] Calculating global q-values for protein and gene groups
+[17:57] Protein groups with global q-value <= 0.01: 2504
+[17:57] Compressed report saved to C:\vero\DEV\DIA\DiaNN\demoAscent\results\report.parquet. Use R 'arrow' or Python 'PyArrow' package to process
+[17:57] Writing report
+[18:02] Report saved to C:\vero\DEV\DIA\DiaNN\demoAscent\results\report.tsv.
+[18:02] Saving precursor levels matrix
+[18:02] Precursor levels matrix (1% precursor and protein group FDR) saved to C:\vero\DEV\DIA\DiaNN\demoAscent\results\report.pr_matrix.tsv.
+[18:02] Saving protein group levels matrix
+[18:02] Protein group levels matrix (1% precursor FDR and protein group FDR) saved to C:\vero\DEV\DIA\DiaNN\demoAscent\results\report.pg_matrix.tsv.
+[18:02] Saving gene group levels matrix
+[18:02] Gene groups levels matrix (1% precursor FDR and protein group FDR) saved to C:\vero\DEV\DIA\DiaNN\demoAscent\results\report.gg_matrix.tsv.
+[18:02] Saving unique genes levels matrix
+[18:02] Unique genes levels matrix (1% precursor FDR and protein group FDR) saved to C:\vero\DEV\DIA\DiaNN\demoAscent\results\report.unique_genes_matrix.tsv.
+[18:02] Manifest saved to C:\vero\DEV\DIA\DiaNN\demoAscent\results\report.manifest.txt
+[18:02] Stats report saved to C:\vero\DEV\DIA\DiaNN\demoAscent\results\report.stats.tsv
+

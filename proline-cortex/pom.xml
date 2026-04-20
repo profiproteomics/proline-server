@@ -100,7 +100,6 @@
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-      <version>2.11.0</version>
     </dependency>
 
     <!-- JSON-RPC -->
@@ -213,6 +212,12 @@
     </dependency>
     
     <!-- Other Proline Modules -->
+    <dependency>
+      <groupId>fr.proline</groupId>
+      <artifactId>pm-diann-parser</artifactId>
+      <version>${server.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>fr.proline</groupId>
       <artifactId>pm-dataset-exporter</artifactId>
