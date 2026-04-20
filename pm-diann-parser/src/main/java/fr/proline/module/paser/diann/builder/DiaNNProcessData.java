@@ -103,7 +103,7 @@ public class DiaNNProcessData {
     // Create Quantitation DS
     try {
       logger.debug("-- Run Create Exp Design");
-      MasterQuantChannel mqChannel  = createQuantitationExpDesign();
+      MasterQuantChannel mqChannel  = createQuantitationExpDesign(mergedRSM);
 
 //      EntityManager em = m_executionContext.getUDSDbConnectionContext().getEntityManager();
 //      TypedQuery<MasterQuantitationChannel> mqcQuery = em.createQuery("Select mqc from fr.proline.core.orm.uds.MasterQuantitationChannel mqc WHERE id = "+mqcId, MasterQuantitationChannel.class);
@@ -174,7 +174,7 @@ public class DiaNNProcessData {
    * @return CreatedMasterQuanChannel of the masterquantchannel for this quantittaion
    * @throws SQLException if an error occurs during data creation
    */
-  protected MasterQuantChannel createQuantitationExpDesign() throws SQLException {
+  protected MasterQuantChannel createQuantitationExpDesign(ResultSummary quantRSM) throws SQLException {
 
     long pId = m_executionContext.getProjectId();
     UdsDbConnectionContext udsDbCtx = m_executionContext.getUDSDbConnectionContext();
@@ -219,7 +219,7 @@ public class DiaNNProcessData {
         long bioSplId = insertIntoBioSpl(connection, qDSId, bioGrpId);
 
         logger.debug(" * Creating MasterQuantChannel ");
-        qMQChId[0] = insertIntoMasterQChannel(connection, qDSId);
+        qMQChId[0] = insertIntoMasterQChannel(connection, qDSId, quantRSM.id());
         logger.debug("     ... done with ID "+qMQChId[0]);
 
         //Create one SampleAnalysis per run
@@ -315,17 +315,19 @@ public class DiaNNProcessData {
     return qChannels;
   }
 
-  private long insertIntoMasterQChannel(Connection connection, long qDSId) throws SQLException {
+  private long insertIntoMasterQChannel(Connection connection, long qDSId, long quantRsmId) throws SQLException {
 
     String sqlQuery;
     long qMQChId;
     sqlQuery = "INSERT INTO " + UdsDbMasterQuantChannelTable$.MODULE$.name() +
-            " (" + UdsDbMasterQuantChannelColumns.QUANTITATION_ID() + "," + UdsDbMasterQuantChannelColumns.NAME() + "," + UdsDbMasterQuantChannelColumns.NUMBER()
-             + ") VALUES (?,?,?) ";
+            " (" + UdsDbMasterQuantChannelColumns.QUANTITATION_ID() + "," + UdsDbMasterQuantChannelColumns.NAME() + "," + UdsDbMasterQuantChannelColumns.NUMBER() +
+            ", "+UdsDbMasterQuantChannelColumns.QUANT_RESULT_SUMMARY_ID()
+             + ") VALUES (?,?,?, ?) ";
     try(PreparedStatement pStmt = connection.prepareStatement(sqlQuery,  new String[] { "id" })) {
       pStmt.setLong(1, qDSId);
       pStmt.setString(2, "Quant " + m_diannResult.getName());
       pStmt.setInt(3, 1);
+      pStmt.setLong(4, quantRsmId);
       pStmt.executeUpdate();
       java.sql.ResultSet keyRS = pStmt.getGeneratedKeys();
       if (keyRS.next()) {
