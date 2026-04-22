@@ -168,7 +168,7 @@ public class DiaNNQuantifier extends AbstractDiannQuantifier {
 
         MasterQuantPeptideIon mqPepion = new MasterQuantPeptideIon(MasterQuantPeptideIon.generateNewId(), prec.getMoz(), prec.getCharge(),
                   0, currentIonsByQc.size(), Option.empty(),2, mQPepId, m_mergedResultSummary.id(),
-                  Option.apply(pi.id()), Option.empty() , Option.empty(), Option.empty(), currentIonsByQc, Option.empty(), new MasterQuantReporterIon[0]);
+                  Option.apply(pi.id()), Option.apply(pi.bestPeptideMatchId()), Option.empty(), Option.empty(), currentIonsByQc, Option.empty(), new MasterQuantReporterIon[0]);
 
         masterQuantPeptidesIon.add(mqPepion);
 
