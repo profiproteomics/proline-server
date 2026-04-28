@@ -62,7 +62,7 @@ public class DiaNNResultsParser  extends IServiceWrapper {
 
   private final File m_diaNNDirPath;
   private  File m_mainReportFile;
-//  private final Map<String,Object> m_parserOptions;
+
   private Map<String,Object> m_diaNNOptions;
   private Long m_instrConfigId;
   private Long m_peaklistSoftwareId;
@@ -79,6 +79,29 @@ public class DiaNNResultsParser  extends IServiceWrapper {
   Map<Long, Map<Long,Spectrum>> m_spectraByIdByRsId;
   Map<String, Set<String>> m_precIdByPepKey;
   Long m_datasetId;
+
+  enum EnzymeParse {
+    TRYPSIN("K*,R*", "Trypsin/P"),
+    TRYPSINP("K*,R*,!*P", "Trypsin"),
+    LYSC("K*,!*P", "Lys-C"),
+    LYSCP("K*,R*", "Lys-C/P");
+
+    String m_cutValue;
+    String m_name;
+
+    EnzymeParse(String cutValue, String name) {
+      this.m_name = name;
+      this.m_cutValue = cutValue;
+    }
+
+    static EnzymeParse fromString(String cutValue) {
+      for (EnzymeParse e : EnzymeParse.values()) {
+        if(e.m_cutValue.equals(cutValue))
+          return e;
+      }
+      return null;
+    }
+  }
 
   public DiaNNResultsParser(ProviderDecoratedExecutionContext parserContext, File diannFolder, Map<String,Object> parserOptions) {
     m_parserContext = parserContext;
@@ -135,14 +158,10 @@ public class DiaNNResultsParser  extends IServiceWrapper {
     } catch (IOException e) {
       throw new IllegalArgumentException("DiaNN report LOG file " + reportLogFile.getAbsolutePath()+" is not valid: "+e.getMessage());
     }
-    logger.warn(" - Modification should ne parsed !! ");
+    logger.debug(" - Parse Modification ");
     //Read Modif in log
-    m_usedFixedPTMs = new ArrayList<>();
-    m_usedVarPTMs = new ArrayList<>();
-    //VDS --- TEST UNTIL PARSE CODE DONE ---
-    m_usedFixedPTMs.add("unimod4");
-    m_usedVarPTMs.add("UniMod:35,15.994915,M");
-    m_usedVarPTMs.add("UniMod:1,42.010565,*n");
+    m_usedFixedPTMs = getFixedModif();
+    m_usedVarPTMs = getVarModif();
 
   }
 
@@ -183,7 +202,6 @@ public class DiaNNResultsParser  extends IServiceWrapper {
     boolean localMSITransaction= false;
     boolean msiTransacOk= false;
 
-
     StorerContext storerContext = null;
     Map<String, Long> rsIdByName = new HashMap<>();
 
@@ -199,6 +217,8 @@ public class DiaNNResultsParser  extends IServiceWrapper {
       List<PtmDefinition> fixedPtmDef =  createPtmList(m_usedFixedPTMs);
       List<PtmDefinition> varPtmDef =  createPtmList(m_usedVarPTMs);
       logger.debug(" .. Found {} var ptm and {} fixed ptm ", varPtmDef.size(), fixedPtmDef.size());
+      logger.debug(" ..... {} ", varPtmDef);
+      logger.debug(" ..... {} ",  fixedPtmDef);
 
       // Retrieve the instrument configuration VDS TODO Read from parserOption
       IInstrumentConfigProvider instConfigProvider= m_parserContext.getProvider(IInstrumentConfigProvider.class);
@@ -254,9 +274,8 @@ public class DiaNNResultsParser  extends IServiceWrapper {
     logger.debug(" - Create SeqDatabase ");
     List<SeqDatabase> seqDbsList = createSeqDatabase();
 
-    //VDS TODO parse from log file cut""
     Enzyme[] enzymes = new Enzyme[1];
-    enzymes[0] = new Enzyme("Trypsin/P");
+    enzymes[0] = createEnzyme();
     String mcAsStr = m_diaNNOptions.getOrDefault("missed-cleavages", "0").toString();
     int mc = 0;
     if(mcAsStr != null ) {
@@ -315,6 +334,7 @@ public class DiaNNResultsParser  extends IServiceWrapper {
     m_rsmIdsByRSId = processData.getRSMIdsByRSIds();
     m_datasetId = processData.getCreatedQuantDatasetId();
   }
+
   private List<SeqDatabase> createSeqDatabase() {
     List<SeqDatabase> seqDbsList = new ArrayList<>();
     ArrayList<String> fastaName = getParamValueAsList("fasta");
@@ -360,40 +380,126 @@ public class DiaNNResultsParser  extends IServiceWrapper {
   private List<PtmDefinition> createPtmList(List<String> diannSrcDef) {
     IPTMProvider ptmProvider= m_parserContext.getProvider(IPTMProvider.class);
     List<PtmDefinition> createdPtmDefs = new ArrayList<>();
+
+    boolean foundErr = false;
     for(String ptmDesc : diannSrcDef){
       String[] ptmParts  = ptmDesc.split(",");
+      StringBuilder errorMessage = new StringBuilder("Error parsing ptm ");
 
-      //VDS TODO : manage error !
       if(ptmParts.length ==1 ) {
         if(ptmDesc.startsWith("unimod") ) { //only one word: should be such as "unimod<id>"
-          int unimodId = Integer.parseInt(ptmParts[0].substring(6));
-          PtmDefinition[] ptmDefs = ptmProvider.getUnimodPtmDefinition(unimodId);
-          if(ptmDefs != null && ptmDefs.length>0)
-            createdPtmDefs.addAll(Arrays.stream(ptmDefs).toList());
+          errorMessage.append(ptmDesc).append(": ");
+          try {
+            int unimodId = Integer.parseInt(ptmParts[0].substring(6));
+            PtmDefinition[] ptmDefs = ptmProvider.getUnimodPtmDefinition(unimodId);
+            if (ptmDefs != null && ptmDefs.length > 0) {
+              if (unimodId == 4) {
+                ptmDefs = extractResidue(ptmDefs, 'C');
+              } else if (unimodId == 35) {
+                ptmDefs = extractResidue(ptmDefs, 'M');
+              } else if (unimodId == 1) {
+                ptmDefs = extractResidue(ptmDefs, '\u0000');
+              } else if (unimodId == 21) {
+                PtmDefinition[] ptmDefStep = extractResidue(ptmDefs, 'S');
+                List<PtmDefinition> incremPtms = new ArrayList<>(List.of(ptmDefStep));
+                ptmDefStep = extractResidue(ptmDefs, 'T');
+                incremPtms.addAll(List.of(ptmDefStep));
+                ptmDefStep = extractResidue(ptmDefs, 'Y');
+                incremPtms.addAll(List.of(ptmDefStep));
+                ptmDefs = incremPtms.toArray(new PtmDefinition[0]);
+              }
+              if (ptmDefs == null || ptmDefs.length == 0){
+                errorMessage.append(" Residue filtering error.");
+                foundErr = true;
+              } else
+                createdPtmDefs.addAll(Arrays.stream(ptmDefs).toList());
+            } else {
+              errorMessage.append(" Modification not found in Proline");
+              foundErr = true;
+            }
+          } catch (NumberFormatException nfe){
+            errorMessage.append("Unable to extract unimod Id.");
+            foundErr = true;
+          }
+
         } else  {
-          logger.warn(" WARNING !! Unable to parse single unimod {} ", ptmDesc);
+          errorMessage.append(" Not well formatted single unimod parameter");
+          foundErr = true;
         }
 
-      }  else {
-        //ptm description is formatted as  [name],[mass],[sites],[optional: 'label'] where name could be unimod:id
+      }  else if (ptmParts.length >= 3 ){
+        // ptm description is formatted as  [name],[mass],[sites],[optional: 'label'] where name could be unimod:id
         String ptmName = ptmParts[0];
 //        double ptmMass = Double.parseDouble(ptmParts[1]);
-//        String sites = ptmParts[2];
+        String sites = ptmParts[2];
 //        String label = ptmParts.length > 3 ? ptmParts[3] : null;
         if(ptmName.toLowerCase().startsWith("unimod:")) {
-          int unimodId = Integer.parseInt(ptmParts[0].substring(7));
-          PtmDefinition[] ptmDefs = ptmProvider.getUnimodPtmDefinition(unimodId);
-          if(ptmDefs != null && ptmDefs.length>0)
-            createdPtmDefs.addAll(Arrays.stream(ptmDefs).toList());
-        }else  {
-          logger.warn(" WARNING !! Unable to parse defined unimod {} ", ptmDesc);
+          try {
+            int unimodId = Integer.parseInt(ptmParts[0].substring(7));
+            PtmDefinition[] ptmDefs = ptmProvider.getUnimodPtmDefinition(unimodId);
+            if(ptmDefs != null && ptmDefs.length>0) {
+              if (sites.equals("*n") || sites.equals("*c")) //N|C-Term, no residue
+                ptmDefs = extractResidue(ptmDefs, '\u0000');
+              else {
+                List<PtmDefinition> incremPtms = new ArrayList<>();
+                for(char site : sites.toCharArray()) {
+                  PtmDefinition[] ptmDefStep = extractResidue(ptmDefs, site);
+                  incremPtms.addAll(List.of(ptmDefStep));
+                }
+                ptmDefs = incremPtms.toArray(new PtmDefinition[0]);
+              }
+              if (ptmDefs == null || ptmDefs.length == 0){
+                errorMessage.append(" Residue filtering error.");
+                foundErr = true;
+              } else
+                createdPtmDefs.addAll(Arrays.stream(ptmDefs).toList());
+            } else {
+              errorMessage.append(" Modification not found in Proline");
+              foundErr = true;
+            }
+          } catch (NumberFormatException nfe){
+            errorMessage.append("Unable to extract unimod Id.");
+            foundErr = true;
+          }
+        } else  {
+          errorMessage.append(" Not well formatted PTM definition parameter, should start with Unimod:<id>");
+          foundErr = true;
         }
+      } else {
+        errorMessage.append("  Not well formatted PTM definition parameter, more than expected parts");
+        foundErr = true;
       }
 
+      if(foundErr) {
+        throw new IllegalArgumentException("Error reading PTMs from diaNN result : "+errorMessage.toString());
+      }
     }// End go through Diann PTM description
     return createdPtmDefs;
   }
 
+  private Enzyme createEnzyme() {
+    Enzyme enzyme = new Enzyme("Trypsin/P");
+    if(m_diaNNOptions.containsKey("cut")){
+      String enzymeRule = m_diaNNOptions.get("cut").toString();
+      EnzymeParse enzymeParsed = EnzymeParse.fromString(enzymeRule);
+      if(enzymeParsed != null) {
+        enzyme = new Enzyme(enzymeParsed.m_name);
+      }
+    }
+    return enzyme;
+  }
+
+  private PtmDefinition[] extractResidue(PtmDefinition[] ptmDefs, char residue) {
+    if(ptmDefs == null || ptmDefs.length == 0)
+        return ptmDefs;
+
+    List<PtmDefinition> newPtms = Arrays.stream(ptmDefs).filter(ptmd-> ptmd.residue()==residue).toList();
+    if(!newPtms.isEmpty())
+      ptmDefs = newPtms.toArray(new PtmDefinition[0]);
+    else
+      logger.warn(" !!!!! WARNING !! Unable to retrieve specific residue {} for unimod {} ", residue, ptmDefs[0].unimodId());
+    return ptmDefs;
+  }
 
   private MSISearch createMsiSearch(String run, SearchSettings searchSettings) {
     String filePath = m_filePathsByRun.getOrDefault(run, run);
@@ -480,7 +586,9 @@ public class DiaNNResultsParser  extends IServiceWrapper {
     SQLMsiSearchWriter.insertInstrumentConfig(instrumentConfig, storerContext);
 
     for(ResultSet nextRS : resultSets){
+      logger.debug("STORE RS {} / MSiSearch {} / SS {} ", nextRS.id(), nextRS.msiSearch().get().id(), nextRS.msiSearch().get().searchSettings().id());
       Long rsId = storeResultFile(nextRS, /*rsMapper,*/ storerContext, rsStorer);
+      logger.debug(" DONE WITH  MSiSearch {} / SS {} ",  nextRS.msiSearch().get().id(), nextRS.msiSearch().get().searchSettings().id());
       rsIdByName.put(nextRS.name(), rsId);
     }
 
@@ -588,6 +696,35 @@ public class DiaNNResultsParser  extends IServiceWrapper {
     }
   }
 
+  /**
+   * Extract Fixed PTMs from diann Option
+   *
+   * @return List of DiaNN fixed PTMs
+   */
+  private ArrayList<String> getFixedModif(){
+    ArrayList<String> ptms = new ArrayList<>();
+    if(m_diaNNOptions.containsKey("fixed-mod")){
+      ptms = getParamValueAsList("fixed-mod");
+    }
+    if(m_diaNNOptions.containsKey("unimod4")){
+      ptms.add("unimod4");
+    }
+    return ptms;
+
+  }
+
+  /**
+   * Extract Variable PTMs from diann Option
+   *
+   * @return List of DiaNN fixed PTMs
+   */
+  private ArrayList<String> getVarModif(){
+    ArrayList<String> ptms = new ArrayList<>();
+    if(m_diaNNOptions.containsKey("var-mod")){
+      ptms = getParamValueAsList("var-mod");
+    }
+    return ptms;
+  }
 
 
 }
