@@ -106,7 +106,7 @@ public class DiaNNParquetReader {
         logger.debug(" Stat {} = {}", stat.getKey(), stat.getValue());
       }
     }
-    diaNNResult.printStat();
+//    diaNNResult.printStat();
     return diaNNResult;
   }
 
@@ -228,7 +228,7 @@ public class DiaNNParquetReader {
 
     } // End go through precursors
 
-    logger.info(" -- Found {} protein group - needed to just add protId {} times ", proteinGroupByName.size(), nbPGAddedProt);
+//    logger.debug(" -- Found {} protein group - needed to just add protId {} times ", proteinGroupByName.size(), nbPGAddedProt);
 //    diaNNResult.setPrecursorForRun(precursors, run);
     diaNNResult.setProteinGroupsForRun(proteinGroupByName.values().stream().toList(), run);
 

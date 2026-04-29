@@ -184,9 +184,9 @@ public class MSDataBuilder {
         }
       }
     }
-    logger.debug(" * Found {}/{} Peptides in Datastore : ", nbFoundPep, pepToSearch.length());
+    logger.debug(" *** Found {}/{} Peptides in Datastore : ", nbFoundPep, pepToSearch.length());
     List<PeptideMatch> rsPepMatches =  currentRSPepMatchesByPepId.values().stream().flatMap(List::stream).toList();
-    logger.debug(" * Created {} peptide matches and {} protein matches ", currentRSProtMatchesByAcc.size(), currentRSProtMatchesByAcc.size());
+    logger.debug(" *** Created {} peptide matches and {} protein matches ", currentRSProtMatchesByAcc.size(), currentRSProtMatchesByAcc.size());
     return  createOMResultSet(rsId,  currentRSPepByUniqueKey.values().stream().toList(), rsPepMatches, currentRSProtMatchesByAcc.values().stream().toList(), run, msiSearch);
   }
 

@@ -217,8 +217,8 @@ public class DiaNNResultsParser  extends IServiceWrapper {
       List<PtmDefinition> fixedPtmDef =  createPtmList(m_usedFixedPTMs);
       List<PtmDefinition> varPtmDef =  createPtmList(m_usedVarPTMs);
       logger.debug(" .. Found {} var ptm and {} fixed ptm ", varPtmDef.size(), fixedPtmDef.size());
-      logger.debug(" ..... {} ", varPtmDef);
-      logger.debug(" ..... {} ",  fixedPtmDef);
+//      logger.debug(" ..... {} ", varPtmDef);
+//      logger.debug(" ..... {} ",  fixedPtmDef);
 
       // Retrieve the instrument configuration VDS TODO Read from parserOption
       IInstrumentConfigProvider instConfigProvider= m_parserContext.getProvider(IInstrumentConfigProvider.class);
@@ -428,6 +428,7 @@ public class DiaNNResultsParser  extends IServiceWrapper {
         }
 
       }  else if (ptmParts.length >= 3 ){
+        errorMessage.append(ptmDesc).append(": ");
         // ptm description is formatted as  [name],[mass],[sites],[optional: 'label'] where name could be unimod:id
         String ptmName = ptmParts[0];
 //        double ptmMass = Double.parseDouble(ptmParts[1]);
@@ -565,7 +566,6 @@ public class DiaNNResultsParser  extends IServiceWrapper {
         else
           sb.append("'").append(properties).append("' )");
         Statement stmt = connection.createStatement();
-        logger.warn(" WILL EXECUTE {}", sb);
         stmt.execute(sb.toString());
       };
 
@@ -586,9 +586,7 @@ public class DiaNNResultsParser  extends IServiceWrapper {
     SQLMsiSearchWriter.insertInstrumentConfig(instrumentConfig, storerContext);
 
     for(ResultSet nextRS : resultSets){
-      logger.debug("STORE RS {} / MSiSearch {} / SS {} ", nextRS.id(), nextRS.msiSearch().get().id(), nextRS.msiSearch().get().searchSettings().id());
       Long rsId = storeResultFile(nextRS, /*rsMapper,*/ storerContext, rsStorer);
-      logger.debug(" DONE WITH  MSiSearch {} / SS {} ",  nextRS.msiSearch().get().id(), nextRS.msiSearch().get().searchSettings().id());
       rsIdByName.put(nextRS.name(), rsId);
     }
 
@@ -598,7 +596,7 @@ public class DiaNNResultsParser  extends IServiceWrapper {
 
   private Long storeResultFile(ResultSet nextRS, /*ResultSetsDataMapper rsMapper,*/ StorerContext storerContext,IRsStorer rsStorer) {
     String rsName = nextRS.name();
-    logger.info("-- Storing  ResultSet {}", rsName);
+    logger.info(" * Storing  ResultSet {}", rsName);
     if(nextRS.peptideMatches() == null || nextRS.peptideMatches().length == 0)
       throw new RuntimeException(rsName+ " ResultSet has NO PeptideMatch");
     if(nextRS.proteinMatches() == null || nextRS.proteinMatches().length == 0)
@@ -611,7 +609,7 @@ public class DiaNNResultsParser  extends IServiceWrapper {
     long peakListId = pklWriter.insertPeaklist(pl, storerContext);
     pl.id_$eq(peakListId);
 
-    logger.info("-- list MSQueries  ");
+    logger.debug("  *** list MSQueries  ");
     // TO DO ?  Create Map Query -> List peptideMatch ?? Why VDS ?!
 //	   	Map<MsQuery,List<PeptideMatch>> pepMatchesByQuery = null;
     Set<MsQuery> queries = Arrays.stream(nextRS.peptideMatches()).map( pm -> pm.msQuery()).collect(Collectors.toSet());
@@ -626,11 +624,11 @@ public class DiaNNResultsParser  extends IServiceWrapper {
     // Insert spectra contained in result file
     Map<Long, Spectrum> spectraById = m_spectraByIdByRsId.get(nextRS.id());
     DiaNNPeaklistContainer plContainer = new DiaNNPeaklistContainer(nextRS, spectraById);
-    logger.info("Storing spectra...");
+    logger.info(" ** Storing spectra...");
     pklWriter.insertSpectra(peakListId, plContainer, storerContext);
 
     //TODO : Compute PrettyRank computePrettyRanks(rs.peptideMatches, separated = true)
-    logger.info("Storing ResultSet...");
+    logger.info(" ** Storing ResultSet...");
     return rsStorer.storeResultSet(nextRS, JavaConverters.asScalaSet(queries).toList(), storerContext);
   }
 
