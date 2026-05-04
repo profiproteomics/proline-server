@@ -193,7 +193,7 @@ public class DiaNNProcessData {
         pStmt.setLong(1, pId);
         java.sql.ResultSet result = pStmt.executeQuery();
         if(result.next()){
-          qDatasetNbr[0] = result.getInt(1);
+          qDatasetNbr[0] = result.getInt(1)+1;
         }
       };
 
@@ -342,13 +342,13 @@ public class DiaNNProcessData {
   private long insertIntoBioSpl(Connection connection, long qDSId, long bioGrpId) throws SQLException {
     long bioSplId;
     String sqlQuery;
-
+    int nbRuns = m_diannResult.getRuns().size();
     sqlQuery = "INSERT INTO " + UdsDbBiologicalSampleTable$.MODULE$.name() +
             " (" + UdsDbBiologicalSampleColumns.QUANTITATION_ID() + "," + UdsDbBiologicalSampleColumns.NAME() + "," + UdsDbBiologicalSampleColumns.NUMBER()
             + ") VALUES (?,?,?) ";
     try(PreparedStatement pStmt =  connection.prepareStatement(sqlQuery,  new String[] { "id" })) {
       pStmt.setLong(1, qDSId);
-      pStmt.setString(2, "Group " + m_diannResult.getName() + "-Sample");
+      pStmt.setString(2, "Group " + m_diannResult.getName() + nbRuns+" Runs");
       pStmt.setInt(3, 1);
       pStmt.executeUpdate();
       java.sql.ResultSet keyRS = pStmt.getGeneratedKeys();
@@ -429,9 +429,9 @@ public class DiaNNProcessData {
       if (methodRs.next()) {
         methodId = methodRs.getLong(1);
       } else {
-        logger.warn("No quantitation method found for quantitation - USE ID 1 !!! ");
+        logger.warn("!!!! No quantitation method found for quantitation - USE ID 1 !!! ");
       }
-     // stmt.close();
+
 
       long qDSId = 0;
       String sqlQuery = "INSERT INTO " + UdsDbDataSetTable$.MODULE$.name() +

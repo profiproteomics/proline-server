@@ -49,7 +49,7 @@ class ImportDiaNNResults extends AbstractRemoteProcessingService with IImportDia
     val resultFileFolders = params.getString(PROCESS_METHOD.RESULT_FILES_DIR_PARAM)
     val instrumentConfigId : Long = params.getLong(PROCESS_METHOD.INSTRUMENT_CONFIG_ID_PARAM)
     val peaklistSoftwareId: Long = params.getLong(PROCESS_METHOD.PEAKLIST_SOFTWARE_ID_PARAM)
-
+    val parentDatasetId: Long =  params.getLong(PROCESS_METHOD.PARENT_DS_ID_PARAM)
     val localPathname = MountPointRegistry.replacePossibleLabel(resultFileFolders, Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname
 
     logger.info("Run Import DiaNN using Params : " + serialize(params)+" from "+localPathname)
@@ -70,11 +70,14 @@ class ImportDiaNNResults extends AbstractRemoteProcessingService with IImportDia
       val parserOption = new util.HashMap[String, Object]()
       parserOption.put(DiaNNResultsParser.INSTR_CONFIG_OPTION_KEY,  java.lang.Long.valueOf(instrumentConfigId))
       parserOption.put(DiaNNResultsParser.PEAKLIST_SOFT_ID_OPTION_KEY,  java.lang.Long.valueOf(peaklistSoftwareId))
+      parserOption.put(DiaNNResultsParser.PARENT_DATASET_ID_OPTION_KEY,  java.lang.Long.valueOf(parentDatasetId))
       val diannParser: DiaNNResultsParser = new DiaNNResultsParser(parserCtxt, localPathname, parserOption)
       diannParser.runService()
       val createdRSMIds = diannParser.getRSMIdByResultSetId
+//      createIdentDataset(JavaConverters.mapAsScalaMap(createdRSMIds),execCtx, projectId, localFile.getName());
       val dsId = diannParser.getCreatedQuantDatasetId
-      result = ImportedDiaNNResult( createdRSMIds.asScala.toMap, dsId)
+      val identDsIs = diannParser.getCreatedIdentDatasetId
+      result = ImportedDiaNNResult( createdRSMIds.asScala.toMap, identDsIs, dsId)
       logger.debug(" Import Diann Done. {} RS imported ", createdRSMIds.size())
     } finally {
       DbConnectionHelper.tryToCloseExecContext(execCtx)
@@ -82,5 +85,7 @@ class ImportDiaNNResults extends AbstractRemoteProcessingService with IImportDia
     System.gc()
     result
   }
+
+
 }
 

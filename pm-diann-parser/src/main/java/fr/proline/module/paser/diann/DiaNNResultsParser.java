@@ -6,7 +6,11 @@ import fr.profi.util.StringUtils;
 import fr.profi.util.serialization.ProfiJson;
 import fr.proline.context.DatabaseConnectionContext;
 import fr.proline.context.MsiDbConnectionContext;
+import fr.proline.context.UdsDbConnectionContext;
 import fr.proline.core.dal.tables.msi.MsiDbPeaklistSoftwareColumns;
+import fr.proline.core.orm.uds.Aggregation;
+import fr.proline.core.orm.uds.Dataset;
+import fr.proline.core.orm.uds.Project;
 import fr.proline.core.om.model.msi.*;
 import fr.proline.core.om.provider.ProviderDecoratedExecutionContext;
 import fr.proline.core.om.provider.msi.IInstrumentConfigProvider;
@@ -16,6 +20,7 @@ import fr.proline.core.om.storer.msi.IRsStorer;
 import fr.proline.core.om.storer.msi.RsStorer;
 import fr.proline.core.om.storer.msi.impl.SQLMsiSearchWriter;
 import fr.proline.core.om.storer.msi.impl.StorerContext;
+import fr.proline.core.orm.uds.repository.AggregationRepository;
 import fr.proline.module.paser.diann.builder.DiaNNPeaklistContainer;
 import fr.proline.module.paser.diann.builder.DiaNNProcessData;
 import fr.proline.module.paser.diann.builder.MSDataBuilder;
@@ -31,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import scala.Option;
 import scala.collection.JavaConverters;
 
+import javax.persistence.Query;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,6 +45,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -57,6 +64,7 @@ public class DiaNNResultsParser  extends IServiceWrapper {
 
   public static String INSTR_CONFIG_OPTION_KEY = "instrumentConfigId";
   public static String PEAKLIST_SOFT_ID_OPTION_KEY = "peaklistSoftwareId";
+  public static String PARENT_DATASET_ID_OPTION_KEY = "parentDatsetId";
   private static final Long DEFAULT_INSTRUM_CFG_ID = 4L;
   private static final Long DEFAULT_PEAKLIST_SOFT_ID = 1L; //extract msn.. diann to create TODO
 
@@ -66,6 +74,7 @@ public class DiaNNResultsParser  extends IServiceWrapper {
   private Map<String,Object> m_diaNNOptions;
   private Long m_instrConfigId;
   private Long m_peaklistSoftwareId;
+  private Long m_parenttDatasetId;
 
   private List<String> m_usedFixedPTMs;
   private List<String> m_usedVarPTMs;
@@ -78,7 +87,8 @@ public class DiaNNResultsParser  extends IServiceWrapper {
   Map<Long,Long> m_rsmIdsByRSId;
   Map<Long, Map<Long,Spectrum>> m_spectraByIdByRsId;
   Map<String, Set<String>> m_precIdByPepKey;
-  Long m_datasetId;
+  Long m_quantDatasetId;
+  Long m_identDatasetId;
 
   enum EnzymeParse {
     TRYPSIN("K*,R*", "Trypsin/P"),
@@ -111,6 +121,7 @@ public class DiaNNResultsParser  extends IServiceWrapper {
     try {
       m_instrConfigId = parserOptions.containsKey(INSTR_CONFIG_OPTION_KEY) ? (Long)parserOptions.get(INSTR_CONFIG_OPTION_KEY) : DEFAULT_INSTRUM_CFG_ID;
       m_peaklistSoftwareId = parserOptions.containsKey(PEAKLIST_SOFT_ID_OPTION_KEY) ?(Long) parserOptions.get(PEAKLIST_SOFT_ID_OPTION_KEY) : DEFAULT_PEAKLIST_SOFT_ID;
+      m_parenttDatasetId = parserOptions.containsKey(PARENT_DATASET_ID_OPTION_KEY) ?(Long) parserOptions.get(PARENT_DATASET_ID_OPTION_KEY) : -1L;
     } catch (Exception e) {
       m_instrConfigId = DEFAULT_INSTRUM_CFG_ID;
       m_peaklistSoftwareId = DEFAULT_PEAKLIST_SOFT_ID;
@@ -118,7 +129,7 @@ public class DiaNNResultsParser  extends IServiceWrapper {
 
     m_spectraByIdByRsId =  new HashMap<>();
     m_resultSetsByRun = new HashMap<>();
-    m_datasetId = -1L;
+    m_quantDatasetId = -1L;
     parseDiaNNParams();
   }
 
@@ -194,7 +205,11 @@ public class DiaNNResultsParser  extends IServiceWrapper {
   }
 
   public Long getCreatedQuantDatasetId(){
-    return m_datasetId;
+    return m_quantDatasetId;
+  }
+
+  public Long getCreatedIdentDatasetId(){
+    return m_identDatasetId;
   }
 
   private void createResultsData(DiaNNResult diaNNResult) {
@@ -239,6 +254,8 @@ public class DiaNNResultsParser  extends IServiceWrapper {
 
       logger.debug(" --- Start Create Validated and Quantitation data");
       createProcessedResults(diaNNResult);
+      m_identDatasetId = createIdentificationDataset(diaNNResult, rsMap);
+
 
       // Commit transaction if it was initiated locally
       if (localMSITransaction) {
@@ -332,8 +349,99 @@ public class DiaNNResultsParser  extends IServiceWrapper {
     DiaNNProcessData processData = new DiaNNProcessData(m_parserContext, diaNNResult, m_resultSetsByRun, m_precIdByPepKey);
     processData.runService();
     m_rsmIdsByRSId = processData.getRSMIdsByRSIds();
-    m_datasetId = processData.getCreatedQuantDatasetId();
+    m_quantDatasetId = processData.getCreatedQuantDatasetId();
   }
+
+  private Long createIdentificationDataset(DiaNNResult diaNNResult, Map<String, Long> rsByRunName) throws SQLException {
+    UdsDbConnectionContext udsDbCtx = m_parserContext.getUDSDbConnectionContext();
+    boolean localUDSTransaction = false;
+    boolean udsTransacOk = false;
+    Long identDS = -1L;
+    try {
+      boolean parentDatasetSet = (m_parenttDatasetId != null && m_parenttDatasetId>0);
+      if (!udsDbCtx.isInTransaction()) {
+        udsDbCtx.beginTransaction();
+        localUDSTransaction = true;
+      }
+
+      final Project udsProject = udsDbCtx.getEntityManager().find(Project.class, m_parserContext.getProjectId());
+      if (udsProject == null) {
+        throw new IllegalStateException("undefined project with id=" + m_parserContext.getProjectId());
+      }
+
+      String numberSQL = "Select max(number) from data_set where project_id = :pid and type != 'QUANTITATION' and type != 'TRASH' and type != 'QUANTITATION_FOLDER' and ";
+      if(parentDatasetSet) {
+        numberSQL += "parent_dataset_id = :parentId";
+      } else {
+        numberSQL += "parent_dataset_id is null";
+      }
+
+      int previousIdentNum = 0;
+      Query  numberQuery = udsDbCtx.getEntityManager().createNativeQuery(numberSQL);
+      numberQuery.setParameter("pid", m_parserContext.getProjectId());
+      if(parentDatasetSet) {
+        numberQuery.setParameter("parentId", m_parenttDatasetId);
+      }
+      Object previousIdentNumObj = numberQuery.getSingleResult();
+
+      if (previousIdentNumObj != null) {
+        previousIdentNum = ((Number) previousIdentNumObj).intValue();
+      }
+
+      Aggregation agg = AggregationRepository.findAggregationByType(udsDbCtx.getEntityManager(), Aggregation.ChildNature.OTHER);
+      Dataset parentDataset = (parentDatasetSet) ? udsDbCtx.getEntityManager().find(Dataset.class, m_parenttDatasetId) : null;
+      Dataset aggregateDataset = new Dataset(udsProject);
+      aggregateDataset.setNumber(previousIdentNum + 1);
+      aggregateDataset.setName(diaNNResult.getName());
+      aggregateDataset.setDescription("Search results from diann import");
+      aggregateDataset.setType(Dataset.DatasetType.AGGREGATE);
+      aggregateDataset.setAggregation(agg);
+      aggregateDataset.setCreationTimestamp(new Timestamp(new Date().getTime()));
+      aggregateDataset.setChildrenCount(rsByRunName.size());
+      aggregateDataset.setParentDataset(parentDataset);
+      udsDbCtx.getEntityManager().persist(aggregateDataset);
+
+      int childNumber = 1;
+      for (String run : diaNNResult.getRuns()) {
+        Long rsId = rsByRunName.get(run);
+        Long rsmId = m_rsmIdsByRSId.get(rsId);
+        if (rsId == null || rsmId == null) {
+          logger.warn("Unable to create child dataset for run {} (rsId={}, rsmId={})", run, rsId, rsmId);
+          continue;
+        }
+
+        Dataset childDataset = new Dataset(udsProject);
+        childDataset.setParentDataset(aggregateDataset);
+        childDataset.setNumber(childNumber++);
+        childDataset.setName(run);
+        childDataset.setDescription("Search results from diann import "+diaNNResult.getName());
+        childDataset.setType(Dataset.DatasetType.IDENTIFICATION);
+        childDataset.setResultSetId(rsId);
+        childDataset.setResultSummaryId(rsmId);
+        childDataset.setCreationTimestamp(new Timestamp(new Date().getTime()));
+        udsDbCtx.getEntityManager().persist(childDataset);
+      }
+
+      identDS = aggregateDataset.getId();
+
+      if (localUDSTransaction) {
+        udsDbCtx.commitTransaction();
+      }
+      udsTransacOk = true;
+      return identDS;
+    } finally {
+      if (localUDSTransaction && !udsTransacOk) {
+        logger.info("Roll backing UDS Db Transaction");
+        try {
+          udsDbCtx.rollbackTransaction();
+        } catch (Exception ex) {
+          logger.error("Error roll backing UDS Db Transaction", ex);
+        }
+      }
+    }
+  }
+
+
 
   private List<SeqDatabase> createSeqDatabase() {
     List<SeqDatabase> seqDbsList = new ArrayList<>();

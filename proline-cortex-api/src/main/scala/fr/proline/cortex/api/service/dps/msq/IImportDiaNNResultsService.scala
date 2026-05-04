@@ -9,11 +9,15 @@ import scala.reflect.runtime.universe.typeOf
 
 
 case class ImportedDiaNNResult(
-    @FieldDescription(content = "Map of RSM Ids by RS id.")
+                                @FieldDescription(content = "Map of RSM Ids by RS id.")
     rsmIdsByRsId: Map[java.lang.Long, java.lang.Long],
 
-    @FieldDescription(content = "ID of created quantitation dataset.")
+                                @FieldDescription(content = "Parent dataset Id containing RSM/RS.")
+    identDataSetId: Long,
+
+                                @FieldDescription(content = "ID of created quantitation dataset.")
     var quantDataSetId: Long = -1L
+
 )
 
 trait IImportDiaNNResultsService extends IMsqService with IDefaultServiceVersion {
@@ -32,6 +36,7 @@ trait IImportDiaNNResultsService extends IMsqService with IDefaultServiceVersion
     // Configure method interface
     val parameters: immutable.Seq[JSONRPC2DefaultMethodParameter] = List(
       PROJECT_ID_PARAM,
+      PARENT_DS_ID_PARAM,
       RESULT_FILES_DIR_PARAM,
       INSTRUMENT_CONFIG_ID_PARAM,
       PEAKLIST_SOFTWARE_ID_PARAM
@@ -46,7 +51,11 @@ trait IImportDiaNNResultsService extends IMsqService with IDefaultServiceVersion
       val description = "The id of the project used for data importation."
       val scalaType = typeOf[Long]
     }
-
+    object PARENT_DS_ID_PARAM extends JSONRPC2DefaultMethodParameter {
+      val name = "parent_dataset_id"
+      val description = "The id of the parent dataset to import diaNN result to. If null or -1, import as root."
+      val scalaType = typeOf[Long]
+    }
     object RESULT_FILES_DIR_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "result_files_dir"
       val description = "The path to folder containing Result files to be imported."
