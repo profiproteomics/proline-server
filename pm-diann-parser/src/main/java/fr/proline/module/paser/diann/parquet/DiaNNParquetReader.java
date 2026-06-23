@@ -42,11 +42,16 @@ public class DiaNNParquetReader {
 
   static Logger logger = LoggerFactory.getLogger(DiaNNParquetReader.class);
   private final File m_reportFile;
+  private Float m_pgQValThreshold;
 
   public DiaNNParquetReader(File reportFile) {
-    m_reportFile = reportFile;
+    this(reportFile, -1f);
   }
 
+  public DiaNNParquetReader(File reportFile, Float pgQValThreshold ) {
+    m_reportFile = reportFile;
+    m_pgQValThreshold = pgQValThreshold;
+  }
 
   public  void  readRunsInfo() throws SQLException {
 
@@ -93,6 +98,9 @@ public class DiaNNParquetReader {
       for (String run : runs.keySet()) {
         //Read and Create data for 1 Run :  Proline RS/RSM
         sql = "select * from '" + m_reportFile.getAbsoluteFile() + "' where Run = '" + run + "'";
+        if(m_pgQValThreshold > 0)
+          sql = sql + " and \"Lib.PG.Q.Value\" < "+m_pgQValThreshold;
+        logger.info("use SQL " + sql);
         try (ResultSet rs = stmt.executeQuery(sql)) {
           statByRuns.put(run, readRunData(run, rs, diaNNResult));
         }
@@ -167,7 +175,11 @@ public class DiaNNParquetReader {
       Double quantQuality = rs.getDouble("Quantity.Quality");
       Double qValue = rs.getDouble("Q.Value");
 
-      Double pgQuant = rs.getDouble("PG.Normalised");
+      Double pgQuant = 0.0d;
+      if(containsColumn("PG.Normalised", rs))
+        pgQuant = rs.getDouble("PG.Normalised");
+      else if(containsColumn("PG.TopN", rs)  )
+        pgQuant = rs.getDouble("PG.Normalised");
       Double pgMaxLFQ = rs.getDouble("PG.MaxLFQ");
       Double pgQValue = rs.getDouble("PG.Q.Value");
 

@@ -75,6 +75,7 @@ public class DiaNNResultsParser  extends IServiceWrapper {
   private Long m_instrConfigId;
   private Long m_peaklistSoftwareId;
   private Long m_parenttDatasetId;
+  private Float m_pgQvalueThreahold;
 
   private List<String> m_usedFixedPTMs;
   private List<String> m_usedVarPTMs;
@@ -117,12 +118,14 @@ public class DiaNNResultsParser  extends IServiceWrapper {
     m_parserContext = parserContext;
     m_diaNNDirPath = diannFolder;
     logger.debug("- ** DiaNNResultsParser initialization using folder "+m_diaNNDirPath.getAbsolutePath());
-  //    m_parserOptions = parserOptions;
+
     try {
       m_instrConfigId = parserOptions.containsKey(INSTR_CONFIG_OPTION_KEY) ? (Long)parserOptions.get(INSTR_CONFIG_OPTION_KEY) : DEFAULT_INSTRUM_CFG_ID;
       m_peaklistSoftwareId = parserOptions.containsKey(PEAKLIST_SOFT_ID_OPTION_KEY) ?(Long) parserOptions.get(PEAKLIST_SOFT_ID_OPTION_KEY) : DEFAULT_PEAKLIST_SOFT_ID;
       m_parenttDatasetId = parserOptions.containsKey(PARENT_DATASET_ID_OPTION_KEY) ?(Long) parserOptions.get(PARENT_DATASET_ID_OPTION_KEY) : -1L;
+      m_pgQvalueThreahold = parserOptions.containsKey("ThresholdPgQvalue") ?(Float) parserOptions.get("ThresholdPgQvalue") : -1L;
     } catch (Exception e) {
+      //VDS TODO : not all in sam try catch  !
       m_instrConfigId = DEFAULT_INSTRUM_CFG_ID;
       m_peaklistSoftwareId = DEFAULT_PEAKLIST_SOFT_ID;
     }
@@ -178,7 +181,7 @@ public class DiaNNResultsParser  extends IServiceWrapper {
 
   private DiaNNResult readDiaNNResult(){
     try {
-      DiaNNParquetReader fileReader = new DiaNNParquetReader(m_mainReportFile);
+      DiaNNParquetReader fileReader = new DiaNNParquetReader(m_mainReportFile, m_pgQvalueThreahold);
       return fileReader.readData();
     } catch (SQLException e) {
       logger.error("Error reading DiaNN file {}", m_mainReportFile.getAbsolutePath(),e);
@@ -400,6 +403,9 @@ public class DiaNNResultsParser  extends IServiceWrapper {
       aggregateDataset.setChildrenCount(rsByRunName.size());
       aggregateDataset.setParentDataset(parentDataset);
       udsDbCtx.getEntityManager().persist(aggregateDataset);
+
+      if(parentDatasetSet)
+        parentDataset.setChildrenCount(parentDataset.getChildrenCount()+1);
 
       int childNumber = 1;
       for (String run : diaNNResult.getRuns()) {

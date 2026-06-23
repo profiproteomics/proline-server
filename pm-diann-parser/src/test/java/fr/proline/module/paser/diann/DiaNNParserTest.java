@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -74,7 +75,7 @@ public class DiaNNParserTest  extends AbstractDatastoreTest {
     } catch (URISyntaxException e) {
       throw new RuntimeException(e);
     }
-    DiaNNResultsParser parser = new DiaNNResultsParser(executionContext, diannFile, null);
+    DiaNNResultsParser parser = new DiaNNResultsParser(executionContext, diannFile, new HashMap<>());
     logger.debug(" Created ");
     boolean b = parser.runService();
     Assert.assertTrue(b);
