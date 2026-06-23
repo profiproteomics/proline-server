@@ -71,6 +71,7 @@ class ImportDiaNNResults extends AbstractRemoteProcessingService with IImportDia
       parserOption.put(DiaNNResultsParser.INSTR_CONFIG_OPTION_KEY,  java.lang.Long.valueOf(instrumentConfigId))
       parserOption.put(DiaNNResultsParser.PEAKLIST_SOFT_ID_OPTION_KEY,  java.lang.Long.valueOf(peaklistSoftwareId))
       parserOption.put(DiaNNResultsParser.PARENT_DATASET_ID_OPTION_KEY,  java.lang.Long.valueOf(parentDatasetId))
+      parserOption.put("ThresholdPgQvalue",  java.lang.Float.valueOf(0.01f))
       val diannParser: DiaNNResultsParser = new DiaNNResultsParser(parserCtxt, localPathname, parserOption)
       diannParser.runService()
       val createdRSMIds = diannParser.getRSMIdByResultSetId
