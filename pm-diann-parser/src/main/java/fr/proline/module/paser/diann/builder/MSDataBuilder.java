@@ -218,7 +218,7 @@ public class MSDataBuilder {
       ab = qPrec.getAbundance().floatValue();
       rtStart = qPrec.getRtStart();
       rtStop = qPrec.getRtStop();
-      score = qPrec.getQValue().floatValue();
+      score = Double.valueOf(Math.pow(10, -qPrec.getQValue())).floatValue();
       if(qPrec.getFragments() != null && !qPrec.getFragments().isEmpty()) {
         int fragSize = qPrec.getFragments().size();
         fragMoz = new double[fragSize];
