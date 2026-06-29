@@ -34,23 +34,42 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class DiaNNParquetReader {
 
   static Logger logger = LoggerFactory.getLogger(DiaNNParquetReader.class);
   private final File m_reportFile;
   private Float m_pgQValThreshold;
+  private String m_cutValue;
+  private Set<String> cleavagePairs = new HashSet<>();
+  private Set<String> blockedPairs = new HashSet<>();
 
   public DiaNNParquetReader(File reportFile) {
-    this(reportFile, -1f);
+    this(reportFile, -1f, null);
   }
 
   public DiaNNParquetReader(File reportFile, Float pgQValThreshold ) {
+    this(reportFile, pgQValThreshold, null);
+  }
+
+  public DiaNNParquetReader(File reportFile, Float pgQValThreshold, String cutValue ) {
     m_reportFile = reportFile;
     m_pgQValThreshold = pgQValThreshold;
+    m_cutValue = cutValue;
+    extractMissCleavedRules(m_cutValue);
+  }
+
+  /*
+  For test purpose only
+   */
+  protected void setCutValue(String cutValue) {
+    m_cutValue = cutValue;
+    extractMissCleavedRules(m_cutValue);
   }
 
   public  void  readRunsInfo() throws SQLException {
@@ -133,6 +152,7 @@ public class DiaNNParquetReader {
       String precursor = rs.getString("Precursor.Id");
       String modifSeq = rs.getString("Modified.Sequence");
       String sequence = rs.getString("Stripped.Sequence");
+      Integer missCleaved = computeMissCleaved(sequence);
       Integer charge = rs.getInt("Precursor.Charge");
       Float precMoz = rs.getFloat("Precursor.Mz");
       Float predictedRT = rs.getFloat("Predicted.RT");
@@ -203,7 +223,7 @@ public class DiaNNParquetReader {
       //Create read Precursor and associated QuantPrecursor
       String protGroupKey = allProteinsInGroup.stream().min(String::compareTo).orElse(null);
       QuantPrecursor qPrec = new QuantPrecursor(precursor,run,precRT, precRTStart, precRTStop, predictedRT,
-              precQuant, fragments, evidence, massEvidence, quantQuality, qValue);
+              precQuant, fragments, evidence, massEvidence, quantQuality, qValue, missCleaved);
       Precursor currentPrec = diaNNResult.getPrecursorForId(precursor);
       if(currentPrec == null) {
         currentPrec = new Precursor(precursor,sequence, modifSeq, charge, precMoz, protGroupKey, allProteinIds, libIndex, proteotypique);
@@ -260,6 +280,73 @@ public class DiaNNParquetReader {
     for(int i=1;i<=nbCol;i++){
       if(rsmd.getCatalogName(i).equals(columnName))
         return true;
+    }
+    return false;
+  }
+
+  private void extractMissCleavedRules(String cutValue){
+    if ( cutValue == null || cutValue.isBlank()) {
+      return;
+    }
+
+    String[] rules = cutValue.split(",");
+    for (String rule : rules) {
+      if (rule == null) {
+        continue;
+      }
+
+      String cleanedRule = rule.trim();
+      if (cleanedRule.isEmpty()) {
+        continue;
+      }
+
+      boolean isBlocked = cleanedRule.startsWith("!");
+      if (isBlocked) {
+        cleanedRule = cleanedRule.substring(1).trim();
+      }
+
+      if (cleanedRule.length() != 2) {
+        continue;
+      }
+
+      if (isBlocked) {
+        blockedPairs.add(cleanedRule);
+      } else {
+        cleavagePairs.add(cleanedRule);
+      }
+    }
+  }
+
+  protected Integer computeMissCleaved(String sequence) {
+
+    if (sequence == null || sequence.length() < 2 || (blockedPairs.isEmpty() &&  cleavagePairs.isEmpty()) ) {
+      return 0;
+    }
+
+    int cleavageSites = 0;
+    for (int i = 0; i < sequence.length() - 1; i++) {
+      String pair = sequence.substring(i, i + 2);
+      if (matchesPair(cleavagePairs, pair) && !matchesPair(blockedPairs, pair)) {
+        cleavageSites++;
+      }
+    }
+
+    return cleavageSites;
+  }
+
+  private static boolean matchesPair(Set<String> patterns, String pair) {
+    for (String pattern : patterns) {
+      if (pattern.length() != 2) {
+        continue;
+      }
+
+      char left = pattern.charAt(0);
+      char right = pattern.charAt(1);
+      boolean leftMatch = left == '*' || left == pair.charAt(0);
+      boolean rightMatch = right == '*' || right == pair.charAt(1);
+      if (leftMatch && rightMatch) {
+        return true;
+      }
     }
     return false;
   }

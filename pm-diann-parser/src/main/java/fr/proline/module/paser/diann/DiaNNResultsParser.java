@@ -181,7 +181,8 @@ public class DiaNNResultsParser  extends IServiceWrapper {
 
   private DiaNNResult readDiaNNResult(){
     try {
-      DiaNNParquetReader fileReader = new DiaNNParquetReader(m_mainReportFile, m_pgQvalueThreahold);
+      String cutValue = m_diaNNOptions.containsKey("cut") ? m_diaNNOptions.get("cut").toString() : null;
+      DiaNNParquetReader fileReader = new DiaNNParquetReader(m_mainReportFile, m_pgQvalueThreahold, cutValue);
       return fileReader.readData();
     } catch (SQLException e) {
       logger.error("Error reading DiaNN file {}", m_mainReportFile.getAbsolutePath(),e);

@@ -210,6 +210,7 @@ public class MSDataBuilder {
     // Parse Fragment Info
     QuantPrecursor qPrec = precursor.getQuantitationForRun(run);
     int fragCount =0;
+    int missCleaved = 0;
     float ab = 0f;
     float rtStart = 0;
     float rtStop = 0;
@@ -219,6 +220,9 @@ public class MSDataBuilder {
       rtStart = qPrec.getRtStart();
       rtStop = qPrec.getRtStop();
       score = Double.valueOf(Math.pow(10, -qPrec.getQValue())).floatValue();
+      if (qPrec.getMissCleaved() != null) {
+        missCleaved = qPrec.getMissCleaved();
+      }
       if(qPrec.getFragments() != null && !qPrec.getFragments().isEmpty()) {
         int fragSize = qPrec.getFragments().size();
         fragMoz = new double[fragSize];
@@ -262,7 +266,7 @@ public class MSDataBuilder {
     Option<PeptideMatchProperties>  pepMProperties = Option.empty();
 
     return new PeptideMatch(PeptideMatch.generateNewId(), 1, score, PeptideMatchScoreType.MASCOT_IONS_SCORE(),
-            precursor.getCharge(), 0.0f, false, pep,0,  fragCount, query,
+            precursor.getCharge(), 0.0f, false, pep, missCleaved,  fragCount, query,
             true, 0, 1,1, null, null, 0, pepMProperties,summaryProperties);
   }
 

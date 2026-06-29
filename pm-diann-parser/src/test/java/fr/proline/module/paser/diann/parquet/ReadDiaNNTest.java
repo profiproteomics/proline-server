@@ -61,4 +61,20 @@ public class ReadDiaNNTest {
 
 
   }
+
+  @Test
+  public void testComputeMissCleavedTrypsinLikeRule() {
+    DiaNNParquetReader reader = new DiaNNParquetReader(null, null, "K*,R*");
+    Assert.assertEquals(Integer.valueOf(2), reader.computeMissCleaved("AKRA"));
+    reader.setCutValue( "K*,R*,!*P");
+    Assert.assertEquals(Integer.valueOf(0), reader.computeMissCleaved("AKPA"));
+  }
+
+  @Test
+  public void testComputeMissCleavedRule2() {
+    DiaNNParquetReader reader = new DiaNNParquetReader(null, null,  "*P");
+    Assert.assertEquals(Integer.valueOf(2), reader.computeMissCleaved("APKP"));
+    reader.setCutValue( "*P,!KP");
+    Assert.assertEquals(Integer.valueOf(1), reader.computeMissCleaved("APKP"));
+  }
 }

@@ -144,6 +144,7 @@ public class DiaNNQuantifier extends AbstractDiannQuantifier {
       long mQPepId = MasterQuantPeptide.generateNewId();
       Set<String> precIds = m_precIdByPepKey.get(pepKey);
       Map<Long, List<QuantPeptideIon>> allIonsByQc = new HashMap<>(precIds.size());
+      QuantPeptideIon bestQPIon = null;
       for(String precId : precIds){ //For each "ions" associated to this peptide instance in each runs
         Precursor prec = m_diannResult.getPrecursorForId(precId);
         LongMap<QuantPeptideIon> currentIonsByQc = new LongMap<>();
@@ -160,14 +161,14 @@ public class DiaNNQuantifier extends AbstractDiannQuantifier {
                   prec.getLibIndex(), 1, Option.empty(), Option.apply(qPrec.getQValue().floatValue()),Option.empty(),
                   qChId, Option.apply(pi.peptideId()), Option.apply(pi.id()), Option.empty(),
                   Option.empty(),Option.empty(),Option.empty(), 2, Option.apply(Boolean.TRUE));
+          if(bestQPIon == null || qpepion.abundance() > bestQPIon.abundance())
+            bestQPIon = qpepion;
           allIonsByQc.computeIfAbsent(qChId, k -> new ArrayList<>()).add(qpepion);
           currentIonsByQc.put(qChId, qpepion);
         }//for each qCh where ion is quantified
 
-
-
         MasterQuantPeptideIon mqPepion = new MasterQuantPeptideIon(MasterQuantPeptideIon.generateNewId(), prec.getMoz(), prec.getCharge(),
-                  0, currentIonsByQc.size(), Option.empty(),2, mQPepId, m_mergedResultSummary.id(),
+                  bestQPIon.elutionTime(), currentIonsByQc.size(), Option.empty(),2, mQPepId, m_mergedResultSummary.id(),
                   Option.apply(pi.id()), Option.apply(pi.bestPeptideMatchId()), Option.empty(), Option.empty(), currentIonsByQc, Option.empty(), new MasterQuantReporterIon[0]);
 
         masterQuantPeptidesIon.add(mqPepion);

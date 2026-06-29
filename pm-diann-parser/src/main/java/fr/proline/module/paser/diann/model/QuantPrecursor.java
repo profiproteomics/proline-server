@@ -40,11 +40,12 @@ public class QuantPrecursor {
   Double m_qValue;
   Double m_evidence;
   Double m_massEvidence;
+  Integer m_missCleaved;
 
   List<Fragment> m_fragments;
 
   public QuantPrecursor(String precId, String runName, Float rt, Float rtStart, Float rtStop, Float predictedRT, Double quantiAb,
-                        List<Fragment> fragments, Double evidence, Double massEvidence, Double quality, Double qValue) {
+                        List<Fragment> fragments, Double evidence, Double massEvidence, Double quality, Double qValue, Integer missCleaved) {
     this.m_evidence = evidence;
     this.m_fragments = fragments;
     this.m_massEvidence = massEvidence;
@@ -57,6 +58,7 @@ public class QuantPrecursor {
     this.m_rtStart = rtStart;
     this.m_rtStop = rtStop;
     this.m_runName = runName;
+    this.m_missCleaved = missCleaved;
   }
 
   public Double getAbundance() {
@@ -141,6 +143,14 @@ public class QuantPrecursor {
 
   public String getRunName() {
     return m_runName;
+  }
+
+  public Integer getMissCleaved() {
+    return m_missCleaved;
+  }
+
+  public void setMissCleaved(Integer missCleaved) {
+    this.m_missCleaved = missCleaved;
   }
 
   public void setRunName(String runName) {
