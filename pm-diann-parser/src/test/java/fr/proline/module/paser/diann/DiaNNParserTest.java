@@ -22,7 +22,7 @@ package fr.proline.module.paser.diann;
 import fr.proline.core.om.model.msi.PtmDefinition;
 import fr.proline.core.om.provider.msi.IPTMProvider;
 import fr.proline.core.om.provider.msi.IPeptideProvider;
-import fr.proline.module.paser.diann.quantify.DiaNNQuantifier;
+import fr.proline.module.paser.diann.model.DiaNNResult;
 import fr.proline.module.paser.diann.util.AbstractDatastoreTest;
 import org.junit.Assert;
 import org.junit.Test;
@@ -34,6 +34,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class DiaNNParserTest  extends AbstractDatastoreTest {
@@ -81,6 +82,61 @@ public class DiaNNParserTest  extends AbstractDatastoreTest {
     Assert.assertTrue(b);
     Assert.assertEquals(NB_RUNS, (Object)parser.m_resultSetsByRun.size());
     Assert.assertEquals(NB_RUNS, (Object)parser.m_rsmIdsByRSId.size());
+  }
+
+  @Test
+  public void testDiaNNParserConstructorWithValidOptions() {
+    File diannFile = getDiaNNFolder();
+    Map<String, Object> parserOptions = new HashMap<>();
+    parserOptions.put(DiaNNResultsParser.INSTR_CONFIG_OPTION_KEY, 4L);
+    parserOptions.put(DiaNNResultsParser.PEAKLIST_SOFT_ID_OPTION_KEY, 1L);
+    parserOptions.put(DiaNNResultsParser.PARENT_DATASET_ID_OPTION_KEY, 10L);
+    parserOptions.put(DiaNNResultsParser.FILTER_MODE_OPTION_KEY, DiaNNResult.FilterMode.NONE);
+
+    DiaNNResultsParser parser = new DiaNNResultsParser(executionContext, diannFile, parserOptions);
+    Assert.assertNotNull(parser);
+  }
+
+  @Test
+  public void testDiaNNParserConstructorInvalidInstrumentConfigOption() {
+    assertInvalidOption(DiaNNResultsParser.INSTR_CONFIG_OPTION_KEY, "4", "expected Long");
+  }
+
+  @Test
+  public void testDiaNNParserConstructorInvalidPeaklistSoftwareOption() {
+    assertInvalidOption(DiaNNResultsParser.PEAKLIST_SOFT_ID_OPTION_KEY, "1", "expected Long");
+  }
+
+  @Test
+  public void testDiaNNParserConstructorInvalidParentDatasetOption() {
+    assertInvalidOption(DiaNNResultsParser.PARENT_DATASET_ID_OPTION_KEY, "10", "expected Long");
+  }
+
+  @Test
+  public void testDiaNNParserConstructorInvalidFilterModeOption() {
+    assertInvalidOption(DiaNNResultsParser.FILTER_MODE_OPTION_KEY, "NONE", "expected FilterMode");
+  }
+
+  private File getDiaNNFolder() {
+    try {
+      return new File(Objects.requireNonNull(getClass().getResource(FILE_NAME)).toURI());
+    } catch (URISyntaxException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void assertInvalidOption(String optionKey, Object invalidValue, String expectedMessagePart) {
+    File diannFile = getDiaNNFolder();
+    Map<String, Object> parserOptions = new HashMap<>();
+    parserOptions.put(optionKey, invalidValue);
+
+    try {
+      new DiaNNResultsParser(executionContext, diannFile, parserOptions);
+      Assert.fail("Expected IllegalArgumentException for option " + optionKey);
+    } catch (IllegalArgumentException exception) {
+      Assert.assertTrue(exception.getMessage().contains(optionKey));
+      Assert.assertTrue(exception.getMessage().contains(expectedMessagePart));
+    }
   }
 
 }

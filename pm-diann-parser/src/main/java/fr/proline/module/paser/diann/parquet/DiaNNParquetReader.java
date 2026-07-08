@@ -44,22 +44,18 @@ public class DiaNNParquetReader {
 
   static Logger logger = LoggerFactory.getLogger(DiaNNParquetReader.class);
   private final File m_reportFile;
-  private Float m_pgQValThreshold;
+  private final DiaNNResult.FilterMode m_resultFilteringMode;
   private String m_cutValue;
-  private Set<String> cleavagePairs = new HashSet<>();
-  private Set<String> blockedPairs = new HashSet<>();
-
+  private final Set<String> cleavagePairs = new HashSet<>();
+  private final Set<String> blockedPairs = new HashSet<>();
+  private static float m_pgQValThreshold = 0.01f;
   public DiaNNParquetReader(File reportFile) {
-    this(reportFile, -1f, null);
+    this(reportFile, DiaNNResult.FilterMode.NONE, null);
   }
 
-  public DiaNNParquetReader(File reportFile, Float pgQValThreshold ) {
-    this(reportFile, pgQValThreshold, null);
-  }
-
-  public DiaNNParquetReader(File reportFile, Float pgQValThreshold, String cutValue ) {
+  public DiaNNParquetReader(File reportFile, DiaNNResult.FilterMode filterResultMode, String cutValue ) {
     m_reportFile = reportFile;
-    m_pgQValThreshold = pgQValThreshold;
+    m_resultFilteringMode = filterResultMode;
     m_cutValue = cutValue;
     extractMissCleavedRules(m_cutValue);
   }
@@ -117,8 +113,20 @@ public class DiaNNParquetReader {
       for (String run : runs.keySet()) {
         //Read and Create data for 1 Run :  Proline RS/RSM
         sql = "select * from '" + m_reportFile.getAbsoluteFile() + "' where Run = '" + run + "'";
-        if(m_pgQValThreshold > 0)
-          sql = sql + " and \"Lib.PG.Q.Value\" < "+m_pgQValThreshold;
+        switch (m_resultFilteringMode) {
+          case MBR: {
+            sql = sql + " and \"Lib.PG.Q.Value\" < " + m_pgQValThreshold + " and \"Q.Value\" < " + m_pgQValThreshold + " and \"Lib.Q.Value\" < " + m_pgQValThreshold;
+            break;
+          }
+          case NONE: {
+            break;
+          }
+          case NOMBR: {
+            sql = sql + " and \"Global.PG.Q.Value\" < " + m_pgQValThreshold + " and \"Q.Value\" < " + m_pgQValThreshold + " and \"Global.Q.Value\" < " + m_pgQValThreshold;
+            break;
+          }
+        }
+
         logger.info("use SQL " + sql);
         try (ResultSet rs = stmt.executeQuery(sql)) {
           statByRuns.put(run, readRunData(run, rs, diaNNResult));
@@ -160,6 +168,7 @@ public class DiaNNParquetReader {
       Float precRTStart = rs.getFloat("RT.Start");
       Float precRTStop = rs.getFloat("RT.Stop");
       Double precQuant = rs.getDouble("Precursor.Quantity");
+      String geneName = rs.getString("Genes");
 
       String proteinGroupAsStr = rs.getString("Protein.Group");
       List<String> allProteinsInGroup = new ArrayList<>();
@@ -231,6 +240,20 @@ public class DiaNNParquetReader {
         nbCreatedPrec++;
       } else
         nbExistingPrec++;
+
+      //Create QValues Map
+      Map<String, Double> qValuesMap = new HashMap<>();
+      if(geneName != null && !geneName.isEmpty())
+        qValuesMap.put("GG.Q.Value_"+geneName, rs.getDouble("GG.Q.Value"));
+      qValuesMap.put("Global.PG.Q.Value_"+protGroupKey, rs.getDouble("Global.PG.Q.Value"));
+      qValuesMap.put("Lib.PG.Q.Value_"+protGroupKey, rs.getDouble("Lib.PG.Q.Value"));
+      qValuesMap.put("PG.Q.Value_"+protGroupKey, pgQValue);
+      qValuesMap.put("Protein.Q.Value_"+protGroupKey, rs.getDouble("Protein.Q.Value"));
+      qValuesMap.put("Global.Q.Value", rs.getDouble("Global.Q.Value"));
+      qValuesMap.put("Lib.Q.Value", rs.getDouble("Lib.Q.Value"));
+      qValuesMap.put("Q.Value", qValue);
+      qPrec.setQValues(qValuesMap);
+
       currentPrec.addQuantPrecursors(qPrec);
       precursors.add(qPrec);
 

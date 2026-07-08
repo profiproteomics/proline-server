@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Option;
 import scala.Tuple2;
+import scala.collection.JavaConverters;
 import scala.collection.Seq;
 import scala.collection.mutable.ArrayBuffer;
 
@@ -215,11 +216,15 @@ public class MSDataBuilder {
     float rtStart = 0;
     float rtStop = 0;
     float score = 0;
+    double qvalue;
+    Option<PeptideMatchDiaNNProperties> diaNNProp = null;
     if(qPrec != null) {
       ab = qPrec.getAbundance().floatValue();
       rtStart = qPrec.getRtStart();
       rtStop = qPrec.getRtStop();
-      score = Double.valueOf(Math.pow(10, -qPrec.getQValue())).floatValue();
+      qvalue = qPrec.getQValue();
+      // use mascot like : -10*log10(P)
+      score = (float) (-10*Math.log10(qvalue));
       if (qPrec.getMissCleaved() != null) {
         missCleaved = qPrec.getMissCleaved();
       }
@@ -234,7 +239,14 @@ public class MSDataBuilder {
         }
         fragCount = fragSize;
       }
+
+      Map<String, Double> javaMap =qPrec.getQValues();
+      scala.collection.immutable.Map<String, Double> scalaMap = JavaConverters.mapAsScalaMap(javaMap).toMap(scala.Predef.conforms());
+      Option<scala.collection.immutable.Map<String, Double>> allQvaluesOption = scalaMap.isEmpty() ? Option.empty(): Option.apply(scalaMap);
+      PeptideMatchDiaNNProperties prop = new PeptideMatchDiaNNProperties(qvalue, allQvaluesOption);
+      diaNNProp = Option.apply(prop);
     }
+
     Spectrum spectrum = new Spectrum(
             Spectrum.generateNewId(),
             "diaNN result "+run+" "+precursor.getLibIndex(),
@@ -263,7 +275,9 @@ public class MSDataBuilder {
     }
 
     Option<PeptideMatchResultSummaryProperties> summaryProperties = Option.empty();
-    Option<PeptideMatchProperties>  pepMProperties = Option.empty();
+
+    PeptideMatchProperties pmPrp = new PeptideMatchProperties(Option.empty(), Option.empty(), Option.empty(), Option.empty(), diaNNProp, Option.empty(), Option.empty(), Option.empty());
+    Option<PeptideMatchProperties>  pepMProperties = Option.apply(pmPrp);
 
     return new PeptideMatch(PeptideMatch.generateNewId(), 1, score, PeptideMatchScoreType.MASCOT_IONS_SCORE(),
             precursor.getCharge(), 0.0f, false, pep, missCleaved,  fragCount, query,

@@ -66,7 +66,7 @@ public class DiaNNProcessDataTest extends AbstractDatastoreTest {
     rsmByRS.put(1L, createFakeResultSummary(1L));
     rsmByRS.put(2L, createFakeResultSummary(2L));
     logger.debug(" Run Create quant dataset");
-    DiaNNProcessData quantifier = new DiaNNProcessData(executionContext, diaNNResult, rsByRun, new HashMap<>() ,rsmByRS);
+    DiaNNProcessData quantifier = new DiaNNProcessData(executionContext, diaNNResult, null, rsByRun, new HashMap<>() ,rsmByRS);
     MasterQuantChannel mqchannel = quantifier.createQuantitationExpDesign(createFakeResultSummary(5L));
     Assert.assertNotNull(mqchannel);
     Assert.assertTrue(mqchannel.id() > 0);

@@ -31,6 +31,18 @@ public class DiaNNResult {
 
   private static final Logger logger = LoggerFactory.getLogger(DiaNNResult.class);
 
+  public enum FilterMode {
+    NONE("no filtering"),
+    MBR("MBR"),
+    NOMBR("No MBR");
+
+    String m_name;
+
+    FilterMode(String name) {
+      this.m_name = name;
+    }
+  }
+
   Map<String, List<Precursor>> m_precursorByRun;
   Map<String, Precursor> m_allPrecursorsById;
   List<String> m_runs;
@@ -97,9 +109,6 @@ public class DiaNNResult {
     }
   }
 
-//  public void setPrecursorForRun(List<Precursor> precursor, String run) {
-//    m_precursorByRun.put(run, precursor);
-//  }
 
   public void setProteinGroupsForRun(List<QuantProteinGroup> proteinGroups, String run) {
     m_protgroupsByRun.put(run, proteinGroups);

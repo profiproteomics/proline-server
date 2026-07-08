@@ -18,6 +18,7 @@
 
 package fr.proline.module.paser.diann.builder;
 
+import fr.profi.util.serialization.ProfiJson;
 import fr.proline.context.IExecutionContext;
 import fr.proline.context.UdsDbConnectionContext;
 import fr.proline.core.algo.msi.AdditionMode;
@@ -61,30 +62,33 @@ public class DiaNNProcessData {
   Map<String, ResultSet> m_allResultSetsByRun;
   Map<Long, ResultSummary> m_allResultSummaryByRsId;
   Map<String, Set<String>> m_precIdByPepKey ;
+  Map<String, Object> m_diaNNOptions ;
   Long m_createdQuantDatasetId;
   boolean m_serviceRun = false;
 
-  public DiaNNProcessData(IExecutionContext context, DiaNNResult diannResult, Map<String, ResultSet> identResultSetsByRun, Map<String, Set<String>> precIdByPepKey) {
+  public DiaNNProcessData(IExecutionContext context, DiaNNResult diannResult, Map<String,Object> diaNNOption, Map<String, ResultSet> identResultSetsByRun, Map<String, Set<String>> precIdByPepKey) {
     this.m_diannResult = diannResult;
     this.m_allResultSetsByRun = identResultSetsByRun;
     this.m_executionContext = context;
     this.m_precIdByPepKey = precIdByPepKey;
+    this.m_diaNNOptions = diaNNOption;
   }
 
 
   /**
-   * This method should be used in specific cases where resultSaummary was alerady created for diaNN run resultset
-   * @param context ExecutionConetxt to get access to datastore provider and storer et conection
+   * This method should be used in specific cases where resultSummary was already created for diaNN run resultset
+   * @param context ExecutionConetxt to get access to datastore provider and storer et connection
    * @param diannResult DiaNNResult to create Proline Quantitation for
    * @param identResultSetsByRun proline ResultSet corresponding to each run in DiaNN result
    * @param rsmByRsId ResultSummary for resultSet corresponding to each run in DiaNN result
    */
-  public DiaNNProcessData(IExecutionContext context, DiaNNResult diannResult, Map<String, ResultSet> identResultSetsByRun,   Map<String, Set<String>> precIdByPepKey , Map<Long, ResultSummary> rsmByRsId) {
+  public DiaNNProcessData(IExecutionContext context, DiaNNResult diannResult, Map<String,Object> diaNNOption, Map<String, ResultSet> identResultSetsByRun,   Map<String, Set<String>> precIdByPepKey , Map<Long, ResultSummary> rsmByRsId) {
     this.m_diannResult = diannResult;
     this.m_allResultSetsByRun = identResultSetsByRun;
     this.m_executionContext = context;
     this.m_precIdByPepKey = precIdByPepKey;
     this.m_allResultSummaryByRsId = rsmByRsId;
+    this.m_diaNNOptions = diaNNOption;
   }
 
   public void runService(){
@@ -105,12 +109,6 @@ public class DiaNNProcessData {
       logger.debug("-- Run Create Exp Design");
       MasterQuantChannel mqChannel  = createQuantitationExpDesign(mergedRSM);
 
-//      EntityManager em = m_executionContext.getUDSDbConnectionContext().getEntityManager();
-//      TypedQuery<MasterQuantitationChannel> mqcQuery = em.createQuery("Select mqc from fr.proline.core.orm.uds.MasterQuantitationChannel mqc WHERE id = "+mqcId, MasterQuantitationChannel.class);
-//      MasterQuantitationChannel mqc = mqcQuery.getSingleResult();
-//      MasterQuantChannelEntityCache cacheEntities = new MasterQuantChannelEntityCache(m_executionContext, mqc);
-
-
       logger.debug("-- Run Quantifier");
       DiaNNQuantifier quantifier = new DiaNNQuantifier(mqChannel, m_allResultSetsByRun, mergedRSM, m_diannResult, m_precIdByPepKey, m_executionContext);
       quantifier.quantify();
@@ -125,21 +123,6 @@ public class DiaNNProcessData {
   }
 
   private @NonNull ResultSummary mergeResultSummaries() {
-//    ResultSummaryAdder rsmBuilder = new ResultSummaryAdder(
-//            ResultSummary.generateNewId(),
-//            false,
-//            PeptideSetScoreUpdater.apply(PepSetScoring.MASCOT_STANDARD_SCORE()),
-//            AdditionMode.UNION()
-//    );
-//
-//    for (ResultSummary identRsm : m_allResultSummaryByRsId.values()) {
-//      rsmBuilder.addResultSummary(identRsm);
-//    }
-//
-//    ResultSummary mergedRSM = rsmBuilder.toResultSummary();
-//    mergedRSM.isQuantified_$eq(true);
-
-//    logger.debug("  - store merged result summary");
 
     List<ResultSummary> rsmIds = new ArrayList<>(m_allResultSummaryByRsId.values());
 
@@ -153,9 +136,7 @@ public class DiaNNProcessData {
     if(!m_serviceRun)
       throw new IllegalStateException("Service has not been executed ");
     Map<Long,Long> rsmIdByRsIs = new  HashMap<>();
-    m_allResultSummaryByRsId.keySet().forEach(e -> {
-      rsmIdByRsIs.put(e, m_allResultSummaryByRsId.get(e).id());
-    });
+    m_allResultSummaryByRsId.keySet().forEach(e -> rsmIdByRsIs.put(e, m_allResultSummaryByRsId.get(e).id()));
     return rsmIdByRsIs;
   }
 
@@ -206,7 +187,7 @@ public class DiaNNProcessData {
 
         logger.debug(" * Creating quantitation dataset ... ");
         long qDSId = insertIntoDataset(connection, qDatasetNbr[0], pId );
-        logger.debug("     ... done with ID "+qDSId);
+        logger.debug("     ... done with ID {}", qDSId);
         m_createdQuantDatasetId = qDSId;
 
         logger.debug(" * Creating quantitation group");
@@ -220,7 +201,7 @@ public class DiaNNProcessData {
 
         logger.debug(" * Creating MasterQuantChannel ");
         qMQChId[0] = insertIntoMasterQChannel(connection, qDSId, quantRSM.id());
-        logger.debug("     ... done with ID "+qMQChId[0]);
+        logger.debug("     ... done with ID {}", qMQChId[0]);
 
         //Create one SampleAnalysis per run
         int splNbr=1;
@@ -301,7 +282,7 @@ public class DiaNNProcessData {
         pStmt3.setLong(8, rsmId);
         pStmt3.executeUpdate();
         keyRS = pStmt3.getGeneratedKeys();
-        long qChId =0;
+        long qChId;
         if (keyRS.next()) {
           qChId = keyRS.getLong(1);
         } else {
@@ -422,7 +403,9 @@ public class DiaNNProcessData {
   }
 
   private long insertIntoDataset(Connection connection, Integer dsNbr, Long projectId) throws SQLException {
-    try (Statement stmt = connection.createStatement();) {
+    try (Statement stmt = connection.createStatement()) {
+
+      // Get Method id for label_free.feature_intensity
       String methodSql = "Select id from " + UdsDbQuantMethodTable$.MODULE$.name() + " WHERE " + UdsDbQuantMethodColumns.TYPE() + " = 'label_free' and " + UdsDbQuantMethodColumns.ABUNDANCE_UNIT() + " = 'feature_intensity';";
       java.sql.ResultSet methodRs = stmt.executeQuery(methodSql);
       long methodId = 1; //VDS TODO exception if not found !
@@ -432,8 +415,8 @@ public class DiaNNProcessData {
         logger.warn("!!!! No quantitation method found for quantitation - USE ID 1 !!! ");
       }
 
-
-      long qDSId = 0;
+      //Create DS entry and get back its id
+      long qDSId;
       String sqlQuery = "INSERT INTO " + UdsDbDataSetTable$.MODULE$.name() +
               " (" + UdsDbDataSetColumns.NUMBER() + "," + UdsDbDataSetColumns.NAME() + "," + UdsDbDataSetColumns.TYPE()
               + "," + UdsDbDataSetColumns.CREATION_TIMESTAMP() + "," + UdsDbDataSetColumns.PROJECT_ID() + "," + UdsDbDataSetColumns.QUANT_METHOD_ID()
@@ -453,11 +436,91 @@ public class DiaNNProcessData {
         } else {
           throw new SQLException("Quantitation dataset Id not found");
         }
+
+        //Create dataset object_tree to store quant config
+        String schema = loadOrCreateObjectTreeSchema(connection, "quantitation.diann_config");
+        createDatasetObjectTree(connection, qDSId, schema);
+
         return qDSId;
       }
     }
   }
 
+  private void createDatasetObjectTree(Connection connection, long qDSId, String schema) throws SQLException {
+    String insertSqlQuery = "INSERT INTO " + UdsDbObjectTreeTable$.MODULE$.name() +
+            " (" + UdsDbObjectTreeColumns.CLOB_DATA()+ "," +UdsDbObjectTreeColumns.SCHEMA_NAME()
+            + ") VALUES (?,?) ";
+    long objTreeId;
+    try (PreparedStatement pStmt = connection.prepareStatement(insertSqlQuery, new String[]{"id"})) {
+      String diaNNCmdLine = m_diaNNOptions == null ? "no command line" : m_diaNNOptions.get("command.line").toString();
+      CommandLineDiNN diannCmdLine = new CommandLineDiNN(diaNNCmdLine);
+      String cmdLine = ProfiJson.serialize(diannCmdLine);
+
+      pStmt.setString(1, cmdLine);
+      pStmt.setString(2, schema);
+      pStmt.executeUpdate();
+      java.sql.ResultSet keyRS = pStmt.getGeneratedKeys();
+
+      if (keyRS.next()) {
+        objTreeId = keyRS.getLong(1);
+      } else {
+        throw new SQLException("Unable to create Object Tree  ");
+      }
+
+    }
+    insertSqlQuery = "INSERT INTO " + UdsDbDataSetObjectTreeMapTable$.MODULE$.name() +
+            " (" + UdsDbDataSetObjectTreeMapColumns.OBJECT_TREE_ID()+ "," + UdsDbDataSetObjectTreeMapColumns.DATA_SET_ID()
+            + ", "+UdsDbDataSetObjectTreeMapColumns.SCHEMA_NAME()
+            + ") VALUES (?,?,?) ";
+    try (PreparedStatement pStmt = connection.prepareStatement(insertSqlQuery)) {
+
+      pStmt.setLong(1, objTreeId);
+      pStmt.setLong(2, qDSId);
+      pStmt.setString(3, schema);
+      pStmt.executeUpdate();
+    }
+  }
+
+
+  private String loadOrCreateObjectTreeSchema(final Connection connection, final String schemaName) throws SQLException {
+    String sqlQuery = "Select name from " + UdsDbObjectTreeSchemaTable$.MODULE$.name() + " WHERE " + UdsDbObjectTreeSchemaColumns.NAME() + " =  '"+schemaName+"';";
+    String foundSchema = null;
+    try  (Statement stmt = connection.createStatement()) {
+      // Get ObjectSchema
+      java.sql.ResultSet objectSchemaRs = stmt.executeQuery(sqlQuery);
+      if (objectSchemaRs.next()) {
+        foundSchema = objectSchemaRs.getString(1);
+      } else {
+        logger.info(" Create new ObjectTreeSchema with name {}", schemaName);
+      }
+
+    } catch (SQLException ex) {
+      foundSchema = null;
+      logger.error("Unable to get ObjectTreeSchema for {}", schemaName, ex);
+    }
+
+    if(foundSchema == null) {
+
+      String insertSqlQuery = "INSERT INTO " + UdsDbObjectTreeSchemaTable$.MODULE$.name() +
+              " (" + UdsDbObjectTreeSchemaColumns.NAME()+ "," +UdsDbObjectTreeSchemaColumns.TYPE() + "," + UdsDbObjectTreeSchemaColumns.VERSION()
+              +", "+UdsDbObjectTreeSchemaColumns.SCHEMA() +", "+UdsDbObjectTreeSchemaColumns.IS_BINARY_MODE()
+              + ") VALUES (?,?,?,?,?) ";
+      try (PreparedStatement pStmt = connection.prepareStatement(insertSqlQuery, new String[]{"name"})) {
+
+        pStmt.setString(1, schemaName);
+        pStmt.setString(2, "JSON");
+        pStmt.setString(3, "0.1");
+        pStmt.setString(4, "");
+        pStmt.setBoolean(5, Boolean.FALSE);
+        logger.debug("Executing SQL query: {}", insertSqlQuery);
+        pStmt.executeUpdate();
+        //if no exception execution is done ... suppose OK
+        foundSchema = schemaName;
+      }
+    }
+
+    return foundSchema;
+  }
 
   private Map<Long, ResultSummary> validateResultSets() {
     Map<Long, ResultSummary> rsmByRsId =  new HashMap<>();
@@ -478,4 +541,11 @@ public class DiaNNProcessData {
     return rsmByRsId;
   }
 
+  private static class CommandLineDiNN {
+    String commandLine;
+
+    public CommandLineDiNN(String commandLine) {
+      this.commandLine = commandLine;
+    }
+  }
 }

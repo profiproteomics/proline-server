@@ -63,8 +63,10 @@ public class DiaNNResultsParser  extends IServiceWrapper {
   public static String REPORT_LOG = "report.log.txt";
 
   public static String INSTR_CONFIG_OPTION_KEY = "instrumentConfigId";
+  public static String FRAGMENTATION_RULE_SET_OPTION_KEY = "fragmentationRuleSetId";
   public static String PEAKLIST_SOFT_ID_OPTION_KEY = "peaklistSoftwareId";
   public static String PARENT_DATASET_ID_OPTION_KEY = "parentDatsetId";
+  public static String FILTER_MODE_OPTION_KEY = "filterMode";
   private static final Long DEFAULT_INSTRUM_CFG_ID = 4L;
   private static final Long DEFAULT_PEAKLIST_SOFT_ID = 1L; //extract msn.. diann to create TODO
 
@@ -72,10 +74,11 @@ public class DiaNNResultsParser  extends IServiceWrapper {
   private  File m_mainReportFile;
 
   private Map<String,Object> m_diaNNOptions;
-  private Long m_instrConfigId;
-  private Long m_peaklistSoftwareId;
-  private Long m_parenttDatasetId;
-  private Float m_pgQvalueThreahold;
+  private final Long m_instrConfigId;
+  private final Long m_peaklistSoftwareId;
+  private final Long m_parenttDatasetId;
+  private final Long m_fragRuleSetId;
+  private final DiaNNResult.FilterMode m_filterMode;
 
   private List<String> m_usedFixedPTMs;
   private List<String> m_usedVarPTMs;
@@ -114,26 +117,44 @@ public class DiaNNResultsParser  extends IServiceWrapper {
     }
   }
 
+
   public DiaNNResultsParser(ProviderDecoratedExecutionContext parserContext, File diannFolder, Map<String,Object> parserOptions) {
     m_parserContext = parserContext;
     m_diaNNDirPath = diannFolder;
     logger.debug("- ** DiaNNResultsParser initialization using folder "+m_diaNNDirPath.getAbsolutePath());
 
-    try {
-      m_instrConfigId = parserOptions.containsKey(INSTR_CONFIG_OPTION_KEY) ? (Long)parserOptions.get(INSTR_CONFIG_OPTION_KEY) : DEFAULT_INSTRUM_CFG_ID;
-      m_peaklistSoftwareId = parserOptions.containsKey(PEAKLIST_SOFT_ID_OPTION_KEY) ?(Long) parserOptions.get(PEAKLIST_SOFT_ID_OPTION_KEY) : DEFAULT_PEAKLIST_SOFT_ID;
-      m_parenttDatasetId = parserOptions.containsKey(PARENT_DATASET_ID_OPTION_KEY) ?(Long) parserOptions.get(PARENT_DATASET_ID_OPTION_KEY) : -1L;
-      m_pgQvalueThreahold = parserOptions.containsKey("ThresholdPgQvalue") ?(Float) parserOptions.get("ThresholdPgQvalue") : -1L;
-    } catch (Exception e) {
-      //VDS TODO : not all in sam try catch  !
-      m_instrConfigId = DEFAULT_INSTRUM_CFG_ID;
-      m_peaklistSoftwareId = DEFAULT_PEAKLIST_SOFT_ID;
-    }
+    m_instrConfigId = getLongOption(parserOptions, INSTR_CONFIG_OPTION_KEY, DEFAULT_INSTRUM_CFG_ID);
+    m_peaklistSoftwareId = getLongOption(parserOptions, PEAKLIST_SOFT_ID_OPTION_KEY, DEFAULT_PEAKLIST_SOFT_ID);
+    m_parenttDatasetId = getLongOption(parserOptions, PARENT_DATASET_ID_OPTION_KEY, -1L);
+    m_fragRuleSetId = getLongOption(parserOptions, FRAGMENTATION_RULE_SET_OPTION_KEY, -1L);
+    m_filterMode = getFilterModeOption(parserOptions, FILTER_MODE_OPTION_KEY, DiaNNResult.FilterMode.NONE);
 
     m_spectraByIdByRsId =  new HashMap<>();
     m_resultSetsByRun = new HashMap<>();
     m_quantDatasetId = -1L;
     parseDiaNNParams();
+  }
+
+  private Long getLongOption(Map<String, Object> parserOptions, String optionName, Long defaultValue) {
+    if (!parserOptions.containsKey(optionName))
+      return defaultValue;
+
+    Object value = parserOptions.get(optionName);
+    if (!(value instanceof Long))
+      throw new IllegalArgumentException("Invalid parser option '" + optionName + "': expected Long but got " + value.getClass().getSimpleName());
+
+    return (Long) value;
+  }
+
+  private DiaNNResult.FilterMode getFilterModeOption(Map<String, Object> parserOptions, String optionName, DiaNNResult.FilterMode defaultValue) {
+    if (!parserOptions.containsKey(optionName))
+      return defaultValue;
+
+    Object value = parserOptions.get(optionName);
+    if (!(value instanceof DiaNNResult.FilterMode))
+      throw new IllegalArgumentException("Invalid parser option '" + optionName + "': expected FilterMode but got " + value.getClass().getSimpleName());
+
+    return (DiaNNResult.FilterMode) value;
   }
 
   public DiaNNResultsParser(ProviderDecoratedExecutionContext parserContext, String diannFolderPath, Map<String,Object> parserOptions) {
@@ -182,7 +203,7 @@ public class DiaNNResultsParser  extends IServiceWrapper {
   private DiaNNResult readDiaNNResult(){
     try {
       String cutValue = m_diaNNOptions.containsKey("cut") ? m_diaNNOptions.get("cut").toString() : null;
-      DiaNNParquetReader fileReader = new DiaNNParquetReader(m_mainReportFile, m_pgQvalueThreahold, cutValue);
+      DiaNNParquetReader fileReader = new DiaNNParquetReader(m_mainReportFile, m_filterMode, cutValue);
       return fileReader.readData();
     } catch (SQLException e) {
       logger.error("Error reading DiaNN file {}", m_mainReportFile.getAbsolutePath(),e);
@@ -350,7 +371,7 @@ public class DiaNNResultsParser  extends IServiceWrapper {
 
   private void createProcessedResults(DiaNNResult diaNNResult){
 
-    DiaNNProcessData processData = new DiaNNProcessData(m_parserContext, diaNNResult, m_resultSetsByRun, m_precIdByPepKey);
+    DiaNNProcessData processData = new DiaNNProcessData(m_parserContext, diaNNResult, m_diaNNOptions,  m_resultSetsByRun, m_precIdByPepKey);
     processData.runService();
     m_rsmIdsByRSId = processData.getRSMIdsByRSIds();
     m_quantDatasetId = processData.getCreatedQuantDatasetId();
@@ -759,6 +780,10 @@ public class DiaNNResultsParser  extends IServiceWrapper {
       while (rawLine != null && !foundParams) {
         if(rawLine.contains("diann.exe")){
           foundParams = true;
+          //Save full line
+          params.put("command.line",rawLine);
+
+          //extract specific options
           String[] paramParts = rawLine.split("--");
           for(int i = 1; i< paramParts.length; i++) { //first value is diann.exe
             String nextParam = paramParts[i];

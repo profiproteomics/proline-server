@@ -38,8 +38,10 @@ trait IImportDiaNNResultsService extends IMsqService with IDefaultServiceVersion
       PROJECT_ID_PARAM,
       PARENT_DS_ID_PARAM,
       RESULT_FILES_DIR_PARAM,
+      FILTER_MODE_PARAM,
       INSTRUMENT_CONFIG_ID_PARAM,
-      PEAKLIST_SOFTWARE_ID_PARAM
+      PEAKLIST_SOFTWARE_ID_PARAM,
+      FRAGMENTATION_RULE_SET_ID_PARAM
     )
     val returns = JSONRPC2MethodResult(
       typeOf[ImportedDiaNNResult],
@@ -61,6 +63,12 @@ trait IImportDiaNNResultsService extends IMsqService with IDefaultServiceVersion
       val description = "The path to folder containing Result files to be imported."
       val scalaType = typeOf[String]
     }
+    object FILTER_MODE_PARAM extends JSONRPC2DefaultMethodParameter {
+      val name = "filter_mode" // TODO: rename to addition_mode ?
+      val description = "The filter mode for precursor to import (none, mbr or nombr)."
+      val scalaType = typeOf[String]
+      optional = true
+    }
     object INSTRUMENT_CONFIG_ID_PARAM extends JSONRPC2DefaultMethodParameter {
       val name = "instrument_config_id"
       val description = "The id in the datastore of the instrument config used for result file acquisition."
@@ -70,6 +78,12 @@ trait IImportDiaNNResultsService extends IMsqService with IDefaultServiceVersion
       val name = "peaklist_software_id"
       val description = "The id in the datastore of the software used to generate the peaklist."
       val scalaType = typeOf[Long]
+    }
+    object FRAGMENTATION_RULE_SET_ID_PARAM extends JSONRPC2DefaultMethodParameter {
+      val name = "fragmentation_rule_set_id"
+      val description = "The id in the datastore of the fragmentation rule set used for result file acquisition."
+      val scalaType = typeOf[Long]
+      optional = true
     }
   }
 }

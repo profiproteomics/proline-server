@@ -18,10 +18,10 @@
 
 package fr.proline.module.paser.diann.model;
 
-import fr.proline.module.paser.diann.parquet.DiaNNParquetReader;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class QuantPrecursor {
   String m_precursorId;
@@ -42,6 +42,7 @@ public class QuantPrecursor {
   Double m_massEvidence;
   Integer m_missCleaved;
 
+  Map<String, Double> m_allQValues;
   List<Fragment> m_fragments;
 
   public QuantPrecursor(String precId, String runName, Float rt, Float rtStart, Float rtStop, Float predictedRT, Double quantiAb,
@@ -59,6 +60,15 @@ public class QuantPrecursor {
     this.m_rtStop = rtStop;
     this.m_runName = runName;
     this.m_missCleaved = missCleaved;
+    this.m_allQValues = new HashMap<>();
+  }
+
+  public void setQValues(Map<String, Double> qValues) {
+    this.m_allQValues = qValues;
+  }
+
+  public Map<String, Double> getQValues() {
+    return m_allQValues;
   }
 
   public Double getAbundance() {

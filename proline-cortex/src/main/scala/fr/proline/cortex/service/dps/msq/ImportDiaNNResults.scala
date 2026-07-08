@@ -13,6 +13,8 @@ import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.cortex.util.fs.MountPointRegistry
 import fr.proline.jms.service.api.{AbstractRemoteProcessingService, ISingleThreadedService}
 import fr.proline.module.paser.diann.DiaNNResultsParser
+import fr.proline.module.paser.diann.model.DiaNNResult
+import fr.proline.module.paser.diann.model.DiaNNResult.FilterMode
 
 import java.io.File
 import java.util
@@ -49,7 +51,10 @@ class ImportDiaNNResults extends AbstractRemoteProcessingService with IImportDia
     val resultFileFolders = params.getString(PROCESS_METHOD.RESULT_FILES_DIR_PARAM)
     val instrumentConfigId : Long = params.getLong(PROCESS_METHOD.INSTRUMENT_CONFIG_ID_PARAM)
     val peaklistSoftwareId: Long = params.getLong(PROCESS_METHOD.PEAKLIST_SOFTWARE_ID_PARAM)
+    val fragmentationRuleSetId: Long = if (params.hasParam(PROCESS_METHOD.FRAGMENTATION_RULE_SET_ID_PARAM) ) params.getLong(PROCESS_METHOD.FRAGMENTATION_RULE_SET_ID_PARAM) else -1L
     val parentDatasetId: Long =  params.getLong(PROCESS_METHOD.PARENT_DS_ID_PARAM)
+    val filterModeParam = params.getOptString(PROCESS_METHOD.FILTER_MODE_PARAM, true, FilterMode.NONE.toString);
+    val filterMode : DiaNNResult.FilterMode  = DiaNNResult.FilterMode.valueOf(filterModeParam);
     val localPathname = MountPointRegistry.replacePossibleLabel(resultFileFolders, Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname
 
     logger.info("Run Import DiaNN using Params : " + serialize(params)+" from "+localPathname)
@@ -71,7 +76,10 @@ class ImportDiaNNResults extends AbstractRemoteProcessingService with IImportDia
       parserOption.put(DiaNNResultsParser.INSTR_CONFIG_OPTION_KEY,  java.lang.Long.valueOf(instrumentConfigId))
       parserOption.put(DiaNNResultsParser.PEAKLIST_SOFT_ID_OPTION_KEY,  java.lang.Long.valueOf(peaklistSoftwareId))
       parserOption.put(DiaNNResultsParser.PARENT_DATASET_ID_OPTION_KEY,  java.lang.Long.valueOf(parentDatasetId))
-      parserOption.put("ThresholdPgQvalue",  java.lang.Float.valueOf(0.01f))
+      if(fragmentationRuleSetId != -1L)
+        parserOption.put(DiaNNResultsParser.FRAGMENTATION_RULE_SET_OPTION_KEY,  java.lang.Long.valueOf(fragmentationRuleSetId))
+//      parserOption.put("ThresholdPgQvalue",  java.lang.Float.valueOf(0.01f))
+      parserOption.put(DiaNNResultsParser.FILTER_MODE_OPTION_KEY, filterMode);
       val diannParser: DiaNNResultsParser = new DiaNNResultsParser(parserCtxt, localPathname, parserOption)
       diannParser.runService()
       val createdRSMIds = diannParser.getRSMIdByResultSetId
