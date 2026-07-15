@@ -208,7 +208,7 @@ public class DiaNNParquetReader {
       if(containsColumn("PG.Normalised", rs))
         pgQuant = rs.getDouble("PG.Normalised");
       else if(containsColumn("PG.TopN", rs)  )
-        pgQuant = rs.getDouble("PG.Normalised");
+        pgQuant = rs.getDouble("PG.TopN");
       Double pgMaxLFQ = rs.getDouble("PG.MaxLFQ");
       Double pgQValue = rs.getDouble("PG.Q.Value");
 
@@ -301,7 +301,7 @@ public class DiaNNParquetReader {
     ResultSetMetaData rsmd  =rs.getMetaData();
     int nbCol = rsmd.getColumnCount();
     for(int i=1;i<=nbCol;i++){
-      if(rsmd.getCatalogName(i).equals(columnName))
+      if(rsmd.getColumnName(i).equals(columnName))
         return true;
     }
     return false;
