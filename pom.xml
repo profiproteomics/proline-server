@@ -48,8 +48,9 @@
             <!-- ProFi Commons -->
             <dependency>
                 <groupId>fr.profi.util</groupId>
-                <artifactId>profi-commons-scala_${scala.compat.version}</artifactId>
+                <artifactId>profi-commons-scala</artifactId>
                 <version>${commons.version}</version> <!-- Snapshot Trunk version -->
+                <classifier>${scala.compat.version}</classifier>
             </dependency>
             <dependency>
                 <groupId>fr.profi.util</groupId>
@@ -58,48 +59,32 @@
             </dependency>
             <dependency>
                 <groupId>fr.profi</groupId>
-                <artifactId>profi-proteomics_${scala.compat.version}</artifactId>
+                <artifactId>profi-proteomics</artifactId>
                 <version>${commons.version}</version>
+                <classifier>${scala.compat.version}</classifier>
             </dependency>
 
             <!-- MzDB access and processing -->
             <dependency>
                 <groupId>fr.profi</groupId>
-                <artifactId>mzdb-access_${scala.compat.version}</artifactId>
+                <artifactId>mzdb-access</artifactId>
                 <version>${mzdb.version}</version>
+                <classifier>${scala.compat.version}</classifier>
             </dependency>
+
             <dependency>
                 <groupId>fr.profi</groupId>
-                <artifactId>mzdb-processing_${scala.compat.version}</artifactId>
+                <artifactId>mzdb-processing</artifactId>
                 <version>${mzdb.version}</version>
+                <classifier>${scala.compat.version}</classifier>
             </dependency>
 
             <!-- "Proline" modules -->
             <dependency>
                 <groupId>fr.proline</groupId>
-                <artifactId>proline-om_${scala.compat.version}</artifactId>
+                <artifactId>proline-om</artifactId>
                 <version>${core.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>fr.proline</groupId>
-                <artifactId>proline-databases</artifactId>
-                <version>${core.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>fr.proline</groupId>
-                <artifactId>proline-dal_${scala.compat.version}</artifactId>
-                <version>${core.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>fr.proline</groupId>
-                <artifactId>proline-om_${scala.compat.version}</artifactId>
-                <version>${core.version}</version>
+                <classifier>${scala.compat.version}</classifier>
             </dependency>
 
             <dependency>
@@ -116,15 +101,44 @@
 
             <dependency>
                 <groupId>fr.proline</groupId>
-                <artifactId>proline-dal_${scala.compat.version}</artifactId>
+                <artifactId>proline-dal</artifactId>
                 <version>${core.version}</version>
+                <classifier>${scala.compat.version}</classifier>
             </dependency>
 
             <dependency>
                 <groupId>fr.proline</groupId>
-                <artifactId>proline-omp_${scala.compat.version}</artifactId>
+                <artifactId>proline-omp</artifactId>
                 <version>${core.version}</version>
+                <classifier>${scala.compat.version}</classifier>
             </dependency>
+
+            <dependency>
+                <groupId>fr.proline</groupId>
+                <artifactId>proline-om</artifactId>
+                <version>${core.version}</version>
+                <type>test-jar</type>
+                <classifier>${scala.compat.version}-tests</classifier>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>fr.proline</groupId>
+                <artifactId>proline-databases</artifactId>
+                <version>${core.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>fr.proline</groupId>
+                <artifactId>proline-dal</artifactId>
+                <version>${core.version}</version>
+                <type>test-jar</type>
+                <classifier>${scala.compat.version}-tests</classifier>
+                <scope>test</scope>
+            </dependency>
+
        </dependencies>
     </dependencyManagement>
 

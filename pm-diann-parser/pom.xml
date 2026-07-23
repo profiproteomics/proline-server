@@ -25,16 +25,18 @@
         </dependency>
         <dependency>
             <groupId>fr.proline</groupId>
-            <artifactId>proline-dal_${scala.compat.version}</artifactId>
+            <artifactId>proline-dal</artifactId>
+            <classifier>${scala.compat.version}</classifier>
         </dependency>
         <dependency>
             <groupId>fr.proline</groupId>
-            <artifactId>proline-om_${scala.compat.version}</artifactId>
-            <!-- Version inherited from parent POM -->
+            <artifactId>proline-om</artifactId>
+            <classifier>${scala.compat.version}</classifier>
         </dependency>
         <dependency>
             <groupId>fr.proline</groupId>
-            <artifactId>proline-omp_${scala.compat.version}</artifactId>
+            <artifactId>proline-omp</artifactId>
+            <classifier>${scala.compat.version}</classifier>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -47,9 +49,10 @@
         <!-- Tests -->
         <dependency>
             <groupId>fr.proline</groupId>
-            <artifactId>proline-dal_${scala.compat.version}</artifactId>
+            <artifactId>proline-dal</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
+            <classifier>${scala.compat.version}-tests</classifier>
         </dependency>
         <dependency>
             <groupId>fr.proline</groupId>

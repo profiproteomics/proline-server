@@ -47,7 +47,8 @@
 
 		<dependency>
 			<groupId>fr.profi</groupId>
-			<artifactId>profi-proteomics_${scala.compat.version}</artifactId>
+			<artifactId>profi-proteomics</artifactId>
+			<classifier>${scala.compat.version}</classifier>
 		</dependency>
 
 		<dependency>

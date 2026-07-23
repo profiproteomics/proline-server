@@ -114,14 +114,15 @@
        <artifactId>profi-commons-java</artifactId>
     </dependency>
     <dependency>
-
       <groupId>fr.profi.util</groupId>
-      <artifactId>profi-commons-scala_${scala.compat.version}</artifactId>
+      <artifactId>profi-commons-scala</artifactId>
+      <classifier>${scala.compat.version}</classifier>
     </dependency>
 
     <dependency>
       <groupId>fr.profi</groupId>
-      <artifactId>mzdb-access_${scala.compat.version}</artifactId>
+      <artifactId>mzdb-access</artifactId>
+      <classifier>${scala.compat.version}</classifier>
     </dependency>
 
     <!-- sqlite4java (needed for mzDB-access) -->
@@ -157,23 +158,26 @@
 
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-om_${scala.compat.version}</artifactId>
+      <artifactId>proline-om</artifactId>
+      <classifier>${scala.compat.version}</classifier>
       <exclusions>
         <exclusion>
           <groupId>fr.profi</groupId>
-          <artifactId>mzdb-processing_${scala.compat.version}</artifactId>
+          <artifactId>mzdb-processing</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
 
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-dal_${scala.compat.version}</artifactId>
+      <artifactId>proline-dal</artifactId>
+      <classifier>${scala.compat.version}</classifier>
     </dependency>
 
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-omp_${scala.compat.version}</artifactId>
+      <artifactId>proline-omp</artifactId>
+      <classifier>${scala.compat.version}</classifier>
     </dependency>
 
     <!-- Proline-Admin -->

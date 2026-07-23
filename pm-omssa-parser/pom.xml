@@ -17,7 +17,6 @@
     <version.path>${basedir}/src/main/scala/fr/proline/module/parser/omssa</version.path>
   </properties>
 
-
   <dependencies>
 
     <dependency>
@@ -53,17 +52,20 @@
     <!-- Proline -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-om_${scala.compat.version}</artifactId>
+      <artifactId>proline-om</artifactId>
+      <classifier>${scala.compat.version}</classifier>
     </dependency>
 
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-dal_${scala.compat.version}</artifactId>
+      <artifactId>proline-dal</artifactId>
+      <classifier>${scala.compat.version}</classifier>
     </dependency>
 
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-omp_${scala.compat.version}</artifactId>
+      <artifactId>proline-omp</artifactId>
+      <classifier>${scala.compat.version}</classifier>
     </dependency>
 
     <dependency>
@@ -78,9 +80,10 @@
     </dependency>
 
     <dependency>
-      <groupId>fr.profi</groupId>
-      <artifactId>profi-proteomics_${scala.compat.version}</artifactId>
-    </dependency>
+            <groupId>fr.profi</groupId>
+            <artifactId>profi-proteomics</artifactId>
+            <classifier>${scala.compat.version}</classifier>
+        </dependency>
 
     <dependency>
       <groupId>fr.profi.util</groupId>
@@ -88,8 +91,9 @@
     </dependency>
 
     <dependency>
-      <groupId>fr.profi.util</groupId>
-      <artifactId>profi-commons-scala_${scala.compat.version}</artifactId>
+            <groupId>fr.profi.util</groupId>
+            <artifactId>profi-commons-scala</artifactId>
+            <classifier>${scala.compat.version}</classifier>
     </dependency>
     <!-- Testing -->
     <dependency>
@@ -114,9 +118,10 @@
 
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-dal_${scala.compat.version}</artifactId>
+      <artifactId>proline-dal</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
+      <classifier>${scala.compat.version}-tests</classifier>
     </dependency>
   </dependencies>
 

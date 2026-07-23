@@ -48,29 +48,34 @@
     </dependency>
 
     <dependency>
-      <groupId>fr.profi.util</groupId>
-      <artifactId>profi-commons-scala_${scala.compat.version}</artifactId>
-    </dependency>
+            <groupId>fr.profi.util</groupId>
+            <artifactId>profi-commons-scala</artifactId>
+            <classifier>${scala.compat.version}</classifier>
+        </dependency>
 
     <dependency>
-      <groupId>fr.profi</groupId>
-      <artifactId>profi-proteomics_${scala.compat.version}</artifactId>
-    </dependency>
+            <groupId>fr.profi</groupId>
+            <artifactId>profi-proteomics</artifactId>
+            <classifier>${scala.compat.version}</classifier>
+        </dependency>
 
     <!-- Proline -->
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-om_${scala.compat.version}</artifactId>
+      <artifactId>proline-om</artifactId>
+      <classifier>${scala.compat.version}</classifier>
     </dependency>
 
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-dal_${scala.compat.version}</artifactId>
+      <artifactId>proline-dal</artifactId>
+      <classifier>${scala.compat.version}</classifier>
     </dependency>
 
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-omp_${scala.compat.version}</artifactId>
+      <artifactId>proline-omp</artifactId>
+      <classifier>${scala.compat.version}</classifier>
     </dependency>
 
     <dependency>
@@ -104,9 +109,10 @@
 
     <dependency>
       <groupId>fr.proline</groupId>
-      <artifactId>proline-dal_${scala.compat.version}</artifactId>
+      <artifactId>proline-dal</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
+      <classifier>${scala.compat.version}-tests</classifier>
     </dependency>
 
 

@@ -60,7 +60,8 @@
     <!-- Proline -->
     <dependency>
       <groupId>fr.profi.util</groupId>
-      <artifactId>profi-commons-scala_${scala.compat.version}</artifactId>
+      <artifactId>profi-commons-scala</artifactId>
+      <classifier>${scala.compat.version}</classifier>
     </dependency>
 
     <dependency>
