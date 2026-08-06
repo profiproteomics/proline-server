@@ -14,11 +14,17 @@ and all other computational modules other than Proline-Core
     * PM-MascotParser
     * PM-OmssaParser
     * PM-XtandemParser
-    * PM-MaxQuantParser: MaxQuant result parse, for identification and quantitation result
-    * PM-MzIdentML :  Parse MzIdentML result and also generate mzIdentML file from Proline dataset
+    * PM-MaxQuantParser: MaxQuant result parse, for identification and quantitation results
+    * PM-MzIdentML:  Parse MzIdentML result and also generate mzIdentML file from Proline dataset
+    * PM-DiannParser: Parse Diann result and create identification & quantitation data in Proline 
   * PM-MSDiag: Module designed to run a diagnosis of a MS/MS search
   * PM-SequenceRepository: Module to get Protein sequences and associated information from fasta files 
-  
+
+
+# Release Note
+
+Changes note is accessible in [ReleaseNote](ReleaseNote.md) file
+
 # License
 
 This project is licensed under the [CeCILL License V2.1](http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html)
