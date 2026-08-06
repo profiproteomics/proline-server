@@ -23,7 +23,7 @@ and all other computational modules other than Proline-Core
 
 # Release Note
 
-Changes note is accessible in [ReleaseNote](ReleaseNote.md) file
+Changes note is accessible in [Release Notes](ReleaseNote.md) file
 
 # License
 

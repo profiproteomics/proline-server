@@ -1,4 +1,4 @@
-# Proline-Server Release Note
+# Proline-Server Release Notes
 
 ## Version 2.4.0 (Snapshot)
 
@@ -13,6 +13,9 @@
   * Save diann command line as quant config using new schema name "quantitation.diann_config"
   * Save all qValues in peptideMatch properties
   * [Dev] update dependencies (mzdb, proline-core...) + replace Scala version suffix with classifier
+
+* Isobaric Quantitation
+  * Fix error reading PSM PIF value from spectrum title : may have multiple PSM and not only one per Spectrum
 
 ## Version 2.3.x
 
