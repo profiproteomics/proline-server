@@ -14,4 +14,4 @@ before_install:
   - git clone --depth 1 --branch $BRANCH_NAME https://github.com/profiproteomics/proline-admin.git $HOME/proline-admin
   - (cd $HOME/proline-admin && mvn -q install -Dmaven.test.skip.exec=true -pl proline-admin -am)
 install:
-  - mvn install -Dmaven.test.skip.exec=true
+  - mvn install -Dmaven.test.skip.exec=true -pl '!pm-mascot-parser,!proline-cortex'
