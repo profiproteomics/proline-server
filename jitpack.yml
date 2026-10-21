@@ -14,5 +14,7 @@ before_install:
   - (cd $HOME/proline-core && mvn -q install -Dmaven.test.skip.exec=true)
   - git clone --depth 1 --branch $BRANCH_NAME https://github.com/profiproteomics/proline-admin.git $HOME/proline-admin
   - (cd $HOME/proline-admin && mvn -q install -Dmaven.test.skip.exec=true -pl proline-admin -am)
+  - curl -sSfL -o $HOME/jacksum-3.4.0.jar https://github.com/jonelo/jacksum/releases/download/v3.4.0/jacksum-3.4.0.jar
+  - mvn -q install:install-file -Dfile=$HOME/jacksum-3.4.0.jar -DgroupId=jacksum -DartifactId=jacksum -Dversion=3.4.0 -Dpackaging=jar
 install:
   - mvn -s $HOME/ebi-settings.xml install -Dmaven.test.skip.exec=true -pl '!pm-mascot-parser,!proline-cortex'
