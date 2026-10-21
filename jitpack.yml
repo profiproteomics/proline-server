@@ -3,6 +3,7 @@ jdk:
 before_install:
   - sdk install maven 3.9.9 && sdk use maven 3.9.9
   - BRANCH_NAME=develop
+  - printf '%s' '<settings><profiles><profile><id>ebi</id><repositories><repository><id>ebi-repo</id><url>https://www.ebi.ac.uk/Tools/maven/repos/content/groups/ebi-repo/</url></repository></repositories></profile></profiles><activeProfiles><activeProfile>ebi</activeProfile></activeProfiles></settings>' > $HOME/ebi-settings.xml
   - git clone --depth 1 --branch $BRANCH_NAME https://github.com/profiproteomics/profi-commons.git $HOME/profi-commons
   - (cd $HOME/profi-commons && mvn -q -f profi_pom/pom.xml install && mvn -q install -DskipTests)
   - curl -sSfL -o $HOME/sgfilter-1.2.jar https://repo.clojars.org/mr/go/sgfilter/sgfilter/1.2/sgfilter-1.2.jar
@@ -14,4 +15,4 @@ before_install:
   - git clone --depth 1 --branch $BRANCH_NAME https://github.com/profiproteomics/proline-admin.git $HOME/proline-admin
   - (cd $HOME/proline-admin && mvn -q install -Dmaven.test.skip.exec=true -pl proline-admin -am)
 install:
-  - mvn install -Dmaven.test.skip.exec=true -pl '!pm-mascot-parser,!proline-cortex'
+  - mvn -s $HOME/ebi-settings.xml install -Dmaven.test.skip.exec=true -pl '!pm-mascot-parser,!proline-cortex'
