@@ -72,7 +72,7 @@ class FilterRsmProteinSets extends AbstractRemoteProcessingService with IFilterR
     true
   }
 
-  def parseProtSetFilters(params: NamedParamsRetriever): Option[Seq[IProteinSetFilter]] = {
+  def parseProtSetFilters(params: NamedParamsRetriever): Option[collection.Seq[IProteinSetFilter]] = {
     if (!params.hasParam(PROCESS_METHOD.PROT_SET_FILTERS_PARAM)) None
     else {
       val protSetFiltersConfigs = params.getList(PROCESS_METHOD.PROT_SET_FILTERS_PARAM).toArray.map(parseFilterConfig(_))

@@ -85,7 +85,7 @@ object MergeResultSetsServiceV1_0 extends IMergeResultSetsServiceV1_0
 trait IMergeResultSetsServiceV1_0 extends IMergeResultSetsService with IDefaultServiceVersion {
   
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(MERGE_RESULT_SETS_METHOD,MERGE_RESULT_SUMMARIES_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(MERGE_RESULT_SETS_METHOD,MERGE_RESULT_SUMMARIES_METHOD)
   
   object MERGE_RESULT_SETS_METHOD extends IMergeResultSetsMethod
   object MERGE_RESULT_SUMMARIES_METHOD extends IMergeResultSummariesMethod
@@ -98,7 +98,7 @@ trait IMergeResultSetsServiceV2_0 extends IMergeResultSetsService {
   val serviceVersion = "2.0"
   
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(MERGE_RESULT_SETS_METHOD,MERGE_RESULT_SUMMARIES_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(MERGE_RESULT_SETS_METHOD,MERGE_RESULT_SUMMARIES_METHOD)
   
   trait HasAggregationModeParam {
     object AGGREGATION_MODE_PARAM extends JSONRPC2DefaultMethodParameter {

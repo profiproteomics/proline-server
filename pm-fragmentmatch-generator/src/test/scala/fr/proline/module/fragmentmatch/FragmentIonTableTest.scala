@@ -11,7 +11,6 @@ import fr.proline.repository.DriverType
 import org.junit.Assert.{assertEquals, fail}
 import org.junit.{After, Before, Test}
 
-import scala.Array.canBuildFrom
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 

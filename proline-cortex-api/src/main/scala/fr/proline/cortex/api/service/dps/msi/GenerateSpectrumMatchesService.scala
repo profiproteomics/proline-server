@@ -28,7 +28,7 @@ trait IGenerateSpectrumMatchesService extends IMsiService with IDefaultServiceVe
   this.serviceDescription = Some("Generates and store the spectrum matches.")
 
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
   object PROCESS_METHOD extends JSONRPC2DefaultMethod with IGenerateSpectrumMatchesServiceParams {
 

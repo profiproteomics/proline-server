@@ -1,6 +1,5 @@
 package fr.proline.cortex.service.dps.uds
 
-import scala.Array.canBuildFrom
 
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging

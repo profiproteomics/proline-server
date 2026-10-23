@@ -111,7 +111,7 @@ object BuildRSMSpectraViewSet extends LazyLogging {
       }
       (peptideMatchesByPeptideAndCharge.toMap, Some(masterQuantPepIonByPepMatchId.toMap))
     } else {
-      val peptideMatchesByPeptideAndCharge = peptideMatches.groupBy(pepMatch => (pepMatch.peptide, pepMatch.charge)).mapValues(_.maxBy(_.score))
+      val peptideMatchesByPeptideAndCharge = peptideMatches.groupBy(pepMatch => (pepMatch.peptide, pepMatch.charge)).mapValues(_.maxBy(_.score)).toMap
       (peptideMatchesByPeptideAndCharge, None)
     }
 

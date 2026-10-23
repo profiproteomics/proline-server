@@ -27,7 +27,6 @@ import fr.proline.module.fragmentmatch.FragmentationRuleSetSource
 import fr.proline.module.fragmentmatch._
 import fr.proline.repository.util.JDBCWork
 
-import scala.Array.fallbackCanBuildFrom
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -41,7 +40,7 @@ object SpectrumMatchesGenerator {
     rs.get
   }
 
-  def _getSpectraIds(rs: ResultSet): Seq[Long] = {
+  def _getSpectraIds(rs: ResultSet): collection.Seq[Long] = {
     rs.peptideMatches.map(_.getMs2Query().spectrumId)
   }
 
@@ -253,7 +252,7 @@ class SpectrumMatchesGenerator(
     (fragmentationRuleSet2Use, frsSource)
   }
 
-  private def generateSpectrumMatchesFor(pepMatchIds: Seq[Long], searchSettings: SearchSettings, updateSearchSettingAllowed: Boolean, peptideMatchProvider: SQLPeptideMatchProvider,
+  private def generateSpectrumMatchesFor(pepMatchIds: collection.Seq[Long], searchSettings: SearchSettings, updateSearchSettingAllowed: Boolean, peptideMatchProvider: SQLPeptideMatchProvider,
                                          spectrumProvider: SQLSpectrumProvider, msiDbCtx: MsiDbConnectionContext): Unit = {
 
     val ms2ErrorTol: Double = searchSettings.msmsSearchSettings.get.ms2ErrorTol

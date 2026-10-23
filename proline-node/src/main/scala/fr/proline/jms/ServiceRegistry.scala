@@ -77,7 +77,7 @@ object ServiceRegistry {
 
   }
 
-  def getParallelizableServices(): Seq[IRemoteServiceIdentity] = {
+  def getParallelizableServices(): collection.Seq[IRemoteServiceIdentity] = {
     val buff = ArrayBuffer.empty[IRemoteServiceIdentity]
 
     m_servicesByName_lock.synchronized {
@@ -103,7 +103,7 @@ object ServiceRegistry {
     buff
   }
   
-  protected def getSingleThreadedServiceByKey(singleThreadedServiceToKey: ISingleThreadedService => String): Map[String, Seq[ISingleThreadedService]] = {
+  protected def getSingleThreadedServiceByKey(singleThreadedServiceToKey: ISingleThreadedService => String): Map[String, collection.Seq[ISingleThreadedService]] = {
     val singleThreadedServicesByName = mutable.Map.empty[String, ArrayBuffer[ISingleThreadedService]]
 
     m_servicesByName_lock.synchronized {
@@ -134,11 +134,11 @@ object ServiceRegistry {
     singleThreadedServicesByName.toMap
   }
 
-  def getSingleThreadedServicesByName(): Map[String, Seq[ISingleThreadedService]] = {
+  def getSingleThreadedServicesByName(): Map[String, collection.Seq[ISingleThreadedService]] = {
     getSingleThreadedServiceByKey( singleThreadedService => singleThreadedService.serviceName )
   }
   
-  def getSingleThreadedServicesByThreadIdent(): Map[String, Seq[ISingleThreadedService]] = {
+  def getSingleThreadedServicesByThreadIdent(): Map[String, collection.Seq[ISingleThreadedService]] = {
     getSingleThreadedServiceByKey( singleThreadedService => singleThreadedService.singleThreadIdent )
   }
 

@@ -60,7 +60,7 @@ class MasterQuantProteinSetProfileBuildingContext(
   protMatch: ProteinMatch,
   var masterQuantProteinSet: MasterQuantProteinSet,
   var profile: Option[MasterQuantProteinSetProfile],
-  quantChannelIds: Seq[Long]
+  quantChannelIds: collection.Seq[Long]
 ) extends ProtMatchBuildingContext(
   protSet,
   peptideSet,

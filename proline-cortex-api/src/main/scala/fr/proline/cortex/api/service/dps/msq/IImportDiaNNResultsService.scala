@@ -26,7 +26,7 @@ trait IImportDiaNNResultsService extends IMsqService with IDefaultServiceVersion
     "Import DiaNN results and create associated Search results, Identification Summary and Quantitation datasets."
   )
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
   object PROCESS_METHOD extends JSONRPC2DefaultMethod {
     // Method description

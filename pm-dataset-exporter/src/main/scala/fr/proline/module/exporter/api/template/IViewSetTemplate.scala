@@ -4,7 +4,7 @@ import fr.proline.module.exporter.api.context.IViewSetCreationContext
 
 trait IViewSetTemplate extends IViewTemplate {
   
-  def templatedViewTypes: Seq[ViewTypeWithTemplate]
+  def templatedViewTypes: collection.Seq[ViewTypeWithTemplate]
   def viewSetCreationContext: IViewSetCreationContext
   
   lazy val fileExtension = {

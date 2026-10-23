@@ -28,15 +28,15 @@ object MSDiagOutput {
   
 }
 
-// TODO: replace cellType by columnTypes = Seq[_] with the same number of items as columnNames (add a require)
+// TODO: replace cellType by columnTypes = collection.Seq[_] with the same number of items as columnNames (add a require)
 case class MSDiagOutput(
   val matrix: Array[Array[Any]], // the output table containing all data
   val outputType: MSDiagOutputTypes.MSDiagOutputType, // the type of information that is represented by the table (chart, table, histogram, etc)
   val cellType: String = scala.Int.toString, // the (native) type of cell values (integer, string, float)
   val description: String = "", // the string description of the output (ie. Number of matches)
-  val columnNames: Seq[_] = Seq[String](), // the column headers
-  val columnTypes: Seq[_] = Seq[String](), // the column types (i.e. Integer, Double, String) to determine action for graphs
-  val columnCategories: Seq[_] = Seq[String](), // tells whether it is a legend or data
+  val columnNames: collection.Seq[_] = Seq[String](), // the column headers
+  val columnTypes: collection.Seq[_] = Seq[String](), // the column types (i.e. Integer, Double, String) to determine action for graphs
+  val columnCategories: collection.Seq[_] = Seq[String](), // tells whether it is a legend or data
   val xAxisDescription: String = "", // the string description of the X axis (ie. Retention times)
   val yAxisDescription: String = "", // the string description of the Y axis (ie. Score)
   val preferedOrder: Int = 0

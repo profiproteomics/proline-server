@@ -166,7 +166,7 @@ object ImportResultFilesServiceV1_0 extends IImportResultFilesServiceV1_0
 trait IImportResultFilesServiceV1_0 extends IImportResultFilesService with IDefaultServiceVersion {
 
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
   
   object PROCESS_METHOD extends JSONRPC2DefaultMethod with IImportResultFilesServiceParams {
 
@@ -203,7 +203,7 @@ trait IImportResultFilesServiceV2_0 extends IImportResultFilesService {
 
   val serviceVersion = "2.0"
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
   
   object PROCESS_METHOD extends JSONRPC2DefaultMethod with IImportResultFilesServiceParams {
 

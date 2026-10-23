@@ -35,7 +35,7 @@ class MzIdResultFileProvider extends IResultFileProvider with IResultFileVerifie
     enzymes.toArray
   }
   
-   def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): Seq[PtmDefinition] = {
+   def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): collection.Seq[PtmDefinition] = {
        logger.debug("MzIdentML Parser, call getPtmDefinitions : Return EMPTY")  
        val ptmDefs = Seq.empty[PtmDefinition]        
        ptmDefs

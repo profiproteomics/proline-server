@@ -71,7 +71,7 @@ class CertifyResultFiles extends AbstractRemoteProcessingService with ICertifyRe
 
       val filesByFormat = resultFiles.groupBy(_.format).mapValues { resultFiles =>
         resultFiles.map(rf => new File(_mountPointBasedPathToLocalPath(rf.path)))
-      }
+      }.toMap
 
       var certifyResult: Boolean = false
       val errorMessage = new StringBuilder()

@@ -92,7 +92,7 @@ object ExportResultSummaryServiceV1_0 extends IExportResultSummaryServiceV1_0
 trait IExportResultSummaryServiceV1_0 extends IExportResultSummaryService with IDefaultServiceVersion {
 
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
   object PROCESS_METHOD extends JSONRPC2DefaultMethod {
     
@@ -128,7 +128,7 @@ trait IExportResultSummariesServiceV2_0 extends IExportResultSummaryService {
   val serviceVersion = "2.0"
 
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
   object PROCESS_METHOD extends JSONRPC2DefaultMethod {
 

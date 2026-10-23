@@ -163,7 +163,7 @@ object Schema {
   val ArrayType = typeOf[Array[_]]
   val ListType = typeOf[List[_]]
   val MapType = typeOf[Map[_, _]]
-  val SeqType = typeOf[Seq[_]]
+  val SeqType = typeOf[collection.Seq[_]]
 
   def schemaOf( tpe: Type ) = buildSchema(tpe, Map())
   def schemaOf[T]()(implicit typeTag: TypeTag[T]) = buildSchema(typeTag.tpe, Map())

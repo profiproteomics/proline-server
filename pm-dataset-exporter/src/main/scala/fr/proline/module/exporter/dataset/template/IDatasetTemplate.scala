@@ -17,7 +17,7 @@ trait IDatasetTemplate extends IViewSetTemplate with StrictLogging {
   def buildTemplate(config: ExportConfig): Array[ViewTypeWithTemplate]
 
   logger.debug(s"Build template from config with ${config.sheets.length} sheets")
-  val templatedViewTypes: Seq[ViewTypeWithTemplate] = buildTemplate(config)
+  val templatedViewTypes: collection.Seq[ViewTypeWithTemplate] = buildTemplate(config)
 
   protected def sheetToTemplatedViewType(sheet: ExportConfigSheet, template: IViewTemplate): ViewTypeWithTemplate = {
 

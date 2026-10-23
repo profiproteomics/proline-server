@@ -38,7 +38,7 @@ object UpdateSpectraParamsServiceV1_0 extends IUpdateSpectraParamsServiceV1_0
 trait IUpdateSpectraParamsServiceV1_0 extends IUpdateSpectraParamsService with IDefaultServiceVersion {
 
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
   object PROCESS_METHOD extends JSONRPC2DefaultMethod {
 
@@ -70,7 +70,7 @@ trait IUpdateSpectraParamsServiceV2_0 extends IUpdateSpectraParamsService {
 
   /* JMS Service identification */
   val serviceVersion = "2.0"
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
   object PROCESS_METHOD extends JSONRPC2DefaultMethod {
 

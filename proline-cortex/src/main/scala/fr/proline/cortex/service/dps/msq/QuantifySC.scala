@@ -1,6 +1,5 @@
 package fr.proline.cortex.service.dps.msq
 
-import scala.collection.JavaConversions.asScalaBuffer
 import com.thetransactioncompany.jsonrpc2.util.NamedParamsRetriever
 import com.typesafe.scalalogging.LazyLogging
 import fr.profi.util.primitives.toLong

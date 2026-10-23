@@ -10,7 +10,7 @@ import fr.proline.module.exporter.msi.view.RSMSpectraViewType
 object SpectraListAsTSV extends AbstractViewSetTSVTemplate {
     
     // Create the templated view types
-  val templatedViewTypes: Seq[ViewTypeWithTemplate] = Seq(
+  val templatedViewTypes: collection.Seq[ViewTypeWithTemplate] = Seq(
     ViewTypeWithTemplate( RSMSpectraViewType.SPECTRA_LIST, tsvTemplate, viewName = Some("spectraList") )
   )
   

@@ -66,7 +66,7 @@ trait IQuantifySCService_V2 extends IAbstractQuantifySCService  {
   val serviceVersion = "2.0"
   
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
   object PROCESS_METHOD extends JSONRPC2DefaultMethod with IQuantifySCServiceParams {
 
@@ -92,7 +92,7 @@ trait IQuantifySCService_V2 extends IAbstractQuantifySCService  {
 trait IQuantifySCService extends IAbstractQuantifySCService with IDefaultServiceVersion {
 
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
   object PROCESS_METHOD extends JSONRPC2DefaultMethod with IQuantifySCServiceParams {
 

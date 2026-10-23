@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Option;
 import scala.Tuple2;
-import scala.collection.JavaConverters;
+import scala.jdk.javaapi.CollectionConverters;
 import scala.collection.Seq;
 import scala.collection.mutable.ArrayBuffer;
 
@@ -241,7 +241,7 @@ public class MSDataBuilder {
       }
 
       Map<String, Double> javaMap =qPrec.getQValues();
-      scala.collection.immutable.Map<String, Double> scalaMap = JavaConverters.mapAsScalaMap(javaMap).toMap(scala.Predef.conforms());
+      scala.collection.immutable.Map<String, Double> scalaMap = scala.collection.immutable.Map$.MODULE$.<String, Double>from(CollectionConverters.asScala(javaMap));
       Option<scala.collection.immutable.Map<String, Double>> allQvaluesOption = scalaMap.isEmpty() ? Option.empty(): Option.apply(scalaMap);
       PeptideMatchDiaNNProperties prop = new PeptideMatchDiaNNProperties(qvalue, allQvaluesOption);
       diaNNProp = Option.apply(prop);

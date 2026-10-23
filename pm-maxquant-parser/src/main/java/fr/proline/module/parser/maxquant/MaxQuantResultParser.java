@@ -24,7 +24,7 @@ import fr.proline.repository.util.JDBCWork;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Option;
-import scala.collection.JavaConversions;
+import scala.jdk.javaapi.CollectionConverters;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -442,7 +442,7 @@ public class MaxQuantResultParser extends IServiceWrapper {
 	    
 	   	//TODO : Compute PrettyRank computePrettyRanks(rs.peptideMatches, separated = true)
 
-		return rsStorer.storeResultSet(nextRS, JavaConversions.asScalaBuffer(queries).toList(), storerContext);
+		return rsStorer.storeResultSet(nextRS, CollectionConverters.asScala(queries).toList(), storerContext);
 	}
 
 	private static Long getMaxQuantPeakListSoftwareId(ProviderDecoratedExecutionContext parserContext) {

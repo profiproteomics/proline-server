@@ -21,7 +21,7 @@ import java.net.URL
 class OmssaResultFileVerifier extends IResultFileVerifier with LazyLogging {
 
   // returns PtmDefinitions referenced by the specified file
-  def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): Seq[PtmDefinition] = {
+  def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): collection.Seq[PtmDefinition] = {
     //    getPtmDefinitionsByInternalId(getUsermodFileLocation(importProperties)).getValues
     getPtmDefinitionsByInternalId(getUsermodFileLocation(importProperties), parsePtmCompositions(getCompositionsFileLocation(importProperties))).getValues
   }

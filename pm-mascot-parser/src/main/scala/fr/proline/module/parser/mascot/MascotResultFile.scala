@@ -2,8 +2,8 @@ package fr.proline.module.parser.mascot
 
 import java.io._
 
-import scala.Array.canBuildFrom
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.parallel.CollectionConverters._
 import scala.concurrent._
 import com.typesafe.scalalogging.StrictLogging
 import fr.profi.chemistry.model.Enzyme

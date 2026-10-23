@@ -19,7 +19,7 @@ trait IIdentifyPtmSitesService extends IMsiService with IDefaultServiceVersion {
     "The extracted information is stored in the database in an object tree linked to the Result Summary."
   )
 
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
   object PROCESS_METHOD extends JSONRPC2DefaultMethod with IIdentifyPtmSitesParams {
 
@@ -50,7 +50,7 @@ trait IIdentifyPtmSitesServiceV2 extends IMsiService {
       "The extracted information is stored in the database in an object tree linked to the Result Summary."
   )
 
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
   object PROCESS_METHOD extends JSONRPC2DefaultMethod with IIdentifyPtmSitesParams {
 

@@ -9,7 +9,6 @@ import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.Spectrum
 import fr.proline.module.fragmentmatch.service.SpectrumMatchesGenerator
 
-import scala.Array.canBuildFrom
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 

@@ -12,8 +12,6 @@ import fr.proline.core.om.provider.msi.impl.SQLMsQueryProvider
 import fr.proline.core.om.provider.msi.impl.SQLResultSetProvider
 import fr.proline.core.om.provider.msi.impl.SQLSpectrumProvider
 
-import scala.Array.canBuildFrom
-import scala.Array.fallbackCanBuildFrom
 
 class MSDiagResultSetManager(val parserContext: IExecutionContext, val rsId: Long) extends LazyLogging {
   

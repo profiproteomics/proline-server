@@ -40,7 +40,7 @@ class FileUpload extends IRemoteBytesMsgService with IDefaultServiceVersion with
 //  val OVERWRITE_PARAM_KEY = "overwrite_file"
   
   // TODO: define me in Proline-Cortex-API
-  def methodDefinitions: Seq[IJSONRPC2Method] = Seq()
+  def methodDefinitions: collection.Seq[IJSONRPC2Method] = Seq()
 
   override def runService(message: BytesMessage, jmsMessageContext: Map[String, Any]): JSONRPC2Response = {
     require(message != null, "message is null")

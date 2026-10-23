@@ -8,14 +8,14 @@ import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.xssf.streaming.SXSSFSheet
 
 class BasicXLSXTemplate(
-  val selectedFields: Option[Seq[String]] = None
+  val selectedFields: Option[collection.Seq[String]] = None
 ) extends IWorksheetTemplate with LazyLogging {
 
   val fileExtension = FileExtensionEnum.XLSX
   
   def newWorksheet(view: IDataView, workbookCreationContext: WorkbookContext) {
     
-    val selectedFieldsOrFields: Seq[String] = {
+    val selectedFieldsOrFields: collection.Seq[String] = {
       if (selectedFields.isDefined) selectedFields.get
       else view.getFieldsNames
     }

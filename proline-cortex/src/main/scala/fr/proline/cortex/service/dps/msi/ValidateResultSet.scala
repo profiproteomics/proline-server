@@ -18,7 +18,6 @@ import fr.proline.cortex.api.service.dps.msi._
 import fr.proline.cortex.util.DbConnectionHelper
 import fr.proline.jms.service.api.AbstractRemoteProcessingService
 
-import scala.Array.canBuildFrom
 import scala.collection.immutable.HashMap
 
 
@@ -92,7 +91,7 @@ object ValidateResultSet {
       new FilterConfig(configAsMap(ValidateResultSetService.PARAMETER_PARAM_NAME).asInstanceOf[String], configAsMap(ValidateResultSetService.THRESHOLD_PARAM_NAME).asInstanceOf[AnyVal])
   }
 
-  def parsePepMatchFilters(params: NamedParamsRetriever): Option[Seq[IPeptideMatchFilter]] = {
+  def parsePepMatchFilters(params: NamedParamsRetriever): Option[collection.Seq[IPeptideMatchFilter]] = {
     if (params.hasParam(PEP_MATCH_FILTERS_PARAM)) {
       val pepMatchFiltersConfigs = params.getList(PEP_MATCH_FILTERS_PARAM).toArray.map(parseFilterConfig(_))
 
@@ -132,7 +131,7 @@ object ValidateResultSet {
     }
   }
 
-  def parsePeptideFilters(params: NamedParamsRetriever): Option[Seq[IPeptideInstanceFilter]] = {
+  def parsePeptideFilters(params: NamedParamsRetriever): Option[collection.Seq[IPeptideInstanceFilter]] = {
     if (params.hasParam(PEPTIDE_FILTERS_PARAM)) {
       val pepFiltersConfigs = params.getList(PEPTIDE_FILTERS_PARAM).toArray.map(parseFilterConfig(_))
       Some(pepFiltersConfigs.map(fc => {
@@ -193,7 +192,7 @@ object ValidateResultSet {
     }
   }
 
-  def parseProtSetFilters(params: NamedParamsRetriever): Option[Seq[IProteinSetFilter]] = {
+  def parseProtSetFilters(params: NamedParamsRetriever): Option[collection.Seq[IProteinSetFilter]] = {
     if (params.hasParam(PROT_SET_FILTERS_PARAM)) {
       val protSetFiltersConfigs = params.getList(PROT_SET_FILTERS_PARAM).toArray.map(parseFilterConfig(_))
       Some(protSetFiltersConfigs.map(fc => BuildProteinSetFilter(fc.parameter, fc.threshold.asInstanceOf[AnyVal])).toSeq)

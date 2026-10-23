@@ -38,10 +38,10 @@ case class JSONRPC2ServiceDescription (
   var contentType: String = "application/json",
   var transport: String = JSONRPC2ServiceTransport.POST.toString(),
   var envelope: String = JSONRPC2ServiceEnvelope.URL.toString(),
-  var parameters: Option[Seq[IJSONRPC2MethodParameter]] = None,
+  var parameters: Option[collection.Seq[IJSONRPC2MethodParameter]] = None,
   var additionalParameters: Option[Boolean] = None,
   var services: Option[Array[JSONRPC2ServiceDescription]] = None,
-  var methods: Option[Seq[IJSONRPC2Method]] = None,
+  var methods: Option[collection.Seq[IJSONRPC2Method]] = None,
   var jsonpCallbackParameter: Option[String] = Some("callback"),
   var SMDVersion: Option[String] = Some("2.0")
 )
@@ -58,7 +58,7 @@ case class JSONRPC2ServiceDescription (
 case class JSONRPC2Method (
   val name: String,
   val description: String,
-  var parameters: Seq[IJSONRPC2MethodParameter],
+  var parameters: collection.Seq[IJSONRPC2MethodParameter],
   var returns: JSONRPC2MethodResult,
   var additionalParameters: Boolean = false
 ) extends IJSONRPC2Method
@@ -66,7 +66,7 @@ case class JSONRPC2Method (
 trait JSONRPC2DefaultMethod extends IJSONRPC2Method {
   def name: String
   def description: String
-  def parameters: Seq[IJSONRPC2MethodParameter]
+  def parameters: collection.Seq[IJSONRPC2MethodParameter]
   def returns: JSONRPC2MethodResult
   def additionalParameters: Boolean = false
 }
@@ -74,7 +74,7 @@ trait JSONRPC2DefaultMethod extends IJSONRPC2Method {
 trait IJSONRPC2Method {
   def name: String
   def description: String
-  def parameters: Seq[IJSONRPC2MethodParameter]
+  def parameters: collection.Seq[IJSONRPC2MethodParameter]
   def returns: JSONRPC2MethodResult
   def additionalParameters: Boolean
   

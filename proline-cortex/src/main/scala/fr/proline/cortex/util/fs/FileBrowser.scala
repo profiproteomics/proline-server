@@ -22,7 +22,7 @@ import fr.proline.cortex.api.fs._
  */
 object FileBrowser extends LazyLogging {
 
-  def getDirectories(localPathname: String, mountPoint: Option[MountPoint], rule: String, maxDepth: Int = 1): Seq[DirAttrs] = {
+  def getDirectories(localPathname: String, mountPoint: Option[MountPoint], rule: String, maxDepth: Int = 1): collection.Seq[DirAttrs] = {
     require(localPathname != null, "LocalPathname is null")
 
     var dirSeqBuilder = Seq.newBuilder[DirAttrs]
@@ -42,7 +42,7 @@ object FileBrowser extends LazyLogging {
     dirSeqBuilder.result
   }
 
-  def getDirectoryContent(localPathname: String, mountPoint: Option[MountPoint], rule: String): Seq[FileOrDirAttrs] = {
+  def getDirectoryContent(localPathname: String, mountPoint: Option[MountPoint], rule: String): collection.Seq[FileOrDirAttrs] = {
     require(localPathname != null, "LocalPathname is null")
 
     var fileOrDirSeqBuilder = Seq.newBuilder[FileOrDirAttrs]

@@ -8,7 +8,7 @@ trait IViewSet {
   
   var viewSetName: String
   val viewSetTemplate: IViewSetTemplate
-  val templatedViews: Seq[ViewWithTemplate]
+  val templatedViews: collection.Seq[ViewWithTemplate]
   val exportConfig: ExportConfig
   
 }

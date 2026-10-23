@@ -22,8 +22,8 @@ case class DirAttrs(
   path: String, // dir path
   name: String,
   lastmodified: Int // mod time since epoch
-  //subdirs: Seq[DirProps] = Seq(),
-  //files: Seq[FileProps] = Seq()
+  //subdirs: collection.Seq[DirProps] = Seq(),
+  //files: collection.Seq[FileProps] = Seq()
 ) extends FileOrDirAttrs {
   val isDir = true
 }

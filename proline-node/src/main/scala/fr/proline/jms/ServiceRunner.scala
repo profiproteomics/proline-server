@@ -51,7 +51,7 @@ object ServiceRunner extends LazyLogging {
     new JSONRPC2Error(code, t.getMessage, stackTrace)
   }
 
-  def buildConcreteSelectorString(handledServices: Seq[IRemoteServiceIdentity], parallelizableRunner: Boolean): String = {
+  def buildConcreteSelectorString(handledServices: collection.Seq[IRemoteServiceIdentity], parallelizableRunner: Boolean): String = {
     buildConcreteSelectorString(handledServices, parallelizableRunner, null)
   }
 
@@ -80,7 +80,7 @@ object ServiceRunner extends LazyLogging {
 
   }
 
-  def buildConcreteSelectorString(handledServices: Seq[IRemoteServiceIdentity], parallelizableRunner: Boolean, specificProjectIdsSelector : Array[Long], useProjectIdsAsNot : Boolean = false): String = {
+  def buildConcreteSelectorString(handledServices: collection.Seq[IRemoteServiceIdentity], parallelizableRunner: Boolean, specificProjectIdsSelector : Array[Long], useProjectIdsAsNot : Boolean = false): String = {
     require(handledServices != null, "handledServices List is null")
 
     val buff = new StringBuilder()
@@ -672,7 +672,7 @@ class SingleThreadedServiceRunner(queue: Queue, connection: Connection, serviceM
   }
 
   /* Private methods */
-  private def retrieveHandledServices(): Seq[IRemoteServiceIdentity] = {
+  private def retrieveHandledServices(): collection.Seq[IRemoteServiceIdentity] = {
     val singleThreadedServicesByKey = if (useThreadIdent) { ServiceRegistry.getSingleThreadedServicesByThreadIdent() }
     else { ServiceRegistry.getSingleThreadedServicesByName() }
 

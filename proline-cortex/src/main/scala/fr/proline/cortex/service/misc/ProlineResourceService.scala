@@ -44,7 +44,7 @@ trait IProlineResourceService extends IRemoteServiceIdentity with IDefaultServic
     "Return the specified file from Proline File System either by using the absolute path or by trying to use Proline Mount Point. If using absolute path a unique Noide should be running or absolute path should be the same on all nodes. Use can use ResourceService to specify a node."
   )
   
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(GET_RESOURCE_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(GET_RESOURCE_METHOD)
   
     // Description of the merge_result_sets service method
   object GET_RESOURCE_METHOD extends JSONRPC2DefaultMethod { // Emulate an enumeration of objects

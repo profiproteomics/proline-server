@@ -27,10 +27,21 @@ import fr.proline.module.exporter.mzidentml.model.{Contact, Organization}
 import javax.xml.bind.{JAXBContext, JAXBElement, Unmarshaller}
 import javax.xml.parsers.SAXParserFactory
 import org.xml.sax.XMLReader
-import uk.ac.ebi.jmzidml.model.mzidml._
-import uk.ac.ebi.jmzidml.model.mzidml.{Enzyme => MzIdEnzyme}
-import uk.ac.ebi.jmzidml.model.mzidml.{Peptide => MzIdPeptide}
-import uk.ac.ebi.jmzidml.model.mzidml.{Organization => MzIdOrganization}
+// The jmzidml classes sharing their name with a class/builder of the fr.proline.module.exporter.mzidentml package are renamed (and thus hidden under their original name by the wildcard)
+import uk.ac.ebi.jmzidml.model.mzidml.{
+  AmbiguousResidue => MzIdAmbiguousResidue,
+  ContactRole => MzIdContactRole,
+  Enzyme => MzIdEnzyme,
+  FileFormat => MzIdFileFormat,
+  FragmentationTable => MzIdFragmentationTable,
+  Measure => MzIdMeasure,
+  Organization => MzIdOrganization,
+  Peptide => MzIdPeptide,
+  Provider => MzIdProvider,
+  Residue => MzIdResidue,
+  Role => MzIdRole,
+  _
+}
 import uk.ac.ebi.jmzidml.model.utils.ModelConstants
 import uk.ac.ebi.jmzidml.xml.io.MzIdentMLMarshaller
 
@@ -250,7 +261,7 @@ class MzIdExporter(rsmId: Long, executionContext: IExecutionContext) extends Par
   }
 
   //Create searchDatabases for all seq database of all MSISearches
-  lazy val searchDatabases: Seq[SearchDatabase] = {
+  lazy val searchDatabases: collection.Seq[SearchDatabase] = {
 
     val searchDbs = new ArrayBuffer[SearchDatabase]()
 
@@ -526,7 +537,7 @@ class MzIdExporter(rsmId: Long, executionContext: IExecutionContext) extends Par
 
     //**** Exporting  FragmentationTable
     //FragmentationTable table = unmarshaller.unmarshal(MzIdentMLElement.FragmentationTable.getXpath());
-    val fragTable: FragmentationTable =  this._buildFragmentationTable()
+    val fragTable: MzIdFragmentationTable =  this._buildFragmentationTable()
     mzIdMarshaller.marshal(fragTable, writer)
     writer.write("\n")
    logger.debug(" **** Exported FragmentationTable ")
@@ -534,7 +545,7 @@ class MzIdExporter(rsmId: Long, executionContext: IExecutionContext) extends Par
    //**** Exporting  SpectrumIdentificationResult
    val pepMatches: Array[PeptideMatch] = if(validatedResult)  rsm.peptideInstances.flatMap(_.peptideMatches)   else rs.peptideMatches
    logger.debug(" **** Will export pepMatches "+pepMatches.length)
-   val measureById: Map[String, Measure] = JavaConverters.asScalaBufferConverter(fragTable.getMeasure).asScala.map(m => m.getId ->m).toMap
+   val measureById: Map[String, MzIdMeasure] = JavaConverters.asScalaBufferConverter(fragTable.getMeasure).asScala.map(m => m.getId ->m).toMap
    val allSpectrumIdentResults = _buildSpectrumIdentificationResult(pepMatches,measureById, mzidPepByPepId, pepEvidencesByPepId, inputs)
    logger.debug(" **** Got "+allSpectrumIdentResults.length+" SpectrumIdentResults ")
     allSpectrumIdentResults.foreach( sir => {
@@ -647,7 +658,7 @@ class MzIdExporter(rsmId: Long, executionContext: IExecutionContext) extends Par
     writer.close()
   }
 
-  private def _buildSpectrumIdentificationResult(pepMatches : Array[PeptideMatch], measureById: Map[String, Measure], mzidPepByPepId: mutable.HashMap[Long, MzIdPeptide], pepEvidencesByPepId: mutable.HashMap[Long, ArrayBuffer[PeptideEvidence]], inputs: Inputs) : Array[SpectrumIdentificationResult] = {
+  private def _buildSpectrumIdentificationResult(pepMatches : Array[PeptideMatch], measureById: Map[String, MzIdMeasure], mzidPepByPepId: mutable.HashMap[Long, MzIdPeptide], pepEvidencesByPepId: mutable.HashMap[Long, ArrayBuffer[PeptideEvidence]], inputs: Inputs) : Array[SpectrumIdentificationResult] = {
     val arraySpectrumIdentificationResult = new ArrayBuffer[SpectrumIdentificationResult]()
     val pepMatchesByMs2Query = pepMatches.groupBy(_.getMs2Query())
     val spectraDataPerMsiSearch = new mutable.HashMap[Long, SpectraData]()
@@ -736,7 +747,7 @@ class MzIdExporter(rsmId: Long, executionContext: IExecutionContext) extends Par
     arraySpectrumIdentificationResult.toArray
   }
 
-  private def _buildFragmentation(pepMatch: PeptideMatch, spectrumMatch : SpectrumMatch, measureById: Map[String, Measure]) : Fragmentation = {
+  private def _buildFragmentation(pepMatch: PeptideMatch, spectrumMatch : SpectrumMatch, measureById: Map[String, MzIdMeasure]) : Fragmentation = {
     //Add Fragmentation
     val fragmentation = new Fragmentation()
     val fragMatchesByIonSeries: Map[(FragmentIonSeries.Value, Int), Array[FragmentMatch]] = spectrumMatch.fragMatches.groupBy(fm => (fm.ionSeries, fm.charge))
@@ -909,7 +920,7 @@ class MzIdExporter(rsmId: Long, executionContext: IExecutionContext) extends Par
     anlSoftList
   }
 
-  protected def _buildProvider(): Provider = {
+  protected def _buildProvider(): MzIdProvider = {
 
     Provider(
       "PROVIDER",
@@ -1017,7 +1028,7 @@ class MzIdExporter(rsmId: Long, executionContext: IExecutionContext) extends Par
   }
 
   // Return a SpectrumIdentificationProtocol for each SearchSettings
-  protected def _buildSpectrumIdentificationProtocols(): Seq[SpectrumIdentificationProtocol] = {
+  protected def _buildSpectrumIdentificationProtocols(): collection.Seq[SpectrumIdentificationProtocol] = {
 
     val spectIdentProtocols = new ArrayBuffer[SpectrumIdentificationProtocol]()
     msiSearches.foreach(msiSearch => {
@@ -1373,7 +1384,7 @@ class MzIdExporter(rsmId: Long, executionContext: IExecutionContext) extends Par
         case _ => PsiMs.MascotDATFormat
       }
 
-      val sourcefileFormat = new FileFormat()
+      val sourcefileFormat = new MzIdFileFormat()
       sourcefileFormat.setCvParam(PsiCvParam(psiFormatVal))
       sourceFile.setFileFormat(sourcefileFormat)
 
@@ -1392,7 +1403,7 @@ class MzIdExporter(rsmId: Long, executionContext: IExecutionContext) extends Par
         else  { PsiMs.MascotMGFFormat } // Ask user ?
 
 
-      val specFileFormat = new FileFormat()
+      val specFileFormat = new MzIdFileFormat()
       specFileFormat.setCvParam(PsiCvParam(psiPeaklistFormatVal))
       specData.setFileFormat(specFileFormat)
 
@@ -1408,7 +1419,7 @@ class MzIdExporter(rsmId: Long, executionContext: IExecutionContext) extends Par
     inputs
   }
 
-  protected def _buildFragmentationTable(): FragmentationTable = {
+  protected def _buildFragmentationTable(): MzIdFragmentationTable = {
 
     FragmentationTable(
       List(

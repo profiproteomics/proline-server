@@ -491,7 +491,7 @@ class XTandemParserTest extends AbstractMultipleDBTestCase {
   
   private def _buildResultSet(tmpRs: ResultSet,
                               protMatches: Array[ProteinMatch],
-                              pepMatches: Seq[PeptideMatch],
+                              pepMatches: collection.Seq[PeptideMatch],
                               isDecoy: Boolean): ResultSet = {
 
     val newPepMatches = new ArrayBuffer[PeptideMatch]()

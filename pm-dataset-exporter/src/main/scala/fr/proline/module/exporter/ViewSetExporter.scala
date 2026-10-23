@@ -9,7 +9,7 @@ object ViewSetExporter {
   /**
    * Returns the list of exported files.
    */
-  def exportViewSetToDirectory(viewSet: IViewSet, outputDir: File): Seq[File] = {
+  def exportViewSetToDirectory(viewSet: IViewSet, outputDir: File): collection.Seq[File] = {
 
     // Create the directory of it doesn't exists
     if (!outputDir.exists) {
@@ -31,7 +31,7 @@ object ViewSetExporter {
 
   }
 
-  /*def exportViewsToArchive( viewSetName: String, exporters: Seq[XDatasetExporter], archiveFile: File ) {
+  /*def exportViewsToArchive( viewSetName: String, exporters: collection.Seq[XDatasetExporter], archiveFile: File ) {
 
     
   }*/

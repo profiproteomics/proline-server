@@ -18,7 +18,7 @@ trait IGetConnectionTemplateService extends IAdminService with IDefaultServiceVe
   this.serviceDescription = Some("Returns a set of properties needed to access the Proline DataStore (UDS db access and JMS Server information).")
 
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
   object PROCESS_METHOD extends JSONRPC2DefaultMethod {
 

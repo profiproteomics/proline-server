@@ -199,7 +199,7 @@ abstract class AbstractImportValidateGenerateSM extends AbstractRemoteProcessing
         val localPathname = MountPointRegistry.replacePossibleLabel(rf.path, Some(MountPointRegistry.RESULT_FILES_DIRECTORY)).localPathname
 
         new File(localPathname)
-      } ))
+      } )).toMap
 
       // Instantiate the ResultFileCertifier service
       val rsCertifier = new ResultFileCertifier(

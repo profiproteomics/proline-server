@@ -19,7 +19,7 @@ import fr.proline.module.seq.service.RetrieveService;
 import fr.proline.module.seq.util.ScalaUtil;
 import scala.Option;
 import scala.Some;
-import scala.collection.JavaConversions;
+import scala.jdk.javaapi.CollectionConverters;
 import scala.collection.Seq;
 
 
@@ -98,12 +98,12 @@ public class RetrieveJMSService extends AbstractRemoteProcessingService {
 		JSONRPC2MethodParameter  FORCE_UPDATE_PARAM =  JSONRPC2Utils.buildBooleanMethodParameter("force_update", "specify if biosequences are retrieve and properties are calculate even if they already exit", true, new Some<String>("false"));		
 		parameters.add(FORCE_UPDATE_PARAM);
 		
-		Seq<IJSONRPC2MethodParameter> params = JavaConversions.asScalaBuffer(parameters).toList();
+		Seq<IJSONRPC2MethodParameter> params = CollectionConverters.asScala(parameters).toList();
 
 		JSONRPC2Method meth = new JSONRPC2Method( RemoteServiceIdentity.PROCESS_METHOD_NAME(),serviceDescription,params, JSONRPC2Utils.buildBooleanMethodReturn("true: if operation was successful"), false);
 		ArrayList<IJSONRPC2Method> methods = new ArrayList<>();
 		methods.add(meth);
-		return JavaConversions.asScalaBuffer(methods).toList(); 
+		return CollectionConverters.asScala(methods).toList(); 
 	}
 
 

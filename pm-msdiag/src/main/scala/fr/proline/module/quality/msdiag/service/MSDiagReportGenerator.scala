@@ -1,6 +1,5 @@
 package fr.proline.module.quality.msdiag.service
 
-import scala.Array.canBuildFrom
 import fr.profi.util.serialization.ProfiJson
 import fr.profi.api.service.IService
 import fr.proline.context.IExecutionContext

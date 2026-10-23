@@ -8,6 +8,6 @@ import fr.proline.module.exporter.commons.config.ExportConfig
 class ViewSet(
   var viewSetName: String,
   val viewSetTemplate: IViewSetTemplate,
-  val templatedViews: Seq[ViewWithTemplate], 
+  val templatedViews: collection.Seq[ViewWithTemplate], 
   val exportConfig: ExportConfig
 ) extends IViewSet

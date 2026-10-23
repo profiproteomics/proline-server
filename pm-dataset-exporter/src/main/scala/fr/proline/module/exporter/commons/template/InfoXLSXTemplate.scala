@@ -8,14 +8,14 @@ import org.apache.poi.ss.usermodel.IndexedColors
 
 // TODO: rename to VerticalXLSXTemplate
 class InfoXLSXTemplate(
-  val selectedFields: Option[Seq[String]] = None
+  val selectedFields: Option[collection.Seq[String]] = None
 ) extends IWorksheetTemplate {
   
   val fileExtension = FileExtensionEnum.XLSX
 
   def newWorksheet(view: IDataView, workbookCreationContext: WorkbookContext) {
     
-    val selectedFieldsOrFields: Seq[String] = {
+    val selectedFieldsOrFields: collection.Seq[String] = {
       if( selectedFields.isDefined ) selectedFields.get
       else view.getFieldsNames()
     }

@@ -13,6 +13,15 @@
 
 	<name>PM-SequenceRepository</name>
 
+	<repositories>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 
 	<dependencies>
 
@@ -109,10 +118,11 @@
 			</exclusions>
 		</dependency>
 
+		<!-- Jacksum 3.4.0 is not on Maven Central: built from the GitHub tag by JitPack (see the repository declared above) -->
 		<dependency>
-			<groupId>jacksum</groupId>
+			<groupId>com.github.jonelo</groupId>
 			<artifactId>jacksum</artifactId>
-			<version>3.4.0</version>
+			<version>v3.4.0</version>
 			<type>jar</type>
 		</dependency>
 

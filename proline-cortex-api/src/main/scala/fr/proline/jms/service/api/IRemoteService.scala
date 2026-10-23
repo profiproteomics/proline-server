@@ -42,7 +42,7 @@ trait IRemoteServiceIdentity {
   lazy val serviceName = serviceNamespace + '/' + serviceLabel //+ "@" + wsVersion
   
   /** The methods handled by the Web Service. */
-  def methodDefinitions: Seq[IJSONRPC2Method]
+  def methodDefinitions: collection.Seq[IJSONRPC2Method]
 
   /**
    * Make service description.

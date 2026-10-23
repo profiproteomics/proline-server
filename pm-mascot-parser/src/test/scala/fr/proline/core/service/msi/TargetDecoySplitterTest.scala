@@ -1,7 +1,6 @@
 package fr.proline.core.service.msi
 
 import java.io.File
-import scala.Array.canBuildFrom
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

@@ -38,7 +38,7 @@ object ImportValidateGenerateSMServiceV1 extends IImportValidateGenerateSMServic
 trait IImportValidateGenerateSMServiceV1 extends IImportValidateGenerateSMService  with IDefaultServiceVersion {
 
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
   object PROCESS_METHOD extends JSONRPC2DefaultMethod {
 
@@ -78,7 +78,7 @@ trait IImportValidateGenerateSMServiceV2 extends IImportValidateGenerateSMServic
 
   val serviceVersion = "2.0"
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
   object PROCESS_METHOD extends JSONRPC2DefaultMethod {
 

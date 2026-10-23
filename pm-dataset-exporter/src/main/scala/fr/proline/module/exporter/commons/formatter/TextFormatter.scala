@@ -26,7 +26,7 @@ class TextFormatter(
     val selectedFields = template.selectedFields
     val sepChar = template.sepChar
     
-    protected lazy val selectedFieldsOrFields: Seq[String] = {
+    protected lazy val selectedFieldsOrFields: collection.Seq[String] = {
       if( selectedFields.isDefined ) selectedFields.get.map(_.toString)
       else view.getFieldsNames
     }

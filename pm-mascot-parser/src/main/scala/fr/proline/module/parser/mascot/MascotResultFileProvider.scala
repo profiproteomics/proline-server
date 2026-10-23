@@ -46,7 +46,7 @@ class MascotResultFileProvider extends IResultFileProvider with IResultFileVerif
     this
   }
 
-  def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): Seq[PtmDefinition] = {
+  def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): collection.Seq[PtmDefinition] = {
 
     logger.info("Search PTMs definition for" +fileLocation.getAbsolutePath())
     val ptmDefs = Array.newBuilder[PtmDefinition]

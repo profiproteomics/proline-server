@@ -698,7 +698,7 @@ class MzIdResultFile(
               // Extract the score value for a given search engine
               val sIDParamGroup = sIdentItem.getParamGroup()
               
-              val scoreParamOpt = ScoreParamName.values.flatMap( termId => findParam(sIDParamGroup, termId.toString) ).headOption
+              val scoreParamOpt = ScoreParamName.values.toSeq.flatMap( termId => findParam(sIDParamGroup, termId.toString) ).headOption
               require( scoreParamOpt.isDefined, s"can't find a score value in this spectrum identification item (id=${sIdentItem.getId})")
               
               val scoreParam = scoreParamOpt.get

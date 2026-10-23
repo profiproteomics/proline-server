@@ -18,7 +18,7 @@ trait IUserAccountService extends IAdminService with IDefaultServiceVersion {
   this.serviceDescription = Some("Service providing methods for user accounts mangement. ")
   
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(CREATE_METHOD,CHANGE_PASSWORD_METHOD,RESET_PASSWORD_METHOD,AUTHENTICATE_METHOD,MODIFY_USER_GROUP_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(CREATE_METHOD,CHANGE_PASSWORD_METHOD,RESET_PASSWORD_METHOD,AUTHENTICATE_METHOD,MODIFY_USER_GROUP_METHOD)
   
   val UDS_AUTH_METHOD = "UDS_HASH"
   

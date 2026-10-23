@@ -35,7 +35,7 @@ class InfoService extends IRemoteJsonRPC2Service with IDefaultServiceVersion wit
   val serviceLabel = "Info"
   
   // TODO: define me
-  def methodDefinitions: Seq[IJSONRPC2Method] = Seq()
+  def methodDefinitions: collection.Seq[IJSONRPC2Method] = Seq()
 
 
   /* Uniquely identify this instance */

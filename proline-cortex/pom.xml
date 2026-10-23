@@ -14,6 +14,8 @@
     <version.path>${project.basedir}/src/main/scala/fr/proline/cortex</version.path>
     <proline.admin.version>2.4.0-SNAPSHOT</proline.admin.version>
     <jre.version>1.8.0_51</jre.version>
+    <!-- Default: cortex-only assembly (no embedded JRE). Use -Pfull_distrib-win64 or -Pfull_distrib-linux-64 to bundle HornetQ + JRE -->
+    <assembly.file.path>assembly/assembly.xml</assembly.file.path>
   </properties>
 
   <dependencies>
@@ -495,7 +497,7 @@
                 <os.classifier>windows-x64</os.classifier>
 			</properties>
 			<activation>
-				<activeByDefault>true</activeByDefault>
+				<activeByDefault>false</activeByDefault>
 			</activation>
           <dependencies>
             <dependency>

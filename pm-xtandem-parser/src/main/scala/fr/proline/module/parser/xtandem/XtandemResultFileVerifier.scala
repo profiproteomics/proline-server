@@ -22,7 +22,7 @@ class XtandemResultFileVerifier extends IResultFileVerifier with LazyLogging {
 
   var parserContext: ProviderDecoratedExecutionContext = _
   
-  def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): Seq[PtmDefinition] = {
+  def getPtmDefinitions(fileLocation: File, importProperties: Map[String, Any]): collection.Seq[PtmDefinition] = {
     // Requirements
     require(parserContext != null,"getPtmDefinitions - No parser context found. Use setParserContext(parserContext: ProviderDecoratedExecutionContext)")
     

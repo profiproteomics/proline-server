@@ -151,7 +151,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
   }
 
   def exportToMzIdentML(
-    rsmIdentifiers: Seq[ExportResultSummaryIdentifier],
+    rsmIdentifiers: collection.Seq[ExportResultSummaryIdentifier],
     fileName: String,
     fileDir: String,
     outputFormat: ExportOutputMode.Value,
@@ -216,7 +216,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
   }
 
   def exportToTemplatedFile(
-    rsmIdentifiers: Seq[ExportResultSummaryIdentifier],
+    rsmIdentifiers: collection.Seq[ExportResultSummaryIdentifier],
     fileName: String,
     fileDir: String,
     outputFormat: ExportOutputMode.Value,
@@ -249,7 +249,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
         if (StringUtils.isEmpty(fileName)) {
           fileDatasetName = "DatasetSummaryExport-" + rsmIdentifier.dsId.get + "_" + UUID.randomUUID().toString //In this version of exported DSId is mandatory
         }
-        var exFiles: Seq[java.io.File] = Seq()
+        var exFiles: collection.Seq[java.io.File] = Seq()
         // Export
         val viewSet = BuildDatasetViewSet(
           executionContext = executionContext,
@@ -293,7 +293,7 @@ class ExportResultSummaryV2_0 extends AbstractRemoteProcessingService with IExpo
 
     val viewSetTemplate = SpectraListAsTSV
     val exportLocation = new java.io.File(fileDir)
-    var exportedFiles: Seq[java.io.File] = Seq()
+    var exportedFiles: collection.Seq[java.io.File] = Seq()
 
     val formatCompatibility = if (extraParams != null && extraParams.isDefined && extraParams.get.contains("format_compatibility")) {
       FormatCompatibility.withName(extraParams.get("format_compatibility").asInstanceOf[String])

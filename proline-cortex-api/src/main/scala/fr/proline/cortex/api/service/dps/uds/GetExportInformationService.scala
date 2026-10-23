@@ -19,7 +19,7 @@ trait IGetExportInformationService extends IUdsService with IDefaultServiceVersi
   this.serviceDescription = Some("Get information about the export default configuration file for a dataset.")
 
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
   object PROCESS_METHOD extends JSONRPC2DefaultMethod {
 

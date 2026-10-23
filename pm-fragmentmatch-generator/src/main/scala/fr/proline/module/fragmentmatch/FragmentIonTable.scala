@@ -1,7 +1,5 @@
 package fr.proline.module.fragmentmatch
 
-import scala.Array.canBuildFrom
-import scala.Array.fallbackCanBuildFrom
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import com.typesafe.scalalogging.LazyLogging

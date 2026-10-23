@@ -22,7 +22,7 @@ trait AbstractIdentDatasetView extends ICustomTableView with LazyLogging {
   
   lazy val fields = new CustomViewFields( buildCustomFieldsTitles() )
     
-  protected def buildCustomFieldsTitles(): Seq[String] = sheetConfig.fields.map(_.title)
+  protected def buildCustomFieldsTitles(): collection.Seq[String] = sheetConfig.fields.map(_.title)
   
   protected val dcf1 = new SmartDecimalFormat("0.#", decimalFormat)
   protected val dcf2 = new SmartDecimalFormat("0.##", decimalFormat)

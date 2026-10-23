@@ -65,7 +65,7 @@ trait IValidateResultSetService extends IMsiService with IDefaultServiceVersion 
   this.serviceDescription = Some("Filters and validates a Result Set for a given set of rules.")
   
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
   object PROCESS_METHOD extends JSONRPC2DefaultMethod with IValidateResultSetServiceParams {
 
@@ -101,7 +101,7 @@ trait IValidateResultSetServiceV2 extends IMsiService  {
   val serviceVersion= "2.0"
    
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
   object PROCESS_METHOD extends JSONRPC2DefaultMethod with IValidateResultSetServiceParams {
 
@@ -139,7 +139,7 @@ trait IValidateResultSetServiceV3 extends IMsiService  {
   val serviceVersion= "3.0"
 
   // List the handled methods
-  val methodDefinitions: Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
+  val methodDefinitions: collection.Seq[IJSONRPC2Method] = List(PROCESS_METHOD)
 
   object PROCESS_METHOD extends JSONRPC2DefaultMethod with IValidateResultSetServiceParams {
 

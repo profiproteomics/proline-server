@@ -85,7 +85,7 @@ class MascotDataParser(
     for (q <- 1 to nbrQueries) { // Go through each Query
 
       val query = msQueryByInitialId(q)
-      val queryPepMatches = new ArrayBuffer[(PeptideMatch, Seq[LocatedPtm])]()
+      val queryPepMatches = new ArrayBuffer[(PeptideMatch, collection.Seq[LocatedPtm])]()
       
       for (k <- 1 to maxRankPerQuery) { // Go through all peptides of each queries
 
@@ -95,7 +95,7 @@ class MascotDataParser(
         // Check that the peptide is not empty
         if (currentMSPep.getAnyMatch()) {
 
-          val (parsedPep: Peptide, varPtms: Seq[LocatedPtm]) = getOrCreatePeptide(currentMSPep, ptmProvider, pepProvider)
+          val (parsedPep: Peptide, varPtms: collection.Seq[LocatedPtm]) = getOrCreatePeptide(currentMSPep, ptmProvider, pepProvider)
 
           val pepMatchScore = currentMSPep.getIonsScore().floatValue()
 
@@ -169,7 +169,7 @@ class MascotDataParser(
       } // End go through current query Peptides
       
       // then compute ptm site probability property
-      val pepMatchesBySequence: Map[String, ArrayBuffer[(PeptideMatch, Seq[LocatedPtm])]] = queryPepMatches.groupBy { e => e._1.peptide.sequence }
+      val pepMatchesBySequence: Map[String, ArrayBuffer[(PeptideMatch, collection.Seq[LocatedPtm])]] = queryPepMatches.groupBy { e => e._1.peptide.sequence }
       for (matches <- pepMatchesBySequence.valuesIterator) {
         computeRelativeProbabilities(matches)
       }
@@ -425,7 +425,7 @@ class MascotDataParser(
     mascotPeptide: ms_peptide,
     ptmProvider: IPTMProvider,
     pepProvider: IPeptideProvider
-  ): (Peptide, Seq[LocatedPtm]) = {
+  ): (Peptide, collection.Seq[LocatedPtm]) = {
 
     // Disable substitution of ambiguous residues
     val pepSeq = mascotPeptide.getPeptideStr(false)
@@ -522,7 +522,7 @@ class MascotDataParser(
 
     fixedPtms foreach (nextPTMDef => {
       //Get all residues modified by this FixedPTM and test if peptide is concerned.
-      var pepResidueIndexes: Seq[Int] = null
+      var pepResidueIndexes: collection.Seq[Int] = null
       val modifResidue = nextPTMDef.residue
       val modifLocation = PtmLocation.withName(nextPTMDef.location)
       var isNter = false
@@ -656,7 +656,7 @@ class MascotDataParser(
     nbrMatches
   }
 
-  private def computeRelativeProbabilities(assignments: Seq[(PeptideMatch, Seq[LocatedPtm])], md10Prob: Float = 0.1f) = {
+  private def computeRelativeProbabilities(assignments: collection.Seq[(PeptideMatch, collection.Seq[LocatedPtm])], md10Prob: Float = 0.1f) = {
 
     val confidenceByPepMatch = new HashMap[PeptideMatch, Float]()
     val confidenceSumBySite = new HashMap[LocatedPtm, Float]()

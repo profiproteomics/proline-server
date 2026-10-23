@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Option;
 import scala.Some;
-import scala.collection.JavaConverters;
+import scala.jdk.javaapi.CollectionConverters;
 import scala.collection.Seq;
 
 import java.util.ArrayList;
@@ -62,12 +62,12 @@ public class RetrieveInfoService extends AbstractRemoteProcessingService {
     public Seq<IJSONRPC2Method> methodDefinitions() {
         ArrayList<IJSONRPC2MethodParameter> parameters = new ArrayList<>();
 
-        Seq<IJSONRPC2MethodParameter> params = JavaConverters.asScalaBuffer(parameters).toList();
+        Seq<IJSONRPC2MethodParameter> params = CollectionConverters.asScala(parameters).toList();
 
         JSONRPC2Method meth = new JSONRPC2Method( RemoteServiceIdentity.PROCESS_METHOD_NAME(),serviceDescription,params, JSONRPC2Utils.buildBooleanMethodReturn("true: if service is available"), false);
         ArrayList<IJSONRPC2Method> methods = new ArrayList<>();
         methods.add(meth);
-        return JavaConverters.asScalaBuffer(methods).toList();
+        return CollectionConverters.asScala(methods).toList();
     }
 
 }

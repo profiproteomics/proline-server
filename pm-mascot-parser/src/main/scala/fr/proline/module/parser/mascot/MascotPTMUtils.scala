@@ -26,13 +26,13 @@ object MascotPTMUtils extends LazyLogging  {
   val MascotModRegex = """(.+) \((.+)\)""".r
 
   /**
-   * Parse mascotMods, Seq[String] containing the list of PTMs as given by Mascot.
+   * Parse mascotMods, collection.Seq[String] containing the list of PTMs as given by Mascot.
    * For each PTM, PtmDefinitions will be retrieved using specified IPTMProvider or created if it doesn't exist.
    *
    * Return an PtmDefinition ArrayBuffer corresponding to mascot "PTM-residue/site"
    *
    */
-  def mascotModsToPTMDefinitions(ptmProvider: IPTMProvider, mascotMods: Seq[String]): Array[PtmDefinition] = {
+  def mascotModsToPTMDefinitions(ptmProvider: IPTMProvider, mascotMods: collection.Seq[String]): Array[PtmDefinition] = {
     mascotMods.flatMap(m => this.mascotModToPTMDefinitions(ptmProvider, m)).toArray
   }
 
@@ -78,7 +78,7 @@ object MascotPTMUtils extends LazyLogging  {
             var ptmIdOpt = ptmProvider.getPtmId(modName) // Get PtmName if exist
             var ptmId: Long = 0L
 
-            if (ptmIdOpt == Some)
+            if (ptmIdOpt.isDefined)
               ptmId = ptmIdOpt.get
             else
               ptmId = PtmNames.generateNewId

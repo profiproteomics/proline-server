@@ -2,7 +2,6 @@ package fr.proline.module.fragmentmatch
 
 import fr.proline.core.om.model.msi.FragmentationRuleSet
 
-import scala.Array.canBuildFrom
 import fr.proline.core.om.model.msi.LocatedPtm
 import fr.proline.core.om.model.msi.PeptideMatch
 import fr.proline.core.om.model.msi.SearchSettings
